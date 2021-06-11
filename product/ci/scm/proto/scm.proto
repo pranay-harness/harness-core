@@ -406,6 +406,7 @@ message CreatePRRequest {
 message CreatePRResponse {
   int32 status = 1;
   int32 number = 2;
+  string error = 3;
 }
 
 message FindFilesInPRRequest {

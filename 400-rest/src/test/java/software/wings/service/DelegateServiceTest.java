@@ -87,6 +87,7 @@ import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateGroup;
 import io.harness.delegate.beans.DelegateGroupStatus;
 import io.harness.delegate.beans.DelegateInstanceStatus;
@@ -2527,6 +2528,99 @@ public class DelegateServiceTest extends WingsBaseTest {
     List<String> k8sNames = delegateService.getKubernetesDelegateNames(ACCOUNT_ID);
     assertThat(k8sNames.size()).isEqualTo(1);
     assertThat(k8sNames.get(0)).isEqualTo("k8s-name");
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldGetAllDelegateSelectorsUpTheHierarchy() {
+    String accountId = generateUuid();
+    String orgId = generateUuid();
+    String projectId = generateUuid();
+
+    DelegateGroup acctGroup = DelegateGroup.builder().name("acctGrp").accountId(accountId).build();
+    DelegateGroup orgGroup = DelegateGroup.builder().name("orgGrp").accountId(accountId).build();
+    DelegateGroup projectGroup = DelegateGroup.builder().name("projectGrp").accountId(accountId).build();
+
+    persistence.saveBatch(Arrays.asList(acctGroup, orgGroup, projectGroup));
+
+    DelegateProfile delegateProfile =
+        DelegateProfile.builder().uuid(generateUuid()).accountId(accountId).name(generateUuid()).build();
+    persistence.save(delegateProfile);
+
+    Delegate cgDelegate = Delegate.builder()
+                              .accountId(accountId)
+                              .ip("127.0.0.1")
+                              .hostName("c.g")
+                              .delegateName("testDelegateNameCg")
+                              .version(VERSION)
+                              .status(DelegateInstanceStatus.ENABLED)
+                              .lastHeartBeat(System.currentTimeMillis())
+                              .delegateProfileId(delegateProfile.getUuid())
+                              .tags(ImmutableList.of("cg"))
+                              .build();
+    persistence.save(cgDelegate);
+
+    Delegate acctDelegate = Delegate.builder()
+                                .accountId(accountId)
+                                .ip("127.0.0.1")
+                                .hostName("a.c.c.t")
+                                .delegateName("acctGrp")
+                                .version(VERSION)
+                                .status(DelegateInstanceStatus.ENABLED)
+                                .lastHeartBeat(System.currentTimeMillis())
+                                .delegateProfileId(delegateProfile.getUuid())
+                                .tags(ImmutableList.of("acct"))
+                                .ng(true)
+                                .delegateGroupId(acctGroup.getUuid())
+                                .build();
+    persistence.save(acctDelegate);
+
+    Delegate orgDelegate = Delegate.builder()
+                               .accountId(accountId)
+                               .ip("127.0.0.1")
+                               .hostName("o.r.g")
+                               .delegateName("orgGrp")
+                               .version(VERSION)
+                               .status(DelegateInstanceStatus.ENABLED)
+                               .lastHeartBeat(System.currentTimeMillis())
+                               .delegateProfileId(delegateProfile.getUuid())
+                               .tags(ImmutableList.of("org"))
+                               .ng(true)
+                               .delegateGroupId(orgGroup.getUuid())
+                               .owner(DelegateEntityOwner.builder().identifier(orgId).build())
+                               .build();
+    persistence.save(orgDelegate);
+
+    Delegate projectDelegate = Delegate.builder()
+                                   .accountId(accountId)
+                                   .ip("127.0.0.1")
+                                   .hostName("p.r.o.j.e.c.t")
+                                   .delegateName("projectGrp")
+                                   .version(VERSION)
+                                   .status(DelegateInstanceStatus.ENABLED)
+                                   .lastHeartBeat(System.currentTimeMillis())
+                                   .delegateProfileId(delegateProfile.getUuid())
+                                   .tags(ImmutableList.of("project"))
+                                   .ng(true)
+                                   .delegateGroupId(projectGroup.getUuid())
+                                   .owner(DelegateEntityOwner.builder().identifier(orgId + "/" + projectId).build())
+                                   .build();
+    persistence.save(projectDelegate);
+
+    Set<String> tags = delegateService.getAllDelegateSelectorsUpTheHierarchy(accountId, null, null);
+    assertThat(tags.size()).isEqualTo(3);
+    assertThat(tags).containsExactlyInAnyOrder("acctgrp", "acct", delegateProfile.getName().toLowerCase());
+
+    tags = delegateService.getAllDelegateSelectorsUpTheHierarchy(accountId, orgId, null);
+    assertThat(tags.size()).isEqualTo(5);
+    assertThat(tags).containsExactlyInAnyOrder(
+        "acctgrp", "orggrp", "acct", "org", delegateProfile.getName().toLowerCase());
+
+    tags = delegateService.getAllDelegateSelectorsUpTheHierarchy(accountId, orgId, projectId);
+    assertThat(tags.size()).isEqualTo(7);
+    assertThat(tags).containsExactlyInAnyOrder(
+        "acctgrp", "orggrp", "projectgrp", "acct", "org", "project", delegateProfile.getName().toLowerCase());
   }
 
   @Test

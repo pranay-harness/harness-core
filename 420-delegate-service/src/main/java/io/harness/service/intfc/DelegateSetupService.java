@@ -15,6 +15,8 @@ import java.util.Map;
 public interface DelegateSetupService {
   DelegateGroupListing listDelegateGroupDetails(String accountId, String orgId, String projectId);
 
+  DelegateGroupListing listDelegateGroupDetailsUpTheHierarchy(String accountId, String orgId, String projectId);
+
   DelegateGroupDetails getDelegateGroupDetails(String accountId, String delegateGroupId);
 
   String getHostNameForGroupedDelegate(String hostname);

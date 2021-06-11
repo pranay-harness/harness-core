@@ -10,11 +10,7 @@ import io.harness.config.PublisherConfiguration;
 import io.harness.mongo.queue.QueueFactory;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.execution.SdkResponseEvent;
-import io.harness.pms.interrupts.InterruptEvent;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.execution.events.node.NodeExecutionEventListener;
-import io.harness.pms.sdk.core.execution.events.orchestration.SdkOrchestrationEventListener;
-import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
@@ -51,9 +47,7 @@ public class PmsSdkQueueModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(new TypeLiteral<QueueListener<OrchestrationEvent>>() {}).to(SdkOrchestrationEventListener.class);
     bind(new TypeLiteral<QueueListener<NodeExecutionEvent>>() {}).to(NodeExecutionEventListener.class);
-    bind(new TypeLiteral<QueueListener<InterruptEvent>>() {}).to(InterruptEventListener.class);
     requireBinding(QueueListenerController.class);
   }
 
@@ -79,37 +73,6 @@ public class PmsSdkQueueModule extends AbstractModule {
       Injector injector, PublisherConfiguration config) {
     MongoTemplate sdkTemplate = getMongoTemplate(injector);
     return QueueFactory.createNgQueuePublisher(injector, SdkResponseEvent.class, emptyList(), config, sdkTemplate);
-  }
-
-  @Provides
-  @Singleton
-  public QueueConsumer<InterruptEvent> interruptEventQueueConsumer(
-      Injector injector, PublisherConfiguration publisherConfiguration) {
-    if (this.config.getSdkDeployMode().isNonLocal()) {
-      MongoTemplate sdkTemplate = getMongoTemplate(injector);
-      List<List<String>> topicExpressions = singletonList(singletonList(config.getServiceName()));
-      return QueueFactory.createNgQueueConsumer(
-          injector, InterruptEvent.class, ofSeconds(5), topicExpressions, publisherConfiguration, sdkTemplate);
-    }
-    MongoTemplate mongoTemplate = injector.getInstance(MongoTemplate.class);
-    List<List<String>> topicExpressions = ImmutableList.of(singletonList(PmsConstants.INTERNAL_SERVICE_NAME));
-    return QueueFactory.createNgQueueConsumer(
-        injector, InterruptEvent.class, ofSeconds(3), topicExpressions, publisherConfiguration, mongoTemplate);
-  }
-
-  @Provides
-  @Singleton
-  public QueueConsumer<OrchestrationEvent> orchestrationEventQueueConsumer(
-      Injector injector, PublisherConfiguration publisherConfiguration) {
-    if (this.config.getSdkDeployMode().isNonLocal()) {
-      MongoTemplate sdkTemplate = getMongoTemplate(injector);
-      List<List<String>> topicExpressions = singletonList(singletonList(config.getServiceName()));
-      return QueueFactory.createNgQueueConsumer(
-          injector, OrchestrationEvent.class, ofSeconds(5), topicExpressions, publisherConfiguration, sdkTemplate);
-    }
-    MongoTemplate mongoTemplate = injector.getInstance(MongoTemplate.class);
-    return QueueFactory.createNgQueueConsumer(
-        injector, OrchestrationEvent.class, ofSeconds(5), emptyList(), publisherConfiguration, mongoTemplate);
   }
 
   private MongoTemplate getMongoTemplate(Injector injector) {

@@ -5,19 +5,23 @@ import static io.harness.accesscontrol.acl.models.ACL.ROLE_IDENTIFIER_KEY;
 import static io.harness.accesscontrol.acl.models.ACL.USER_GROUP_IDENTIFIER_KEY;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import static org.springframework.data.mongodb.util.MongoDbErrorCodes.isDuplicateKeyCode;
+
 import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.acl.models.ACL.ACLKeys;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.mongodb.MongoBulkWriteException;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.mongodb.BulkOperationException;
+import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -30,16 +34,23 @@ public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
   private final MongoTemplate mongoTemplate;
 
   public long insertAllIgnoringDuplicates(List<ACL> acls) {
-    long insertedCount = 0;
-    for (ACL acl : acls) {
-      try {
-        mongoTemplate.save(acl);
-        insertedCount++;
-      } catch (DuplicateKeyException duplicateKeyException) {
-        // ignore
+    try {
+      return mongoTemplate.bulkOps(BulkMode.UNORDERED, ACL.class).insert(acls).execute().getInsertedCount();
+    } catch (BulkOperationException ex) {
+      if (ex.getErrors().stream().allMatch(bulkWriteError -> isDuplicateKeyCode(bulkWriteError.getCode()))) {
+        return ex.getResult().getInsertedCount();
       }
+      throw ex;
+    } catch (Exception ex) {
+      if (ex.getCause() instanceof MongoBulkWriteException) {
+        MongoBulkWriteException bulkWriteException = (MongoBulkWriteException) ex.getCause();
+        if (bulkWriteException.getWriteErrors().stream().allMatch(
+                writeError -> isDuplicateKeyCode(writeError.getCode()))) {
+          return bulkWriteException.getWriteResult().getInsertedCount();
+        }
+      }
+      throw ex;
     }
-    return insertedCount;
   }
 
   @Override

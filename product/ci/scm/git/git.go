@@ -33,8 +33,19 @@ func CreatePR(ctx context.Context, request *pb.CreatePRRequest, log *zap.Sugared
 	if err != nil {
 		log.Errorw("CreatePR failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "source", request.GetSource(), "target", request.GetTarget(),
 			"elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
-		return nil, err
+
+		// hard error from git
+		if response == nil {
+			return nil, err
+		}
+		// this is an error from git provider
+		out = &pb.CreatePRResponse{
+			Status: int32(response.Status),
+			Error:  err.Error(),
+		}
+		return out, nil
 	}
+
 	log.Infow("CreatePR success", "slug", request.GetSlug(), "source", request.GetSource(), "target", request.GetTarget(), "elapsed_time_ms", utils.TimeSince(start))
 
 	out = &pb.CreatePRResponse{

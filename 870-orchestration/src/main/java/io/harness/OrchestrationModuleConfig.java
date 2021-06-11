@@ -30,7 +30,4 @@ public class OrchestrationModuleConfig {
           .build();
   boolean withPMS;
   boolean isPipelineService;
-  boolean useRedisForInterrupts;
-  boolean useRedisForEvents;
-  boolean useRedisForNodeExecutionEvents;
 }

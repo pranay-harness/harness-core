@@ -57,12 +57,16 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
       log.info("Repo {} doesn't exist, ignoring the branch push change set event : {}", repoURL, yamlChangeSetDTO);
       return YamlChangeSetStatus.SKIPPED;
     }
-    // TODO @deepak add check if event already exists in progress service, then return
+
+    if (gitToHarnessProgressService.isProgressEventAlreadyProcessedOrInProcess(repoURL,
+            yamlChangeSetDTO.getGitWebhookRequestAttributes().getHeadCommitId(), YamlChangeSetEventType.BRANCH_PUSH)) {
+      log.info("Event {} already in progress or successfully completed", yamlChangeSetDTO);
+      return YamlChangeSetStatus.SKIPPED;
+    }
 
     // Init Progress Record for this event
-    GitToHarnessProgressDTO gitToHarnessProgressRecord =
-        gitToHarnessProgressService.save(yamlChangeSetDTO, YamlChangeSetEventType.BRANCH_PUSH,
-            GitToHarnessProcessingStepType.GET_FILES, GitToHarnessProcessingStepStatus.TO_DO);
+    GitToHarnessProgressDTO gitToHarnessProgressRecord = gitToHarnessProgressService.initProgress(
+        yamlChangeSetDTO, YamlChangeSetEventType.BRANCH_PUSH, GitToHarnessProcessingStepType.GET_FILES);
 
     GitToHarnessGetFilesStepResponse gitToHarnessGetFilesStepResponse =
         performGetFilesStep(GitToHarnessGetFilesStepRequest.builder()

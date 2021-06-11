@@ -1,5 +1,6 @@
 package io.harness.engine.interrupts.handlers.publisher;
 
+import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.events.PmsEventFrameworkConstants.SERVICE_NAME;
 
@@ -29,14 +30,14 @@ public class RedisInterruptEventPublisher implements InterruptEventPublisher {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     String serviceName = nodeExecution.getNode().getServiceName();
     Producer producer = eventsFrameworkUtils.obtainProducerForInterrupt(serviceName);
-    Builder builder =
-        InterruptEvent.newBuilder()
-            .setInterruptUuid(interrupt.getUuid())
-            .setAmbiance(nodeExecution.getAmbiance())
-            .setType(interruptType)
-            .putAllMetadata(CollectionUtils.emptyIfNull(interrupt.getMetadata()))
-            .setNotifyId(generateUuid())
-            .setStepParameters(ByteString.copyFromUtf8(nodeExecution.getResolvedStepParameters().toJson()));
+    Builder builder = InterruptEvent.newBuilder()
+                          .setInterruptUuid(interrupt.getUuid())
+                          .setAmbiance(nodeExecution.getAmbiance())
+                          .setType(interruptType)
+                          .putAllMetadata(CollectionUtils.emptyIfNull(interrupt.getMetadata()))
+                          .setNotifyId(generateUuid())
+                          .setStepParameters(
+                              ByteString.copyFromUtf8(emptyIfNull(nodeExecution.getResolvedStepParameters().toJson())));
     InterruptEvent event = populateResponse(nodeExecution, builder);
     producer.send(Message.newBuilder()
                       .putAllMetadata(ImmutableMap.of(SERVICE_NAME, nodeExecution.getNode().getServiceName()))

@@ -57,8 +57,6 @@ public interface NgUserService {
 
   List<UserMetadataDTO> getUserMetadata(List<String> userIds);
 
-  void addUserToScope(UserInfo user, Scope scope, UserMembershipUpdateSource source);
-
   void addUserToScope(String user, Scope scope, String roleIdentifier, UserMembershipUpdateSource source);
 
   void addUserToScope(UserInfo user, Scope scope, boolean postCreation, UserMembershipUpdateSource source);
