@@ -53,6 +53,7 @@ public class PmsSdkInstance implements PersistentEntity, UuidAware, CreatedAtAwa
 
   ConsumerConfig interruptConsumerConfig;
   ConsumerConfig orchestrationEventConsumerConfig;
+  ConsumerConfig facilitatorEventConsumerConfig;
 
   @Setter @NonFinal @SchemaIgnore @FdIndex @CreatedDate long createdAt;
   @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate long lastUpdatedAt;

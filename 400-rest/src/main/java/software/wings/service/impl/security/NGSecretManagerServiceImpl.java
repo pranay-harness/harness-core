@@ -2,6 +2,7 @@ package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessModule._890_SM_CORE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.security.encryption.EncryptionType.AZURE_VAULT;
@@ -100,6 +101,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
       if (duplicatePresent) {
         throw new DuplicateFieldException("Secret manager with same configuration exists");
       }
+      validateSecretFieldsPresent(secretManagerConfig);
       switch (secretManagerConfig.getEncryptionType()) {
         case VAULT:
           vaultService.saveOrUpdateVaultConfig(
@@ -125,6 +127,28 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
       }
     }
     throw new InvalidRequestException("No such secret manager found", INVALID_REQUEST, USER);
+  }
+
+  private void validateSecretFieldsPresent(SecretManagerConfig secretManagerConfig) {
+    switch (secretManagerConfig.getEncryptionType()) {
+      case VAULT:
+        VaultConfig vaultConfig = (VaultConfig) secretManagerConfig;
+        if (AccessType.TOKEN.equals(vaultConfig.getAccessType()) && isEmpty(vaultConfig.getAuthToken())) {
+          throw new InvalidRequestException("authToken should be provided for Vault.");
+        }
+        if (AccessType.APP_ROLE.equals(vaultConfig.getAccessType())
+            && (isEmpty(vaultConfig.getAppRoleId()) || isEmpty(vaultConfig.getSecretId()))) {
+          throw new InvalidRequestException("Both appRoleId and secretId should be provided for Vault.");
+        }
+        return;
+      case AZURE_VAULT:
+        AzureVaultConfig azureVaultConfig = (AzureVaultConfig) secretManagerConfig;
+        if (isEmpty(azureVaultConfig.getSecretKey())) {
+          throw new InvalidRequestException("secretKey should be provided for Azure Key Vault.");
+        }
+        return;
+      default:
+    }
   }
 
   @Override

@@ -43,7 +43,7 @@ import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.metrics.CVNGMetricsUtils;
-import io.harness.cvng.metrics.beans.CVNGMetricContext;
+import io.harness.cvng.metrics.beans.AccountMetricContext;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.cvng.verificationjob.beans.AdditionalInfo;
 import io.harness.cvng.verificationjob.beans.TestVerificationBaselineExecutionDTO;
@@ -258,7 +258,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     progressLog.setCreatedAt(clock.instant());
     progressLog.validate();
     VerificationTask verificationTask = verificationTaskService.get(progressLog.getVerificationTaskId());
-    try (CVNGMetricContext cvngMetricContext = new CVNGMetricContext(verificationTask.getAccountId())) {
+    try (AccountMetricContext accountMetricContext = new AccountMetricContext(verificationTask.getAccountId())) {
       String verificationJobInstanceId = verificationTask.getVerificationJobInstanceId();
       UpdateOperations<VerificationJobInstance> verificationJobInstanceUpdateOperations =
           hPersistence.createUpdateOperations(VerificationJobInstance.class)

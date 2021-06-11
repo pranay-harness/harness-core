@@ -21,6 +21,8 @@ import io.harness.engine.executions.plan.PlanService;
 import io.harness.engine.executions.plan.PlanServiceImpl;
 import io.harness.engine.expressions.EngineExpressionServiceImpl;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
+import io.harness.engine.facilitation.facilitator.publisher.FacilitateEventPublisher;
+import io.harness.engine.facilitation.facilitator.publisher.RedisFacilitateEventPublisher;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptServiceImpl;
 import io.harness.engine.interrupts.handlers.publisher.InterruptEventPublisher;
@@ -33,6 +35,7 @@ import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.engine.pms.data.PmsSweepingOutputServiceImpl;
 import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.engine.pms.tasks.TaskExecutor;
+import io.harness.exception.exceptionmanager.ExceptionModule;
 import io.harness.govern.ServersModule;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.expression.EngineExpressionService;
@@ -80,6 +83,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
 
   @Override
   protected void configure() {
+    install(ExceptionModule.getInstance());
     install(new AbstractWaiterModule() {
       @Override
       public WaiterConfiguration waiterConfiguration() {
@@ -128,6 +132,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     } else {
       bind(InterruptEventPublisher.class).to(MongoInterruptEventPublisher.class);
     }
+    bind(FacilitateEventPublisher.class).to(RedisFacilitateEventPublisher.class).in(Singleton.class);
   }
 
   @Provides

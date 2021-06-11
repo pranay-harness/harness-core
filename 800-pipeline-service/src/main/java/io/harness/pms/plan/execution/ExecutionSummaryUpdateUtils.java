@@ -7,6 +7,7 @@ import io.harness.beans.ExecutionErrorInfo;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.steps.StepSpecTypeConstants;
 
@@ -27,7 +28,7 @@ public class ExecutionSummaryUpdateUtils {
       update.set(
           PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".nodeRunInfo",
           nodeExecution.getNodeRunInfo());
-      if (ExecutionStatus.isTerminal(status)) {
+      if (StatusUtils.isFinalStatus(status.getEngineStatus())) {
         update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".endTs",
             nodeExecution.getEndTs());
       }
@@ -60,7 +61,7 @@ public class ExecutionSummaryUpdateUtils {
       ExecutionStatus status = ExecutionStatus.getExecutionStatus(nodeExecution.getStatus());
       update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.internalStatus, nodeExecution.getStatus());
       update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.status, status);
-      if (ExecutionStatus.isTerminal(status)) {
+      if (StatusUtils.isFinalStatus(status.getEngineStatus())) {
         update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.endTs, nodeExecution.getEndTs());
       }
       if (status == ExecutionStatus.FAILED) {

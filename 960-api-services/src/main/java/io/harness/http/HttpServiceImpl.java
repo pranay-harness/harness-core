@@ -10,6 +10,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.KeyValuePair;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.exception.runtime.AuthenticationRuntimeException;
+import io.harness.exception.runtime.AuthorizationRuntimeException;
 import io.harness.globalcontex.ErrorHandlingGlobalContextData;
 import io.harness.http.beans.HttpInternalConfig;
 import io.harness.http.beans.HttpInternalResponse;
@@ -133,10 +135,10 @@ public class HttpServiceImpl implements HttpService {
     ErrorHandlingGlobalContextData globalContextData =
         GlobalContextManager.get(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
     if (globalContextData != null && globalContextData.isSupportedErrorFramework()) {
-      return executeHttpStep(httpclient, httpInternalResponse, httpUriRequest, httpInternalConfig);
+      return executeHttpStep(httpclient, httpInternalResponse, httpUriRequest, httpInternalConfig, true);
     } else {
       try {
-        executeHttpStep(httpclient, httpInternalResponse, httpUriRequest, httpInternalConfig);
+        executeHttpStep(httpclient, httpInternalResponse, httpUriRequest, httpInternalConfig, false);
       } catch (SocketTimeoutException | ConnectTimeoutException | HttpHostConnectException e) {
         handleException(httpInternalResponse, e, true);
       } catch (IOException e) {
@@ -148,9 +150,19 @@ public class HttpServiceImpl implements HttpService {
   }
 
   private HttpInternalResponse executeHttpStep(CloseableHttpClient httpclient,
-      HttpInternalResponse httpInternalResponse, HttpUriRequest httpUriRequest, HttpInternalConfig httpInternalConfig)
-      throws IOException {
+      HttpInternalResponse httpInternalResponse, HttpUriRequest httpUriRequest, HttpInternalConfig httpInternalConfig,
+      boolean isSupportingErrorFramework) throws IOException {
     HttpResponse httpResponse = httpclient.execute(httpUriRequest);
+    if (isSupportingErrorFramework) {
+      if (httpResponse.getStatusLine().getStatusCode() == 401) {
+        throw new AuthenticationRuntimeException(httpUriRequest.getURI().toString());
+      }
+
+      if (httpResponse.getStatusLine().getStatusCode() == 403) {
+        throw new AuthorizationRuntimeException(httpUriRequest.getURI().toString());
+      }
+    }
+
     httpInternalResponse.setHeader(httpInternalConfig.getHeader());
     httpInternalResponse.setHttpResponseCode(httpResponse.getStatusLine().getStatusCode());
     HttpEntity entity = httpResponse.getEntity();

@@ -25,12 +25,14 @@ import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
 import io.harness.delegate.task.scm.ScmPRTaskParams;
 import io.harness.delegate.task.scm.ScmPRTaskResponseData;
 import io.harness.exception.UnexpectedException;
+import io.harness.gitsync.common.dtos.CreatePRDTO;
 import io.harness.gitsync.common.dtos.GitDiffResultFileListDTO;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.helper.FileBatchResponseMapper;
 import io.harness.gitsync.common.helper.PRFileListMapper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
+import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
@@ -117,7 +119,7 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
   }
 
   @Override
-  public boolean createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+  public CreatePRDTO createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String yamlGitConfigRef, GitPRCreateRequest gitCreatePRRequest) {
     YamlGitConfigDTO yamlGitConfigDTO =
         getYamlGitConfigDTO(accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigRef);
@@ -146,11 +148,10 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     ScmPRTaskResponseData scmCreatePRResponse = (ScmPRTaskResponseData) responseData;
     final CreatePRResponse createPRResponse = scmCreatePRResponse.getCreatePRResponse();
-    if (createPRResponse.getStatus() != 200 || createPRResponse.getStatus() != 201) {
-      log.error("Could not create the pull request from {} to {}", gitCreatePRRequest.getSourceBranch(),
-          gitCreatePRRequest.getTargetBranch());
-    }
-    return createPRResponse.getStatus() == 200 || createPRResponse.getStatus() == 201;
+    ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(createPRResponse.getStatus(),
+        String.format("Could not create the pull request from %s to %s", gitCreatePRRequest.getSourceBranch(),
+            gitCreatePRRequest.getTargetBranch()));
+    return CreatePRDTO.builder().prNumber(createPRResponse.getNumber()).build();
   }
 
   @Override

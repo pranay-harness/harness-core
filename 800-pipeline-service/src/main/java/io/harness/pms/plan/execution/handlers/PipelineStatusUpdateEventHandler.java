@@ -7,6 +7,7 @@ import io.harness.engine.observers.PlanStatusUpdateObserver;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 
@@ -38,7 +39,7 @@ public class PipelineStatusUpdateEventHandler implements PlanStatusUpdateObserve
 
     update.set(PlanExecutionSummaryKeys.internalStatus, planExecution.getStatus());
     update.set(PlanExecutionSummaryKeys.status, status);
-    if (ExecutionStatus.isTerminal(status)) {
+    if (StatusUtils.isFinalStatus(status.getEngineStatus())) {
       update.set(PlanExecutionSummaryKeys.endTs, planExecution.getEndTs());
     }
 

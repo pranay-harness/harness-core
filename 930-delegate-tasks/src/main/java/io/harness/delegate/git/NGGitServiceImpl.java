@@ -6,10 +6,8 @@ import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAs
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSyncConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.task.shell.SshSessionConfigMapper;
 import io.harness.exception.InvalidRequestException;
@@ -31,7 +29,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
-import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
@@ -102,27 +99,10 @@ public class NGGitServiceImpl implements NGGitService {
     };
   }
 
-  private void setAuthorInfo(GitConfigDTO gitConfig, CommitAndPushRequest commitAndPushRequest) {
-    final Optional<String> name = Optional.ofNullable(gitConfig.getGitSyncConfig())
-                                      .map(GitSyncConfig::getCustomCommitAttributes)
-                                      .map(CustomCommitAttributes::getAuthorName);
-    final Optional<String> email = Optional.ofNullable(gitConfig.getGitSyncConfig())
-                                       .map(GitSyncConfig::getCustomCommitAttributes)
-                                       .map(CustomCommitAttributes::getAuthorEmail);
-    final Optional<String> message = Optional.ofNullable(gitConfig.getGitSyncConfig())
-                                         .map(GitSyncConfig::getCustomCommitAttributes)
-                                         .map(CustomCommitAttributes::getCommitMessage);
-
-    name.ifPresent(commitAndPushRequest::setAuthorName);
-    email.ifPresent(commitAndPushRequest::setAuthorEmail);
-    message.ifPresent(commitAndPushRequest::setCommitMessage);
-  }
-
   @Override
   public CommitAndPushResult commitAndPush(GitConfigDTO gitConfig, CommitAndPushRequest commitAndPushRequest,
       String accountId, SshSessionConfig sshSessionConfig) {
     setGitBaseRequest(gitConfig, accountId, commitAndPushRequest, YAML, sshSessionConfig);
-    setAuthorInfo(gitConfig, commitAndPushRequest);
     return gitClientV2.commitAndPush(commitAndPushRequest);
   }
 

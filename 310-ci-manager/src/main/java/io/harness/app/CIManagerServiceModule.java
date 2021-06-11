@@ -171,7 +171,7 @@ public class CIManagerServiceModule extends AbstractModule {
         ciManagerConfiguration.getCiExecutionServiceConfig(), ciManagerConfiguration.getShouldConfigureWithPMS()));
     install(DelegateServiceDriverModule.getInstance(false));
     install(new DelegateServiceDriverGrpcClientModule(ciManagerConfiguration.getManagerServiceSecret(),
-        ciManagerConfiguration.getManagerTarget(), ciManagerConfiguration.getManagerAuthority()));
+        ciManagerConfiguration.getManagerTarget(), ciManagerConfiguration.getManagerAuthority(), true));
 
     install(new AbstractManagerGrpcClientModule() {
       @Override

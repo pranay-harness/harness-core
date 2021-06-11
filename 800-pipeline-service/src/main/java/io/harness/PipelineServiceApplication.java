@@ -3,6 +3,7 @@ package io.harness;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.PipelineServiceConfiguration.getResourceClasses;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_FACILITATOR_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_INTERRUPT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
@@ -58,6 +59,7 @@ import io.harness.pms.event.PMSEventConsumerService;
 import io.harness.pms.exception.WingsExceptionMapper;
 import io.harness.pms.inputset.gitsync.InputSetEntityGitSyncHelper;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTO;
+import io.harness.pms.listener.facilitators.FacilitatorRedisConsumerService;
 import io.harness.pms.listener.interrupts.InterruptRedisConsumerService;
 import io.harness.pms.listener.orchestrationevent.OrchestrationEventEventConsumerService;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
@@ -432,6 +434,10 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
             ConsumerConfig.newBuilder()
                 .setRedis(Redis.newBuilder().setTopicName(PIPELINE_ORCHESTRATION_EVENT_TOPIC).build())
                 .build())
+        .facilitationEventConsumerConfig(
+            ConsumerConfig.newBuilder()
+                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_FACILITATOR_EVENT_TOPIC).build())
+                .build())
         .build();
   }
 
@@ -515,6 +521,9 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     environment.lifecycle().manage(injector.getInstance(OrchestrationEventEventConsumerService.class));
     environment.lifecycle().manage(injector.getInstance(SdkResponseEventRedisConsumerService.class));
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
+
+    // facilitator
+    environment.lifecycle().manage(injector.getInstance(FacilitatorRedisConsumerService.class));
   }
 
   private void registerCorsFilter(PipelineServiceConfiguration appConfig, Environment environment) {

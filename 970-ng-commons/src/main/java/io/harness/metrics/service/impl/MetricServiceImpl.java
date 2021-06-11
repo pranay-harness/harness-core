@@ -238,9 +238,9 @@ public class MetricServiceImpl implements MetricService {
     labelValues.add(env);
 
     if (labelNames.size() != labelValues.size()) {
-      throw new IllegalStateException(
-          "Some labels were not found from the object while trying to record metric. Label Names: " + labelNames
+      log.error("Some labels were not found from the object while trying to record metric. Label Names: " + labelNames
           + " and labels: " + labelValues);
+      // TODO: send a metric for this and add alert on it.
     }
     return labelValues;
   }

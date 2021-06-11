@@ -23,6 +23,7 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.facilitation.FacilitationHelper;
 import io.harness.engine.facilitation.RunPreFacilitationChecker;
 import io.harness.engine.facilitation.SkipPreFacilitationChecker;
+import io.harness.engine.facilitation.facilitator.publisher.FacilitateEventPublisher;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.observers.OrchestrationEndObserver;
 import io.harness.engine.pms.EngineAdviseCallback;
@@ -120,6 +121,7 @@ public class OrchestrationEngine {
   @Inject private TransactionUtils transactionUtils;
   @Inject private ExceptionManager exceptionManager;
   @Inject private FacilitationHelper facilitationHelper;
+  @Inject private FacilitateEventPublisher facilitateEventPublisher;
 
   @Getter private final Subject<OrchestrationEndObserver> orchestrationEndSubject = new Subject<>();
 
@@ -191,11 +193,7 @@ public class OrchestrationEngine {
           }));
 
       if (facilitationHelper.customFacilitatorPresent(node)) {
-        NodeExecutionEvent event = NodeExecutionEvent.builder()
-                                       .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(updatedNodeExecution))
-                                       .eventType(NodeExecutionEventType.FACILITATE)
-                                       .build();
-        nodeExecutionEventQueuePublisher.send(event);
+        facilitateEventPublisher.publishEvent(nodeExecution.getUuid());
       } else {
         facilitationHelper.facilitateExecution(nodeExecution);
       }

@@ -302,6 +302,7 @@ public class BuildJobEnvInfoBuilder {
                                    .imageDetails(IntegrationStageUtils.getImageInfo(
                                        CIStepInfoUtils.getPluginCustomStepImage(stepInfo, ciExecutionServiceConfig)))
                                    .build())
+        .isHarnessManagedImage(true)
         .containerResourceParams(getStepContainerResource(stepInfo.getResources(), stepType, identifier))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.PLUGIN)
@@ -424,6 +425,7 @@ public class BuildJobEnvInfoBuilder {
                                        "connectorRef", "Plugin", identifier, pluginStepInfo.getConnectorRef(), true))
                                    .build())
         .containerResourceParams(getStepContainerResource(pluginStepInfo.getResources(), "Plugin", identifier))
+        .isHarnessManagedImage(pluginStepInfo.isHarnessManagedImage())
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.PLUGIN)
         .stepName(name)

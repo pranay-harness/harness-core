@@ -21,14 +21,14 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 public class EntityLookupHelper implements EntityKeySource {
   private final @NonNull Cache<Object, Object> keyCache;
   HarnessToGitPushInfoServiceBlockingStub harnessToGitPushInfoServiceBlockingStub;
-  private final int SCOPE_GIT_SYNC_ENABLED_CACHE_TIME = 1 /*hour*/;
+  private final int SCOPE_GIT_SYNC_ENABLED_CACHE_TIME = 5 /*minutes*/;
   private final int SCOPE_GIT_SYNC_ENABLED_CACHE_SIZE = 1000;
 
   @Inject
   public EntityLookupHelper(HarnessToGitPushInfoServiceBlockingStub harnessToGitPushInfoServiceBlockingStub) {
     this.keyCache = Caffeine.newBuilder()
                         .maximumSize(SCOPE_GIT_SYNC_ENABLED_CACHE_SIZE)
-                        .expireAfterWrite(SCOPE_GIT_SYNC_ENABLED_CACHE_TIME, TimeUnit.HOURS)
+                        .expireAfterWrite(SCOPE_GIT_SYNC_ENABLED_CACHE_TIME, TimeUnit.MINUTES)
                         .build();
     this.harnessToGitPushInfoServiceBlockingStub = harnessToGitPushInfoServiceBlockingStub;
   }

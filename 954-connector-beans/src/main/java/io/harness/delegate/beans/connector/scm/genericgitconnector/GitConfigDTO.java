@@ -46,15 +46,11 @@ public class GitConfigDTO extends ConnectorConfigDTO implements ScmConnector, De
   @NotNull
   GitAuthenticationDTO gitAuth;
 
-  @JsonProperty("gitSync") GitSyncConfig gitSyncConfig;
-
   @Builder
-  public GitConfigDTO(GitAuthType gitAuthType, GitAuthenticationDTO gitAuth, GitSyncConfig gitSyncConfig,
-      GitConnectionType gitConnectionType, String url, String validationRepo, String branchName,
-      Set<String> delegateSelectors) {
+  public GitConfigDTO(GitAuthType gitAuthType, GitAuthenticationDTO gitAuth, GitConnectionType gitConnectionType,
+      String url, String validationRepo, String branchName, Set<String> delegateSelectors) {
     this.gitAuthType = gitAuthType;
     this.gitAuth = gitAuth;
-    this.gitSyncConfig = gitSyncConfig;
     this.gitConnectionType = gitConnectionType;
     this.url = url;
     this.validationRepo = validationRepo;

@@ -51,6 +51,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateBuilder;
@@ -572,11 +573,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .accountId(accountId)
                                    .uuid(generateUuid())
                                    .delegateProfileId(generateUuid())
+                                   .ng(true)
                                    .build())
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
                                .accountId(accountId)
                                .setupAbstraction("k1", "v13")
+                               .setupAbstraction("ng", "TRUE")
                                .data(TaskData.builder()
                                          .taskType(TaskType.HTTP.name())
                                          .async(true)
@@ -1934,6 +1937,58 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
         .isFalse();
     verify(delegateSelectionLogsService).logMustExecuteOnDelegateNotMatched(batch, accountId, delegateId2);
     verify(delegateSelectionLogsService, never()).logCanAssign(batch, accountId, delegateId1);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testCanAssignCgNg() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(accountId)
+                                    .data(TaskData.builder().build())
+                                    .executionCapabilities(emptyList())
+                                    .build();
+    Delegate delegate =
+        Delegate.builder().accountId(accountId).uuid(delegateId).status(ENABLED).lastHeartBeat(clock.millis()).build();
+
+    BatchDelegateSelectionLog batch = Mockito.mock(BatchDelegateSelectionLog.class);
+    when(delegateCache.get(accountId, delegateId, false)).thenReturn(delegate);
+
+    // Test FF disabled
+    when(featureFlagService.isNotEnabled(FeatureName.NG_CG_TASK_ASSIGNMENT_ISOLATION, accountId)).thenReturn(true);
+    canAssignCgNgAssert(delegateTask, batch, delegate, true, null, true);
+
+    // Test FF disabled
+    when(featureFlagService.isNotEnabled(FeatureName.NG_CG_TASK_ASSIGNMENT_ISOLATION, accountId)).thenReturn(false);
+
+    // Test delegate cg and task cg
+    canAssignCgNgAssert(delegateTask, batch, delegate, false, null, true);
+    canAssignCgNgAssert(delegateTask, batch, delegate, false, ImmutableMap.of(), true);
+    canAssignCgNgAssert(delegateTask, batch, delegate, false, ImmutableMap.of("k1", "v1"), true);
+    canAssignCgNgAssert(delegateTask, batch, delegate, false, ImmutableMap.of("ng", "FALSE"), true);
+    canAssignCgNgAssert(delegateTask, batch, delegate, false, ImmutableMap.of("ng", "false"), true);
+    canAssignCgNgAssert(delegateTask, batch, delegate, false, ImmutableMap.of("ng", "invalidValue"), true);
+
+    // Test delegate ng and task ng
+    canAssignCgNgAssert(delegateTask, batch, delegate, true, ImmutableMap.of("ng", "TRUE"), true);
+    canAssignCgNgAssert(delegateTask, batch, delegate, true, ImmutableMap.of("ng", "true"), true);
+
+    // Test other non-matching cases
+    canAssignCgNgAssert(delegateTask, batch, delegate, true, null, false);
+    canAssignCgNgAssert(delegateTask, batch, delegate, true, ImmutableMap.of(), false);
+    canAssignCgNgAssert(delegateTask, batch, delegate, true, ImmutableMap.of("k1", "v1"), false);
+    canAssignCgNgAssert(delegateTask, batch, delegate, false, ImmutableMap.of("ng", "TRUE"), false);
+    canAssignCgNgAssert(delegateTask, batch, delegate, false, ImmutableMap.of("ng", "true"), false);
+    canAssignCgNgAssert(delegateTask, batch, delegate, true, ImmutableMap.of("ng", "invalidValue"), false);
+  }
+
+  private void canAssignCgNgAssert(DelegateTask delegateTask, BatchDelegateSelectionLog batch, Delegate delegate,
+      boolean isDelegateNg, Map<String, String> setupAbstractions, boolean canAssign) {
+    delegate.setNg(isDelegateNg);
+    delegateTask.setSetupAbstractions(setupAbstractions);
+    assertThat(assignDelegateService.canAssign(batch, delegate.getUuid(), delegateTask)).isEqualTo(canAssign);
   }
 
   @Test

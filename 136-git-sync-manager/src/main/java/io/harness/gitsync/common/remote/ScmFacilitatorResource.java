@@ -7,6 +7,7 @@ import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.gitsync.common.YamlConstants;
+import io.harness.gitsync.common.dtos.CreatePRDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.dtos.SaasGitDTO;
 import io.harness.gitsync.common.impl.GitUtils;
@@ -122,7 +123,7 @@ public class ScmFacilitatorResource {
   @POST
   @Path("createPR")
   @ApiOperation(value = "creates a pull request", nickname = "createPR")
-  public ResponseDTO<Boolean> createPR(@NotNull @QueryParam(YamlConstants.YAML_GIT_CONFIG) String yamlGitConfigRef,
+  public ResponseDTO<CreatePRDTO> createPR(@NotNull @QueryParam(YamlConstants.YAML_GIT_CONFIG) String yamlGitConfigRef,
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,

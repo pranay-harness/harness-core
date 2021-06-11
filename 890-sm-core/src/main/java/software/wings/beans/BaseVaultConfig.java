@@ -7,6 +7,7 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
@@ -17,8 +18,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -39,6 +42,7 @@ import lombok.experimental.SuperBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "BaseVaultConfigKeys")
 public abstract class BaseVaultConfig extends SecretManagerConfig {
+  private static final String TASK_SELECTORS = "Task Selectors";
   @Attributes(title = "Name", required = true) public String name;
   @Attributes(title = "Vault Url", required = true) @FdIndex public String vaultUrl;
   @Attributes(title = "Auth token") @Encrypted(fieldName = "auth_token") public String authToken;
@@ -51,14 +55,22 @@ public abstract class BaseVaultConfig extends SecretManagerConfig {
   @JsonIgnore @SchemaIgnore boolean isCertValidationRequired;
   private long renewedAt;
 
+  @Attributes(title = "useVaultAgent") private boolean useVaultAgent;
+  @Attributes(title = "delegateSelectors") private Set<String> delegateSelectors;
+  @Attributes(title = "sinkPath") private String sinkPath;
+
   public boolean isCertValidationRequired() {
     return isCertValidationRequired;
   }
 
   @Override
   public void maskSecrets() {
-    this.authToken = SECRET_MASK;
-    this.secretId = SECRET_MASK;
+    if (isNotEmpty(this.authToken)) {
+      this.authToken = SECRET_MASK;
+    }
+    if (isNotEmpty(this.secretId)) {
+      this.secretId = SECRET_MASK;
+    }
   }
 
   @JsonIgnore
@@ -83,7 +95,12 @@ public abstract class BaseVaultConfig extends SecretManagerConfig {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return Collections.singletonList(
-        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(vaultUrl, maskingEvaluator));
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>(Arrays.asList(
+        HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(vaultUrl, maskingEvaluator)));
+    if (isNotEmpty(delegateSelectors)) {
+      executionCapabilities.add(
+          SelectorCapability.builder().selectors(delegateSelectors).selectorOrigin(TASK_SELECTORS).build());
+    }
+    return executionCapabilities;
   }
 }

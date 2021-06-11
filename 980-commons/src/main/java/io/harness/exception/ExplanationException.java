@@ -35,6 +35,8 @@ public class ExplanationException extends WingsException {
   public static String MALFORMED_GIT_SSH_KEY = "Provided ssh key uses incorrect format.";
   public static String INVALID_GIT_SSH_AUTHORIZATION = "Provided ssh credentials are not authorized.";
 
+  public static String URL_NOT_FOUND = "Provided URL path does not exist.";
+  public static String AUTHORIZATION_FAILURE = "Provided credentials are unauthorized.";
   public ExplanationException(String message, Throwable cause) {
     super(message, cause, EXPLANATION, INFO, USER_SRE, null);
     super.excludeReportTarget(EXPLANATION, EnumSet.of(ReportTarget.LOG_SYSTEM));

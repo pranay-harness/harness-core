@@ -21,6 +21,7 @@ import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import java.util.function.BooleanSupplier;
 import javax.net.ssl.SSLException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,11 +31,14 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
   private final String target;
   private final String authority;
   private final String deployMode = System.getenv().get("DEPLOY_MODE");
+  private final Boolean delegateDriverInstalledInNgService;
 
-  public DelegateServiceDriverGrpcClientModule(String serviceSecret, String target, String authority) {
+  public DelegateServiceDriverGrpcClientModule(
+      String serviceSecret, String target, String authority, boolean delegateDriverInstalledInNgService) {
     this.serviceSecret = serviceSecret;
     this.target = target;
     this.authority = authority;
+    this.delegateDriverInstalledInNgService = delegateDriverInstalledInNgService;
   }
 
   @Override
@@ -116,5 +120,12 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
   @Singleton
   CallCredentials dpsCallCredentials() {
     return new ServiceAuthCallCredentials(serviceSecret, new ServiceTokenGenerator(), "delegate-profile-service");
+  }
+
+  @Named("driver-installed-in-ng-service")
+  @Provides
+  @Singleton
+  BooleanSupplier isDelegateDriverInstalledInNgServiceSupplier() {
+    return () -> delegateDriverInstalledInNgService;
   }
 }
