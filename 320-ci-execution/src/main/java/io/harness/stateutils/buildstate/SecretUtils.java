@@ -53,7 +53,7 @@ public class SecretUtils {
   private final int MAX_ATTEMPTS = 3;
 
   @Inject
-  public SecretUtils(SecretNGManagerClient secretNGManagerClient,
+  public SecretUtils(@Named("PRIVILEGED") SecretNGManagerClient secretNGManagerClient,
       @Named("PRIVILEGED") SecretManagerClientService secretManagerClientService) {
     this.secretNGManagerClient = secretNGManagerClient;
     this.secretManagerClientService = secretManagerClientService;
