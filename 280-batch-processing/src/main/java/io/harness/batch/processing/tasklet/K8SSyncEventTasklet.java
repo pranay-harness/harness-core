@@ -9,6 +9,7 @@ import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.writer.EventWriter;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.beans.FeatureName;
+import io.harness.ccm.commons.beans.JobConstants;
 import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.event.payloads.Lifecycle.EventType;
@@ -19,6 +20,7 @@ import io.harness.perpetualtask.k8s.watch.K8SClusterSyncEvent;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.protobuf.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -59,15 +61,24 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
       instanceDataBulkWriteService.updateList(lifecycleList);
 
       if (featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_1, jobConstants.getAccountId())) {
-        // Since lifecycle event update uses instanceId (which is an uuid) as 'where' clause
-        // we can safely assume that it can't co exists between node_info and pod_info tables.
-        instanceInfoTimescaleDAO.updateNodeLifecycleEvent(jobConstants.getAccountId(), lifecycleList);
-
-        instanceInfoTimescaleDAO.updatePodLifecycleEvent(jobConstants.getAccountId(), lifecycleList);
+        updateInactiveInstancesInTimescale(jobConstants, publishedMessageList);
       }
 
     } while (publishedMessageList.size() == batchSize);
     return null;
+  }
+
+  private void updateInactiveInstancesInTimescale(JobConstants jobConstants, List<PublishedMessage> publishedMessages) {
+    for (PublishedMessage publishedMessage : publishedMessages) {
+      K8SClusterSyncEvent k8SClusterSyncEvent = (K8SClusterSyncEvent) publishedMessage.getMessage();
+
+      Instant syncEventTime = HTimestamps.toInstant(k8SClusterSyncEvent.getLastProcessedTimestamp());
+
+      instanceInfoTimescaleDAO.stopInactiveNodesAtTime(
+          jobConstants, k8SClusterSyncEvent.getClusterId(), syncEventTime, k8SClusterSyncEvent.getActiveNodeUidsList());
+      instanceInfoTimescaleDAO.stopInactivePodsAtTime(
+          jobConstants, k8SClusterSyncEvent.getClusterId(), syncEventTime, k8SClusterSyncEvent.getActivePodUidsList());
+    }
   }
 
   private List<Lifecycle> processK8SSyncEventMessage(List<PublishedMessage> publishedMessages) {

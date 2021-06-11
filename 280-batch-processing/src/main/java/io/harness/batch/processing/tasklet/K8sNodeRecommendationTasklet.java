@@ -94,7 +94,7 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
     log.info("RecommendationResponse: {}", recommendation);
 
     String mongoEntityId = k8sRecommendationDAO.insertNodeRecommendationResponse(
-        jobConstants, nodePoolId, totalResourceUsage, recommendation);
+        jobConstants, nodePoolId, totalResourceUsage, serviceProvider, recommendation);
 
     RecommendationOverviewStats stats = getMonthlyCostAndSaving(nodePoolId, serviceProvider, recommendation);
     log.info("The monthly stat is: {}", stats);
@@ -149,16 +149,17 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
   private RecommendationOverviewStats getMonthlyCostAndSaving(
       NodePoolId nodePoolId, K8sServiceProvider serviceProvider, RecommendationResponse recommendation) {
     int nodeCount = k8sRecommendationDAO.getNodeCount(jobConstants, nodePoolId);
+    log.info("nodeCount: {}", nodeCount);
 
     double currentPricePerVm = getCurrentInstancePrice(serviceProvider);
 
-    final double toMonthly = 24 * 30;
-    double monthlyCost = currentPricePerVm * (double) nodeCount * toMonthly;
-    double monthlySaving = recommendation.getAccuracy().getTotalPrice() * toMonthly - monthlyCost;
+    double currentHourlyCost = currentPricePerVm * (double) nodeCount;
+    double recommendedHourlyCost = recommendation.getAccuracy().getTotalPrice();
 
+    final double toMonthly = 24 * 30;
     return RecommendationOverviewStats.builder()
-        .totalMonthlyCost(monthlyCost)
-        .totalMonthlySaving(monthlySaving)
+        .totalMonthlyCost(currentHourlyCost * toMonthly)
+        .totalMonthlySaving((currentHourlyCost - recommendedHourlyCost) * toMonthly)
         .build();
   }
 
