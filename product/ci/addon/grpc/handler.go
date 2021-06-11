@@ -62,7 +62,7 @@ func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*
 	switch x := in.GetStep().GetStep().(type) {
 	case *enginepb.UnitStep_Run:
 		stepOutput, numRetries, err := newRunTask(in.GetStep(), in.GetPrevStepOutputs(), in.GetTmpFilePath(), rl.BaseLogger,
-			rl.Writer, h.logMetrics, h.log).Run(ctx)
+			rl.Writer, false, h.log).Run(ctx)
 		response := &pb.ExecuteStepResponse{
 			Output:     stepOutput,
 			NumRetries: numRetries,
@@ -74,7 +74,7 @@ func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*
 		}
 		return response, err
 	case *enginepb.UnitStep_RunTests:
-		numRetries, err := newRunTestsTask(in.GetStep(), in.GetTmpFilePath(), rl.BaseLogger, rl.Writer, h.logMetrics, h.log).Run(ctx)
+		numRetries, err := newRunTestsTask(in.GetStep(), in.GetTmpFilePath(), rl.BaseLogger, rl.Writer, false, h.log).Run(ctx)
 		response := &pb.ExecuteStepResponse{
 			NumRetries: numRetries,
 		}
@@ -85,7 +85,7 @@ func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*
 		}
 		return response, err
 	case *enginepb.UnitStep_Plugin:
-		artifact, numRetries, err := newPluginTask(in.GetStep(), in.GetPrevStepOutputs(), rl.BaseLogger, rl.Writer, h.logMetrics, h.log).Run(ctx)
+		artifact, numRetries, err := newPluginTask(in.GetStep(), in.GetPrevStepOutputs(), rl.BaseLogger, rl.Writer, false, h.log).Run(ctx)
 		response := &pb.ExecuteStepResponse{
 			Artifact:   artifact,
 			NumRetries: numRetries,
