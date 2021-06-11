@@ -81,9 +81,15 @@ public class WinRMCredentialController {
     }
 
     if (winRMCredentialInput.getAuthenticationScheme().equals(QLAuthScheme.KERBEROS)) {
-      verifyKerberosAuth(winRMCredentialInput, accountId);
+      if (winRMCredentialInput.getQlKerberosWinRMAuthentication() == null) {
+        throw new InvalidRequestException("Kerberos Authentication can not be empty");
+      }
+      verifyKerberosAuth(winRMCredentialInput.getQlKerberosWinRMAuthentication(), accountId);
     } else {
-      verifyNtlmAuth(winRMCredentialInput, accountId);
+      if (winRMCredentialInput.getQlNtlmAuthentication() == null) {
+        throw new InvalidRequestException("NTLM Authentication can not be empty");
+      }
+      verifyNtlmAuth(winRMCredentialInput.getQlNtlmAuthentication(), accountId);
     }
 
     if (isBlank(winRMCredentialInput.getName())) {
@@ -178,12 +184,34 @@ public class WinRMCredentialController {
       settingValue.setUsername(userName);
     }
 
-    if (updateInput.getPasswordSecretId().isPresent()) {
-      String password = updateInput.getPasswordSecretId().getValue().map(StringUtils::strip).orElse(null);
-      if (isBlank(password) || secretManager.getSecretById(accountId, password) == null) {
-        throw new InvalidRequestException("Invalid password in winRM Credential");
+    if (updateInput.getQlNtlmAuthenticationRequestField().isPresent()) {
+      QLNtlmAuthentication ntlmAuthentication =
+          updateInput.getQlNtlmAuthenticationRequestField().getValue().orElse(null);
+      if (ntlmAuthentication == null && updateInput.getAuthenticationScheme().equals(QLAuthScheme.NTLM)) {
+        throw new InvalidRequestException("Invalid credentials");
       }
-      settingValue.setPassword(password.toCharArray());
+      if (ntlmAuthentication != null) {
+        verifyNtlmAuth(ntlmAuthentication, accountId);
+        if (!isBlank(ntlmAuthentication.getPasswordSecretId())) {
+          settingValue.setPassword(ntlmAuthentication.getPasswordSecretId().toCharArray());
+        }
+      }
+    }
+
+    if (updateInput.getQlKerberosWinRMAuthenticationInputRequestField().isPresent()) {
+      QLKerberosWinRMAuthentication kerberosWinRMAuthentication =
+          updateInput.getQlKerberosWinRMAuthenticationInputRequestField().getValue().orElse(null);
+      if (kerberosWinRMAuthentication == null && updateInput.getAuthenticationScheme().equals(QLAuthScheme.KERBEROS)) {
+        throw new InvalidRequestException("Invalid credentials");
+      }
+      if (kerberosWinRMAuthentication != null) {
+        verifyKerberosAuth(kerberosWinRMAuthentication, accountId);
+        if (!isBlank(kerberosWinRMAuthentication.getKeyTabFilePath())) {
+          settingValue.setKeyTabFilePath(kerberosWinRMAuthentication.getKeyTabFilePath());
+        } else {
+          settingValue.setPassword(kerberosWinRMAuthentication.getPasswordSecretId().toCharArray());
+        }
+      }
     }
 
     if (updateInput.getUseSSL().isPresent()) {
@@ -207,7 +235,6 @@ public class WinRMCredentialController {
           usageScopeController.populateUsageRestrictions(usageScope, accountId));
     }
 
-    // do I need to update for auth type too???
     if (updateInput.getAuthenticationScheme().equals(QLAuthScheme.NTLM)
         && ((WinRmConnectionAttributes) existingWinRMCredential.getValue())
                .getAuthenticationScheme()
@@ -225,52 +252,38 @@ public class WinRMCredentialController {
         existingWinRMCredential, existingWinRMCredential.getUuid(), GLOBAL_APP_ID);
   }
 
-  void verifyKerberosAuth(QLWinRMCredentialInput winRMCredentialInput, String accountId) {
-    if (isBlank(winRMCredentialInput.getQlKerberosWinRMAuthentication().getKeyTabFilePath())) {
-      if (isBlank(winRMCredentialInput.getQlKerberosWinRMAuthentication().getPasswordSecretId())
-          || secretManager.getSecretById(
-                 accountId, winRMCredentialInput.getQlKerberosWinRMAuthentication().getPasswordSecretId())
-              == null) {
+  void verifyKerberosAuth(QLKerberosWinRMAuthentication kerberosWinRMAuthentication, String accountId) {
+    if (!isBlank(kerberosWinRMAuthentication.getKeyTabFilePath())
+        && !isBlank(kerberosWinRMAuthentication.getPasswordSecretId())) {
+      throw new InvalidRequestException("Cannot set both KeyTabFilePath and password secret");
+    }
+    if (isBlank(kerberosWinRMAuthentication.getKeyTabFilePath())) {
+      if (isBlank(kerberosWinRMAuthentication.getPasswordSecretId())
+          || secretManager.getSecretById(accountId, kerberosWinRMAuthentication.getPasswordSecretId()) == null) {
         throw new InvalidRequestException("The password secret id is invalid for the winRM credential input");
       }
     }
   }
 
-  void verifyNtlmAuth(QLWinRMCredentialInput winRMCredentialInput, String accountId) {
-    if (isBlank(winRMCredentialInput.getQlNtlmAuthentication().getPasswordSecretId())
-        || secretManager.getSecretById(accountId, winRMCredentialInput.getQlNtlmAuthentication().getPasswordSecretId())
-            == null) {
+  void verifyNtlmAuth(QLNtlmAuthentication ntlmAuthentication, String accountId) {
+    if (isBlank(ntlmAuthentication.getPasswordSecretId())
+        || secretManager.getSecretById(accountId, ntlmAuthentication.getPasswordSecretId()) == null) {
       throw new InvalidRequestException("The password secret id is invalid for the winRM credential input");
-    }
-  }
-
-  String getPassword(QLWinRMCredentialUpdate winRMCredentialUpdate) {
-    if (winRMCredentialUpdate.getAuthenticationScheme().equals(QLAuthScheme.NTLM)) {
-      QLNtlmAuthentication ntlmAuthentication =
-          winRMCredentialUpdate.getQlNtlmAuthenticationRequestField().getValue().orElse(null);
-      if (ntlmAuthentication == null) {
-        throw new InvalidRequestException("Invalid crendentials to update winRM secret");
-      }
-      String password = ntlmAuthentication.getPasswordSecretId();
-      if (isBlank(ntlmAuthentication.getPasswordSecretId())) {
-      }
-      return ntlmAuthentication.getPasswordSecretId();
-    } else {
-      QLKerberosWinRMAuthentication kerberosWinRMAuthentication =
-          winRMCredentialUpdate.getQlKerberosWinRMAuthenticationInputRequestField().getValue().orElse(null);
-      if (kerberosWinRMAuthentication == null) {
-        throw new InvalidRequestException("Invalid crendentials to update winRM secret");
-      }
-      return kerberosWinRMAuthentication.getPasswordSecretId();
     }
   }
 
   char[] getPassword(QLWinRMCredentialInput winRMCredentialInput, String accountId) {
     if (winRMCredentialInput.getAuthenticationScheme().equals(QLAuthScheme.NTLM)) {
-      verifyNtlmAuth(winRMCredentialInput, accountId);
+      if (winRMCredentialInput.getQlNtlmAuthentication() == null) {
+        throw new InvalidRequestException("NTLM Authentication can not be empty");
+      }
+      verifyNtlmAuth(winRMCredentialInput.getQlNtlmAuthentication(), accountId);
       return winRMCredentialInput.getQlNtlmAuthentication().getPasswordSecretId().toCharArray();
     } else {
-      verifyKerberosAuth(winRMCredentialInput, accountId);
+      if (winRMCredentialInput.getQlKerberosWinRMAuthentication() == null) {
+        throw new InvalidRequestException("Kerberos Authentication can not be empty");
+      }
+      verifyKerberosAuth(winRMCredentialInput.getQlKerberosWinRMAuthentication(), accountId);
       return ((isBlank(winRMCredentialInput.getQlKerberosWinRMAuthentication().getPasswordSecretId()))
               ? null
               : winRMCredentialInput.getQlKerberosWinRMAuthentication().getPasswordSecretId().toCharArray());
