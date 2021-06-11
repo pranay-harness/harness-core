@@ -149,6 +149,16 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
     return OrchestrationUtils.calculateStatus(nodeExecutions, planExecutionId);
   }
 
+  @Override
+  public Status calculateStatusExcluding(String planExecutionId, String excludedNodeExecutionId) {
+    List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetriesAndStatusIn(
+        planExecutionId, EnumSet.noneOf(Status.class));
+    List<NodeExecution> filtered = nodeExecutions.stream()
+                                       .filter(ne -> !ne.getUuid().equals(excludedNodeExecutionId))
+                                       .collect(Collectors.toList());
+    return OrchestrationUtils.calculateStatus(filtered, planExecutionId);
+  }
+
   public PlanExecution updateCalculatedStatus(String planExecutionId) {
     return updateStatus(planExecutionId, calculateStatus(planExecutionId));
   }
