@@ -254,8 +254,8 @@ public class RoleAssignmentResource {
     }));
   }
 
-  private List<RoleAssignmentResponseDTO> createRoleAssignments(HarnessScopeParams harnessScopeParams,
-      RoleAssignmentCreateRequestDTO requestDTO, boolean managed, boolean applyAccessChecks) {
+  private List<RoleAssignmentResponseDTO> createRoleAssignments(
+      HarnessScopeParams harnessScopeParams, RoleAssignmentCreateRequestDTO requestDTO, boolean managed) {
     Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
     List<RoleAssignment> roleAssignmentsPayload =
         requestDTO.getRoleAssignments()
@@ -266,9 +266,7 @@ public class RoleAssignmentResource {
     for (RoleAssignment roleAssignment : roleAssignmentsPayload) {
       try {
         syncDependencies(roleAssignment, scope);
-        if (applyAccessChecks) {
-          checkUpdatePermission(harnessScopeParams, roleAssignment);
-        }
+        checkUpdatePermission(harnessScopeParams, roleAssignment);
         RoleAssignmentResponseDTO roleAssignmentResponseDTO =
             Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
               RoleAssignmentResponseDTO response =
@@ -293,8 +291,7 @@ public class RoleAssignmentResource {
   @ApiOperation(value = "Create Multiple Role Assignments", nickname = "createRoleAssignments")
   public ResponseDTO<List<RoleAssignmentResponseDTO>> create(@BeanParam HarnessScopeParams harnessScopeParams,
       @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO) {
-    return ResponseDTO.newResponse(
-        createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, false, true));
+    return ResponseDTO.newResponse(createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, false));
   }
 
   @POST
@@ -304,8 +301,7 @@ public class RoleAssignmentResource {
   public ResponseDTO<List<RoleAssignmentResponseDTO>> create(@BeanParam HarnessScopeParams harnessScopeParams,
       @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO,
       @QueryParam("managed") @DefaultValue("false") Boolean managed) {
-    return ResponseDTO.newResponse(
-        createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, managed, false));
+    return ResponseDTO.newResponse(createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, managed));
   }
 
   @POST

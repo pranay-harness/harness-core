@@ -93,7 +93,7 @@ public class DefaultResourceGroupCreationService {
     }
   }
 
-  private void createDefaultResourceGroup(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  public void createDefaultResourceGroup(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     try {
       ResourceGroupResponse resourceGroupResponse = NGRestUtils.getResponse(resourceGroupClient.getResourceGroup(
           DEFAULT_RESOURCE_GROUP_IDENTIFIER, accountIdentifier, orgIdentifier, projectIdentifier));
