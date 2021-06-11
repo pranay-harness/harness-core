@@ -120,6 +120,7 @@ import com.google.inject.name.Names;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
+import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
@@ -348,6 +349,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerRequestContextFilter(Environment environment) {
     environment.jersey().register(new RequestContextFilter());
+    environment.jersey().register(new JsonProcessingExceptionMapper(true));
   }
 
   private void intializeGitSync(Injector injector, NextGenConfiguration nextGenConfiguration) {
