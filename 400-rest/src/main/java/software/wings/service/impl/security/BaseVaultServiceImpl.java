@@ -78,7 +78,7 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
     if (baseVaultConfig != null) {
       EncryptedData encryptedToken = wingsPersistence.get(EncryptedData.class, baseVaultConfig.getAuthToken());
       EncryptedData encryptedSecretId = wingsPersistence.get(EncryptedData.class, baseVaultConfig.getSecretId());
-      if (encryptedToken == null && encryptedSecretId == null) {
+      if (!baseVaultConfig.isUseVaultAgent() && encryptedToken == null && encryptedSecretId == null) {
         throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
             "Either auth token or secret Id field needs to be present for vault secret manager.", USER);
       }
@@ -244,29 +244,45 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
   }
 
   protected void updateVaultCredentials(
-      BaseVaultConfig savedVaultConfig, String authToken, String secretId, SettingVariableTypes settingVariableTypes) {
+      BaseVaultConfig savedVaultConfig, BaseVaultConfig vaultConfig, SettingVariableTypes settingVariableTypes) {
     String vaultConfigId = savedVaultConfig.getUuid();
     String accountId = savedVaultConfig.getAccountId();
     String authTokenEncryptedDataId = savedVaultConfig.getAuthToken();
     String secretIdEncryptedDataId = savedVaultConfig.getSecretId();
 
-    // Create a LOCAL encrypted record for Vault authToken
-    Preconditions.checkNotNull(authToken);
-    Preconditions.checkNotNull(authTokenEncryptedDataId);
-    authTokenEncryptedDataId = updateSecretField(authTokenEncryptedDataId, accountId, vaultConfigId, authToken,
-        TOKEN_SECRET_NAME_SUFFIX, BaseVaultConfigKeys.authToken, settingVariableTypes);
-    savedVaultConfig.setAuthToken(authTokenEncryptedDataId);
-
-    // Create a LOCAL encrypted record for Vault secretId
-    if (isNotEmpty(secretId)) {
-      if (isNotEmpty(secretIdEncryptedDataId)) {
-        secretIdEncryptedDataId = updateSecretField(secretIdEncryptedDataId, accountId, vaultConfigId, secretId,
-            SECRET_ID_SECRET_NAME_SUFFIX, BaseVaultConfigKeys.secretId, settingVariableTypes);
-      } else {
-        secretIdEncryptedDataId = saveSecretField(accountId, vaultConfigId, secretId, SECRET_ID_SECRET_NAME_SUFFIX,
-            BaseVaultConfigKeys.secretId, settingVariableTypes);
+    if (vaultConfig.isUseVaultAgent()) {
+      // deleate AppId cred and Saved Token
+      if (isNotEmpty(savedVaultConfig.getAuthToken())) {
+        wingsPersistence.delete(EncryptedData.class, savedVaultConfig.getAuthToken());
+        log.info("Deleted encrypted auth token record {} associated with Vault '{}'", savedVaultConfig.getAuthToken(),
+            savedVaultConfig.getName());
       }
-      savedVaultConfig.setSecretId(secretIdEncryptedDataId);
+      if (isNotEmpty(savedVaultConfig.getSecretId())) {
+        wingsPersistence.delete(EncryptedData.class, savedVaultConfig.getSecretId());
+        log.info("Deleted encrypted secret id record {} associated with Vault '{}'", savedVaultConfig.getSecretId(),
+            savedVaultConfig.getName());
+      }
+    } else {
+      // Create a LOCAL encrypted record for Vault authToken
+      String authToken = vaultConfig.getAuthToken();
+      String secretId = vaultConfig.getSecretId();
+      Preconditions.checkNotNull(authToken);
+      Preconditions.checkNotNull(authTokenEncryptedDataId);
+      authTokenEncryptedDataId = updateSecretField(authTokenEncryptedDataId, accountId, vaultConfigId, authToken,
+          TOKEN_SECRET_NAME_SUFFIX, BaseVaultConfigKeys.authToken, settingVariableTypes);
+      savedVaultConfig.setAuthToken(authTokenEncryptedDataId);
+
+      // Create a LOCAL encrypted record for Vault secretId
+      if (isNotEmpty(secretId)) {
+        if (isNotEmpty(secretIdEncryptedDataId)) {
+          secretIdEncryptedDataId = updateSecretField(secretIdEncryptedDataId, accountId, vaultConfigId, secretId,
+              SECRET_ID_SECRET_NAME_SUFFIX, BaseVaultConfigKeys.secretId, settingVariableTypes);
+        } else {
+          secretIdEncryptedDataId = saveSecretField(accountId, vaultConfigId, secretId, SECRET_ID_SECRET_NAME_SUFFIX,
+              BaseVaultConfigKeys.secretId, settingVariableTypes);
+        }
+        savedVaultConfig.setSecretId(secretIdEncryptedDataId);
+      }
     }
   }
 
@@ -276,7 +292,7 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
     } else {
       EncryptedData tokenData = wingsPersistence.get(EncryptedData.class, vaultConfig.getAuthToken());
       EncryptedData secretIdData = wingsPersistence.get(EncryptedData.class, vaultConfig.getSecretId());
-      if (tokenData == null && secretIdData == null) {
+      if (!vaultConfig.isUseVaultAgent() && tokenData == null && secretIdData == null) {
         throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
             "Either auth token or secret Id field needs to be present for vault secret manager.", USER);
       }
