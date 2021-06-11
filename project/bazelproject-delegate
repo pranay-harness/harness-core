@@ -1,4 +1,4 @@
-import .bazelproject-config
+import project/bazelproject-config
 
 directories:
   260-delegate
@@ -28,6 +28,6 @@ directories:
   tools/bazel
 
 import_run_configurations:
-  run-configurations/DelegateApp.xml
-  run-configurations/WingsApp.xml
-  run-configurations/DataGen_App.xml
+  project/run-configurations/DelegateApp.xml
+  project/run-configurations/WingsApp.xml
+  project/run-configurations/DataGen_App.xml
