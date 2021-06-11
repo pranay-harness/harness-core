@@ -13,5 +13,5 @@ import java.util.Optional;
 @TargetModule(HarnessModule._950_NG_CORE)
 public interface NGSecretService {
   Optional<EncryptedDataMigrationDTO> getEncryptedDataMigrationDTO(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, boolean decrypted);
 }

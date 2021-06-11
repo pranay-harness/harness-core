@@ -40,11 +40,12 @@ public class SecretsResourceNG {
   @Path("migration/{identifier}")
   public RestResponse<EncryptedDataMigrationDTO> getEncryptedDataMigrationDTO(
       @PathParam("identifier") String identifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) final String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) final String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) final String projectIdentifier) {
-    Optional<EncryptedDataMigrationDTO> encryptedDataOptional =
-        ngSecretService.getEncryptedDataMigrationDTO(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam("decrypted") Boolean decrypted) {
+    Optional<EncryptedDataMigrationDTO> encryptedDataOptional = ngSecretService.getEncryptedDataMigrationDTO(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, Boolean.TRUE.equals(decrypted));
     return new RestResponse<>(encryptedDataOptional.orElse(null));
   }
 }

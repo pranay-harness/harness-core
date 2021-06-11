@@ -38,7 +38,7 @@ public interface SecretManagerClient {
       @Path(value = "identifier") String identifier,
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @Query("decrypted") Boolean decrypted);
 
   // create secret manager
   @POST(SECRET_MANAGERS_API)

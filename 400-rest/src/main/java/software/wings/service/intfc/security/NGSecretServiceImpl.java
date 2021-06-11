@@ -1,6 +1,8 @@
 package software.wings.service.intfc.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.FileBucket.CONFIGS;
 import static io.harness.security.SimpleEncryption.CHARSET;
 import static io.harness.security.encryption.EncryptionType.GCP_KMS;
@@ -12,11 +14,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
+import io.harness.beans.SecretManagerConfig;
+import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.exception.WingsException;
 import io.harness.secretmanagerclient.NGMetadata.NGMetadataKeys;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata.NGSecretManagerMetadataKeys;
 import io.harness.secretmanagerclient.dto.EncryptedDataMigrationDTO;
-import io.harness.secrets.SecretsFileService;
 import io.harness.security.encryption.EncryptionType;
 
 import software.wings.dl.WingsPersistence;
@@ -51,8 +54,8 @@ public class NGSecretServiceImpl implements NGSecretService {
   private static final String PROJECT_IDENTIFIER_KEY =
       EncryptedDataKeys.ngMetadata + "." + NGSecretManagerMetadataKeys.projectIdentifier;
 
-  private final SecretsFileService secretFileService;
   private final NGSecretManagerService ngSecretManagerService;
+  private final KmsEncryptorsRegistry kmsEncryptorsRegistry;
   private final WingsPersistence wingsPersistence;
   private final FileService fileService;
 
@@ -72,7 +75,7 @@ public class NGSecretServiceImpl implements NGSecretService {
 
   @Override
   public Optional<EncryptedDataMigrationDTO> getEncryptedDataMigrationDTO(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, boolean decrypted) {
     Optional<EncryptedData> encryptedDataOptional =
         get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     if (encryptedDataOptional.isPresent()) {
@@ -84,7 +87,16 @@ public class NGSecretServiceImpl implements NGSecretService {
           setEncryptedValueToFileContent(encryptedData);
         } catch (WingsException exception) {
           // ignore can't do anything if file is not present
+          encryptedData.setEncryptedValue(null);
         }
+      }
+      if (decrypted && isNotEmpty(encryptedData.getEncryptedValue()) && isEmpty(encryptedData.getPath())
+          && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())) {
+        Optional<SecretManagerConfig> secretManagerConfig = ngSecretManagerService.get(accountIdentifier, orgIdentifier,
+            projectIdentifier, encryptedData.getNgMetadata().getSecretManagerIdentifier(), false);
+        secretManagerConfig.ifPresent(config
+            -> encryptedData.setEncryptedValue(kmsEncryptorsRegistry.getKmsEncryptor(config).fetchSecretValue(
+                accountIdentifier, encryptedData, config)));
       }
       return Optional.of(EncryptedDataMigrationDTO.builder()
                              .uuid(encryptedData.getUuid())
