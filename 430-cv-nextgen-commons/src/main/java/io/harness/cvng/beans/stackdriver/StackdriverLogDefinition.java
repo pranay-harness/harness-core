@@ -1,4 +1,4 @@
-package io.harness.cvng.core.beans;
+package io.harness.cvng.beans.stackdriver;
 
 import lombok.Builder;
 import lombok.Value;

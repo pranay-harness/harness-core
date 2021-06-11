@@ -19,6 +19,7 @@ import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.beans.SplunkValidationResponse.SplunkSampleResponse;
 import io.harness.cvng.beans.StackdriverDataCollectionInfo;
+import io.harness.cvng.beans.StackdriverLogDataCollectionInfo;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
 import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
 import io.harness.cvng.beans.TimeSeriesMetricType;
@@ -118,5 +119,6 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(PrometheusLabelNamesFetchRequest.class, 9056);
     kryo.register(PrometheusFetchSampleDataRequest.class, 9057);
     kryo.register(StackdriverLogSampleDataRequest.class, 9058);
+    kryo.register(StackdriverLogDataCollectionInfo.class, 9059);
   }
 }
