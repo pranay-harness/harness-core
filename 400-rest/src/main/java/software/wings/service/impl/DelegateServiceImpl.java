@@ -487,6 +487,39 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  public Set<String> getAllDelegateSelectorsUpTheHierarchy(String accountId, String orgId, String projectId) {
+    Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
+                                        .filter(DelegateKeys.accountId, accountId)
+                                        .filter(DelegateKeys.ng, true)
+                                        .field(DelegateKeys.delegateGroupId)
+                                        .exists();
+
+    String projectIdentifier = orgId == null || projectId == null ? null : orgId + "/" + projectId;
+    delegateQuery.field(DelegateKeys.owner_identifier).in(Arrays.asList(null, orgId, projectIdentifier));
+
+    delegateQuery.field(DelegateKeys.status)
+        .notEqual(DelegateInstanceStatus.DELETED)
+        .project(DelegateKeys.accountId, true)
+        .project(DelegateKeys.tags, true)
+        .project(DelegateKeys.delegateName, true)
+        .project(DelegateKeys.hostName, true)
+        .project(DelegateKeys.delegateProfileId, true)
+        .project(DelegateKeys.delegateGroupId, true);
+
+    try (HIterator<Delegate> delegates = new HIterator<>(delegateQuery.fetch())) {
+      if (delegates.hasNext()) {
+        Set<String> selectors = new HashSet<>();
+
+        for (Delegate delegate : delegates) {
+          selectors.addAll(retrieveDelegateSelectors(delegate));
+        }
+        return selectors;
+      }
+    }
+    return emptySet();
+  }
+
+  @Override
   public Set<String> retrieveDelegateSelectors(Delegate delegate) {
     Set<String> selectors = delegate.getTags() == null ? new HashSet<>() : new HashSet<>(delegate.getTags());
 

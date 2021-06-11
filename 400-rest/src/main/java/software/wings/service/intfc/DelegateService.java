@@ -53,6 +53,8 @@ public interface DelegateService extends OwnedByAccount {
 
   Set<String> getAllDelegateSelectors(String accountId);
 
+  Set<String> getAllDelegateSelectorsUpTheHierarchy(String accountId, String orgId, String projectId);
+
   DelegateStatus getDelegateStatus(String accountId);
 
   DelegateStatus getDelegateStatusWithScalingGroups(String accountId);
