@@ -22,10 +22,11 @@ import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.metrics.CVNGMetricsUtils;
-import io.harness.cvng.metrics.beans.CVNGMetricContext;
+import io.harness.cvng.metrics.services.impl.MetricContextBuilder;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.DataCollectionProgressLog;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
+import io.harness.metrics.AutoMetricContext;
 import io.harness.metrics.service.api.MetricService;
 import io.harness.persistence.HPersistence;
 
@@ -62,6 +63,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Inject private MetricService metricService;
+  @Inject private MetricContextBuilder metricContextBuilder;
 
   // TODO: this is creating reverse dependency. Find a way to get rid of this dependency.
   // Probabally by moving ProgressLog concept to a separate service and model.
@@ -186,12 +188,11 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   }
 
   private void recordMetricsOnUpdateStatus(DataCollectionTask dataCollectionTask) {
-    try (CVNGMetricContext cvngMetricContext = new CVNGMetricContext(dataCollectionTask.getAccountId())) {
+    try (AutoMetricContext ignore = metricContextBuilder.getContext(dataCollectionTask, DataCollectionTask.class)) {
       metricService.incCounter(CVNGMetricsUtils.getDataCollectionTaskStatusMetricName(dataCollectionTask.getStatus()));
       metricService.recordDuration(
           CVNGMetricsUtils.DATA_COLLECTION_TASK_TOTAL_TIME, dataCollectionTask.totalTime(clock.instant()));
       if (dataCollectionTask.getLastPickedAt() != null) { // Remove this in the future after lastPickedAt is populated.
-        // TODO: Too many reties can vary the metric value. Send retry count as a tag once tagging support is added.
         metricService.recordDuration(CVNGMetricsUtils.DATA_COLLECTION_TASK_WAIT_TIME, dataCollectionTask.waitTime());
         metricService.recordDuration(
             CVNGMetricsUtils.DATA_COLLECTION_TASK_RUNNING_TIME, dataCollectionTask.runningTime(clock.instant()));

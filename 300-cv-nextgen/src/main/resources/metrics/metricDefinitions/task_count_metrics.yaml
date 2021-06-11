@@ -34,12 +34,5 @@ metrics:
     metricDefinition: learning engine task success count
     type: Count
     unit: "1"
-  - metricName: data_collection_task_failed_count
-    metricDefinition: data collection task failed count
-    type: Count
-    unit: "1"
-  - metricName: data_collection_task_success_count
-    metricDefinition: data collection task success count
-    type: Count
-    unit: "1"
+
 
