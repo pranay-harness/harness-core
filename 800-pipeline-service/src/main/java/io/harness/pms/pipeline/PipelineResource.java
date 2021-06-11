@@ -56,6 +56,7 @@ import io.harness.yaml.schema.YamlSchemaResource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -294,11 +295,17 @@ public class PipelineResource implements YamlSchemaResource {
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
       @QueryParam("sort") List<String> sort, @QueryParam("filterIdentifier") String filterIdentifier,
       @QueryParam("module") String moduleName, FilterPropertiesDTO filterProperties,
-      @QueryParam("status") ExecutionStatus status, @QueryParam("myDeployments") boolean myDeployments) {
+      @QueryParam("status") ExecutionStatus status, @QueryParam("myDeployments") boolean myDeployments,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     log.info("Get List of executions");
+    ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
+    if (EmptyPredicate.isEmpty(gitEntityBasicInfo.getBranch())
+        || EmptyPredicate.isEmpty(gitEntityBasicInfo.getYamlGitConfigId())) {
+      gitSyncBranchContext = null;
+    }
     Criteria criteria = pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier,
         filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm, status,
-        myDeployments, false);
+        myDeployments, false, gitSyncBranchContext);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));
