@@ -66,6 +66,36 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
   }
 
   @Override
+  public DelegateGroupListing listDelegateGroupDetailsUpTheHierarchy(String accountId, String orgId, String projectId) {
+    List<DelegateGroupDetails> delegateGroupDetails =
+        getDelegateGroupDetailsUpTheHierarchy(accountId, orgId, projectId);
+
+    return DelegateGroupListing.builder().delegateGroupDetails(delegateGroupDetails).build();
+  }
+
+  private List<DelegateGroupDetails> getDelegateGroupDetailsUpTheHierarchy(
+      String accountId, String orgId, String projectId) {
+    Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
+                                        .filter(DelegateKeys.accountId, accountId)
+                                        .filter(DelegateKeys.ng, true)
+                                        .field(DelegateKeys.delegateGroupId)
+                                        .exists();
+
+    String projectIdentifier = orgId == null || projectId == null ? null : orgId + "/" + projectId;
+    delegateQuery.field(DelegateKeys.owner_identifier).in(Arrays.asList(null, orgId, projectIdentifier));
+    delegateQuery.field(DelegateKeys.status)
+        .hasAnyOf(Arrays.asList(DelegateInstanceStatus.ENABLED, DelegateInstanceStatus.WAITING_FOR_APPROVAL));
+
+    return delegateQuery.asList()
+        .stream()
+        .collect(groupingBy(Delegate::getDelegateGroupId))
+        .entrySet()
+        .stream()
+        .map(entry -> buildDelegateGroupDetails(accountId, entry.getKey(), entry.getValue()))
+        .collect(toList());
+  }
+
+  @Override
   public DelegateGroupDetails getDelegateGroupDetails(String accountId, String delegateGroupId) {
     List<Delegate> groupDelegates = persistence.createQuery(Delegate.class)
                                         .filter(DelegateKeys.accountId, accountId)

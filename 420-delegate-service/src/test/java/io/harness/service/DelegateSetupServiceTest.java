@@ -201,6 +201,76 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
+  public void shouldListDelegateGroupsUpTheHierarchy() {
+    String accountId = generateUuid();
+    String orgId = generateUuid();
+    String projectId = generateUuid();
+
+    String acctGroupId = generateUuid();
+    String orgGroupId = generateUuid();
+    String projectGroupId = generateUuid();
+
+    Delegate cgAcctDelegate = createDelegateBuilder()
+                                  .accountId(accountId)
+                                  .ng(false)
+                                  .delegateType(KUBERNETES)
+                                  .delegateName(generateUuid())
+                                  .hostName(generateUuid())
+                                  .build();
+
+    Delegate acctDelegate = createDelegateBuilder()
+                                .accountId(accountId)
+                                .ng(true)
+                                .delegateType(KUBERNETES)
+                                .delegateName(generateUuid())
+                                .hostName(generateUuid())
+                                .delegateGroupId(acctGroupId)
+                                .build();
+
+    Delegate orgDelegate = createDelegateBuilder()
+                               .accountId(accountId)
+                               .ng(true)
+                               .delegateType(KUBERNETES)
+                               .delegateName(generateUuid())
+                               .hostName(generateUuid())
+                               .delegateGroupId(orgGroupId)
+                               .owner(DelegateEntityOwner.builder().identifier(orgId).build())
+                               .build();
+
+    Delegate projectDelegate = createDelegateBuilder()
+                                   .accountId(accountId)
+                                   .ng(true)
+                                   .delegateType(KUBERNETES)
+                                   .delegateName(generateUuid())
+                                   .hostName(generateUuid())
+                                   .delegateGroupId(projectGroupId)
+                                   .owner(DelegateEntityOwner.builder().identifier(orgId + "/" + projectId).build())
+                                   .build();
+
+    persistence.save(Arrays.asList(cgAcctDelegate, acctDelegate, orgDelegate, projectDelegate));
+
+    DelegateGroupListing delegateGroupListing =
+        delegateSetupService.listDelegateGroupDetailsUpTheHierarchy(accountId, null, null);
+    assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(1);
+    assertThat(delegateGroupListing.getDelegateGroupDetails().get(0).getGroupId()).isEqualTo(acctGroupId);
+
+    delegateGroupListing = delegateSetupService.listDelegateGroupDetailsUpTheHierarchy(accountId, orgId, null);
+    assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(2);
+    assertThat(Arrays.asList(delegateGroupListing.getDelegateGroupDetails().get(0).getGroupId(),
+                   delegateGroupListing.getDelegateGroupDetails().get(1).getGroupId()))
+        .containsExactlyInAnyOrder(acctGroupId, orgGroupId);
+
+    delegateGroupListing = delegateSetupService.listDelegateGroupDetailsUpTheHierarchy(accountId, orgId, projectId);
+    assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(3);
+    assertThat(Arrays.asList(delegateGroupListing.getDelegateGroupDetails().get(0).getGroupId(),
+                   delegateGroupListing.getDelegateGroupDetails().get(1).getGroupId(),
+                   delegateGroupListing.getDelegateGroupDetails().get(2).getGroupId()))
+        .containsExactlyInAnyOrder(acctGroupId, orgGroupId, projectGroupId);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
   public void shouldGetDelegateGroupDetails() {
     String accountId = generateUuid();
     String delegateProfileId = generateUuid();
