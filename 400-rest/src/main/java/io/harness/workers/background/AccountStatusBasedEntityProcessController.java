@@ -27,7 +27,9 @@ public class AccountStatusBasedEntityProcessController<T extends PersistentItera
   public boolean shouldProcessEntity(T entity) {
     String accountId = entity.getAccountId();
     String accountStatus;
-
+    if (accountId == null) {
+      return false;
+    }
     try {
       accountStatus = accountService.getAccountStatus(accountId);
     } catch (AccountNotFoundException ex) {
