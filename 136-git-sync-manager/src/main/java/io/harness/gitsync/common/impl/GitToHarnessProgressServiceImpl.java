@@ -56,7 +56,7 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
   }
 
   @Override
-  public GitToHarnessProgressDTO updateStatus(String uuid, GitToHarnessProcessingStepStatus stepStatus) {
+  public GitToHarnessProgressDTO updateStepStatus(String uuid, GitToHarnessProcessingStepStatus stepStatus) {
     Update update = new Update();
     update.set(GitToHarnessProgressKeys.stepStatus, stepStatus);
     return update(uuid, update);
@@ -124,5 +124,13 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
             .gitToHarnessProgressStatus(GitToHarnessProgressStatus.TO_DO)
             .build();
     return save(gitToHarnessProgress);
+  }
+
+  @Override
+  public GitToHarnessProgressDTO updateProgressStatus(
+      String gitToHarnessProgressRecordId, GitToHarnessProgressStatus gitToHarnessProgressStatus) {
+    Update update = new Update();
+    update.set(GitToHarnessProgressKeys.gitToHarnessProgressStatus, gitToHarnessProgressStatus);
+    return update(gitToHarnessProgressRecordId, update);
   }
 }
