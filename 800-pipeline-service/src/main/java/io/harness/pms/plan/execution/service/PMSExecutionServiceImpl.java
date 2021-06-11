@@ -39,6 +39,7 @@ import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.ByteString;
 import com.mongodb.client.result.UpdateResult;
 import java.util.Collections;
 import java.util.Map;
@@ -64,7 +65,8 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   @Override
   public Criteria formCriteria(String accountId, String orgId, String projectId, String pipelineIdentifier,
       String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName,
-      String searchTerm, ExecutionStatus status, boolean myDeployments, boolean pipelineDeleted) {
+      String searchTerm, ExecutionStatus status, boolean myDeployments, boolean pipelineDeleted,
+      ByteString gitEntityBasicInfo) {
     Criteria criteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(accountId)) {
       criteria.and(PlanExecutionSummaryKeys.accountId).is(accountId);
@@ -122,7 +124,12 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
               .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
     }
 
-    criteria.andOperator(filterCriteria, moduleCriteria, searchCriteria);
+    Criteria gitCriteria = new Criteria();
+    if (gitEntityBasicInfo != null) {
+      gitCriteria.orOperator(where(PlanExecutionSummaryKeys.gitSyncBranchContext).is(gitEntityBasicInfo));
+    }
+
+    criteria.andOperator(filterCriteria, moduleCriteria, searchCriteria, gitCriteria);
 
     return criteria;
   }
