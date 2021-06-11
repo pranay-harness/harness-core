@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.commons.beans.recommendation.K8sServiceProvider;
 import io.harness.ccm.commons.beans.recommendation.NodePoolId;
 import io.harness.ccm.commons.beans.recommendation.NodePoolId.NodePoolIdKeys;
 import io.harness.ccm.commons.beans.recommendation.TotalResourceUsage;
@@ -60,6 +61,8 @@ public final class K8sNodeRecommendation
   NodePoolId nodePoolId;
 
   TotalResourceUsage totalResourceUsage;
+
+  K8sServiceProvider currentServiceProvider;
 
   RecommendationResponse recommendation;
 

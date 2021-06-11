@@ -93,7 +93,7 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     String entityUuid = "entityUuid";
     when(k8sRecommendationDAO.getServiceProvider(eq(ACCOUNT_ID), eq(nodePoolId))).thenReturn(k8sServiceProvider);
     when(k8sRecommendationDAO.insertNodeRecommendationResponse(
-             any(), eq(nodePoolId), eq(resourceUsage), eq(getRecommendationResponse())))
+             any(), eq(nodePoolId), eq(resourceUsage), eq(k8sServiceProvider), eq(getRecommendationResponse())))
         .thenReturn(entityUuid);
     doNothing().when(k8sRecommendationDAO).updateCeRecommendation(eq(entityUuid), any(), eq(nodePoolId), any(), any());
   }
@@ -128,7 +128,7 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     // first time it's invoked at K8sNodeRecommendationTaskletTest#setUp, due to deep stub probably, so effectively 0
     // execution.
     verify(banzaiRecommenderClient, times(1)).getRecommendation(any(), any(), any(), any());
-    verify(k8sRecommendationDAO, times(0)).insertNodeRecommendationResponse(any(), any(), any(), any());
+    verify(k8sRecommendationDAO, times(0)).insertNodeRecommendationResponse(any(), any(), any(), any(), any());
     verify(k8sRecommendationDAO, times(0)).updateCeRecommendation(any(), any(), any(), any(), any());
     verify(k8sRecommendationDAO, times(0)).getNodeCount(any(), any());
   }
@@ -147,7 +147,7 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
 
     // effectively 0 times
     verify(banzaiRecommenderClient, times(1)).getRecommendation(any(), any(), any(), any());
-    verify(k8sRecommendationDAO, times(0)).insertNodeRecommendationResponse(any(), any(), any(), any());
+    verify(k8sRecommendationDAO, times(0)).insertNodeRecommendationResponse(any(), any(), any(), any(), any());
   }
 
   @Test
@@ -164,7 +164,7 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
 
     // effectively 0 times
     verify(banzaiRecommenderClient, times(1)).getRecommendation(any(), any(), any(), any());
-    verify(k8sRecommendationDAO, times(0)).insertNodeRecommendationResponse(any(), any(), any(), any());
+    verify(k8sRecommendationDAO, times(0)).insertNodeRecommendationResponse(any(), any(), any(), any(), any());
   }
 
   @Test
@@ -212,8 +212,8 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     assertThat(stats).isNotNull();
     // $2 per node * 6 nodes * 24 hrs * 30 days
     assertThat(stats.getTotalMonthlyCost()).isCloseTo(2D * 6 * 24 * 30, offset(0.5D));
-    // $1.329993 per vm * 24 hrs * 30 days - monthlyCost
-    assertThat(stats.getTotalMonthlySaving()).isCloseTo(1.329993D * 24 * 30 - 2D * 6 * 24 * 30, offset(0.5D));
+    // monthlyCost - $1.329993 per vm * 24 hrs * 30 days
+    assertThat(stats.getTotalMonthlySaving()).isCloseTo((2D * 6 - 1.329993D) * 24 * 30, offset(0.5D));
   }
 
   private RecommendClusterRequest captureRequest(TotalResourceUsage totalResourceUsage) throws Exception {
@@ -226,7 +226,7 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     // effectively 1 times
     verify(banzaiRecommenderClient, times(2)).getRecommendation(any(), any(), any(), captor.capture());
 
-    verify(k8sRecommendationDAO, times(1)).insertNodeRecommendationResponse(any(), any(), any(), any());
+    verify(k8sRecommendationDAO, times(1)).insertNodeRecommendationResponse(any(), any(), any(), any(), any());
 
     return captor.getAllValues().get(1);
   }
