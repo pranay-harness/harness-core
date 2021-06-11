@@ -1848,7 +1848,7 @@ load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
 maven_install(
     name = "maven_harness",
     artifacts = [
-        "io.harness.cv:data-collection-dsl:0.23-RELEASE",
+        "io.harness.cv:data-collection-dsl:0.25-RELEASE",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
