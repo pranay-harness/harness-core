@@ -74,8 +74,8 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   @Before
   public void setup() {
     initMocks(this);
-    secretCrudServiceSpy = new SecretCrudServiceImpl(secretManagerClient, secretEntityReferenceHelper, fileUploadLimit,
-        ngSecretServiceV2, eventProducer, encryptedDataService, true);
+    secretCrudServiceSpy = new SecretCrudServiceImpl(
+        secretEntityReferenceHelper, fileUploadLimit, ngSecretServiceV2, eventProducer, encryptedDataService);
     secretCrudService = spy(secretCrudServiceSpy);
   }
 

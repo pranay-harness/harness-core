@@ -12,10 +12,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
-import io.harness.beans.SecretManagerConfig;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.secretmanagerclient.NGMetadata.NGMetadataKeys;
 import io.harness.secretmanagerclient.NGSecretManagerMetadata.NGSecretManagerMetadataKeys;
 import io.harness.secretmanagerclient.dto.EncryptedDataMigrationDTO;
@@ -74,82 +71,6 @@ public class NGSecretServiceImpl implements NGSecretService {
   }
 
   @Override
-  public boolean save(EncryptedDataMigrationDTO encryptedData) {
-    Optional<EncryptedData> encryptedDataOptional = get(encryptedData.getAccountIdentifier(),
-        encryptedData.getOrgIdentifier(), encryptedData.getProjectIdentifier(), encryptedData.getIdentifier());
-    if (!encryptedDataOptional.isPresent()) {
-      EncryptedData existing = EncryptedData.builder().build();
-      existing.setAccountId(encryptedData.getAccountIdentifier());
-      Optional<SecretManagerConfig> secretManagerConfig =
-          ngSecretManagerService.get(encryptedData.getAccountIdentifier(), encryptedData.getOrgIdentifier(),
-              encryptedData.getProjectIdentifier(), encryptedData.getKmsId(), true);
-      if (!secretManagerConfig.isPresent()) {
-        return false;
-      }
-      existing.setKmsId(secretManagerConfig.get().getUuid());
-      existing.setEncryptionType(encryptedData.getEncryptionType());
-      existing.setNgMetadata(NGEncryptedDataMetadata.builder()
-                                 .accountIdentifier(encryptedData.getAccountIdentifier())
-                                 .orgIdentifier(encryptedData.getOrgIdentifier())
-                                 .projectIdentifier(encryptedData.getProjectIdentifier())
-                                 .identifier(encryptedData.getIdentifier())
-                                 .secretManagerIdentifier(encryptedData.getKmsId())
-                                 .build());
-      existing.setName(encryptedData.getName());
-      existing.setBase64Encoded(encryptedData.isBase64Encoded());
-      existing.setEncryptionKey(encryptedData.getEncryptionKey());
-      existing.setType(encryptedData.getType());
-      existing.setPath(encryptedData.getPath());
-      if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
-          && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())
-          && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
-        String fileId = secretFileService.createFile(
-            encryptedData.getName(), encryptedData.getAccountIdentifier(), encryptedData.getEncryptedValue());
-        existing.setEncryptedValue(fileId.toCharArray());
-      } else {
-        existing.setEncryptedValue(encryptedData.getEncryptedValue());
-      }
-      wingsPersistence.save(existing);
-      return true;
-    }
-    throw new InvalidRequestException(
-        String.format("Secret with identifier %s already exists in this scope", encryptedData.getIdentifier()));
-  }
-
-  @Override
-  public boolean update(EncryptedDataMigrationDTO encryptedData) {
-    Optional<EncryptedData> encryptedDataOptional = get(encryptedData.getAccountIdentifier(),
-        encryptedData.getOrgIdentifier(), encryptedData.getProjectIdentifier(), encryptedData.getIdentifier());
-    if (encryptedDataOptional.isPresent()) {
-      EncryptedData existing = encryptedDataOptional.get();
-      existing.setBase64Encoded(encryptedData.isBase64Encoded());
-      existing.setEncryptionKey(encryptedData.getEncryptionKey());
-      existing.setPath(encryptedData.getPath());
-      existing.setName(encryptedData.getName());
-      if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
-          && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())
-          && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
-        String fileId = secretFileService.createFile(
-            encryptedData.getName(), encryptedData.getAccountIdentifier(), encryptedData.getEncryptedValue());
-        if (Optional.ofNullable(existing.getEncryptedValue()).isPresent()) {
-          try {
-            secretFileService.deleteFile(existing.getEncryptedValue());
-          } catch (Exception exception) {
-            // ignore
-          }
-        }
-        existing.setEncryptedValue(fileId.toCharArray());
-      } else {
-        existing.setEncryptedValue(encryptedData.getEncryptedValue());
-      }
-      wingsPersistence.save(existing);
-      return true;
-    }
-    throw new InvalidRequestException(
-        String.format("Secret with identifier %s not found in this scope", encryptedData.getIdentifier()));
-  }
-
-  @Override
   public Optional<EncryptedDataMigrationDTO> getEncryptedDataMigrationDTO(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     Optional<EncryptedData> encryptedDataOptional =
@@ -182,27 +103,6 @@ public class NGSecretServiceImpl implements NGSecretService {
                              .build());
     }
     return Optional.empty();
-  }
-
-  @Override
-  public boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    Optional<EncryptedData> encryptedDataOptional =
-        get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-
-    if (encryptedDataOptional.isPresent()) {
-      EncryptedData encryptedData = encryptedDataOptional.get();
-      if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
-          && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()
-          && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())) {
-        try {
-          secretFileService.deleteFile(encryptedData.getEncryptedValue());
-        } catch (Exception exception) {
-          // ignore
-        }
-      }
-      return wingsPersistence.delete(EncryptedData.class, encryptedData.getUuid());
-    }
-    return true;
   }
 
   public void setEncryptedValueToFileContent(EncryptedData encryptedData) {

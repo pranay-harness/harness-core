@@ -11,7 +11,6 @@ import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ng.core.migration.ManagerToNGManagerEncryptedDataMigrationHandler.fromEncryptedDataMigrationDTO;
-import static io.harness.ng.core.migration.ManagerToNGManagerEncryptedDataMigrationHandler.toEncryptedDataMigrationDTO;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 import static io.harness.secretmanagerclient.SecretType.SecretFile;
 import static io.harness.secretmanagerclient.SecretType.SecretText;
@@ -124,10 +123,6 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     } else {
       validatePath(encryptedData.getPath(), encryptedData.getEncryptionType());
     }
-    if (!ngSecretMigrationCompleted) {
-      // remove after migration
-      getResponse(secretManagerClient.saveSecret(toEncryptedDataMigrationDTO(encryptedData)));
-    }
     return encryptedDataDao.save(encryptedData);
   }
 
@@ -164,10 +159,6 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
 
     encrypt(encryptedData, fileContent, SecretManagerConfigMapper.fromDTO(secretManager));
     encryptedData.setBase64Encoded(true);
-    if (!ngSecretMigrationCompleted) {
-      // remove after migration
-      getResponse(secretManagerClient.saveSecret(toEncryptedDataMigrationDTO(encryptedData)));
-    }
     if (ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())
         && isNotEmpty(fileContent)) {
       String encryptedFileId = secretsFileService.createFile(
@@ -313,10 +304,6 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
       existingEncryptedData.setPath(encryptedData.getPath());
     }
     existingEncryptedData.setName(encryptedData.getName());
-    if (!ngSecretMigrationCompleted) {
-      // remove after migration
-      getResponse(secretManagerClient.updateSecret(toEncryptedDataMigrationDTO(existingEncryptedData)));
-    }
     return encryptedDataDao.save(existingEncryptedData);
   }
 
@@ -434,17 +421,6 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     existingEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
     existingEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
     existingEncryptedData.setBase64Encoded(encryptedData.isBase64Encoded());
-    if (!ngSecretMigrationCompleted) {
-      // remove after migration
-      char[] fileId = existingEncryptedData.getEncryptedValue();
-      if (Optional.ofNullable(existingEncryptedData.getEncryptedValue()).isPresent()
-          && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(existingEncryptedData.getEncryptionType())) {
-        char[] content = secretsFileService.getFileContents(String.valueOf(fileId));
-        existingEncryptedData.setEncryptedValue(content);
-      }
-      getResponse(secretManagerClient.updateSecret(toEncryptedDataMigrationDTO(existingEncryptedData)));
-      existingEncryptedData.setEncryptedValue(fileId);
-    }
     return encryptedDataDao.save(existingEncryptedData);
   }
 
@@ -467,22 +443,8 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
   @Override
   public boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     NGEncryptedData encryptedData = get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    boolean fromManager = false;
-    if (encryptedData == null && !ngSecretMigrationCompleted) {
-      // remove after migration
-      fromManager = true;
-      encryptedData = getFromManagerWithFileContent(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    }
     if (encryptedData == null) {
       return false;
-    }
-    if (!ngSecretMigrationCompleted) {
-      // remove after migration
-      Boolean managerSuccess = getResponse(
-          secretManagerClient.deleteSecret(identifier, accountIdentifier, orgIdentifier, projectIdentifier));
-      if (Boolean.FALSE.equals(managerSuccess)) {
-        throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Secret deletion failed", USER);
-      }
     }
     SecretManagerConfigDTO secretManager = getSecretManagerOrThrow(
         accountIdentifier, orgIdentifier, projectIdentifier, encryptedData.getSecretManagerIdentifier(), false);
@@ -496,7 +458,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
         && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
       deleteSecretInSecretManager(accountIdentifier, encryptedData, SecretManagerConfigMapper.fromDTO(secretManager));
     }
-    if (!fromManager && encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
+    if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
         && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()
         && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(encryptedData.getEncryptionType())) {
       secretsFileService.deleteFile(encryptedData.getEncryptedValue());
