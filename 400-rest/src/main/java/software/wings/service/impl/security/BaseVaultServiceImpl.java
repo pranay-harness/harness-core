@@ -78,7 +78,7 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
     if (baseVaultConfig != null) {
       EncryptedData encryptedToken = wingsPersistence.get(EncryptedData.class, baseVaultConfig.getAuthToken());
       EncryptedData encryptedSecretId = wingsPersistence.get(EncryptedData.class, baseVaultConfig.getSecretId());
-      if (!baseVaultConfig.isUseVaultAgent() && encryptedToken == null && encryptedSecretId == null) {
+      if (encryptedToken == null && encryptedSecretId == null && !baseVaultConfig.isUseVaultAgent()) {
         throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
             "Either auth token or secret Id field needs to be present for vault secret manager.", USER);
       }

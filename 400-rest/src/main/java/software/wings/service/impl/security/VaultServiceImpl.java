@@ -43,6 +43,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.VaultService;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
@@ -113,7 +114,9 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
     savedVaultConfig.setUsageRestrictions(vaultConfig.getUsageRestrictions());
     savedVaultConfig.setScopedToAccount(vaultConfig.isScopedToAccount());
     // Handle vault Agent Properties
-    updateVaultAgentConfiguration(vaultConfig, savedVaultConfig);
+    if (vaultConfig.isUseVaultAgent()) {
+      updateVaultAgentConfiguration(vaultConfig, savedVaultConfig);
+    }
     updateNameSpace(accountId, vaultConfig, savedVaultConfig);
     // PL-3237: Audit secret manager config changes.
     if (auditChanges) {
@@ -127,11 +130,12 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
   }
 
   private void updateVaultAgentConfiguration(VaultConfig vaultConfig, VaultConfig savedVaultConfig) {
+    Preconditions.checkNotNull(vaultConfig.getSinkPath());
+    Preconditions.checkNotNull(vaultConfig.getDelegateSelectors());
     // set all set credentials to null
     savedVaultConfig.setAppRoleId(null);
     savedVaultConfig.setAuthToken(null);
     savedVaultConfig.setSecretId(null);
-
     savedVaultConfig.setSinkPath(vaultConfig.getSinkPath());
     savedVaultConfig.setUseVaultAgent(vaultConfig.isUseVaultAgent());
     savedVaultConfig.setDelegateSelectors(vaultConfig.getDelegateSelectors());
