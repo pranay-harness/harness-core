@@ -47,6 +47,7 @@ public class PmsSdkInstanceRepositoryCustomImpl implements PmsSdkInstanceReposit
             .set(PmsSdkInstanceKeys.lastUpdatedAt, System.currentTimeMillis())
             .set(PmsSdkInstanceKeys.interruptConsumerConfig, request.getInterruptConsumerConfig())
             .set(PmsSdkInstanceKeys.orchestrationEventConsumerConfig, request.getOrchestrationEventConsumerConfig())
+            .set(PmsSdkInstanceKeys.facilitatorEventConsumerConfig, request.getFacilitatorEventConsumerConfig())
             .set(PmsSdkInstanceKeys.sdkModuleInfo, request.getSdkModuleInfo());
     RetryPolicy<Object> retryPolicy = getRetryPolicy("[Retrying]: Failed updating PMS SDK instance; attempt: {}",
         "[Failed]: Failed updating PMS SDK instance; attempt: {}");

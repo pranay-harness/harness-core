@@ -21,6 +21,8 @@ import io.harness.engine.executions.plan.PlanService;
 import io.harness.engine.executions.plan.PlanServiceImpl;
 import io.harness.engine.expressions.EngineExpressionServiceImpl;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
+import io.harness.engine.facilitation.facilitator.publisher.FacilitateEventPublisher;
+import io.harness.engine.facilitation.facilitator.publisher.RedisFacilitateEventPublisher;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptServiceImpl;
 import io.harness.engine.interrupts.handlers.publisher.InterruptEventPublisher;
@@ -130,6 +132,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     } else {
       bind(InterruptEventPublisher.class).to(MongoInterruptEventPublisher.class);
     }
+    bind(FacilitateEventPublisher.class).to(RedisFacilitateEventPublisher.class).in(Singleton.class);
   }
 
   @Provides

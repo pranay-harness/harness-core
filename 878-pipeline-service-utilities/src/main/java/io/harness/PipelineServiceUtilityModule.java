@@ -1,9 +1,13 @@
 package io.harness;
 
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_FACILITATOR_EVENT_BATCH_SIZE;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_FACILITATOR_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_INTERRUPT_BATCH_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_INTERRUPT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_BATCH_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
+import static io.harness.pms.listener.PmsUtilityConsumerConstants.PT_FACILITATOR_CONSUMER;
+import static io.harness.pms.listener.PmsUtilityConsumerConstants.PT_FACILITATOR_LISTENER;
 import static io.harness.pms.listener.PmsUtilityConsumerConstants.PT_INTERRUPT_CONSUMER;
 import static io.harness.pms.listener.PmsUtilityConsumerConstants.PT_INTERRUPT_LISTENER;
 import static io.harness.pms.listener.PmsUtilityConsumerConstants.PT_ORCHESTRATION_EVENT_CONSUMER;
@@ -15,6 +19,7 @@ import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.ng.core.event.MessageListener;
+import io.harness.pms.listener.facilitators.FacilitatorEventMessageListener;
 import io.harness.pms.listener.interrupts.InterruptEventMessageListener;
 import io.harness.pms.listener.orchestrationevent.OrchestrationEventMessageListener;
 import io.harness.redis.RedisConfig;
@@ -52,6 +57,12 @@ public class PipelineServiceUtilityModule extends AbstractModule {
           .annotatedWith(Names.named(PT_ORCHESTRATION_EVENT_CONSUMER))
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
+
+      // facilitator
+      bind(Consumer.class)
+          .annotatedWith(Names.named(PT_FACILITATOR_CONSUMER))
+          .toInstance(
+              NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
       bind(Consumer.class)
           .annotatedWith(Names.named(PT_INTERRUPT_CONSUMER))
@@ -61,6 +72,12 @@ public class PipelineServiceUtilityModule extends AbstractModule {
           .annotatedWith(Names.named(PT_ORCHESTRATION_EVENT_CONSUMER))
           .toInstance(RedisConsumer.of(PIPELINE_ORCHESTRATION_EVENT_TOPIC, serviceName, redisConfig,
               Duration.ofSeconds(10), PIPELINE_ORCHESTRATION_EVENT_BATCH_SIZE));
+
+      // facilitator
+      bind(Consumer.class)
+          .annotatedWith(Names.named(PT_FACILITATOR_CONSUMER))
+          .toInstance(RedisConsumer.of(PIPELINE_FACILITATOR_EVENT_TOPIC, serviceName, redisConfig,
+              Duration.ofSeconds(10), PIPELINE_FACILITATOR_EVENT_BATCH_SIZE));
     }
     bind(MessageListener.class)
         .annotatedWith(Names.named(PT_INTERRUPT_LISTENER))
@@ -68,5 +85,10 @@ public class PipelineServiceUtilityModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(PT_ORCHESTRATION_EVENT_LISTENER))
         .to(OrchestrationEventMessageListener.class);
+
+    // facilitator listener
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(PT_FACILITATOR_LISTENER))
+        .to(FacilitatorEventMessageListener.class);
   }
 }

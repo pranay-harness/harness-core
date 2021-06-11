@@ -81,6 +81,7 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
                                         .sdkModuleInfo(request.getSdkModuleInfo())
                                         .interruptConsumerConfig(request.getInterruptConsumerConfig())
                                         .orchestrationEventConsumerConfig(request.getOrchestrationEventConsumerConfig())
+                                        .facilitatorEventConsumerConfig(request.getFacilitatorEventConsumerConfig())
                                         .build());
     }
   }

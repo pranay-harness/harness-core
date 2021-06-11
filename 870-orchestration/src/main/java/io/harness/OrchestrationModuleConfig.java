@@ -32,4 +32,5 @@ public class OrchestrationModuleConfig {
   boolean isPipelineService;
   boolean useRedisForInterrupts;
   boolean useRedisForEvents;
+  boolean useRedisForNodeExecutionEvents;
 }
