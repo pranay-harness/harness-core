@@ -543,7 +543,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       startKeepAliveRequestWhenPollingEnabled(builder);
 
       if (!multiVersion) {
-        startUpgradeCheck(getVersionWithPatch());
+        startUpgradeCheck(getVersion());
       }
 
       log.info("Delegate started");
@@ -675,7 +675,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       // Stream the request body
       RequestBuilder requestBuilder =
-          client.newRequestBuilder().method(METHOD.GET).uri(uri.toString()).header("Version", getVersionWithPatch());
+          client.newRequestBuilder().method(METHOD.GET).uri(uri.toString()).header("Version", getVersion());
 
       requestBuilder
           .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
