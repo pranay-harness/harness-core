@@ -20,6 +20,7 @@ message InitializeSdkRequest {
   SdkModuleInfo sdkModuleInfo = 5;
   ConsumerConfig interruptConsumerConfig = 6;
   ConsumerConfig orchestrationEventConsumerConfig = 7;
+  ConsumerConfig facilitatorEventConsumerConfig = 8;
 }
 
 message InitializeSdkResponse {}

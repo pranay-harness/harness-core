@@ -88,7 +88,7 @@ public class PmsSdkInitHelper {
           ? null
           : injector.getInstance(config.getPipelineServiceInfoProviderClass());
       registerSdk(pipelineServiceInfoProvider, config.getModuleType(), injector, config.getInterruptConsumerConfig(),
-          config.getOrchestrationEventConsumerConfig());
+          config.getOrchestrationEventConsumerConfig(), config.getFacilitationEventConsumerConfig());
     }
     registerQueueListeners(injector);
     registerObserversForEvents(injector);
@@ -117,7 +117,8 @@ public class PmsSdkInitHelper {
   }
 
   private static void registerSdk(PipelineServiceInfoProvider pipelineServiceInfoProvider, ModuleType moduleType,
-      Injector injector, ConsumerConfig interruptConsumerConfig, ConsumerConfig orchestrationEventConsumerConfig) {
+      Injector injector, ConsumerConfig interruptConsumerConfig, ConsumerConfig orchestrationEventConsumerConfig,
+      ConsumerConfig facilitatorEventConsumerConfig) {
     try {
       StepRegistry stepRegistry = injector.getInstance(StepRegistry.class);
       Map<StepType, Step> registry = stepRegistry.getRegistry();
@@ -134,6 +135,7 @@ public class PmsSdkInitHelper {
               .addAllSupportedStepTypes(stepTypes)
               .setInterruptConsumerConfig(interruptConsumerConfig)
               .setOrchestrationEventConsumerConfig(orchestrationEventConsumerConfig)
+              .setFacilitatorEventConsumerConfig(facilitatorEventConsumerConfig)
               .setSdkModuleInfo(SdkModuleInfo.newBuilder().setDisplayName(displayName).build())
               .build());
     } catch (StatusRuntimeException ex) {

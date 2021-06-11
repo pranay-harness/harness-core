@@ -57,4 +57,5 @@ public class PmsSdkConfiguration {
   boolean useRedisForSdkResponseEvents;
   ConsumerConfig interruptConsumerConfig;
   ConsumerConfig orchestrationEventConsumerConfig;
+  ConsumerConfig facilitationEventConsumerConfig;
 }
