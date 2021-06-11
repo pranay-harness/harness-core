@@ -13,12 +13,8 @@ import software.wings.service.intfc.security.NGSecretService;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import java.util.Optional;
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -50,24 +46,5 @@ public class SecretsResourceNG {
     Optional<EncryptedDataMigrationDTO> encryptedDataOptional =
         ngSecretService.getEncryptedDataMigrationDTO(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return new RestResponse<>(encryptedDataOptional.orElse(null));
-  }
-
-  @POST
-  public RestResponse<Boolean> saveSecret(@NotNull EncryptedDataMigrationDTO encryptedData) {
-    return new RestResponse<>(ngSecretService.save(encryptedData));
-  }
-
-  @PUT
-  public RestResponse<Boolean> updateSecret(@NotNull EncryptedDataMigrationDTO encryptedData) {
-    return new RestResponse<>(ngSecretService.update(encryptedData));
-  }
-
-  @DELETE
-  @Path("{identifier}")
-  public RestResponse<Boolean> deleteSecret(@PathParam("identifier") String identifier,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) final String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) final String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) final String projectIdentifier) {
-    return new RestResponse<>(ngSecretService.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }
 }

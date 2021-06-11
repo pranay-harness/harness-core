@@ -40,19 +40,6 @@ public interface SecretManagerClient {
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
 
-  // save secret
-  @POST(SECRETS_API) Call<RestResponse<Boolean>> saveSecret(@Body EncryptedDataMigrationDTO encryptedData);
-
-  // update secret
-  @PUT(SECRETS_API) Call<RestResponse<Boolean>> updateSecret(@Body EncryptedDataMigrationDTO encryptedData);
-
-  // delete secret
-  @DELETE(SECRETS_API + "/{identifier}")
-  Call<RestResponse<Boolean>> deleteSecret(@Path(value = "identifier") String identifier,
-      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
-
   // create secret manager
   @POST(SECRET_MANAGERS_API)
   @KryoRequest
