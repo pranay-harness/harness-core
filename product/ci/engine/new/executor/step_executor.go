@@ -124,6 +124,7 @@ func (e *stepExecutor) updateStepStatus(ctx context.Context, step *pb.UnitStep,
 		}
 	}
 
+	timeout := max(getStepTimeout(step), 300)
 	err := sendStepStatus(ctx, stepID, e.delegateSvcEndpoint, accountID, callbackToken,
 		taskID, int32(1), timeTaken, stepStatus, errMsg, so, artifact, e.log)
 	if err != nil {
@@ -132,4 +133,22 @@ func (e *stepExecutor) updateStepStatus(ctx context.Context, step *pb.UnitStep,
 		return err
 	}
 	return nil
+}
+
+func max(a, b int64) int64 {
+	if (a > b) return a;
+	return b;
+}
+
+func getStepTimeout(s *pb.UnitStep) int64 {
+	switch x := step.GetStep().(type) {
+	case *pb.UnitStep_Run:
+		return s.GetRun().GetContext().GetExecutionTimeoutSecs()
+	case *pb.UnitStep_Plugin:
+		return s.GetPlugin().GetContext().GetExecutionTimeoutSecs()
+	case *pb.UnitStep_RunTests:
+		return s.GetRunTests().GetContext().GetExecutionTimeoutSecs()
+	default:
+		return 0
+	}
 }
