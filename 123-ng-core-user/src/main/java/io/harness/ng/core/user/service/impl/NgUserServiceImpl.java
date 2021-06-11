@@ -99,7 +99,7 @@ public class NgUserServiceImpl implements NgUserService {
 
   @Inject
   public NgUserServiceImpl(UserClient userClient, UserMembershipRepository userMembershipRepository,
-      AccessControlAdminClient accessControlAdminClient,
+      @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient,
       @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, OutboxService outboxService,
       UserGroupService userGroupService) {
     this.userClient = userClient;
@@ -239,11 +239,6 @@ public class NgUserServiceImpl implements NgUserService {
   @Override
   public List<UserMetadataDTO> getUserMetadata(List<String> userIds) {
     return userMembershipRepository.getUserMetadata(Criteria.where(UserMembershipKeys.userId).in(userIds));
-  }
-
-  @Override
-  public void addUserToScope(UserInfo user, Scope scope, UserMembershipUpdateSource source) {
-    addUserToScope(user.getUuid(), scope, true, source);
   }
 
   @Override
