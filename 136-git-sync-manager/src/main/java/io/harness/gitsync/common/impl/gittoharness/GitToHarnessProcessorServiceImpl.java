@@ -23,6 +23,7 @@ import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingResponse;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingResponseDTO;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus;
+import io.harness.gitsync.common.beans.GitToHarnessProgressStatus;
 import io.harness.gitsync.common.beans.MsvcProcessingFailureStage;
 import io.harness.gitsync.common.helper.GitChangeSetMapper;
 import io.harness.gitsync.common.helper.GitSyncUtils;
@@ -106,7 +107,13 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   private void updateTheGitToHarnessStatus(
       String gitToHarnessProgressRecordId, List<GitToHarnessProcessingResponse> gitToHarnessProcessingResponses) {
     GitToHarnessProcessingStepStatus status = getStatus(gitToHarnessProcessingResponses);
-    gitToHarnessProgressService.updateStatus(gitToHarnessProgressRecordId, status);
+    gitToHarnessProgressService.updateStepStatus(gitToHarnessProgressRecordId, status);
+    // mark end of the progress for this record
+    if (ERROR == status) {
+      gitToHarnessProgressService.updateProgressStatus(gitToHarnessProgressRecordId, GitToHarnessProgressStatus.ERROR);
+    } else {
+      gitToHarnessProgressService.updateProgressStatus(gitToHarnessProgressRecordId, GitToHarnessProgressStatus.DONE);
+    }
   }
 
   private GitToHarnessProcessingStepStatus getStatus(
