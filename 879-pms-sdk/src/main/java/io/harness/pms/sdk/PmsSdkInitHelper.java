@@ -14,8 +14,6 @@ import io.harness.pms.contracts.plan.SdkModuleInfo;
 import io.harness.pms.contracts.plan.Types;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.execution.events.node.NodeExecutionEventListener;
-import io.harness.pms.sdk.core.execution.events.orchestration.SdkOrchestrationEventListener;
-import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.registries.StepRegistry;
@@ -103,17 +101,11 @@ public class PmsSdkInitHelper {
     NodeExecutionEventListener nodeExecutionEventListener = injector.getInstance(NodeExecutionEventListener.class);
     nodeExecutionEventListener.getEventListenerObserverSubject().register(
         injector.getInstance(Key.get(MonitoringEventObserver.class)));
-    SdkOrchestrationEventListener sdkOrchestrationEventListener =
-        injector.getInstance(SdkOrchestrationEventListener.class);
-    sdkOrchestrationEventListener.getEventListenerObserverSubject().register(
-        injector.getInstance(Key.get(MonitoringEventObserver.class)));
   }
 
   private static void registerQueueListeners(Injector injector) {
     QueueListenerController queueListenerController = injector.getInstance(Key.get(QueueListenerController.class));
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 3);
-    queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 2);
-    queueListenerController.register(injector.getInstance(InterruptEventListener.class), 1);
   }
 
   private static void registerSdk(PipelineServiceInfoProvider pipelineServiceInfoProvider, ModuleType moduleType,

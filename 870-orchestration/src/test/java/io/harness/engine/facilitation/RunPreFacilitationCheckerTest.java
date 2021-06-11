@@ -16,7 +16,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.ExecutionCheck;
 import io.harness.engine.OrchestrationEngine;
-import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.InvalidRequestException;
@@ -46,6 +45,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 @OwnedBy(PIPELINE)
 public class RunPreFacilitationCheckerTest extends OrchestrationTestBase {
@@ -53,7 +53,7 @@ public class RunPreFacilitationCheckerTest extends OrchestrationTestBase {
   @Mock EngineExpressionEvaluator engineExpressionEvaluator;
   @Mock VariableResolverTracker variableResolverTracker;
   @Mock OrchestrationEngine engine;
-  @Inject NodeExecutionService nodeExecutionService;
+  @Inject MongoTemplate mongoTemplate;
   @Inject @InjectMocks RunPreFacilitationChecker checker;
 
   @Test
@@ -73,7 +73,7 @@ public class RunPreFacilitationCheckerTest extends OrchestrationTestBase {
                                                 .build())
                                       .startTs(System.currentTimeMillis())
                                       .build();
-    nodeExecutionService.save(nodeExecution);
+    mongoTemplate.save(nodeExecution);
 
     when(engineExpressionEvaluator.getVariableResolverTracker()).thenReturn(variableResolverTracker);
     when(variableResolverTracker.getUsage()).thenReturn(new HashMap<>());
@@ -103,7 +103,7 @@ public class RunPreFacilitationCheckerTest extends OrchestrationTestBase {
                                                 .build())
                                       .startTs(System.currentTimeMillis())
                                       .build();
-    nodeExecutionService.save(nodeExecution);
+    mongoTemplate.save(nodeExecution);
 
     when(engineExpressionEvaluator.getVariableResolverTracker()).thenReturn(variableResolverTracker);
     when(variableResolverTracker.getUsage()).thenReturn(new HashMap<>());
@@ -139,7 +139,7 @@ public class RunPreFacilitationCheckerTest extends OrchestrationTestBase {
                                                 .build())
                                       .startTs(System.currentTimeMillis())
                                       .build();
-    nodeExecutionService.save(nodeExecution);
+    mongoTemplate.save(nodeExecution);
 
     when(engineExpressionEvaluator.getVariableResolverTracker()).thenReturn(variableResolverTracker);
     when(variableResolverTracker.getUsage()).thenReturn(new HashMap<>());

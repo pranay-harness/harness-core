@@ -11,7 +11,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionUpdateFailedException;
 import io.harness.engine.interrupts.AbortInterruptCallback;
-import io.harness.engine.interrupts.InterruptEventQueuePublisher;
 import io.harness.engine.interrupts.InterruptProcessingFailedException;
 import io.harness.engine.interrupts.handlers.publisher.InterruptEventPublisher;
 import io.harness.exception.InvalidRequestException;
@@ -33,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 public class AbortHelper {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
-  @Inject private InterruptEventQueuePublisher interruptEventQueuePublisher;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private InterruptHelper interruptHelper;
   @Inject private InterruptEventPublisher interruptEventPublisher;

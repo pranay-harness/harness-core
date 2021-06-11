@@ -2,6 +2,7 @@ package io.harness.engine;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.contracts.execution.Status.ERRORED;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
@@ -43,6 +44,7 @@ import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
@@ -58,11 +60,11 @@ import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.expression.PmsEngineExpressionService;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.serializer.KryoSerializer;
+import io.harness.serializer.ProtoUtils;
 import io.harness.timeout.TimeoutCallback;
 import io.harness.timeout.TimeoutEngine;
 import io.harness.timeout.TimeoutInstance;
@@ -386,16 +388,17 @@ public class OrchestrationEngine {
     if (resolvedStepParameters != null) {
       stepParameters = resolvedStepParameters.toJson();
     }
-    eventEmitter.emitEvent(OrchestrationEvent.builder()
-                               .ambiance(Ambiance.newBuilder()
-                                             .setPlanExecutionId(planExecution.getUuid())
-                                             .putAllSetupAbstractions(planExecution.getSetupAbstractions() == null
-                                                     ? Collections.emptyMap()
-                                                     : planExecution.getSetupAbstractions())
-                                             .build())
-                               .eventType(OrchestrationEventType.ORCHESTRATION_END)
-                               .status(nodeExecution.getStatus())
-                               .resolvedStepParameters(stepParameters)
+    eventEmitter.emitEvent(OrchestrationEvent.newBuilder()
+                               .setAmbiance(Ambiance.newBuilder()
+                                                .setPlanExecutionId(planExecution.getUuid())
+                                                .putAllSetupAbstractions(planExecution.getSetupAbstractions() == null
+                                                        ? Collections.emptyMap()
+                                                        : planExecution.getSetupAbstractions())
+                                                .build())
+                               .setEventType(OrchestrationEventType.ORCHESTRATION_END)
+                               .setStatus(nodeExecution.getStatus())
+                               .setStepParameters(ByteString.copyFromUtf8(emptyIfNull(stepParameters)))
+                               .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
                                .build());
     orchestrationEndSubject.fireInform(OrchestrationEndObxxxxxxxx:onEnd, ambiance);
   }
