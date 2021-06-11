@@ -21,6 +21,7 @@ public class ContainerDefinitionInfo {
   @NotEmpty private ContainerImageDetails containerImageDetails;
   @NotEmpty private CIContainerType containerType;
   @NotEmpty private ContainerResourceParams containerResourceParams;
+  private boolean isHarnessManagedImage;
   private String stepIdentifier;
   private String stepName;
   private List<String> commands;
