@@ -58,7 +58,7 @@ public class WinRmConnectionAttributes extends SettingValue implements Encryptab
     return new ArrayList<>();
   }
 
-  public enum AuthenticationScheme { BASIC, NTLM, KERBEROS }
+  public enum AuthenticationScheme { @Deprecated BASIC, NTLM, KERBEROS }
 
   public WinRmConnectionAttributes() {
     super(SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES.name());
