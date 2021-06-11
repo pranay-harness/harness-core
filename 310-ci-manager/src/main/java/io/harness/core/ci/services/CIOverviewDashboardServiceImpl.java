@@ -44,8 +44,8 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
   private final long HR_IN_MS = 60 * 60 * 1000;
   private final long DAY_IN_MS = 24 * HR_IN_MS;
 
-  private List<String> failedList =
-      Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(), ExecutionStatus.EXPIRED.name());
+  private List<String> failedList = Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(),
+      ExecutionStatus.EXPIRED.name(), ExecutionStatus.IGNOREFAILED.name(), ExecutionStatus.ERRORED.name());
 
   private static final int MAX_RETRY_COUNT = 5;
 
