@@ -33,6 +33,7 @@ import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.engine.pms.data.PmsSweepingOutputServiceImpl;
 import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.engine.pms.tasks.TaskExecutor;
+import io.harness.exception.exceptionmanager.ExceptionModule;
 import io.harness.govern.ServersModule;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.expression.EngineExpressionService;
@@ -80,6 +81,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
 
   @Override
   protected void configure() {
+    install(ExceptionModule.getInstance());
     install(new AbstractWaiterModule() {
       @Override
       public WaiterConfiguration waiterConfiguration() {
