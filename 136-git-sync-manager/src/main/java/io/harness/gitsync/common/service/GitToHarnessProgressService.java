@@ -29,4 +29,9 @@ public interface GitToHarnessProgressService {
 
   GitToHarnessProgressDTO updateProgressWithProcessingResponse(
       String gitToHarnessProgressRecordId, GitToHarnessProcessingResponse gitToHarnessResponse);
+
+  boolean isProgressEventAlreadyProcessedOrInProcess(String repoURL, String commitId, YamlChangeSetEventType eventType);
+
+  GitToHarnessProgressDTO initProgress(
+      YamlChangeSetDTO yamlChangeSetDTO, YamlChangeSetEventType eventType, GitToHarnessProcessingStepType stepType);
 }

@@ -11,6 +11,7 @@ import io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepType;
 import io.harness.gitsync.common.beans.GitToHarnessProgress;
 import io.harness.gitsync.common.beans.GitToHarnessProgress.GitToHarnessProgressKeys;
+import io.harness.gitsync.common.beans.GitToHarnessProgressStatus;
 import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.dtos.GitToHarnessProgressDTO;
 import io.harness.gitsync.common.service.GitToHarnessProgressService;
@@ -93,5 +94,35 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
     Update update = new Update();
     update.addToSet(GitToHarnessProgressKeys.processingResponse, gitToHarnessResponse);
     return update(gitToHarnessProgressRecordId, update);
+  }
+
+  @Override
+  public boolean isProgressEventAlreadyProcessedOrInProcess(
+      String repoURL, String commitId, YamlChangeSetEventType eventType) {
+    GitToHarnessProgress gitToHarnessProgress =
+        gitToHarnessProgressRepository.findByRepoUrlAndCommitIdAndEventType(repoURL, commitId, eventType);
+    if (gitToHarnessProgress == null) {
+      return false;
+    }
+    return !gitToHarnessProgress.getGitToHarnessProgressStatus().isFailureStatus();
+  }
+
+  @Override
+  public GitToHarnessProgressDTO initProgress(
+      YamlChangeSetDTO yamlChangeSetDTO, YamlChangeSetEventType eventType, GitToHarnessProcessingStepType stepType) {
+    GitToHarnessProgressDTO gitToHarnessProgress =
+        GitToHarnessProgressDTO.builder()
+            .accountIdentifier(yamlChangeSetDTO.getAccountId())
+            .yamlChangeSetId(yamlChangeSetDTO.getChangesetId())
+            .repoUrl(yamlChangeSetDTO.getRepoUrl())
+            .branch(yamlChangeSetDTO.getBranch())
+            .eventType(eventType)
+            .stepType(stepType)
+            .stepStatus(GitToHarnessProcessingStepStatus.TO_DO)
+            .stepStartingTime(System.currentTimeMillis())
+            .commitId(yamlChangeSetDTO.getGitWebhookRequestAttributes().getHeadCommitId())
+            .gitToHarnessProgressStatus(GitToHarnessProgressStatus.TO_DO)
+            .build();
+    return save(gitToHarnessProgress);
   }
 }
