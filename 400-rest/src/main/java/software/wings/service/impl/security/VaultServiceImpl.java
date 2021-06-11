@@ -91,14 +91,12 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
       vaultConfig.setSecretId(savedVaultConfigWithCredentials.getSecretId());
     }
 
-    boolean credentialChanged =
-        !Objects.equals(savedVaultConfigWithCredentials.getAuthToken(), vaultConfig.getAuthToken())
-        || !Objects.equals(savedVaultConfigWithCredentials.getSecretId(), vaultConfig.getSecretId());
+    boolean credentialChanged = isCredentialChanged(vaultConfig, savedVaultConfigWithCredentials);
 
     validateVaultConfig(accountId, vaultConfig, validate);
 
     if (credentialChanged) {
-      updateVaultCredentials(savedVaultConfig, vaultConfig.getAuthToken(), vaultConfig.getSecretId(), VAULT);
+      updateVaultCredentials(savedVaultConfig, vaultConfig, VAULT);
     }
 
     savedVaultConfig.setName(vaultConfig.getName());
@@ -114,6 +112,8 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
     savedVaultConfig.setTemplatizedFields(vaultConfig.getTemplatizedFields());
     savedVaultConfig.setUsageRestrictions(vaultConfig.getUsageRestrictions());
     savedVaultConfig.setScopedToAccount(vaultConfig.isScopedToAccount());
+    // Handle vault Agent Properties
+    updateVaultAgentConfiguration(vaultConfig, savedVaultConfig);
     updateNameSpace(accountId, vaultConfig, savedVaultConfig);
     // PL-3237: Audit secret manager config changes.
     if (auditChanges) {
@@ -124,6 +124,26 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
       alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, getRenewalAlert(oldConfigForAudit));
     }
     return configId;
+  }
+
+  private void updateVaultAgentConfiguration(VaultConfig vaultConfig, VaultConfig savedVaultConfig) {
+    // set all set credentials to null
+    savedVaultConfig.setAppRoleId(null);
+    savedVaultConfig.setAuthToken(null);
+    savedVaultConfig.setSecretId(null);
+
+    savedVaultConfig.setSinkPath(vaultConfig.getSinkPath());
+    savedVaultConfig.setUseVaultAgent(vaultConfig.isUseVaultAgent());
+    savedVaultConfig.setDelegateSelectors(vaultConfig.getDelegateSelectors());
+  }
+
+  private boolean isCredentialChanged(VaultConfig vaultConfig, VaultConfig savedVaultConfigWithCredentials) {
+    return !Objects.equals(savedVaultConfigWithCredentials.getAuthToken(), vaultConfig.getAuthToken())
+        || !Objects.equals(savedVaultConfigWithCredentials.getSecretId(), vaultConfig.getSecretId())
+        || !Objects.equals(savedVaultConfigWithCredentials.isUseVaultAgent(), vaultConfig.isUseVaultAgent())
+        || !Objects.equals(savedVaultConfigWithCredentials.isUseVaultAgent(), vaultConfig.isUseVaultAgent())
+        || !Objects.equals(savedVaultConfigWithCredentials.getDelegateSelectors(), vaultConfig.getDelegateSelectors())
+        || !Objects.equals(savedVaultConfigWithCredentials.getSinkPath(), vaultConfig.getSinkPath());
   }
 
   private void updateNameSpace(String accountId, VaultConfig vaultConfig, VaultConfig savedVaultConfig) {
@@ -156,21 +176,23 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
           SECRET_MANAGEMENT_ERROR, "Another vault configuration with the same name or URL exists", e, USER_SRE);
     }
 
-    saveVaultCredentials(vaultConfig, authToken, secretId, VAULT);
+    if (!vaultConfig.isUseVaultAgent()) {
+      saveVaultCredentials(vaultConfig, authToken, secretId, VAULT);
 
-    Query<SecretManagerConfig> query =
-        wingsPersistence.createQuery(SecretManagerConfig.class).field(ID_KEY).equal(vaultConfig.getUuid());
+      Query<SecretManagerConfig> query =
+          wingsPersistence.createQuery(SecretManagerConfig.class).field(ID_KEY).equal(vaultConfig.getUuid());
 
-    UpdateOperations<SecretManagerConfig> updateOperations =
-        wingsPersistence.createUpdateOperations(SecretManagerConfig.class)
-            .set(BaseVaultConfigKeys.authToken, vaultConfig.getAuthToken());
+      UpdateOperations<SecretManagerConfig> updateOperations =
+          wingsPersistence.createUpdateOperations(SecretManagerConfig.class)
+              .set(BaseVaultConfigKeys.authToken, vaultConfig.getAuthToken());
 
-    if (isNotEmpty(vaultConfig.getSecretId())) {
-      updateOperations.set(BaseVaultConfigKeys.secretId, vaultConfig.getSecretId());
+      if (isNotEmpty(vaultConfig.getSecretId())) {
+        updateOperations.set(BaseVaultConfigKeys.secretId, vaultConfig.getSecretId());
+      }
+
+      vaultConfig =
+          (VaultConfig) wingsPersistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
     }
-
-    vaultConfig = (VaultConfig) wingsPersistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
-
     // PL-3237: Audit secret manager config changes.
     generateAuditForSecretManager(accountId, null, vaultConfig);
     return vaultConfig.getUuid();
@@ -286,6 +308,17 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
     if (isEmpty(vaultConfig.getSecretEngineName()) || vaultConfig.getSecretEngineVersion() == 0) {
       throw new SecretManagementException(
           VAULT_OPERATION_ERROR, "Secret engine or secret engine version was not specified", USER);
+    }
+
+    if (vaultConfig.isUseVaultAgent()) {
+      if (isEmpty(vaultConfig.getSinkPath())) {
+        throw new SecretManagementException(
+            VAULT_OPERATION_ERROR, "You must provide a sink path to read token if you are using VaultAgent", USER);
+      }
+      if (isEmpty(vaultConfig.getDelegateSelectors())) {
+        throw new SecretManagementException(VAULT_OPERATION_ERROR,
+            "You must provide a delegate selector to read token if you are using VaultAgent", USER);
+      }
     }
     // Need to try using Vault AppRole login to generate a client token if configured so
     if (vaultConfig.getAccessType() == APP_ROLE) {
