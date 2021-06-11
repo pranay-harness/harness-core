@@ -1,6 +1,7 @@
 package software.wings.core.winrm.executors;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.TMACARI;
 
@@ -31,6 +32,7 @@ import com.jcraft.jsch.JSchException;
 import io.cloudsoft.winrm4j.client.ShellCommand;
 import io.cloudsoft.winrm4j.client.WinRmClient;
 import io.cloudsoft.winrm4j.client.WinRmClientBuilder;
+import io.cloudsoft.winrm4j.client.WinRmClientContext;
 import io.cloudsoft.winrm4j.winrm.WinRmTool;
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 import java.io.IOException;
@@ -44,6 +46,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -162,6 +165,29 @@ public class WinRmSessionTest extends WingsBaseTest {
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> new WinRmSession(winRmSessionConfig, logCallback))
         .withMessageContaining("Username or domain cannot be null");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testAutoClosable() throws JSchException {
+    PowerMockito.mockStatic(SshHelperUtils.class);
+    winRmSessionConfig = WinRmSessionConfig.builder()
+                             .domain("KRB.LOCAL")
+                             .skipCertChecks(true)
+                             .username("TestUser")
+                             .environment(new HashMap<>())
+                             .hostname("localhost")
+                             .authenticationScheme(WinRmConnectionAttributes.AuthenticationScheme.KERBEROS)
+                             .build();
+    WinRmSession session = new WinRmSession(winRmSessionConfig, logCallback);
+    WinRmClientContext context = Mockito.mock(WinRmClientContext.class);
+    WinRmClient client = Mockito.mock(WinRmClient.class);
+    on(session).set("context", context);
+    on(session).set("client", client);
+    session.close();
+    verify(context).shutdown();
+    verify(client).close();
   }
 
   @Test
