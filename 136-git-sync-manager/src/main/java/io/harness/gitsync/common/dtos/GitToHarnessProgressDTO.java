@@ -7,6 +7,7 @@ import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingResponseDTO;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepType;
+import io.harness.gitsync.common.beans.GitToHarnessProgressStatus;
 import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 
 import java.util.List;
@@ -23,10 +24,12 @@ public class GitToHarnessProgressDTO {
   @NotNull private String yamlChangeSetId;
   @NotNull private String repoUrl;
   @NotNull private String branch;
+  @NotNull private String commitId;
   @NotNull private YamlChangeSetEventType eventType;
   @NotNull private GitToHarnessProcessingStepType stepType;
   @NotNull private GitToHarnessProcessingStepStatus stepStatus;
   @NotNull private Long stepStartingTime;
+  @NotNull private GitToHarnessProgressStatus gitToHarnessProgressStatus;
   List<GitToHarnessFileProcessingRequest> gitFileChanges;
   List<GitToHarnessProcessingResponseDTO> processingResponse;
 }
