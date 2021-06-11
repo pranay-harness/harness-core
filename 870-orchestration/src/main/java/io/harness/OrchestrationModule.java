@@ -26,7 +26,6 @@ import io.harness.engine.facilitation.facilitator.publisher.RedisFacilitateEvent
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptServiceImpl;
 import io.harness.engine.interrupts.handlers.publisher.InterruptEventPublisher;
-import io.harness.engine.interrupts.handlers.publisher.MongoInterruptEventPublisher;
 import io.harness.engine.interrupts.handlers.publisher.RedisInterruptEventPublisher;
 import io.harness.engine.pms.data.PmsEngineExpressionServiceImpl;
 import io.harness.engine.pms.data.PmsOutcomeService;
@@ -127,11 +126,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
         .toInstance(() -> OrchestrationComponentTester.testKryoRegistration(kryoSerializerProvider));
 
     install(new OrchestrationEventsFrameworkModule(config.getEventsFrameworkConfiguration()));
-    if (config.isUseRedisForInterrupts()) {
-      bind(InterruptEventPublisher.class).to(RedisInterruptEventPublisher.class);
-    } else {
-      bind(InterruptEventPublisher.class).to(MongoInterruptEventPublisher.class);
-    }
+    bind(InterruptEventPublisher.class).to(RedisInterruptEventPublisher.class);
     bind(FacilitateEventPublisher.class).to(RedisFacilitateEventPublisher.class).in(Singleton.class);
   }
 

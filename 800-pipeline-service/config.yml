@@ -186,6 +186,4 @@ auditClientConfig:
 
 enableAudit: false
 
-useRedisForInterrupts: true
-useRedisForOrchestrationEvents: true
 useRedisForSdkResponseEvents: true

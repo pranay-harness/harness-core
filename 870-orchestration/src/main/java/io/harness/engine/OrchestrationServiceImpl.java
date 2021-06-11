@@ -19,10 +19,11 @@ import io.harness.observer.Subject;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.serializer.ProtoUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -71,8 +72,11 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                             .setMetadata(metadata)
                             .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
                             .build();
-    eventEmitter.emitEvent(
-        OrchestrationEvent.builder().ambiance(ambiance).eventType(OrchestrationEventType.ORCHESTRATION_START).build());
+    eventEmitter.emitEvent(OrchestrationEvent.newBuilder()
+                               .setAmbiance(ambiance)
+                               .setEventType(OrchestrationEventType.ORCHESTRATION_START)
+                               .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
+                               .build());
     orchestrationStartSubject.fireInform(OrchestrationStartObxxxxxxxx:onStart,
         OrchestrationStartInfo.builder().ambiance(ambiance).planExecutionMetadata(planExecutionMetadata).build());
 

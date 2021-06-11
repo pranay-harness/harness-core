@@ -10,8 +10,6 @@ import io.harness.execution.SdkResponseEventListener;
 import io.harness.mongo.queue.QueueFactory;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.execution.SdkResponseEvent;
-import io.harness.pms.interrupts.InterruptEvent;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueuePublisher;
@@ -49,22 +47,8 @@ public class OrchestrationQueueModule extends AbstractModule {
 
   @Provides
   @Singleton
-  QueuePublisher<OrchestrationEvent> orchestrationEventQueuePublisher(
-      Injector injector, PublisherConfiguration config, MongoTemplate mongoTemplate) {
-    return QueueFactory.createNgQueuePublisher(injector, OrchestrationEvent.class, emptyList(), config, mongoTemplate);
-  }
-
-  @Provides
-  @Singleton
   QueuePublisher<NodeExecutionEvent> executionEventQueuePublisher(
       Injector injector, PublisherConfiguration config, MongoTemplate mongoTemplate) {
     return QueueFactory.createNgQueuePublisher(injector, NodeExecutionEvent.class, emptyList(), config, mongoTemplate);
-  }
-
-  @Provides
-  @Singleton
-  QueuePublisher<InterruptEvent> interruptEventQueuePublisher(
-      Injector injector, PublisherConfiguration config, MongoTemplate mongoTemplate) {
-    return QueueFactory.createNgQueuePublisher(injector, InterruptEvent.class, emptyList(), config, mongoTemplate);
   }
 }

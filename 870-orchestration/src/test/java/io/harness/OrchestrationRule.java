@@ -10,6 +10,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delay.DelayEventListener;
 import io.harness.delegate.DelegateServiceGrpc;
+import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.execution.SdkResponseEventListener;
 import io.harness.factory.ClosingFactory;
@@ -152,6 +153,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
         bind(DelegateAsyncService.class).toInstance(mock(DelegateAsyncService.class));
         bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
         }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
+        bind(OrchestrationEventEmitter.class).to(MockEventEmitter.class);
       }
     });
 
