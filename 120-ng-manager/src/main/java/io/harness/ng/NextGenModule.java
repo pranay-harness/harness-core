@@ -21,7 +21,9 @@ import io.harness.OrchestrationStepsModule;
 import io.harness.YamlBaseUrlServiceImpl;
 import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
 import io.harness.accesscontrol.AccessControlAdminClientModule;
+import io.harness.account.AbstractAccountModule;
 import io.harness.account.AccountClientModule;
+import io.harness.account.AccountConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
@@ -459,6 +461,13 @@ public class NextGenModule extends AbstractModule {
       @Override
       public TelemetryConfiguration telemetryConfiguration() {
         return appConfig.getSegmentConfiguration();
+      }
+    });
+
+    install(new AbstractAccountModule() {
+      @Override
+      public AccountConfig accountConfiguration() {
+        return appConfig.getAccountConfig();
       }
     });
     install(LicenseModule.getInstance());

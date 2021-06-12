@@ -67,6 +67,9 @@ mongo:
   transactionsEnabled: false
   aliasDBName: ng-harness
 
+accountConfig:
+  deploymentClusterName: ""
+
 #[secondary-db] : Uncomment the following if you want to connect to another database
 #secondary - mongo:
 #uri : mongodb:  // localhost:27017/cd-nextgen-secondary
