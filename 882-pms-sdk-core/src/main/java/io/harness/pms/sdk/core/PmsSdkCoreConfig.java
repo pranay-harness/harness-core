@@ -26,5 +26,4 @@ public class PmsSdkCoreConfig {
           .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
           .build();
   AuthorizationServiceHeader serviceHeader;
-  boolean useRedisForSdkResponseEvents;
 }

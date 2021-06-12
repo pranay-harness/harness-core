@@ -314,8 +314,6 @@ replace_key_value yamlSchemaClientConfig.yamlSchemaHttpClientMap.cvng.secret "$C
 
 replace_key_value yamlSchemaClientConfig.yamlSchemaHttpClientMap.cvng.serviceHttpClientConfig.baseUrl $CVNG_BASE_URL
 
-replace_key_value useRedisForSdkResponseEvents "$USE_REDIS_FOR_SDK_RESPONSE_EVENTS"
-
 replace_key_value signupNotificationConfiguration.projectId "$SIGNUP_NOTIFICATION_GCS_PROJECT_ID"
 replace_key_value signupNotificationConfiguration.bucketName "$SIGNUP_NOTIFICATION_GCS_BUCKET_NAME"
 

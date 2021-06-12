@@ -12,7 +12,6 @@ import io.harness.delay.DelayEventListener;
 import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
-import io.harness.execution.SdkResponseEventListener;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
@@ -201,7 +200,6 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     final QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(SdkResponseEventListener.class), 1);
 
     closingFactory.addServer(new Closeable() {
       @SneakyThrows

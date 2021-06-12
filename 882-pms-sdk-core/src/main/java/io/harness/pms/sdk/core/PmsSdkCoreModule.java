@@ -13,7 +13,6 @@ import io.harness.pms.sdk.core.resolver.outcome.OutcomeGrpcServiceImpl;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingGrpcOutputService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
-import io.harness.pms.sdk.core.response.publishers.MongoSdkResponseEventPublisher;
 import io.harness.pms.sdk.core.response.publishers.RedisSdkResponseEventPublisher;
 import io.harness.pms.sdk.core.response.publishers.SdkResponseEventPublisher;
 import io.harness.threading.ThreadPool;
@@ -58,12 +57,7 @@ public class PmsSdkCoreModule extends AbstractModule {
     bind(FacilitatorEventHandler.class).to(FacilitatorEventHandlerImpl.class).in(Singleton.class);
     install(
         PmsSdkCoreEventsFrameworkModule.getInstance(config.getEventsFrameworkConfiguration(), config.getServiceName()));
-
-    if (config.isUseRedisForSdkResponseEvents()) {
-      bind(SdkResponseEventPublisher.class).to(RedisSdkResponseEventPublisher.class);
-    } else {
-      bind(SdkResponseEventPublisher.class).to(MongoSdkResponseEventPublisher.class);
-    }
+    bind(SdkResponseEventPublisher.class).to(RedisSdkResponseEventPublisher.class);
   }
 
   @Provides

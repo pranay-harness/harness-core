@@ -8,10 +8,10 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.execution.events.EventErrorRequest;
+import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
-import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.rule.Owner;
 import io.harness.tasks.FailureResponseData;
@@ -51,9 +51,9 @@ public class ErrorEventResponseHandlerTest {
                                                         .addFailureTypes(FailureType.AUTHENTICATION_FAILURE)
                                                         .build())
                                     .build();
-    SdkResponseEvent sdkResponseEventInternal =
-        SdkResponseEvent.builder()
-            .sdkResponseEventRequest(SdkResponseEventRequest.newBuilder().setEventErrorRequest(request).build())
+    SdkResponseEventProto sdkResponseEventInternal =
+        SdkResponseEventProto.newBuilder()
+            .setSdkResponseEventRequest(SdkResponseEventRequest.newBuilder().setEventErrorRequest(request).build())
             .build();
     errorEventResponseHandler.handleEvent(sdkResponseEventInternal);
     verify(waitNotifyEngine)

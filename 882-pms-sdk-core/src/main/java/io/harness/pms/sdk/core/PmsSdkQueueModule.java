@@ -1,7 +1,6 @@
 package io.harness.pms.sdk.core;
 
 import static java.time.Duration.ofSeconds;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -9,13 +8,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.config.PublisherConfiguration;
 import io.harness.mongo.queue.QueueFactory;
 import io.harness.pms.execution.NodeExecutionEvent;
-import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.pms.sdk.core.execution.events.node.NodeExecutionEventListener;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
-import io.harness.queue.QueuePublisher;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
@@ -65,14 +62,6 @@ public class PmsSdkQueueModule extends AbstractModule {
     List<List<String>> topicExpressions = ImmutableList.of(singletonList(PmsConstants.INTERNAL_SERVICE_NAME));
     return QueueFactory.createNgQueueConsumer(
         injector, NodeExecutionEvent.class, ofSeconds(3), topicExpressions, publisherConfiguration, mongoTemplate);
-  }
-
-  @Provides
-  @Singleton
-  QueuePublisher<SdkResponseEvent> pmsExecutionResponseEventQueuePublisher(
-      Injector injector, PublisherConfiguration config) {
-    MongoTemplate sdkTemplate = getMongoTemplate(injector);
-    return QueueFactory.createNgQueuePublisher(injector, SdkResponseEvent.class, emptyList(), config, sdkTemplate);
   }
 
   private MongoTemplate getMongoTemplate(Injector injector) {

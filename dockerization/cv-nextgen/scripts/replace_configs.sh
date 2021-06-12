@@ -121,8 +121,6 @@ if [[ "" != "$GRPC_SERVER_PORT" ]]; then
   yq write -i $CONFIG_FILE pmsSdkGrpcServerConfig.connectors[0].port "$GRPC_SERVER_PORT"
 fi
 
-replace_key_value useRedisForSdkResponseEvents "$USE_REDIS_FOR_SDK_RESPONSE_EVENTS"
-
 replace_key_value cfClientConfig.apiKey "$CF_CLIENT_API_KEY"
 replace_key_value cfClientConfig.configUrl "$CF_CLIENT_CONFIG_URL"
 replace_key_value cfClientConfig.eventUrl "$CF_CLIENT_EVENT_URL"
