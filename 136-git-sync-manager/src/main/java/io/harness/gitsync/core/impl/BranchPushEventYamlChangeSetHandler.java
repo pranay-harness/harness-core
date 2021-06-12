@@ -61,7 +61,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
     if (gitToHarnessProgressService.isProgressEventAlreadyProcessedOrInProcess(repoURL,
             yamlChangeSetDTO.getGitWebhookRequestAttributes().getHeadCommitId(), YamlChangeSetEventType.BRANCH_PUSH)) {
       log.info("Event {} already in progress or successfully completed", yamlChangeSetDTO);
-      return YamlChangeSetStatus.SKIPPED;
+      return YamlChangeSetStatus.RUNNING;
     }
 
     // Init Progress Record for this event
