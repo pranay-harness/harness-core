@@ -37,7 +37,7 @@ public class CENextGenManagerExecutor {
   public static final String MODULE = "340-ce-nextgen";
   public static final String CONFIG_YML = "config.yml";
   private static boolean failedAlready;
-  private static final Duration waiting = ofMinutes(4);
+  private static final Duration waiting = ofMinutes(5);
 
   public static void ensureServiceIsRunning(Class<?> clazz) throws IOException {
     if (!isHealthy()) {
