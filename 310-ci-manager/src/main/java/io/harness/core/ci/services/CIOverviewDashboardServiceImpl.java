@@ -15,9 +15,7 @@ import io.harness.app.beans.entities.RepositoryBuildInfo;
 import io.harness.app.beans.entities.RepositoryInfo;
 import io.harness.app.beans.entities.RepositoryInformation;
 import io.harness.app.beans.entities.StatusAndTime;
-import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -29,7 +27,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +43,10 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
 
   private List<String> failedList = Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(),
       ExecutionStatus.EXPIRED.name(), ExecutionStatus.IGNOREFAILED.name(), ExecutionStatus.ERRORED.name());
+
+  private List<String> activeStatusList =
+      Arrays.asList(ExecutionStatus.RUNNING.name(), ExecutionStatus.ASYNCWAITING.name(),
+          ExecutionStatus.TASKWAITING.name(), ExecutionStatus.TIMEDWAITING.name(), ExecutionStatus.PAUSED.name());
 
   private static final int MAX_RETRY_COUNT = 5;
 
@@ -125,9 +126,8 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     }
 
     totalBuildSqlBuilder.append("status IN (");
-    EnumSet<Status> activeStatuses = StatusUtils.activeStatuses();
-    for (Status activeStatus : activeStatuses) {
-      totalBuildSqlBuilder.append(" '" + activeStatus.name() + "' ,");
+    for (String active : activeStatusList) {
+      totalBuildSqlBuilder.append(String.format("'%s',", active));
     }
 
     totalBuildSqlBuilder.deleteCharAt(totalBuildSqlBuilder.length() - 1);
