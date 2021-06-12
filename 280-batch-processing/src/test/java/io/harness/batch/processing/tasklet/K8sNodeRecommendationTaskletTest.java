@@ -56,17 +56,20 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
   private static final String CLUSTER_ID = "clusterId";
   private static final Gson GSON = new Gson();
 
+  private K8sServiceProvider k8sServiceProvider;
+  private NodePoolId nodePoolId;
+
   @Before
   public void setUp() throws Exception {
     TotalResourceUsage resourceUsage =
         TotalResourceUsage.builder().maxcpu(1).maxmemory(3).sumcpu(8).summemory(64).build();
-    NodePoolId nodePoolId = NodePoolId.builder().clusterid(CLUSTER_ID).nodepoolname(NODE_POOL_NAME).build();
-    K8sServiceProvider k8sServiceProvider = K8sServiceProvider.builder()
-                                                .cloudProvider(CloudProvider.GCP)
-                                                .instanceCategory(InstanceCategory.ON_DEMAND)
-                                                .region("us-west-1")
-                                                .instanceFamily("xyz")
-                                                .build();
+    nodePoolId = NodePoolId.builder().clusterid(CLUSTER_ID).nodepoolname(NODE_POOL_NAME).build();
+    k8sServiceProvider = K8sServiceProvider.builder()
+                             .cloudProvider(CloudProvider.GCP)
+                             .instanceCategory(InstanceCategory.ON_DEMAND)
+                             .region("us-west-1")
+                             .instanceFamily("xyz")
+                             .build();
     VMComputePricingInfo pricingInfo = VMComputePricingInfo.builder().onDemandPrice(2D).build();
 
     // #execute
@@ -214,6 +217,48 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     assertThat(stats.getTotalMonthlyCost()).isCloseTo(2D * 6 * 24 * 30, offset(0.5D));
     // monthlyCost - $1.329993 per vm * 24 hrs * 30 days
     assertThat(stats.getTotalMonthlySaving()).isCloseTo((2D * 6 - 1.329993D) * 24 * 30, offset(0.5D));
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testTotalPriceIsCorrectInSpotRecommendation() throws Exception {
+    k8sServiceProvider.setInstanceCategory(InstanceCategory.SPOT);
+
+    when(k8sRecommendationDAO.getServiceProvider(eq(ACCOUNT_ID), eq(nodePoolId))).thenReturn(k8sServiceProvider);
+
+    assertThat(tasklet.execute(null, chunkContext)).isNull();
+
+    ArgumentCaptor<RecommendationResponse> captor = ArgumentCaptor.forClass(RecommendationResponse.class);
+
+    verify(k8sRecommendationDAO, times(1))
+        .insertNodeRecommendationResponse(any(), any(), any(), any(), captor.capture());
+
+    RecommendationResponse recommendation = captor.getValue();
+    assertThat(recommendation).isNotNull();
+    assertThat(recommendation.getAccuracy().getTotalPrice()).isCloseTo(0.28D + 0, offset(0.05D));
+    assertThat(recommendation.getAccuracy().getTotalPrice())
+        .isCloseTo(
+            recommendation.getAccuracy().getSpotPrice() + recommendation.getAccuracy().getMasterPrice(), offset(0.05D));
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testTotalPriceIsCorrectInOnDemandRecommendation() throws Exception {
+    assertThat(tasklet.execute(null, chunkContext)).isNull();
+
+    ArgumentCaptor<RecommendationResponse> captor = ArgumentCaptor.forClass(RecommendationResponse.class);
+
+    verify(k8sRecommendationDAO, times(1))
+        .insertNodeRecommendationResponse(any(), any(), any(), any(), captor.capture());
+
+    RecommendationResponse recommendation = captor.getValue();
+    assertThat(recommendation).isNotNull();
+    assertThat(recommendation.getAccuracy().getTotalPrice()).isCloseTo(1.329993D, offset(0.05D));
+    assertThat(recommendation.getAccuracy().getTotalPrice())
+        .isCloseTo(recommendation.getAccuracy().getWorkerPrice() + recommendation.getAccuracy().getMasterPrice(),
+            offset(0.05D));
   }
 
   private RecommendClusterRequest captureRequest(TotalResourceUsage totalResourceUsage) throws Exception {
