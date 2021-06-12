@@ -285,8 +285,7 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
 
     DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
     if (owner != null) {
-      query.or(query.criteria(DelegateProfileKeys.owner).equal(owner),
-          query.criteria(DelegateProfileKeys.primary).equal(true));
+      query.field(DelegateProfileKeys.owner).equal(owner);
     } else {
       // Account level delegate configurations
       query.field(DelegateProfileKeys.owner).doesNotExist();

@@ -114,6 +114,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.delegate.utils.DelegateEntityOwnerMapper;
 import io.harness.eventsframework.api.Producer;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -209,6 +210,7 @@ import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
@@ -268,7 +270,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private KryoSerializer kryoSerializer;
 
-  private int port = LocalhostUtils.findFreePort();
+  private final int port = LocalhostUtils.findFreePort();
   @Rule public WireMockRule wireMockRule = new WireMockRule(port);
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -282,10 +284,10 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Inject private HPersistence persistence;
 
-  private final Subject<DelegateProfileObserver> delegateProfileSubject = mock(Subject.class);
-  private final Subject<DelegateTaskRetryObserver> retryObserverSubject = mock(Subject.class);
-  private final Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject = mock(Subject.class);
-  private final Subject<DelegateObserver> subject = mock(Subject.class);
+  @Mock private Subject<DelegateProfileObserver> delegateProfileSubject;
+  @Mock private Subject<DelegateTaskRetryObserver> retryObserverSubject;
+  @Mock private Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject;
+  @Mock private Subject<DelegateObserver> subject;
 
   private final Account account =
       anAccount().withLicenseInfo(LicenseInfo.builder().accountStatus(AccountStatus.ACTIVE).build()).build();
@@ -742,7 +744,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                    .ng(true)
                                                    .primary(true)
                                                    .build();
-    when(delegateProfileService.fetchNgPrimaryProfile(ngDelegateWithoutProfile.getAccountId()))
+    when(delegateProfileService.fetchNgPrimaryProfile(ngDelegateWithoutProfile.getAccountId(), null))
         .thenReturn(ngPrimaryDelegateProfile);
 
     ngDelegateWithoutProfile = delegateService.add(ngDelegateWithoutProfile);
@@ -965,7 +967,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .build();
 
     DelegateProfile profile = createDelegateProfileBuilder().accountId(accountId).primary(true).build();
-    when(delegateProfileService.fetchNgPrimaryProfile(accountId)).thenReturn(profile);
+    when(delegateProfileService.fetchNgPrimaryProfile(accountId, null)).thenReturn(profile);
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     DelegateRegisterResponse registerResponse = delegateService.register(params);
@@ -991,12 +993,14 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldRegisterDelegateParamsWithOrgId() {
-    String accountId = generateUuid();
+    final String accountId = generateUuid();
+    final String orgId = "orgId";
+    final DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, StringUtils.EMPTY);
 
     DelegateParams params = DelegateParams.builder()
                                 .accountId(accountId)
                                 .sessionIdentifier("sessionId")
-                                .orgIdentifier("orgId")
+                                .orgIdentifier(orgId)
                                 .hostName(HOST_NAME)
                                 .description(DESCRIPTION)
                                 .delegateType(DOCKER_DELEGATE)
@@ -1010,26 +1014,29 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .build();
 
     DelegateProfile profile = createDelegateProfileBuilder().accountId(accountId).primary(true).build();
-    when(delegateProfileService.fetchNgPrimaryProfile(accountId)).thenReturn(profile);
+    when(delegateProfileService.fetchNgPrimaryProfile(accountId, owner)).thenReturn(profile);
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     DelegateRegisterResponse registerResponse = delegateService.register(params);
     Delegate delegateFromDb = delegateCache.get(accountId, registerResponse.getDelegateId(), true);
 
-    assertThat(delegateFromDb.getOwner().getIdentifier()).isEqualTo("orgId");
+    assertThat(delegateFromDb.getOwner().getIdentifier()).isEqualTo(orgId);
   }
 
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldRegisterDelegateParamsWithProjectId() {
-    String accountId = generateUuid();
+    final String accountId = generateUuid();
+    final String orgId = "orgId";
+    final String projectId = "projectId";
+    final DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
 
     DelegateParams params = DelegateParams.builder()
                                 .accountId(accountId)
                                 .sessionIdentifier("sessionId")
-                                .orgIdentifier("orgId")
-                                .projectIdentifier("projectId")
+                                .orgIdentifier(orgId)
+                                .projectIdentifier(projectId)
                                 .hostName(HOST_NAME)
                                 .description(DESCRIPTION)
                                 .delegateType(DOCKER_DELEGATE)
@@ -1043,7 +1050,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .build();
 
     DelegateProfile profile = createDelegateProfileBuilder().accountId(accountId).primary(true).build();
-    when(delegateProfileService.fetchNgPrimaryProfile(accountId)).thenReturn(profile);
+    when(delegateProfileService.fetchNgPrimaryProfile(accountId, owner)).thenReturn(profile);
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     DelegateRegisterResponse registerResponse = delegateService.register(params);

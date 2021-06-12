@@ -1902,7 +1902,7 @@ public class DelegateServiceImpl implements DelegateService {
     DelegateProfile delegateProfile = delegateProfileService.get(accountId, delegate.getDelegateProfileId());
     if (delegateProfile == null) {
       if (delegate.isNg()) {
-        delegateProfile = delegateProfileService.fetchNgPrimaryProfile(accountId);
+        delegateProfile = delegateProfileService.fetchNgPrimaryProfile(accountId, delegate.getOwner());
       } else {
         delegateProfile = delegateProfileService.fetchCgPrimaryProfile(accountId);
       }
