@@ -22,6 +22,7 @@ import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateGroup;
 import io.harness.delegate.beans.DelegateGroupDetails;
 import io.harness.delegate.beans.DelegateGroupListing;
+import io.harness.delegate.beans.DelegateGroupStatus;
 import io.harness.delegate.beans.DelegateInsightsBarDetails;
 import io.harness.delegate.beans.DelegateInsightsDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
@@ -74,10 +75,36 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     when(delegateCache.getDelegateProfile(accountId, delegateProfileId))
         .thenReturn(DelegateProfile.builder().name("profile").selectors(ImmutableList.of("s1", "s2")).build());
 
-    DelegateGroup delegateGroup1 = DelegateGroup.builder().name("grp1").accountId(accountId).build();
+    DelegateSizeDetails grp1SizeDetails = DelegateSizeDetails.builder()
+                                              .size(DelegateSize.LARGE)
+                                              .cpu(2.5d)
+                                              .label("size")
+                                              .ram(2048)
+                                              .taskLimit(25)
+                                              .replicas(2)
+                                              .build();
+
+    DelegateGroup delegateGroup1 = DelegateGroup.builder()
+                                       .name("grp1")
+                                       .accountId(accountId)
+                                       .ng(true)
+                                       .delegateType(KUBERNETES)
+                                       .description("description")
+                                       .sizeDetails(grp1SizeDetails)
+                                       .delegateConfigurationId(delegateProfileId)
+                                       .build();
     persistence.save(delegateGroup1);
-    DelegateGroup delegateGroup2 = DelegateGroup.builder().name("grp2").accountId(accountId).build();
+    DelegateGroup delegateGroup2 =
+        DelegateGroup.builder()
+            .name("grp2")
+            .accountId(accountId)
+            .ng(true)
+            .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).replicas(1).build())
+            .build();
     persistence.save(delegateGroup2);
+
+    when(delegateCache.getDelegateGroup(accountId, delegateGroup1.getUuid())).thenReturn(delegateGroup1);
+    when(delegateCache.getDelegateGroup(accountId, delegateGroup2.getUuid())).thenReturn(delegateGroup2);
 
     // Insights
     DelegateInsightsDetails delegateInsightsDetails =
@@ -88,15 +115,6 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     when(
         delegateInsightsService.retrieveDelegateInsightsDetails(eq(accountId), eq(delegateGroup1.getUuid()), anyLong()))
         .thenReturn(delegateInsightsDetails);
-
-    DelegateSizeDetails grp1SizeDetails = DelegateSizeDetails.builder()
-                                              .size(DelegateSize.LARGE)
-                                              .cpu(2.5d)
-                                              .label("size")
-                                              .ram(2048)
-                                              .taskLimit(25)
-                                              .replicas(2)
-                                              .build();
 
     // these three delegates should be returned for group 1
     Delegate delegate1 = createDelegateBuilder()
@@ -206,9 +224,18 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     String orgId = generateUuid();
     String projectId = generateUuid();
 
-    String acctGroupId = generateUuid();
-    String orgGroupId = generateUuid();
-    String projectGroupId = generateUuid();
+    DelegateGroup acctGroup = DelegateGroup.builder().accountId(accountId).ng(true).build();
+    DelegateGroup orgGroup = DelegateGroup.builder()
+                                 .accountId(accountId)
+                                 .ng(true)
+                                 .owner(DelegateEntityOwnerMapper.buildOwner(orgId, null))
+                                 .build();
+    DelegateGroup projectGroup = DelegateGroup.builder()
+                                     .accountId(accountId)
+                                     .ng(true)
+                                     .owner(DelegateEntityOwnerMapper.buildOwner(orgId, projectId))
+                                     .build();
+    persistence.save(Arrays.asList(acctGroup, orgGroup, projectGroup));
 
     Delegate cgAcctDelegate = createDelegateBuilder()
                                   .accountId(accountId)
@@ -224,7 +251,7 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
                                 .delegateType(KUBERNETES)
                                 .delegateName(generateUuid())
                                 .hostName(generateUuid())
-                                .delegateGroupId(acctGroupId)
+                                .delegateGroupId(acctGroup.getUuid())
                                 .build();
 
     Delegate orgDelegate = createDelegateBuilder()
@@ -233,7 +260,7 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
                                .delegateType(KUBERNETES)
                                .delegateName(generateUuid())
                                .hostName(generateUuid())
-                               .delegateGroupId(orgGroupId)
+                               .delegateGroupId(orgGroup.getUuid())
                                .owner(DelegateEntityOwner.builder().identifier(orgId).build())
                                .build();
 
@@ -243,7 +270,7 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
                                    .delegateType(KUBERNETES)
                                    .delegateName(generateUuid())
                                    .hostName(generateUuid())
-                                   .delegateGroupId(projectGroupId)
+                                   .delegateGroupId(projectGroup.getUuid())
                                    .owner(DelegateEntityOwner.builder().identifier(orgId + "/" + projectId).build())
                                    .build();
 
@@ -252,20 +279,20 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     DelegateGroupListing delegateGroupListing =
         delegateSetupService.listDelegateGroupDetailsUpTheHierarchy(accountId, null, null);
     assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(1);
-    assertThat(delegateGroupListing.getDelegateGroupDetails().get(0).getGroupId()).isEqualTo(acctGroupId);
+    assertThat(delegateGroupListing.getDelegateGroupDetails().get(0).getGroupId()).isEqualTo(acctGroup.getUuid());
 
     delegateGroupListing = delegateSetupService.listDelegateGroupDetailsUpTheHierarchy(accountId, orgId, null);
     assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(2);
     assertThat(Arrays.asList(delegateGroupListing.getDelegateGroupDetails().get(0).getGroupId(),
                    delegateGroupListing.getDelegateGroupDetails().get(1).getGroupId()))
-        .containsExactlyInAnyOrder(acctGroupId, orgGroupId);
+        .containsExactlyInAnyOrder(acctGroup.getUuid(), orgGroup.getUuid());
 
     delegateGroupListing = delegateSetupService.listDelegateGroupDetailsUpTheHierarchy(accountId, orgId, projectId);
     assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(3);
     assertThat(Arrays.asList(delegateGroupListing.getDelegateGroupDetails().get(0).getGroupId(),
                    delegateGroupListing.getDelegateGroupDetails().get(1).getGroupId(),
                    delegateGroupListing.getDelegateGroupDetails().get(2).getGroupId()))
-        .containsExactlyInAnyOrder(acctGroupId, orgGroupId, projectGroupId);
+        .containsExactlyInAnyOrder(acctGroup.getUuid(), orgGroup.getUuid(), projectGroup.getUuid());
   }
 
   @Test
@@ -278,8 +305,27 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     when(delegateCache.getDelegateProfile(accountId, delegateProfileId))
         .thenReturn(DelegateProfile.builder().name("profile").selectors(ImmutableList.of("s1", "s2")).build());
 
-    DelegateGroup delegateGroup1 = DelegateGroup.builder().name("grp1").accountId(accountId).build();
+    DelegateSizeDetails grp1SizeDetails = DelegateSizeDetails.builder()
+                                              .size(DelegateSize.LARGE)
+                                              .cpu(2.5d)
+                                              .label("size")
+                                              .ram(2048)
+                                              .taskLimit(25)
+                                              .replicas(2)
+                                              .build();
+
+    DelegateGroup delegateGroup1 = DelegateGroup.builder()
+                                       .name("grp1")
+                                       .accountId(accountId)
+                                       .ng(true)
+                                       .delegateType(KUBERNETES)
+                                       .description("description")
+                                       .sizeDetails(grp1SizeDetails)
+                                       .delegateConfigurationId(delegateProfileId)
+                                       .build();
     persistence.save(delegateGroup1);
+
+    when(delegateCache.getDelegateGroup(accountId, delegateGroup1.getUuid())).thenReturn(delegateGroup1);
 
     // Insights
     DelegateInsightsDetails delegateInsightsDetails =
@@ -290,15 +336,6 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     when(
         delegateInsightsService.retrieveDelegateInsightsDetails(eq(accountId), eq(delegateGroup1.getUuid()), anyLong()))
         .thenReturn(delegateInsightsDetails);
-
-    DelegateSizeDetails grp1SizeDetails = DelegateSizeDetails.builder()
-                                              .size(DelegateSize.LARGE)
-                                              .cpu(2.5d)
-                                              .label("size")
-                                              .ram(2048)
-                                              .taskLimit(25)
-                                              .replicas(2)
-                                              .build();
 
     Delegate delegate1 = createDelegateBuilder()
                              .accountId(accountId)
@@ -536,6 +573,21 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     String orgId = generateUuid();
     String projectId = generateUuid();
 
+    DelegateGroup deletedGroup =
+        DelegateGroup.builder().accountId(accountId).ng(true).status(DelegateGroupStatus.DELETED).build();
+    DelegateGroup acctGroup = DelegateGroup.builder().accountId(accountId).ng(true).build();
+    DelegateGroup orgGroup = DelegateGroup.builder()
+                                 .accountId(accountId)
+                                 .ng(true)
+                                 .owner(DelegateEntityOwnerMapper.buildOwner(orgId, null))
+                                 .build();
+    DelegateGroup projectGroup = DelegateGroup.builder()
+                                     .accountId(accountId)
+                                     .ng(true)
+                                     .owner(DelegateEntityOwnerMapper.buildOwner(orgId, projectId))
+                                     .build();
+    persistence.save(Arrays.asList(deletedGroup, acctGroup, orgGroup, projectGroup));
+
     Delegate cgDelegate = Delegate.builder()
                               .accountId(accountId)
                               .delegateGroupId(generateUuid())
@@ -544,26 +596,26 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     Delegate deletedDelegate = Delegate.builder()
                                    .accountId(accountId)
                                    .ng(true)
-                                   .delegateGroupId(generateUuid())
+                                   .delegateGroupId(deletedGroup.getUuid())
                                    .status(DelegateInstanceStatus.DELETED)
                                    .build();
     Delegate acctDelegate = Delegate.builder()
                                 .accountId(accountId)
                                 .ng(true)
-                                .delegateGroupId(generateUuid())
+                                .delegateGroupId(acctGroup.getUuid())
                                 .status(DelegateInstanceStatus.ENABLED)
                                 .build();
     Delegate orgDelegate = Delegate.builder()
                                .accountId(accountId)
                                .ng(true)
-                               .delegateGroupId(generateUuid())
+                               .delegateGroupId(orgGroup.getUuid())
                                .status(DelegateInstanceStatus.ENABLED)
                                .owner(DelegateEntityOwnerMapper.buildOwner(orgId, null))
                                .build();
     Delegate projectDelegate = Delegate.builder()
                                    .accountId(accountId)
                                    .ng(true)
-                                   .delegateGroupId(generateUuid())
+                                   .delegateGroupId(projectGroup.getUuid())
                                    .status(DelegateInstanceStatus.ENABLED)
                                    .owner(DelegateEntityOwnerMapper.buildOwner(orgId, projectId))
                                    .build();

@@ -2107,8 +2107,14 @@ public class DelegateServiceTest extends WingsBaseTest {
             .k8sConfigDetails(K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_ADMIN).build())
             .build();
 
-    persistence.save(
-        DelegateGroup.builder().accountId(ACCOUNT_ID).name("harness-delegate").uuid("delegateGroupId1").build());
+    persistence.save(DelegateGroup.builder()
+                         .accountId(ACCOUNT_ID)
+                         .name("harness-delegate")
+                         .uuid("delegateGroupId1")
+                         .ng(true)
+                         .owner(DelegateEntityOwnerMapper.buildOwner(
+                             setupDetails.getOrgIdentifier(), setupDetails.getProjectIdentifier()))
+                         .build());
 
     File gzipFile = delegateService.generateKubernetesYaml(ACCOUNT_ID, setupDetails, "https://localhost:9090",
         "https://localhost:7070", MediaType.MULTIPART_FORM_DATA_TYPE);
@@ -2151,8 +2157,14 @@ public class DelegateServiceTest extends WingsBaseTest {
             .k8sConfigDetails(K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_VIEWER).build())
             .build();
 
-    persistence.save(
-        DelegateGroup.builder().accountId(ACCOUNT_ID).name("harness-delegate").uuid("delegateGroupId1").build());
+    persistence.save(DelegateGroup.builder()
+                         .accountId(ACCOUNT_ID)
+                         .name("harness-delegate")
+                         .uuid("delegateGroupId1")
+                         .ng(true)
+                         .owner(DelegateEntityOwnerMapper.buildOwner(
+                             setupDetails.getOrgIdentifier(), setupDetails.getProjectIdentifier()))
+                         .build());
 
     File gzipFile = delegateService.generateKubernetesYaml(ACCOUNT_ID, setupDetails, "https://localhost:9090",
         "https://localhost:7070", MediaType.MULTIPART_FORM_DATA_TYPE);
@@ -2197,8 +2209,14 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                                   .build())
                                             .build();
 
-    persistence.save(
-        DelegateGroup.builder().accountId(ACCOUNT_ID).name("harness-delegate").uuid("delegateGroupId1").build());
+    persistence.save(DelegateGroup.builder()
+                         .accountId(ACCOUNT_ID)
+                         .name("harness-delegate")
+                         .uuid("delegateGroupId1")
+                         .ng(true)
+                         .owner(DelegateEntityOwnerMapper.buildOwner(
+                             setupDetails.getOrgIdentifier(), setupDetails.getProjectIdentifier()))
+                         .build());
 
     File gzipFile = delegateService.generateKubernetesYaml(ACCOUNT_ID, setupDetails, "https://localhost:9090",
         "https://localhost:7070", MediaType.MULTIPART_FORM_DATA_TYPE);
@@ -2238,8 +2256,12 @@ public class DelegateServiceTest extends WingsBaseTest {
             .k8sConfigDetails(K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_ADMIN).build())
             .build();
 
-    persistence.save(
-        DelegateGroup.builder().accountId(ACCOUNT_ID).name("harness-delegate").uuid("delegateGroupId1").build());
+    persistence.save(DelegateGroup.builder()
+                         .accountId(ACCOUNT_ID)
+                         .name("harness-delegate")
+                         .uuid("delegateGroupId1")
+                         .ng(true)
+                         .build());
 
     File gzipFile = delegateService.generateKubernetesYaml(ACCOUNT_ID, setupDetails, "https://localhost:9090",
         "https://localhost:7070", MediaType.MULTIPART_FORM_DATA_TYPE);
@@ -2545,9 +2567,19 @@ public class DelegateServiceTest extends WingsBaseTest {
     String orgId = generateUuid();
     String projectId = generateUuid();
 
-    DelegateGroup acctGroup = DelegateGroup.builder().name("acctGrp").accountId(accountId).build();
-    DelegateGroup orgGroup = DelegateGroup.builder().name("orgGrp").accountId(accountId).build();
-    DelegateGroup projectGroup = DelegateGroup.builder().name("projectGrp").accountId(accountId).build();
+    DelegateGroup acctGroup = DelegateGroup.builder().name("acctGrp").accountId(accountId).ng(true).build();
+    DelegateGroup orgGroup = DelegateGroup.builder()
+                                 .name("orgGrp")
+                                 .accountId(accountId)
+                                 .ng(true)
+                                 .owner(DelegateEntityOwnerMapper.buildOwner(orgId, null))
+                                 .build();
+    DelegateGroup projectGroup = DelegateGroup.builder()
+                                     .name("projectGrp")
+                                     .accountId(accountId)
+                                     .ng(true)
+                                     .owner(DelegateEntityOwnerMapper.buildOwner(orgId, projectId))
+                                     .build();
 
     persistence.saveBatch(Arrays.asList(acctGroup, orgGroup, projectGroup));
 
