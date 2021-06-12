@@ -35,8 +35,8 @@
         "nodes": 7,
         "regularPrice": 1.329993,
         "regularNodes": 7,
-        "spotPrice": 0,
-        "spotNodes": 0,
+        "spotPrice": 0.28,
+        "spotNodes": 7,
         "workerPrice": 1.329993,
         "masterPrice": 0,
         "totalPrice": 1.329993

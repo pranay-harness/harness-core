@@ -156,6 +156,12 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
     double currentHourlyCost = currentPricePerVm * (double) nodeCount;
     double recommendedHourlyCost = recommendation.getAccuracy().getTotalPrice();
 
+    if (InstanceCategory.SPOT.equals(serviceProvider.getInstanceCategory())) {
+      recommendedHourlyCost =
+          recommendation.getAccuracy().getMasterPrice() + recommendation.getAccuracy().getSpotPrice();
+      recommendation.getAccuracy().setTotalPrice(recommendedHourlyCost);
+    }
+
     final double toMonthly = 24 * 30;
     return RecommendationOverviewStats.builder()
         .totalMonthlyCost(currentHourlyCost * toMonthly)
