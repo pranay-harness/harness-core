@@ -9,13 +9,12 @@ import static io.harness.pms.sdk.core.execution.invokers.StrategyHelper.buildRes
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutableResponse;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.SkipTaskExecutableResponse;
 import io.harness.pms.contracts.execution.TaskExecutableResponse;
 import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest.RequestCase;
-import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.data.StringOutcome;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.ProgressableStrategy;
@@ -41,41 +40,39 @@ public class TaskStrategy extends ProgressableStrategy {
 
   @Override
   public void start(InvokerPackage invokerPackage) {
-    NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
-    TaskExecutable taskExecutable = extractStep(nodeExecution);
-    Ambiance ambiance = nodeExecution.getAmbiance();
-    TaskRequest task = taskExecutable.obtainTask(ambiance,
-        sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
-    handleResponse(ambiance, nodeExecution, task);
+    Ambiance ambiance = invokerPackage.getAmbiance();
+    TaskExecutable taskExecutable = extractStep(ambiance);
+    TaskRequest task =
+        taskExecutable.obtainTask(ambiance, invokerPackage.getStepParameters(), invokerPackage.getInputPackage());
+    handleResponse(ambiance, task);
   }
 
   @Override
   public void resume(ResumePackage resumePackage) {
-    NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
-    Ambiance ambiance = nodeExecution.getAmbiance();
-    TaskExecutable taskExecutable = extractStep(nodeExecution);
+    Ambiance ambiance = resumePackage.getAmbiance();
+    TaskExecutable taskExecutable = extractStep(ambiance);
     StepResponse stepResponse = null;
     try {
-      stepResponse = taskExecutable.handleTaskResult(ambiance,
-          sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution),
-          buildResponseDataSupplier(resumePackage.getResponseDataMap()));
+      stepResponse = taskExecutable.handleTaskResult(
+          ambiance, resumePackage.getStepParameters(), buildResponseDataSupplier(resumePackage.getResponseDataMap()));
     } catch (Exception e) {
       stepResponse = strategyHelper.handleException(e);
     }
     sdkNodeExecutionService.handleStepResponse(
-        nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
+        AmbianceUtils.obtainCurrentRuntimeId(ambiance), StepResponseMapper.toStepResponseProto(stepResponse));
   }
 
-  private void handleResponse(@NonNull Ambiance ambiance, NodeExecutionProto nodeExecution, TaskRequest taskRequest) {
+  private void handleResponse(@NonNull Ambiance ambiance, TaskRequest taskRequest) {
+    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     if (RequestCase.SKIPTASKREQUEST == taskRequest.getRequestCase()) {
-      sdkNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), NO_OP,
+      sdkNodeExecutionService.addExecutableResponse(nodeExecutionId, NO_OP,
           ExecutableResponse.newBuilder()
               .setSkipTask(SkipTaskExecutableResponse.newBuilder()
                                .setMessage(taskRequest.getSkipTaskRequest().getMessage())
                                .build())
               .build(),
           Collections.emptyList());
-      sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(),
+      sdkNodeExecutionService.handleStepResponse(nodeExecutionId,
           StepResponseMapper.toStepResponseProto(
               StepResponse.builder()
                   .status(SKIPPED)
@@ -101,7 +98,7 @@ public class TaskStrategy extends ProgressableStrategy {
             .build();
 
     QueueTaskRequest queueTaskRequest = QueueTaskRequest.newBuilder()
-                                            .setNodeExecutionId(nodeExecution.getUuid())
+                                            .setNodeExecutionId(nodeExecutionId)
                                             .putAllSetupAbstractions(ambiance.getSetupAbstractionsMap())
                                             .setTaskRequest(taskRequest)
                                             .setExecutableResponse(executableResponse)
@@ -111,8 +108,7 @@ public class TaskStrategy extends ProgressableStrategy {
   }
 
   @Override
-  public TaskExecutable extractStep(NodeExecutionProto nodeExecution) {
-    PlanNodeProto node = nodeExecution.getNode();
-    return (TaskExecutable) stepRegistry.obtain(node.getStepType());
+  public TaskExecutable extractStep(Ambiance ambiance) {
+    return (TaskExecutable) stepRegistry.obtain(AmbianceUtils.getCurrentStepType(ambiance));
   }
 }

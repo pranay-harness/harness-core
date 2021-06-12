@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.advisers.AdviserResponse;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
@@ -27,6 +28,7 @@ import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.response.publishers.SdkResponseEventPublisher;
 import io.harness.pms.sdk.core.steps.Step;
@@ -195,20 +197,20 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
   }
 
   @Override
-  public void handleProgressResponse(NodeExecutionProto nodeExecutionProto, ProgressData progressData) {
+  public void handleProgressResponse(Ambiance ambiance, ProgressData progressData) {
     String progressJson = RecastOrchestrationUtils.toDocumentJson(progressData);
+    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     sdkResponseEventPublisher.publishEvent(
         SdkResponseEventProto.newBuilder()
             .setSdkResponseEventType(SdkResponseEventType.HANDLE_PROGRESS)
-            .setSdkResponseEventRequest(
-                SdkResponseEventRequest.newBuilder()
-                    .setProgressRequest(HandleProgressRequest.newBuilder()
-                                            .setNodeExecutionId(nodeExecutionProto.getUuid())
-                                            .setPlanExecutionId(nodeExecutionProto.getAmbiance().getPlanExecutionId())
-                                            .setProgressJson(progressJson)
+            .setSdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
+                                            .setProgressRequest(HandleProgressRequest.newBuilder()
+                                                                    .setNodeExecutionId(nodeExecutionId)
+                                                                    .setPlanExecutionId(ambiance.getPlanExecutionId())
+                                                                    .setProgressJson(progressJson)
+                                                                    .build())
+                                            .setNodeExecutionId(nodeExecutionId)
                                             .build())
-                    .setNodeExecutionId(nodeExecutionProto.getUuid())
-                    .build())
             .build());
   }
 

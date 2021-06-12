@@ -1,6 +1,7 @@
 package io.harness.pms.sdk.core.execution.events.node;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.pms.contracts.execution.Status.ABORTED;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -10,8 +11,11 @@ import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
+import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
@@ -24,23 +28,29 @@ import io.harness.pms.execution.ProgressNodeExecutionEventData;
 import io.harness.pms.execution.ResumeNodeExecutionEventData;
 import io.harness.pms.execution.StartNodeExecutionEventData;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
+import io.harness.pms.sdk.core.execution.ChainDetails;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.ExecutableProcessor;
 import io.harness.pms.sdk.core.execution.ExecutableProcessorFactory;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
+import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.execution.ProgressPackage;
 import io.harness.pms.sdk.core.execution.ResumePackage;
+import io.harness.pms.sdk.core.execution.ResumePackage.ResumePackageBuilder;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.facilitator.Facilitator;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
 import io.harness.pms.sdk.core.facilitator.FacilitatorResponseMapper;
 import io.harness.pms.sdk.core.registries.AdviserRegistry;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
+import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
+import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListenerWithObservers;
 import io.harness.serializer.KryoSerializer;
@@ -48,10 +58,12 @@ import io.harness.tasks.ErrorResponseData;
 import io.harness.tasks.ProgressData;
 import io.harness.tasks.ResponseData;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
@@ -114,7 +126,8 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
       ProgressNodeExecutionEventData eventData = (ProgressNodeExecutionEventData) event.getEventData();
       ProgressPackage progressPackage =
           ProgressPackage.builder()
-              .nodeExecution(event.getNodeExecution())
+              .ambiance(nodeExecution.getAmbiance())
+              .stepParameters(sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution))
               .progressData((ProgressData) kryoSerializer.asInflatedObject(eventData.getProgressBytes()))
               .build();
       processor.handleProgress(progressPackage);
@@ -167,9 +180,11 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
           : FacilitatorResponseMapper.fromFacilitatorResponseProto(eventData.getFacilitatorResponse());
       processor.handleStart(
           InvokerPackage.builder()
+              .ambiance(nodeExecution.getAmbiance())
               .inputPackage(inputPackage)
               .passThroughData(facilitatorResponse == null ? null : facilitatorResponse.getPassThroughData())
-              .nodeExecution(nodeExecution)
+              .stepParameters(sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution))
+              .executionMode(nodeExecution.getMode())
               .build());
       return true;
     } catch (Exception ex) {
@@ -203,13 +218,64 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
         return true;
       }
 
-      processor.handleResume(ResumePackage.builder().nodeExecution(nodeExecution).responseDataMap(response).build());
+      processor.handleResume(buildResumePackage(nodeExecution, response));
       return true;
     } catch (Exception ex) {
       log.error("Error while resuming execution", ex);
       sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), constructStepResponse(ex));
       return false;
     }
+  }
+
+  private ResumePackage buildResumePackage(NodeExecutionProto nodeExecution, Map<String, ResponseData> response) {
+    ResumePackageBuilder builder =
+        ResumePackage.builder()
+            .ambiance(nodeExecution.getAmbiance())
+            .stepParameters(sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution))
+            .stepInputPackage(engineObtainmentHelper.obtainInputPackage(
+                nodeExecution.getAmbiance(), nodeExecution.getNode().getRebObjectsList()))
+            .responseDataMap(response);
+
+    if (nodeExecution.getMode() == ExecutionMode.TASK_CHAIN || nodeExecution.getMode() == ExecutionMode.CHILD_CHAIN) {
+      ExecutionMode mode = nodeExecution.getMode();
+      switch (mode) {
+        case TASK_CHAIN:
+          TaskChainExecutableResponse lastLinkResponse =
+              Objects.requireNonNull(NodeExecutionUtils.obtainLatestExecutableResponse(nodeExecution)).getTaskChain();
+          builder
+              .chainDetails(ChainDetails.builder()
+                                .shouldEnd(lastLinkResponse.getChainEnd())
+                                .passThroughData((PassThroughData) kryoSerializer.asObject(
+                                    lastLinkResponse.getPassThroughData().toByteArray()))
+                                .build())
+              .build();
+          break;
+        case CHILD_CHAIN:
+          ChildChainExecutableResponse lastChildChainExecutableResponse = Preconditions.checkNotNull(
+              Objects.requireNonNull(NodeExecutionUtils.obtainLatestExecutableResponse(nodeExecution)).getChildChain());
+
+          byte[] passThrowDataBytes = lastChildChainExecutableResponse.getPassThroughData().toByteArray();
+          PassThroughData passThroughData = passThrowDataBytes.length == 0 ? new PassThroughData() {
+          } : (PassThroughData) kryoSerializer.asObject(passThrowDataBytes);
+          boolean chainEnd = lastChildChainExecutableResponse.getLastLink()
+              || lastChildChainExecutableResponse.getSuspend() || isBroken(response) || isAborted(response);
+          builder.chainDetails(ChainDetails.builder().shouldEnd(chainEnd).passThroughData(passThroughData).build());
+          break;
+        default:
+          log.error("This Should Not Happen not a chain mode");
+      }
+    }
+    return builder.build();
+  }
+
+  private boolean isBroken(Map<String, ResponseData> accumulatedResponse) {
+    return accumulatedResponse.values().stream().anyMatch(stepNotifyResponse
+        -> StatusUtils.brokeStatuses().contains(((StepResponseNotifyData) stepNotifyResponse).getStatus()));
+  }
+
+  private boolean isAborted(Map<String, ResponseData> accumulatedResponse) {
+    return accumulatedResponse.values().stream().anyMatch(
+        stepNotifyResponse -> ABORTED == (((StepResponseNotifyData) stepNotifyResponse).getStatus()));
   }
 
   private StepInputPackage obtainInputPackage(NodeExecutionProto nodeExecution) {
