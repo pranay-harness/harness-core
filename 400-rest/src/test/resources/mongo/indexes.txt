@@ -7,8 +7,6 @@
 !!!testDummies {"name": "createdAt_1", "background": true} {"createdAt": 1}
 !!!testMongo {"name": "appId_1", "background": true} {"appId": 1}
 !!!testMongo {"name": "createdAt_1", "background": true} {"createdAt": 1}
-SdkResponseEvent {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
-SdkResponseEvent {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 accounts {"name": "accountBackgroundJobCheckIteration_1", "background": true} {"accountBackgroundJobCheckIteration": 1}
 accounts {"name": "accountDeletionIteration_1", "background": true} {"accountDeletionIteration": 1}
 accounts {"name": "accountName_1", "unique": true} {"accountName": 1}

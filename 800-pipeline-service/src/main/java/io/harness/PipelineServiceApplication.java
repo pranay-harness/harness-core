@@ -27,7 +27,6 @@ import io.harness.event.OrchestrationEndEventHandler;
 import io.harness.event.OrchestrationLogPublisher;
 import io.harness.event.OrchestrationStartEventHandler;
 import io.harness.exception.GeneralException;
-import io.harness.execution.SdkResponseEventListener;
 import io.harness.execution.consumers.SdkResponseEventMessageListener;
 import io.harness.execution.consumers.SdkResponseEventRedisConsumerService;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
@@ -43,7 +42,6 @@ import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
-import io.harness.monitoring.MonitoringEventObserver;
 import io.harness.monitoring.MonitoringRedisEventObserver;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
@@ -369,10 +367,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     orchestrationEngine.getOrchestrationEndSubject().register(
         injector.getInstance(Key.get(OrchestrationEndEventHandler.class)));
 
-    SdkResponseEventListener sdkResponseEventListener = injector.getInstance(SdkResponseEventListener.class);
-    sdkResponseEventListener.getEventListenerObserverSubject().register(
-        injector.getInstance(Key.get(MonitoringEventObserver.class)));
-
     SdkResponseEventMessageListener sdkResponseEventMessageListener =
         injector.getInstance(SdkResponseEventMessageListener.class);
     sdkResponseEventMessageListener.getEventListenerObserverSubject().register(
@@ -426,7 +420,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .engineEventHandlersMap(ImmutableMap.of())
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
-        .useRedisForSdkResponseEvents(config.getUseRedisForSdkResponseEvents())
         .interruptConsumerConfig(ConsumerConfig.newBuilder()
                                      .setRedis(Redis.newBuilder().setTopicName(PIPELINE_INTERRUPT_TOPIC).build())
                                      .build())
@@ -485,7 +478,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   private void registerEventListeners(Injector injector) {
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(SdkResponseEventListener.class), 3);
     queueListenerController.register(injector.getInstance(PmsNotifyEventListener.class), 3);
   }
 

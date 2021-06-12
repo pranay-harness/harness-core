@@ -4,6 +4,7 @@ import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingResponse;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepType;
+import io.harness.gitsync.common.beans.GitToHarnessProgressStatus;
 import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.dtos.GitToHarnessProgressDTO;
 import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
@@ -19,7 +20,7 @@ public interface GitToHarnessProgressService {
   GitToHarnessProgressDTO updateFilesInProgressRecord(
       String uuid, List<GitToHarnessFileProcessingRequest> gitToHarnessFilesToProcess);
 
-  GitToHarnessProgressDTO updateStatus(String uuid, GitToHarnessProcessingStepStatus stepStatus);
+  GitToHarnessProgressDTO updateStepStatus(String uuid, GitToHarnessProcessingStepStatus stepStatus);
 
   GitToHarnessProgressDTO save(YamlChangeSetDTO yamlChangeSetDTO, YamlChangeSetEventType eventType,
       GitToHarnessProcessingStepType stepType, GitToHarnessProcessingStepStatus stepStatus);
@@ -34,4 +35,7 @@ public interface GitToHarnessProgressService {
 
   GitToHarnessProgressDTO initProgress(
       YamlChangeSetDTO yamlChangeSetDTO, YamlChangeSetEventType eventType, GitToHarnessProcessingStepType stepType);
+
+  GitToHarnessProgressDTO updateProgressStatus(
+      String gitToHarnessProgressRecordId, GitToHarnessProgressStatus gitToHarnessProgressStatus);
 }

@@ -94,7 +94,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
     YamlChangeSetDTO yamlChangeSetDTO = request.getYamlChangeSetDTO();
 
     // Mark step status in progress
-    GitToHarnessProgressDTO gitToHarnessProgressRecord = gitToHarnessProgressService.updateStatus(
+    GitToHarnessProgressDTO gitToHarnessProgressRecord = gitToHarnessProgressService.updateStepStatus(
         request.getGitToHarnessProgress().getUuid(), GitToHarnessProcessingStepStatus.IN_PROGRESS);
 
     List<String> rootFolderList = getRootFolderList(yamlGitConfigDTOList);
@@ -107,7 +107,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
         getAllFileContent(yamlChangeSetDTO, yamlGitConfigDTOList.get(0), prFilesTobeProcessed);
 
     // Mark step status done
-    gitToHarnessProgressRecord = gitToHarnessProgressService.updateStatus(
+    gitToHarnessProgressRecord = gitToHarnessProgressService.updateStepStatus(
         gitToHarnessProgressRecord.getUuid(), GitToHarnessProcessingStepStatus.DONE);
 
     return GitToHarnessGetFilesStepResponse.builder()

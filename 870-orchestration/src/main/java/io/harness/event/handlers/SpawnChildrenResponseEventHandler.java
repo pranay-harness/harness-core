@@ -17,9 +17,9 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildrenExecutableResponse.Child;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.events.SpawnChildrenRequest;
 import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.waiter.OldNotifyCallback;
@@ -43,7 +43,7 @@ public class SpawnChildrenResponseEventHandler implements SdkResponseEventHandle
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) private String publisherName;
 
   @Override
-  public void handleEvent(SdkResponseEvent event) {
+  public void handleEvent(SdkResponseEventProto event) {
     SpawnChildrenRequest request = event.getSdkResponseEventRequest().getSpawnChildrenRequest();
     NodeExecution nodeExecution = nodeExecutionService.get(request.getNodeExecutionId());
     Ambiance ambiance = nodeExecution.getAmbiance();

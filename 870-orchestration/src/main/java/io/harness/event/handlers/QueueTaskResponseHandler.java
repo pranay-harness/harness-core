@@ -15,9 +15,9 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
 import io.harness.pms.contracts.execution.TaskExecutableResponse;
 import io.harness.pms.contracts.execution.events.QueueTaskRequest;
+import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
-import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.ProgressCallback;
 import io.harness.waiter.WaitNotifyEngine;
@@ -41,7 +41,7 @@ public class QueueTaskResponseHandler implements SdkResponseEventHandler {
   @Inject private NodeExecutionService nodeExecutionService;
 
   @Override
-  public void handleEvent(SdkResponseEvent event) {
+  public void handleEvent(SdkResponseEventProto event) {
     // Queue Task
     QueueTaskRequest queueTaskRequest = event.getSdkResponseEventRequest().getQueueTaskRequest();
     String nodeExecutionId = queueTaskRequest.getNodeExecutionId();

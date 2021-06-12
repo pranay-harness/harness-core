@@ -427,7 +427,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
         .filterCreationResponseMerger(new CVNGFilterCreationResponseMerger())
         .executionSummaryModuleInfoProviderClass(CVNGModuleInfoProvider.class)
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
-        .useRedisForSdkResponseEvents(config.getUseRedisForSdkResponseEvents())
         .interruptConsumerConfig(ConsumerConfig.newBuilder()
                                      .setRedis(Redis.newBuilder().setTopicName(PIPELINE_INTERRUPT_TOPIC).build())
                                      .build())

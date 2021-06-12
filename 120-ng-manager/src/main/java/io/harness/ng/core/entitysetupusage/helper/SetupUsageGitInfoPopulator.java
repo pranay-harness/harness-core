@@ -47,7 +47,7 @@ public class SetupUsageGitInfoPopulator {
     }
     String repoIdentifier = gitEntityInfo.getYamlGitConfigId();
     String branch = gitEntityInfo.getBranch();
-    if (isEmpty(repoIdentifier) && isEmpty(branch)) {
+    if (isEmpty(repoIdentifier) || isEmpty(branch)) {
       return;
     }
     EntityDetail referredByEntity = setupUsages.stream().map(EntitySetupUsage::getReferredByEntity).findAny().get();
