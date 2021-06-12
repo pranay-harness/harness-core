@@ -614,25 +614,31 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     String orgId = generateUuid();
     String projectId = generateUuid();
 
-    DelegateProfile cgDelegateProfile = DelegateProfile.builder().accountId(accountId).name("cg").build();
-    DelegateProfile primaryDelegateProfile =
+    final DelegateProfile cgDelegateProfile = DelegateProfile.builder().accountId(accountId).name("cg").build();
+    final DelegateProfile primaryAcctDelegateProfile =
         DelegateProfile.builder().accountId(accountId).name("primary").ng(true).primary(true).build();
-    DelegateProfile acctDelegateProfile = DelegateProfile.builder().accountId(accountId).name("acct").ng(true).build();
-    DelegateProfile orgDelegateProfile = DelegateProfile.builder()
-                                             .accountId(accountId)
-                                             .name("org")
-                                             .ng(true)
-                                             .owner(DelegateEntityOwnerMapper.buildOwner(orgId, null))
-                                             .build();
-    DelegateProfile projectDelegateProfile = DelegateProfile.builder()
-                                                 .accountId(accountId)
-                                                 .name("project")
-                                                 .ng(true)
-                                                 .owner(DelegateEntityOwnerMapper.buildOwner(orgId, projectId))
-                                                 .build();
+    final DelegateProfile acctDelegateProfile =
+        DelegateProfile.builder().accountId(accountId).name("acct").ng(true).build();
 
-    persistence.saveBatch(Arrays.asList(
-        cgDelegateProfile, primaryDelegateProfile, acctDelegateProfile, orgDelegateProfile, projectDelegateProfile));
+    final DelegateEntityOwner orgOwner = DelegateEntityOwnerMapper.buildOwner(orgId, null);
+    final DelegateProfile primaryOrgDelegateProfile =
+        DelegateProfile.builder().accountId(accountId).name("primary").ng(true).primary(true).owner(orgOwner).build();
+    final DelegateProfile orgDelegateProfile =
+        DelegateProfile.builder().accountId(accountId).name("org").ng(true).owner(orgOwner).build();
+
+    final DelegateEntityOwner projectOwner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
+    final DelegateProfile primaryProjectDelegateProfile = DelegateProfile.builder()
+                                                              .accountId(accountId)
+                                                              .name("primary")
+                                                              .ng(true)
+                                                              .primary(true)
+                                                              .owner(projectOwner)
+                                                              .build();
+    final DelegateProfile projectDelegateProfile =
+        DelegateProfile.builder().accountId(accountId).name("project").ng(true).owner(projectOwner).build();
+
+    persistence.saveBatch(Arrays.asList(cgDelegateProfile, primaryAcctDelegateProfile, acctDelegateProfile,
+        primaryOrgDelegateProfile, orgDelegateProfile, primaryProjectDelegateProfile, projectDelegateProfile));
 
     // Test non-existing delegate profile
     assertThat(delegateSetupService.validateDelegateConfigurations(
@@ -646,17 +652,17 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
 
     // Test account delegate profile
     assertThat(delegateSetupService.validateDelegateConfigurations(accountId, null, null,
-                   Arrays.asList(primaryDelegateProfile.getUuid(), acctDelegateProfile.getUuid())))
+                   Arrays.asList(primaryAcctDelegateProfile.getUuid(), acctDelegateProfile.getUuid())))
         .containsExactly(true, true);
 
     // Test org delegate profile
     assertThat(delegateSetupService.validateDelegateConfigurations(accountId, orgId, null,
-                   Arrays.asList(primaryDelegateProfile.getUuid(), orgDelegateProfile.getUuid())))
+                   Arrays.asList(primaryOrgDelegateProfile.getUuid(), orgDelegateProfile.getUuid())))
         .containsExactly(true, true);
 
     // Test project delegate profile
     assertThat(delegateSetupService.validateDelegateConfigurations(accountId, orgId, projectId,
-                   Arrays.asList(primaryDelegateProfile.getUuid(), projectDelegateProfile.getUuid())))
+                   Arrays.asList(primaryProjectDelegateProfile.getUuid(), projectDelegateProfile.getUuid())))
         .containsExactly(true, true);
   }
 }
