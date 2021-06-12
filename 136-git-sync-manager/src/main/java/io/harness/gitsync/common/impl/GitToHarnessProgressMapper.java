@@ -23,6 +23,7 @@ public class GitToHarnessProgressMapper {
         .stepStartingTime(gitToHarnessProgressDTO.getStepStartingTime())
         .stepStatus(gitToHarnessProgressDTO.getStepStatus())
         .stepType(gitToHarnessProgressDTO.getStepType())
+        .gitToHarnessProgressStatus(gitToHarnessProgressDTO.getGitToHarnessProgressStatus())
         .yamlChangeSetId(gitToHarnessProgressDTO.getYamlChangeSetId())
         .build();
   }
@@ -41,6 +42,7 @@ public class GitToHarnessProgressMapper {
         .stepStatus(gitToHarnessProgress.getStepStatus())
         .stepType(gitToHarnessProgress.getStepType())
         .yamlChangeSetId(gitToHarnessProgress.getYamlChangeSetId())
+        .gitToHarnessProgressStatus(gitToHarnessProgress.getGitToHarnessProgressStatus())
         .build();
   }
 }
