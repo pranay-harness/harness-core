@@ -8,7 +8,6 @@ import io.harness.eventsframework.consumer.Message;
 import io.harness.execution.utils.SdkResponseListenerHelper;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.events.base.PmsAbstractBaseMessageListenerWithObservers;
-import io.harness.pms.execution.utils.SdkResponseEventUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -32,7 +31,7 @@ public class SdkResponseEventMessageListener
   @Override
   public boolean processMessageInternal(SdkResponseEventProto sdkResponseEventProto) {
     try {
-      sdkResponseListenerHelper.handleEvent(SdkResponseEventUtils.fromProtoToSdkResponseEvent(sdkResponseEventProto));
+      sdkResponseListenerHelper.handleEvent(sdkResponseEventProto);
       return true;
     } catch (Exception ex) {
       // TODO (prashant) : Handle Failure should we retry here. Currently acknowledging the message ?

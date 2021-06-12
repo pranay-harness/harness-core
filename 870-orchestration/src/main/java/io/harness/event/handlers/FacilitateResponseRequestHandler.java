@@ -5,9 +5,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.FacilitatorResponseRequest;
+import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
-import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
@@ -22,7 +22,7 @@ public class FacilitateResponseRequestHandler implements SdkResponseEventHandler
   @Inject private OrchestrationEngine orchestrationEngine;
 
   @Override
-  public void handleEvent(SdkResponseEvent event) {
+  public void handleEvent(SdkResponseEventProto event) {
     log.info("Starting to process facilitation response");
     FacilitatorResponseRequest request = event.getSdkResponseEventRequest().getFacilitatorResponseRequest();
     FacilitatorResponseProto facilitatorResponseProto = request.getFacilitatorResponse();
