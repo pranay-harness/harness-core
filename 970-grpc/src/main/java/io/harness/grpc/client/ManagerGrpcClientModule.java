@@ -38,7 +38,12 @@ public class ManagerGrpcClientModule extends ProviderModule {
 
   @Provides
   @Singleton
-  CallCredentials callCredentials(Config config) {
+  CallCredentials callCredentials(Config config, @Named("Application") String application) {
+    boolean isSsl = isSsl(config, application);
+    if (!isSsl) {
+      return new DelegateAuthCallCredentials(
+          new TokenGenerator(config.accountId, config.accountSecret), config.accountId, false);
+    }
     return new DelegateAuthCallCredentials(
         new TokenGenerator(config.accountId, config.accountSecret), config.accountId, true);
   }
