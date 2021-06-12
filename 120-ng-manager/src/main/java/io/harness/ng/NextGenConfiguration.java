@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toSet;
 import io.harness.AccessControlClientConfiguration;
 import io.harness.Microservice;
 import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
+import io.harness.account.AccountConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.CfClientConfig;
@@ -82,6 +83,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("pmsGrpcClientConfig") private GrpcClientConfig pmsGrpcClientConfig;
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
+  @JsonProperty("accountConfig") private AccountConfig accountConfig;
   @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfiguration logStreamingServiceConfig;
   @JsonProperty("gitSyncServerConfig") private GrpcServerConfig gitSyncGrpcServerConfig;
   @JsonProperty("gitGrpcClientConfigs") private Map<Microservice, GrpcClientConfig> gitGrpcClientConfigs;
