@@ -30,6 +30,9 @@ public class Setup {
   public static RequestSpecification commandLibraryService() {
     return given().spec(rqProvider.useDefaultSpecForCommandLibraryService());
   }
+  public static RequestSpecification ceNextGenService() {
+    return given().spec(rqProvider.useCESpec());
+  }
   public static RequestSpecification email() {
     return given().spec(rqProvider.useEmailSpec());
   }
