@@ -33,9 +33,23 @@ public final class EventsFrameworkConstants {
 
   // Pipeline Service Events
   public static final String PIPELINE_ORCHESTRATION_EVENT_TOPIC = "pipeline_orchestration";
+  public static final int PIPELINE_ORCHESTRATION_EVENT_BATCH_SIZE = 20;
+  public static final int PIPELINE_ORCHESTRATION_EVENT_MAX_TOPIC_SIZE = 5000;
+
   public static final String PIPELINE_SDK_RESPONSE_EVENT_TOPIC = "pipeline_sdk_response";
+  public static final int PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE = 5000;
+
   public static final String PIPELINE_INTERRUPT_TOPIC = "pipeline_interrupt";
-  public static final String PIPELINE_FACILITATOR_EVENT_TOPIC = "pipeline_facilitator";
+  public static final int PIPELINE_INTERRUPT_BATCH_SIZE = 10;
+  public static final int PIPELINE_INTERRUPT_EVENT_MAX_TOPIC_SIZE = 1000;
+
+  public static final String PIPELINE_FACILITATOR_EVENT_TOPIC = "pipeline_node_facilitation";
+  public static final int PIPELINE_FACILITATOR_EVENT_BATCH_SIZE = 10;
+  public static final int PIPELINE_FACILITATOR_EVENT_MAX_TOPIC_SIZE = 5000;
+
+  public static final String PIPELINE_NODE_START_EVENT_TOPIC = "pipeline_node_start";
+  public static final int PIPELINE_NODE_START_EVENT_BATCH_SIZE = 10;
+  public static final int PIPELINE_NODE_START_EVENT_MAX_TOPIC_SIZE = 5000;
 
   public static final int DEFAULT_TOPIC_SIZE = 10000;
   public static final int USER_MEMBERSHIP_TOPIC_SIZE = 100000;
@@ -50,17 +64,6 @@ public final class EventsFrameworkConstants {
   public static final int GIT_PR_EVENT_STREAM_MAX_TOPIC_SIZE = 10000;
   public static final int GIT_CREATE_BRANCH_EVENT_STREAM_MAX_TOPIC_SIZE = 10000;
   public static final int GIT_CONFIG_STREAM_MAX_TOPIC_SIZE = 10000;
-  // Pipeline Service Events
-  // batch size
-  public static final int PIPELINE_INTERRUPT_BATCH_SIZE = 10;
-  public static final int PIPELINE_ORCHESTRATION_EVENT_BATCH_SIZE = 20;
-  public static final int PIPELINE_FACILITATOR_EVENT_BATCH_SIZE = 20;
-
-  // topic size
-  public static final int PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE = 5000;
-  public static final int PIPELINE_ORCHESTRATION_EVENT_MAX_TOPIC_SIZE = 5000;
-  public static final int PIPELINE_INTERRUPT_EVENT_MAX_TOPIC_SIZE = 1000;
-  public static final int PIPELINE_FACILITATOR_EVENT_MAX_TOPIC_SIZE = 1000;
 
   public static final Duration DEFAULT_MAX_PROCESSING_TIME = Duration.ofSeconds(10);
   public static final Duration ENTITY_CRUD_MAX_PROCESSING_TIME = Duration.ofSeconds(20);

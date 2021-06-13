@@ -3,7 +3,7 @@ package io.harness.engine.resume;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.OrchestrationEngine;
+import io.harness.engine.pms.start.NodeStartHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -16,7 +16,7 @@ import lombok.Builder;
 
 @OwnedBy(CDC)
 public class EngineWaitResumeCallback implements OldNotifyCallback {
-  @Inject private OrchestrationEngine orchestrationEngine;
+  @Inject private NodeStartHelper nodeStartHelper;
 
   Ambiance ambiance;
   FacilitatorResponseProto facilitatorResponse;
@@ -30,7 +30,7 @@ public class EngineWaitResumeCallback implements OldNotifyCallback {
 
   @Override
   public void notify(Map<String, ResponseData> response) {
-    orchestrationEngine.invokeExecutable(ambiance, facilitatorResponse);
+    nodeStartHelper.startNode(ambiance, facilitatorResponse);
   }
 
   @Override

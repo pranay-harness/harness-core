@@ -21,6 +21,7 @@ message InitializeSdkRequest {
   ConsumerConfig interruptConsumerConfig = 6;
   ConsumerConfig orchestrationEventConsumerConfig = 7;
   ConsumerConfig facilitatorEventConsumerConfig = 8;
+  ConsumerConfig nodeStartEventConsumerConfig = 9;
 }
 
 message InitializeSdkResponse {}

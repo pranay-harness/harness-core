@@ -1,24 +1,20 @@
 package io.harness.pms.sdk.core.execution.events.node;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.contracts.execution.Status.ABORTED;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.ExceptionUtils;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserResponse;
-import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
-import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
-import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
@@ -26,7 +22,6 @@ import io.harness.pms.execution.AdviseNodeExecutionEventData;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.execution.ProgressNodeExecutionEventData;
 import io.harness.pms.execution.ResumeNodeExecutionEventData;
-import io.harness.pms.execution.StartNodeExecutionEventData;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
@@ -37,19 +32,13 @@ import io.harness.pms.sdk.core.execution.ChainDetails;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.ExecutableProcessor;
 import io.harness.pms.sdk.core.execution.ExecutableProcessorFactory;
-import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.execution.ProgressPackage;
 import io.harness.pms.sdk.core.execution.ResumePackage;
 import io.harness.pms.sdk.core.execution.ResumePackage.ResumePackageBuilder;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
-import io.harness.pms.sdk.core.facilitator.Facilitator;
-import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
-import io.harness.pms.sdk.core.facilitator.FacilitatorResponseMapper;
 import io.harness.pms.sdk.core.registries.AdviserRegistry;
-import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
-import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListenerWithObservers;
@@ -66,11 +55,10 @@ import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @Slf4j
 @Singleton
 public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeExecutionEvent> {
-  @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private AdviserRegistry adviserRegistry;
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
@@ -97,12 +85,6 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
     NodeExecutionEventType nodeExecutionEventType = event.getEventType();
     log.info("Starting to handle NodeExecutionEvent of type: {}", event.getEventType());
     switch (nodeExecutionEventType) {
-      case START:
-        handled = startExecution(event);
-        break;
-      case FACILITATE:
-        handled = facilitateExecution(event);
-        break;
       case RESUME:
         handled = resumeExecution(event);
         break;
@@ -138,62 +120,6 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
     }
   }
 
-  private boolean facilitateExecution(NodeExecutionEvent event) {
-    try {
-      NodeExecutionProto nodeExecution = event.getNodeExecution();
-      Ambiance ambiance = nodeExecution.getAmbiance();
-      StepInputPackage inputPackage = obtainInputPackage(nodeExecution);
-      PlanNodeProto node = nodeExecution.getNode();
-      FacilitatorResponse currFacilitatorResponse = null;
-      for (FacilitatorObtainment obtainment : node.getFacilitatorObtainmentsList()) {
-        Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
-        currFacilitatorResponse =
-            facilitator.facilitate(ambiance, sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution),
-                obtainment.getParameters().toByteArray(), inputPackage);
-        if (currFacilitatorResponse != null) {
-          break;
-        }
-      }
-      if (currFacilitatorResponse == null) {
-        sdkNodeExecutionService.handleFacilitationResponse(nodeExecution.getUuid(), event.getNotifyId(),
-            FacilitatorResponseProto.newBuilder().setIsSuccessful(false).build());
-        return true;
-      }
-      sdkNodeExecutionService.handleFacilitationResponse(nodeExecution.getUuid(), event.getNotifyId(),
-          FacilitatorResponseMapper.toFacilitatorResponseProto(currFacilitatorResponse));
-      return true;
-    } catch (Exception ex) {
-      log.error("Error while facilitating execution", ex);
-      sdkNodeExecutionService.handleEventError(event.getEventType(), event.getNotifyId(), constructFailureInfo(ex));
-      return false;
-    }
-  }
-
-  private boolean startExecution(NodeExecutionEvent event) {
-    NodeExecutionProto nodeExecution = event.getNodeExecution();
-    try {
-      ExecutableProcessor processor = executableProcessorFactory.obtainProcessor(nodeExecution.getMode());
-      StepInputPackage inputPackage = obtainInputPackage(nodeExecution);
-      StartNodeExecutionEventData eventData = (StartNodeExecutionEventData) event.getEventData();
-      FacilitatorResponse facilitatorResponse = eventData.getFacilitatorResponse() == null
-          ? null
-          : FacilitatorResponseMapper.fromFacilitatorResponseProto(eventData.getFacilitatorResponse());
-      processor.handleStart(
-          InvokerPackage.builder()
-              .ambiance(nodeExecution.getAmbiance())
-              .inputPackage(inputPackage)
-              .passThroughData(facilitatorResponse == null ? null : facilitatorResponse.getPassThroughData())
-              .stepParameters(sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution))
-              .executionMode(nodeExecution.getMode())
-              .build());
-      return true;
-    } catch (Exception ex) {
-      log.error("Error while starting execution", ex);
-      sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), constructStepResponse(ex));
-      return false;
-    }
-  }
-
   private boolean resumeExecution(NodeExecutionEvent event) {
     NodeExecutionProto nodeExecution = event.getNodeExecution();
     ExecutableProcessor processor = executableProcessorFactory.obtainProcessor(nodeExecution.getMode());
@@ -222,7 +148,7 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
       return true;
     } catch (Exception ex) {
       log.error("Error while resuming execution", ex);
-      sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), constructStepResponse(ex));
+      sdkNodeExecutionService.handleStepResponse(nodeExecution.getUuid(), NodeExecutionUtils.constructStepResponse(ex));
       return false;
     }
   }
@@ -278,11 +204,6 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
         stepNotifyResponse -> ABORTED == (((StepResponseNotifyData) stepNotifyResponse).getStatus()));
   }
 
-  private StepInputPackage obtainInputPackage(NodeExecutionProto nodeExecution) {
-    return engineObtainmentHelper.obtainInputPackage(
-        nodeExecution.getAmbiance(), nodeExecution.getNode().getRebObjectsList());
-  }
-
   private boolean adviseExecution(NodeExecutionEvent event) {
     try {
       NodeExecutionProto nodeExecutionProto = event.getNodeExecution();
@@ -315,19 +236,9 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
       return true;
     } catch (Exception ex) {
       log.error("Error while advising execution", ex);
-      sdkNodeExecutionService.handleEventError(event.getEventType(), event.getNotifyId(), constructFailureInfo(ex));
+      sdkNodeExecutionService.handleEventError(
+          event.getEventType(), event.getNotifyId(), NodeExecutionUtils.constructFailureInfo(ex));
       return false;
     }
-  }
-
-  private static FailureInfo constructFailureInfo(Exception ex) {
-    return FailureInfo.newBuilder()
-        .addAllFailureTypes(EngineExceptionUtils.getOrchestrationFailureTypes(ex))
-        .setErrorMessage(ExceptionUtils.getMessage(ex))
-        .build();
-  }
-
-  private static StepResponseProto constructStepResponse(Exception ex) {
-    return StepResponseProto.newBuilder().setStatus(Status.FAILED).setFailureInfo(constructFailureInfo(ex)).build();
   }
 }

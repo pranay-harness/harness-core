@@ -1,7 +1,7 @@
 package io.harness.registrars;
 
 import io.harness.pms.contracts.facilitators.FacilitatorType;
-import io.harness.pms.sdk.core.facilitator.Facilitator;
+import io.harness.pms.sdk.core.execution.events.node.facilitate.Facilitator;
 
 import java.util.HashMap;
 import java.util.Map;
