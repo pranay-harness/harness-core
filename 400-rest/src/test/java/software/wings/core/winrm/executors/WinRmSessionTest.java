@@ -193,6 +193,23 @@ public class WinRmSessionTest extends WingsBaseTest {
   @Test
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
+  public void testExecuteCommandsListWithScriptExecCommandKerberos() throws JSchException, IOException {
+    List<List<String>> commandsList = new ArrayList<>();
+    List<String> commands = new ArrayList<>();
+    commands.add("command");
+    commandsList.add(commands);
+    ShellCommand shell = mock(ShellCommand.class);
+    WinRmTool winRmTool = mock(WinRmTool.class);
+    PyWinrmArgs pyWinrmArgs = mock(PyWinrmArgs.class);
+    setupMocks(commands, shell, winRmTool, pyWinrmArgs);
+
+    winRmSession.executeCommandsList(commandsList, writer, error, false, "executeCommand");
+    assertThat(commandsList.get(commandsList.size() - 1).get(1)).isEqualTo("executeCommand");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
   public void testExecuteCommandsListWithScriptExecCommand() throws JSchException, IOException {
     List<List<String>> commandsList = new ArrayList<>();
     List<String> commands = Collections.singletonList("command");
@@ -200,7 +217,7 @@ public class WinRmSessionTest extends WingsBaseTest {
     ShellCommand shell = mock(ShellCommand.class);
     WinRmTool winRmTool = mock(WinRmTool.class);
 
-    setupMocks(commands, shell, winRmTool);
+    setupMocks(commands, shell, winRmTool, null);
 
     winRmSession.executeCommandsList(commandsList, writer, error, false, "executeCommand");
     verify(winRmTool).executeCommand(commands);
@@ -217,14 +234,15 @@ public class WinRmSessionTest extends WingsBaseTest {
     ShellCommand shell = mock(ShellCommand.class);
     WinRmTool winRmTool = mock(WinRmTool.class);
 
-    setupMocks(commands, shell, winRmTool);
+    setupMocks(commands, shell, winRmTool, null);
 
     winRmSession.executeCommandsList(commandsList, writer, error, false, null);
     verify(winRmTool).executeCommand(commands);
     verifyZeroInteractions(shell);
   }
 
-  private void setupMocks(List<String> commands, ShellCommand shell, WinRmTool winRmTool) throws JSchException {
+  private void setupMocks(List<String> commands, ShellCommand shell, WinRmTool winRmTool, PyWinrmArgs pyWinrmArgs)
+      throws JSchException {
     WinRmClientBuilder winRmClientBuilder = spy(WinRmClient.builder("http://localhost"));
     PowerMockito.mockStatic(SshHelperUtils.class);
     PowerMockito.mockStatic(WinRmClient.class);
@@ -243,6 +261,7 @@ public class WinRmSessionTest extends WingsBaseTest {
                              .authenticationScheme(WinRmConnectionAttributes.AuthenticationScheme.NTLM)
                              .build();
     winRmSession = new WinRmSession(winRmSessionConfig, logCallback);
+    on(winRmSession).set("args", pyWinrmArgs);
     on(winRmSession).set("shell", shell);
     on(winRmSession).set("winRmTool", winRmTool);
     when(winRmTool.executeCommand(commands)).thenReturn(new WinRmToolResponse("", "", 0));

@@ -128,6 +128,9 @@ public class WinRmSession implements AutoCloseable {
     }
     int statusCode = 0;
     if (args != null) {
+      if (isNotEmpty(scriptExecCommand)) {
+        commandList.get(commandList.size() - 1).add(scriptExecCommand);
+      }
       for (List<String> list : commandList) {
         String command = String.join(" & ", list);
         statusCode = executeCommandString(command, output, error, isOutputWriter);
