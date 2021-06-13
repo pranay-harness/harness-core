@@ -2,7 +2,7 @@ package io.harness.steps.resourcerestraint;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
-import static io.harness.pms.sdk.core.facilitator.FacilitatorResponse.FacilitatorResponseBuilder;
+import static io.harness.pms.sdk.core.execution.events.node.facilitate.FacilitatorResponse.FacilitatorResponseBuilder;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -22,8 +22,8 @@ import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.execution.facilitator.FacilitatorUtils;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.expression.PmsEngineExpressionService;
-import io.harness.pms.sdk.core.facilitator.Facilitator;
-import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
+import io.harness.pms.sdk.core.execution.events.node.facilitate.Facilitator;
+import io.harness.pms.sdk.core.execution.events.node.facilitate.FacilitatorResponse;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;

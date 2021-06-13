@@ -3,7 +3,6 @@ package software.wings.service.impl.security;
 import static io.harness.annotations.dev.HarnessModule._890_SM_CORE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
@@ -15,6 +14,9 @@ import static io.harness.security.encryption.AccessType.APP_ROLE;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.settings.SettingVariableTypes.VAULT;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
@@ -22,7 +24,6 @@ import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.SecretChangeLog;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
@@ -53,7 +54,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -114,31 +114,35 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
     savedVaultConfig.setUsageRestrictions(vaultConfig.getUsageRestrictions());
     savedVaultConfig.setScopedToAccount(vaultConfig.isScopedToAccount());
     // Handle vault Agent Properties
-    if (vaultConfig.isUseVaultAgent()) {
-      updateVaultAgentConfiguration(vaultConfig, savedVaultConfig);
-    }
+    updateVaultAgentConfiguration(vaultConfig, savedVaultConfig);
     updateNameSpace(accountId, vaultConfig, savedVaultConfig);
     // PL-3237: Audit secret manager config changes.
     if (auditChanges) {
       generateAuditForSecretManager(accountId, oldConfigForAudit, savedVaultConfig);
     }
     String configId = secretManagerConfigService.save(savedVaultConfig);
-    if (isNotEmpty(configId)) {
+    if (isNotBlank(configId)) {
       alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.InvalidKMS, getRenewalAlert(oldConfigForAudit));
     }
     return configId;
   }
 
   private void updateVaultAgentConfiguration(VaultConfig vaultConfig, VaultConfig savedVaultConfig) {
-    Preconditions.checkNotNull(vaultConfig.getSinkPath());
-    Preconditions.checkNotNull(vaultConfig.getDelegateSelectors());
-    // set all set credentials to null
-    savedVaultConfig.setAppRoleId(null);
-    savedVaultConfig.setAuthToken(null);
-    savedVaultConfig.setSecretId(null);
-    savedVaultConfig.setSinkPath(vaultConfig.getSinkPath());
-    savedVaultConfig.setUseVaultAgent(vaultConfig.isUseVaultAgent());
-    savedVaultConfig.setDelegateSelectors(vaultConfig.getDelegateSelectors());
+    if (vaultConfig.isUseVaultAgent()) {
+      Preconditions.checkNotNull(vaultConfig.getSinkPath());
+      Preconditions.checkNotNull(vaultConfig.getDelegateSelectors());
+      // set all set credentials to null
+      savedVaultConfig.setAppRoleId(null);
+      savedVaultConfig.setAuthToken(null);
+      savedVaultConfig.setSecretId(null);
+      savedVaultConfig.setSinkPath(vaultConfig.getSinkPath());
+      savedVaultConfig.setUseVaultAgent(vaultConfig.isUseVaultAgent());
+      savedVaultConfig.setDelegateSelectors(vaultConfig.getDelegateSelectors());
+    } else {
+      savedVaultConfig.setUseVaultAgent(false);
+      savedVaultConfig.setSinkPath(null);
+      savedVaultConfig.setDelegateSelectors(null);
+    }
   }
 
   private boolean isCredentialChanged(VaultConfig vaultConfig, VaultConfig savedVaultConfigWithCredentials) {
@@ -190,7 +194,7 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
           wingsPersistence.createUpdateOperations(SecretManagerConfig.class)
               .set(BaseVaultConfigKeys.authToken, vaultConfig.getAuthToken());
 
-      if (isNotEmpty(vaultConfig.getSecretId())) {
+      if (isNotBlank(vaultConfig.getSecretId())) {
         updateOperations.set(BaseVaultConfigKeys.secretId, vaultConfig.getSecretId());
       }
 
@@ -207,7 +211,7 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
     checkIfSecretsManagerConfigCanBeCreatedOrUpdated(accountId);
     // First normalize the base path value. Set default base path if it has not been specified from input.
     String basePath =
-        isEmpty(vaultConfig.getBasePath()) ? VaultConfig.DEFAULT_BASE_PATH : vaultConfig.getBasePath().trim();
+        isBlank(vaultConfig.getBasePath()) ? VaultConfig.DEFAULT_BASE_PATH : vaultConfig.getBasePath().trim();
     vaultConfig.setBasePath(basePath);
     vaultConfig.setAccountId(accountId);
 
@@ -218,7 +222,7 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
 
     checkIfTemplatizedSecretManagerCanBeCreatedOrUpdated(vaultConfig);
 
-    return isEmpty(vaultConfig.getUuid()) ? saveVaultConfig(accountId, vaultConfig, validateBySavingTestSecret)
+    return isBlank(vaultConfig.getUuid()) ? saveVaultConfig(accountId, vaultConfig, validateBySavingTestSecret)
                                           : updateVaultConfig(accountId, vaultConfig, true, validateBySavingTestSecret);
   }
 
@@ -265,7 +269,7 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
 
   @Override
   public List<SecretEngineSummary> listSecretEngines(VaultConfig vaultConfig) {
-    if (isNotEmpty(vaultConfig.getUuid())) {
+    if (isNotBlank(vaultConfig.getUuid())) {
       VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
       decryptVaultConfigSecrets(vaultConfig.getAccountId(), savedVaultConfig, false);
       if (SecretString.SECRET_MASK.equals(vaultConfig.getAuthToken())) {
@@ -303,19 +307,19 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
   }
 
   private void validateVaultFields(VaultConfig vaultConfig) {
-    if (isEmpty(vaultConfig.getName())) {
+    if (isBlank(vaultConfig.getName())) {
       throw new SecretManagementException(VAULT_OPERATION_ERROR, "Name can not be empty", USER);
     }
-    if (isEmpty(vaultConfig.getVaultUrl())) {
+    if (isBlank(vaultConfig.getVaultUrl())) {
       throw new SecretManagementException(VAULT_OPERATION_ERROR, "Vault URL can not be empty", USER);
     }
-    if (isEmpty(vaultConfig.getSecretEngineName()) || vaultConfig.getSecretEngineVersion() == 0) {
+    if (isBlank(vaultConfig.getSecretEngineName()) || vaultConfig.getSecretEngineVersion() == 0) {
       throw new SecretManagementException(
           VAULT_OPERATION_ERROR, "Secret engine or secret engine version was not specified", USER);
     }
 
     if (vaultConfig.isUseVaultAgent()) {
-      if (isEmpty(vaultConfig.getSinkPath())) {
+      if (isBlank(vaultConfig.getSinkPath())) {
         throw new SecretManagementException(
             VAULT_OPERATION_ERROR, "You must provide a sink path to read token if you are using VaultAgent", USER);
       }
@@ -327,7 +331,7 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
     // Need to try using Vault AppRole login to generate a client token if configured so
     if (vaultConfig.getAccessType() == APP_ROLE) {
       VaultAppRoleLoginResult loginResult = appRoleLogin(vaultConfig);
-      if (loginResult != null && EmptyPredicate.isNotEmpty(loginResult.getClientToken())) {
+      if (loginResult != null && isNotBlank(loginResult.getClientToken())) {
         vaultConfig.setAuthToken(loginResult.getClientToken());
       } else {
         String message =
@@ -365,7 +369,7 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
     VaultConfig vaultConfig = (VaultConfig) kryoSerializer.clone(secretManagerConfig);
     for (String templatizedField : secretManagerConfig.getTemplatizedFields()) {
       String templatizedFieldValue = runtimeParameters.get(templatizedField);
-      if (StringUtils.isEmpty(templatizedFieldValue)) {
+      if (isBlank(templatizedFieldValue)) {
         return Optional.empty();
       }
       if (templatizedField.equals(BaseVaultConfigKeys.appRoleId)) {

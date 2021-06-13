@@ -4,7 +4,7 @@ import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
 
 import io.harness.pms.contracts.facilitators.FacilitatorEvent;
 import io.harness.pms.events.base.PmsAbstractMessageListener;
-import io.harness.pms.sdk.core.facilitator.eventhandler.FacilitatorEventHandler;
+import io.harness.pms.sdk.core.execution.events.node.facilitate.FacilitatorEventHandler;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

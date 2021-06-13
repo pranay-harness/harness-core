@@ -3,8 +3,6 @@ package io.harness.pms.sdk.core;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionServiceImpl;
-import io.harness.pms.sdk.core.facilitator.eventhandler.FacilitatorEventHandler;
-import io.harness.pms.sdk.core.facilitator.eventhandler.FacilitatorEventHandlerImpl;
 import io.harness.pms.sdk.core.interrupt.InterruptEventHandler;
 import io.harness.pms.sdk.core.interrupt.InterruptEventHandlerImpl;
 import io.harness.pms.sdk.core.interrupt.PMSInterruptService;
@@ -54,7 +52,6 @@ public class PmsSdkCoreModule extends AbstractModule {
     bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingGrpcOutputService.class).in(Singleton.class);
     bind(SdkNodeExecutionService.class).to(SdkNodeExecutionServiceImpl.class).in(Singleton.class);
     bind(InterruptEventHandler.class).to(InterruptEventHandlerImpl.class).in(Singleton.class);
-    bind(FacilitatorEventHandler.class).to(FacilitatorEventHandlerImpl.class).in(Singleton.class);
     install(
         PmsSdkCoreEventsFrameworkModule.getInstance(config.getEventsFrameworkConfiguration(), config.getServiceName()));
     bind(SdkResponseEventPublisher.class).to(RedisSdkResponseEventPublisher.class);

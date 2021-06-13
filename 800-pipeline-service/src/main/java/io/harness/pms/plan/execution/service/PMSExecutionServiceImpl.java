@@ -6,6 +6,7 @@ import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
+import io.harness.ModuleType;
 import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -31,7 +32,6 @@ import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys;
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterPropertiesDTO;
-import io.harness.pms.utils.PmsConstants;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.ProtoUtils;
@@ -56,6 +56,9 @@ import org.springframework.data.mongodb.core.query.Update;
 @Slf4j
 @OwnedBy(PIPELINE)
 public class PMSExecutionServiceImpl implements PMSExecutionService {
+  // This is here just for backward compatibility should be removed
+  private static final String INTERNAL_SERVICE_NAME = "pmsInternal";
+
   @Inject private PmsExecutionSummaryRespository pmsExecutionSummaryRespository;
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private OrchestrationService orchestrationService;
@@ -106,8 +109,9 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
     if (EmptyPredicate.isNotEmpty(moduleName)) {
       // Check for pipeline with no filters also - empty pipeline or pipelines with only approval stage
       moduleCriteria.orOperator(Criteria.where(PlanExecutionSummaryKeys.modules).is(Collections.emptyList()),
-          Criteria.where(PlanExecutionSummaryKeys.modules)
-              .is(Collections.singletonList(PmsConstants.INTERNAL_SERVICE_NAME)),
+          // This is here just for backward compatibility should be removed
+          Criteria.where(PlanExecutionSummaryKeys.modules).is(Collections.singletonList(INTERNAL_SERVICE_NAME)),
+          Criteria.where(PlanExecutionSummaryKeys.modules).in(ModuleType.PMS.name().toLowerCase()),
           Criteria.where(PlanExecutionSummaryKeys.modules).in(moduleName),
           Criteria.where(String.format("moduleInfo.%s", moduleName)).exists(true));
     }

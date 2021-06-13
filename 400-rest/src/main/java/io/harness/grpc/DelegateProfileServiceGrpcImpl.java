@@ -100,24 +100,14 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
         pageRequest.addFilter(DelegateProfileKeys.ng, SearchFilter.Operator.NOT_EQ, true);
       }
 
-      String orgId = request.getOrgId() != null ? request.getOrgId().getId() : null;
-      String projectId = request.getProjectId() != null ? request.getProjectId().getId() : null;
-      DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
+      DelegateEntityOwner owner =
+          DelegateEntityOwnerMapper.buildOwner(request.getOrgId().getId(), request.getProjectId().getId());
 
       if (owner != null) {
-        pageRequest.addFilter("", SearchFilter.Operator.OR,
-            SearchFilter.builder()
-                .fieldName(DelegateProfileKeys.owner)
-                .op(SearchFilter.Operator.EQ)
-                .fieldValues(new DelegateEntityOwner[] {owner})
-                .build(),
-            SearchFilter.builder()
-                .fieldName(DelegateProfileKeys.primary)
-                .op(SearchFilter.Operator.EQ)
-                .fieldValues(new Boolean[] {true})
-                .build());
+        pageRequest.addFilter(DelegateProfileKeys.owner, SearchFilter.Operator.EQ, owner);
       } else {
         // Account level delegates
+        log.info("Owner doesn't exist, assume account level delegate");
         pageRequest.addFilter(DelegateProfileKeys.owner, SearchFilter.Operator.NOT_EXISTS);
       }
 

@@ -30,11 +30,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileBuilder;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
+import io.harness.delegate.utils.DelegateEntityOwnerMapper;
 import io.harness.eventsframework.api.Producer;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -171,7 +173,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     assertThat(ngPrimaryProfile).isNotNull();
     assertThat(ngPrimaryProfile.getUuid()).isNotNull();
     assertThat(ngPrimaryProfile.getAccountId()).isEqualTo(account.getUuid());
-    assertThat(ngPrimaryProfile.getName()).isEqualTo(NG_PRIMARY_PROFILE_NAME);
+    assertThat(ngPrimaryProfile.getName()).isEqualTo(String.format("%s for %s", NG_PRIMARY_PROFILE_NAME, "Account"));
     assertThat(ngPrimaryProfile.getDescription()).isEqualTo(PRIMARY_PROFILE_DESCRIPTION);
     assertThat(ngPrimaryProfile.isPrimary()).isTrue();
     assertThat(ngPrimaryProfile.isNg()).isTrue();
@@ -252,12 +254,18 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void testFetchNgPrimaryProfileShouldFetchFromDb() {
-    String accountId = "existingAccountId";
+    final String accountId = "existingAccountId";
+    final String orgId = "existingOrgId";
+    final String projectId = "existingProjectId";
+
+    final DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
+    final String profileName = String.format("%s for %s", NG_PRIMARY_PROFILE_NAME, owner.getIdentifier());
 
     DelegateProfile primaryProfile = DelegateProfile.builder()
                                          .uuid(generateUuid())
                                          .accountId(accountId)
-                                         .name(NG_PRIMARY_PROFILE_NAME)
+                                         .name(profileName)
+                                         .owner(owner)
                                          .description(PRIMARY_PROFILE_DESCRIPTION)
                                          .primary(true)
                                          .ng(true)
@@ -265,12 +273,42 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
 
     persistence.save(primaryProfile);
 
-    DelegateProfile fetchedProfile = delegateProfileService.fetchNgPrimaryProfile(accountId);
+    DelegateProfile fetchedProfile = delegateProfileService.fetchNgPrimaryProfile(accountId, owner);
 
     assertThat(fetchedProfile).isNotNull();
     assertThat(fetchedProfile.getUuid()).isNotNull();
     assertThat(fetchedProfile.getAccountId()).isEqualTo(accountId);
-    assertThat(fetchedProfile.getName()).isEqualTo(NG_PRIMARY_PROFILE_NAME);
+    assertThat(fetchedProfile.getName()).isEqualTo(profileName);
+    assertThat(fetchedProfile.getDescription()).isEqualTo(PRIMARY_PROFILE_DESCRIPTION);
+    assertThat(fetchedProfile.isPrimary()).isTrue();
+    assertThat(fetchedProfile.isNg()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testFetchNgPrimaryAccountProfileShouldFetchFromDb() {
+    final String accountId = "existingAccountId";
+    final String profileName = String.format("%s for %s", NG_PRIMARY_PROFILE_NAME, "Account");
+
+    DelegateProfile primaryProfile = DelegateProfile.builder()
+                                         .uuid(generateUuid())
+                                         .accountId(accountId)
+                                         .name(profileName)
+                                         .owner(null)
+                                         .description(PRIMARY_PROFILE_DESCRIPTION)
+                                         .primary(true)
+                                         .ng(true)
+                                         .build();
+
+    persistence.save(primaryProfile);
+
+    DelegateProfile fetchedProfile = delegateProfileService.fetchNgPrimaryProfile(accountId, null);
+
+    assertThat(fetchedProfile).isNotNull();
+    assertThat(fetchedProfile.getUuid()).isNotNull();
+    assertThat(fetchedProfile.getAccountId()).isEqualTo(accountId);
+    assertThat(fetchedProfile.getName()).isEqualTo(profileName);
     assertThat(fetchedProfile.getDescription()).isEqualTo(PRIMARY_PROFILE_DESCRIPTION);
     assertThat(fetchedProfile.isPrimary()).isTrue();
     assertThat(fetchedProfile.isNg()).isTrue();
@@ -280,14 +318,19 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void testFetchNgPrimaryProfileShouldCreateProfile() {
-    String accountId = "nonExistingAccountId";
+    final String accountId = "nonExistingAccountId";
+    final String orgId = "existingOrgId";
+    final String projectId = "existingProjectId";
 
-    DelegateProfile fetchedProfile = delegateProfileService.fetchNgPrimaryProfile(accountId);
+    final DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
+
+    DelegateProfile fetchedProfile = delegateProfileService.fetchNgPrimaryProfile(accountId, owner);
 
     assertThat(fetchedProfile).isNotNull();
     assertThat(fetchedProfile.getUuid()).isNotNull();
     assertThat(fetchedProfile.getAccountId()).isEqualTo(accountId);
-    assertThat(fetchedProfile.getName()).isEqualTo(NG_PRIMARY_PROFILE_NAME);
+    assertThat(fetchedProfile.getName())
+        .isEqualTo(String.format("%s for %s", NG_PRIMARY_PROFILE_NAME, owner.getIdentifier()));
     assertThat(fetchedProfile.getDescription()).isEqualTo(PRIMARY_PROFILE_DESCRIPTION);
     assertThat(fetchedProfile.isPrimary()).isTrue();
     assertThat(fetchedProfile.isNg()).isTrue();

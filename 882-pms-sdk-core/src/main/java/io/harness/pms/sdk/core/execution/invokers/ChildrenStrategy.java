@@ -5,9 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildrenExecutableResponse;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.events.SpawnChildrenRequest;
-import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.ResumePackage;
@@ -27,37 +26,32 @@ public class ChildrenStrategy implements ExecuteStrategy {
 
   @Override
   public void start(InvokerPackage invokerPackage) {
-    NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
-    ChildrenExecutable childrenExecutable = extractStep(nodeExecution);
-    Ambiance ambiance = nodeExecution.getAmbiance();
-    ChildrenExecutableResponse response = childrenExecutable.obtainChildren(ambiance,
-        sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
-    handleResponse(nodeExecution, response);
+    Ambiance ambiance = invokerPackage.getAmbiance();
+    ChildrenExecutable childrenExecutable = extractStep(ambiance);
+    ChildrenExecutableResponse response = childrenExecutable.obtainChildren(
+        ambiance, invokerPackage.getStepParameters(), invokerPackage.getInputPackage());
+    handleResponse(ambiance, response);
   }
 
   @Override
   public void resume(ResumePackage resumePackage) {
-    NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
-    Ambiance ambiance = nodeExecution.getAmbiance();
-    ChildrenExecutable childrenExecutable = extractStep(nodeExecution);
-    StepResponse stepResponse = childrenExecutable.handleChildrenResponse(ambiance,
-        sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), resumePackage.getResponseDataMap());
+    Ambiance ambiance = resumePackage.getAmbiance();
+    ChildrenExecutable childrenExecutable = extractStep(ambiance);
+    StepResponse stepResponse = childrenExecutable.handleChildrenResponse(
+        ambiance, resumePackage.getStepParameters(), resumePackage.getResponseDataMap());
     sdkNodeExecutionService.handleStepResponse(
-        nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
+        AmbianceUtils.obtainCurrentRuntimeId(ambiance), StepResponseMapper.toStepResponseProto(stepResponse));
   }
 
   @Override
-  public ChildrenExecutable extractStep(NodeExecutionProto nodeExecution) {
-    PlanNodeProto node = nodeExecution.getNode();
-    return (ChildrenExecutable) stepRegistry.obtain(node.getStepType());
+  public ChildrenExecutable extractStep(Ambiance ambiance) {
+    return (ChildrenExecutable) stepRegistry.obtain(AmbianceUtils.getCurrentStepType(ambiance));
   }
 
-  private void handleResponse(NodeExecutionProto nodeExecution, ChildrenExecutableResponse response) {
-    Ambiance ambiance = nodeExecution.getAmbiance();
-
+  private void handleResponse(Ambiance ambiance, ChildrenExecutableResponse response) {
     SpawnChildrenRequest spawnChildrenRequest = SpawnChildrenRequest.newBuilder()
                                                     .setPlanExecutionId(ambiance.getPlanExecutionId())
-                                                    .setNodeExecutionId(nodeExecution.getUuid())
+                                                    .setNodeExecutionId(AmbianceUtils.obtainCurrentRuntimeId(ambiance))
                                                     .setChildren(response)
                                                     .build();
     sdkNodeExecutionService.spawnChildren(spawnChildrenRequest);

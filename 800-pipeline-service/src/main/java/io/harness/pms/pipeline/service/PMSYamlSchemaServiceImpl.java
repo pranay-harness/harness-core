@@ -6,6 +6,7 @@ import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
 import static java.lang.String.format;
 
 import io.harness.EntityType;
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
@@ -22,7 +23,6 @@ import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.helpers.PmsFeatureFlagHelper;
 import io.harness.pms.merger.helpers.FQNUtils;
 import io.harness.pms.sdk.PmsSdkInstanceService;
-import io.harness.pms.utils.PmsConstants;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.steps.approval.stage.ApprovalStageConfig;
@@ -144,7 +144,7 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     flattenParallelElementConfig(pipelineDefinitions);
 
     Set<String> instanceNames = pmsSdkInstanceService.getInstanceNames();
-    instanceNames.remove(PmsConstants.INTERNAL_SERVICE_NAME);
+    instanceNames.remove(ModuleType.PMS.name().toLowerCase());
     for (String instanceName : instanceNames) {
       PartialSchemaDTO partialSchemaDTO = getStage(instanceName, projectIdentifier, orgIdentifier, scope);
       if (partialSchemaDTO == null) {

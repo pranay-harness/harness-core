@@ -21,6 +21,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
@@ -52,6 +53,7 @@ import com.google.protobuf.StringValue;
 import io.fabric8.utils.Strings;
 import java.util.List;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -66,7 +68,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class DelegateProfileServiceImpl implements DelegateProfileService, AccountCrudObserver {
   public static final String CG_PRIMARY_PROFILE_NAME = "Primary";
   public static final String NG_PRIMARY_PROFILE_NAME = "Primary Configuration";
-  public static final String PRIMARY_PROFILE_DESCRIPTION = "The primary profile for the account";
+  public static final String PRIMARY_PROFILE_DESCRIPTION =
+      "The primary profile for the account"; // FixMe: change description
 
   @Inject private HPersistence persistence;
   @Inject private AuditServiceHelper auditServiceHelper;
@@ -96,19 +99,20 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
             .filter(DelegateProfileKeys.primary, Boolean.TRUE)
             .get());
 
-    return primaryProfile.orElseGet(() -> add(buildPrimaryDelegateProfile(accountId, false)));
+    return primaryProfile.orElseGet(() -> add(buildPrimaryDelegateProfile(accountId, null, false)));
   }
 
   @Override
-  public DelegateProfile fetchNgPrimaryProfile(String accountId) {
+  public DelegateProfile fetchNgPrimaryProfile(final String accountId, @Nullable final DelegateEntityOwner owner) {
     Optional<DelegateProfile> primaryProfile =
         Optional.ofNullable(persistence.createQuery(DelegateProfile.class)
                                 .filter(DelegateProfileKeys.accountId, accountId)
                                 .filter(DelegateProfileKeys.ng, Boolean.TRUE)
                                 .filter(DelegateProfileKeys.primary, Boolean.TRUE)
+                                .filter(DelegateProfileKeys.owner, owner)
                                 .get());
 
-    return primaryProfile.orElseGet(() -> add(buildPrimaryDelegateProfile(accountId, true)));
+    return primaryProfile.orElseGet(() -> add(buildPrimaryDelegateProfile(accountId, owner, true)));
   }
 
   @Override
@@ -298,10 +302,10 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     log.info("AccountCreated event received.");
 
     if (!account.isForImport()) {
-      DelegateProfile cgDelegateProfile = buildPrimaryDelegateProfile(account.getUuid(), false);
+      DelegateProfile cgDelegateProfile = buildPrimaryDelegateProfile(account.getUuid(), null, false);
       add(cgDelegateProfile);
 
-      DelegateProfile ngDelegateProfile = buildPrimaryDelegateProfile(account.getUuid(), true);
+      DelegateProfile ngDelegateProfile = buildPrimaryDelegateProfile(account.getUuid(), null, true);
       add(ngDelegateProfile);
 
       log.info("Primary Delegate Profiles added.");
@@ -330,15 +334,26 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
         .collect(toList());
   }
 
-  private DelegateProfile buildPrimaryDelegateProfile(String accountId, boolean isNg) {
+  private DelegateProfile buildPrimaryDelegateProfile(
+      final String accountId, @Nullable final DelegateEntityOwner owner, final boolean isNg) {
     return DelegateProfile.builder()
         .uuid(generateUuid())
         .accountId(accountId)
-        .name(isNg ? NG_PRIMARY_PROFILE_NAME : CG_PRIMARY_PROFILE_NAME)
+        .name(getProfileName(owner, isNg))
         .description(PRIMARY_PROFILE_DESCRIPTION)
         .primary(true)
+        .owner(owner)
         .ng(isNg)
         .build();
+  }
+
+  private String getProfileName(final DelegateEntityOwner owner, final boolean isNg) {
+    if (isNg) {
+      final String nameSuffix = owner != null ? owner.getIdentifier() : "Account";
+      return String.format("%s for %s", NG_PRIMARY_PROFILE_NAME, nameSuffix);
+    } else {
+      return CG_PRIMARY_PROFILE_NAME;
+    }
   }
 
   @VisibleForTesting

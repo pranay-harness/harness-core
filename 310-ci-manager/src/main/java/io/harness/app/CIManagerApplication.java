@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_FACILITATOR_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_INTERRUPT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_START_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
@@ -41,6 +42,7 @@ import io.harness.pms.contracts.plan.Redis;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.pms.listener.facilitators.FacilitatorRedisConsumerService;
 import io.harness.pms.listener.interrupts.InterruptRedisConsumerService;
+import io.harness.pms.listener.node.start.NodeStartRedisConsumerService;
 import io.harness.pms.listener.orchestrationevent.OrchestrationEventEventConsumerService;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
@@ -345,6 +347,10 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
             ConsumerConfig.newBuilder()
                 .setRedis(Redis.newBuilder().setTopicName(PIPELINE_FACILITATOR_EVENT_TOPIC).build())
                 .build())
+        .nodeStartEventConsumerConfig(
+            ConsumerConfig.newBuilder()
+                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_NODE_START_EVENT_TOPIC).build())
+                .build())
         .build();
   }
 
@@ -366,11 +372,12 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
+
+    // Pipeline SDK Consumer
     environment.lifecycle().manage(injector.getInstance(InterruptRedisConsumerService.class));
     environment.lifecycle().manage(injector.getInstance(OrchestrationEventEventConsumerService.class));
-
-    // facilitator
     environment.lifecycle().manage(injector.getInstance(FacilitatorRedisConsumerService.class));
+    environment.lifecycle().manage(injector.getInstance(NodeStartRedisConsumerService.class));
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {

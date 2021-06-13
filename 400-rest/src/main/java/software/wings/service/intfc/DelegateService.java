@@ -24,7 +24,6 @@ import io.harness.delegate.beans.DelegateSetupDetails;
 import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.FileBucket;
-import io.harness.delegate.beans.K8sConfigDetails;
 import io.harness.validation.Create;
 
 import software.wings.beans.CEDelegateStatus;
@@ -167,5 +166,5 @@ public interface DelegateService extends OwnedByAccount {
 
   void regenerateCapabilityPermissions(String accountId, String delegateId);
 
-  DelegateGroup upsertDelegateGroup(String name, String accountId, K8sConfigDetails k8sConfigDetails);
+  DelegateGroup upsertDelegateGroup(String name, String accountId, DelegateSetupDetails delegateSetupDetails);
 }

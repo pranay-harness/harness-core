@@ -23,7 +23,7 @@ public class CreateNgPrimaryProfileForExistingAccounts implements Migration {
     try (HKeyIterator<Account> keys = new HKeyIterator(wingsPersistence.createQuery(Account.class).fetchKeys())) {
       while (keys.hasNext()) {
         String accountId = keys.next().getId().toString();
-        delegateProfileService.fetchNgPrimaryProfile(accountId);
+        delegateProfileService.fetchNgPrimaryProfile(accountId, null);
       }
     }
   }
