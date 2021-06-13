@@ -3,6 +3,7 @@ package software.wings.helpers.ext.cloudformation.request;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.amazonaws.services.cloudformation.model.StackStatus;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -42,14 +43,14 @@ public class CloudFormationCreateStackRequest extends CloudFormationCommandReque
   private GitConfig gitConfig;
   private List<String> capabilities;
   private String tags;
+  private List<StackStatus> stackStatusesToMarkAsSuccess;
 
   @Builder
   public CloudFormationCreateStackRequest(CloudFormationCommandType commandType, String accountId, String appId,
       String activityId, String commandName, AwsConfig awsConfig, int timeoutInMs, String createType, String data,
       String stackNameSuffix, String cloudFormationRoleArn, Map<String, String> variables, String region,
-      String customStackName, GitFileConfig gitFileConfig, GitConfig gitConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, Map<String, EncryptedDataDetail> encryptedVariables,
-      List<String> capabilities, String tags) {
+      String customStackName, GitFileConfig gitFileConfig, GitConfig gitConfig, List<StackStatus> stackStatusesToMarkAsSuccess,
+      List<EncryptedDataDetail> encryptedDataDetails, Map<String, EncryptedDataDetail> encryptedVariables, List<String> capabilities, String tags) {
     super(
         commandType, accountId, appId, activityId, commandName, awsConfig, timeoutInMs, region, cloudFormationRoleArn);
     this.createType = createType;
@@ -59,6 +60,7 @@ public class CloudFormationCreateStackRequest extends CloudFormationCommandReque
     this.customStackName = customStackName;
     this.gitFileConfig = gitFileConfig;
     this.gitConfig = gitConfig;
+    this.stackStatusesToMarkAsSuccess = stackStatusesToMarkAsSuccess;
     this.sourceRepoEncryptionDetails = encryptedDataDetails;
     this.encryptedVariables = encryptedVariables;
     this.capabilities = capabilities;

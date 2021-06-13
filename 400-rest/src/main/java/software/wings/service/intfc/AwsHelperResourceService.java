@@ -52,4 +52,6 @@ public interface AwsHelperResourceService {
    * @return
    */
   List<String> listCloudformationCapabilities();
+
+  Set<String> listCloudFormationStatues();
 }

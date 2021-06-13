@@ -360,6 +360,8 @@ public abstract class CloudFormationState extends State {
                               .cloudFormationRoleArn(rollbackInfo.getCloudFormationRoleArn())
                               .variables(rollbackInfo.getVariables())
                               .workflowExecutionId(context.getWorkflowExecutionId())
+                              .skipBasedOnStackStatus(rollbackInfo.isSkipBasedOnStackStatus())
+                              .stackStatusesToMarkAsSuccess(rollbackInfo.getStackStatusesToMarkAsSuccess())
                               .entityId(getStackNameSuffix(context, provisionerId))
                               .build());
   }

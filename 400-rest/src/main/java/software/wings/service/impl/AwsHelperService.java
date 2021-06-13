@@ -77,10 +77,13 @@ import com.amazonaws.services.cloudformation.model.CreateStackResult;
 import com.amazonaws.services.cloudformation.model.DeleteStackRequest;
 import com.amazonaws.services.cloudformation.model.DescribeStackEventsRequest;
 import com.amazonaws.services.cloudformation.model.DescribeStackEventsResult;
+import com.amazonaws.services.cloudformation.model.DescribeStackResourcesRequest;
+import com.amazonaws.services.cloudformation.model.DescribeStackResourcesResult;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.DescribeStacksResult;
 import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.StackEvent;
+import com.amazonaws.services.cloudformation.model.StackResource;
 import com.amazonaws.services.cloudformation.model.UpdateStackRequest;
 import com.amazonaws.services.cloudformation.model.UpdateStackResult;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
@@ -1446,6 +1449,22 @@ public class AwsHelperService {
         stacksEvents.addAll(result.getStackEvents());
       } while (nextToken != null);
       return stacksEvents;
+    } catch (AmazonServiceException amazonServiceException) {
+      awsApiHelperService.handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      awsApiHelperService.handleAmazonClientException(amazonClientException);
+    }
+    return emptyList();
+  }
+
+  public List<StackResource> getAllStackResources(
+      String region, DescribeStackResourcesRequest describeStackResourcesRequest, AwsConfig awsConfig) {
+    AmazonCloudFormationClient cloudFormationClient =
+        getAmazonCloudFormationClient(Regions.fromName(region), awsConfig);
+    try {
+      tracker.trackCFCall("Describe Stack Events");
+      DescribeStackResourcesResult result = cloudFormationClient.describeStackResources(describeStackResourcesRequest);
+      return result.getStackResources();
     } catch (AmazonServiceException amazonServiceException) {
       awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {

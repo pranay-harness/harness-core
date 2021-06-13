@@ -8,6 +8,7 @@ import io.harness.context.ContextElementType;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 
+import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
@@ -23,6 +24,8 @@ public class CloudFormationRollbackInfoElement implements CloudFormationElement 
   private String stackNameSuffix;
   private String customStackName;
   private String provisionerId;
+  private boolean skipBasedOnStackStatus;
+  private List<String> stackStatusesToMarkAsSuccess;
   private Map<String, String> oldStackParameters;
 
   @Override

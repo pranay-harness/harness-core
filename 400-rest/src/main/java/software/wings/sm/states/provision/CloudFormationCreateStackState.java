@@ -73,6 +73,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.GitUtilsManager;
 
 import com.amazonaws.services.cloudformation.model.Parameter;
+import com.amazonaws.services.cloudformation.model.StackStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -113,6 +114,11 @@ public class CloudFormationCreateStackState extends CloudFormationState {
 
   @Attributes(title = "Parameters file path") @Getter @Setter protected List<String> parametersFilePaths;
   @Attributes(title = "Use parameters file") @Getter @Setter protected boolean useParametersFile;
+  @Attributes(title = "Should skip on reaching given stack statuses")
+  @Getter
+  @Setter
+  protected boolean skipBasedOnStackStatus;
+  @Attributes(title = "Stack status to ignore") @Getter @Setter protected List<String> stackStatusesToMarkAsSuccess;
 
   @Setter @JsonIgnore @SchemaIgnore private boolean fileFetched;
   @Getter @Setter private boolean specifyCapabilities;
@@ -157,6 +163,11 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     CloudFormationInfrastructureProvisioner provisioner = getProvisioner(context);
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
+
+    if (skipBasedOnStackStatus == false || isEmpty(stackStatusesToMarkAsSuccess)) {
+      stackStatusesToMarkAsSuccess = new ArrayList<>();
+    }
+
     if (provisioner.provisionByGit() && useParametersFile && !isFileFetched()) {
       return buildAndQueueGitCommandTask(executionContext, provisioner, activityId);
     }
@@ -169,8 +180,19 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     CloudFormationCreateStackRequestBuilder builder = CloudFormationCreateStackRequest.builder();
 
     String roleArnRendered = executionContext.renderExpression(getCloudFormationRoleArn());
+    if (isEmpty(getStackStatusesToMarkAsSuccess())) {
+      setStackStatusesToMarkAsSuccess(new ArrayList<>());
+    }
+
+    List<String> stackStatusesToMarkAsSuccessRendered = getStackStatusesToMarkAsSuccess()
+                                                            .stream()
+                                                            .map(status -> executionContext.renderExpression(status))
+                                                            .collect(Collectors.toList());
     String regionRendered = executionContext.renderExpression(getRegion());
     builder.cloudFormationRoleArn(roleArnRendered).region(regionRendered);
+    builder.stackStatusesToMarkAsSuccess(stackStatusesToMarkAsSuccessRendered.stream()
+                                             .map(status -> StackStatus.fromValue(status))
+                                             .collect(Collectors.toList()));
 
     if (isSpecifyCapabilities()) {
       builder.capabilities(capabilities);
@@ -504,6 +526,11 @@ public class CloudFormationCreateStackState extends CloudFormationState {
               .region(context.renderExpression(region))
               .stackNameSuffix(getStackNameSuffix((ExecutionContextImpl) context, provisionerId))
               .customStackName(useCustomStackName ? context.renderExpression(customStackName) : StringUtils.EMPTY)
+              .skipBasedOnStackStatus(
+                  ((CloudFormationCreateStackResponse) commandResponse).getRollbackInfo().isSkipBasedOnStackStatus())
+              .stackStatusesToMarkAsSuccess(((CloudFormationCreateStackResponse) commandResponse)
+                                                .getRollbackInfo()
+                                                .getStackStatusesToMarkAsSuccess())
               .oldStackBody(context.renderExpression(existingStackInfo.getOldStackBody()))
               .oldStackParameters(renderedOldStackParams)
               .build();
