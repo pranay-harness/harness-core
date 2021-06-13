@@ -1,4 +1,4 @@
-package io.harness.steps.dummy;
+package io.harness.pms.sdk.core.supporter.sync;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
@@ -11,23 +11,22 @@ import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.steps.OrchestrationStepTypes;
 
 import com.google.common.base.Preconditions;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-public class DummyStep implements SyncExecutable<DummyStepParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.DUMMY).build();
+public class TestSyncStep implements SyncExecutable<TestSyncStepParameters> {
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType("TEST_SYNC").build();
 
   @Override
-  public Class<DummyStepParameters> getStepParametersClass() {
-    return DummyStepParameters.class;
+  public Class<TestSyncStepParameters> getStepParametersClass() {
+    return TestSyncStepParameters.class;
   }
 
   @Override
-  public StepResponse executeSync(Ambiance ambiance, DummyStepParameters dummyStepParameters,
+  public StepResponse executeSync(Ambiance ambiance, TestSyncStepParameters dummyStepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData) {
     log.info("Dummy Step getting executed. Identifier: {}",
         Preconditions.checkNotNull(AmbianceUtils.obtainCurrentLevel(ambiance)).getIdentifier());
