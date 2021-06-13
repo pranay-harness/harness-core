@@ -2,8 +2,6 @@ package software.wings.service.impl.security;
 
 import static io.harness.beans.EncryptedData.EncryptedDataKeys;
 import static io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -14,6 +12,8 @@ import static software.wings.beans.BaseVaultConfig.BaseVaultConfigKeys;
 import static software.wings.settings.SettingVariableTypes.VAULT;
 
 import static java.time.Duration.ofMillis;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
@@ -58,12 +58,12 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
     BaseVaultConfig baseVaultConfig = wingsPersistence.get(BaseVaultConfig.class, vaultConfigId);
     checkNotNull(baseVaultConfig, "No SSH vault config found with id " + vaultConfigId);
 
-    if (isNotEmpty(baseVaultConfig.getAuthToken())) {
+    if (isNotBlank(baseVaultConfig.getAuthToken())) {
       wingsPersistence.delete(EncryptedData.class, baseVaultConfig.getAuthToken());
       log.info("Deleted encrypted auth token record {} associated with SSH vault secret engine '{}'",
           baseVaultConfig.getAuthToken(), baseVaultConfig.getName());
     }
-    if (isNotEmpty(baseVaultConfig.getSecretId())) {
+    if (isNotBlank(baseVaultConfig.getSecretId())) {
       wingsPersistence.delete(EncryptedData.class, baseVaultConfig.getSecretId());
       log.info("Deleted encrypted secret id record {} associated with SSH vault secret engine '{}'",
           baseVaultConfig.getSecretId(), baseVaultConfig.getName());
@@ -151,7 +151,7 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
   }
 
   public BaseVaultConfig getBaseVaultConfig(String accountId, String entityId) {
-    if (isEmpty(accountId) || isEmpty(entityId)) {
+    if (isBlank(accountId) || isBlank(entityId)) {
       return new VaultConfig();
     }
     Query<BaseVaultConfig> query = wingsPersistence.createQuery(BaseVaultConfig.class)
@@ -211,7 +211,7 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
         BaseVaultConfigKeys.authToken, settingVariableTypes);
     savedVaultConfig.setAuthToken(authTokenEncryptedDataId);
     // Create a LOCAL encrypted record for Vault secretId
-    if (isNotEmpty(secretId)) {
+    if (isNotBlank(secretId)) {
       String secretIdEncryptedDataId = saveSecretField(accountId, vaultConfigId, secretId, SECRET_ID_SECRET_NAME_SUFFIX,
           BaseVaultConfigKeys.secretId, settingVariableTypes);
       savedVaultConfig.setSecretId(secretIdEncryptedDataId);
@@ -252,29 +252,35 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
 
     if (vaultConfig.isUseVaultAgent()) {
       // deleate AppId cred and Saved Token
-      if (isNotEmpty(savedVaultConfig.getAuthToken())) {
+      if (isNotBlank(savedVaultConfig.getAuthToken())) {
         wingsPersistence.delete(EncryptedData.class, savedVaultConfig.getAuthToken());
         log.info("Deleted encrypted auth token record {} associated with Vault '{}'", savedVaultConfig.getAuthToken(),
             savedVaultConfig.getName());
       }
-      if (isNotEmpty(savedVaultConfig.getSecretId())) {
+      if (isNotBlank(savedVaultConfig.getSecretId())) {
         wingsPersistence.delete(EncryptedData.class, savedVaultConfig.getSecretId());
         log.info("Deleted encrypted secret id record {} associated with Vault '{}'", savedVaultConfig.getSecretId(),
             savedVaultConfig.getName());
       }
     } else {
-      // Create a LOCAL encrypted record for Vault authToken
       String authToken = vaultConfig.getAuthToken();
       String secretId = vaultConfig.getSecretId();
-      Preconditions.checkNotNull(authToken);
-      Preconditions.checkNotNull(authTokenEncryptedDataId);
-      authTokenEncryptedDataId = updateSecretField(authTokenEncryptedDataId, accountId, vaultConfigId, authToken,
-          TOKEN_SECRET_NAME_SUFFIX, BaseVaultConfigKeys.authToken, settingVariableTypes);
-      savedVaultConfig.setAuthToken(authTokenEncryptedDataId);
+
+      // Create or Update a local encrypted record of Auth token
+      if (isNotBlank(authToken)) {
+        if (isNotBlank(authTokenEncryptedDataId)) {
+          authTokenEncryptedDataId = updateSecretField(authTokenEncryptedDataId, accountId, vaultConfigId, authToken,
+              TOKEN_SECRET_NAME_SUFFIX, BaseVaultConfigKeys.authToken, settingVariableTypes);
+        } else {
+          authTokenEncryptedDataId = saveSecretField(accountId, vaultConfigId, authToken, TOKEN_SECRET_NAME_SUFFIX,
+              BaseVaultConfigKeys.authToken, settingVariableTypes);
+        }
+        savedVaultConfig.setAuthToken(authTokenEncryptedDataId);
+      }
 
       // Create a LOCAL encrypted record for Vault secretId
-      if (isNotEmpty(secretId)) {
-        if (isNotEmpty(secretIdEncryptedDataId)) {
+      if (isNotBlank(secretId)) {
+        if (isNotBlank(secretIdEncryptedDataId)) {
           secretIdEncryptedDataId = updateSecretField(secretIdEncryptedDataId, accountId, vaultConfigId, secretId,
               SECRET_ID_SECRET_NAME_SUFFIX, BaseVaultConfigKeys.secretId, settingVariableTypes);
         } else {
