@@ -59,8 +59,8 @@ public class CIExecutionConstants {
   // Lite engine container constants
   public static final String LITE_ENGINE_CONTAINER_NAME = "lite-engine";
 
-  public static final Integer LITE_ENGINE_CONTAINER_MEM = 100;
-  public static final Integer LITE_ENGINE_CONTAINER_CPU = 100;
+  public static final Integer LITE_ENGINE_CONTAINER_MEM = 40;
+  public static final Integer LITE_ENGINE_CONTAINER_CPU = 40;
 
   // entry point constants
   public static final String PORT_PREFIX = "--port";
