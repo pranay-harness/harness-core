@@ -17,7 +17,6 @@ import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
-import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueueListenerController;
 
 import com.google.common.util.concurrent.ServiceManager;
@@ -102,30 +101,12 @@ public class PmsSdkInitHelper {
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 3);
   }
 
-  private static void registerSdk(Injector injector, PmsSdkConfiguration config) {
+  private static void registerSdk(Injector injector, PmsSdkConfiguration sdkConfiguration) {
     try {
-      PipelineServiceInfoProvider pipelineServiceInfoProvider =
-          injector.getInstance(config.getPipelineServiceInfoProviderClass());
-      StepRegistry stepRegistry = injector.getInstance(StepRegistry.class);
-      Map<StepType, Step> registry = stepRegistry.getRegistry();
-      List<StepType> stepTypes = registry == null ? Collections.emptyList() : new ArrayList<>(registry.keySet());
-      ModuleType moduleType = config.getModuleType();
-      String serviceName = moduleType == null ? PmsConstants.INTERNAL_SERVICE_NAME : moduleType.name().toLowerCase();
-      String displayName = moduleType == null ? PmsConstants.INTERNAL_SERVICE_NAME : moduleType.getDisplayName();
       PmsServiceGrpc.PmsServiceBlockingStub pmsClient =
           injector.getInstance(PmsServiceGrpc.PmsServiceBlockingStub.class);
-      pmsClient.initializeSdk(
-          InitializeSdkRequest.newBuilder()
-              .setName(serviceName)
-              .putAllSupportedTypes(PmsSdkInitHelper.calculateSupportedTypes(pipelineServiceInfoProvider))
-              .addAllSupportedSteps(pipelineServiceInfoProvider.getStepInfo())
-              .addAllSupportedStepTypes(stepTypes)
-              .setInterruptConsumerConfig(config.getInterruptConsumerConfig())
-              .setOrchestrationEventConsumerConfig(config.getOrchestrationEventConsumerConfig())
-              .setFacilitatorEventConsumerConfig(config.getFacilitationEventConsumerConfig())
-              .setSdkModuleInfo(SdkModuleInfo.newBuilder().setDisplayName(displayName).build())
-              .setNodeStartEventConsumerConfig(config.getNodeStartEventConsumerConfig())
-              .build());
+      pmsClient.initializeSdk(buildInitializeSdkRequest(injector, sdkConfiguration));
+      log.info("Sdk Initialized for module {} Successfully", sdkConfiguration.getModuleType());
     } catch (StatusRuntimeException ex) {
       log.error("Sdk Initialization failed with StatusRuntimeException Status: {}", ex.getStatus());
       throw ex;
@@ -133,5 +114,28 @@ public class PmsSdkInitHelper {
       log.error("Sdk Initialization failed with Status: {}", ex.getMessage());
       throw ex;
     }
+  }
+
+  private static InitializeSdkRequest buildInitializeSdkRequest(
+      Injector injector, PmsSdkConfiguration sdkConfiguration) {
+    PipelineServiceInfoProvider infoProvider = injector.getInstance(PipelineServiceInfoProvider.class);
+    ModuleType moduleType = sdkConfiguration.getModuleType();
+    return InitializeSdkRequest.newBuilder()
+        .setName(sdkConfiguration.getServiceName())
+        .putAllSupportedTypes(PmsSdkInitHelper.calculateSupportedTypes(infoProvider))
+        .addAllSupportedSteps(infoProvider.getStepInfo())
+        .addAllSupportedStepTypes(calculateStepTypes(injector))
+        .setInterruptConsumerConfig(sdkConfiguration.getInterruptConsumerConfig())
+        .setOrchestrationEventConsumerConfig(sdkConfiguration.getOrchestrationEventConsumerConfig())
+        .setSdkModuleInfo(SdkModuleInfo.newBuilder().setDisplayName(moduleType.getDisplayName()).build())
+        .setFacilitatorEventConsumerConfig(sdkConfiguration.getFacilitationEventConsumerConfig())
+        .setNodeStartEventConsumerConfig(sdkConfiguration.getNodeStartEventConsumerConfig())
+        .build();
+  }
+
+  private static List<StepType> calculateStepTypes(Injector injector) {
+    StepRegistry stepRegistry = injector.getInstance(StepRegistry.class);
+    Map<StepType, Step> registry = stepRegistry.getRegistry();
+    return registry == null ? Collections.emptyList() : new ArrayList<>(registry.keySet());
   }
 }

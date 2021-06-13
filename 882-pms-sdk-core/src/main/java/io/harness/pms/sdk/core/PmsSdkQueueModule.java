@@ -3,13 +3,13 @@ package io.harness.pms.sdk.core;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.config.PublisherConfiguration;
 import io.harness.mongo.queue.QueueFactory;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.sdk.core.execution.events.node.NodeExecutionEventListener;
-import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
@@ -59,7 +59,7 @@ public class PmsSdkQueueModule extends AbstractModule {
           injector, NodeExecutionEvent.class, ofSeconds(5), topicExpressions, publisherConfiguration, sdkTemplate);
     }
     MongoTemplate mongoTemplate = injector.getInstance(MongoTemplate.class);
-    List<List<String>> topicExpressions = ImmutableList.of(singletonList(PmsConstants.INTERNAL_SERVICE_NAME));
+    List<List<String>> topicExpressions = ImmutableList.of(singletonList(ModuleType.PMS.name().toLowerCase()));
     return QueueFactory.createNgQueueConsumer(
         injector, NodeExecutionEvent.class, ofSeconds(3), topicExpressions, publisherConfiguration, mongoTemplate);
   }
