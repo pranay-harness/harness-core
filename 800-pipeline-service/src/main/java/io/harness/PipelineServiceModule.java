@@ -172,6 +172,9 @@ public class PipelineServiceModule extends AbstractModule {
             .maxPoolSize(100)
             .idleTimeInSecs(500L)
             .eventsFrameworkConfiguration(configuration.getEventsFrameworkConfiguration())
+            .accountClientId(PIPELINE_SERVICE.getServiceId())
+            .accountServiceHttpClientConfig(configuration.getManagerClientConfig())
+            .accountServiceSecret(configuration.getManagerServiceSecret())
             .build()));
     install(OrchestrationStepsModule.getInstance(configuration.getOrchestrationStepConfig()));
     install(OrchestrationVisualizationModule.getInstance());

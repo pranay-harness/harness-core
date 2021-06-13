@@ -18,76 +18,69 @@
  * Harness.toCSV(Harness.connectedDelegateMachines())
  */
 var Harness = function() {
+  return {
 
-    return {
+    // Print usage
+    toString: function() {
+      return "Usage:\n\n" +
+          "Harness.toCSV(<some-query>) outputs all result rows in CSV so you can copy into a spreadsheet.\n\n" +
+          "You can nest these like:\n\n" +
+          "Harness.toCSV(Harness.connectedDelegateMachines())\n";
+    },
 
-        // Print usage
-        toString: function() {
+    // Produce CSV output from any cursor
+    toCSV: function(cursor) {
+      var count = -1;
+      var headers = [];
+      var data = {};
 
-            return "Usage:\n\n"
-                + "Harness.toCSV(<some-query>) outputs all result rows in CSV so you can copy into a spreadsheet.\n\n"
-                + "You can nest these like:\n\n"
-                + "Harness.toCSV(Harness.connectedDelegateMachines())\n";
+      deliminator = ',';
+      textQualifier = '\"';
 
-        },
+      while (cursor.hasNext()) {
+        var array = new Array(cursor.next());
 
-        // Produce CSV output from any cursor
-        toCSV: function(cursor) {
+        count++;
 
-            var count = -1;
-            var headers = [];
-            var data = {};
+        for (var index in array[0]) {
+          if (headers.indexOf(index) == -1) {
+            headers.push(index);
+          }
+        }
 
-            deliminator = ',';
-            textQualifier = '\"';
+        for (var i = 0; i < array.length; i++) {
+          for (var index in array[i]) {
+            data[count + '_' + index] = array[i][index];
+          }
+        }
+      }
 
-            while (cursor.hasNext()) {
+      var line = '';
 
-                var array = new Array(cursor.next());
+      for (var index in headers) {
+        line += textQualifier + headers[index] + textQualifier + deliminator;
+      }
 
-                count++;
+      line = line.slice(0, -1);
+      print(line);
 
-                for (var index in array[0]) {
-                    if (headers.indexOf(index) == -1) {
-                        headers.push(index);
-                    }
-                }
+      for (var i = 0; i < count + 1; i++) {
+        var line = '';
+        var cell = '';
+        for (var j = 0; j < headers.length; j++) {
+          cell = data[i + '_' + headers[j]];
+          if (cell == undefined) cell = '';
+          line += textQualifier + cell + textQualifier + deliminator;
+        }
 
-                for (var i = 0; i < array.length; i++) {
-                    for (var index in array[i]) {
-                        data[count + '_' + index] = array[i][index];
-                    }
-                }
-            }
+        line = line.slice(0, -1);
+        print(line);
+      }
+    },
 
-            var line = '';
-
-            for (var index in headers) {
-                line += textQualifier + headers[index] + textQualifier + deliminator;
-            }
-
-            line = line.slice(0, -1);
-            print(line);
-
-            for (var i = 0; i < count + 1; i++) {
-
-                var line = '';
-                var cell = '';
-                for (var j = 0; j < headers.length; j++) {
-                    cell = data[i + '_' + headers[j]];
-                    if (cell == undefined) cell = '';
-                    line += textQualifier + cell + textQualifier + deliminator;
-                }
-
-                line = line.slice(0, -1);
-                print(line);
-            }
-        },
-
-        // Count the connected delegate processes per account
-        connectedDelegateProcesses: function() {
-
-            return db.delegateConnections.aggregate([
+    // Count the connected delegate processes per account
+    connectedDelegateProcesses: function() {
+      return db.delegateConnections.aggregate([
                 {$group:{
                     _id:"$accountId",
                     connections: { $sum: NumberInt(1) }
@@ -107,13 +100,11 @@ var Harness = function() {
                 }},
                 {$sort:{connections:-1, accountName:1}}
             ]);
+    },
 
-        },
-
-        // Count the connected delegate IDs per account
-        connectedDelegateMachines: function() {
-
-            return db.delegateConnections.aggregate([
+    // Count the connected delegate IDs per account
+    connectedDelegateMachines: function() {
+      return db.delegateConnections.aggregate([
                 {$group:{
                     _id:"$accountId",
                     distinctDelegateIds: { $addToSet: "$delegateId" }
@@ -133,49 +124,47 @@ var Harness = function() {
                 }},
                 {$sort:{connectedDelegates:-1, accountName:1}}
             ]);
+    },
 
-        },
-
-        // Count connected delegates versus to total number of delegate records per account
-        connectedDelegatesVsTotalDelegates: function() {
-
-            return db.delegates.aggregate([
+    // Count connected delegates versus to total number of delegate records per
+    // account
+    connectedDelegatesVsTotalDelegates: function() {
+      return db.delegates.aggregate([
                 {$lookup:{
-                    from:"delegateConnections",
-                    localField:"_id",
-                    foreignField:"delegateId",
-                    as:"connection_docs"
+                    from:'delegateConnections',
+                    localField:'_id',
+                    foreignField:'delegateId',
+                    as:'connection_docs'
                 }},
-                {$unwind: {path:"$connection_docs", preserveNullAndEmptyArrays: true}},
+                {$unwind: {path:'$connection_docs', preserveNullAndEmptyArrays: true}},
                 {$group:{
-                    _id:"$accountId",
-                    delegates: { $addToSet: "$_id" },
-                    distinctConnections: { $addToSet: "$connection_docs.delegateId" }
+                    _id:'$accountId',
+                    delegates: { $addToSet: '$_id' },
+                    distinctConnections: { $addToSet: '$connection_docs.delegateId' }
                 }},
                 {$lookup:{
-                    from:"accounts",
-                    localField:"_id",
-                    foreignField:"_id",
-                    as:"account_docs"
+                    from:'accounts',
+                    localField:'_id',
+                    foreignField:'_id',
+                    as:'account_docs'
                 }},
-                {$unwind: {path:"$account_docs", preserveNullAndEmptyArrays: true}},
+                {$unwind: {path:'$account_docs', preserveNullAndEmptyArrays: true}},
                 {$project:{
                     _id: 0,
-                    accountId: "$_id",
-                    accountName: "$account_docs.accountName",
-                    delegates: {$size: "$delegates"},
-                    connectedDelegates: {$size: "$distinctConnections"},
-                    disconnected: {$subtract: [{$size: "$delegates"}, {$size: "$distinctConnections"}] }
+                    accountId: '$_id',
+                    accountName: '$account_docs.accountName',
+                    delegates: {$size: '$delegates'},
+                    connectedDelegates: {$size: '$distinctConnections'},
+                    disconnected: {$subtract: [{$size: '$delegates'}, {$size: '$distinctConnections'}] }
                 }},
                 {$sort:{connectedDelegates:-1, accountName:1}}
             ]);
+    },
 
-        },
-
-        // Count connected delegates per account with a list of versions those delegates have
-        connectedDelegatesByAccountWithVersion: function() {
-
-            return db.delegateConnections.aggregate([
+    // Count connected delegates per account with a list of versions those
+    // delegates have
+    connectedDelegatesByAccountWithVersion: function() {
+      return db.delegateConnections.aggregate([
                 {$group:{
                     _id:"$accountId",
                     distinctDelegateIds: { $addToSet: "$delegateId" },
@@ -218,13 +207,12 @@ var Harness = function() {
                 }},
                 {$sort:{connectedDelegates:-1, accountName:1}}
             ]);
+    },
 
-        },
-
-        // List the delegate hostnames and account along with versions each host is running
-        connectedDelegateHostNamesAndVersions: function() {
-
-            return db.delegates.aggregate([
+    // List the delegate hostnames and account along with versions each host is
+    // running
+    connectedDelegateHostNamesAndVersions: function() {
+      return db.delegates.aggregate([
                 {$lookup:{
                     from:"delegateConnections",
                     localField:"_id",
@@ -276,13 +264,11 @@ var Harness = function() {
                 }},
                 {$sort:{accountName:1, hostName:1}}
             ]);
+    },
 
-        },
-
-        // List the connected delegates that have exactly one version running
-        connectedDelegatesWithOneVersion: function() {
-
-            return db.delegates.aggregate([
+    // List the connected delegates that have exactly one version running
+    connectedDelegatesWithOneVersion: function() {
+      return db.delegates.aggregate([
                 {$lookup:{
                     from:"delegateConnections",
                     localField:"_id",
@@ -313,13 +299,11 @@ var Harness = function() {
                 }},
                 {$sort:{accountName:1, hostName:1}}
             ]);
+    },
 
-        },
-
-        // Count the running executions per account
-        runningExecutionsByAccount: function() {
-
-            return db.workflowExecutions.aggregate([
+    // Count the running executions per account
+    runningExecutionsByAccount: function() {
+      return db.workflowExecutions.aggregate([
                 {$match:{
                     status:"RUNNING",
                     workflowType: {$ne : "PIPELINE"}
@@ -343,13 +327,11 @@ var Harness = function() {
                 }},
                 {$sort:{running:-1, accountName:1}}
             ]);
+    },
 
-        },
-
-        // Count running executions per application
-        runningExecutionsByApplication: function() {
-
-            return db.workflowExecutions.aggregate([
+    // Count running executions per application
+    runningExecutionsByApplication: function() {
+      return db.workflowExecutions.aggregate([
                 {$match:{
                     status:"RUNNING",
                     workflowType: {$ne : "PIPELINE"}
@@ -382,12 +364,10 @@ var Harness = function() {
                 }},
                 {$sort:{running:-1, accountName:1, appName:1}}
             ]);
+    },
 
-        },
-
-        runningExecutionsByAccountWithStartWeek: function() {
-
-            return db.workflowExecutions.aggregate([
+    runningExecutionsByAccountWithStartWeek: function() {
+      return db.workflowExecutions.aggregate([
                 {$match:{
                     status:"RUNNING",
                     workflowType: {$ne : "PIPELINE"}
@@ -417,13 +397,11 @@ var Harness = function() {
                 }},
                 {$sort:{year:1, week:1, accountName:1}}
             ]);
+    },
 
-        },
-
-        // Count the executions per account with statuses for the last N days
-        executionsLastNDays: function(days) {
-
-            return db.workflowExecutions.aggregate([
+    // Count the executions per account with statuses for the last N days
+    executionsLastNDays: function(days) {
+      return db.workflowExecutions.aggregate([
                 {$match:{
                     workflowType: {$ne : "PIPELINE"},
                     status: {$ne: "RUNNING"}
@@ -476,13 +454,11 @@ var Harness = function() {
                 }},
                 {$sort:{totalExecuted:-1, succeeded:-1}}
             ]);
+    },
 
-        },
-
-        // Count the executions for one account with statuses in the last N days
-        executionsOneAccountLastNDays: function(accountId, days) {
-
-            return db.workflowExecutions.aggregate([
+    // Count the executions for one account with statuses in the last N days
+    executionsOneAccountLastNDays: function(accountId, days) {
+      return db.workflowExecutions.aggregate([
                 {$match:{
                     workflowType: {$ne : "PIPELINE"},
                     status: {$ne: "RUNNING"}
@@ -536,38 +512,33 @@ var Harness = function() {
                 }},
                 {$sort:{totalExecuted:-1, succeeded:-1}}
             ]);
+    },
 
+    // Count the total executions per isoweek over the last N days
+    executionsByWeekLastNDays: function(days) {
+      return db.workflowExecutions.aggregate([
+        {
+          $match: {
+            workflowType: {$ne: "PIPELINE"},
+            status: {$ne: "RUNNING"},
+            createdAt: {$gte: new Date().getTime() - days * 24 * 60 * 60 * 1000}
+          }
         },
+        {$project: {createdAt: {$add: [new Date(0), "$createdAt"]}}}, {
+          $group: {
+            _id: {
+              year: {$isoWeekYear: "$createdAt"},
+              week: {$isoWeek: "$createdAt"}
+            },
+            executed: {$sum: NumberInt(1)}
+          }
+        },
+        {$project: {_id: 0, year: "$_id.year", week: "$_id.week", executed: 1}},
+        {$sort: {year: 1, week: 1}}
+      ]);
+    }
 
-        // Count the total executions per isoweek over the last N days
-        executionsByWeekLastNDays: function(days) {
-
-            return db.workflowExecutions.aggregate([
-                {$match:{
-                    workflowType: {$ne : "PIPELINE"},
-                    status: {$ne: "RUNNING"},
-                    createdAt: {$gte: new Date().getTime() - days * 24 * 60 * 60 * 1000}
-                }},
-                {$project:{
-                    createdAt:{$add:[new Date(0), "$createdAt"]}
-                }},
-                {$group:{
-                    _id:{year: { $isoWeekYear: "$createdAt" }, week: { $isoWeek: "$createdAt" }},
-                    executed:{$sum:NumberInt(1)}
-                }},
-                {$project:{
-                    _id:0,
-                    year:"$_id.year",
-                    week:"$_id.week",
-                    executed:1
-                }},
-                {$sort:{year:1, week:1}}
-            ]);
-
-        }
-
-    };
-
+  };
 }();
 
 // Hide the object defaults

@@ -8,6 +8,7 @@ import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.redis.RedisConfig;
 
+import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.NonNull;
@@ -30,4 +31,8 @@ public class OrchestrationModuleConfig {
           .build();
   boolean withPMS;
   boolean isPipelineService;
+  boolean useFeatureFlagService;
+  @Nullable io.harness.remote.client.ServiceHttpClientConfig accountServiceHttpClientConfig;
+  @Nullable String accountServiceSecret;
+  @Nullable String accountClientId;
 }
