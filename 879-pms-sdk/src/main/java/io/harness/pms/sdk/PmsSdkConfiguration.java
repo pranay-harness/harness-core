@@ -14,7 +14,7 @@ import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
-import io.harness.pms.sdk.core.facilitator.Facilitator;
+import io.harness.pms.sdk.core.execution.events.node.facilitate.Facilitator;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.steps.Step;
@@ -57,4 +57,5 @@ public class PmsSdkConfiguration {
   ConsumerConfig interruptConsumerConfig;
   ConsumerConfig orchestrationEventConsumerConfig;
   ConsumerConfig facilitationEventConsumerConfig;
+  ConsumerConfig nodeStartEventConsumerConfig;
 }

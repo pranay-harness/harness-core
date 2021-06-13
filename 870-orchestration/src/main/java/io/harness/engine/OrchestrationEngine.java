@@ -8,8 +8,6 @@ import static io.harness.pms.contracts.execution.Status.ERRORED;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
-import static java.lang.String.format;
-
 import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -19,20 +17,18 @@ import io.harness.engine.advise.AdviserResponseHandler;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executables.InvocationHelper;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.executions.node.NodeExecutionTimeoutCallback;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.facilitation.FacilitationHelper;
 import io.harness.engine.facilitation.RunPreFacilitationChecker;
 import io.harness.engine.facilitation.SkipPreFacilitationChecker;
 import io.harness.engine.facilitation.facilitator.publisher.FacilitateEventPublisher;
-import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.observers.OrchestrationEndObserver;
 import io.harness.engine.pms.EngineAdviseCallback;
+import io.harness.engine.pms.start.NodeStartHelper;
 import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.engine.utils.TransactionUtils;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.exceptionmanager.ExceptionManager;
-import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
@@ -54,7 +50,6 @@ import io.harness.pms.contracts.steps.io.StepResponseProto.Builder;
 import io.harness.pms.execution.AdviseNodeExecutionEventData;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.execution.ResumeNodeExecutionEventData;
-import io.harness.pms.execution.StartNodeExecutionEventData;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.execution.utils.LevelUtils;
@@ -62,18 +57,7 @@ import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
-import io.harness.registries.timeout.TimeoutRegistry;
-import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.ProtoUtils;
-import io.harness.timeout.TimeoutCallback;
-import io.harness.timeout.TimeoutEngine;
-import io.harness.timeout.TimeoutInstance;
-import io.harness.timeout.TimeoutParameters;
-import io.harness.timeout.TimeoutTracker;
-import io.harness.timeout.TimeoutTrackerFactory;
-import io.harness.timeout.contracts.TimeoutObtainment;
-import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
-import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -106,24 +90,21 @@ public class OrchestrationEngine {
   @Inject private Injector injector;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
-  @Inject private TimeoutRegistry timeoutRegistry;
   @Inject private AdviseHandlerFactory adviseHandlerFactory;
   @Inject private DelayEventHelper delayEventHelper;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private PmsEngineExpressionService pmsEngineExpressionService;
-  @Inject private TimeoutEngine timeoutEngine;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
   @Inject private OrchestrationEventEmitter eventEmitter;
   @Inject private NodeExecutionEventQueuePublisher nodeExecutionEventQueuePublisher;
-  @Inject private KryoSerializer kryoSerializer;
   @Inject private EndNodeExecutionHelper endNodeExecutionHelper;
-  @Inject private InterruptService interruptService;
   @Inject private InvocationHelper invocationHelper;
   @Inject private TransactionUtils transactionUtils;
   @Inject private ExceptionManager exceptionManager;
   @Inject private FacilitationHelper facilitationHelper;
   @Inject private FacilitateEventPublisher facilitateEventPublisher;
+  @Inject private NodeStartHelper startHelper;
 
   @Getter private final Subject<OrchestrationEndObserver> orchestrationEndSubject = new Subject<>();
 
@@ -230,68 +211,7 @@ public class OrchestrationEngine {
           resumeId);
       return;
     }
-    invokeExecutable(ambiance, facilitatorResponse);
-  }
-
-  public void invokeExecutable(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
-    ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
-        ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    if (!check.isProceed()) {
-      log.info("Not Proceeding with Execution : {}", check.getReason());
-      return;
-    }
-
-    PlanExecution planExecution = Preconditions.checkNotNull(planExecutionService.get(ambiance.getPlanExecutionId()));
-    NodeExecution nodeExecution = prepareNodeExecutionForInvocation(ambiance);
-    log.info("Sending NodeExecution START event");
-    StartNodeExecutionEventData startNodeExecutionEventData =
-        StartNodeExecutionEventData.builder().facilitatorResponse(facilitatorResponse).build();
-    NodeExecutionEvent startEvent = NodeExecutionEvent.builder()
-                                        .eventType(NodeExecutionEventType.START)
-                                        .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
-                                        .eventData(startNodeExecutionEventData)
-                                        .build();
-    nodeExecutionEventQueuePublisher.send(startEvent);
-  }
-
-  private List<String> registerTimeouts(NodeExecution nodeExecution) {
-    List<TimeoutObtainment> timeoutObtainmentList;
-    if (nodeExecution.getNode().getTimeoutObtainmentsList().isEmpty()) {
-      timeoutObtainmentList = Collections.singletonList(
-          TimeoutObtainment.newBuilder()
-              .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
-              .setParameters(ByteString.copyFrom(
-                  kryoSerializer.asBytes(AbsoluteTimeoutParameters.builder()
-                                             .timeoutMillis(TimeoutParameters.DEFAULT_TIMEOUT_IN_MILLIS)
-                                             .build())))
-              .build());
-    } else {
-      timeoutObtainmentList = nodeExecution.getNode().getTimeoutObtainmentsList();
-    }
-
-    List<String> timeoutInstanceIds = new ArrayList<>();
-    TimeoutCallback timeoutCallback =
-        new NodeExecutionTimeoutCallback(nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid());
-    for (TimeoutObtainment timeoutObtainment : timeoutObtainmentList) {
-      TimeoutTrackerFactory timeoutTrackerFactory = timeoutRegistry.obtain(timeoutObtainment.getDimension());
-      TimeoutTracker timeoutTracker = timeoutTrackerFactory.create(
-          (TimeoutParameters) kryoSerializer.asObject(timeoutObtainment.getParameters().toByteArray()));
-      TimeoutInstance instance = timeoutEngine.registerTimeout(timeoutTracker, timeoutCallback);
-      timeoutInstanceIds.add(instance.getUuid());
-    }
-    log.info(format("Registered node execution timeouts: %s", timeoutInstanceIds.toString()));
-    return timeoutInstanceIds;
-  }
-
-  private NodeExecution prepareNodeExecutionForInvocation(Ambiance ambiance) {
-    NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    return Preconditions.checkNotNull(nodeExecutionService.updateStatusWithOps(
-        AmbianceUtils.obtainCurrentRuntimeId(ambiance), Status.RUNNING, ops -> {
-          ops.set(NodeExecutionKeys.startTs, System.currentTimeMillis());
-          if (!ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
-            setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution));
-          }
-        }, EnumSet.noneOf(Status.class)));
+    startHelper.startNode(ambiance, facilitatorResponse);
   }
 
   public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse) {

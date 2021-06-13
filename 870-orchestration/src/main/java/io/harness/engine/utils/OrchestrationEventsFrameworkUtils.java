@@ -84,6 +84,15 @@ public class OrchestrationEventsFrameworkUtils {
                                           .build()));
   }
 
+  public Producer obtainProducerForNodeStart(String serviceName) {
+    return Failsafe.with(retryPolicy)
+        .get(()
+                 -> producerCache.get(ProducerCacheKey.builder()
+                                          .eventCategory(EventCategory.NODE_START)
+                                          .serviceName(serviceName)
+                                          .build()));
+  }
+
   @VisibleForTesting
   Producer obtainProducer(ProducerCacheKey cacheKey) {
     PmsSdkInstance instance = getPmsSdkInstance(cacheKey.getServiceName());
@@ -97,6 +106,9 @@ public class OrchestrationEventsFrameworkUtils {
       case FACILITATOR_EVENT:
         return extractProducer(instance.getFacilitatorEventConsumerConfig(),
             EventsFrameworkConstants.PIPELINE_FACILITATOR_EVENT_MAX_TOPIC_SIZE);
+      case NODE_START:
+        return extractProducer(instance.getNodeStartEventConsumerConfig(),
+            EventsFrameworkConstants.PIPELINE_NODE_START_EVENT_MAX_TOPIC_SIZE);
       default:
         throw new InvalidRequestException("Invalid Event Category while obtaining Producer");
     }

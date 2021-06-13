@@ -7,7 +7,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.metrics.jobs.RecordMetricsJob;
 import io.harness.metrics.service.api.MetricService;
 import io.harness.monitoring.MonitoringEventObserver;
-import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.plan.InitializeSdkRequest;
 import io.harness.pms.contracts.plan.PmsServiceGrpc;
 import io.harness.pms.contracts.plan.SdkModuleInfo;
@@ -81,12 +80,7 @@ public class PmsSdkInitHelper {
           injector.getInstance(Key.get(ServiceManager.class, Names.named("pmsSDKServiceManager"))).startAsync();
       serviceManager.awaitHealthy();
       Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
-
-      PipelineServiceInfoProvider pipelineServiceInfoProvider = config.getPipelineServiceInfoProviderClass() == null
-          ? null
-          : injector.getInstance(config.getPipelineServiceInfoProviderClass());
-      registerSdk(pipelineServiceInfoProvider, config.getModuleType(), injector, config.getInterruptConsumerConfig(),
-          config.getOrchestrationEventConsumerConfig(), config.getFacilitationEventConsumerConfig());
+      registerSdk(injector, config);
     }
     registerQueueListeners(injector);
     registerObserversForEvents(injector);
@@ -108,13 +102,14 @@ public class PmsSdkInitHelper {
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 3);
   }
 
-  private static void registerSdk(PipelineServiceInfoProvider pipelineServiceInfoProvider, ModuleType moduleType,
-      Injector injector, ConsumerConfig interruptConsumerConfig, ConsumerConfig orchestrationEventConsumerConfig,
-      ConsumerConfig facilitatorEventConsumerConfig) {
+  private static void registerSdk(Injector injector, PmsSdkConfiguration config) {
     try {
+      PipelineServiceInfoProvider pipelineServiceInfoProvider =
+          injector.getInstance(config.getPipelineServiceInfoProviderClass());
       StepRegistry stepRegistry = injector.getInstance(StepRegistry.class);
       Map<StepType, Step> registry = stepRegistry.getRegistry();
       List<StepType> stepTypes = registry == null ? Collections.emptyList() : new ArrayList<>(registry.keySet());
+      ModuleType moduleType = config.getModuleType();
       String serviceName = moduleType == null ? PmsConstants.INTERNAL_SERVICE_NAME : moduleType.name().toLowerCase();
       String displayName = moduleType == null ? PmsConstants.INTERNAL_SERVICE_NAME : moduleType.getDisplayName();
       PmsServiceGrpc.PmsServiceBlockingStub pmsClient =
@@ -125,10 +120,11 @@ public class PmsSdkInitHelper {
               .putAllSupportedTypes(PmsSdkInitHelper.calculateSupportedTypes(pipelineServiceInfoProvider))
               .addAllSupportedSteps(pipelineServiceInfoProvider.getStepInfo())
               .addAllSupportedStepTypes(stepTypes)
-              .setInterruptConsumerConfig(interruptConsumerConfig)
-              .setOrchestrationEventConsumerConfig(orchestrationEventConsumerConfig)
-              .setFacilitatorEventConsumerConfig(facilitatorEventConsumerConfig)
+              .setInterruptConsumerConfig(config.getInterruptConsumerConfig())
+              .setOrchestrationEventConsumerConfig(config.getOrchestrationEventConsumerConfig())
+              .setFacilitatorEventConsumerConfig(config.getFacilitationEventConsumerConfig())
               .setSdkModuleInfo(SdkModuleInfo.newBuilder().setDisplayName(displayName).build())
+              .setNodeStartEventConsumerConfig(config.getNodeStartEventConsumerConfig())
               .build());
     } catch (StatusRuntimeException ex) {
       log.error("Sdk Initialization failed with StatusRuntimeException Status: {}", ex.getStatus());
