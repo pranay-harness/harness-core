@@ -9,6 +9,7 @@ import io.harness.pms.sdk.core.execution.events.node.facilitate.FacilitatorEvent
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.Map;
 
 @Singleton
 public class FacilitatorEventMessageListener extends PmsAbstractMessageListener<FacilitatorEvent> {
@@ -22,7 +23,7 @@ public class FacilitatorEventMessageListener extends PmsAbstractMessageListener<
   }
 
   @Override
-  public boolean processMessage(FacilitatorEvent event) {
+  public boolean processMessage(FacilitatorEvent event, Map<String, String> metadataMap) {
     return facilitatorEventHandler.handleEvent(event);
   }
 }

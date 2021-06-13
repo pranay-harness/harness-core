@@ -4,6 +4,7 @@ import static io.harness.AuthorizationServiceHeader.CI_MANAGER;
 
 import io.harness.AccessControlClientModule;
 import io.harness.CIExecutionServiceModule;
+import io.harness.account.AccountClientModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.impl.CIBuildInfoServiceImpl;
@@ -198,5 +199,7 @@ public class CIManagerServiceModule extends AbstractModule {
         ciManagerConfiguration.getNgManagerServiceSecret(), "CIManager"));
     install(new CILogServiceClientModule(ciManagerConfiguration.getLogServiceConfig()));
     install(new TIServiceClientModule(ciManagerConfiguration.getTiServiceConfig()));
+    install(new AccountClientModule(ciManagerConfiguration.getManagerClientConfig(),
+        ciManagerConfiguration.getNgManagerServiceSecret(), CI_MANAGER.toString()));
   }
 }

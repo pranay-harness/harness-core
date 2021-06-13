@@ -28,7 +28,7 @@ public abstract class PmsAbstractMessageListener<T extends com.google.protobuf.M
     if (isProcessable(message)) {
       log.info("[PMS_SDK] Starting to process message from {} messageId: {}", this.getClass().getSimpleName(),
           message.getId());
-      boolean processed = processMessage(extractEntity(message));
+      boolean processed = processMessage(extractEntity(message), message.getMessage().getMetadataMap());
       log.info("[PMS_SDK] Processing Finished from {} for messageId: {} returning {}", this.getClass().getSimpleName(),
           message.getId(), processed);
       return processed;
@@ -55,5 +55,5 @@ public abstract class PmsAbstractMessageListener<T extends com.google.protobuf.M
     return false;
   }
 
-  public abstract boolean processMessage(T event);
+  public abstract boolean processMessage(T event, Map<String, String> metadataMap);
 }
