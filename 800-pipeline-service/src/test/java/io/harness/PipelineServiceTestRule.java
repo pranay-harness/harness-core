@@ -26,6 +26,7 @@ import io.harness.outbox.api.impl.OutboxServiceImpl;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.repositories.outbox.OutboxEventRepository;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
@@ -158,7 +159,11 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
 
     modules.add(mongoTypeModule(annotations));
 
-    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder().engineEventHandlersMap(ImmutableMap.of()).build();
+    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
+                                        .moduleType(ModuleType.PMS)
+                                        .deploymentMode(SdkDeployMode.LOCAL)
+                                        .engineEventHandlersMap(ImmutableMap.of())
+                                        .build();
     modules.add(PmsSdkModule.getInstance(sdkConfig));
     return modules;
   }

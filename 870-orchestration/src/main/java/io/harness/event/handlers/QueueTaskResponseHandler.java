@@ -18,7 +18,6 @@ import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
-import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.ProgressCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -79,7 +78,7 @@ public class QueueTaskResponseHandler implements SdkResponseEventHandler {
       TaskExecutor taskExecutor = taskExecutorMap.get(taskRequest.getTaskCategory());
       String taskId =
           Preconditions.checkNotNull(taskExecutor.queueTask(setupAbstractionsMap, taskRequest, Duration.ofSeconds(0)));
-      OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecutionId).build();
+      EngineResumeCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecutionId).build();
       ProgressCallback progressCallback = EngineProgressCallback.builder().nodeExecutionId(nodeExecutionId).build();
       waitNotifyEngine.waitForAllOn(publisherName, callback, progressCallback, taskId);
       return taskId;

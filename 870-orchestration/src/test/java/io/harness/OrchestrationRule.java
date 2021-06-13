@@ -22,6 +22,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.execution.events.node.NodeExecutionEventListener;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
@@ -182,7 +183,8 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
                                             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                             .isPipelineService(true)
                                             .build()));
-    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder().build();
+    PmsSdkConfiguration sdkConfig =
+        PmsSdkConfiguration.builder().moduleType(ModuleType.PMS).deploymentMode(SdkDeployMode.LOCAL).build();
     modules.add(PmsSdkModule.getInstance(sdkConfig));
     return modules;
   }

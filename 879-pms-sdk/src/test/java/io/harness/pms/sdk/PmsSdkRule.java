@@ -1,5 +1,6 @@
 package io.harness.pms.sdk;
 
+import io.harness.ModuleType;
 import io.harness.PmsCommonsModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
@@ -49,7 +50,8 @@ public class PmsSdkRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
-    PmsSdkConfiguration sdkConfiguration = PmsSdkConfiguration.builder().deploymentMode(SdkDeployMode.LOCAL).build();
+    PmsSdkConfiguration sdkConfiguration =
+        PmsSdkConfiguration.builder().deploymentMode(SdkDeployMode.LOCAL).moduleType(ModuleType.PMS).build();
     List<Module> modules = new ArrayList<>();
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(PmsSdkModule.getInstance(sdkConfiguration));

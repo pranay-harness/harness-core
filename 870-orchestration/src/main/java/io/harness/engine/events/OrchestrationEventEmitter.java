@@ -3,6 +3,7 @@ package io.harness.engine.events;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pms.events.PmsEventFrameworkConstants.SERVICE_NAME;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.utils.OrchestrationEventsFrameworkUtils;
@@ -11,7 +12,6 @@ import io.harness.eventsframework.producer.Message;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.execution.utils.OrchestrationEventUtils;
-import io.harness.pms.utils.PmsConstants;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -27,7 +27,7 @@ public class OrchestrationEventEmitter {
   public void emitEvent(OrchestrationEvent event) {
     try (AutoLogContext ignore = OrchestrationEventUtils.obtainLogContext(event)) {
       String serviceName =
-          isEmpty(event.getServiceName()) ? PmsConstants.INTERNAL_SERVICE_NAME : event.getServiceName();
+          isEmpty(event.getServiceName()) ? ModuleType.PMS.name().toLowerCase() : event.getServiceName();
       emitViaEventsFramework(event, serviceName);
     } catch (Exception ex) {
       log.error("Failed to create orchestration event", ex);
