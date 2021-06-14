@@ -7,6 +7,8 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.OrchestrationModuleConfig;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.utils.ProducerCacheKey.EventCategory;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
@@ -38,6 +40,7 @@ import net.jodah.failsafe.RetryPolicy;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 @Slf4j
 public class OrchestrationEventsFrameworkUtils {
@@ -93,6 +96,15 @@ public class OrchestrationEventsFrameworkUtils {
                                           .build()));
   }
 
+  public Producer obtainProducerForProgressEvent(String serviceName) {
+    return Failsafe.with(retryPolicy)
+        .get(()
+                 -> producerCache.get(ProducerCacheKey.builder()
+                                          .eventCategory(EventCategory.PROGRESS_EVENT)
+                                          .serviceName(serviceName)
+                                          .build()));
+  }
+
   @VisibleForTesting
   Producer obtainProducer(ProducerCacheKey cacheKey) {
     PmsSdkInstance instance = getPmsSdkInstance(cacheKey.getServiceName());
@@ -109,6 +121,9 @@ public class OrchestrationEventsFrameworkUtils {
       case NODE_START:
         return extractProducer(instance.getNodeStartEventConsumerConfig(),
             EventsFrameworkConstants.PIPELINE_NODE_START_EVENT_MAX_TOPIC_SIZE);
+      case PROGRESS_EVENT:
+        return extractProducer(
+            instance.getProgressEventConsumerConfig(), EventsFrameworkConstants.PIPELINE_PROGRESS_MAX_TOPIC_SIZE);
       default:
         throw new InvalidRequestException("Invalid Event Category while obtaining Producer");
     }

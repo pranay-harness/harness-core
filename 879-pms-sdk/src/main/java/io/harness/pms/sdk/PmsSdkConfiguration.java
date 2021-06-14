@@ -1,6 +1,8 @@
 package io.harness.pms.sdk;
 
 import io.harness.ModuleType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
@@ -27,6 +29,7 @@ import lombok.Builder.Default;
 import lombok.NonNull;
 import lombok.Value;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Value
 @Builder
 public class PmsSdkConfiguration {
@@ -56,4 +59,5 @@ public class PmsSdkConfiguration {
   ConsumerConfig orchestrationEventConsumerConfig;
   ConsumerConfig facilitationEventConsumerConfig;
   ConsumerConfig nodeStartEventConsumerConfig;
+  ConsumerConfig progressEventConsumerConfig;
 }
