@@ -34,6 +34,7 @@ import io.harness.eventsframework.webhookpayloads.webhookdata.SourceRepoType;
 import io.harness.eventsframework.webhookpayloads.webhookdata.WebhookDTO;
 import io.harness.ng.webhook.entities.WebhookEvent;
 import io.harness.ng.webhook.entities.WebhookEvent.WebhookEventBuilder;
+import io.harness.product.ci.scm.proto.Action;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 
 import com.google.inject.Inject;
@@ -113,7 +114,7 @@ public class WebhookHelper {
       builder.setEvent(PR);
     } else if (parseWebhookResponse.hasComment()) {
       builder.setEvent(ISSUE_COMMENT);
-    } else if (parseWebhookResponse.hasCreateBranch()) {
+    } else if (parseWebhookResponse.hasBranch() && parseWebhookResponse.getBranch().getAction() == Action.CREATE) {
       builder.setEvent(CREATE_BRANCH);
     }
 
