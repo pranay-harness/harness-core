@@ -1,13 +1,14 @@
 package io.harness.steps.cf;
 
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonValue;
 import org.springframework.data.annotation.TypeAlias;
 
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME, property = "type", visible = true, defaultImpl = SetFeatureFlagStateYaml.class)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = PROPERTY, visible = true)
 @JsonSubTypes({
   @JsonSubTypes.Type(value = SetFeatureFlagStateYaml.class, name = "SetFeatureFlagState")
   , @JsonSubTypes.Type(value = AddTargetsToVariationTargetMapYaml.class, name = "AddTargetsToVariationTargetMap"),
@@ -24,8 +25,9 @@ public interface PatchInstruction {
     @JsonProperty("AddTargetsToVariationTargetMap")
     ADD_TARGETS_TO_VARIATION_TARGET_MAP("AddTargetsToVariationTargetMap"),
     @JsonProperty("RemoveTargetsToVariationTargetMap")
-    REMOVE_TARGETS_TO_VARIATION_MAP("RemoveTargetsToVariationTargetMap"),
-    @JsonProperty("AddSegmentsToVariationTargetMap") ADD_SEGMENT_TO_VARIATION_MAP("AddSegmentToVariationTargetMap"),
+    REMOVE_TARGETS_TO_VARIATION_TARGET_MAP("RemoveTargetsToVariationTargetMap"),
+    @JsonProperty("AddSegmentsToVariationTargetMap")
+    ADD_SEGMENT_TO_VARIATION_TARGET_MAP("AddSegmentToVariationTargetMap"),
     @JsonProperty("RemoveSegmentsToVariationTargetMap")
     REMOVE_SEGMENT_TO_VARIATION_TARGET_MAP("RemoveSegmentToVariationTargetMap");
     private final String yamlName;

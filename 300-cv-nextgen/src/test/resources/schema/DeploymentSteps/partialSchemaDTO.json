@@ -192,21 +192,21 @@
             {
               "type": "object",
               "required": [
+                "identifier",
                 "spec",
                 "type"
               ],
               "properties": {
+                "identifier": {
+                  "type": "string"
+                },
                 "spec": {
                   "$ref": "#/definitions/cvng/AddSegmentToVariationTargetMapYamlSpec"
                 },
                 "type": {
                   "type": "string",
                   "enum": [
-                    "SetFeatureFlagState",
-                    "AddTargetsToVariationTargetMap",
-                    "RemoveTargetsToVariationTargetMap",
-                    "AddSegmentsToVariationTargetMap",
-                    "RemoveSegmentsToVariationTargetMap"
+                    "AddSegmentToVariationTargetMap"
                   ]
                 }
               }
@@ -216,14 +216,19 @@
         },
         "AddSegmentToVariationTargetMapYamlSpec": {
           "type": "object",
+          "required": [
+            "segments",
+            "variation"
+          ],
           "properties": {
-            "identifier":{"$ref":"#/definitions/cvng/ParameterFieldString"},
-            "name":{"$ref":"#/definitions/cvng/ParameterFieldString"},
             "segments": {
-              "$ref":"#/definitions/cvng/ParameterFieldListString"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "variation": {
-              "$ref":"#/definitions/cvng/ParameterFieldString"
+              "type": "string"
             }
           },
           "$schema": "http://json-schema.org/draft-07/schema#"
@@ -236,21 +241,21 @@
             {
               "type": "object",
               "required": [
+                "identifier",
                 "spec",
                 "type"
               ],
               "properties": {
+                "identifier": {
+                  "type": "string"
+                },
                 "spec": {
                   "$ref": "#/definitions/cvng/AddTargetsToVariationTargetMapYamlSpec"
                 },
                 "type": {
                   "type": "string",
                   "enum": [
-                    "SetFeatureFlagState",
-                    "AddTargetsToVariationTargetMap",
-                    "RemoveTargetsToVariationTargetMap",
-                    "AddSegmentsToVariationTargetMap",
-                    "RemoveSegmentsToVariationTargetMap"
+                    "AddTargetsToVariationTargetMap"
                   ]
                 }
               }
@@ -260,18 +265,19 @@
         },
         "AddTargetsToVariationTargetMapYamlSpec": {
           "type": "object",
+          "required": [
+            "targets",
+            "variation"
+          ],
           "properties": {
-            "identifier": {
-              "$ref":"#/definitions/cvng/ParameterFieldString"
-            },
-            "name": {
-              "$ref":"#/definitions/cvng/ParameterFieldString"
-            },
             "targets": {
-              "$ref":"#/definitions/cvng/ParameterFieldListString"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "variation": {
-              "$ref":"#/definitions/cvng/ParameterFieldString"
+              "type": "string"
             }
           },
           "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1256,36 +1262,6 @@
           },
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
-        "ParameterFieldListString": {
-          "type": "object",
-          "properties": {
-            "expression": {
-              "type": "boolean"
-            },
-            "expressionValue": {
-              "type": "string"
-            },
-            "inputSetValidator": {
-              "$ref": "#/definitions/cvng/InputSetValidator"
-            },
-            "jsonResponseField": {
-              "type": "boolean"
-            },
-            "responseField": {
-              "type": "string"
-            },
-            "typeString": {
-              "type": "boolean"
-            },
-            "value": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          "$schema": "http://json-schema.org/draft-07/schema#"
-        },
         "ParameterFieldString": {
           "type": "object",
           "properties": {
@@ -1338,21 +1314,21 @@
             {
               "type": "object",
               "required": [
+                "identifier",
                 "spec",
                 "type"
               ],
               "properties": {
+                "identifier": {
+                  "type": "string"
+                },
                 "spec": {
                   "$ref": "#/definitions/cvng/RemoveSegmentToVariationTargetMapYamlSpec"
                 },
                 "type": {
                   "type": "string",
                   "enum": [
-                    "SetFeatureFlagState",
-                    "AddTargetsToVariationTargetMap",
-                    "RemoveTargetsToVariationTargetMap",
-                    "AddSegmentsToVariationTargetMap",
-                    "RemoveSegmentsToVariationTargetMap"
+                    "RemoveSegmentToVariationTargetMap"
                   ]
                 }
               }
@@ -1362,18 +1338,18 @@
         },
         "RemoveSegmentToVariationTargetMapYamlSpec": {
           "type": "object",
+          "required": [
+            "segments", "variation"
+          ],
           "properties": {
-            "identifier" : {
-              "$ref" : "#/definitions/cvng/ParameterFieldString"
-            },
-            "name" : {
-              "$ref" : "#/definitions/cvng/ParameterFieldString"
-            },
             "segments": {
-              "$ref" : "#/definitions/cvng/ParameterFieldListString"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "variation": {
-              "$ref" : "#/definitions/cvng/ParameterFieldString"
+              "type": "string"
             }
           },
           "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1386,21 +1362,21 @@
             {
               "type": "object",
               "required": [
+                "identifier",
                 "spec",
                 "type"
               ],
               "properties": {
+                "identifier": {
+                  "type": "string"
+                },
                 "spec": {
                   "$ref": "#/definitions/cvng/RemoveTargetsToVariationTargetMapYamlSpec"
                 },
                 "type": {
                   "type": "string",
                   "enum": [
-                    "SetFeatureFlagState",
-                    "AddTargetsToVariationTargetMap",
-                    "RemoveTargetsToVariationTargetMap",
-                    "AddSegmentsToVariationTargetMap",
-                    "RemoveSegmentsToVariationTargetMap"
+                    "RemoveTargetsToVariationTargetMap"
                   ]
                 }
               }
@@ -1410,14 +1386,19 @@
         },
         "RemoveTargetsToVariationTargetMapYamlSpec": {
           "type": "object",
+          "required": [
+            "targets",
+            "variation"
+          ],
           "properties": {
-            "identifier":{"$ref":"#/definitions/cvng/ParameterFieldString"},
-            "name":{"$ref":"#/definitions/cvng/ParameterFieldString"},
             "targets": {
-              "$ref":"#/definitions/cvng/ParameterFieldListString"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "variation": {
-              "$ref":"#/definitions/cvng/ParameterFieldString"
+              "type": "string"
             }
           },
           "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1553,21 +1534,21 @@
             {
               "type": "object",
               "required": [
+                "identifier",
                 "spec",
                 "type"
               ],
               "properties": {
+                "identifier": {
+                  "type": "string"
+                },
                 "spec": {
                   "$ref": "#/definitions/cvng/SetFeatureFlagStateYamlSpec"
                 },
                 "type": {
                   "type": "string",
                   "enum": [
-                    "SetFeatureFlagState",
-                    "AddTargetsToVariationTargetMap",
-                    "RemoveTargetsToVariationTargetMap",
-                    "AddSegmentsToVariationTargetMap",
-                    "RemoveSegmentsToVariationTargetMap"
+                    "SetFeatureFlagState"
                   ]
                 }
               }
@@ -1577,15 +1558,12 @@
         },
         "SetFeatureFlagStateYamlSpec": {
           "type": "object",
+          "required": [
+            "state"
+          ],
           "properties": {
-            "identifier": {
-              "$ref": "#/definitions/cvng/ParameterFieldString"
-            },
-            "name": {
-              "$ref": "#/definitions/cvng/ParameterFieldString"
-            },
             "state": {
-              "$ref": "#/definitions/cvng/ParameterFieldString"
+              "type": "string"
             }
           },
           "$schema": "http://json-schema.org/draft-07/schema#"

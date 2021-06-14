@@ -11,21 +11,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/AddSegmentToVariationTargetMapYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "AddSegmentToVariationTargetMap"
               ]
             }
           }
@@ -35,18 +35,19 @@
     },
     "AddSegmentToVariationTargetMapYamlSpec": {
       "type": "object",
+      "required": [
+        "segments",
+        "variation"
+      ],
       "properties": {
-        "identifier": {
-          "$ref": "#/definitions/ParameterFieldString"
-        },
-        "name": {
-          "$ref": "#/definitions/ParameterFieldString"
-        },
         "segments": {
-          "$ref": "#/definitions/ParameterFieldListString"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "variation": {
-          "$ref": "#/definitions/ParameterFieldString"
+          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -59,21 +60,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/AddTargetsToVariationTargetMapYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "AddTargetsToVariationTargetMap"
               ]
             }
           }
@@ -83,18 +84,19 @@
     },
     "AddTargetsToVariationTargetMapYamlSpec": {
       "type": "object",
+      "required": [
+        "targets",
+        "variation"
+      ],
       "properties": {
-        "identifier": {
-          "$ref": "#/definitions/ParameterFieldString"
-        },
-        "name": {
-          "$ref": "#/definitions/ParameterFieldString"
-        },
         "targets": {
-          "$ref": "#/definitions/ParameterFieldListString"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "variation": {
-          "$ref": "#/definitions/ParameterFieldString"
+          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -412,22 +414,6 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "InputSetValidator": {
-      "type": "object",
-      "properties": {
-        "parameters": {
-          "type": "string"
-        },
-        "validatorType": {
-          "type": "string",
-          "enum": [
-            "ALLOWED_VALUES",
-            "REGEX"
-          ]
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "JexlCriteriaSpec": {
       "allOf": [
         {
@@ -657,90 +643,6 @@
       "discriminator": "type",
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "ParameterField": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "object"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "ParameterFieldListString": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "ParameterFieldString": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "string"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "PatchInstruction": {
       "type": "object",
       "discriminator": "type",
@@ -766,21 +668,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/RemoveSegmentToVariationTargetMapYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "RemoveSegmentToVariationTargetMap"
               ]
             }
           }
@@ -790,18 +692,19 @@
     },
     "RemoveSegmentToVariationTargetMapYamlSpec": {
       "type": "object",
+      "required": [
+        "segments",
+        "variation"
+      ],
       "properties": {
-        "identifier": {
-          "$ref": "#/definitions/ParameterFieldString"
-        },
-        "name": {
-          "$ref": "#/definitions/ParameterFieldString"
-        },
         "segments": {
-          "$ref": "#/definitions/ParameterFieldListString"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "variation": {
-          "$ref": "#/definitions/ParameterFieldString"
+          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -814,21 +717,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/RemoveTargetsToVariationTargetMapYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "RemoveTargetsToVariationTargetMap"
               ]
             }
           }
@@ -838,18 +741,19 @@
     },
     "RemoveTargetsToVariationTargetMapYamlSpec": {
       "type": "object",
+      "required": [
+        "targets",
+        "variation"
+      ],
       "properties": {
-        "identifier": {
-          "$ref": "#/definitions/ParameterFieldString"
-        },
-        "name": {
-          "$ref": "#/definitions/ParameterFieldString"
-        },
         "targets": {
-          "$ref": "#/definitions/ParameterFieldListString"
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "variation": {
-          "$ref": "#/definitions/ParameterFieldString"
+          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -894,21 +798,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/SetFeatureFlagStateYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "SetFeatureFlagState"
               ]
             }
           }
@@ -918,15 +822,12 @@
     },
     "SetFeatureFlagStateYamlSpec": {
       "type": "object",
+      "required": [
+        "state"
+      ],
       "properties": {
-        "identifier": {
-          "$ref": "#/definitions/ParameterFieldString"
-        },
-        "name": {
-          "$ref": "#/definitions/ParameterFieldString"
-        },
         "state": {
-          "$ref": "#/definitions/ParameterFieldString"
+          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
