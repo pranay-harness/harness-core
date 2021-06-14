@@ -16,6 +16,7 @@ import io.harness.product.ci.scm.proto.SCMGrpc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 import lombok.Builder;
@@ -130,7 +131,7 @@ public class GetFilesInFolderForkTask extends RecursiveTask<List<FileChange>> {
         .collect(toList());
   }
 
-  public List<FileChange> createForkJoinTask(List<String> foldersList) {
+  public List<FileChange> createForkJoinTask(Set<String> foldersList) {
     List<GetFilesInFolderForkTask> tasks = new ArrayList<>();
     ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
     for (String folder : foldersList) {

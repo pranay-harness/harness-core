@@ -31,6 +31,7 @@ import io.harness.product.ci.scm.proto.SCMGrpc;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
 
 import java.util.List;
+import java.util.Set;
 
 @OwnedBy(DX)
 public interface ScmServiceClient {
@@ -77,7 +78,7 @@ public interface ScmServiceClient {
       ScmConnector scmConnector, long prNumber, SCMGrpc.SCMBlockingStub scmBlockingStub);
 
   FileContentBatchResponse listFiles(
-      ScmConnector connector, List<String> foldersList, String branch, SCMGrpc.SCMBlockingStub scmBlockingStub);
+      ScmConnector connector, Set<String> foldersList, String branch, SCMGrpc.SCMBlockingStub scmBlockingStub);
 
   FileContentBatchResponse listFilesByFilePaths(
       ScmConnector connector, List<String> filePaths, String branch, SCMGrpc.SCMBlockingStub scmBlockingStub);

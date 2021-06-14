@@ -30,6 +30,7 @@ import io.harness.service.ScmClient;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -106,7 +107,7 @@ public class JgitGitServiceImpl implements ScmClient {
   }
 
   @Override
-  public FileContentBatchResponse listFiles(ScmConnector connector, List<String> foldersList, String branchName) {
+  public FileContentBatchResponse listFiles(ScmConnector connector, Set<String> foldersList, String branchName) {
     return null;
   }
 

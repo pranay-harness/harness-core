@@ -52,6 +52,7 @@ import com.google.inject.name.Named;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.time.Duration;
 import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 // Don't inject this directly go through ScmClientOrchestrator.
@@ -156,7 +157,7 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
 
   @Override
   public List<GitFileChangeDTO> listFilesOfBranches(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String yamlGitConfigRef, List<String> foldersList, String branchName) {
+      String projectIdentifier, String yamlGitConfigRef, Set<String> foldersList, String branchName) {
     IdentifierRef identifierRef =
         IdentifierRefHelper.getIdentifierRef(yamlGitConfigRef, accountIdentifier, orgIdentifier, projectIdentifier);
     YamlGitConfigDTO yamlGitConfigDTO = getYamlGitConfigDTO(identifierRef.getAccountIdentifier(),
