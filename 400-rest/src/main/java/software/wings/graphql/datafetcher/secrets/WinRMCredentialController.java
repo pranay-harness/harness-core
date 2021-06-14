@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.secrets;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme.KERBEROS;
@@ -58,8 +59,7 @@ public class WinRMCredentialController {
       }
       default:
         throw new InvalidRequestException(
-            "Unknown authentication schema " + winRmConnectionAttributes.getAuthenticationScheme(),
-            WingsException.USER);
+            "Unknown authentication schema " + winRmConnectionAttributes.getAuthenticationScheme(), USER);
     }
     return QLWinRMCredential.builder()
         .id(settingAttribute.getUuid())
@@ -77,23 +77,23 @@ public class WinRMCredentialController {
 
   private void validateSettingAttribute(QLWinRMCredentialInput winRMCredentialInput, String accountId) {
     if (isBlank(winRMCredentialInput.getUserName())) {
-      throw new InvalidRequestException("The username cannot be blank for the winRM credential input");
+      throw new InvalidRequestException("The username cannot be blank for the winRM credential input", USER);
     }
 
     if (winRMCredentialInput.getAuthenticationScheme().equals(QLAuthScheme.KERBEROS)) {
       if (winRMCredentialInput.getQlKerberosWinRMAuthentication() == null) {
-        throw new InvalidRequestException("Kerberos Authentication can not be empty");
+        throw new InvalidRequestException("Kerberos Authentication can not be empty", USER);
       }
       verifyKerberosAuth(winRMCredentialInput.getQlKerberosWinRMAuthentication(), accountId);
-    } else {
+    } else if (winRMCredentialInput.getAuthenticationScheme().equals(QLAuthScheme.NTLM)) {
       if (winRMCredentialInput.getQlNtlmAuthentication() == null) {
-        throw new InvalidRequestException("NTLM Authentication can not be empty");
+        throw new InvalidRequestException("NTLM Authentication can not be empty", USER);
       }
       verifyNtlmAuth(winRMCredentialInput.getQlNtlmAuthentication(), accountId);
     }
 
     if (isBlank(winRMCredentialInput.getName())) {
-      throw new InvalidRequestException("The name of the winRM credential cannot be blank");
+      throw new InvalidRequestException("The name of the winRM credential cannot be blank", USER);
     }
   }
 
@@ -112,7 +112,7 @@ public class WinRMCredentialController {
       }
       default:
         throw new InvalidRequestException(
-            "Unknown authentication scheme " + winRMCredentialInput.getAuthenticationScheme(), WingsException.USER);
+            "Unknown authentication scheme " + winRMCredentialInput.getAuthenticationScheme(), USER);
     }
     boolean skipCertChecks = true;
     boolean useSSL = true;
@@ -187,7 +187,8 @@ public class WinRMCredentialController {
     if (updateInput.getNtlmAuthentication().isPresent()) {
       QLNtlmAuthentication ntlmAuthentication = updateInput.getNtlmAuthentication().getValue().orElse(null);
       if (ntlmAuthentication == null && updateInput.getAuthenticationScheme().equals(QLAuthScheme.NTLM)) {
-        throw new InvalidRequestException("Invalid credentials Auth Scheme specified as NTLM and no NTLM input given");
+        throw new InvalidRequestException(
+            "Invalid credentials Auth Scheme specified as NTLM and no NTLM input given", USER);
       }
       if (ntlmAuthentication != null) {
         verifyNtlmAuth(ntlmAuthentication, accountId);
@@ -202,7 +203,7 @@ public class WinRMCredentialController {
           updateInput.getKerberosWinRMAuthentication().getValue().orElse(null);
       if (kerberosWinRMAuthentication == null && updateInput.getAuthenticationScheme().equals(QLAuthScheme.KERBEROS)) {
         throw new InvalidRequestException(
-            "Invalid credentials Auth Scheme specified as Kerberos and no Kerberos input given");
+            "Invalid credentials Auth Scheme specified as Kerberos and no Kerberos input given", USER);
       }
       if (kerberosWinRMAuthentication != null) {
         verifyKerberosAuth(kerberosWinRMAuthentication, accountId);
@@ -255,12 +256,12 @@ public class WinRMCredentialController {
   void verifyKerberosAuth(QLKerberosWinRMAuthentication kerberosWinRMAuthentication, String accountId) {
     if (!isBlank(kerberosWinRMAuthentication.getKeyTabFilePath())
         && !isBlank(kerberosWinRMAuthentication.getPasswordSecretId())) {
-      throw new InvalidRequestException("Cannot set both KeyTabFilePath and password secret");
+      throw new InvalidRequestException("Cannot set both KeyTabFilePath and password secret", USER);
     }
     if (isBlank(kerberosWinRMAuthentication.getKeyTabFilePath())) {
       if (isBlank(kerberosWinRMAuthentication.getPasswordSecretId())
           || secretManager.getSecretById(accountId, kerberosWinRMAuthentication.getPasswordSecretId()) == null) {
-        throw new InvalidRequestException("The password secret id is invalid for the winRM credential input");
+        throw new InvalidRequestException("The password secret id is invalid for the winRM credential input", USER);
       }
     }
   }
@@ -268,20 +269,20 @@ public class WinRMCredentialController {
   void verifyNtlmAuth(QLNtlmAuthentication ntlmAuthentication, String accountId) {
     if (isBlank(ntlmAuthentication.getPasswordSecretId())
         || secretManager.getSecretById(accountId, ntlmAuthentication.getPasswordSecretId()) == null) {
-      throw new InvalidRequestException("The password secret id is invalid for the winRM credential input");
+      throw new InvalidRequestException("The password secret id is invalid for the winRM credential input", USER);
     }
   }
 
   char[] getPassword(QLWinRMCredentialInput winRMCredentialInput, String accountId) {
     if (winRMCredentialInput.getAuthenticationScheme().equals(QLAuthScheme.NTLM)) {
       if (winRMCredentialInput.getQlNtlmAuthentication() == null) {
-        throw new InvalidRequestException("NTLM Authentication can not be empty");
+        throw new InvalidRequestException("NTLM Authentication can not be empty", USER);
       }
       verifyNtlmAuth(winRMCredentialInput.getQlNtlmAuthentication(), accountId);
       return winRMCredentialInput.getQlNtlmAuthentication().getPasswordSecretId().toCharArray();
     } else {
       if (winRMCredentialInput.getQlKerberosWinRMAuthentication() == null) {
-        throw new InvalidRequestException("Kerberos Authentication can not be empty");
+        throw new InvalidRequestException("Kerberos Authentication can not be empty", USER);
       }
       verifyKerberosAuth(winRMCredentialInput.getQlKerberosWinRMAuthentication(), accountId);
       return ((isBlank(winRMCredentialInput.getQlKerberosWinRMAuthentication().getPasswordSecretId()))
