@@ -28,7 +28,8 @@ if [ "${RUN_BAZEL_FUNCTIONAL_TESTS}" == "true" ]; then
 
   bazel run ${GCP} ${BAZEL_ARGUMENTS} 230-model-test:app &
   MANAGER_PID=$!
-  sleep 180
+  #Manager has startup time of 5 mins.
+  sleep 300
   bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 -- //200-functional-test:io.harness.functional.DummyFirstFunctionalTest || true
 
   java -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError \
