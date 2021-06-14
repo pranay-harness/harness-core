@@ -82,7 +82,7 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
           instructions.add(instruction);
         }
 
-        if (patchInstruction.getType().equals(Type.REMOVE_TARGETS_TO_VARIATION_MAP)) {
+        if (patchInstruction.getType().equals(Type.REMOVE_TARGETS_TO_VARIATION_TARGET_MAP)) {
           RemoveTargetsToVariationTargetMapYamlSpec spec =
               ((RemoveTargetsToVariationTargetMapYaml) patchInstruction).getSpec();
           PatchInstruction instruction =
@@ -90,7 +90,7 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
           instructions.add(instruction);
         }
 
-        if (patchInstruction.getType().equals(Type.ADD_SEGMENT_TO_VARIATION_MAP)) {
+        if (patchInstruction.getType().equals(Type.ADD_SEGMENT_TO_VARIATION_TARGET_MAP)) {
           AddSegmentToVariationTargetMapYamlSpec spec =
               ((AddSegmentToVariationTargetMapYaml) patchInstruction).getSpec();
           PatchInstruction instruction =
