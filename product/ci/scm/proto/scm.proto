@@ -131,10 +131,11 @@ message IssueCommentHook {
   Comment comment = 5;
 }
 
-message CreateBranchHook {
-  Action action = 1;
-  Repository repo = 2;
-  User sender = 3;
+message BranchHook {
+  Action action = 1;    // branch hook action can be create or delete
+  Repository repo = 2;  // repository where the event occurred
+  User sender = 3;      // user that triggered the event
+  Reference ref = 4;    // git ref object
 }
 
 message Comment {
@@ -190,7 +191,7 @@ message ParseWebhookResponse {
     PullRequestHook pr = 1;
     PushHook push = 2;
     IssueCommentHook comment = 3;
-    CreateBranchHook createBranch = 4;
+    BranchHook branch = 4;
   }
 }
 

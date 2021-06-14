@@ -57,7 +57,7 @@ public class AwsCodeCommitDataObtainer implements GitProviderBaseDataObtainer {
   public void acquireProviderData(FilterRequestData filterRequestData) {
     WebhookPayloadData webhookPayloadData = filterRequestData.getWebhookPayloadData();
 
-    if (webhookPayloadData.getWebhookEvent().getType() != WebhookEvent.Type.BRANCH) {
+    if (webhookPayloadData.getWebhookEvent().getType() != WebhookEvent.Type.PUSH) {
       throw new TriggerException(String.format("Unsupported web hook event type:[%s] for aws codecommit",
                                      webhookPayloadData.getWebhookEvent().getType()),
           WingsException.SRE);
