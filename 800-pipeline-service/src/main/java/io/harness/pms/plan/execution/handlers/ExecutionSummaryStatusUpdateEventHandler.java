@@ -3,11 +3,13 @@ package io.harness.pms.plan.execution.handlers;
 import static io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup.PIPELINE;
 import static io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup.STAGE;
 
+import io.harness.engine.observers.NodeStatusUpdateObserver;
 import io.harness.engine.observers.NodeUpdateInfo;
-import io.harness.engine.observers.NodeUpdateObserver;
+import io.harness.event.GraphNodeUpdateInfo;
+import io.harness.event.GraphNodeUpdateObserver;
 import io.harness.execution.NodeExecution;
 import io.harness.observer.AsyncInformObserver;
-import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.plan.execution.ExecutionSummaryUpdateUtils;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import io.harness.steps.StepSpecTypeConstants;
@@ -24,27 +26,37 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @Slf4j
 @Singleton
-public class ExecutionSummaryUpdateEventHandler implements NodeUpdateObserver, AsyncInformObserver {
-  @Inject private PmsExecutionSummaryRespository pmsExecutionSummaryRepository;
+public class ExecutionSummaryStatusUpdateEventHandler
+    implements NodeStatusUpdateObserver, GraphNodeUpdateObserver, AsyncInformObserver {
   @Inject @Named("PipelineExecutorService") private ExecutorService executorService;
+  @Inject private PmsExecutionSummaryRespository pmsExecutionSummaryRepository;
 
   @Override
-  public ExecutorService getInformExecutorService() {
-    return executorService;
+  public void onNodeStatusUpdate(NodeUpdateInfo nodeUpdateInfo) {
+    updatePipelineLevelInfo(nodeUpdateInfo.getPlanExecutionId(), nodeUpdateInfo.getNodeExecution());
+    updateStageLevelInfo(nodeUpdateInfo.getPlanExecutionId(), nodeUpdateInfo.getNodeExecution());
   }
 
   @Override
-  public void onNodeUpdate(NodeUpdateInfo nodeUpdateInfo) {
-    updateStageLevelInfo(nodeUpdateInfo.getPlanExecutionId(), nodeUpdateInfo.getNodeExecution());
-    updatePipelineLevelInfo(nodeUpdateInfo.getPlanExecutionId(), nodeUpdateInfo.getNodeExecution());
+  public void update(GraphNodeUpdateInfo graphNodeUpdateInfo) {
+    String planExecutionId = graphNodeUpdateInfo.getPlanExecutionId();
+    Update update = new Update();
+    for (NodeExecution nodeExecution : graphNodeUpdateInfo.getNodeExecutions()) {
+      if (Objects.equals(nodeExecution.getNode().getGroup(), STAGE.name())
+          || Objects.equals(nodeExecution.getNode().getStepType().getType(), StepSpecTypeConstants.BARRIER)) {
+        ExecutionSummaryUpdateUtils.addStageUpdateCriteria(update, planExecutionId, nodeExecution);
+      }
+    }
+    Criteria criteria =
+        Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId);
+    Query query = new Query(criteria);
+    pmsExecutionSummaryRepository.update(query, update);
   }
 
   public void updatePipelineLevelInfo(String planExecutionId, NodeExecution nodeExecution) {
-    if (Objects.equals(nodeExecution.getNode().getGroup(), PIPELINE)) {
+    if (Objects.equals(nodeExecution.getNode().getGroup(), PIPELINE.name())) {
       Update update = new Update();
-      if (StatusUtils.isFinalStatus(nodeExecution.getStatus())) {
-        update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.endTs, nodeExecution.getEndTs());
-      }
+      ExecutionSummaryUpdateUtils.addPipelineUpdateCriteria(update, planExecutionId, nodeExecution);
       Criteria criteria =
           Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId);
       Query query = new Query(criteria);
@@ -56,15 +68,16 @@ public class ExecutionSummaryUpdateEventHandler implements NodeUpdateObserver, A
     if (Objects.equals(nodeExecution.getNode().getGroup(), STAGE.name())
         || Objects.equals(nodeExecution.getNode().getStepType().getType(), StepSpecTypeConstants.BARRIER)) {
       Update update = new Update();
-      String stageUuid = nodeExecution.getNode().getUuid();
-      if (StatusUtils.isFinalStatus(nodeExecution.getStatus())) {
-        update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".endTs",
-            nodeExecution.getEndTs());
-      }
+      ExecutionSummaryUpdateUtils.addStageUpdateCriteria(update, planExecutionId, nodeExecution);
       Criteria criteria =
           Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId);
       Query query = new Query(criteria);
       pmsExecutionSummaryRepository.update(query, update);
     }
+  }
+
+  @Override
+  public ExecutorService getInformExecutorService() {
+    return executorService;
   }
 }
