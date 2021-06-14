@@ -8,11 +8,11 @@ import static software.wings.beans.WinRmConnectionAttributes.AuthenticationSchem
 import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
@@ -184,25 +184,25 @@ public class WinRMCredentialController {
       settingValue.setUsername(userName);
     }
 
-    if (updateInput.getQlNtlmAuthenticationRequestField().isPresent()) {
-      QLNtlmAuthentication ntlmAuthentication =
-          updateInput.getQlNtlmAuthenticationRequestField().getValue().orElse(null);
+    if (updateInput.getNtlmAuthentication().isPresent()) {
+      QLNtlmAuthentication ntlmAuthentication = updateInput.getNtlmAuthentication().getValue().orElse(null);
       if (ntlmAuthentication == null && updateInput.getAuthenticationScheme().equals(QLAuthScheme.NTLM)) {
-        throw new InvalidRequestException("Invalid credentials");
+        throw new InvalidRequestException("Invalid credentials Auth Scheme specified as NTLM and no NTLM input given");
       }
       if (ntlmAuthentication != null) {
         verifyNtlmAuth(ntlmAuthentication, accountId);
-        if (!isBlank(ntlmAuthentication.getPasswordSecretId())) {
+        if (isNotBlank(ntlmAuthentication.getPasswordSecretId())) {
           settingValue.setPassword(ntlmAuthentication.getPasswordSecretId().toCharArray());
         }
       }
     }
 
-    if (updateInput.getQlKerberosWinRMAuthenticationInputRequestField().isPresent()) {
+    if (updateInput.getKerberosWinRMAuthentication().isPresent()) {
       QLKerberosWinRMAuthentication kerberosWinRMAuthentication =
-          updateInput.getQlKerberosWinRMAuthenticationInputRequestField().getValue().orElse(null);
+          updateInput.getKerberosWinRMAuthentication().getValue().orElse(null);
       if (kerberosWinRMAuthentication == null && updateInput.getAuthenticationScheme().equals(QLAuthScheme.KERBEROS)) {
-        throw new InvalidRequestException("Invalid credentials");
+        throw new InvalidRequestException(
+            "Invalid credentials Auth Scheme specified as Kerberos and no Kerberos input given");
       }
       if (kerberosWinRMAuthentication != null) {
         verifyKerberosAuth(kerberosWinRMAuthentication, accountId);
