@@ -1,4 +1,4 @@
-Var jobUrl = concat(Env:baseUrl, "search/jobs/")
+Var jobUrl = concat(Env:baseUrl, "api/v1/search/jobs/")
 Var bodyMap = {}
 Var query = "*exception*"
 Var:bodyMap.put("query", Var:query)
