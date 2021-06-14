@@ -43,10 +43,7 @@ public class TimeRangeBasedFreezeConfigYamlHandler
       appFiltersYaml.add(applicationFilterYamlHandler.toYaml(applicationFilter, accountId));
     }
 
-    TimeRange.Yaml timeRangeYaml = TimeRange.Yaml.builder()
-                                       .from(String.valueOf(bean.getTimeRange().getFrom()))
-                                       .to(String.valueOf(bean.getTimeRange().getTo()))
-                                       .build();
+    TimeRange.Yaml timeRangeYaml = getTimeRangeYaml(bean.getTimeRange());
 
     return Yaml.builder()
         .name(bean.getName())
@@ -57,6 +54,18 @@ public class TimeRangeBasedFreezeConfigYamlHandler
         .userGroups(getUserGroupNames(bean.getUserGroups(), accountId))
         .timeRange(timeRangeYaml)
         .build();
+  }
+
+  private TimeRange.Yaml getTimeRangeYaml(TimeRange timeRange) {
+    TimeRange.Yaml.YamlBuilder timeRangeYamlBuilder =
+        TimeRange.Yaml.builder().from(String.valueOf(timeRange.getFrom()));
+    boolean durationBased = timeRange.isDurationBased();
+    if (durationBased) {
+      long duration = timeRange.getTo() - timeRange.getFrom();
+      timeRangeYamlBuilder.duration(String.valueOf(duration));
+      timeRangeYamlBuilder.durationBased(durationBased);
+    }
+    return timeRangeYamlBuilder.to(String.valueOf(timeRange.getTo())).build();
   }
 
   @Override
@@ -129,19 +138,29 @@ public class TimeRangeBasedFreezeConfigYamlHandler
   private TimeRange validateTimeRangeYaml(TimeRange.Yaml timeRangeYaml) {
     Validator.notNullCheck("Time Range cannot be empty", timeRangeYaml);
     Validator.notNullCheck("From time cannot be empty", timeRangeYaml.getFrom());
-    Validator.notNullCheck("To time cannot be empty", timeRangeYaml.getTo());
+    if (timeRangeYaml.isDurationBased()) {
+      Validator.notNullCheck("Duration cannot be empty", timeRangeYaml.getDuration());
+    } else {
+      Validator.notNullCheck("To time cannot be empty", timeRangeYaml.getTo());
+    }
 
     long from;
     long to;
-
+    Long duration = null;
+    boolean durationBased = timeRangeYaml.isDurationBased();
     try {
       from = Long.parseLong(timeRangeYaml.getFrom());
-      to = Long.parseLong(timeRangeYaml.getTo());
+      if (durationBased) {
+        duration = Long.parseLong(timeRangeYaml.getDuration());
+        to = duration + from;
+      } else {
+        to = Long.parseLong(timeRangeYaml.getTo());
+      }
     } catch (NumberFormatException exception) {
       throw new InvalidRequestException("Incorrect format for Time Range. Please enter epoch time");
     }
 
     // time zone from DB document
-    return new TimeRange(from, to, null);
+    return new TimeRange(from, to, null, durationBased, duration);
   }
 }

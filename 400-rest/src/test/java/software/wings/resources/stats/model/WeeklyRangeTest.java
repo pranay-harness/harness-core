@@ -55,7 +55,7 @@ public class WeeklyRangeTest extends CategoryTest {
   @Category(UnitTests.class)
   public void createGovernanceConfig_shouldThrowException() {
     try {
-      TimeRange range = new TimeRange(100L, 200L, "Asia/Kolkata");
+      TimeRange range = new TimeRange(100L, 200L, "Asia/Kolkata", false, null);
       WeeklyRange weeklyRange = new WeeklyRange(null, "Monday", "7:00 PM", "Tuesday", "5:00 AM", "Asia/Kolkata");
       TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
           new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),

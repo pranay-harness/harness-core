@@ -15,6 +15,7 @@ timeRangeBasedFreezeConfigs:
   applicable: false
   description: git sync
   timeRange:
+    durationBased: false
     from: '1707388740000'
     to: '1707392340000'
   userGroups:

@@ -112,7 +112,7 @@ public class GovernanceConfigServiceTest extends IntegrationTestBase {
     savedGovernanceConfig = governanceConfigService.get(accountId);
     compare(inputConfig, savedGovernanceConfig);
 
-    TimeRange range = new TimeRange(100L, 200L, "Asia/Kolkata");
+    TimeRange range = new TimeRange(100L, 200L, "Asia/Kolkata", false, null);
     WeeklyRange weeklyRange = new WeeklyRange(null, "Tuesday", "7:00 PM", "Monday", "5:00 AM", "Asia/Kolkata");
     TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
         new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),

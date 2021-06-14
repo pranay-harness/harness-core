@@ -2916,7 +2916,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             .timeRangeBasedFreezeConfigs(Collections.singletonList(TimeRangeBasedFreezeConfig.builder()
                                                                        .name("freeze1")
                                                                        .uuid(FREEZE_WINDOW_ID)
-                                                                       .timeRange(new TimeRange(0, 1, ""))
+                                                                       .timeRange(new TimeRange(0, 1, "", false, null))
                                                                        .build()))
             .build();
     when(governanceConfigService.get(account.getUuid())).thenReturn(governanceConfig);
