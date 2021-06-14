@@ -41,8 +41,9 @@ public class GitCreateBranchEventExecutionServiceImpl implements GitCreateBranch
         return;
       }
 
+      String newBranch = getNewBranchName(scmParsedWebhookResponse);
       // Create new record with UNSYNCED status as its a new branch, if not already exists
-      if (gitBranchService.get(webhookDTO.getAccountId(), repository.getLink(), repository.getBranch()) == null) {
+      if (gitBranchService.get(webhookDTO.getAccountId(), repository.getLink(), newBranch) == null) {
         gitBranchService.save(prepareGitBranch(webhookDTO));
       } else {
         log.info("{} : Branch already exists, ignoring the event : {}", GIT_CREATE_BRANCH_EVENT, webhookDTO);
@@ -56,11 +57,16 @@ public class GitCreateBranchEventExecutionServiceImpl implements GitCreateBranch
 
   private GitBranch prepareGitBranch(WebhookDTO webhookDTO) {
     Repository repository = webhookDTO.getParsedResponse().getBranch().getRepo();
+
     return GitBranch.builder()
         .accountIdentifier(webhookDTO.getAccountId())
-        .branchName(repository.getBranch())
+        .branchName(getNewBranchName(webhookDTO.getParsedResponse()))
         .branchSyncStatus(BranchSyncStatus.UNSYNCED)
         .repoURL(repository.getLink())
         .build();
+  }
+
+  private String getNewBranchName(ParseWebhookResponse parseWebhookResponse) {
+    return parseWebhookResponse.getBranch().getRef().getName();
   }
 }
