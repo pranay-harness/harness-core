@@ -147,7 +147,8 @@ public class DeploymentFreezeCheckerTest extends WingsBaseTest {
   }
 
   private GovernanceConfig generateGovernanceConfig() {
-    TimeRange timeRange = new TimeRange(System.currentTimeMillis(), System.currentTimeMillis() + 100_000, "");
+    TimeRange timeRange =
+        new TimeRange(System.currentTimeMillis(), System.currentTimeMillis() + 100_000, "", false, null);
     TimeRangeBasedFreezeConfig freezeConfig =
         TimeRangeBasedFreezeConfig.builder()
             .applicable(true)
