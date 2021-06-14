@@ -3037,7 +3037,6 @@
           "type": "object",
           "required": [
             "clientCertRef",
-            "clientKeyPassphraseRef",
             "clientKeyRef"
           ],
           "properties": {
