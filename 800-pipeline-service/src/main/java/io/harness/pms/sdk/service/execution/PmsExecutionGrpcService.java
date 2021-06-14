@@ -10,7 +10,6 @@ import io.harness.pms.contracts.service.ExecutionSummaryResponse;
 import io.harness.pms.contracts.service.ExecutionSummaryUpdateRequest;
 import io.harness.pms.contracts.service.PmsExecutionServiceGrpc.PmsExecutionServiceImplBase;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.plan.execution.ExecutionSummaryUpdateUtils;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
@@ -66,7 +65,6 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
         }
       }
     }
-    ExecutionSummaryUpdateUtils.addPipelineUpdateCriteria(update, planExecutionId, nodeExecution);
     Criteria criteria =
         Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId);
     Query query = new Query(criteria);
@@ -98,7 +96,6 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
         }
       }
     }
-    ExecutionSummaryUpdateUtils.addStageUpdateCriteria(update, planExecutionId, nodeExecution);
     Criteria criteria =
         Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId);
     Query query = new Query(criteria);
