@@ -70,23 +70,31 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
     GitToHarnessProgressDTO gitToHarnessProgressRecord = gitToHarnessProgressService.initProgress(
         yamlChangeSetDTO, YamlChangeSetEventType.BRANCH_PUSH, GitToHarnessProcessingStepType.GET_FILES);
 
-    GitToHarnessGetFilesStepResponse gitToHarnessGetFilesStepResponse =
-        performGetFilesStep(GitToHarnessGetFilesStepRequest.builder()
-                                .yamlChangeSetDTO(yamlChangeSetDTO)
-                                .yamlGitConfigDTOList(yamlGitConfigDTOList)
-                                .gitToHarnessProgress(gitToHarnessProgressRecord)
-                                .build());
+    try {
+      GitToHarnessGetFilesStepResponse gitToHarnessGetFilesStepResponse =
+          performGetFilesStep(GitToHarnessGetFilesStepRequest.builder()
+                                  .yamlChangeSetDTO(yamlChangeSetDTO)
+                                  .yamlGitConfigDTOList(yamlGitConfigDTOList)
+                                  .gitToHarnessProgress(gitToHarnessProgressRecord)
+                                  .build());
 
-    performProcessFilesInMsvcStep(
-        GitToHarnessProcessMsvcStepRequest.builder()
-            .yamlChangeSetDTO(yamlChangeSetDTO)
-            .yamlGitConfigDTO(yamlGitConfigDTOList.get(0))
-            .gitFileChangeDTOList(gitToHarnessGetFilesStepResponse.getGitFileChangeDTOList())
-            .gitDiffResultFileDTOList(gitToHarnessGetFilesStepResponse.getGitDiffResultFileDTOList())
-            .progressRecord(gitToHarnessGetFilesStepResponse.getProgressRecord())
-            .build());
+      performProcessFilesInMsvcStep(
+          GitToHarnessProcessMsvcStepRequest.builder()
+              .yamlChangeSetDTO(yamlChangeSetDTO)
+              .yamlGitConfigDTO(yamlGitConfigDTOList.get(0))
+              .gitFileChangeDTOList(gitToHarnessGetFilesStepResponse.getGitFileChangeDTOList())
+              .gitDiffResultFileDTOList(gitToHarnessGetFilesStepResponse.getGitDiffResultFileDTOList())
+              .progressRecord(gitToHarnessGetFilesStepResponse.getProgressRecord())
+              .build());
 
-    return YamlChangeSetStatus.COMPLETED;
+      return YamlChangeSetStatus.COMPLETED;
+    } catch (Exception ex) {
+      log.error("Error while processing event {}", yamlChangeSetDTO, ex);
+      // Update the g2h terminal status to ERROR
+      gitToHarnessProgressService.updateStepStatus(
+          gitToHarnessProgressRecord.getUuid(), GitToHarnessProcessingStepStatus.ERROR);
+      return YamlChangeSetStatus.FAILED;
+    }
   }
 
   // ---------------------------------- PRIVATE METHODS -------------------------------
