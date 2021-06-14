@@ -60,6 +60,17 @@ public class ChartMuseumClientHelper {
       boolean useEc2IamCredentials, char[] accessKey, char[] secretKey) throws Exception {
     log.info(format("useEc2IamCredentials: %s", useEc2IamCredentials));
     log.info(format("bucket: %s basepath: %s region: %s", bucket, basePath, region));
+    if (accessKey == null) {
+      log.info("access key is null");
+    } else {
+      log.info("access key is not null");
+    }
+
+    if (secretKey == null) {
+      log.info("secretKey is null");
+    } else {
+      log.info("secretKey is not null");
+    }
 
     log.info("getting env");
     Map<String, String> environment = getEnvForAwsConfig(accessKey, secretKey, useEc2IamCredentials);
@@ -179,10 +190,14 @@ public class ChartMuseumClientHelper {
   @VisibleForTesting
   static Map<String, String> getEnvForAwsConfig(char[] accessKey, char[] secretKey, boolean useEc2IamCredentials) {
     Map<String, String> environment = new HashMap<>();
+    log.info("inside getenv method");
     if (!useEc2IamCredentials) {
+      log.info("inside if means we are getting env from access key and secret key");
       environment.put(AWS_ACCESS_KEY_ID, new String(accessKey));
       environment.put(AWS_SECRET_ACCESS_KEY, new String(secretKey));
+      log.info("if cluase done");
     }
+    log.info("returning env");
     return environment;
   }
 
