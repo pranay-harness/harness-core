@@ -1,5 +1,7 @@
 package io.harness.pms.sdk.core.execution.events.node.facilitate;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.facilitators.FacilitatorEvent;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
@@ -8,7 +10,7 @@ import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
-import io.harness.pms.sdk.core.execution.events.node.NodeBaseEventHandler;
+import io.harness.pms.sdk.core.execution.events.NodeBaseEventHandler;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -23,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
 public class FacilitatorEventHandler extends NodeBaseEventHandler<FacilitatorEvent> {
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
