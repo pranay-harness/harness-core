@@ -3,6 +3,7 @@ package io.harness.impl.scm;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FileContentBatchResponse;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
@@ -14,7 +15,6 @@ import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.CreateWebhookResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.DeleteWebhookResponse;
-import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
 import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
@@ -111,12 +111,12 @@ public class SCMServiceGitClientImpl implements ScmClient {
   }
 
   @Override
-  public FileBatchContentResponse listFiles(ScmConnector connector, List<String> foldersList, String branch) {
+  public FileContentBatchResponse listFiles(ScmConnector connector, List<String> foldersList, String branch) {
     return scmServiceClient.listFiles(connector, foldersList, branch, scmBlockingStub);
   }
 
   @Override
-  public FileBatchContentResponse listFilesByFilePaths(
+  public FileContentBatchResponse listFilesByFilePaths(
       ScmConnector connector, List<String> filePathsList, String branchName) {
     return scmServiceClient.listFilesByFilePaths(connector, filePathsList, branchName, scmBlockingStub);
   }
