@@ -24,12 +24,18 @@ import io.harness.ng.core.user.service.NgUserService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import javax.ws.rs.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -41,6 +47,7 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
   private final ProjectService projectService;
   private final OrganizationService organizationService;
   private final NgUserService ngUserService;
+  private final ExecutorService executorService;
 
   @Inject
   public AggregateProjectServiceImpl(
@@ -48,6 +55,7 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
     this.projectService = projectService;
     this.organizationService = organizationService;
     this.ngUserService = ngUserService;
+    this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
   }
 
   @Override
@@ -64,7 +72,27 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
   public Page<ProjectAggregateDTO> listProjectAggregateDTO(
       String accountIdentifier, Pageable pageable, ProjectFilterDTO projectFilterDTO) {
     Page<Project> projects = projectService.list(accountIdentifier, pageable, projectFilterDTO);
-    return projects.map(project -> buildAggregateDTO(accountIdentifier, project));
+
+    List<Future<ProjectAggregateDTO>> futures = new ArrayList<>();
+    List<ProjectAggregateDTO> aggregates = new ArrayList<>();
+
+    projects.forEach(
+        project -> futures.add(executorService.submit(() -> buildAggregateDTO(accountIdentifier, project))));
+
+    for (int i = 0; i < futures.size(); i++) {
+      try {
+        aggregates.add(futures.get(i).get());
+      } catch (InterruptedException interruptedException) {
+        Thread.currentThread().interrupt();
+      } catch (ExecutionException e) {
+        log.error("Error while computing aggregate", e);
+        aggregates.add(ProjectAggregateDTO.builder()
+                           .projectResponse(ProjectMapper.toResponseWrapper(projects.getContent().get(i)))
+                           .build());
+      }
+    }
+
+    return new PageImpl<>(aggregates, projects.getPageable(), projects.getTotalElements());
   }
 
   private ProjectAggregateDTO buildAggregateDTO(final String accountIdentifier, final Project project) {

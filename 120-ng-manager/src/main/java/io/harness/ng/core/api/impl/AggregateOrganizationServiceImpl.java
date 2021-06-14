@@ -22,12 +22,18 @@ import io.harness.ng.core.user.service.NgUserService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import javax.ws.rs.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -39,6 +45,7 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   private final OrganizationService organizationService;
   private final ProjectService projectService;
   private final NgUserService ngUserService;
+  private final ExecutorService executorService;
 
   @Inject
   public AggregateOrganizationServiceImpl(
@@ -46,6 +53,7 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
     this.organizationService = organizationService;
     this.projectService = projectService;
     this.ngUserService = ngUserService;
+    this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
   }
 
   @Override
@@ -104,6 +112,25 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   public Page<OrganizationAggregateDTO> listOrganizationAggregateDTO(
       String accountIdentifier, Pageable pageable, OrganizationFilterDTO organizationFilterDTO) {
     Page<Organization> organizations = organizationService.list(accountIdentifier, pageable, organizationFilterDTO);
-    return organizations.map(this::buildAggregateDTO);
+
+    List<Future<OrganizationAggregateDTO>> futures = new ArrayList<>();
+    List<OrganizationAggregateDTO> aggregates = new ArrayList<>();
+    organizations.forEach(org -> futures.add(executorService.submit(() -> buildAggregateDTO(org))));
+
+    for (int i = 0; i < futures.size(); i++) {
+      try {
+        aggregates.add(futures.get(i).get());
+      } catch (InterruptedException interruptedException) {
+        Thread.currentThread().interrupt();
+      } catch (ExecutionException e) {
+        log.error("Error while computing aggregate", e);
+        aggregates.add(
+            OrganizationAggregateDTO.builder()
+                .organizationResponse(OrganizationMapper.toResponseWrapper(organizations.getContent().get(i)))
+                .build());
+      }
+    }
+
+    return new PageImpl<>(aggregates, organizations.getPageable(), organizations.getTotalElements());
   }
 }
