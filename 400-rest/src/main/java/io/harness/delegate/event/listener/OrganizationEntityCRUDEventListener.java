@@ -8,7 +8,7 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANI
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateEntityOwner;
-import io.harness.delegate.utils.DelegateEntityOwnerMapper;
+import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
 import io.harness.exception.InvalidRequestException;
@@ -68,12 +68,10 @@ public class OrganizationEntityCRUDEventListener implements MessageListener {
   }
 
   private boolean handleCreateEvent(final OrganizationEntityChangeDTO organizationEntityChangeDTO) {
-    log.info("New ORG created: {}", organizationEntityChangeDTO.getIdentifier());
-    log.info("New ORG created: {}", organizationEntityChangeDTO.getAccountIdentifier());
     try {
       final DelegateEntityOwner owner =
-          DelegateEntityOwnerMapper.buildOwner(organizationEntityChangeDTO.getIdentifier(), StringUtils.EMPTY);
-      log.info("New Project created: {}", owner.getIdentifier());
+          DelegateEntityOwnerHelper.buildOwner(organizationEntityChangeDTO.getIdentifier(), StringUtils.EMPTY);
+      log.info("New organization created {}. Creating delegate primary config.", owner.getIdentifier());
       // We need to create only if it doesn't already exist as message can be repeated
       delegateProfileService.fetchNgPrimaryProfile(organizationEntityChangeDTO.getAccountIdentifier(), owner);
       return true;

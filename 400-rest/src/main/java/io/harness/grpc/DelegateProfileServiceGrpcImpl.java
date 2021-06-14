@@ -21,7 +21,7 @@ import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileBuilder;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
-import io.harness.delegate.utils.DelegateEntityOwnerMapper;
+import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.delegateprofile.AddProfileRequest;
 import io.harness.delegateprofile.AddProfileResponse;
 import io.harness.delegateprofile.DelegateProfileGrpc;
@@ -101,7 +101,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
       }
 
       DelegateEntityOwner owner =
-          DelegateEntityOwnerMapper.buildOwner(request.getOrgId().getId(), request.getProjectId().getId());
+          DelegateEntityOwnerHelper.buildOwner(request.getOrgId().getId(), request.getProjectId().getId());
 
       if (owner != null) {
         pageRequest.addFilter(DelegateProfileKeys.owner, SearchFilter.Operator.EQ, owner);
@@ -318,9 +318,9 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
 
     if (delegateProfile.getOwner() != null) {
       String orgId =
-          DelegateEntityOwnerMapper.extractOrgIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
+          DelegateEntityOwnerHelper.extractOrgIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
       String projectId =
-          DelegateEntityOwnerMapper.extractProjectIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
+          DelegateEntityOwnerHelper.extractProjectIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
 
       if (isNotBlank(orgId)) {
         delegateProfileGrpcBuilder.setOrgIdentifier(OrgIdentifier.newBuilder().setId(orgId).build());
@@ -394,7 +394,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
     String orgId = delegateProfileGrpc.hasOrgIdentifier() ? delegateProfileGrpc.getOrgIdentifier().getId() : null;
     String projectId =
         delegateProfileGrpc.hasProjectIdentifier() ? delegateProfileGrpc.getProjectIdentifier().getId() : null;
-    DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
+    DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
     delegateProfileBuilder.owner(owner);
 
     return delegateProfileBuilder.build();

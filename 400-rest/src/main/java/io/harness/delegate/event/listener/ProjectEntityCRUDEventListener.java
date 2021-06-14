@@ -8,7 +8,7 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJEC
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateEntityOwner;
-import io.harness.delegate.utils.DelegateEntityOwnerMapper;
+import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
 import io.harness.exception.InvalidRequestException;
@@ -66,13 +66,10 @@ public class ProjectEntityCRUDEventListener implements MessageListener {
   }
 
   private boolean handleCreateEvent(final ProjectEntityChangeDTO projectEntityChangeDTO) {
-    log.info("New Project created: {}", projectEntityChangeDTO.getIdentifier());
-    log.info("New Project created: {}", projectEntityChangeDTO.getAccountIdentifier());
-    log.info("New Project created: {}", projectEntityChangeDTO.getOrgIdentifier());
     try {
-      final DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(
+      final DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(
           projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
-      log.info("New Project created: {}", owner.getIdentifier());
+      log.info("New project created {}. Creating delegate primary config.", owner.getIdentifier());
       // We need to create only if it doesn't already exist as message can be repeated
       delegateProfileService.fetchNgPrimaryProfile(projectEntityChangeDTO.getAccountIdentifier(), owner);
       return true;
