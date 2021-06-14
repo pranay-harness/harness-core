@@ -25,7 +25,8 @@ public class ResumeStepStatusUpdate implements NodeStatusUpdateHandler {
   public void handleNodeStatusUpdate(NodeUpdateInfo nodeStatusUpdateInfo) {
     boolean resumePlan = resumeParents(nodeStatusUpdateInfo.getNodeExecution());
     if (resumePlan) {
-      Status planStatus = planExecutionService.calculateStatus(nodeStatusUpdateInfo.getPlanExecutionId());
+      Status planStatus = planExecutionService.calculateStatusExcluding(
+          nodeStatusUpdateInfo.getPlanExecutionId(), nodeStatusUpdateInfo.getNodeExecutionId());
       if (!StatusUtils.isFinalStatus(planStatus)) {
         planExecutionService.updateStatus(nodeStatusUpdateInfo.getPlanExecutionId(), planStatus);
       }

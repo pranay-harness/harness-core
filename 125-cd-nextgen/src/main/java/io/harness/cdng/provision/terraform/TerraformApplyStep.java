@@ -2,9 +2,9 @@ package io.harness.cdng.provision.terraform;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.common.ParameterFieldHelper;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.terraform.TFTaskType;
 import io.harness.delegate.task.terraform.TerraformCommand;
@@ -18,7 +18,6 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.UnitProgress;
 import io.harness.ngpipeline.common.AmbianceHelper;
-import io.harness.ngpipeline.common.ParameterFieldHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollback;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -94,7 +93,7 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
         .varFileInfos(helper.toTerraformVarFileInfo(spec.getVarFiles(), ambiance))
         .backendConfig(helper.getBackendConfig(spec.getBackendConfig()))
         .targets(ParameterFieldHelper.getParameterFieldValue(spec.getTargets()))
-        .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
+        .saveTerraformStateJson(false)
         .environmentVariables(helper.getEnvironmentVariablesMap(spec.getEnvironmentVariables()))
         .timeoutInMillis(
             StepUtils.getTimeoutMillis(stepElementParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT));
@@ -130,7 +129,7 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
         .varFileInfos(helper.prepareTerraformVarFileInfo(inheritOutput.getVarFileConfigs(), ambiance))
         .backendConfig(inheritOutput.getBackendConfig())
         .targets(inheritOutput.getTargets())
-        .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
+        .saveTerraformStateJson(false)
         .encryptionConfig(inheritOutput.getEncryptionConfig())
         .encryptedTfPlan(inheritOutput.getEncryptedTfPlan())
         .planName(inheritOutput.getPlanName())
@@ -212,6 +211,10 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
       ThrowingSupplier<TerraformTaskNGResponse> responseSupplier) throws Exception {
     StepResponseBuilder stepResponseBuilder = createStepResponseBuilder(responseSupplier);
     TerraformTaskNGResponse terraformTaskNGResponse = responseSupplier.get();
+    List<UnitProgress> unitProgresses = terraformTaskNGResponse.getUnitProgressData() == null
+        ? Collections.emptyList()
+        : terraformTaskNGResponse.getUnitProgressData().getUnitProgresses();
+    stepResponseBuilder.unitProgressList(unitProgresses);
     if (CommandExecutionStatus.SUCCESS == terraformTaskNGResponse.getCommandExecutionStatus()) {
       helper.saveRollbackDestroyConfigInline(stepParameters, terraformTaskNGResponse, ambiance);
       addStepOutcomeToStepResponse(stepResponseBuilder, terraformTaskNGResponse);
@@ -227,6 +230,10 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
       ThrowingSupplier<TerraformTaskNGResponse> responseSupplier) throws Exception {
     StepResponseBuilder stepResponseBuilder = createStepResponseBuilder(responseSupplier);
     TerraformTaskNGResponse terraformTaskNGResponse = responseSupplier.get();
+    List<UnitProgress> unitProgresses = terraformTaskNGResponse.getUnitProgressData() == null
+        ? Collections.emptyList()
+        : terraformTaskNGResponse.getUnitProgressData().getUnitProgresses();
+    stepResponseBuilder.unitProgressList(unitProgresses);
     if (CommandExecutionStatus.SUCCESS == terraformTaskNGResponse.getCommandExecutionStatus()) {
       helper.saveRollbackDestroyConfigInherited(stepParameters, ambiance);
       addStepOutcomeToStepResponse(stepResponseBuilder, terraformTaskNGResponse);

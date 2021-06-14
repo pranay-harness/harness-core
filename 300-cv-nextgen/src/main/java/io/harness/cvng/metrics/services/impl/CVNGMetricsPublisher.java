@@ -11,13 +11,14 @@ import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskKeys;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
-import io.harness.cvng.metrics.beans.CVNGMetricContext;
+import io.harness.cvng.metrics.beans.AccountMetricContext;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine.AnalysisStateMachineKeys;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceKeys;
+import io.harness.metrics.AutoMetricContext;
 import io.harness.metrics.beans.MetricConfiguration;
 import io.harness.metrics.service.api.MetricDefinitionInitializer;
 import io.harness.metrics.service.api.MetricService;
@@ -80,6 +81,7 @@ public class CVNGMetricsPublisher implements MetricsPublisher, MetricDefinitionI
   @Inject private OrchestrationService orchestrationService;
   @Inject private MetricService metricService;
   @Inject private HPersistence hPersistence;
+  @Inject MetricContextBuilder metricContextBuilder;
 
   @Override
   public void recordMetrics() {
@@ -99,7 +101,7 @@ public class CVNGMetricsPublisher implements MetricsPublisher, MetricDefinitionI
           .group(id(grouping("accountId", "accountId")), grouping("count", accumulator("$sum", 1)))
           .aggregate(InstanceCount.class)
           .forEachRemaining(instanceCount -> {
-            try (CVNGMetricContext cvngMetricContext = new CVNGMetricContext(instanceCount.id.accountId)) {
+            try (AccountMetricContext accountMetricContext = new AccountMetricContext(instanceCount.id.accountId)) {
               metricService.recordMetric(getNonFinalStatusMetricName(queryParams.getName()), instanceCount.count);
             }
           });
@@ -110,7 +112,7 @@ public class CVNGMetricsPublisher implements MetricsPublisher, MetricDefinitionI
             .group(id(grouping("accountId", "accountId")), grouping("count", accumulator("$sum", 1)))
             .aggregate(InstanceCount.class)
             .forEachRemaining(instanceCount -> {
-              try (CVNGMetricContext cvngMetricContext = new CVNGMetricContext(instanceCount.id.accountId)) {
+              try (AutoMetricContext accountMetricContext = new AccountMetricContext(instanceCount.id.accountId)) {
                 metricService.recordMetric(getStatusMetricName(queryParams, status.toString()), instanceCount.count);
               }
             });

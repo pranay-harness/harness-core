@@ -223,7 +223,7 @@ public class SSHVaultServiceImpl extends BaseVaultServiceImpl implements SSHVaul
     }
 
     if (credentialChanged) {
-      updateVaultCredentials(savedVaultConfig, sshVaultConfig.getAuthToken(), sshVaultConfig.getSecretId(), VAULT_SSH);
+      updateVaultCredentials(savedVaultConfig, sshVaultConfig, VAULT_SSH);
     }
 
     savedVaultConfig.setName(sshVaultConfig.getName());

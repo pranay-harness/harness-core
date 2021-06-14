@@ -49,6 +49,7 @@ import com.google.protobuf.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -63,24 +64,19 @@ public class StepUtils {
   public static StepResponse createStepResponseFromChildResponse(Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
 
-    for (ResponseData responseData : responseDataMap.values()) {
-      if (((StepResponseNotifyData) responseData).getStatus() == Status.FAILED) {
-        responseBuilder.status(Status.FAILED);
-        responseBuilder.failureInfo(((StepResponseNotifyData) responseData).getFailureInfo());
-        return responseBuilder.build();
-      }
-    }
+    List<Status> childStatuses = new LinkedList<>();
+    String nodeExecutionId = "";
 
     for (ResponseData responseData : responseDataMap.values()) {
       StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) responseData;
       Status executionStatus = responseNotifyData.getStatus();
-      if (!StatusUtils.positiveStatuses().contains(executionStatus)) {
-        responseBuilder.status(executionStatus);
-      }
+      childStatuses.add(executionStatus);
+      nodeExecutionId = responseNotifyData.getNodeUuid();
       if (StatusUtils.brokeStatuses().contains(executionStatus)) {
         responseBuilder.failureInfo(responseNotifyData.getFailureInfo());
       }
     }
+    responseBuilder.status(StatusUtils.calculateStatusForNode(childStatuses, nodeExecutionId));
     return responseBuilder.build();
   }
 

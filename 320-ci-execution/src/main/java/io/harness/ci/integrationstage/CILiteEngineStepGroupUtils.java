@@ -222,6 +222,7 @@ public class CILiteEngineStepGroupUtils {
                               .settings(ParameterField.createValueField(settings))
                               .envVariables(envVariables)
                               .entrypoint(ciExecutionServiceConfig.getStepConfig().getGitCloneConfig().getEntrypoint())
+                              .harnessManagedImage(true)
                               .resources(ciCodebase.getResources())
                               .build();
 

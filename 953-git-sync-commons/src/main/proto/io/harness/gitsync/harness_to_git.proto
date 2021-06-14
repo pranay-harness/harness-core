@@ -65,6 +65,7 @@ message IsGitSyncEnabled {
 message UserPrincipal {
   google.protobuf.StringValue user_id = 1;
   google.protobuf.StringValue email = 2;
+  google.protobuf.StringValue user_name = 3;
 }
 
 message RepoDetails {

@@ -33,6 +33,9 @@ public interface AccountClient {
 
   @GET(ACCOUNT_API) Call<RestResponse<List<AccountDTO>>> getAccountDTOs(@Query("accountIds") List<String> accountIds);
 
+  @PUT(ACCOUNT_API + "/{accountId}/name")
+  Call<RestResponse<AccountDTO>> updateAccountName(@Path("accountId") String accountId, @Query("name") String name);
+
   @GET(FEATURE_FLAG_CHECK_API)
   Call<RestResponse<Boolean>> isFeatureFlagEnabled(
       @Query("featureName") String featureName, @Query("accountId") String accountId);
@@ -44,8 +47,12 @@ public interface AccountClient {
   @GET(ACCOUNT_EXISTS + "/{accountName}")
   Call<RestResponse<Boolean>> doesAccountExist(@Path("accountName") String accountName);
 
-  @PUT(ACCOUNT_API + "/{accountId}/default-experience")
+  @PUT(ACCOUNT_API + "/{accountId}/default-experience-if-applicable")
   Call<RestResponse<Boolean>> updateDefaultExperienceIfApplicable(
+      @Path("accountId") String accountId, @Query("defaultExperience") DefaultExperience defaultExperience);
+
+  @PUT(ACCOUNT_API + "/{accountId}/default-experience")
+  Call<RestResponse<AccountDTO>> updateDefaultExperience(
       @Path("accountId") String accountId, @Query("defaultExperience") DefaultExperience defaultExperience);
 
   @GET(FEATURE_FLAG_LIST_API)

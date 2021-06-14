@@ -1,6 +1,7 @@
 package io.harness.gitsync.common.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.gitsync.GitSyncModule.SCM_ON_DELEGATE;
 import static io.harness.gitsync.common.beans.BranchSyncStatus.SYNCING;
 import static io.harness.gitsync.common.beans.BranchSyncStatus.UNSYNCED;
 
@@ -17,6 +18,7 @@ import io.harness.gitsync.common.dtos.GitBranchDTO.SyncedBranchDTOKeys;
 import io.harness.gitsync.common.dtos.GitBranchListDTO;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
+import io.harness.gitsync.common.service.ScmClientFacilitatorService;
 import io.harness.gitsync.common.service.ScmOrchestratorService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.ng.beans.PageResponse;
@@ -25,10 +27,10 @@ import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -39,7 +41,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(DX)
 public class GitBranchServiceImpl implements GitBranchService {
@@ -48,6 +49,20 @@ public class GitBranchServiceImpl implements GitBranchService {
   private final ExecutorService executorService;
   private final HarnessToGitHelperService harnessToGitHelperService;
   private final ScmOrchestratorService scmOrchestratorService;
+  private final ScmClientFacilitatorService scmDelegateService;
+
+  @Inject
+  public GitBranchServiceImpl(GitBranchesRepository gitBranchesRepository, YamlGitConfigService yamlGitConfigService,
+      ExecutorService executorService, HarnessToGitHelperService harnessToGitHelperService,
+      ScmOrchestratorService scmOrchestratorService,
+      @Named(SCM_ON_DELEGATE) ScmClientFacilitatorService scmDelegateService) {
+    this.gitBranchesRepository = gitBranchesRepository;
+    this.yamlGitConfigService = yamlGitConfigService;
+    this.executorService = executorService;
+    this.harnessToGitHelperService = harnessToGitHelperService;
+    this.scmOrchestratorService = scmOrchestratorService;
+    this.scmDelegateService = scmDelegateService;
+  }
 
   @Override
   public GitBranchListDTO listBranchesWithStatus(String accountIdentifier, String orgIdentifier,
@@ -108,17 +123,15 @@ public class GitBranchServiceImpl implements GitBranchService {
   public void createBranches(String accountId, String orgIdentifier, String projectIdentifier, String gitConnectorRef,
       String repoUrl, String yamlGitConfigIdentifier) {
     final int MAX_BRANCH_SIZE = 5000;
-    final List<String> branches = scmOrchestratorService.processScmRequest(scmClientFacilitatorService
-        -> scmClientFacilitatorService.listBranchesForRepoByConnector(accountId, orgIdentifier, projectIdentifier,
-            gitConnectorRef, repoUrl,
-            io.harness.ng.beans.PageRequest.builder().pageSize(MAX_BRANCH_SIZE).pageIndex(0).build(), null),
-        projectIdentifier, orgIdentifier, accountId);
+    final List<String> branches =
+        scmDelegateService.listBranchesForRepoByConnector(accountId, orgIdentifier, projectIdentifier, gitConnectorRef,
+            repoUrl, io.harness.ng.beans.PageRequest.builder().pageSize(MAX_BRANCH_SIZE).pageIndex(0).build(), null);
     for (String branchName : branches) {
       GitBranch gitBranch = GitBranch.builder()
                                 .accountIdentifier(accountId)
                                 .branchName(branchName)
                                 .branchSyncStatus(BranchSyncStatus.UNSYNCED)
-                                .repoURL(repoUrl)
+                                .repoURL(GitUtils.convertToUrlWithGit(repoUrl))
                                 .build();
       save(gitBranch);
     }

@@ -3,6 +3,7 @@ package io.harness.engine.executions.node;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
 import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
 import static io.harness.pms.contracts.execution.Status.ERRORED;
 import static io.harness.springdata.SpringDataMongoUtils.returnNewOptions;
@@ -24,12 +25,15 @@ import io.harness.execution.NodeExecutionMapper;
 import io.harness.observer.Subject;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.events.OrchestrationEvent;
+import io.harness.pms.contracts.execution.events.OrchestrationEvent.Builder;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.execution.utils.StatusUtils;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.serializer.ProtoUtils;
 
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 import com.mongodb.client.result.UpdateResult;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -176,16 +180,18 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Override
   public NodeExecution save(NodeExecution nodeExecution) {
     if (nodeExecution.getVersion() == null) {
-      eventEmitter.emitEvent(OrchestrationEvent.builder()
-                                 .ambiance(nodeExecution.getAmbiance())
-                                 .status(nodeExecution.getStatus())
-                                 .resolvedStepParameters(nodeExecution.getResolvedStepParameters() != null
-                                         ? nodeExecution.getResolvedStepParameters().toJson()
-                                         : null)
-                                 .eventType(OrchestrationEventType.NODE_EXECUTION_START)
-                                 .serviceName(nodeExecution.getNode().getServiceName())
-                                 .build());
+      Builder builder = OrchestrationEvent.newBuilder()
+                            .setAmbiance(nodeExecution.getAmbiance())
+                            .setStatus(nodeExecution.getStatus())
+                            .setEventType(OrchestrationEventType.NODE_EXECUTION_START)
+                            .setServiceName(nodeExecution.getNode().getServiceName())
+                            .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()));
 
+      if (nodeExecution.getResolvedStepParameters() != null) {
+        builder.setStepParameters(
+            ByteString.copyFromUtf8(emptyIfNull(nodeExecution.getResolvedStepParameters().toJson())));
+      }
+      eventEmitter.emitEvent(builder.build());
       nodeExecutionStartSubject.fireInform(
           NodeExecutionStartObxxxxxxxx:onNodeStart, OrchestrationEventType.NODE_EXECUTION_START, nodeExecution);
       return mongoTemplate.insert(nodeExecution);
@@ -363,12 +369,13 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     Document resolvedStepParameters = nodeExecution != null ? nodeExecution.getResolvedStepParameters() : null;
     String stepParametersJson = resolvedStepParameters != null ? resolvedStepParameters.toJson() : null;
 
-    eventEmitter.emitEvent(OrchestrationEvent.builder()
-                               .ambiance(nodeExecution.getAmbiance())
-                               .status(nodeExecution.getStatus())
-                               .resolvedStepParameters(stepParametersJson)
-                               .eventType(orchestrationEventType)
-                               .serviceName(nodeExecution.getNode().getServiceName())
+    eventEmitter.emitEvent(OrchestrationEvent.newBuilder()
+                               .setAmbiance(nodeExecution.getAmbiance())
+                               .setStatus(nodeExecution.getStatus())
+                               .setStepParameters(ByteString.copyFromUtf8(emptyIfNull(stepParametersJson)))
+                               .setEventType(orchestrationEventType)
+                               .setServiceName(nodeExecution.getNode().getServiceName())
+                               .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
                                .build());
   }
 }

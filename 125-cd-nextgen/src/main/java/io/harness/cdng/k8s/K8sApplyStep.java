@@ -1,7 +1,7 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

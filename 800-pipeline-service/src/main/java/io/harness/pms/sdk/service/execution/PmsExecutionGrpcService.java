@@ -10,10 +10,8 @@ import io.harness.pms.contracts.service.ExecutionSummaryResponse;
 import io.harness.pms.contracts.service.ExecutionSummaryUpdateRequest;
 import io.harness.pms.contracts.service.PmsExecutionServiceGrpc.PmsExecutionServiceImplBase;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.execution.ExecutionSummaryUpdateUtils;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
-import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 
@@ -34,11 +32,8 @@ import org.springframework.data.mongodb.core.query.Update;
 public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
   private static final String PIPELINE_MODULE_INFO_UPDATE_KEY = "moduleInfo.%s.%s";
   private static final String STAGE_MODULE_INFO_UPDATE_KEY = "layoutNodeMap.%s.moduleInfo.%s.%s";
-  private static final String STAGE = StepOutcomeGroup.STAGE.name();
-  private static final String PIPELINE = StepOutcomeGroup.PIPELINE.name();
 
   @Inject PmsExecutionSummaryRespository pmsExecutionSummaryRepository;
-  @Inject private PMSPipelineService pmsPipelineService;
   @Inject private NodeExecutionService nodeExecutionService;
 
   @Override

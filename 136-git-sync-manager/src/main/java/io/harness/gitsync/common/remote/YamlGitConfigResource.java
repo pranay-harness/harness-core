@@ -3,9 +3,14 @@ package io.harness.gitsync.common.remote;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toSetupGitSyncDTO;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConfigDTO;
+import static io.harness.ng.core.rbac.ProjectPermissions.EDIT_PROJECT_PERMISSION;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.accesscontrol.ResourceTypes;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.common.dtos.GitSyncConfigDTO;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
@@ -38,11 +43,17 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class YamlGitConfigResource {
   private final YamlGitConfigService yamlGitConfigService;
   private final HarnessToGitHelperService harnessToGitHelperService;
+  private final AccessControlClient accessControlClient;
 
   @POST
   @ApiOperation(value = "Create a Git Sync", nickname = "postGitSync")
   public GitSyncConfigDTO create(
       @QueryParam("accountIdentifier") @NotEmpty String accountId, @NotNull @Valid GitSyncConfigDTO request) {
+    // todo(abhinav): when git sync comes at other level see for new permission
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountId, request.getOrgIdentifier(), request.getProjectIdentifier()),
+        Resource.of(ResourceTypes.PROJECT, request.getProjectIdentifier()), EDIT_PROJECT_PERMISSION);
+
     YamlGitConfigDTO yamlGitConfig = yamlGitConfigService.save(toYamlGitConfigDTO(request, accountId));
     return toSetupGitSyncDTO(yamlGitConfig);
   }
@@ -51,6 +62,10 @@ public class YamlGitConfigResource {
   @ApiOperation(value = "Update Git Sync by id", nickname = "putGitSync")
   public GitSyncConfigDTO update(@QueryParam("accountIdentifier") @NotEmpty String accountId,
       @NotNull @Valid GitSyncConfigDTO updateGitSyncConfigDTO) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, updateGitSyncConfigDTO.getOrgIdentifier(),
+                                                  updateGitSyncConfigDTO.getProjectIdentifier()),
+        Resource.of(ResourceTypes.PROJECT, updateGitSyncConfigDTO.getProjectIdentifier()), EDIT_PROJECT_PERMISSION);
+
     YamlGitConfigDTO yamlGitConfigDTOUpdated =
         yamlGitConfigService.update(toYamlGitConfigDTO(updateGitSyncConfigDTO, accountId));
     return toSetupGitSyncDTO(yamlGitConfigDTOUpdated);

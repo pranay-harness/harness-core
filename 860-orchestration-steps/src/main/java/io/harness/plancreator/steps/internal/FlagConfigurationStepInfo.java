@@ -34,17 +34,15 @@ public class FlagConfigurationStepInfo implements PMSStepInfo {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> feature;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> environment;
   @NotNull List<PatchInstruction> instructions;
-  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> state;
 
   @Builder
-  @ConstructorProperties({"name", "feature", "environment", "instructions", "state"})
+  @ConstructorProperties({"name", "feature", "environment", "instructions"})
   public FlagConfigurationStepInfo(String name, ParameterField<String> feature, ParameterField<String> environment,
-      List<PatchInstruction> instructions, ParameterField<String> state) {
+      List<PatchInstruction> instructions) {
     this.name = name;
     this.feature = feature;
     this.environment = environment;
     this.instructions = instructions;
-    this.state = state;
   }
 
   @Override
@@ -63,7 +61,6 @@ public class FlagConfigurationStepInfo implements PMSStepInfo {
         .name(name)
         .feature(feature)
         .environment(environment)
-        .state(state)
         .instructions(instructions)
         .build();
   }

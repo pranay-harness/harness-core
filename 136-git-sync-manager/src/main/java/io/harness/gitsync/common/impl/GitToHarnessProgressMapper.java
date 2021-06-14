@@ -15,6 +15,7 @@ public class GitToHarnessProgressMapper {
     return GitToHarnessProgress.builder()
         .accountIdentifier(gitToHarnessProgressDTO.getAccountIdentifier())
         .branch(gitToHarnessProgressDTO.getBranch())
+        .commitId(gitToHarnessProgressDTO.getCommitId())
         .eventType(gitToHarnessProgressDTO.getEventType())
         .gitFileChanges(gitToHarnessProgressDTO.getGitFileChanges())
         .processingResponse(gitToHarnessProgressDTO.getProcessingResponse())
@@ -22,6 +23,7 @@ public class GitToHarnessProgressMapper {
         .stepStartingTime(gitToHarnessProgressDTO.getStepStartingTime())
         .stepStatus(gitToHarnessProgressDTO.getStepStatus())
         .stepType(gitToHarnessProgressDTO.getStepType())
+        .gitToHarnessProgressStatus(gitToHarnessProgressDTO.getGitToHarnessProgressStatus())
         .yamlChangeSetId(gitToHarnessProgressDTO.getYamlChangeSetId())
         .build();
   }
@@ -31,6 +33,7 @@ public class GitToHarnessProgressMapper {
         .uuid(gitToHarnessProgress.getUuid())
         .accountIdentifier(gitToHarnessProgress.getAccountIdentifier())
         .branch(gitToHarnessProgress.getBranch())
+        .commitId(gitToHarnessProgress.getCommitId())
         .eventType(gitToHarnessProgress.getEventType())
         .gitFileChanges(gitToHarnessProgress.getGitFileChanges())
         .processingResponse(gitToHarnessProgress.getProcessingResponse())
@@ -39,6 +42,7 @@ public class GitToHarnessProgressMapper {
         .stepStatus(gitToHarnessProgress.getStepStatus())
         .stepType(gitToHarnessProgress.getStepType())
         .yamlChangeSetId(gitToHarnessProgress.getYamlChangeSetId())
+        .gitToHarnessProgressStatus(gitToHarnessProgress.getGitToHarnessProgressStatus())
         .build();
   }
 }

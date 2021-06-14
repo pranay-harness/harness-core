@@ -16,7 +16,6 @@ import io.github.resilience4j.retry.RetryConfig;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.connect.source.SourceRecord;
@@ -41,6 +40,7 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
     this.collectionToDeserializerMap = collectionToDeserializerMap;
     this.collectionToConsumerMap = collectionToConsumerMap;
     this.changeEventFailureHandler = changeEventFailureHandler;
+
     IntervalFunction intervalFunction = IntervalFunction.ofExponentialBackoff(1000, 2);
     RetryConfig retryConfig = RetryConfig.custom()
                                   .ignoreExceptions(DuplicateKeyException.class, DuplicateFieldException.class)
@@ -52,55 +52,47 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
 
   private boolean handleEvent(ChangeEvent<String, String> changeEvent) {
     String id = idDeserializer.deserialize(null, changeEvent.key().getBytes());
-    String collectionName = getCollectionName(changeEvent.destination());
-    OpType opType = getOperationType(((EmbeddedEngineChangeEvent<String, String>) changeEvent).sourceRecord());
+    Optional<String> collectionName = getCollectionName(changeEvent.destination());
+    Optional<OpType> opType =
+        getOperationType(((EmbeddedEngineChangeEvent<String, String>) changeEvent).sourceRecord());
+    if (opType.isPresent() && collectionName.isPresent()) {
+      log.info("Handling {} event for entity: {}.{}", opType, collectionName, id);
 
-    log.info("Received {} event for entity: {} in collection: {}", opType, id, collectionName);
-
-    ChangeConsumer<? extends AccessControlEntity> changeConsumer = collectionToConsumerMap.get(collectionName);
-    changeConsumer.consumeEvent(opType, id, deserialize(changeEvent));
+      ChangeConsumer<? extends AccessControlEntity> changeConsumer = collectionToConsumerMap.get(collectionName.get());
+      changeConsumer.consumeEvent(opType.get(), id, deserialize(collectionName.get(), changeEvent));
+    }
     return true;
   }
 
-  @SneakyThrows
   @Override
-  public void handleBatch(List<ChangeEvent<String, String>> list,
-      DebeziumEngine.RecordCommitter<ChangeEvent<String, String>> recordCommitter) {
-    for (ChangeEvent<String, String> changeEvent : list) {
+  public void handleBatch(List<ChangeEvent<String, String>> changeEvents,
+      DebeziumEngine.RecordCommitter<ChangeEvent<String, String>> recordCommitter) throws InterruptedException {
+    for (ChangeEvent<String, String> changeEvent : changeEvents) {
       try {
-        handleEvent(changeEvent);
+        retry.executeSupplier(() -> handleEvent(changeEvent));
       } catch (Exception exception) {
         changeEventFailureHandler.handle(changeEvent, exception);
-        log.error(
-            "Exception caught when trying to process event: {}. Retrying this event with exponential backoff now...",
-            changeEvent, exception);
-        retry.executeSupplier(() -> handleEvent(changeEvent));
       }
       recordCommitter.markProcessed(changeEvent);
     }
     recordCommitter.markBatchFinished();
   }
 
-  private <T extends AccessControlEntity> T deserialize(ChangeEvent<String, String> changeEvent) {
-    String collectionName = getCollectionName(changeEvent.destination());
-    Deserializer<? extends AccessControlEntity> deserializer = collectionToDeserializerMap.get(collectionName);
-    return (T) deserializer.deserialize(null, getValue(changeEvent));
+  private <T extends AccessControlEntity> T deserialize(
+      String collectionName, ChangeEvent<String, String> changeEvent) {
+    return (T) collectionToDeserializerMap.get(collectionName).deserialize(null, getValue(changeEvent));
   }
 
   private byte[] getValue(ChangeEvent<String, String> changeEvent) {
     return changeEvent.value() == null ? null : changeEvent.value().getBytes();
   }
 
-  private OpType getOperationType(SourceRecord sourceRecord) {
+  private Optional<OpType> getOperationType(SourceRecord sourceRecord) {
     return Optional.ofNullable(sourceRecord.headers().lastWithName(OP_FIELD))
-        .flatMap(x -> OpType.fromString((String) x.value()))
-        .orElseThrow(() -> new IllegalArgumentException("Unsupported operation type "));
+        .flatMap(x -> OpType.fromString((String) x.value()));
   }
 
-  private String getCollectionName(String sourceRecordTopic) {
-    return Optional.of(sourceRecordTopic.split("\\."))
-        .filter(x -> x.length >= 2)
-        .map(x -> x[2])
-        .orElseThrow(() -> new IllegalArgumentException("Unknown collection name: " + sourceRecordTopic));
+  private Optional<String> getCollectionName(String sourceRecordTopic) {
+    return Optional.of(sourceRecordTopic.split("\\.")).filter(x -> x.length >= 2).map(x -> x[2]);
   }
 }

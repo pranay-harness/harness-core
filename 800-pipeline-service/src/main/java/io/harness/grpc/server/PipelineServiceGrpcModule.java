@@ -1,5 +1,6 @@
 package io.harness.grpc.server;
 
+import io.harness.ModuleType;
 import io.harness.PipelineServiceConfiguration;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -12,7 +13,6 @@ import io.harness.pms.plan.execution.data.service.outcome.OutcomeServiceGrpcServ
 import io.harness.pms.plan.execution.data.service.outputs.SweepingOutputServiceImpl;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.sdk.service.execution.PmsExecutionGrpcService;
-import io.harness.pms.utils.PmsConstants;
 
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
@@ -72,13 +72,14 @@ public class PipelineServiceGrpcModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public Map<String, PlanCreationServiceBlockingStub> grpcClients(PipelineServiceConfiguration configuration)
+  public Map<ModuleType, PlanCreationServiceBlockingStub> grpcClients(PipelineServiceConfiguration configuration)
       throws SSLException {
-    Map<String, PlanCreationServiceBlockingStub> map = new HashMap<>();
-    map.put(PmsConstants.INTERNAL_SERVICE_NAME,
+    Map<ModuleType, PlanCreationServiceBlockingStub> map = new HashMap<>();
+    map.put(ModuleType.PMS,
         PlanCreationServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName("pmsSdkInternal").build()));
     for (Map.Entry<String, GrpcClientConfig> entry : configuration.getGrpcClientConfigs().entrySet()) {
-      map.put(entry.getKey(), PlanCreationServiceGrpc.newBlockingStub(getChannel(entry.getValue())));
+      map.put(
+          ModuleType.fromString(entry.getKey()), PlanCreationServiceGrpc.newBlockingStub(getChannel(entry.getValue())));
     }
     return map;
   }
@@ -130,7 +131,7 @@ public class PipelineServiceGrpcModule extends AbstractModule {
   public Service pmsGrpcInternalService(HealthStatusManager healthStatusManager, Set<BindableService> services,
       Set<ServerInterceptor> serverInterceptors) {
     return new GrpcInProcessServer(
-        PmsConstants.INTERNAL_SERVICE_NAME, services, serverInterceptors, healthStatusManager);
+        ModuleType.PMS.name().toLowerCase(), services, serverInterceptors, healthStatusManager);
   }
 
   @Provides

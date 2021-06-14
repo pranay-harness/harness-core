@@ -11,6 +11,7 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMess
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
@@ -32,11 +33,11 @@ import com.google.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketTimeoutException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.net.ssl.SSLHandshakeException;
 import javax.xml.stream.XMLStreamException;
@@ -105,7 +106,7 @@ public class NexusServiceImpl implements NexusService {
   public Map<String, String> getRepositories(NexusRequest nexusConfig, String repositoryFormat) {
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
-      return timeLimiter.callWithTimeout(() -> {
+      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(20), () -> {
         if (isNexusTwo) {
           if (RepositoryFormat.docker.name().equals(repositoryFormat)) {
             throw new InvalidArtifactServerException("Nexus 2.x does not support Docker artifact type", USER);
@@ -117,7 +118,7 @@ public class NexusServiceImpl implements NexusService {
           }
           return nexusThreeService.getRepositories(nexusConfig, repositoryFormat);
         }
-      }, 20L, TimeUnit.SECONDS, true);
+      });
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -136,34 +137,28 @@ public class NexusServiceImpl implements NexusService {
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
       if (isNexusTwo) {
-        timeLimiter.callWithTimeout(
-            ()
-                -> nexusTwoService.collectGroupIds(nexusConfig, repoId, groupIds, repositoryFormat),
-            20L, TimeUnit.SECONDS, true);
+        HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(20),
+            () -> nexusTwoService.collectGroupIds(nexusConfig, repoId, groupIds, repositoryFormat));
       } else {
         if (repositoryFormat != null) {
           switch (repositoryFormat) {
             case "nuget":
             case "npm":
-              return timeLimiter.callWithTimeout(
-                  ()
-                      -> nexusThreeService.getPackageNames(nexusConfig, repoId, repositoryFormat, groupIds),
-                  20L, TimeUnit.SECONDS, true);
+              return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(20),
+                  () -> nexusThreeService.getPackageNames(nexusConfig, repoId, repositoryFormat, groupIds));
             case "maven":
-              return timeLimiter.callWithTimeout(
-                  ()
-                      -> nexusThreeService.getGroupIds(nexusConfig, repoId, repositoryFormat, groupIds),
-                  20L, TimeUnit.SECONDS, true);
+              return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(20),
+                  () -> nexusThreeService.getGroupIds(nexusConfig, repoId, repositoryFormat, groupIds));
             case "docker":
-              return timeLimiter.callWithTimeout(
-                  () -> nexusThreeService.getDockerImages(nexusConfig, repoId, groupIds), 20L, TimeUnit.SECONDS, true);
+              return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(20),
+                  () -> nexusThreeService.getDockerImages(nexusConfig, repoId, groupIds));
             default:
               throw new InvalidArtifactServerException("Unsupported repositoryFormat for Nexus 3.x");
           }
         } else {
           // for backward compatibility  with old UI when repositoryFormat is null
-          return timeLimiter.callWithTimeout(
-              () -> nexusThreeService.getDockerImages(nexusConfig, repoId, groupIds), 20L, TimeUnit.SECONDS, true);
+          return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(20),
+              () -> nexusThreeService.getDockerImages(nexusConfig, repoId, groupIds));
         }
       }
     } catch (WingsException e) {

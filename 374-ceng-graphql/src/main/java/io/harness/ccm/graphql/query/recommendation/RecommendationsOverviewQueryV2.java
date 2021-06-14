@@ -1,7 +1,7 @@
 package io.harness.ccm.graphql.query.recommendation;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
-import static io.harness.ccm.commons.constants.Constants.ZONE_OFFSET;
+import static io.harness.ccm.commons.utils.TimeUtils.offsetDateTimeNow;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.timescaledb.Tables.CE_RECOMMENDATIONS;
 
@@ -22,7 +22,6 @@ import io.leangen.graphql.annotations.GraphQLArgument;
 import io.leangen.graphql.annotations.GraphQLEnvironment;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.execution.ResolutionEnvironment;
-import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -119,6 +118,6 @@ public class RecommendationsOverviewQueryV2 {
         .eq(true)
         // based on current-gen workload recommendation dataFetcher
         .and(CE_RECOMMENDATIONS.LASTPROCESSEDAT.greaterOrEqual(
-            OffsetDateTime.now(ZONE_OFFSET).truncatedTo(ChronoUnit.DAYS).minusDays(2)));
+            offsetDateTimeNow().truncatedTo(ChronoUnit.DAYS).minusDays(2)));
   }
 }

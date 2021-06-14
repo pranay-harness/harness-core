@@ -58,15 +58,15 @@ def main(event, context):
         monthfolder = ps[-2]  # second last folder in path
         jsonData["cleanuppath"] = "/".join(ps[:-1])
 
-    reportYear = monthfolder.split("-")[0][:4]
-    reportMonth = monthfolder.split("-")[0][4:6]
+    jsonData["reportYear"] = monthfolder.split("-")[0][:4]
+    jsonData["reportMonth"] = monthfolder.split("-")[0][4:6]
 
     connector_id = ps[1]  # second from beginning is connector id in mongo
 
     accountIdBQ = re.sub('[^0-9a-z]', '_', jsonData.get("accountId").lower())
     jsonData["datasetName"] = "BillingReport_%s" % (accountIdBQ)
 
-    jsonData["tableSuffix"] = "%s_%s_%s" % (reportYear, reportMonth, connector_id)
+    jsonData["tableSuffix"] = "%s_%s_%s" % (jsonData["reportYear"], jsonData["reportMonth"], connector_id)
     jsonData["tableName"] = f"awsBilling_{jsonData['tableSuffix']}"
     jsonData["tableId"] = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], jsonData["tableName"])
 
@@ -109,14 +109,15 @@ def create_dataset_and_tables(jsonData):
 
 def create_table_from_manifest(jsonData):
     # Read the CSV from GCS as string
-    manifestdata = {"columns": []}
+    manifestdata = {}
+    blob_to_delete = None
     try:
         blobs = storage_client.list_blobs(
             jsonData["bucket"], prefix=jsonData["path"])
-        blob_to_delete = None
         for blob in blobs:
             # To avoid picking up sub directory json files
-            if not jsonData["path"] == "/".join(blob.name.split("/")[:-1]):
+            if jsonData["path"] != "/".join(blob.name.split("/")[:-1]):
+                print_(blob.name)
                 continue
             if blob.name.endswith("Manifest.json"):
                 print_(blob.name)
@@ -134,7 +135,7 @@ def create_table_from_manifest(jsonData):
     reg = re.compile("[^a-zA-Z0-9_]")
     map_tags = {}
     schema = []
-    for column in manifestdata["columns"]:
+    for column in manifestdata.get("columns", []):
         name = column["name"].lower()
         if reg.search(name):
             # This must be a TAG ex. aws:autoscaling:groupName
@@ -151,11 +152,16 @@ def create_table_from_manifest(jsonData):
     # Create table
     try:
         if len(schema) != 0:
+            print_("Schema: %s" % schema)
             # Delete older table only when new manifest format is available
             client.delete_table(jsonData["tableId"], not_found_ok=True)
-        table = client.create_table(bigquery.Table(jsonData["tableId"], schema=schema))
-        print_("Created table from blob {} {}.{}.{}".format(blob_to_delete.name, table.project, table.dataset_id, table.table_id))
-        blob_to_delete.delete()
+            table = client.create_table(bigquery.Table(jsonData["tableId"], schema=schema))
+            print_("Created table from blob {} {}.{}.{}".format(blob_to_delete.name, table.project, table.dataset_id,
+                                                                table.table_id))
+            blob_to_delete.delete()
+            print_("Deleted Manifest Json {}".format(blob_to_delete.name))
+        else:
+            print_("No Manifest found. No table to create")
     except Exception as e:
         print_("Error while creating table\n {}".format(e), "ERROR")
 
@@ -191,10 +197,11 @@ def ingest_data_from_csv(jsonData):
             "gs://" + jsonData["bucket"] + "/" + jsonData["path"] + "/*.csv.gz",
             "gs://" + jsonData["bucket"] + "/" + jsonData["path"] + "/*.csv.zip"]
     print_("Ingesting all CSVs from %s" % jsonData["path"])
-    print_("Loading into %s table..." % jsonData["tableId"])
+    table = "%s.%s" % (jsonData["datasetName"], jsonData["tableName"])
+    print_("Loading into %s table..." % table)
     load_job = client.load_table_from_uri(
         uris,
-        jsonData["tableId"],
+        table,
         job_config=job_config
     )  # Make an API request.
 
@@ -207,9 +214,8 @@ def ingest_data_from_csv(jsonData):
     )
     print_("Cleaning up all csvs in this path: %s" % jsonData["cleanuppath"])
     for blob in blobs:
-        if blob.name.endswith(".csv") or blob.name.endswith(".csv.gz"):
-            blob.delete()
-            print_("Blob {} deleted.".format(blob.name))
+        blob.delete()
+        print_("Blob {} deleted.".format(blob.name))
 
 
 def ingest_data_to_awscur(jsonData):
@@ -271,7 +277,7 @@ def get_unique_accountids(jsonData):
 def ingest_data_to_preagg(jsonData):
     ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
     tableName = "%s.%s" % (ds, "preAggregated")
-    year, month, _ = jsonData["tableSuffix"].split('_')
+    year, month = jsonData["reportYear"], jsonData["reportMonth"]
     date_start = "%s-%s-01" % (year, month)
     date_end = "%s-%s-%s" % (year, month, monthrange(int(year), int(month))[1])
     print_("Loading into %s preAggregated table..." % tableName)
@@ -303,7 +309,7 @@ def ingest_data_to_preagg(jsonData):
 def ingest_data_to_unified(jsonData):
     ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
     tableName = "%s.%s" % (ds, "unifiedTable")
-    year, month, _ = jsonData["tableSuffix"].split('_')
+    year, month = jsonData["reportYear"], jsonData["reportMonth"]
     date_start = "%s-%s-01" % (year, month)
     date_end = "%s-%s-%s" % (year, month, monthrange(int(year), int(month))[1])
     print_("Loading into %s table..." % tableName)

@@ -57,12 +57,16 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
       log.info("Repo {} doesn't exist, ignoring the branch push change set event : {}", repoURL, yamlChangeSetDTO);
       return YamlChangeSetStatus.SKIPPED;
     }
-    // TODO @deepak add check if event already exists in progress service, then return
+
+    if (gitToHarnessProgressService.isProgressEventAlreadyProcessedOrInProcess(repoURL,
+            yamlChangeSetDTO.getGitWebhookRequestAttributes().getHeadCommitId(), YamlChangeSetEventType.BRANCH_PUSH)) {
+      log.info("Event {} already in progress or successfully completed", yamlChangeSetDTO);
+      return YamlChangeSetStatus.RUNNING;
+    }
 
     // Init Progress Record for this event
-    GitToHarnessProgressDTO gitToHarnessProgressRecord =
-        gitToHarnessProgressService.save(yamlChangeSetDTO, YamlChangeSetEventType.BRANCH_PUSH,
-            GitToHarnessProcessingStepType.GET_FILES, GitToHarnessProcessingStepStatus.TO_DO);
+    GitToHarnessProgressDTO gitToHarnessProgressRecord = gitToHarnessProgressService.initProgress(
+        yamlChangeSetDTO, YamlChangeSetEventType.BRANCH_PUSH, GitToHarnessProcessingStepType.GET_FILES);
 
     GitToHarnessGetFilesStepResponse gitToHarnessGetFilesStepResponse =
         performGetFilesStep(GitToHarnessGetFilesStepRequest.builder()
@@ -90,7 +94,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
     YamlChangeSetDTO yamlChangeSetDTO = request.getYamlChangeSetDTO();
 
     // Mark step status in progress
-    GitToHarnessProgressDTO gitToHarnessProgressRecord = gitToHarnessProgressService.updateStatus(
+    GitToHarnessProgressDTO gitToHarnessProgressRecord = gitToHarnessProgressService.updateStepStatus(
         request.getGitToHarnessProgress().getUuid(), GitToHarnessProcessingStepStatus.IN_PROGRESS);
 
     List<String> rootFolderList = getRootFolderList(yamlGitConfigDTOList);
@@ -103,7 +107,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
         getAllFileContent(yamlChangeSetDTO, yamlGitConfigDTOList.get(0), prFilesTobeProcessed);
 
     // Mark step status done
-    gitToHarnessProgressRecord = gitToHarnessProgressService.updateStatus(
+    gitToHarnessProgressRecord = gitToHarnessProgressService.updateStepStatus(
         gitToHarnessProgressRecord.getUuid(), GitToHarnessProcessingStepStatus.DONE);
 
     return GitToHarnessGetFilesStepResponse.builder()
@@ -118,6 +122,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
         prepareFileProcessingRequests(request.getGitFileChangeDTOList(), request.getGitDiffResultFileDTOList());
     gitToHarnessProcessorService.processFiles(request.getYamlChangeSetDTO().getAccountId(), fileProcessingRequests,
         request.getYamlChangeSetDTO().getBranch(), request.getYamlGitConfigDTO(),
+        request.getYamlChangeSetDTO().getGitWebhookRequestAttributes().getHeadCommitId(),
         request.getProgressRecord().getUuid());
   }
 

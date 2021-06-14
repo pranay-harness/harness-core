@@ -11,6 +11,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
 import software.wings.sm.StateExecutionData;
 
+import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,6 +32,7 @@ public class PcfRouteUpdateStateExecutionData extends StateExecutionData impleme
   private PcfCommandRequest pcfCommandRequest;
   private String commandName;
   private PcfRouteUpdateRequestConfigData pcfRouteUpdateRequestConfigData;
+  private List<String> tags;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {

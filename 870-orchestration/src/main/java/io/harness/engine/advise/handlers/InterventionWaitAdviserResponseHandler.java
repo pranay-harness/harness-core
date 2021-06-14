@@ -1,5 +1,6 @@
 package io.harness.engine.advise.handlers;
 
+import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
 import static io.harness.pms.contracts.execution.Status.INTERVENTION_WAITING;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -13,10 +14,11 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.serializer.KryoSerializer;
+import io.harness.serializer.ProtoUtils;
 import io.harness.timeout.TimeoutCallback;
 import io.harness.timeout.TimeoutEngine;
 import io.harness.timeout.TimeoutInstance;
@@ -72,12 +74,13 @@ public class InterventionWaitAdviserResponseHandler implements AdviserResponseHa
     if (resolvedStepParameters != null) {
       stepParameters = resolvedStepParameters.toJson();
     }
-    eventEmitter.emitEvent(OrchestrationEvent.builder()
-                               .eventType(OrchestrationEventType.INTERVENTION_WAIT_START)
-                               .ambiance(nodeExecution.getAmbiance())
-                               .status(nodeExecution.getStatus())
-                               .resolvedStepParameters(stepParameters)
-                               .serviceName(nodeExecution.getNode().getServiceName())
+    eventEmitter.emitEvent(OrchestrationEvent.newBuilder()
+                               .setEventType(OrchestrationEventType.INTERVENTION_WAIT_START)
+                               .setAmbiance(nodeExecution.getAmbiance())
+                               .setStatus(nodeExecution.getStatus())
+                               .setStepParameters(ByteString.copyFromUtf8(emptyIfNull(stepParameters)))
+                               .setServiceName(nodeExecution.getNode().getServiceName())
+                               .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
                                .build());
   }
 

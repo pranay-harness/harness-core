@@ -15,6 +15,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.services.OrganizationService;
+import io.harness.ng.resourcegroup.migration.DefaultResourceGroupCreationService;
+import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -31,12 +33,15 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class OrganizationEntityCRUDStreamListener implements MessageListener {
   private final OrganizationService organizationService;
   private final DefaultOrganizationManager defaultOrganizationManager;
+  private final DefaultResourceGroupCreationService defaultResourceGroupCreationService;
 
   @Inject
-  public OrganizationEntityCRUDStreamListener(
-      OrganizationService organizationService, DefaultOrganizationManager defaultOrganizationManager) {
+  public OrganizationEntityCRUDStreamListener(OrganizationService organizationService,
+      DefaultOrganizationManager defaultOrganizationManager, ResourceGroupClient resourceGroupClient,
+      DefaultResourceGroupCreationService defaultResourceGroupCreationService) {
     this.organizationService = organizationService;
     this.defaultOrganizationManager = defaultOrganizationManager;
+    this.defaultResourceGroupCreationService = defaultResourceGroupCreationService;
   }
 
   @Override
@@ -78,6 +83,7 @@ public class OrganizationEntityCRUDStreamListener implements MessageListener {
 
   private boolean processAccountCreateEvent(AccountEntityChangeDTO accountEntityChangeDTO) {
     defaultOrganizationManager.createDefaultOrganization(accountEntityChangeDTO.getAccountId());
+    defaultResourceGroupCreationService.createDefaultResourceGroup(accountEntityChangeDTO.getAccountId(), null, null);
     return true;
   }
 

@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.rule.OwnerRule.ABOSII;
@@ -147,7 +148,7 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
         .isEqualTo(thrownException);
 
     verify(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
-    verify(logCallback).saveExecutionLog(thrownException.getMessage(), ERROR, FAILURE);
+    verify(logCallback).saveExecutionLog(getMessage(thrownException), ERROR, FAILURE);
   }
 
   @Test
@@ -203,7 +204,7 @@ public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
     verify(k8sRollingRollbackBaseHandler)
         .steadyStateCheck(rollbackHandlerConfig, k8sDelegateTaskParams, timeoutIntervalInMin, logCallback);
     verify(k8sRollingRollbackBaseHandler).postProcess(rollbackHandlerConfig, releaseName);
-    verify(logCallback).saveExecutionLog(thrownException.getMessage(), ERROR, FAILURE);
+    verify(logCallback).saveExecutionLog(getMessage(thrownException), ERROR, FAILURE);
     verify(logCallback, never()).saveExecutionLog(anyString(), any(LogLevel.class), eq(CommandExecutionStatus.SUCCESS));
   }
 }

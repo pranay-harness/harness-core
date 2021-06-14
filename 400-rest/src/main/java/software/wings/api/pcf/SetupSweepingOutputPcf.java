@@ -47,6 +47,7 @@ public class SetupSweepingOutputPcf implements SweepingOutput {
   private Integer desiredActualFinalCount;
   private PcfManifestsPackage pcfManifestsPackage;
   private boolean isSuccess;
+  private List<String> tags;
 
   public InfoVariables fetchPcfVariableInfo() {
     InfoVariablesBuilder infoVariablesBuilder = InfoVariables.builder();

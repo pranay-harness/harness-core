@@ -48,6 +48,7 @@ public class OrchestrationEvent extends Queuable implements WithMonitoring {
   @NotNull OrchestrationEventType eventType;
   @Getter @Setter @NonFinal @CreatedDate Long createdAt;
   @Setter @NonFinal @Version Long version;
+  @Getter @Setter @NonFinal boolean monitoringEnabled;
 
   public AutoLogContext autoLogContext() {
     Map<String, String> logContext = AmbianceUtils.logContextMap(ambiance);

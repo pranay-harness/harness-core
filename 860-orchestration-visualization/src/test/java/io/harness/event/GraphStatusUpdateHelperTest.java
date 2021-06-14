@@ -6,6 +6,8 @@ import static io.harness.pms.contracts.execution.events.OrchestrationEventType.N
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -19,6 +21,7 @@ import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
 import io.harness.data.OutcomeInstance;
+import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
@@ -45,9 +48,12 @@ import java.util.concurrent.TimeUnit;
 import org.assertj.core.util.Maps;
 import org.awaitility.Awaitility;
 import org.bson.Document;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Spy;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
@@ -56,10 +62,17 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
   @Inject private PlanExecutionService planExecutionService;
   @Inject private SpringMongoStore mongoStore;
 
-  @Inject private NodeExecutionService nodeExecutionService;
+  @Inject @InjectMocks private NodeExecutionService nodeExecutionService;
   @Inject @Spy private GraphGenerationService graphGenerationService;
   @Inject private MongoTemplate mongoTemplate;
   @Inject private GraphStatusUpdateHelper eventHandlerV2;
+
+  @Mock private OrchestrationEventEmitter eventEmitter;
+
+  @Before
+  public void setup() {
+    doNothing().when(eventEmitter).emitEvent(any());
+  }
 
   @Test
   @Owner(developers = ALEXEI)

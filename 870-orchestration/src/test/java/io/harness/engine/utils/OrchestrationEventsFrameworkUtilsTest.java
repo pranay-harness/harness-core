@@ -1,6 +1,5 @@
 package io.harness.engine.utils;
 
-import static io.harness.pms.utils.PmsConstants.INTERNAL_SERVICE_NAME;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,6 +9,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.ModuleType;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
@@ -41,7 +41,7 @@ public class OrchestrationEventsFrameworkUtilsTest extends OrchestrationTestBase
   public void setup() {
     mongoTemplate.save(
         PmsSdkInstance.builder()
-            .name(INTERNAL_SERVICE_NAME)
+            .name(ModuleType.PMS.name())
             .supportedTypes(new HashMap<>())
             .supportedSteps(new ArrayList<>())
             .supportedStepTypes(new ArrayList<>())
@@ -56,7 +56,7 @@ public class OrchestrationEventsFrameworkUtilsTest extends OrchestrationTestBase
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestObtainProducerForInterrupt() {
-    Producer producer = eventsFrameworkUtils.obtainProducerForInterrupt(INTERNAL_SERVICE_NAME);
+    Producer producer = eventsFrameworkUtils.obtainProducerForInterrupt(ModuleType.PMS.name());
     assertThat(((NoOpProducer) producer).getTopicName()).isEqualTo(TOPIC1);
   }
 
@@ -64,7 +64,7 @@ public class OrchestrationEventsFrameworkUtilsTest extends OrchestrationTestBase
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestObtainProducerForOrchestrationEvent() {
-    Producer producer = eventsFrameworkUtils.obtainProducerForOrchestrationEvent(INTERNAL_SERVICE_NAME);
+    Producer producer = eventsFrameworkUtils.obtainProducerForOrchestrationEvent(ModuleType.PMS.name());
     assertThat(((NoOpProducer) producer).getTopicName()).isEqualTo(TOPIC2);
   }
 
@@ -76,11 +76,11 @@ public class OrchestrationEventsFrameworkUtilsTest extends OrchestrationTestBase
     Reflect.on(spyEventsFrameworkUtils)
         .set("moduleConfig",
             OrchestrationModuleConfig.builder()
-                .serviceName(INTERNAL_SERVICE_NAME)
+                .serviceName(ModuleType.PMS.name())
                 .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                 .build());
     doReturn(PmsSdkInstance.builder()
-                 .name(INTERNAL_SERVICE_NAME)
+                 .name(ModuleType.PMS.name())
                  .supportedTypes(new HashMap<>())
                  .supportedSteps(new ArrayList<>())
                  .supportedStepTypes(new ArrayList<>())
@@ -90,10 +90,10 @@ public class OrchestrationEventsFrameworkUtilsTest extends OrchestrationTestBase
                      ConsumerConfig.newBuilder().setRedis(Redis.newBuilder().setTopicName(TOPIC2).build()).build())
                  .build())
         .when(spyEventsFrameworkUtils)
-        .getPmsSdkInstance(INTERNAL_SERVICE_NAME);
+        .getPmsSdkInstance(ModuleType.PMS.name());
 
-    spyEventsFrameworkUtils.obtainProducerForOrchestrationEvent(INTERNAL_SERVICE_NAME);
-    spyEventsFrameworkUtils.obtainProducerForOrchestrationEvent(INTERNAL_SERVICE_NAME);
+    spyEventsFrameworkUtils.obtainProducerForOrchestrationEvent(ModuleType.PMS.name());
+    spyEventsFrameworkUtils.obtainProducerForOrchestrationEvent(ModuleType.PMS.name());
 
     verify(spyEventsFrameworkUtils, times(1)).obtainProducer(any(ProducerCacheKey.class));
   }

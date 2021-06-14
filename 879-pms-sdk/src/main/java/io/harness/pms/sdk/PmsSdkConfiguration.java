@@ -14,24 +14,24 @@ import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
-import io.harness.pms.sdk.core.facilitator.Facilitator;
+import io.harness.pms.sdk.core.execution.events.node.facilitate.Facilitator;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.steps.Step;
-import io.harness.pms.utils.PmsConstants;
 import io.harness.redis.RedisConfig;
 
 import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Builder.Default;
+import lombok.NonNull;
 import lombok.Value;
 
 @Value
 @Builder
 public class PmsSdkConfiguration {
   @Builder.Default SdkDeployMode deploymentMode = SdkDeployMode.LOCAL;
-  ModuleType moduleType;
+  @NonNull ModuleType moduleType;
   MongoConfig mongoConfig;
   GrpcServerConfig grpcServerConfig;
   GrpcClientConfig pmsGrpcClientConfig;
@@ -44,17 +44,16 @@ public class PmsSdkConfiguration {
   Class<? extends ExecutionSummaryModuleInfoProvider> executionSummaryModuleInfoProviderClass;
 
   public String getServiceName() {
-    if (moduleType == null) {
-      return PmsConstants.INTERNAL_SERVICE_NAME;
-    }
     return moduleType.name().toLowerCase();
   }
+
   @Default
   EventsFrameworkConfiguration eventsFrameworkConfiguration =
       EventsFrameworkConfiguration.builder()
           .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
           .build();
-  boolean useRedisForSdkResponseEvents;
   ConsumerConfig interruptConsumerConfig;
   ConsumerConfig orchestrationEventConsumerConfig;
+  ConsumerConfig facilitationEventConsumerConfig;
+  ConsumerConfig nodeStartEventConsumerConfig;
 }

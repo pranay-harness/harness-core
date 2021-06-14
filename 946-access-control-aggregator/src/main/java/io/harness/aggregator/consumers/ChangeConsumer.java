@@ -7,9 +7,9 @@ import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(HarnessTeam.PL)
 public interface ChangeConsumer<T extends AccessControlEntity> {
-  long consumeUpdateEvent(String id, T updatedEntity);
+  void consumeUpdateEvent(String id, T updatedEntity);
 
-  long consumeDeleteEvent(String id);
+  void consumeDeleteEvent(String id);
 
   long consumeCreateEvent(String id, T createdEntity);
 
@@ -26,7 +26,7 @@ public interface ChangeConsumer<T extends AccessControlEntity> {
         consumeDeleteEvent(id);
         break;
       default:
-        throw new UnsupportedOperationException("Operation type " + opType + " not supported");
+        break;
     }
   }
 }

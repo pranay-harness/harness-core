@@ -22,6 +22,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
@@ -69,6 +71,11 @@ public class GitSyncablePersistenceTestConfig extends AbstractMongoConfiguration
   public CustomConversions customConversions() {
     List<?> converterInstances = springConverters.stream().map(injector::getInstance).collect(Collectors.toList());
     return new MongoCustomConversions(converterInstances);
+  }
+
+  @Bean
+  MongoTransactionManager transactionManager(MongoDbFactory dbFactory) {
+    return new MongoTransactionManager(dbFactory);
   }
 
   @Override

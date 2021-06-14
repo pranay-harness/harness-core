@@ -214,6 +214,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
   private YamlSchemaClientConfig getYamlSchemaClientConfig() {
     return YamlSchemaClientConfig.builder().build();
   }
+
   private PmsSdkConfiguration getPmsSdkConfiguration() {
     return PmsSdkConfiguration.builder()
         .deploymentMode(SdkDeployMode.LOCAL)

@@ -17,7 +17,6 @@ fi
 
 # initialize variables
 export VERSION_FILE=build.properties
-export HASH_FILE=project/protocol.info
 
 export VERSION=`cat ${VERSION_FILE} |\
     grep 'build.number=' |\
@@ -31,16 +30,11 @@ export SHA=`git rev-parse HEAD`
 # Update jira issues
 scripts/jenkins/release-branch-update-jiras.sh
 
-# Compute the codebase hash
-export BUILD_HASH=`bazel run //001-microservice-intfc-tool:module | grep "Codebase Hash:" | cut -f 2 -d ":"`
-
 # Prepare new release commit
 git checkout ${BRANCH}
 
 sed -i "s:build.number=${VERSION}00:build.number=${NEW_VERSION}00:g" ${VERSION_FILE}
-sed -i "s/Codebase Hash: [^ ]*/Codebase Hash: ${BUILD_HASH}/g" ${HASH_FILE}
 git add ${VERSION_FILE}
-git add ${HASH_FILE}
 git commit -m "Branching to release/${PURPOSE}/${VERSION}xx. New version ${NEW_VERSION}xx"
 
 

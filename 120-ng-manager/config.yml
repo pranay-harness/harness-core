@@ -67,6 +67,9 @@ mongo:
   transactionsEnabled: false
   aliasDBName: ng-harness
 
+accountConfig:
+  deploymentClusterName: ""
+
 #[secondary-db] : Uncomment the following if you want to connect to another database
 #secondary - mongo:
 #uri : mongodb:  // localhost:27017/cd-nextgen-secondary
@@ -181,7 +184,7 @@ pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
 
-shouldConfigureWithPMS: false
+shouldConfigureWithPMS: true
 
 ceAwsSetupConfig:
   accessKey: ce_aws_accessKey_placeholder
@@ -325,5 +328,3 @@ signupNotificationConfiguration:
       gcsFileName: "signup_confirmation.txt"
       templateId: "signup_confirmation"
   expireDurationInMinutes: 60
-
-useRedisForSdkResponseEvents: false
