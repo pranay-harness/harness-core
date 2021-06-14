@@ -114,7 +114,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.http.HttpTaskParameters;
-import io.harness.delegate.utils.DelegateEntityOwnerMapper;
+import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.eventsframework.api.Producer;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -995,7 +995,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldRegisterDelegateParamsWithOrgId() {
     final String accountId = generateUuid();
     final String orgId = "orgId";
-    final DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, StringUtils.EMPTY);
+    final DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, StringUtils.EMPTY);
 
     DelegateParams params = DelegateParams.builder()
                                 .accountId(accountId)
@@ -1030,7 +1030,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     final String accountId = generateUuid();
     final String orgId = "orgId";
     final String projectId = "projectId";
-    final DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
+    final DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
 
     DelegateParams params = DelegateParams.builder()
                                 .accountId(accountId)
@@ -2112,7 +2112,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                          .name("harness-delegate")
                          .uuid("delegateGroupId1")
                          .ng(true)
-                         .owner(DelegateEntityOwnerMapper.buildOwner(
+                         .owner(DelegateEntityOwnerHelper.buildOwner(
                              setupDetails.getOrgIdentifier(), setupDetails.getProjectIdentifier()))
                          .build());
 
@@ -2162,7 +2162,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                          .name("harness-delegate")
                          .uuid("delegateGroupId1")
                          .ng(true)
-                         .owner(DelegateEntityOwnerMapper.buildOwner(
+                         .owner(DelegateEntityOwnerHelper.buildOwner(
                              setupDetails.getOrgIdentifier(), setupDetails.getProjectIdentifier()))
                          .build());
 
@@ -2214,7 +2214,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                          .name("harness-delegate")
                          .uuid("delegateGroupId1")
                          .ng(true)
-                         .owner(DelegateEntityOwnerMapper.buildOwner(
+                         .owner(DelegateEntityOwnerHelper.buildOwner(
                              setupDetails.getOrgIdentifier(), setupDetails.getProjectIdentifier()))
                          .build());
 
@@ -2572,13 +2572,13 @@ public class DelegateServiceTest extends WingsBaseTest {
                                  .name("orgGrp")
                                  .accountId(accountId)
                                  .ng(true)
-                                 .owner(DelegateEntityOwnerMapper.buildOwner(orgId, null))
+                                 .owner(DelegateEntityOwnerHelper.buildOwner(orgId, null))
                                  .build();
     DelegateGroup projectGroup = DelegateGroup.builder()
                                      .name("projectGrp")
                                      .accountId(accountId)
                                      .ng(true)
-                                     .owner(DelegateEntityOwnerMapper.buildOwner(orgId, projectId))
+                                     .owner(DelegateEntityOwnerHelper.buildOwner(orgId, projectId))
                                      .build();
 
     persistence.saveBatch(Arrays.asList(acctGroup, orgGroup, projectGroup));

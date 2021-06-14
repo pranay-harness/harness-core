@@ -26,7 +26,7 @@ import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateSizeDetails;
-import io.harness.delegate.utils.DelegateEntityOwnerMapper;
+import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateInsightsService;
@@ -122,7 +122,7 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
                                                   .filter(DelegateGroupKeys.accountId, accountId)
                                                   .filter(DelegateGroupKeys.ng, true);
 
-    DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
+    DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
     if (owner != null) {
       delegateGroupQuery.filter(DelegateGroupKeys.owner, owner);
     } else {
@@ -275,7 +275,7 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
                                      .field(DelegateGroupKeys.uuid)
                                      .in(identifiers);
 
-    DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
+    DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
     if (owner != null) {
       query.filter(DelegateGroupKeys.owner, owner);
     } else {
@@ -300,7 +300,7 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
                                        .filter(DelegateProfileKeys.accountId, accountId)
                                        .filter(DelegateProfileKeys.ng, true);
 
-    DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
+    DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
     if (owner != null) {
       query.field(DelegateProfileKeys.owner).equal(owner);
     } else {

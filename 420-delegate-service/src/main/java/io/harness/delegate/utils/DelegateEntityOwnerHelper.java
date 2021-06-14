@@ -12,7 +12,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 @OwnedBy(HarnessTeam.DEL)
-public class DelegateEntityOwnerMapper {
+public class DelegateEntityOwnerHelper {
   private static final String SEPARATOR = "/";
 
   public static DelegateEntityOwner buildOwner(String orgIdentifier, String projectIdentifier) {
@@ -47,5 +47,20 @@ public class DelegateEntityOwnerMapper {
     String[] identifierElements = identifier.split("/");
 
     return identifierElements.length >= 2 ? identifierElements[1] : null;
+  }
+
+  public static boolean isAccount(final DelegateEntityOwner owner) {
+    return owner == null
+        || (extractOrgIdFromOwnerIdentifier(owner.getIdentifier()) == null
+            && extractProjectIdFromOwnerIdentifier(owner.getIdentifier()) == null);
+  }
+
+  public static boolean isOrganisation(final DelegateEntityOwner owner) {
+    return owner != null && extractOrgIdFromOwnerIdentifier(owner.getIdentifier()) != null
+        && extractProjectIdFromOwnerIdentifier(owner.getIdentifier()) == null;
+  }
+
+  public static boolean isProject(final DelegateEntityOwner owner) {
+    return owner != null && extractProjectIdFromOwnerIdentifier(owner.getIdentifier()) != null;
   }
 }
