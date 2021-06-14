@@ -125,8 +125,10 @@ public class ManagerToNGManagerEncryptedDataMigrationHandler implements Handler<
         encryptedData = fromEncryptedDataMigrationDTO(getResponse(secretManagerClient.getEncryptedDataMigrationDTO(
             secret.getIdentifier(), secret.getAccountIdentifier(), secret.getOrgIdentifier(),
             secret.getProjectIdentifier(), HARNESS_SECRET_MANAGER_IDENTIFIER.equals(secretManagerIdentifier))));
+        boolean dummy = false;
         if (encryptedData == null) {
           encryptedData = getDummyEncryptedData(secret);
+          dummy = true;
         }
         if (encryptedData == null) {
           log.info(String.format(
@@ -149,12 +151,23 @@ public class ManagerToNGManagerEncryptedDataMigrationHandler implements Handler<
           encryptedDataDao.save(encryptedData);
         } else {
           if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE) {
-            encryptedDataService.updateSecretFile(secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData),
-                isEmpty(encryptedData.getEncryptedValue())
-                    ? null
-                    : new ByteArrayInputStream(String.valueOf(encryptedData.getEncryptedValue()).getBytes()));
+            if (!dummy) {
+              encryptedDataService.updateSecretFile(secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData),
+                  isEmpty(encryptedData.getEncryptedValue())
+                      ? null
+                      : new ByteArrayInputStream(String.valueOf(encryptedData.getEncryptedValue()).getBytes()));
+            } else {
+              encryptedDataService.createSecretFile(secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData),
+                  isEmpty(encryptedData.getEncryptedValue())
+                      ? null
+                      : new ByteArrayInputStream(String.valueOf(encryptedData.getEncryptedValue()).getBytes()));
+            }
           } else {
-            encryptedDataService.updateSecretText(secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData));
+            if (!dummy) {
+              encryptedDataService.updateSecretText(secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData));
+            } else {
+              encryptedDataService.createSecretText(secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData));
+            }
           }
         }
       }
@@ -182,17 +195,21 @@ public class ManagerToNGManagerEncryptedDataMigrationHandler implements Handler<
     } else {
       SecretTextSpecDTO specDTO;
       if (isEmpty(encryptedData.getPath())) {
-        specDTO = SecretTextSpecDTO.builder()
-                      .value(String.valueOf(encryptedData.getEncryptedValue()))
-                      .valueType(ValueType.Inline)
-                      .secretManagerIdentifier(encryptedData.getSecretManagerIdentifier())
-                      .build();
+        specDTO =
+            SecretTextSpecDTO.builder()
+                .value(isEmpty(encryptedData.getEncryptedValue()) ? null
+                                                                  : String.valueOf(encryptedData.getEncryptedValue()))
+                .valueType(ValueType.Inline)
+                .secretManagerIdentifier(encryptedData.getSecretManagerIdentifier())
+                .build();
       } else {
-        specDTO = SecretTextSpecDTO.builder()
-                      .value(String.valueOf(encryptedData.getEncryptedValue()))
-                      .valueType(ValueType.Reference)
-                      .secretManagerIdentifier(encryptedData.getSecretManagerIdentifier())
-                      .build();
+        specDTO =
+            SecretTextSpecDTO.builder()
+                .value(isEmpty(encryptedData.getEncryptedValue()) ? null
+                                                                  : String.valueOf(encryptedData.getEncryptedValue()))
+                .valueType(ValueType.Reference)
+                .secretManagerIdentifier(encryptedData.getSecretManagerIdentifier())
+                .build();
       }
       secretDTOV2.setSpec(specDTO);
       secretDTOV2.setType(SecretText);
