@@ -45,6 +45,7 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.monitoring.MonitoringRedisEventObserver;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.OutboxEventPollService;
@@ -55,7 +56,6 @@ import io.harness.pms.approval.ApprovalInstanceHandler;
 import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.plan.Redis;
 import io.harness.pms.event.PMSEventConsumerService;
-import io.harness.pms.exception.WingsExceptionMapper;
 import io.harness.pms.inputset.gitsync.InputSetEntityGitSyncHelper;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTO;
 import io.harness.pms.listener.facilitators.FacilitatorRedisConsumerService;
@@ -549,7 +549,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   private void registerJerseyProviders(Environment environment, Injector injector) {
     environment.jersey().register(JsonProcessingExceptionMapper.class);
     environment.jersey().register(EarlyEofExceptionMapper.class);
-    environment.jersey().register(WingsExceptionMapper.class);
+    environment.jersey().register(WingsExceptionMapperV2.class);
 
     environment.jersey().register(MultiPartFeature.class);
     //    environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));
