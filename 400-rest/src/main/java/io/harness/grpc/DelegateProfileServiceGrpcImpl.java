@@ -184,7 +184,8 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
       responseObserver.onCompleted();
     } catch (Exception ex) {
       log.error("Unexpected error occurred while processing delete profile request.", ex);
-      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+      responseObserver.onError(
+          io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).withCause(ex).asRuntimeException());
     }
   }
 
