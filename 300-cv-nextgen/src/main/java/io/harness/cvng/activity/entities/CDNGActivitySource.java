@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @NoArgsConstructor
@@ -43,5 +44,13 @@ public class CDNGActivitySource extends ActivitySource {
         .name(CDNG_ACTIVITY_SOURCE_NAME)
         .type(ActivitySourceType.CDNG)
         .build();
+  }
+
+  public static class CDNGActivitySourceUpdatableEntity<T extends CDNGActivitySource, D extends CDNGActivitySourceDTO>
+      extends ActivitySourceUpdatableEntity<T, D> {
+    @Override
+    public void setUpdateOperations(UpdateOperations<T> updateOperations, D dto) {
+      throw new IllegalStateException("CDNG activity can not be updated using the API.");
+    }
   }
 }
