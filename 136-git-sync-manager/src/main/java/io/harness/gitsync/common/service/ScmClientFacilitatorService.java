@@ -5,12 +5,14 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.gitsync.common.dtos.CreatePRDTO;
 import io.harness.gitsync.common.dtos.GitDiffResultFileListDTO;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.ng.beans.PageRequest;
 
 import java.util.List;
+import java.util.Set;
 
 // Don't inject this directly go through ScmClientOrchestrator.
 @OwnedBy(DX)
@@ -24,11 +26,11 @@ public interface ScmClientFacilitatorService {
   GitFileContent getFileContent(String yamlGitConfigIdentifier, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String filePath, String branch, String commitId);
 
-  boolean createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+  CreatePRDTO createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String yamlGitConfigRef, GitPRCreateRequest gitCreatePRRequest);
 
   List<GitFileChangeDTO> listFilesOfBranches(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String yamlGitConfigIdentifier, List<String> foldersList, String branchName);
+      String yamlGitConfigIdentifier, Set<String> foldersList, String branchName);
 
   List<GitFileChangeDTO> listFilesByFilePaths(
       YamlGitConfigDTO yamlGitConfigDTO, List<String> filePaths, String branchName);

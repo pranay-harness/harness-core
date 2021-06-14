@@ -134,13 +134,13 @@ func (r *runTask) fetchOutputVariables(outputFile string) (map[string]string, er
 	for s.Scan() {
 		line := s.Text()
 		sa := strings.Split(line, " ")
-		if len(sa) != 2 {
+		if len(sa) < 2 {
 			r.log.Warnw(
 				"output variable does not exist",
 				"variable", sa[0],
 			)
 		} else {
-			envVarMap[sa[0]] = sa[1]
+			envVarMap[sa[0]] = line[len(sa[0])+1:]
 		}
 	}
 	if err := s.Err(); err != nil {

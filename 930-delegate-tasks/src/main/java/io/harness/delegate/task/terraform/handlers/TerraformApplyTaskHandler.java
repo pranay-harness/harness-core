@@ -117,6 +117,8 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
       String stateFileId = terraformBaseHelper.uploadTfStateFile(
           taskParameters.getAccountId(), delegateId, taskId, taskParameters.getEntityId(), tfStateFile);
 
+      logCallback.saveExecutionLog("\nDone \n", INFO, CommandExecutionStatus.SUCCESS);
+
       return TerraformTaskNGResponse.builder()
           .outputs(new String(Files.readAllBytes(tfOutputsFile.toPath()), Charsets.UTF_8))
           .commitIdForConfigFilesMap(commitIdToFetchedFilesMap)

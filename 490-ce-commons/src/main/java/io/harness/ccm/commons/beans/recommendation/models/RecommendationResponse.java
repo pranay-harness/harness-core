@@ -1,5 +1,7 @@
 package io.harness.ccm.commons.beans.recommendation.models;
 
+import io.harness.ccm.commons.beans.billing.InstanceCategory;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
@@ -21,4 +23,6 @@ public class RecommendationResponse {
   @SerializedName("service") private String service;
 
   @SerializedName("zone") private String zone;
+
+  @Builder.Default private InstanceCategory instanceCategory = InstanceCategory.ON_DEMAND;
 }

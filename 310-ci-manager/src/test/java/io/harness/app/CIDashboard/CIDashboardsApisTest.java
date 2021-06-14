@@ -200,7 +200,7 @@ public class CIDashboardsApisTest {
   @Category(UnitTests.class)
   public void testGetDashboardBuildFailureInfo() {
     String queryRequired =
-        "select name, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, startts, endts  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status in ('FAILED','ABORTED','EXPIRED') ORDER BY startts DESC LIMIT 5;";
+        "select name, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, startts, endts  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status in ('FAILED','ABORTED','EXPIRED','IGNOREFAILED','ERRORED') ORDER BY startts DESC LIMIT 5;";
 
     List<BuildFailureInfo> buildFailureInfos = new ArrayList<>();
     buildFailureInfos.add(BuildFailureInfo.builder()
@@ -223,7 +223,7 @@ public class CIDashboardsApisTest {
   @Category(UnitTests.class)
   public void testGetDashboardBuildActiveInfo() {
     String queryRequired =
-        "select name, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, startts, status  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status IN ( 'RUNNING' , 'INTERVENTION_WAITING' , 'TIMED_WAITING' , 'ASYNC_WAITING' , 'TASK_WAITING' , 'DISCONTINUING' , 'APPROVAL_WAITING' , 'RESOURCE_WAITING' ) ORDER BY startts DESC LIMIT 5;";
+        "select name, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, startts, status  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status IN ('RUNNING','ASYNCWAITING','TASKWAITING','TIMEDWAITING','PAUSED') ORDER BY startts DESC LIMIT 5;";
 
     List<BuildActiveInfo> buildActiveInfos = new ArrayList<>();
     buildActiveInfos.add(BuildActiveInfo.builder()

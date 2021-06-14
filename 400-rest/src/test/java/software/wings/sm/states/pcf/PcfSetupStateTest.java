@@ -388,6 +388,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     on(context).set("serviceTemplateService", serviceTemplateService);
     pcfSetupState.setUseCurrentRunningCount(false);
     pcfSetupState.setMaxInstances(2);
+    pcfSetupState.setTags(singletonList("tag1"));
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     // With workflowV2 flag = true
@@ -409,6 +410,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(pcfCommandSetupRequest.getOrganization()).isEqualTo(ORG);
     assertThat(pcfCommandSetupRequest.getSpace()).isEqualTo(SPACE);
     assertThat(pcfCommandSetupRequest.getMaxCount()).isEqualTo(3);
+    assertThat(stateExecutionData.getTags()).isEqualTo(singletonList("tag1"));
   }
 
   @Test

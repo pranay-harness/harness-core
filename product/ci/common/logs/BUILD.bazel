@@ -19,7 +19,6 @@ go_test(
     embed = [":go_default_library"],
     deps = [
         "//commons/go/lib/logs:go_default_library",
-        "//product/ci/common/external:go_default_library",
         "//product/log-service/client:go_default_library",
         "//product/log-service/mock:go_default_library",
         "//product/log-service/stream:go_default_library",

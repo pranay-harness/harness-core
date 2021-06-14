@@ -1,5 +1,6 @@
 package io.harness.gitsync.core.impl;
 
+import static io.harness.gitsync.common.beans.YamlChangeSetStatus.RUNNING;
 import static io.harness.gitsync.common.beans.YamlChangeSetStatus.getTerminalStatusList;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
@@ -53,8 +54,8 @@ public class YamlChangeSetLifeCycleManagerServiceImpl implements YamlChangeSetLi
     final boolean success =
         Failsafe.with(retryPolicy)
             .get(()
-                     -> yamlChangeSetService.updateStatusWithRetryCountIncrement(
-                         yamlChangeSet.getAccountId(), YamlChangeSetStatus.QUEUED, yamlChangeSet.getChangesetId()));
+                     -> yamlChangeSetService.updateStatusWithRetryCountIncrement(yamlChangeSet.getAccountId(), RUNNING,
+                         YamlChangeSetStatus.QUEUED, yamlChangeSet.getChangesetId()));
     log.info("Update status result: [{}] while updating status to QUEUED for changesetId [{}]",
         success ? "success" : "failure", yamlChangeSet.getChangesetId());
   }

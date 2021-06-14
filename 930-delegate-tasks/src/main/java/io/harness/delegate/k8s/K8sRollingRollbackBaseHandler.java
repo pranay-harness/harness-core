@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getExecutionLogOutputStream;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getOcCommandPrefix;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
+import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.k8s.K8sConstants.ocRolloutUndoCommand;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -456,7 +457,7 @@ public class K8sRollingRollbackBaseHandler {
     } catch (Exception ex) {
       deleteLogCallback.saveExecutionLog(
           "Failed in  deleting newly created resources of current failed  release.", WARN, RUNNING);
-      deleteLogCallback.saveExecutionLog(ex.getMessage(), WARN, SUCCESS);
+      deleteLogCallback.saveExecutionLog(getMessage(ex), WARN, SUCCESS);
     }
   }
 

@@ -94,7 +94,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
     when(vaultService.saveOrUpdateVaultConfig(any(), any(), anyBoolean())).thenReturn("abcde");
 
     SecretManagerConfig secretManagerConfig = ngSecretManagerService.create(
-        VaultConfig.builder().ngMetadata(NGSecretManagerMetadata.builder().build()).build());
+        VaultConfig.builder().ngMetadata(NGSecretManagerMetadata.builder().build()).authToken("abd").build());
     assertThat(secretManagerConfig).isNotNull();
     assertThat(secretManagerConfig.getEncryptionType()).isEqualTo(EncryptionType.VAULT);
 

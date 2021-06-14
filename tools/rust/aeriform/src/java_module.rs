@@ -90,7 +90,7 @@ pub fn modules() -> HashMap<String, JavaModule> {
         "https/harness-internal-read%40harness.jfrog.io/artifactory/harness-internal",
         "io/harness/cv",
         "data-collection-dsl",
-        "0.23-RELEASE",
+        "0.25-RELEASE",
         Some("CV".to_string()),
     );
 

@@ -104,7 +104,6 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthentica
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSyncConfig;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessType;
@@ -153,7 +152,6 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(GitConnectionType.class, 19068);
     kryo.register(GitHTTPAuthenticationDTO.class, 19064);
     kryo.register(GitSSHAuthenticationDTO.class, 19065);
-    kryo.register(GitSyncConfig.class, 19069);
     kryo.register(KubernetesAuthCredentialDTO.class, 19058);
     kryo.register(KubernetesAuthDTO.class, 19050);
     kryo.register(KubernetesAuthType.class, 19051);

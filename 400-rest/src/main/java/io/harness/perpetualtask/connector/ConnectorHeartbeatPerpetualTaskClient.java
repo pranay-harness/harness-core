@@ -11,6 +11,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType.ASSUME_IAM_ROLE;
 import static io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType.ASSUME_STS_ROLE;
 import static io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType.MANUAL_CONFIG;
+import static io.harness.utils.DelegateOwner.getNGTaskSetupAbstractionsWithOwner;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -149,6 +150,12 @@ public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServi
       executionCapabilities =
           ((ExecutionCapabilityDemander) connectorValidationParams).fetchRequiredExecutionCapabilities(null);
     }
+
+    String orgIdentifier = clientParams.get(ORG_KEY);
+    String projectIdentifier = clientParams.get(PROJECT_KEY);
+    final Map<String, String> ngTaskSetupAbstractionsWithOwner =
+        getNGTaskSetupAbstractionsWithOwner(accountId, orgIdentifier, projectIdentifier);
+
     final List<ExecutionCapability> nonSelectorExecutionCapabilities =
         executionCapabilities.stream()
             .filter(executionCapability -> !(executionCapability instanceof SelectorCapability))
@@ -156,6 +163,7 @@ public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServi
     return DelegateTask.builder()
         .accountId(accountId)
         .executionCapabilities(executionCapabilities)
+        .setupAbstractions(ngTaskSetupAbstractionsWithOwner)
         .data(TaskData.builder()
                   .async(false)
                   .taskType(TaskType.CAPABILITY_VALIDATION.name())

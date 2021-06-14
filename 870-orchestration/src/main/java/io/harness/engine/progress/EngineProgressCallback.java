@@ -5,12 +5,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.engine.NodeExecutionEventQueuePublisher;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.execution.NodeExecution;
+import io.harness.engine.progress.publisher.ProgressEventPublisher;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.execution.NodeExecutionMapper;
-import io.harness.pms.contracts.plan.NodeExecutionEventType;
-import io.harness.pms.execution.NodeExecutionEvent;
-import io.harness.pms.execution.ProgressNodeExecutionEventData;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ProgressData;
@@ -30,6 +26,7 @@ public class EngineProgressCallback implements ProgressCallback {
   @Inject @Transient NodeExecutionService nodeExecutionService;
   @Inject @Transient KryoSerializer kryoSerializer;
   @Inject @Transient NodeExecutionEventQueuePublisher nodeExecutionEventQueuePublisher;
+  @Inject @Transient ProgressEventPublisher progressEventPublisher;
 
   String nodeExecutionId;
 
@@ -40,7 +37,7 @@ public class EngineProgressCallback implements ProgressCallback {
     }
 
     // This is the new way of managing progress updates below code is only to maintain backward compatibility
-    sendProgressDataEvent((BinaryResponseData) progressData);
+    progressEventPublisher.publishEvent(nodeExecutionId, (BinaryResponseData) progressData);
 
     try {
       // This code is only to maintain backward compatibility
@@ -52,16 +49,5 @@ public class EngineProgressCallback implements ProgressCallback {
     } catch (Exception ex) {
       log.error("Failed to deserialize progress data via kryo");
     }
-  }
-
-  public void sendProgressDataEvent(BinaryResponseData progressData) {
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-    NodeExecutionEvent event =
-        NodeExecutionEvent.builder()
-            .eventType(NodeExecutionEventType.PROGRESS)
-            .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
-            .eventData(ProgressNodeExecutionEventData.builder().progressBytes(progressData.getData()).build())
-            .build();
-    nodeExecutionEventQueuePublisher.send(event);
   }
 }

@@ -7,6 +7,7 @@ import io.harness.cdng.provision.terraform.TerraformStepConfigurationParameters.
 import io.harness.validation.Validator;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class TerraformStepConfiguration {
-  @JsonProperty("type") TerraformStepConfigurationType terraformStepConfigurationType;
+  @NotNull @JsonProperty("type") TerraformStepConfigurationType terraformStepConfigurationType;
   @JsonProperty("spec") TerraformExecutionData terraformExecutionData;
 
   public TerraformStepConfigurationParameters toStepParameters() {

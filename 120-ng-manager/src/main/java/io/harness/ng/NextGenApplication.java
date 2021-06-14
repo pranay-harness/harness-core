@@ -5,8 +5,11 @@ import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_FACILITATOR_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_INTERRUPT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_START_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_EVENT_TOPIC;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
@@ -70,8 +73,11 @@ import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.plan.Redis;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
+import io.harness.pms.listener.facilitators.FacilitatorRedisConsumerService;
 import io.harness.pms.listener.interrupts.InterruptRedisConsumerService;
+import io.harness.pms.listener.node.start.NodeStartRedisConsumerService;
 import io.harness.pms.listener.orchestrationevent.OrchestrationEventEventConsumerService;
+import io.harness.pms.listener.progress.ProgressRedisConsumerService;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
@@ -120,6 +126,7 @@ import com.google.inject.name.Names;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
+import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
@@ -348,6 +355,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerRequestContextFilter(Environment environment) {
     environment.jersey().register(new RequestContextFilter());
+    environment.jersey().register(new JsonProcessingExceptionMapper(true));
   }
 
   private void intializeGitSync(Injector injector, NextGenConfiguration nextGenConfiguration) {
@@ -378,9 +386,14 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void createConsumerThreadsToListenToEvents(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(NGEventConsumerService.class));
+    environment.lifecycle().manage(injector.getInstance(GitSyncEventConsumerService.class));
+
+    // Pipeline SDK Consumers
     environment.lifecycle().manage(injector.getInstance(InterruptRedisConsumerService.class));
     environment.lifecycle().manage(injector.getInstance(OrchestrationEventEventConsumerService.class));
-    environment.lifecycle().manage(injector.getInstance(GitSyncEventConsumerService.class));
+    environment.lifecycle().manage(injector.getInstance(FacilitatorRedisConsumerService.class));
+    environment.lifecycle().manage(injector.getInstance(NodeStartRedisConsumerService.class));
+    environment.lifecycle().manage(injector.getInstance(ProgressRedisConsumerService.class));
   }
 
   private void registerYamlSdk(Injector injector) {
@@ -421,13 +434,24 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .engineAdvisers(CDServiceAdviserRegistrar.getEngineAdvisers())
         .executionSummaryModuleInfoProviderClass(CDNGModuleInfoProvider.class)
         .eventsFrameworkConfiguration(appConfig.getEventsFrameworkConfiguration())
-        .useRedisForSdkResponseEvents(appConfig.getUseRedisForSdkResponseEvents())
         .interruptConsumerConfig(ConsumerConfig.newBuilder()
                                      .setRedis(Redis.newBuilder().setTopicName(PIPELINE_INTERRUPT_TOPIC).build())
                                      .build())
         .orchestrationEventConsumerConfig(
             ConsumerConfig.newBuilder()
                 .setRedis(Redis.newBuilder().setTopicName(PIPELINE_ORCHESTRATION_EVENT_TOPIC).build())
+                .build())
+        .facilitationEventConsumerConfig(
+            ConsumerConfig.newBuilder()
+                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_FACILITATOR_EVENT_TOPIC).build())
+                .build())
+        .nodeStartEventConsumerConfig(
+            ConsumerConfig.newBuilder()
+                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_NODE_START_EVENT_TOPIC).build())
+                .build())
+        .progressEventConsumerConfig(
+            ConsumerConfig.newBuilder()
+                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_PROGRESS_EVENT_TOPIC).build())
                 .build())
         .build();
   }

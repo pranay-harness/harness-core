@@ -77,7 +77,7 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
 
   private static final String GOOGLE_CREDENTIALS_PATH = "GOOGLE_CREDENTIALS_PATH";
   private static final String TABLE_SUFFIX = "%s_%s";
-  private static final String AWS_CUR_TABLE_NAME = "awscur_%s_*";
+  private static final String AWS_CUR_TABLE_NAME = "awscur_%s";
   private static final String AZURE_TABLE_NAME = "unifiedTable";
   private String resourceCondition = "resourceid like '%%%s%%'";
 

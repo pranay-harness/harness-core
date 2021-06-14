@@ -70,6 +70,11 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
   public void handle(SecretManagerConfig secretManagerConfig) {
     log.info("renewing client tokens for {}", secretManagerConfig.getUuid());
     BaseVaultConfig baseVaultConfig = (BaseVaultConfig) secretManagerConfig;
+    // this should not be needed when we update the query to return only vaults which are needed to be renewed.
+    if (baseVaultConfig.isUseVaultAgent()) {
+      log.info("Vault {} not configured with Vault Agent and does not need renewal", baseVaultConfig.getUuid());
+      return;
+    }
     KmsSetupAlert kmsSetupAlert = vaultService.getRenewalAlert(baseVaultConfig);
     try {
       long renewalInterval = baseVaultConfig.getRenewalInterval();

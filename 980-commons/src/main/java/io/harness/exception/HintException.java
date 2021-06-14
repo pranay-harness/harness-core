@@ -55,9 +55,13 @@ public class HintException extends WingsException {
   public static final String HINT_INVALID_GIT_SSH_KEY =
       "Please provide correct git ssh private key with 'git' username.";
 
+  public static final String HINT_CHECK_URL_DETAILS = "Please Check URL/Account details.";
+  public static final String HINT_CHECK_AUTHORIZATION_DETAILS = "Check Authorization credentials.";
+
   public static final HintException MOVE_TO_THE_PARENT_OBJECT =
       new HintException("Navigate back to the parent object page and continue from there.");
   public static final HintException REFRESH_THE_PAGE = new HintException("Refresh the web page to update the data.");
+
   public HintException(String message) {
     super(message, null, HINT, INFO, null, null);
     super.excludeReportTarget(EXPLANATION, EnumSet.of(ReportTarget.LOG_SYSTEM));

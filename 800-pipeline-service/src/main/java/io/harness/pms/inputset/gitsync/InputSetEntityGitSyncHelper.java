@@ -66,7 +66,8 @@ public class InputSetEntityGitSyncHelper implements GitSdkEntityHandlerInterface
 
   @Override
   public InputSetYamlDTO update(String accountIdentifier, String yaml) {
-    return save(accountIdentifier, yaml);
+    InputSetEntity inputSetEntity = PMSInputSetElementMapper.toInputSetEntity(accountIdentifier, yaml);
+    return InputSetYamlDTOMapper.toDTO(pmsInputSetService.update(inputSetEntity));
   }
 
   @Override

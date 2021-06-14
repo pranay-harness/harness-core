@@ -148,6 +148,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
                   .project(DelegateKeys.status, true)
                   .project(DelegateKeys.delegateGroupName, true)
                   .project(DelegateKeys.delegateGroupId, true)
+                  .project(DelegateKeys.ng, true)
                   .asList();
             }
           });
@@ -170,7 +171,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       }
     }
 
-    boolean canAssign = canAssignOwner(batch, delegate, task.getSetupAbstractions())
+    boolean canAssign = canAssignCgNg(delegate, task.getSetupAbstractions())
+        && canAssignOwner(batch, delegate, task.getSetupAbstractions())
         && canAssignDelegateScopes(batch, delegate, task)
         && canAssignDelegateProfileScopes(batch, delegate, task.getSetupAbstractions())
         && canAssignSelectors(batch, delegate, task.getExecutionCapabilities());
@@ -208,10 +210,33 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     if (delegate == null) {
       return false;
     }
-    return canAssignOwner(batch, delegate, taskSetupAbstractions)
+    return canAssignCgNg(delegate, taskSetupAbstractions) && canAssignOwner(batch, delegate, taskSetupAbstractions)
         && canAssignDelegateScopes(batch, delegate, appId, envId, infraMappingId, taskGroup)
         && canAssignDelegateProfileScopes(batch, delegate, taskSetupAbstractions)
         && canAssignSelectors(batch, delegate, executionCapabilities);
+  }
+
+  /**
+   * Method will make sure that CG delegate is being assigned to CG task and NG delegate to NG task
+   */
+  private boolean canAssignCgNg(Delegate delegate, Map<String, String> taskSetupAbstractions) {
+    boolean isDelegateNg = delegate.isNg();
+    boolean isTaskNg = !isEmpty(taskSetupAbstractions) && taskSetupAbstractions.get(NgSetupFields.NG) != null
+        && Boolean.TRUE.equals(Boolean.valueOf(taskSetupAbstractions.get(NgSetupFields.NG)));
+
+    if (featureFlagService.isNotEnabled(FeatureName.NG_CG_TASK_ASSIGNMENT_ISOLATION, delegate.getAccountId())) {
+      log.info(
+          "CG/NG delegate/task assignment isolation test. Is Delegate NG: {}, Is Task NG: {}", isDelegateNg, isTaskNg);
+      return true;
+    }
+
+    if (isDelegateNg && isTaskNg || !isDelegateNg && !isTaskNg) {
+      return true;
+    }
+
+    log.warn("CG/NG delegate/task assignment isolation check was negative. Is Delegate NG: {}, Is Task NG: {}",
+        isDelegateNg, isTaskNg);
+    return false;
   }
 
   private boolean canAssignOwner(

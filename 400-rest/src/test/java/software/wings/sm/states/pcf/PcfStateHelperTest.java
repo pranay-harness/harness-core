@@ -459,6 +459,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testQueueDelegateTaskForRouteUpdate() {
+    List renderedTags = Arrays.asList("tag1", "tag2");
     PcfRouteUpdateQueueRequestData requestData =
         PcfRouteUpdateQueueRequestData.builder()
             .timeoutIntervalInMinutes(5)
@@ -493,7 +494,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
         SetupSweepingOutputPcf.builder()
             .pcfCommandRequest(PcfCommandSetupRequest.builder().organization("org").space("space").build())
             .build(),
-        null, false);
+        null, false, renderedTags);
     assertThat(response).isNotNull();
     assertThat(response.isAsync()).isTrue();
     assertThat(response.getCorrelationIds()).containsExactly(ACTIVITY_ID);

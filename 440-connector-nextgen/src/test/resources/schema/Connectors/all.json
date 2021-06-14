@@ -681,6 +681,7 @@
       "required": [
         "containerName",
         "directoryName",
+        "reportName",
         "storageAccountName"
       ],
       "properties": {
@@ -688,6 +689,9 @@
           "type": "string"
         },
         "directoryName": {
+          "type": "string"
+        },
+        "reportName": {
           "type": "string"
         },
         "storageAccountName": {
@@ -819,6 +823,9 @@
               ]
             },
             "url": {
+              "type": "string"
+            },
+            "validationRepo": {
               "type": "string"
             }
           }
@@ -1634,21 +1641,6 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "CustomCommitAttributes": {
-      "type": "object",
-      "properties": {
-        "authorEmail": {
-          "type": "string"
-        },
-        "authorName": {
-          "type": "string"
-        },
-        "commitMessage": {
-          "type": "string"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "DatadogConnectorDTO": {
       "allOf": [
         {
@@ -2024,9 +2016,6 @@
                 "type": "string"
               }
             },
-            "gitSync": {
-              "$ref": "#/definitions/GitSyncConfig"
-            },
             "type": {
               "type": "string",
               "enum": [
@@ -2035,6 +2024,9 @@
               ]
             },
             "url": {
+              "type": "string"
+            },
+            "validationRepo": {
               "type": "string"
             }
           }
@@ -2130,21 +2122,6 @@
           }
         }
       ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "GitSyncConfig": {
-      "type": "object",
-      "properties": {
-        "customCommitAttributes": {
-          "$ref": "#/definitions/CustomCommitAttributes"
-        },
-        "enabled": {
-          "type": "boolean"
-        },
-        "syncEnabled": {
-          "type": "boolean"
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "GithubApiAccess": {
@@ -2313,6 +2290,9 @@
               ]
             },
             "url": {
+              "type": "string"
+            },
+            "validationRepo": {
               "type": "string"
             }
           }
@@ -2608,6 +2588,9 @@
               ]
             },
             "url": {
+              "type": "string"
+            },
+            "validationRepo": {
               "type": "string"
             }
           }
@@ -3054,7 +3037,6 @@
           "type": "object",
           "required": [
             "clientCertRef",
-            "clientKeyPassphraseRef",
             "clientKeyRef"
           ],
           "properties": {

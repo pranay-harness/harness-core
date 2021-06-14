@@ -7,10 +7,10 @@ import static io.harness.cdng.manifest.ManifestType.Kustomize;
 import static io.harness.cdng.manifest.ManifestType.OpenshiftParam;
 import static io.harness.cdng.manifest.ManifestType.OpenshiftTemplate;
 import static io.harness.cdng.manifest.ManifestType.VALUES;
+import static io.harness.common.ParameterFieldHelper.getBooleanParameterFieldValue;
+import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.ngpipeline.common.ParameterFieldHelper.getBooleanParameterFieldValue;
-import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 
 import static java.lang.String.format;
 

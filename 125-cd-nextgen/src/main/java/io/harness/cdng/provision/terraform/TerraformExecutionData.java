@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.LinkedHashMap;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,7 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TerraformExecutionData {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> workspace;
-  @JsonProperty("configFiles") TerraformConfigFilesWrapper terraformConfigFilesWrapper;
+  @NotNull @JsonProperty("configFiles") TerraformConfigFilesWrapper terraformConfigFilesWrapper;
   @JsonProperty("varFiles") List<TerraformVarFileWrapper> terraformVarFiles;
   @JsonProperty("backendConfig") TerraformBackendConfig terraformBackendConfig;
   @YamlSchemaTypes(value = {string})

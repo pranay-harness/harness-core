@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.AWS_OVERRIDE_REGION;
-import static io.harness.beans.FeatureName.IRSA_FOR_EKS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
@@ -458,9 +457,6 @@ public class SettingValidationService {
         }
       }
 
-      if (featureFlagService.isNotEnabled(IRSA_FOR_EKS, settingAttribute.getAccountId()) && value.isUseIRSA()) {
-        throw new InvalidRequestException("AWS EKS IRSA is not enabled for this harness account", USER);
-      }
       awsEc2HelperServiceManager.validateAwsAccountCredential(value, encryptedDataDetails);
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);

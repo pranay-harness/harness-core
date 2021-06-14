@@ -21,6 +21,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
@@ -59,6 +60,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -70,7 +72,6 @@ import java.util.Stack;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.net.ssl.HostnameVerifier;
@@ -148,7 +149,7 @@ public class JenkinsImpl implements Jenkins {
   public JobWithDetails getJobWithDetails(String jobname) {
     log.info("Retrieving job {}", jobname);
     try {
-      return timeLimiter.callWithTimeout(() -> {
+      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(120), () -> {
         while (true) {
           if (jobname == null) {
             sleep(ofSeconds(1L));
@@ -174,7 +175,7 @@ public class JenkinsImpl implements Jenkins {
           log.info("Retrieving job with details {} success", jobname);
           return singletonList(jobWithDetails).get(0);
         }
-      }, 120L, TimeUnit.SECONDS, true);
+      });
     } catch (Exception e) {
       throw new ArtifactServerException(
           "Failure in fetching job with details: " + ExceptionUtils.getMessage(e), e, USER);
@@ -188,7 +189,7 @@ public class JenkinsImpl implements Jenkins {
   public Job getJob(String jobname, JenkinsConfig jenkinsConfig) {
     log.info("Retrieving job {}", jobname);
     try {
-      return timeLimiter.callWithTimeout(() -> {
+      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(120), () -> {
         while (true) {
           if (jobname == null) {
             sleep(ofSeconds(1L));
@@ -214,7 +215,7 @@ public class JenkinsImpl implements Jenkins {
           log.info("Retrieving job {} success", jobname);
           return singletonList(job).get(0);
         }
-      }, 120L, TimeUnit.SECONDS, true);
+      });
     } catch (Exception e) {
       throw new ArtifactServerException("Failure in fetching job: " + ExceptionUtils.getMessage(e), e, USER);
     }
@@ -223,7 +224,7 @@ public class JenkinsImpl implements Jenkins {
   @Override
   public List<JobDetails> getJobs(String parentJob) {
     try {
-      return timeLimiter.callWithTimeout(() -> {
+      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(120), () -> {
         while (true) {
           List<JobDetails> details = getJobDetails(parentJob);
           if (details != null) {
@@ -231,7 +232,7 @@ public class JenkinsImpl implements Jenkins {
           }
           sleep(ofMillis(100L));
         }
-      }, 120L, TimeUnit.SECONDS, true);
+      });
     } catch (Exception e) {
       throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER);
     }
@@ -600,7 +601,7 @@ public class JenkinsImpl implements Jenkins {
 
     log.info("Retrieving environment variables for job {}", buildUrl);
     try {
-      return timeLimiter.callWithTimeout(() -> {
+      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(30), () -> {
         while (true) {
           String path = buildUrl;
           if (path.charAt(path.length() - 1) != '/') {
@@ -641,7 +642,7 @@ public class JenkinsImpl implements Jenkins {
           log.info("Retrieving environment variables for job {} success", buildUrl);
           return envVars;
         }
-      }, 30L, TimeUnit.SECONDS, true);
+      });
     } catch (Exception e) {
       throw new ArtifactServerException(
           "Failure in fetching environment variables for job: " + ExceptionUtils.getMessage(e), e, USER);

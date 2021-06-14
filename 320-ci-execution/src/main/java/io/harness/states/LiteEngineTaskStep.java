@@ -222,7 +222,7 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
                                       .startTime(containerStatus.getStartTime())
                                       .endTime(containerStatus.getEndTime())
                                       .errorMessage(containerStatus.getErrorMsg())
-                                      .status(status)
+                                      .status(status.getDisplayName())
                                       .logKeys(Collections.singletonList(logKey))
                                       .build());
       } else {
@@ -236,7 +236,7 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
                                       .name(serviceContainer.getStepName())
                                       .image(image)
                                       .errorMessage("Unknown")
-                                      .status(ServiceDependency.Status.ERROR)
+                                      .status(ServiceDependency.Status.ERROR.getDisplayName())
                                       .logKeys(Collections.singletonList(logKey))
                                       .build());
       }

@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.RAGHU;
 
@@ -396,6 +397,18 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
 
     assertThat(SettingServiceHelper.getAllEncryptedFields(pcfConfig).stream().map(Field::getName))
         .containsExactlyInAnyOrder("username", "password");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void setResetTransientFields() {
+    GitConfig config = null;
+    settingServiceHelper.resetTransientFields(config);
+
+    config = GitConfig.builder().sshSettingAttribute(new SettingAttribute()).build();
+    settingServiceHelper.resetTransientFields(config);
+    assertThat(config.getSshSettingAttribute()).isNull();
   }
 
   private SettingAttribute prepareSettingAttributeWithoutSecrets() {

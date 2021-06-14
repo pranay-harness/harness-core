@@ -62,13 +62,16 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
   private YamlChangeSetSaveDTO prepareQueueEvent(WebhookDTO webhookDTO) {
     Repository repository = webhookDTO.getParsedResponse().getPush().getRepo();
     String commitId = webhookDTO.getParsedResponse().getPush().getCommit().getSha();
+    String branchRef = webhookDTO.getParsedResponse().getPush().getRef();
+    final int lastIndexOfSlash = branchRef.lastIndexOf('/');
+    final String branchName = branchRef.substring(lastIndexOfSlash + 1);
     return YamlChangeSetSaveDTO.builder()
         .accountId(webhookDTO.getAccountId())
-        .branch(repository.getBranch())
+        .branch(branchName)
         .repoUrl(repository.getLink())
         .eventType(YamlChangeSetEventType.BRANCH_PUSH)
         .gitWebhookRequestAttributes(GitWebhookRequestAttributes.builder()
-                                         .branchName(repository.getBranch())
+                                         .branchName(branchName)
                                          .repo(repository.getLink())
                                          .webhookBody(webhookDTO.getJsonPayload())
                                          .webhookHeaders(webhookDTO.getHeadersList().toString())

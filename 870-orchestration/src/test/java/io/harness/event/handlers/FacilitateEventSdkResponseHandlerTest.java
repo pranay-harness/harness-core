@@ -9,9 +9,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.events.FacilitatorResponseRequest;
+import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
-import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.rule.Owner;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.waiter.WaitNotifyEngine;
@@ -51,9 +51,9 @@ public class FacilitateEventSdkResponseHandlerTest {
         FacilitatorResponseRequest.newBuilder()
             .setFacilitatorResponse(FacilitatorResponseProto.newBuilder().setExecutionMode(ExecutionMode.TASK).build())
             .build();
-    SdkResponseEvent sdkResponseEventInternal =
-        SdkResponseEvent.builder()
-            .sdkResponseEventRequest(
+    SdkResponseEventProto sdkResponseEventInternal =
+        SdkResponseEventProto.newBuilder()
+            .setSdkResponseEventRequest(
                 SdkResponseEventRequest.newBuilder().setFacilitatorResponseRequest(request).build())
             .build();
     facilitateResponseRequestHandler.handleEvent(sdkResponseEventInternal);

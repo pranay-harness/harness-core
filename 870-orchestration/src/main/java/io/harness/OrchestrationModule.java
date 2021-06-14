@@ -5,6 +5,7 @@ import static io.harness.OrchestrationPublisherName.PUBLISHER_NAME;
 
 import static java.util.Arrays.asList;
 
+import io.harness.account.AccountClientModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delay.AbstractOrchestrationDelayModule;
@@ -21,10 +22,11 @@ import io.harness.engine.executions.plan.PlanService;
 import io.harness.engine.executions.plan.PlanServiceImpl;
 import io.harness.engine.expressions.EngineExpressionServiceImpl;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
+import io.harness.engine.facilitation.facilitator.publisher.FacilitateEventPublisher;
+import io.harness.engine.facilitation.facilitator.publisher.RedisFacilitateEventPublisher;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptServiceImpl;
 import io.harness.engine.interrupts.handlers.publisher.InterruptEventPublisher;
-import io.harness.engine.interrupts.handlers.publisher.MongoInterruptEventPublisher;
 import io.harness.engine.interrupts.handlers.publisher.RedisInterruptEventPublisher;
 import io.harness.engine.pms.data.PmsEngineExpressionServiceImpl;
 import io.harness.engine.pms.data.PmsOutcomeService;
@@ -33,10 +35,16 @@ import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.engine.pms.data.PmsSweepingOutputServiceImpl;
 import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.engine.pms.tasks.TaskExecutor;
+import io.harness.engine.progress.publisher.ProgressEventPublisher;
+import io.harness.engine.progress.publisher.RedisProgressEventPublisher;
+import io.harness.exception.exceptionmanager.ExceptionModule;
 import io.harness.govern.ServersModule;
+import io.harness.pms.NoopFeatureFlagServiceImpl;
+import io.harness.pms.PmsFeatureFlagService;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.expression.PmsEngineExpressionService;
+import io.harness.pms.helpers.PmsFeatureFlagHelper;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.serializer.KryoSerializer;
@@ -80,6 +88,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
 
   @Override
   protected void configure() {
+    install(ExceptionModule.getInstance());
     install(new AbstractWaiterModule() {
       @Override
       public WaiterConfiguration waiterConfiguration() {
@@ -94,7 +103,13 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     });
     install(OrchestrationBeansModule.getInstance());
     install(OrchestrationQueueModule.getInstance());
-
+    if (!config.isUseFeatureFlagService()) {
+      bind(PmsFeatureFlagService.class).to(NoopFeatureFlagServiceImpl.class);
+    } else {
+      install(new AccountClientModule(
+          config.getAccountServiceHttpClientConfig(), config.getAccountServiceSecret(), config.getAccountClientId()));
+      bind(PmsFeatureFlagService.class).to(PmsFeatureFlagHelper.class);
+    }
     bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class).in(Singleton.class);
     bind(PlanExecutionService.class).to(PlanExecutionServiceImpl.class).in(Singleton.class);
     bind(PlanService.class).to(PlanServiceImpl.class).in(Singleton.class);
@@ -123,11 +138,9 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
         .toInstance(() -> OrchestrationComponentTester.testKryoRegistration(kryoSerializerProvider));
 
     install(new OrchestrationEventsFrameworkModule(config.getEventsFrameworkConfiguration()));
-    if (config.isUseRedisForInterrupts()) {
-      bind(InterruptEventPublisher.class).to(RedisInterruptEventPublisher.class);
-    } else {
-      bind(InterruptEventPublisher.class).to(MongoInterruptEventPublisher.class);
-    }
+    bind(InterruptEventPublisher.class).to(RedisInterruptEventPublisher.class);
+    bind(FacilitateEventPublisher.class).to(RedisFacilitateEventPublisher.class).in(Singleton.class);
+    bind(ProgressEventPublisher.class).to(RedisProgressEventPublisher.class).in(Singleton.class);
   }
 
   @Provides
