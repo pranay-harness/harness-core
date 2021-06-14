@@ -58,16 +58,24 @@ public class ChartMuseumClientHelper {
 
   public ChartMuseumServer startS3ChartMuseumServer(String bucket, String basePath, String region,
       boolean useEc2IamCredentials, char[] accessKey, char[] secretKey) throws Exception {
+    log.info(format("useEc2IamCredentials: %s", useEc2IamCredentials));
+    log.info(format("bucket: %s basepath: %s region: %s", bucket, basePath, region));
+
+    log.info("getting env");
     Map<String, String> environment = getEnvForAwsConfig(accessKey, secretKey, useEc2IamCredentials);
+    log.info("getting env done");
     String evaluatedTemplate = AMAZON_S3_COMMAND_TEMPLATE.replace("${BUCKET_NAME}", bucket)
                                    .replace("${FOLDER_PATH}", basePath == null ? "" : basePath)
                                    .replace("${REGION}", region);
+    log.info("evaluatedTemplate: " + evaluatedTemplate);
 
     StringBuilder builder = new StringBuilder(128);
     builder.append(encloseWithQuotesIfNeeded(k8sGlobalConfigService.getChartMuseumPath()))
         .append(' ')
         .append(evaluatedTemplate);
 
+    log.info(builder.toString());
+    log.info("method start server begin");
     return startServer(builder.toString(), environment);
   }
 
@@ -107,9 +115,12 @@ public class ChartMuseumClientHelper {
     StringBuffer stringBuffer = null;
 
     log.info(command);
-
+    log.info("method start server begin");
     while (retries < CHART_MUSEUM_SERVER_START_RETRIES) {
+      log.info("inside while");
       port = getNextRandomPort(random);
+      log.info(format("got port: %s", port));
+
       command = command.replace("${PORT}", Integer.toString(port));
       log.info("Starting server at port {}. Retry #{}", port, retries);
 
