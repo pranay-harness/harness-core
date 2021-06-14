@@ -81,7 +81,6 @@ public class CVNGMetricsPublisher implements MetricsPublisher, MetricDefinitionI
   @Inject private OrchestrationService orchestrationService;
   @Inject private MetricService metricService;
   @Inject private HPersistence hPersistence;
-  @Inject MetricContextBuilder metricContextBuilder;
 
   @Override
   public void recordMetrics() {
@@ -147,6 +146,14 @@ public class CVNGMetricsPublisher implements MetricsPublisher, MetricDefinitionI
                                                   .name("CVNG tasks status count")
                                                   .metrics(metrics)
                                                   .build();
+    /*
+    TODO: Uncomment this to write file to generate dashboard. This is kind of manual now. We need to automate dashboard
+    creation. ObjectMapper mapper = new ObjectMapper(new
+    YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)); try { mapper.writeValue(new
+    File("~/workspace/portal/300-cv-nextgen/src/scripts/runtime.yaml"), metricConfiguration); } catch (IOException e) {
+      e.printStackTrace();
+    }
+    */
     return Collections.singletonList(metricConfiguration);
   }
 
