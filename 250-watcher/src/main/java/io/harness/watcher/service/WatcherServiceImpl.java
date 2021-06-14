@@ -1046,7 +1046,7 @@ public class WatcherServiceImpl implements WatcherService {
     }
 
     String downloadUrl = restResponse.getResource();
-    log.info("Downloading delegate jar version {}", version);
+    log.info("Downloading delegate jar version {} and download url {}", version, downloadUrl);
     File downloadFolder = new File(version);
     if (!downloadFolder.exists()) {
       downloadFolder.mkdir();
