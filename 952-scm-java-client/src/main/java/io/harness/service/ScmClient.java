@@ -27,6 +27,7 @@ import io.harness.product.ci.scm.proto.ListWebhooksResponse;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
 
 import java.util.List;
+import java.util.Set;
 
 @OwnedBy(DX)
 public interface ScmClient {
@@ -58,7 +59,7 @@ public interface ScmClient {
 
   ListCommitsInPRResponse listCommitsInPR(ScmConnector scmConnector, int prNumber);
 
-  FileContentBatchResponse listFiles(ScmConnector connector, List<String> foldersList, String branchName);
+  FileContentBatchResponse listFiles(ScmConnector connector, Set<String> foldersList, String branchName);
 
   FileContentBatchResponse listFilesByFilePaths(ScmConnector connector, List<String> filePathsList, String branchName);
 

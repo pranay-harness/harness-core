@@ -84,13 +84,23 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
                                                                   .setCommitId(StringValue.of(commitId))
                                                                   .build();
       log.info("Sending to microservice {}", entry.getKey());
-      ProcessingResponse processingResponse = gitToHarnessServiceBlockingStub.process(gitToHarnessProcessRequest);
-      log.info("Got the processing response for the microservice {}, response {}", entry.getKey(), processingResponse);
-      GitToHarnessProcessingResponse gitToHarnessResponse =
-          GitToHarnessProcessingResponse.builder()
-              .processingResponse(ProcessingResponseMapper.toProcessingResponseDTO(processingResponse))
-              .microservice(microservice)
-              .build();
+      GitToHarnessProcessingResponseDTO gitToHarnessProcessingResponseDTO = null;
+      try {
+        ProcessingResponse processingResponse = gitToHarnessServiceBlockingStub.process(gitToHarnessProcessRequest);
+        gitToHarnessProcessingResponseDTO = ProcessingResponseMapper.toProcessingResponseDTO(processingResponse);
+        log.info(
+            "Got the processing response for the microservice {}, response {}", entry.getKey(), processingResponse);
+      } catch (Exception ex) {
+        // This exception happens in the case when we are not able to connect to the microservice
+        log.info("Exception in file processing for the microservice {}", entry.getKey(), ex);
+        gitToHarnessProcessingResponseDTO = GitToHarnessProcessingResponseDTO.builder()
+                                                .msvcProcessingFailureStage(MsvcProcessingFailureStage.RECEIVE_STAGE)
+                                                .build();
+      }
+      GitToHarnessProcessingResponse gitToHarnessResponse = GitToHarnessProcessingResponse.builder()
+                                                                .processingResponse(gitToHarnessProcessingResponseDTO)
+                                                                .microservice(microservice)
+                                                                .build();
       gitToHarnessProcessingResponses.add(gitToHarnessResponse);
       gitToHarnessProgressService.updateProgressWithProcessingResponse(
           gitToHarnessProgressRecordId, gitToHarnessResponse);

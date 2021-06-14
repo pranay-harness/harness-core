@@ -31,6 +31,7 @@ import io.harness.tasks.DecryptGitApiAccessHelper;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 // Don't inject this directly go through ScmClientOrchestrator.
@@ -96,7 +97,7 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
 
   @Override
   public List<GitFileChangeDTO> listFilesOfBranches(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String yamlGitConfigIdentifier, List<String> foldersList, String branchName) {
+      String projectIdentifier, String yamlGitConfigIdentifier, Set<String> foldersList, String branchName) {
     final ScmConnector decryptedConnector = gitSyncConnectorHelper.getDecryptedConnector(
         yamlGitConfigIdentifier, projectIdentifier, orgIdentifier, accountIdentifier);
     // todo @deepak: pick commit id from here.

@@ -78,6 +78,7 @@ import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -394,7 +395,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
 
   @Override
   public FileContentBatchResponse listFiles(
-      ScmConnector connector, List<String> foldersList, String branchName, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+      ScmConnector connector, Set<String> foldersList, String branchName, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(connector);
     String slug = scmGitProviderHelper.getSlug(connector);
     final GetLatestCommitResponse latestCommit = scmBlockingStub.getLatestCommit(
@@ -412,8 +413,8 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     }
   }
 
-  private List<String> getFileNames(List<String> foldersList, String slug, Provider gitProvider, String ref,
-      SCMGrpc.SCMBlockingStub scmBlockingStub) {
+  private List<String> getFileNames(
+      Set<String> foldersList, String slug, Provider gitProvider, String ref, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     GetFilesInFolderForkTask getFilesInFolderTask = GetFilesInFolderForkTask.builder()
                                                         .provider(gitProvider)
                                                         .scmBlockingStub(scmBlockingStub)

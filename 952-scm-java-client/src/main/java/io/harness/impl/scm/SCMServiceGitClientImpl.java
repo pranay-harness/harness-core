@@ -32,6 +32,7 @@ import io.harness.service.ScmServiceClient;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -111,7 +112,7 @@ public class SCMServiceGitClientImpl implements ScmClient {
   }
 
   @Override
-  public FileContentBatchResponse listFiles(ScmConnector connector, List<String> foldersList, String branch) {
+  public FileContentBatchResponse listFiles(ScmConnector connector, Set<String> foldersList, String branch) {
     return scmServiceClient.listFiles(connector, foldersList, branch, scmBlockingStub);
   }
 

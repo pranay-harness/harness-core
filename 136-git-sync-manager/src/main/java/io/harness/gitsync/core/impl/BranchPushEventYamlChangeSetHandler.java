@@ -17,6 +17,7 @@ import io.harness.gitsync.common.dtos.GitToHarnessGetFilesStepRequest;
 import io.harness.gitsync.common.dtos.GitToHarnessGetFilesStepResponse;
 import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepRequest;
 import io.harness.gitsync.common.dtos.GitToHarnessProgressDTO;
+import io.harness.gitsync.common.helper.YamlGitConfigHelper;
 import io.harness.gitsync.common.service.GitToHarnessProgressService;
 import io.harness.gitsync.common.service.ScmOrchestratorService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
@@ -34,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -97,7 +99,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
     GitToHarnessProgressDTO gitToHarnessProgressRecord = gitToHarnessProgressService.updateStepStatus(
         request.getGitToHarnessProgress().getUuid(), GitToHarnessProcessingStepStatus.IN_PROGRESS);
 
-    List<String> rootFolderList = getRootFolderList(yamlGitConfigDTOList);
+    Set<String> rootFolderList = YamlGitConfigHelper.getRootFolderList(yamlGitConfigDTOList);
     // Fetch files that have changed b/w push event commit id and the local commit id
     List<GitDiffResultFileDTO> prFiles = getDiffFilesUsingSCM(yamlChangeSetDTO, yamlGitConfigDTOList.get(0));
     // We need to process only those files which are in root folders
@@ -124,14 +126,6 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
         request.getYamlChangeSetDTO().getBranch(), request.getYamlGitConfigDTO(),
         request.getYamlChangeSetDTO().getGitWebhookRequestAttributes().getHeadCommitId(),
         request.getProgressRecord().getUuid());
-  }
-
-  // Parse root folders from all yaml git configs
-  private List<String> getRootFolderList(List<YamlGitConfigDTO> yamlGitConfigDTOList) {
-    List<String> rootFolderList = new ArrayList<>();
-    yamlGitConfigDTOList.forEach(yamlGitConfigDTO
-        -> yamlGitConfigDTO.getRootFolders().forEach(rootFolder -> rootFolderList.add(rootFolder.getRootFolder())));
-    return rootFolderList;
   }
 
   // Fetch list of files in the diff b/w last processed commit and new pushed commit, along with their change status
@@ -186,7 +180,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
 
   // Create list of files that are part of folders in the root folder list
   private List<GitDiffResultFileDTO> getFilePathsToBeProcessed(
-      List<String> rootFolderList, List<GitDiffResultFileDTO> prFiles) {
+      Set<String> rootFolderList, List<GitDiffResultFileDTO> prFiles) {
     List<GitDiffResultFileDTO> filesToBeProcessed = new ArrayList<>();
 
     prFiles.forEach(prFile -> {
