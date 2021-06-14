@@ -2,10 +2,9 @@ package io.harness.resourcegroup.reconciliation;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
-
-import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -17,6 +16,8 @@ import io.harness.resourcegroup.framework.service.ResourceGroupService;
 import io.harness.resourcegroup.framework.service.impl.ResourceGroupValidatorServiceImpl;
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.model.ResourceGroup.ResourceGroupKeys;
+
+import com.google.inject.Inject;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -34,9 +35,13 @@ public class ResourceGroupAsyncReconciliationHandler implements MongoPersistence
 
   @Override
   public void handle(ResourceGroup resourceGroup) {
-    boolean areResourcesValid = resourceGroupValidatorService.validateAndFilterInvalidResources(resourceGroup);
-    if (!areResourcesValid) {
+    int resourceSelectorsCountBeforeValidation = resourceGroup.getResourceSelectors().size();
+    if (resourceGroupValidatorService.validateAndFilterInvalidResourceSelectors(resourceGroup)
+        && resourceGroup.getResourceSelectors().size() != resourceSelectorsCountBeforeValidation) {
       resourceGroupService.update(ResourceGroupMapper.toDTO(resourceGroup));
+    } else {
+      resourceGroupService.delete(resourceGroup.getIdentifier(), resourceGroup.getAccountIdentifier(),
+          resourceGroup.getOrgIdentifier(), resourceGroup.getProjectIdentifier(), true);
     }
   }
 

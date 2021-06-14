@@ -8,9 +8,6 @@ import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.AC
 import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.ORGANIZATION;
 import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.PROJECT;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
@@ -26,13 +23,9 @@ import io.harness.resourcegroup.model.StaticResourceSelector;
 import io.harness.resourcegroup.model.StaticResourceSelector.StaticResourceSelectorKeys;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.query.Criteria;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +34,12 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
@@ -222,8 +221,7 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
   private boolean handleCreateEvent(ResourceInfo resourceInfo) {
     String resourceType = resourceInfo.getResourceType();
     if (resourceType.equals(PROJECT) || resourceType.equals(ORGANIZATION) || resourceType.equals(ACCOUNT)) {
-      resourceGroupService.createManagedResourceGroup(
-          resourceInfo.getAccountIdentifier(), resourceInfo.getOrgIdentifier(), resourceInfo.getProjectIdentifier());
+      resourceGroupService.createManagedResourceGroup(resourceInfo.getAccountIdentifier());
     }
     return true;
   }

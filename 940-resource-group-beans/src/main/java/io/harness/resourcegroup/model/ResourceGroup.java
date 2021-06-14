@@ -2,12 +2,12 @@ package io.harness.resourcegroup.model;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import com.google.common.collect.ImmutableList;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.Scope;
+import io.harness.data.validator.EntityIdentifier;
+import io.harness.data.validator.NGEntityName;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.CollationLocale;
 import io.harness.mongo.CollationStrength;
@@ -18,6 +18,14 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
+import io.harness.utils.ScopeUtils;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.ImmutableList;
+import java.util.Collections;
+import java.util.List;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
@@ -33,10 +41,6 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.List;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-
 @OwnedBy(PL)
 @Data
 @Builder
@@ -46,6 +50,9 @@ import javax.validation.constraints.Size;
 @TypeAlias("resourceGroup")
 @StoreIn(DbAliases.RESOURCEGROUP)
 public class ResourceGroup implements PersistentRegularIterable, PersistentEntity {
+  public static final String ALL_RESOURCES_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
+  public static final String DEFAULT_COLOR = "#0063F7";
+
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -73,8 +80,8 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
   @NotEmpty String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
-  @NotEmpty @Size(max = 128) String identifier;
-  @NotEmpty @Size(max = 128) String name;
+  @EntityIdentifier @NotEmpty @Size(max = 128) String identifier;
+  @NGEntityName @NotEmpty @Size(max = 128) String name;
   @Size(max = 1024) String description;
   @NotEmpty @Size(min = 7, max = 7) String color;
   @Size(max = 128) @Singular List<NGTag> tags;
@@ -104,5 +111,21 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
   @Override
   public String getUuid() {
     return this.id;
+  }
+
+  public static ResourceGroup getHarnessManagedResourceGroup(Scope scope) {
+    return builder()
+        .accountIdentifier(scope.getAccountIdentifier())
+        .orgIdentifier(scope.getOrgIdentifier())
+        .projectIdentifier(scope.getProjectIdentifier())
+        .tags(Collections.emptyList())
+        .name("All Resources")
+        .identifier(ALL_RESOURCES_RESOURCE_GROUP_IDENTIFIER)
+        .description(String.format("All the resources in this %s are included in this resource group.",
+            ScopeUtils.getMostSignificantScope(scope).toString().toLowerCase()))
+        .resourceSelectors(Collections.emptyList())
+        .fullScopeSelected(true)
+        .harnessManaged(true)
+        .build();
   }
 }

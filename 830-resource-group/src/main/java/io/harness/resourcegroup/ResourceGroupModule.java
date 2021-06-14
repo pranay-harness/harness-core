@@ -61,7 +61,6 @@ public class ResourceGroupModule extends AbstractModule {
         resourceGroupServiceConfig.getAccessControlAdminClientConfiguration(), RESOUCE_GROUP_SERVICE.toString()));
     bind(ResourceGroupService.class).to(ResourceGroupServiceImpl.class);
     bind(ResourceTypeService.class).to(ResourceTypeServiceImpl.class);
-    bind(ResourceGroupValidatorService.class).to(ResourceGroupValidatorServiceImpl.class);
     bind(String.class).annotatedWith(Names.named("serviceId")).toInstance(RESOUCE_GROUP_SERVICE.toString());
     bind(OutboxEventHandler.class).to(ResourceGroupEventHandler.class);
     requireBinding(OutboxService.class);

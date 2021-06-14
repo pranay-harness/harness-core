@@ -3,16 +3,16 @@ package io.harness.ng.core.event;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.FeatureName.NEXT_GEN_ENABLED;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.protobuf.InvalidProtocolBufferException;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.featureflag.FeatureFlagChangeDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)

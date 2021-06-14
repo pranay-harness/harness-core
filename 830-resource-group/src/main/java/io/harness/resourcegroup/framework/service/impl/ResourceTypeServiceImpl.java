@@ -8,14 +8,13 @@ import io.harness.resourcegroup.framework.remote.mapper.ResourceTypeMapper;
 import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceTypeService;
 import io.harness.resourcegroup.remote.dto.ResourceTypeDTO;
+import io.harness.resourcegroup.remote.dto.ResourceTypeDTO.ResourceType;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
-import io.harness.resourcegroup.remote.dto.ResourceTypeDTO.ResourceType;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -30,9 +29,9 @@ public class ResourceTypeServiceImpl implements ResourceTypeService {
 
   private static ResourceType toResourceType(Resource resource) {
     return ResourceType.builder()
-            .name(resource.getType())
-            .validatorTypes(new ArrayList<>(resource.getSelectorKind()))
-            .build();
+        .name(resource.getType())
+        .validatorTypes(new ArrayList<>(resource.getSelectorKind()))
+        .build();
   }
 
   @Override
@@ -41,11 +40,10 @@ public class ResourceTypeServiceImpl implements ResourceTypeService {
       return null;
     }
 
-    return ResourceTypeMapper.toDTO(
-        resources.values()
-            .stream()
-            .filter(resource -> resource.getValidScopeLevels().contains(scopeLevel))
-            .map(ResourceTypeServiceImpl::toResourceType)
-            .collect(Collectors.toList()));
+    return ResourceTypeMapper.toDTO(resources.values()
+                                        .stream()
+                                        .filter(resource -> resource.getValidScopeLevels().contains(scopeLevel))
+                                        .map(ResourceTypeServiceImpl::toResourceType)
+                                        .collect(Collectors.toList()));
   }
 }

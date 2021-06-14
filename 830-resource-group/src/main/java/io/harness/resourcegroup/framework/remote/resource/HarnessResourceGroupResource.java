@@ -6,8 +6,6 @@ import static io.harness.resourcegroup.ResourceGroupPermissions.VIEW_RESOURCEGRO
 import static io.harness.resourcegroup.ResourceGroupResourceTypes.RESOURCE_GROUP;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
-import com.google.inject.Inject;
-
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.clients.AccessControlClient;
@@ -15,6 +13,7 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -25,13 +24,12 @@ import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
+
+import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -45,6 +43,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 
 @Api("/resourcegroup")
 @Path("resourcegroup")
@@ -64,7 +64,7 @@ public class HarnessResourceGroupResource {
 
   @GET
   @Path("{identifier}")
-  @ApiOperation(value = "Gets a resource group by identifier", nickname = "getResourceGroup")
+  @ApiOperation(value = "Get a resource group by identifier", nickname = "getResourceGroup")
   public ResponseDTO<ResourceGroupResponse> get(
       @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
@@ -73,12 +73,12 @@ public class HarnessResourceGroupResource {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(RESOURCE_GROUP, identifier), VIEW_RESOURCEGROUP_PERMISSION);
     Optional<ResourceGroupResponse> resourceGroupResponseOpt =
-        resourceGroupService.get(identifier, accountIdentifier, orgIdentifier, projectIdentifier);
+        resourceGroupService.get(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), identifier);
     return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
   }
 
   @GET
-  @ApiOperation(value = "Get Resource Group list", nickname = "getResourceGroupList")
+  @ApiOperation(value = "Get list of resource groups", nickname = "getResourceGroupList")
   public ResponseDTO<PageResponse<ResourceGroupResponse>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
@@ -86,12 +86,12 @@ public class HarnessResourceGroupResource {
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(RESOURCE_GROUP, null), VIEW_RESOURCEGROUP_PERMISSION);
-    return ResponseDTO.newResponse(getNGPageResponse(
-        resourceGroupService.list(accountIdentifier, orgIdentifier, projectIdentifier, pageRequest, searchTerm)));
+    return ResponseDTO.newResponse(getNGPageResponse(resourceGroupService.list(
+        Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), pageRequest, searchTerm)));
   }
 
   @POST
-  @ApiOperation(value = "Creates a resource group", nickname = "createResourceGroup")
+  @ApiOperation(value = "Create a resource group", nickname = "createResourceGroup")
   public ResponseDTO<ResourceGroupResponse> create(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
@@ -107,12 +107,12 @@ public class HarnessResourceGroupResource {
   @Path("/createManaged")
   @InternalApi
   @ApiOperation(
-      value = "Create default/harness managed resource group", nickname = "createResourceGroupInternal", hidden = true)
+      value = "Create default/harness managed resource group", nickname = "createManagedResourceGroup", hidden = true)
   public ResponseDTO<Boolean>
   createManagedResourceGroup(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
-    resourceGroupService.createManagedResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier);
+    resourceGroupService.createManagedResourceGroup(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier));
     return ResponseDTO.newResponse(true);
   }
 
@@ -143,8 +143,7 @@ public class HarnessResourceGroupResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(RESOURCE_GROUP, identifier), DELETE_RESOURCEGROUP_PERMISSION);
-    boolean deleted =
-        resourceGroupService.delete(identifier, accountIdentifier, orgIdentifier, projectIdentifier, false);
-    return ResponseDTO.newResponse(deleted);
+    resourceGroupService.delete(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), identifier, false);
+    return ResponseDTO.newResponse(true);
   }
 }
