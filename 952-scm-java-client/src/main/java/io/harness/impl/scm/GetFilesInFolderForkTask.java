@@ -31,15 +31,15 @@ public class GetFilesInFolderForkTask extends RecursiveTask<List<FileChange>> {
   SCMGrpc.SCMBlockingStub scmBlockingStub;
   private String folderPath;
   private Provider provider;
-  private String branch;
+  private String ref;
   private String slug;
 
   @Builder
   public GetFilesInFolderForkTask(
-      String folderPath, Provider provider, String branch, String slug, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+      String folderPath, Provider provider, String ref, String slug, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     this.folderPath = folderPath;
     this.provider = provider;
-    this.branch = branch;
+    this.ref = ref;
     this.slug = slug;
     this.scmBlockingStub = scmBlockingStub;
   }
@@ -57,7 +57,7 @@ public class GetFilesInFolderForkTask extends RecursiveTask<List<FileChange>> {
     String updatedFolderPath = folderPath.endsWith("/") ? folderPath.substring(0, folderPath.length() - 1) : folderPath;
     FindFilesInBranchRequest.Builder findFilesInBranchRequest =
         FindFilesInBranchRequest.newBuilder()
-            .setBranch(branch)
+            .setRef(ref)
             .setSlug(slug)
             .setProvider(provider)
             .setPath(updatedFolderPath)
@@ -80,8 +80,8 @@ public class GetFilesInFolderForkTask extends RecursiveTask<List<FileChange>> {
         findFilesInBranchRequest.setPagination(
             PageRequest.newBuilder().setPage(filesInBranchResponse.getPagination().getNext()).build());
       } catch (Exception ex) {
-        log.error("Error while getting files from git for the branch %s in slug %s for folder %s", branch, slug,
-            folderPath, ex);
+        log.error(
+            "Error while getting files from git for the ref %s in slug %s for folder %s", ref, slug, folderPath, ex);
       }
     } while (hasMoreFiles(filesInBranchResponse));
     return allFilesInThisFolder;
@@ -96,7 +96,7 @@ public class GetFilesInFolderForkTask extends RecursiveTask<List<FileChange>> {
     List<GetFilesInFolderForkTask> tasks = new ArrayList<>();
     for (String folder : newFoldersToBeProcessed) {
       GetFilesInFolderForkTask task = GetFilesInFolderForkTask.builder()
-                                          .branch(branch)
+                                          .ref(ref)
                                           .folderPath(folder)
                                           .provider(provider)
                                           .scmBlockingStub(scmBlockingStub)
@@ -135,7 +135,7 @@ public class GetFilesInFolderForkTask extends RecursiveTask<List<FileChange>> {
     ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
     for (String folder : foldersList) {
       GetFilesInFolderForkTask task = GetFilesInFolderForkTask.builder()
-                                          .branch(branch)
+                                          .ref(ref)
                                           .folderPath(folder)
                                           .provider(provider)
                                           .scmBlockingStub(scmBlockingStub)

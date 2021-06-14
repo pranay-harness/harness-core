@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.eraro.ErrorCode.PR_CREATION_ERROR;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FileContentBatchResponse;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
@@ -23,7 +24,6 @@ import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
-import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.service.ScmClient;
 import io.harness.tasks.DecryptGitApiAccessHelper;
@@ -99,8 +99,10 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
       String projectIdentifier, String yamlGitConfigIdentifier, List<String> foldersList, String branchName) {
     final ScmConnector decryptedConnector = gitSyncConnectorHelper.getDecryptedConnector(
         yamlGitConfigIdentifier, projectIdentifier, orgIdentifier, accountIdentifier);
-    FileBatchContentResponse filesList = scmClient.listFiles(decryptedConnector, foldersList, branchName);
-    return FileBatchResponseMapper.createGitFileChangeList(filesList);
+    // todo @deepak: pick commit id from here.
+    final FileContentBatchResponse fileContentBatchResponse =
+        scmClient.listFiles(decryptedConnector, foldersList, branchName);
+    return FileBatchResponseMapper.createGitFileChangeList(fileContentBatchResponse.getFileBatchContentResponse());
   }
 
   @Override
@@ -108,8 +110,10 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
       YamlGitConfigDTO yamlGitConfigDTO, List<String> filePaths, String branchName) {
     final ScmConnector decryptedConnector =
         gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfigDTO, yamlGitConfigDTO.getAccountIdentifier());
-    FileBatchContentResponse filesList = scmClient.listFilesByFilePaths(decryptedConnector, filePaths, branchName);
-    return FileBatchResponseMapper.createGitFileChangeList(filesList);
+    // todo @mohit: pick commit id from here.
+    final FileContentBatchResponse fileContentBatchResponse =
+        scmClient.listFilesByFilePaths(decryptedConnector, filePaths, branchName);
+    return FileBatchResponseMapper.createGitFileChangeList(fileContentBatchResponse.getFileBatchContentResponse());
   }
 
   @Override

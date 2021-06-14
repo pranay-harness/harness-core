@@ -340,7 +340,10 @@ message FileBatchContentResponse {
 
 message FindFilesInBranchRequest {
   string slug = 1;
-  string branch = 2;
+  oneof type {
+    string branch = 2;
+    string ref = 6;
+  }
   string path = 3;
   PageRequest pagination = 4;
   Provider provider = 5;
