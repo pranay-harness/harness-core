@@ -15,6 +15,7 @@ import lombok.Data;
 public class K8sServiceProvider {
   String region;
   String instanceFamily;
+  int nodeCount;
   CloudProvider cloudProvider;
   InstanceCategory instanceCategory;
 }

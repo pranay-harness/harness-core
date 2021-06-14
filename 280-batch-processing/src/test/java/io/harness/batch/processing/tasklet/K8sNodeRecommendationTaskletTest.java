@@ -67,6 +67,7 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     k8sServiceProvider = K8sServiceProvider.builder()
                              .cloudProvider(CloudProvider.GCP)
                              .instanceCategory(InstanceCategory.ON_DEMAND)
+                             .nodeCount(6)
                              .region("us-west-1")
                              .instanceFamily("xyz")
                              .build();
@@ -87,14 +88,13 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
         .thenReturn(Response.success(getRecommendationResponse()));
 
     // #getMonthlyCostAndSaving
-    when(k8sRecommendationDAO.getNodeCount(any(), eq(nodePoolId))).thenReturn(6);
     when(vmPricingService.getComputeVMPricingInfo(eq(k8sServiceProvider.getInstanceFamily()),
              eq(k8sServiceProvider.getRegion()), eq(k8sServiceProvider.getCloudProvider())))
         .thenReturn(pricingInfo);
 
     // #calculateAndSaveRecommendation
     String entityUuid = "entityUuid";
-    when(k8sRecommendationDAO.getServiceProvider(eq(ACCOUNT_ID), eq(nodePoolId))).thenReturn(k8sServiceProvider);
+    when(k8sRecommendationDAO.getServiceProvider(any(), eq(nodePoolId))).thenReturn(k8sServiceProvider);
     when(k8sRecommendationDAO.insertNodeRecommendationResponse(
              any(), eq(nodePoolId), eq(resourceUsage), eq(k8sServiceProvider), eq(getRecommendationResponse())))
         .thenReturn(entityUuid);
@@ -133,7 +133,6 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     verify(banzaiRecommenderClient, times(1)).getRecommendation(any(), any(), any(), any());
     verify(k8sRecommendationDAO, times(0)).insertNodeRecommendationResponse(any(), any(), any(), any(), any());
     verify(k8sRecommendationDAO, times(0)).updateCeRecommendation(any(), any(), any(), any(), any());
-    verify(k8sRecommendationDAO, times(0)).getNodeCount(any(), any());
   }
 
   @Test
@@ -225,7 +224,7 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
   public void testTotalPriceIsCorrectInSpotRecommendation() throws Exception {
     k8sServiceProvider.setInstanceCategory(InstanceCategory.SPOT);
 
-    when(k8sRecommendationDAO.getServiceProvider(eq(ACCOUNT_ID), eq(nodePoolId))).thenReturn(k8sServiceProvider);
+    when(k8sRecommendationDAO.getServiceProvider(any(), eq(nodePoolId))).thenReturn(k8sServiceProvider);
 
     assertThat(tasklet.execute(null, chunkContext)).isNull();
 
@@ -235,7 +234,9 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
         .insertNodeRecommendationResponse(any(), any(), any(), any(), captor.capture());
 
     RecommendationResponse recommendation = captor.getValue();
+
     assertThat(recommendation).isNotNull();
+    assertThat(recommendation.getInstanceCategory()).isEqualTo(InstanceCategory.SPOT);
     assertThat(recommendation.getAccuracy().getTotalPrice()).isCloseTo(0.28D + 0, offset(0.05D));
     assertThat(recommendation.getAccuracy().getTotalPrice())
         .isCloseTo(
@@ -254,7 +255,9 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
         .insertNodeRecommendationResponse(any(), any(), any(), any(), captor.capture());
 
     RecommendationResponse recommendation = captor.getValue();
+
     assertThat(recommendation).isNotNull();
+    assertThat(recommendation.getInstanceCategory()).isEqualTo(InstanceCategory.ON_DEMAND);
     assertThat(recommendation.getAccuracy().getTotalPrice()).isCloseTo(1.329993D, offset(0.05D));
     assertThat(recommendation.getAccuracy().getTotalPrice())
         .isCloseTo(recommendation.getAccuracy().getWorkerPrice() + recommendation.getAccuracy().getMasterPrice(),
