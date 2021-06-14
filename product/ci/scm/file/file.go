@@ -43,6 +43,7 @@ func FindFile(ctx context.Context, fileRequest *pb.GetFileRequest, log *zap.Suga
 		out = &pb.FileContent{
 			Status: int32(response.Status),
 			Error:  err.Error(),
+			Path:   fileRequest.GetPath(),
 		}
 		return out, nil
 	}
