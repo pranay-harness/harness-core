@@ -1,3 +1,4 @@
+
 workspace(name = "harness_monorepo")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
@@ -1002,6 +1003,7 @@ plain_artifacts = [
     "com.datadoghq:java-dogstatsd-client:2.3",
     "com.deftlabs:mongo-java-distributed-lock:0.1.7",
     "com.eclipsesource.j2v8:j2v8_macosx_x86_64:4.6.0",
+    "com.epam.reportportal:agent-java-junit5:5.0.6",
     "com.esotericsoftware.yamlbeans:yamlbeans:1.13",
     "com.esotericsoftware:kryo:4.0.0",
     "com.esotericsoftware:minlog:1.3.0",

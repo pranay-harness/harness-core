@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.epam.reportportal.junit5.ReportPortalExtension;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -24,8 +25,10 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 @OwnedBy(CE)
+@ExtendWith(ReportPortalExtension.class)
 public class CENextGenStartupTest extends CategoryTest {
   public static DropwizardTestSupport<CENextGenConfiguration> SUPPORT;
   public static MongoServer MONGO_SERVER;

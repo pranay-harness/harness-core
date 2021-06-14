@@ -199,6 +199,7 @@ public class PerpetualTaskWorker {
               .perpetualTaskHandle(perpetualTaskHandle)
               .perpetualTaskAssignDetails(task)
               .build();
+              .build();
         });
       }
     } catch (Exception ex) {
