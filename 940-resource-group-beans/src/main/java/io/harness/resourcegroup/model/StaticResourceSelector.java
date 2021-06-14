@@ -11,6 +11,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @FieldNameConstants(innerTypeName = "StaticResourceSelectorKeys")
 public class StaticResourceSelector implements ResourceSelector {
-  @NotEmpty List<String> identifiers;
   @NotNull String resourceType;
+  @NotEmpty List<String> identifiers;
 }

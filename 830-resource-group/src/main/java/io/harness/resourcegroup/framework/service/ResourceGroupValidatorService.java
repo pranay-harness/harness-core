@@ -5,5 +5,5 @@ import io.harness.resourcegroup.model.ResourceGroup;
 public interface ResourceGroupValidatorService {
   void validate(ResourceGroup resourceGroup);
 
-  boolean validateAndFilterInvalidOnes(ResourceGroup resourceGroup);
+  boolean validateAndFilterInvalidResources(ResourceGroup resourceGroup);
 }

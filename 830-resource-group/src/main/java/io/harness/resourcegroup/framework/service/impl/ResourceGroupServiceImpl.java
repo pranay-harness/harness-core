@@ -6,11 +6,14 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 import static io.harness.utils.PageUtils.getPageRequest;
-
 import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
+
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
@@ -40,16 +43,6 @@ import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.utils.PaginationUtils;
 import io.harness.utils.ScopeUtils;
-
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
@@ -59,8 +52,14 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
@@ -103,18 +102,32 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   @Override
-  public ResourceGroupResponse createManagedResourceGroup(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, ResourceGroupDTO resourceGroupDTO) {
-    ResourceGroup resourceGroup = ResourceGroupMapper.fromDTO(resourceGroupDTO);
-    resourceGroup.setHarnessManaged(true);
-    ResourceGroup createdResourceGroup = null;
+  public void createManagedResourceGroup(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     try {
-      createdResourceGroup = create(resourceGroup);
+      create(getHarnessManagedResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier));
     } catch (DuplicateKeyException ex) {
-      log.error("Resource group with identifier {}/{} already present",
-          ScopeUtils.toString(accountIdentifier, orgIdentifier, projectIdentifier), resourceGroupDTO.getIdentifier());
+      log.info("Resource group with identifier {}/{} already present",
+          ScopeUtils.toString(accountIdentifier, orgIdentifier, projectIdentifier), "_all_resources");
     }
-    return ResourceGroupMapper.toResponseWrapper(createdResourceGroup);
+  }
+
+  private ResourceGroup getHarnessManagedResourceGroup(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return ResourceGroup.builder()
+        .accountIdentifier(accountIdentifier)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
+        .tags(Collections.emptyList())
+        .name("All Resources")
+        .identifier("_all_resources")
+        .description(String.format("All the resources in this %s are included in this resource group.",
+            ScopeUtils.getMostSignificantScope(accountIdentifier, orgIdentifier, projectIdentifier)
+                .toString()
+                .toLowerCase()))
+        .resourceSelectors(Collections.emptyList())
+        .fullScopeSelected(true)
+        .harnessManaged(true)
+        .build();
   }
 
   private ResourceGroup create(ResourceGroup resourceGroup) {
@@ -142,9 +155,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
                             .and(ResourceGroupKeys.orgIdentifier)
                             .in(orgIdentifier)
                             .and(ResourceGroupKeys.projectIdentifier)
-                            .is(projectIdentifier)
-                            .and(ResourceGroupKeys.deleted)
-                            .is(false);
+                            .is(projectIdentifier);
     if (Objects.nonNull(stripToNull(searchTerm))) {
       criteria.orOperator(Criteria.where(ResourceGroupKeys.name).regex(searchTerm, "i"),
           Criteria.where(ResourceGroupKeys.identifier).regex(searchTerm, "i"),
@@ -182,9 +193,8 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
                   projectIdentifier)));
         }
       }
-      resourceGroup.setDeleted(true);
       Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-        resourceGroupRepository.save(resourceGroup);
+        resourceGroupRepository.delete(resourceGroup);
         outboxService.save(new ResourceGroupDeleteEvent(accountIdentifier, ResourceGroupMapper.toDTO(resourceGroup)));
         return true;
       }));
@@ -275,18 +285,5 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
         .distinct()
         .forEach(condensedResourceSelectors::add);
     return condensedResourceSelectors;
-  }
-
-  public boolean restoreAll(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    Criteria criteria = Criteria.where(ResourceGroupKeys.accountIdentifier)
-                            .is(accountIdentifier)
-                            .and(ResourceGroupKeys.orgIdentifier)
-                            .is(orgIdentifier)
-                            .and(ResourceGroupKeys.projectIdentifier)
-                            .is(projectIdentifier)
-                            .and(ResourceGroupKeys.deleted)
-                            .is(true);
-    Update update = new Update().set(ResourceGroupKeys.deleted, false);
-    return resourceGroupRepository.update(criteria, update);
   }
 }

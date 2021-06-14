@@ -2,9 +2,10 @@ package io.harness.resourcegroup.reconciliation;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
-
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
+
+import com.google.inject.Inject;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -16,12 +17,9 @@ import io.harness.resourcegroup.framework.service.ResourceGroupService;
 import io.harness.resourcegroup.framework.service.impl.ResourceGroupValidatorServiceImpl;
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.model.ResourceGroup.ResourceGroupKeys;
-
-import com.google.inject.Inject;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -36,7 +34,7 @@ public class ResourceGroupAsyncReconciliationHandler implements MongoPersistence
 
   @Override
   public void handle(ResourceGroup resourceGroup) {
-    boolean areResourcesValid = resourceGroupValidatorService.validateAndFilterInvalidOnes(resourceGroup);
+    boolean areResourcesValid = resourceGroupValidatorService.validateAndFilterInvalidResources(resourceGroup);
     if (!areResourcesValid) {
       resourceGroupService.update(ResourceGroupMapper.toDTO(resourceGroup));
     }
@@ -56,7 +54,6 @@ public class ResourceGroupAsyncReconciliationHandler implements MongoPersistence
             .targetInterval(ofHours(2))
             .acceptableNoAlertDelay(ofHours(2))
             .handler(this)
-            .filterExpander(query -> query.addCriteria(Criteria.where(ResourceGroupKeys.deleted).is(Boolean.FALSE)))
             .schedulingType(REGULAR)
             .persistenceProvider(new SpringPersistenceProvider<>(mongoTemplate))
             .redistribute(true));

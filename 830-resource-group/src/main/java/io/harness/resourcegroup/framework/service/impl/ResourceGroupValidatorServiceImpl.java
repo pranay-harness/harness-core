@@ -52,7 +52,7 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
   }
 
   @Override
-  public boolean validateAndFilterInvalidOnes(ResourceGroup resourceGroup) {
+  public boolean validateAndFilterInvalidResources(ResourceGroup resourceGroup) {
     boolean valid = true;
     Scope scope = Scope.builder()
                       .accountIdentifier(resourceGroup.getAccountIdentifier())

@@ -6,6 +6,8 @@ import static io.harness.resourcegroup.ResourceGroupPermissions.VIEW_RESOURCEGRO
 import static io.harness.resourcegroup.ResourceGroupResourceTypes.RESOURCE_GROUP;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
+import com.google.inject.Inject;
+
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.clients.AccessControlClient;
@@ -19,17 +21,17 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
-import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
-
-import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -43,8 +45,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 
 @Api("/resourcegroup")
 @Path("resourcegroup")
@@ -104,17 +104,15 @@ public class HarnessResourceGroupResource {
   }
 
   @POST
-  @Path("/createInternal")
+  @Path("/createManaged")
   @InternalApi
   @ApiOperation(
-      value = "create default/harneess managed resource group", nickname = "createResourceGroupInternal", hidden = true)
+      value = "Create default/harness managed resource group", nickname = "createResourceGroupInternal", hidden = true)
   public ResponseDTO<Boolean>
   createManagedResourceGroup(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @Valid ResourceGroupDTO resourceGroupDTO) {
-    resourceGroupService.createManagedResourceGroup(
-        accountIdentifier, orgIdentifier, projectIdentifier, resourceGroupDTO);
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    resourceGroupService.createManagedResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier);
     return ResponseDTO.newResponse(true);
   }
 

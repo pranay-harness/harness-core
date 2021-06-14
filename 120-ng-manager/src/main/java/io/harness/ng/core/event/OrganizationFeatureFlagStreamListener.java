@@ -3,16 +3,16 @@ package io.harness.ng.core.event;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.FeatureName.NEXT_GEN_ENABLED;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.protobuf.InvalidProtocolBufferException;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.featureflag.FeatureFlagChangeDTO;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ng.resourcegroup.migration.DefaultResourceGroupCreationService;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.protobuf.InvalidProtocolBufferException;
+import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
@@ -20,13 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class OrganizationFeatureFlagStreamListener implements MessageListener {
   private final DefaultOrganizationManager defaultOrganizationManager;
-  private final DefaultResourceGroupCreationService defaultResourceGroupCreationService;
+  private final ResourceGroupClient resourceGroupClient;
 
   @Inject
-  public OrganizationFeatureFlagStreamListener(DefaultOrganizationManager defaultOrganizationManager,
-      DefaultResourceGroupCreationService defaultResourceGroupCreationService) {
+  public OrganizationFeatureFlagStreamListener(
+      DefaultOrganizationManager defaultOrganizationManager, ResourceGroupClient resourceGroupClient) {
     this.defaultOrganizationManager = defaultOrganizationManager;
-    this.defaultResourceGroupCreationService = defaultResourceGroupCreationService;
+    this.resourceGroupClient = resourceGroupClient;
   }
 
   @Override
@@ -50,7 +50,7 @@ public class OrganizationFeatureFlagStreamListener implements MessageListener {
 
   private boolean processNGEnableAction(String accountId) {
     defaultOrganizationManager.createDefaultOrganization(accountId);
-    defaultResourceGroupCreationService.createDefaultResourceGroup(accountId, null, null);
+    resourceGroupClient.createManagedResourceGroup(accountId, null, null);
     return true;
   }
 }

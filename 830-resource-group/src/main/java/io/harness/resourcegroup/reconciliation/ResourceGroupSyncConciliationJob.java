@@ -4,10 +4,12 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CREATE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.RESTORE_ACTION;
 import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.ACCOUNT;
 import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.ORGANIZATION;
 import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.PROJECT;
+
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
@@ -22,15 +24,16 @@ import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.model.ResourceGroup.ResourceGroupKeys;
 import io.harness.resourcegroup.model.StaticResourceSelector;
 import io.harness.resourcegroup.model.StaticResourceSelector.StaticResourceSelectorKeys;
-import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
-import io.harness.utils.ScopeUtils;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -38,12 +41,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.query.Criteria;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
@@ -149,40 +146,35 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
         return handleDeleteEvent(resourceInfo);
       case CREATE_ACTION:
         return handleCreateEvent(resourceInfo);
-      case RESTORE_ACTION:
-        return handleRestoreEvent(resourceInfo);
       default:
         return true;
     }
   }
 
   private boolean handleDeleteEvent(ResourceInfo resourceInfo) {
+    if (isScope(resourceInfo.getResourceType())) {
+      return true;
+    }
     Criteria criteria = getCriteriaForResourceDeleteEvent(resourceInfo);
     String resourceType = resourceInfo.getResourceType();
-    boolean isResourceTypeAlsoAScope = isResourceTypeAlsoAScope(resourceInfo.getResourceType());
     int counter = 0;
     int maxLimit = 50;
     while (counter < maxLimit) {
-      Pageable pageable = org.springframework.data.domain.PageRequest.of(isResourceTypeAlsoAScope ? 0 : counter, 20);
+      Pageable pageable = org.springframework.data.domain.PageRequest.of(counter, 20);
       Page<ResourceGroup> resourceGroupsPage = resourceGroupService.list(criteria, pageable);
       if (!resourceGroupsPage.hasContent()) {
         break;
       }
       for (ResourceGroup resourceGroup : resourceGroupsPage.getContent()) {
-        if (isResourceTypeAlsoAScope) {
-          resourceGroupService.delete(resourceGroup.getIdentifier(), resourceGroup.getAccountIdentifier(),
-              resourceGroup.getOrgIdentifier(), resourceGroup.getProjectIdentifier(), true);
-        } else {
-          deleteResourceFromGroup(resourceInfo, resourceType, resourceGroup);
-          resourceGroupService.update(ResourceGroupMapper.toDTO(resourceGroup));
-        }
+        deleteResourceFromGroup(resourceInfo, resourceType, resourceGroup);
+        resourceGroupService.update(ResourceGroupMapper.toDTO(resourceGroup));
       }
       counter++;
     }
     return true;
   }
 
-  private boolean isResourceTypeAlsoAScope(String resourceType) {
+  private boolean isScope(String resourceType) {
     return resourceType.equals(ACCOUNT) || resourceType.equals(ORGANIZATION) || resourceType.equals(PROJECT);
   }
 
@@ -193,11 +185,9 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
                             .and(ResourceGroupKeys.orgIdentifier)
                             .is(resourceInfo.getOrgIdentifier())
                             .and(ResourceGroupKeys.projectIdentifier)
-                            .is(resourceInfo.getProjectIdentifier())
-                            .and(ResourceGroupKeys.deleted)
-                            .is(false);
+                            .is(resourceInfo.getProjectIdentifier());
 
-    if (isResourceTypeAlsoAScope(resourceType)) {
+    if (isScope(resourceType)) {
       return criteria;
     }
     criteria.and(ResourceGroupKeys.resourceSelectors)
@@ -229,36 +219,11 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
     }
   }
 
-  private boolean handleRestoreEvent(ResourceInfo resourceInfo) {
-    String resourceType = resourceInfo.getResourceType();
-    if (resourceType.equals(PROJECT) || resourceType.equals(ORGANIZATION) || resourceType.equals(ACCOUNT)) {
-      return resourceGroupService.restoreAll(
-          resourceInfo.getAccountIdentifier(), resourceInfo.getOrgIdentifier(), resourceInfo.getProjectIdentifier());
-    }
-    return true;
-  }
-
   private boolean handleCreateEvent(ResourceInfo resourceInfo) {
     String resourceType = resourceInfo.getResourceType();
     if (resourceType.equals(PROJECT) || resourceType.equals(ORGANIZATION) || resourceType.equals(ACCOUNT)) {
-      ResourceGroupDTO resourceGroupDTO =
-          ResourceGroupDTO.builder()
-              .accountIdentifier(resourceInfo.getAccountIdentifier())
-              .orgIdentifier(resourceInfo.getOrgIdentifier())
-              .projectIdentifier(resourceInfo.getProjectIdentifier())
-              .name(DEFAULT_RESOURCE_GROUP_NAME)
-              .identifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
-              .description(String.format(DESCRIPTION_FORMAT,
-                  ScopeUtils
-                      .getMostSignificantScope(resourceInfo.getAccountIdentifier(), resourceInfo.getOrgIdentifier(),
-                          resourceInfo.getProjectIdentifier())
-                      .toString()
-                      .toLowerCase()))
-              .resourceSelectors(Collections.emptyList())
-              .fullScopeSelected(true)
-              .build();
-      resourceGroupService.createManagedResourceGroup(resourceInfo.getAccountIdentifier(),
-          resourceInfo.getOrgIdentifier(), resourceInfo.getProjectIdentifier(), resourceGroupDTO);
+      resourceGroupService.createManagedResourceGroup(
+          resourceInfo.getAccountIdentifier(), resourceInfo.getOrgIdentifier(), resourceInfo.getProjectIdentifier());
     }
     return true;
   }

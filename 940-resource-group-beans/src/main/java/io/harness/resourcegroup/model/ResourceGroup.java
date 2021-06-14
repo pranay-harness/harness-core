@@ -2,6 +2,9 @@ package io.harness.resourcegroup.model;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import com.google.common.collect.ImmutableList;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
@@ -15,12 +18,6 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.collect.ImmutableList;
-import java.util.List;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
@@ -35,6 +32,10 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
+
+import java.util.List;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @OwnedBy(PL)
 @Data
@@ -81,7 +82,6 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
   @NotNull @Size(max = 256) @Singular List<ResourceSelector> resourceSelectors;
   @Builder.Default Boolean fullScopeSelected = Boolean.FALSE;
 
-  @Builder.Default Boolean deleted = Boolean.FALSE;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
   @CreatedBy EmbeddedUser createdBy;

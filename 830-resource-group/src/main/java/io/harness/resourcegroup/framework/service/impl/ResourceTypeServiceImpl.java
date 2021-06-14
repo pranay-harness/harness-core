@@ -14,16 +14,25 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import io.harness.resourcegroup.remote.dto.ResourceTypeDTO.ResourceType;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(PL)
 public class ResourceTypeServiceImpl implements ResourceTypeService {
-  Map<String, Resource> resourceValidators;
+  Map<String, Resource> resources;
 
   @Inject
-  public ResourceTypeServiceImpl(Map<String, Resource> resourceValidators) {
-    this.resourceValidators = resourceValidators;
+  public ResourceTypeServiceImpl(Map<String, Resource> resources) {
+    this.resources = resources;
+  }
+
+  private static ResourceType toResourceType(Resource resource) {
+    return ResourceType.builder()
+            .name(resource.getType())
+            .validatorTypes(new ArrayList<>(resource.getSelectorKind()))
+            .build();
   }
 
   @Override
@@ -31,15 +40,12 @@ public class ResourceTypeServiceImpl implements ResourceTypeService {
     if (Objects.isNull(scopeLevel)) {
       return null;
     }
+
     return ResourceTypeMapper.toDTO(
-        resourceValidators.values()
+        resources.values()
             .stream()
-            .filter(resourceValidator -> resourceValidator.getValidScopeLevels().contains(scopeLevel))
-            .map(resourceValidator
-                -> ResourceTypeDTO.ResourceType.builder()
-                       .name(resourceValidator.getType())
-                       .validatorTypes(new ArrayList<>(resourceValidator.getSelectorKind()))
-                       .build())
+            .filter(resource -> resource.getValidScopeLevels().contains(scopeLevel))
+            .map(ResourceTypeServiceImpl::toResourceType)
             .collect(Collectors.toList()));
   }
 }
