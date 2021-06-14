@@ -174,6 +174,10 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     long timeoutInMillis;
     if (ParameterField.isNull(stepElement.getTimeout())) {
       timeoutInMillis = TimeoutParameters.DEFAULT_TIMEOUT_IN_MILLIS;
+    } else if (stepElement.getTimeout().isExpression()) {
+      throw new InvalidRequestException(
+          String.format("Timeout needs to be a fixed value. It cannot be an expression: %s",
+              stepElement.getTimeout().getExpressionValue()));
     } else {
       timeoutInMillis = stepElement.getTimeout().getValue().getTimeoutInMillis();
     }
