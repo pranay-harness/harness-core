@@ -149,12 +149,12 @@ public class ManagerToNGManagerEncryptedDataMigrationHandler implements Handler<
           encryptedDataDao.save(encryptedData);
         } else {
           if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE) {
-            encryptedDataService.createSecretFile(secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData),
+            encryptedDataService.updateSecretFile(secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData),
                 isEmpty(encryptedData.getEncryptedValue())
                     ? null
                     : new ByteArrayInputStream(String.valueOf(encryptedData.getEncryptedValue()).getBytes()));
           } else {
-            encryptedDataService.createSecretText(secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData));
+            encryptedDataService.updateSecretText(secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData));
           }
         }
       }
