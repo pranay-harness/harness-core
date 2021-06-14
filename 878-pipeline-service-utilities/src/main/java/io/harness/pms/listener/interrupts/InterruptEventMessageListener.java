@@ -8,6 +8,7 @@ import io.harness.pms.sdk.core.interrupt.InterruptEventHandler;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -21,7 +22,7 @@ public class InterruptEventMessageListener extends PmsAbstractMessageListener<In
     this.interruptEventHandler = interruptEventHandler;
   }
 
-  public boolean processMessage(InterruptEvent event) {
+  public boolean processMessage(InterruptEvent event, Map<String, String> metadataMap) {
     return interruptEventHandler.handleEvent(event);
   }
 }

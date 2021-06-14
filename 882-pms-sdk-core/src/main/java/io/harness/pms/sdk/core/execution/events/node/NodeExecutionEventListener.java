@@ -6,6 +6,8 @@ import static io.harness.pms.contracts.execution.Status.ABORTED;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.logging.AutoLogContext;
+import io.harness.manage.GlobalContextManager;
+import io.harness.monitoring.MonitoringContext;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserResponse;
@@ -76,6 +78,8 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
     try (PmsGitSyncBranchContextGuard ignore1 =
              pmsGitSyncHelper.createGitSyncBranchContextGuard(event.getNodeExecution().getAmbiance(), true);
          AutoLogContext ignore2 = event.autoLogContext()) {
+      GlobalContextManager.upsertGlobalContextRecord(
+          MonitoringContext.builder().isMonitoringEnabled(event.isMonitoringEnabled()).build());
       onMessageInternalWithContext(event);
     }
   }

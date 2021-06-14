@@ -26,6 +26,7 @@ public class SdkOrchestrationEventListenerHelper {
   public void handleEvent(OrchestrationEvent orchestrationEvent) {
     Set<OrchestrationEventHandler> handlers = handlerRegistry.obtain(orchestrationEvent.getEventType());
     if (isNotEmpty(handlers)) {
+      // Todo: Add exception handling here.
       handlers.forEach(handler -> executorService.submit(() -> handler.handleEvent(orchestrationEvent)));
     }
   }

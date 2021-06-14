@@ -14,6 +14,8 @@ import java.util.Set;
 
 @OwnedBy(HarnessTeam.CF)
 public class FeatureFlagStageFilterJsonCreator implements FilterJsonCreator<StageElementConfig> {
+  public static final String FEATURE_FLAG_SUPPORTED_TYPE = "FeatureFlag";
+
   @Override
   public Class<StageElementConfig> getFieldClass() {
     return StageElementConfig.class;
@@ -21,7 +23,7 @@ public class FeatureFlagStageFilterJsonCreator implements FilterJsonCreator<Stag
 
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
-    return Collections.singletonMap("stage", Collections.singleton("FeatureFlag"));
+    return Collections.singletonMap("stage", Collections.singleton(FEATURE_FLAG_SUPPORTED_TYPE));
   }
 
   @Override

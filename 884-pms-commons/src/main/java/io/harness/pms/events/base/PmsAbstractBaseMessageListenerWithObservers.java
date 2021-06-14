@@ -3,6 +3,7 @@ package io.harness.pms.events.base;
 import io.harness.observer.Subject;
 import io.harness.queue.EventListenerObserver;
 
+import java.util.Map;
 import lombok.Getter;
 
 public abstract class PmsAbstractBaseMessageListenerWithObservers<T extends com.google.protobuf.Message>
@@ -14,10 +15,12 @@ public abstract class PmsAbstractBaseMessageListenerWithObservers<T extends com.
   }
 
   @Override
-  public boolean processMessage(T event) {
-    eventListenerObserverSubject.fireInform(EventListenerObxxxxxxxx:onListenerStart, event);
+  public boolean processMessage(T event, Map<String, String> metadataMap) {
+    eventListenerObserverSubject.fireInform(
+        (eventListenerObserver1, message1) -> eventListenerObserver1.onListenerStart(message1, metadataMap), event);
     boolean successful = processMessageInternal(event);
-    eventListenerObserverSubject.fireInform(EventListenerObxxxxxxxx:onListenerEnd, event);
+    eventListenerObserverSubject.fireInform(
+        (eventListenerObserver, message) -> eventListenerObserver.onListenerEnd(message, metadataMap), event);
     return successful;
   }
 
