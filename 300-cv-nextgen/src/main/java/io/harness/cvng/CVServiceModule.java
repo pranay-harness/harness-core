@@ -7,6 +7,10 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
+import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceUpdatableEntity;
+import io.harness.cvng.activity.entities.CD10ActivitySource.CD10ActivitySourceUpdatableEntity;
+import io.harness.cvng.activity.entities.CDNGActivitySource.CDNGActivitySourceUpdatableEntity;
+import io.harness.cvng.activity.entities.KubernetesActivitySource.KubernetesActivitySourceUpdatableEntity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
@@ -42,6 +46,7 @@ import io.harness.cvng.analysis.services.impl.TimeSeriesAnomalousPatternsService
 import io.harness.cvng.analysis.services.impl.TrendAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.VerificationJobInstanceAnalysisServiceImpl;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.activity.ActivitySourceType;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
 import io.harness.cvng.cdng.services.impl.CVNGStepTaskServiceImpl;
@@ -265,6 +270,17 @@ public class CVServiceModule extends AbstractModule {
     bind(VerificationJobUpdatableEntity.class)
         .annotatedWith(Names.named(VerificationJobType.CANARY.name()))
         .to(CanaryVerificationUpdatableEntity.class);
+
+    bind(ActivitySourceUpdatableEntity.class)
+        .annotatedWith(Names.named(ActivitySourceType.KUBERNETES.name()))
+        .to(KubernetesActivitySourceUpdatableEntity.class);
+    bind(ActivitySourceUpdatableEntity.class)
+        .annotatedWith(Names.named(ActivitySourceType.CDNG.name()))
+        .to(CDNGActivitySourceUpdatableEntity.class);
+    bind(ActivitySourceUpdatableEntity.class)
+        .annotatedWith(Names.named(ActivitySourceType.HARNESS_CD10.name()))
+        .to(CD10ActivitySourceUpdatableEntity.class);
+
     bind(CVConfigTransformer.class)
         .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
         .to(AppDynamicsCVConfigTransformer.class);

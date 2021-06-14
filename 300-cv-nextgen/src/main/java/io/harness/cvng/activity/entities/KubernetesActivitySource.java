@@ -65,9 +65,14 @@ public class KubernetesActivitySource extends ActivitySource {
         .build();
   }
 
-  public static void setUpdateOperations(
-      UpdateOperations<ActivitySource> updateOperations, KubernetesActivitySourceDTO activitySourceDTO) {
-    updateOperations.set(KubernetesActivitySourceKeys.connectorIdentifier, activitySourceDTO.getConnectorIdentifier())
-        .set(KubernetesActivitySourceKeys.activitySourceConfigs, activitySourceDTO.getActivitySourceConfigs());
+  public static class KubernetesActivitySourceUpdatableEntity<T extends KubernetesActivitySource, D
+                                                                  extends KubernetesActivitySourceDTO>
+      extends ActivitySourceUpdatableEntity<T, D> {
+    @Override
+    public void setUpdateOperations(UpdateOperations<T> updateOperations, D dto) {
+      setCommonOperations(updateOperations, dto);
+      updateOperations.set(KubernetesActivitySourceKeys.connectorIdentifier, dto.getConnectorIdentifier())
+          .set(KubernetesActivitySourceKeys.activitySourceConfigs, dto.getActivitySourceConfigs());
+    }
   }
 }
