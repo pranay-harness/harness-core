@@ -127,3 +127,5 @@ ceAzureSetupConfig:
 awsConfig:
   harnessAwsAccountId: 108817434118
   awsConnectorTemplate: https://continuous-efficiency-templates.s3.amazonaws.com/templateOptimOnly.yaml
+  awsAccessKey: awsAccessKeyPlaceHolder
+  awsSecretKey: awsSecretKeyPlaceHolder
