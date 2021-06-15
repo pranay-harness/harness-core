@@ -26,6 +26,7 @@ import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.filter.utils.ModuleInfoFilterUtils;
 import io.harness.pms.helpers.TriggeredByHelper;
+import io.harness.pms.helpers.YamlExpressionResolveHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.plan.execution.PlanExecutionInterruptType;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
@@ -64,6 +65,7 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   @Inject private OrchestrationService orchestrationService;
   @Inject private FilterService filterService;
   @Inject private TriggeredByHelper triggeredByHelper;
+  @Inject private YamlExpressionResolveHelper yamlExpressionResolveHelper;
 
   @Override
   public Criteria formCriteria(String accountId, String orgId, String projectId, String pipelineIdentifier,
@@ -167,14 +169,18 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   }
 
   @Override
-  public String getInputSetYaml(
-      String accountId, String orgId, String projectId, String planExecutionId, boolean pipelineDeleted) {
+  public String getInputSetYaml(String accountId, String orgId, String projectId, String planExecutionId,
+      boolean pipelineDeleted, boolean resolveExpressions) {
     Optional<PipelineExecutionSummaryEntity> pipelineExecutionSummaryEntityOptional =
         pmsExecutionSummaryRespository
             .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionIdAndPipelineDeletedNot(
                 accountId, orgId, projectId, planExecutionId, !pipelineDeleted);
     if (pipelineExecutionSummaryEntityOptional.isPresent()) {
-      return pipelineExecutionSummaryEntityOptional.get().getInputSetYaml();
+      String yaml = pipelineExecutionSummaryEntityOptional.get().getInputSetYaml();
+      if (resolveExpressions && yaml != null) {
+        yaml = yamlExpressionResolveHelper.resolveExpressionsInYaml(yaml, planExecutionId);
+      }
+      return yaml;
     }
     throw new InvalidRequestException(
         "Invalid request : Input Set did not exist or pipeline execution has been deleted");

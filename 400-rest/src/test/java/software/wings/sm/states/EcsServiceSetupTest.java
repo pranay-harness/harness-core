@@ -107,6 +107,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
   @Mock private SweepingOutputService mockSweepingOutputService;
   @Mock private StateExecutionService stateExecutionService;
+  @Mock private ApplicationManifestUtils applicationManifestUtils;
 
   @InjectMocks private EcsServiceSetup state = new EcsServiceSetup("stateName");
 

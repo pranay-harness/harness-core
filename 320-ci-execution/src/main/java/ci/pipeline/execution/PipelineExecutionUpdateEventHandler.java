@@ -1,6 +1,7 @@
 package ci.pipeline.execution;
 
 import static io.harness.pms.execution.utils.StatusUtils.isFinalStatus;
+import static io.harness.steps.StepUtils.buildAbstractions;
 
 import static java.lang.String.format;
 
@@ -8,6 +9,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.ci.CIK8CleanupTaskParams;
+import io.harness.encryption.Scope;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
@@ -20,6 +22,7 @@ import io.harness.service.DelegateGrpcClientWrapper;
 
 import com.google.inject.Inject;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
@@ -63,9 +66,10 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
           log.info("Received event with status {} to clean podName {}, planExecutionId {}, stage {}", status,
               cik8CleanupTaskParams.getPodNameList(), ambiance.getPlanExecutionId(), level.getIdentifier());
 
+          Map<String, String> abstractions = buildAbstractions(ambiance, Scope.PROJECT);
           DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                         .accountId(accountId)
-                                                        .taskSetupAbstractions(ambiance.getSetupAbstractions())
+                                                        .taskSetupAbstractions(abstractions)
                                                         .executionTimeout(java.time.Duration.ofSeconds(120))
                                                         .taskType("CI_CLEANUP")
                                                         .taskParameters(cik8CleanupTaskParams)

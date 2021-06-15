@@ -2,6 +2,7 @@ package io.harness.manifest;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -15,6 +16,7 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.ShellExecutionException;
+import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
@@ -177,6 +179,41 @@ public class CustomManifestServiceImplTest extends CategoryTest {
         customManifestService.fetchValues(customManifestSource, shellWorkingDirectory, ACTIVITY_ID, logCallback);
     assertThat(result.stream().map(CustomSourceFile::getFilePath)).containsExactly(absolutePath);
     assertThat(result.stream().map(CustomSourceFile::getFileContent)).containsExactly("absolute-content");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void tesExecuteCustomSourceScriptSuccess() throws IOException {
+    CustomManifestSource customManifestSource =
+        CustomManifestSource.builder().script("test script").filePaths(singletonList("file1.yaml")).build();
+    doReturn(ExecuteCommandResponse.builder().status(CommandExecutionStatus.SUCCESS).build())
+        .when(scriptProcessExecutor)
+        .executeCommandString("test script", emptyList());
+    String resultWorkingDir =
+        customManifestService.executeCustomSourceScript(ACTIVITY_ID, logCallback, customManifestSource);
+
+    assertThat(resultWorkingDir).isNotNull();
+    File file = new File(resultWorkingDir);
+    assertThat(file.exists()).isTrue();
+    assertThat(file.toString()).contains("manifestCustomSource");
+    FileIo.deleteDirectoryAndItsContentIfExists(resultWorkingDir);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void tesExecuteCustomSourceScriptSFail() throws IOException {
+    CustomManifestSource customManifestSource =
+        CustomManifestSource.builder().script("test script").filePaths(singletonList("file1.yaml")).build();
+    doReturn(ExecuteCommandResponse.builder().status(CommandExecutionStatus.FAILURE).build())
+        .when(scriptProcessExecutor)
+        .executeCommandString("test script", emptyList());
+
+    assertThatThrownBy(
+        () -> customManifestService.executeCustomSourceScript(ACTIVITY_ID, logCallback, customManifestSource))
+        .isInstanceOf(ShellExecutionException.class)
+        .hasMessageContaining("Custom shell script failed");
   }
 
   @After

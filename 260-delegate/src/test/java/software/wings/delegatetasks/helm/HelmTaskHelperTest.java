@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.delegate.task.helm.CustomManifestFetchTaskHelper.zipManifestDirectory;
 import static io.harness.delegate.task.helm.HelmTaskHelperBase.RESOURCE_DIR_BASE;
 import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.k8s.model.HelmVersion.V3;
@@ -8,6 +9,7 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -43,6 +45,8 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.chartmuseum.ChartMuseumServer;
+import io.harness.delegate.beans.DelegateFileManagerBase;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
 import io.harness.exception.HelmClientException;
@@ -73,6 +77,7 @@ import software.wings.settings.SettingValue;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -107,6 +112,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
   @Mock K8sGlobalConfigService k8sGlobalConfigService;
   @Mock EncryptionService encryptionService;
   @Mock ChartMuseumClient chartMuseumClient;
+  @Mock DelegateFileManagerBase delegateFileManagerBase;
   @Spy @InjectMocks private HelmTaskHelper helmTaskHelper;
   @Spy @InjectMocks private HelmTaskHelperBase helmTaskHelperBase;
 
@@ -989,5 +995,43 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .doesNotThrowAnyException();
 
     verify(helmTaskHelperBase).removeRepo(repoName, workingDirectory, V2, LONG_TIMEOUT_INTERVAL);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testDownloadAndUnzipCustomSourceManifestFiles() throws IOException {
+    final String workingDirPath = "./repository/helm/work/ACTIVITY_ID";
+    final String sourceDirPath = "./repository/helm/source/manifests";
+    final String zipDirPath = "./repository/helm/zip/ACTIVITY_ID";
+    final String zipFilePath = format("%s/destZipFile.zip", zipDirPath);
+    final String fileId = "fileId";
+
+    FileIo.createDirectoryIfDoesNotExist(workingDirPath);
+    FileIo.createDirectoryIfDoesNotExist(sourceDirPath);
+    Files.createFile(Paths.get(sourceDirPath, "test1.yaml"));
+    Files.createFile(Paths.get(sourceDirPath, "test2.yaml"));
+    FileIo.createDirectoryIfDoesNotExist(zipDirPath);
+
+    zipManifestDirectory(sourceDirPath, zipFilePath);
+    InputStream targetStream = FileUtils.openInputStream(new File(zipFilePath));
+
+    doReturn(targetStream)
+        .when(delegateFileManagerBase)
+        .downloadByFileId(FileBucket.CUSTOM_MANIFEST, fileId, ACCOUNT_ID);
+
+    helmTaskHelper.downloadAndUnzipCustomSourceManifestFiles(workingDirPath, fileId, ACCOUNT_ID);
+
+    File destFile = new File(workingDirPath);
+    assertThat(destFile).exists();
+    String[] unzippedFiles = destFile.list((dir, name) -> !dir.isHidden());
+    assertThat(unzippedFiles).hasSize(1);
+    assertThat(unzippedFiles[0]).contains("manifests");
+    Path path = Paths.get(workingDirPath, unzippedFiles[0]);
+    File file = new File(path.toString());
+    assertThat(file.list()).contains("test1.yaml", "test2.yaml");
+    FileIo.deleteDirectoryAndItsContentIfExists(workingDirPath);
+    FileIo.deleteDirectoryAndItsContentIfExists(sourceDirPath);
+    FileIo.deleteDirectoryAndItsContentIfExists(zipDirPath);
   }
 }

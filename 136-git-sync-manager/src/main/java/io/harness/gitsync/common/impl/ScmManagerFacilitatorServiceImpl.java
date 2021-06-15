@@ -12,7 +12,9 @@ import io.harness.connector.impl.ConnectorErrorMessagesHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.exception.ExplanationException;
 import io.harness.exception.ScmException;
+import io.harness.exception.WingsException;
 import io.harness.gitsync.common.dtos.CreatePRDTO;
 import io.harness.gitsync.common.dtos.GitDiffResultFileListDTO;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
@@ -86,9 +88,14 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
     CreatePRResponse createPRResponse;
     try {
       createPRResponse = scmClient.createPullRequest(decryptScmConnector, gitCreatePRRequest);
-      ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(createPRResponse.getStatus(),
-          String.format("Could not create the pull request from %s to %s", gitCreatePRRequest.getSourceBranch(),
-              gitCreatePRRequest.getTargetBranch()));
+      try {
+        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
+            createPRResponse.getStatus(), createPRResponse.getError());
+      } catch (WingsException e) {
+        throw new ExplanationException(String.format("Could not create the pull request from %s to %s",
+                                           gitCreatePRRequest.getSourceBranch(), gitCreatePRRequest.getTargetBranch()),
+            e);
+      }
     } catch (Exception ex) {
       throw new ScmException(PR_CREATION_ERROR);
     }

@@ -294,4 +294,16 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
 
     return delegateFile;
   }
+
+  @Override
+  public DelegateFile uploadAsFile(DelegateFile delegateFile, File file) {
+    log.info("File local name {} for delegate file created", file.getName());
+    try {
+      upload(delegateFile, file);
+      log.info("File name {} with file id {} uploaded successfully", file.getName(), delegateFile.getFileId());
+    } catch (Exception e) {
+      log.warn("Error uploading file: " + file.getName(), e);
+    }
+    return delegateFile;
+  }
 }

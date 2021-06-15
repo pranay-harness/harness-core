@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -1182,6 +1183,30 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     assertThat(result.get(Environment)).containsExactly("env-1", "env-2");
     assertThat(result.get(EnvironmentGlobal)).containsExactly("env-global-1", "env-global-2");
     assertThat(result.get(K8sValuesLocation.Service)).containsExactly("service-default");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testIsCustomManifest() {
+    ApplicationManifest appManifestAtService =
+        ApplicationManifest.builder()
+            .serviceId("1")
+            .kind(K8S_MANIFEST)
+            .customSourceConfig(CustomSourceConfig.builder().path("path").script("test script").build())
+            .storeType(CUSTOM)
+            .envId("2")
+            .build();
+
+    doReturn(appManifestAtService).when(applicationManifestUtilsSpy).getApplicationManifestForService(context);
+
+    assertThat(applicationManifestUtilsSpy.isCustomManifest(context)).isTrue();
+
+    appManifestAtService.setStoreType(CUSTOM_OPENSHIFT_TEMPLATE);
+    assertThat(applicationManifestUtilsSpy.isCustomManifest(context)).isTrue();
+
+    appManifestAtService.setStoreType(Local);
+    assertThat(applicationManifestUtilsSpy.isCustomManifest(context)).isFalse();
   }
 
   private ApplicationManifest customAppManifest(String path, String script, StoreType storeType) {

@@ -401,9 +401,14 @@ public class YamlUtils {
     return strings[2];
   }
 
-  public String getErrorNodePartialFQN(YamlNode yamlNode, JsonMappingException e) {
-    List<JsonMappingException.Reference> path = e.getPath();
-    StringBuilder partialFQN = new StringBuilder(getFullyQualifiedName(yamlNode));
+  private String getErrorNodePartialFQN(String startingFQN, IOException e) {
+    if (!(e.getClass().isAssignableFrom(JsonMappingException.class))) {
+      return startingFQN;
+    }
+
+    JsonMappingException ex = (JsonMappingException) e;
+    List<JsonMappingException.Reference> path = ex.getPath();
+    StringBuilder partialFQN = new StringBuilder(startingFQN);
     for (JsonMappingException.Reference pathNode : path) {
       if (pathNode.getFieldName() == null) {
         break;
@@ -411,5 +416,41 @@ public class YamlUtils {
       partialFQN.append('.').append(pathNode.getFieldName());
     }
     return partialFQN.toString();
+  }
+
+  public String getErrorNodePartialFQN(YamlNode yamlNode, IOException e) {
+    String startingFQN = getFullyQualifiedName(yamlNode);
+    return getErrorNodePartialFQN(startingFQN, e);
+  }
+
+  public String getErrorNodePartialFQN(IOException e) {
+    return getErrorNodePartialFQN("", e);
+  }
+
+  public void removeUuid(JsonNode node) {
+    if (node.isObject()) {
+      removeUuidInObject(node);
+    } else if (node.isArray()) {
+      removeUuidInArray(node);
+    }
+  }
+
+  private void removeUuidInObject(JsonNode node) {
+    ObjectNode objectNode = (ObjectNode) node;
+    for (Iterator<Entry<String, JsonNode>> it = objectNode.fields(); it.hasNext();) {
+      Entry<String, JsonNode> field = it.next();
+      if (field.getKey().equals(YamlNode.UUID_FIELD_NAME)) {
+        objectNode.remove(field.getKey());
+      } else {
+        removeUuid(field.getValue());
+      }
+    }
+  }
+
+  private void removeUuidInArray(JsonNode node) {
+    ArrayNode arrayNode = (ArrayNode) node;
+    for (Iterator<JsonNode> it = arrayNode.elements(); it.hasNext();) {
+      removeUuid(it.next());
+    }
   }
 }

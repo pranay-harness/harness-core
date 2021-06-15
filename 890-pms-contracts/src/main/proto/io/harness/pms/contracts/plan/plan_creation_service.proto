@@ -8,6 +8,7 @@ import "io/harness/pms/contracts/plan/plan_node_proto.proto";
 import "io/harness/pms/contracts/plan/graph_layout.proto";
 import "io/harness/pms/contracts/plan/variables.proto";
 import "io/harness/pms/contracts/plan/execution_metadata.proto";
+import "io/harness/pms/contracts/triggers/trigger_payload.proto";
 import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_detail.proto";
 
 service PlanCreationService {
@@ -46,6 +47,7 @@ message PlanCreationContextValue {
     string stringValue = 1;
     ExecutionMetadata metadata = 2;
   }
+  triggers.TriggerPayload triggerPayload = 3;
 }
 
 message YamlFieldBlob {
