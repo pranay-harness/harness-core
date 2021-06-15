@@ -57,8 +57,9 @@ public class ChartMuseumClientHelper {
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
 
   public ChartMuseumServer startS3ChartMuseumServer(String bucket, String basePath, String region,
-      boolean useEc2IamCredentials, char[] accessKey, char[] secretKey) throws Exception {
-    log.info(format("useEc2IamCredentials: %s", useEc2IamCredentials));
+      boolean useEc2IamCredentials, char[] accessKey, char[] secretKey, boolean useIRSA) throws Exception {
+    log.info(format("boolean useEc2IamCredentials is : %s", useEc2IamCredentials));
+    log.info(format("boolean useIrsa is: %s", useIRSA));
     log.info(format("bucket: %s basepath: %s region: %s", bucket, basePath, region));
     if (accessKey == null) {
       log.info("access key is null");
@@ -73,7 +74,7 @@ public class ChartMuseumClientHelper {
     }
 
     log.info("getting env");
-    Map<String, String> environment = getEnvForAwsConfig(accessKey, secretKey, useEc2IamCredentials);
+    Map<String, String> environment = getEnvForAwsConfig(accessKey, secretKey, useEc2IamCredentials, useIRSA);
     log.info("getting env done");
     String evaluatedTemplate = AMAZON_S3_COMMAND_TEMPLATE.replace("${BUCKET_NAME}", bucket)
                                    .replace("${FOLDER_PATH}", basePath == null ? "" : basePath)
@@ -188,10 +189,11 @@ public class ChartMuseumClientHelper {
   }
 
   @VisibleForTesting
-  static Map<String, String> getEnvForAwsConfig(char[] accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+  static Map<String, String> getEnvForAwsConfig(
+      char[] accessKey, char[] secretKey, boolean useEc2IamCredentials, boolean useIRSA) {
     Map<String, String> environment = new HashMap<>();
     log.info("inside getenv method");
-    if (!useEc2IamCredentials) {
+    if (!useEc2IamCredentials && !useIRSA) {
       log.info("inside if means we are getting env from access key and secret key");
       environment.put(AWS_ACCESS_KEY_ID, new String(accessKey));
       environment.put(AWS_SECRET_ACCESS_KEY, new String(secretKey));

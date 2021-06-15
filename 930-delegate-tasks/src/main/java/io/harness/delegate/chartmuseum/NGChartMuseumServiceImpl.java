@@ -54,7 +54,7 @@ public class NGChartMuseumServiceImpl implements NGChartMuseumService {
 
         return clientHelper.startS3ChartMuseumServer(s3StoreDelegateConfig.getBucketName(),
             s3StoreDelegateConfig.getFolderPath(), s3StoreDelegateConfig.getRegion(), inheritFromDelegate, accessKey,
-            secretKey);
+            secretKey, false);
 
       case GCS_HELM:
         GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig = (GcsHelmStoreDelegateConfig) storeDelegateConfig;
