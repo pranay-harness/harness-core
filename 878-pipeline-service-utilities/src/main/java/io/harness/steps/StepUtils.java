@@ -245,7 +245,7 @@ public class StepUtils {
         .build();
   }
 
-  private static Map<String, String> buildAbstractions(Ambiance ambiance, Scope taskScope) {
+  public static Map<String, String> buildAbstractions(Ambiance ambiance, Scope taskScope) {
     Map<String, String> setupMap = new HashMap<>();
     if (!isEmpty(ambiance.getSetupAbstractionsMap())) {
       setupMap.putAll(ambiance.getSetupAbstractionsMap());
