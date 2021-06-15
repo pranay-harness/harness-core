@@ -696,6 +696,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
                                     .validAfter(preDeploymentTimeRange.get().getEndTime().plus(
                                         verificationJobInstance.getDataCollectionDelay()))
                                     .accountId(verificationJob.getAccountId())
+                                    .type(Type.DEPLOYMENT)
                                     .status(QUEUED)
                                     .dataCollectionInfo(preDeploymentDataCollectionInfo)
                                     .queueAnalysis(cvConfig.queueAnalysisForPreDeploymentTask())
@@ -718,6 +719,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
                 .endTime(timeRange.getEndTime())
                 .validAfter(timeRange.getEndTime().plus(verificationJobInstance.getDataCollectionDelay()))
                 .accountId(verificationJob.getAccountId())
+                .type(Type.DEPLOYMENT)
                 .status(QUEUED)
                 .dataCollectionInfo(dataCollectionInfo)
                 .build());
