@@ -52,6 +52,7 @@ public class SamlSettings extends SSOSettings {
     return SSOType.SAML;
   }
 
+  
   @JsonProperty
   public boolean isAuthorizationEnabled() {
     return isNotEmpty(groupMembershipAttr);
