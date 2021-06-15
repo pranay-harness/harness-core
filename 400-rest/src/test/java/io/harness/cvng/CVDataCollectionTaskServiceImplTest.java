@@ -90,7 +90,6 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
   public void testCreateCVTask() throws InvalidProtocolBufferException {
     SecretRefData secretRefData = SecretRefData.builder().scope(Scope.ACCOUNT).identifier("secret").build();
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = AppDynamicsConnectorDTO.builder()
-                                                          .accountId(accountId)
                                                           .accountname("accountName")
                                                           .username("username")
                                                           .controllerUrl("controllerUrl")
@@ -178,7 +177,6 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
     String dataCollectionWorkerId = generateUuid();
     SecretRefData secretRefData = SecretRefData.builder().scope(Scope.ACCOUNT).identifier("secret").build();
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = AppDynamicsConnectorDTO.builder()
-                                                          .accountId(accountId)
                                                           .accountname("accountName")
                                                           .username("username")
                                                           .controllerUrl("controllerUrl")
@@ -196,7 +194,6 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
     String taskId = dataCollectionTaskService.create(accountId, orgIdentifier, projectIdentifier, bundle);
 
     AppDynamicsConnectorDTO appDynamicsConnectorDTO2 = AppDynamicsConnectorDTO.builder()
-                                                           .accountId(accountId)
                                                            .accountname("accountName2")
                                                            .username("username2")
                                                            .controllerUrl("controllerUrl2")
@@ -225,7 +222,6 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
     params.put("dataCollectionWorkerId", dataCollectionWorkerId);
     SecretRefData secretRefData = SecretRefData.builder().scope(Scope.ACCOUNT).identifier("secret").build();
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = AppDynamicsConnectorDTO.builder()
-                                                          .accountId(accountId)
                                                           .accountname("accountName")
                                                           .username("username")
                                                           .controllerUrl("controllerUrl")

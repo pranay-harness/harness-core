@@ -1198,7 +1198,6 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.APPDYNAMICS_COLLECT_METRIC_DATA_V2).toInstance(MetricsDataCollectionTask.class);
     mapBinder.addBinding(TaskType.APPDYNAMICS_COLLECT_24_7_METRIC_DATA).toInstance(AppdynamicsDataCollectionTask.class);
     mapBinder.addBinding(TaskType.APPDYNAMICS_METRIC_DATA_FOR_NODE).toInstance(ServiceImplDelegateTask.class);
-    mapBinder.addBinding(TaskType.APPDYNAMICS_METRIC_PACK_DATA).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.INSTANA_GET_INFRA_METRICS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.INSTANA_GET_TRACE_METRICS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.INSTANA_COLLECT_METRIC_DATA).toInstance(MetricsDataCollectionTask.class);
