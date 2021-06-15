@@ -84,8 +84,8 @@ public class AccountResourceNG {
   @PUT
   @Path("/{accountId}/name")
   public RestResponse<Account> updateAccountName(
-      @PathParam("accountId") @NotEmpty String accountId, @QueryParam("name") String name) {
-    return new RestResponse<>(accountService.updateAccountName(accountId, name, null));
+      @PathParam("accountId") @NotEmpty String accountId, @Body AccountDTO dto) {
+    return new RestResponse<>(accountService.updateAccountName(accountId, dto.getName(), null));
   }
 
   @GET
@@ -159,15 +159,15 @@ public class AccountResourceNG {
    * This is only intended for an NG user to switch their account experience
    * Please use updateDefaultExperienceIfApplicable for all internal calls / side effects
    * @param accountId
-   * @param defaultExperience
+   * @param dto
    * @return
    */
   @PUT
   @Path("/{accountId}/default-experience")
-  public RestResponse<AccountDTO> updateDefaultExperience(@PathParam("accountId") @AccountIdentifier String accountId,
-      @QueryParam("defaultExperience") DefaultExperience defaultExperience) {
+  public RestResponse<AccountDTO> updateDefaultExperience(
+      @PathParam("accountId") @AccountIdentifier String accountId, @Body AccountDTO dto) {
     Account account = accountService.get(accountId);
-    account.setDefaultExperience(defaultExperience);
+    account.setDefaultExperience(dto.getDefaultExperience());
     return new RestResponse(AccountMapper.toAccountDTO(accountService.update(account)));
   }
 }
