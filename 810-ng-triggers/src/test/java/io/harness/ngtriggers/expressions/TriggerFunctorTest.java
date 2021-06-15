@@ -80,17 +80,17 @@ public class TriggerFunctorTest extends CategoryTest {
   public void testGetMetadataWebhook() {
     PlanExecutionMetadataService metadataService = mock(PlanExecutionMetadataServiceImpl.class);
     when(metadataService.findByPlanExecutionId(any()))
-        .thenReturn(Optional.of(PlanExecutionMetadata.builder().triggerJsonPayload(bigPayload).build()));
+        .thenReturn(Optional.of(
+            PlanExecutionMetadata.builder()
+                .triggerJsonPayload(bigPayload)
+                .triggerPayload(TriggerPayload.newBuilder()
+                                    .setParsedPayload(ParsedPayload.newBuilder().setPr(prEvent.getPr()).build())
+                                    .setType(Type.WEBHOOK)
+                                    .setSourceType(SourceType.GITHUB_REPO)
+                                    .build())
+                .build()));
     SampleEvaluator expressionEvaluator = new SampleEvaluator(
-        new TriggerFunctor(Ambiance.newBuilder()
-                               .setMetadata(ExecutionMetadata.newBuilder().setTriggerPayload(
-                                   TriggerPayload.newBuilder()
-                                       .setParsedPayload(ParsedPayload.newBuilder().setPr(prEvent.getPr()).build())
-                                       .setType(Type.WEBHOOK)
-                                       .setSourceType(SourceType.GITHUB_REPO)
-                                       .build()))
-                               .build(),
-            metadataService));
+        new TriggerFunctor(Ambiance.newBuilder().setMetadata(ExecutionMetadata.newBuilder()).build(), metadataService));
 
     assertThat(expressionEvaluator.renderExpression("<+trigger.branch>")).isEqualTo("target");
     assertThat(expressionEvaluator.renderExpression("<+trigger.sourceBranch>")).isEqualTo("source");
@@ -105,17 +105,19 @@ public class TriggerFunctorTest extends CategoryTest {
     assertThat(expressionEvaluator.renderExpression("<+trigger.gitUser>")).isEqualTo("user");
     assertThat(expressionEvaluator.renderExpression("<+trigger.prTitle>")).isEqualTo("This is Title");
 
-    expressionEvaluator = new SampleEvaluator(new TriggerFunctor(
-        Ambiance.newBuilder()
-            .setMetadata(ExecutionMetadata.newBuilder().setTriggerPayload(
-                TriggerPayload.newBuilder()
-                    .setParsedPayload(ParsedPayload.newBuilder().setPush(pushEvent.getPush()).build())
-                    .setType(Type.WEBHOOK)
+    when(metadataService.findByPlanExecutionId(any()))
+        .thenReturn(Optional.of(
+            PlanExecutionMetadata.builder()
+                .triggerJsonPayload(bigPayload)
+                .triggerPayload(TriggerPayload.newBuilder()
+                                    .setParsedPayload(ParsedPayload.newBuilder().setPush(pushEvent.getPush()).build())
+                                    .setType(Type.WEBHOOK)
+                                    .setSourceType(SourceType.GITHUB_REPO)
+                                    .build())
+                .build()));
 
-                    .setSourceType(SourceType.GITHUB_REPO)
-                    .build()))
-            .build(),
-        metadataService));
+    expressionEvaluator = new SampleEvaluator(
+        new TriggerFunctor(Ambiance.newBuilder().setMetadata(ExecutionMetadata.newBuilder()).build(), metadataService));
 
     assertThat(expressionEvaluator.renderExpression("<+trigger.event>")).isEqualTo("PUSH");
     assertThat(expressionEvaluator.renderExpression("<+trigger.type>")).isEqualTo("Webhook");

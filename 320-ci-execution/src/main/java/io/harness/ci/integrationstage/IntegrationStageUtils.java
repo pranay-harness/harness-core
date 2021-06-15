@@ -24,8 +24,8 @@ import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
-import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.pms.yaml.ParameterField;
@@ -79,8 +79,8 @@ public class IntegrationStageUtils {
   }
 
   public ExecutionSource buildExecutionSource(
-      ExecutionMetadata executionMetadata, String identifier, ParameterField<Build> parameterFieldBuild) {
-    ExecutionTriggerInfo executionTriggerInfo = executionMetadata.getTriggerInfo();
+      PlanCreationContextValue planCreationContextValue, String identifier, ParameterField<Build> parameterFieldBuild) {
+    ExecutionTriggerInfo executionTriggerInfo = planCreationContextValue.getMetadata().getTriggerInfo();
 
     if (executionTriggerInfo.getTriggerType() == TriggerType.MANUAL
         || executionTriggerInfo.getTriggerType() == TriggerType.SCHEDULER_CRON) {
@@ -101,12 +101,8 @@ public class IntegrationStageUtils {
         }
       }
     } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
-      ParsedPayload parsedPayload = executionMetadata.getTriggerPayload().getParsedPayload();
-      if (parsedPayload != null) {
-        return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
-      } else {
-        throw new CIStageExecutionException("Parsed payload is empty for webhook execution");
-      }
+      ParsedPayload parsedPayload = planCreationContextValue.getTriggerPayload().getParsedPayload();
+      return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
     } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK_CUSTOM) {
       return buildCustomExecutionSource(identifier, parameterFieldBuild);
     }

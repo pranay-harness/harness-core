@@ -315,7 +315,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   public void processFilesInBranch(String accountId, String gitSyncConfigId, String projectIdentifier,
       String orgIdentifier, String branch, String filePathToBeExcluded, String repoURL) {
     final GitEntityInfo emptyRepoBranch =
-        GitEntityInfo.builder().branch(null).yamlGitConfigId(null).findDefaultFromOtherBranches(true).build();
+        GitEntityInfo.builder().branch(null).yamlGitConfigId(null).findDefaultFromOtherRepos(true).build();
     try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
       GlobalContextManager.upsertGlobalContextRecord(
           GitSyncBranchContext.builder().gitBranchInfo(emptyRepoBranch).build());

@@ -35,9 +35,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.pms.contracts.triggers.SourceType;
+import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.product.ci.scm.proto.PullRequest;
 import io.harness.product.ci.scm.proto.User;
 
@@ -47,26 +47,10 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 @OwnedBy(PIPELINE)
-public class TriggerAmbianceHelper {
-  public ParsedPayload getParsedPayload(Ambiance ambiance) {
-    return ambiance.getMetadata().getTriggerPayload().getParsedPayload();
-  }
-
-  public Map<String, String> getHeadersMap(Ambiance ambiance) {
-    return ambiance.getMetadata().getTriggerPayload().getHeadersMap();
-  }
-
-  public boolean isScheduledTrigger(Ambiance ambiance) {
-    return SCHEDULED == ambiance.getMetadata().getTriggerPayload().getType();
-  }
-
-  public SourceType getSourceRepo(Ambiance ambiance) {
-    return ambiance.getMetadata().getTriggerPayload().getSourceType();
-  }
-
-  public Map<String, Object> buildJsonObjectFromAmbiance(Ambiance ambiance) {
+public class TriggerHelper {
+  public Map<String, Object> buildJsonObjectFromAmbiance(TriggerPayload triggerPayload) {
     Map<String, Object> jsonObject = new HashMap<>();
-    ParsedPayload parsedPayload = TriggerAmbianceHelper.getParsedPayload(ambiance);
+    ParsedPayload parsedPayload = triggerPayload.getParsedPayload();
     // branchesxv
     switch (parsedPayload.getPayloadCase()) {
       case PR:
@@ -95,7 +79,7 @@ public class TriggerAmbianceHelper {
         jsonObject.put(GIT_USER, parsedPayload.getPush().getSender().getLogin());
         break;
       default:
-        if (TriggerAmbianceHelper.isScheduledTrigger(ambiance)) {
+        if (SCHEDULED == triggerPayload.getType()) {
           jsonObject.put(TYPE, SCHEDULED_TYPE);
         } else {
           jsonObject.put(TYPE, CUSTOM_TYPE);
@@ -103,8 +87,8 @@ public class TriggerAmbianceHelper {
         break;
     }
 
-    setSourceType(jsonObject, ambiance);
-    jsonObject.put(HEADER, TriggerAmbianceHelper.getHeadersMap(ambiance));
+    setSourceType(jsonObject, triggerPayload);
+    jsonObject.put(HEADER, triggerPayload.getHeadersMap());
     return jsonObject;
   }
 
@@ -119,25 +103,23 @@ public class TriggerAmbianceHelper {
     return gitUser;
   }
 
-  private void setSourceType(Map<String, Object> jsonObject, Ambiance ambiance) {
-    SourceType sourceRepo = TriggerAmbianceHelper.getSourceRepo(ambiance);
-    if (sourceRepo != null) {
-      String sourceTypeVal = null;
-      if (sourceRepo == GITHUB_REPO) {
-        sourceTypeVal = GITHUB.getValue();
-      } else if (sourceRepo == GITLAB_REPO) {
-        sourceTypeVal = GITLAB.getValue();
-      } else if (sourceRepo == BITBUCKET_REPO) {
-        sourceTypeVal = BITBUCKET.getValue();
-      } else if (sourceRepo == CUSTOM_REPO) {
-        sourceTypeVal = CUSTOM.getValue();
-      } else if (sourceRepo == AWS_CODECOMMIT_REPO) {
-        sourceTypeVal = AWS_CODECOMMIT.getValue();
-      }
+  private void setSourceType(Map<String, Object> jsonObject, TriggerPayload triggerPayload) {
+    SourceType sourceRepo = triggerPayload.getSourceType();
+    String sourceTypeVal = null;
+    if (sourceRepo == GITHUB_REPO) {
+      sourceTypeVal = GITHUB.getValue();
+    } else if (sourceRepo == GITLAB_REPO) {
+      sourceTypeVal = GITLAB.getValue();
+    } else if (sourceRepo == BITBUCKET_REPO) {
+      sourceTypeVal = BITBUCKET.getValue();
+    } else if (sourceRepo == CUSTOM_REPO) {
+      sourceTypeVal = CUSTOM.getValue();
+    } else if (sourceRepo == AWS_CODECOMMIT_REPO) {
+      sourceTypeVal = AWS_CODECOMMIT.getValue();
+    }
 
-      if (isNotBlank(sourceTypeVal)) {
-        jsonObject.put(SOURCE_TYPE, sourceTypeVal);
-      }
+    if (isNotBlank(sourceTypeVal)) {
+      jsonObject.put(SOURCE_TYPE, sourceTypeVal);
     }
   }
 }
