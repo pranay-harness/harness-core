@@ -97,7 +97,6 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTestBase {
                                       .decryptedValue(generateUuid().toCharArray())
                                       .build();
     appDynamicsConnectorDTO = AppDynamicsConnectorDTO.builder()
-                                  .accountId(accountId)
                                   .accountname(generateUuid())
                                   .username(generateUuid())
                                   .controllerUrl(generateUuid())
