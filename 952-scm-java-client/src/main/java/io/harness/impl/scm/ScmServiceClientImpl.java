@@ -425,6 +425,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     return emptyIfNull(forkJoinTask).stream().map(FileChange::getPath).collect(toList());
   }
 
+  // Find content of files for given files paths in the branch at latest commit
   @Override
   public FileContentBatchResponse listFilesByFilePaths(
       ScmConnector connector, List<String> filePaths, String branch, SCMGrpc.SCMBlockingStub scmBlockingStub) {
@@ -432,14 +433,14 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     String slug = scmGitProviderHelper.getSlug(connector);
     final GetLatestCommitResponse latestCommit = scmBlockingStub.getLatestCommit(
         GetLatestCommitRequest.newBuilder().setBranch(branch).setProvider(gitProvider).setSlug(slug).build());
-    try (AutoLogContext ignore1 = new RepoBranchLogContext(slug, branch, latestCommit.getCommitId(), OVERRIDE_ERROR)) {
-      final FileBatchContentResponse contentOfFiles =
-          getContentOfFiles(filePaths, slug, gitProvider, latestCommit.getCommitId(), scmBlockingStub);
-      return FileContentBatchResponse.builder()
-          .fileBatchContentResponse(contentOfFiles)
-          .commitId(latestCommit.getCommitId())
-          .build();
-    }
+    return processListFilesByFilePaths(connector, filePaths, branch, latestCommit.getCommitId(), scmBlockingStub);
+  }
+
+  // Find content of files for given files paths in the branch at given commit
+  @Override
+  public FileContentBatchResponse listFilesByCommitId(
+      ScmConnector connector, List<String> filePaths, String commitId, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    return processListFilesByFilePaths(connector, filePaths, null, commitId, scmBlockingStub);
   }
 
   @Override
@@ -600,6 +601,17 @@ public class ScmServiceClientImpl implements ScmServiceClient {
   public GetUserReposResponse getUserRepos(ScmConnector scmConnector, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
     return scmBlockingStub.getUserRepos(GetUserReposRequest.newBuilder().setProvider(gitProvider).build());
+  }
+
+  private FileContentBatchResponse processListFilesByFilePaths(ScmConnector connector, List<String> filePaths,
+      String branch, String commitId, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(connector);
+    String slug = scmGitProviderHelper.getSlug(connector);
+    try (AutoLogContext ignore1 = new RepoBranchLogContext(slug, branch, commitId, OVERRIDE_ERROR)) {
+      final FileBatchContentResponse contentOfFiles =
+          getContentOfFiles(filePaths, slug, gitProvider, commitId, scmBlockingStub);
+      return FileContentBatchResponse.builder().fileBatchContentResponse(contentOfFiles).commitId(commitId).build();
+    }
   }
 
   private CreateBranchResponse createNewBranchFromDefault(String slug, Provider gitProvider, String branch,

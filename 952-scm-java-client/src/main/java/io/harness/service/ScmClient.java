@@ -63,6 +63,8 @@ public interface ScmClient {
 
   FileContentBatchResponse listFilesByFilePaths(ScmConnector connector, List<String> filePathsList, String branchName);
 
+  FileContentBatchResponse listFilesByCommitId(ScmConnector connector, List<String> filePathsList, String commitId);
+
   void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName);
 
   CreatePRResponse createPullRequest(ScmConnector scmConnector, GitPRCreateRequest gitPRCreateRequest);
