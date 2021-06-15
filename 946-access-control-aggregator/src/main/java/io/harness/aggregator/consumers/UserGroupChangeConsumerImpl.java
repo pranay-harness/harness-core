@@ -48,6 +48,10 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
 
   @Override
   public void consumeUpdateEvent(String id, UserGroupDBO updatedUserGroup) {
+    if (updatedUserGroup.getUsers() == null) {
+      return;
+    }
+
     Optional<UserGroupDBO> userGroup = userGroupRepository.findById(id);
     if (!userGroup.isPresent()) {
       return;

@@ -49,6 +49,10 @@ public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
 
   @Override
   public void consumeUpdateEvent(String id, RoleDBO updatedRole) {
+    if (updatedRole.getPermissions() == null) {
+      return;
+    }
+
     Optional<RoleDBO> role = roleRepository.findById(id);
     if (!role.isPresent()) {
       return;
