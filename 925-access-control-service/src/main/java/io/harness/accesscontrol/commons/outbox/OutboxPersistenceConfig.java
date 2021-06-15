@@ -14,6 +14,8 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ReadPreference;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -29,7 +31,6 @@ import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-
 @OwnedBy(PL)
 @Configuration
 @EnableMongoRepositories(
@@ -67,6 +68,11 @@ public class OutboxPersistenceConfig extends AbstractMongoConfiguration {
   @Bean
   MongoTransactionManager transactionManager(MongoDbFactory dbFactory) {
     return new MongoTransactionManager(dbFactory);
+  }
+
+  @Override
+  protected Collection<String> getMappingBasePackages() {
+    return Collections.singleton("io.harness");
   }
 
   @Bean

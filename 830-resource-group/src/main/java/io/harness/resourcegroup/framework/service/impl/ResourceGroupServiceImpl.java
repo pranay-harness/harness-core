@@ -132,9 +132,11 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   public Page<ResourceGroupResponse> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       PageRequest pageRequest, String searchTerm) {
     if (isEmpty(pageRequest.getSortOrders())) {
-      SortOrder order =
+      SortOrder harnessManagedOrder =
+          SortOrder.Builder.aSortOrder().withField(ResourceGroupKeys.harnessManaged, SortOrder.OrderType.DESC).build();
+      SortOrder lastModifiedOrder =
           SortOrder.Builder.aSortOrder().withField(ResourceGroupKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
-      pageRequest.setSortOrders(ImmutableList.of(order));
+      pageRequest.setSortOrders(ImmutableList.of(harnessManagedOrder, lastModifiedOrder));
     }
     Pageable page = getPageRequest(pageRequest);
     Criteria criteria = Criteria.where(ResourceGroupKeys.accountIdentifier)
