@@ -412,4 +412,31 @@ public class YamlUtils {
     }
     return partialFQN.toString();
   }
+
+  public void removeUuid(JsonNode node) {
+    if (node.isObject()) {
+      removeUuidInObject(node);
+    } else if (node.isArray()) {
+      removeUuidInArray(node);
+    }
+  }
+
+  private void removeUuidInObject(JsonNode node) {
+    ObjectNode objectNode = (ObjectNode) node;
+    for (Iterator<Entry<String, JsonNode>> it = objectNode.fields(); it.hasNext();) {
+      Entry<String, JsonNode> field = it.next();
+      if (field.getKey().equals(YamlNode.UUID_FIELD_NAME)) {
+        objectNode.remove(field.getKey());
+      } else {
+        removeUuid(field.getValue());
+      }
+    }
+  }
+
+  private void removeUuidInArray(JsonNode node) {
+    ArrayNode arrayNode = (ArrayNode) node;
+    for (Iterator<JsonNode> it = arrayNode.elements(); it.hasNext();) {
+      removeUuid(it.next());
+    }
+  }
 }
