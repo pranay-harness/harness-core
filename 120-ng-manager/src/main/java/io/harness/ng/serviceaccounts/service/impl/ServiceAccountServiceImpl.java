@@ -27,6 +27,14 @@ public class ServiceAccountServiceImpl implements ServiceAccountService {
   @Override
   public void createServiceAccount(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, ServiceAccountRequestDTO requestDTO) {
+    ServiceAccount existingAccount = hPersistence.createQuery(ServiceAccount.class)
+                                         .filter(ServiceAccountKeys.accountIdentifier, accountIdentifier)
+                                         .filter(ServiceAccountKeys.orgIdentifier, orgIdentifier)
+                                         .filter(ServiceAccountKeys.projectIdentifier, projectIdentifier)
+                                         .filter(ServiceAccountKeys.identifier, requestDTO.getIdentifier())
+                                         .get();
+    Preconditions.checkState(existingAccount == null,
+        "Duplicate service account with identifier " + requestDTO.getIdentifier() + " in scope");
     ServiceAccount serviceAccount = ServiceAccount.builder()
                                         .accountIdentifier(accountIdentifier)
                                         .orgIdentifier(orgIdentifier)

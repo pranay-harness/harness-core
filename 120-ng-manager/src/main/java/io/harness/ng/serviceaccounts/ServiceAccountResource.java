@@ -58,7 +58,7 @@ public class ServiceAccountResource {
 
   @PUT
   @Path("{identifier}")
-  @ApiOperation(value = "Create service account", nickname = "createServiceAccount")
+  @ApiOperation(value = "Update service account", nickname = "updateServiceAccount")
   public ResponseDTO<Void> updateServiceAccount(@QueryParam("accountIdentifier") String accountIdentifier,
       @Optional @QueryParam("orgIdentifier") String orgIdentifier,
       @Optional @QueryParam("projectIdentifier") String projectIdentifier, @PathParam("identifier") String identifier,
@@ -70,7 +70,7 @@ public class ServiceAccountResource {
 
   @DELETE
   @Path("{identifier}")
-  @ApiOperation(value = "Create service account", nickname = "createServiceAccount")
+  @ApiOperation(value = "Delete service account", nickname = "deleteServiceAccount")
   public ResponseDTO<Void> deleteServiceAccount(@QueryParam("accountIdentifier") String accountIdentifier,
       @Optional @QueryParam("orgIdentifier") String orgIdentifier,
       @Optional @QueryParam("projectIdentifier") String projectIdentifier, @PathParam("identifier") String identifier) {
@@ -79,7 +79,7 @@ public class ServiceAccountResource {
   }
 
   @GET
-  @ApiOperation(value = "Create service account", nickname = "createServiceAccount")
+  @ApiOperation(value = "List service account", nickname = "listServiceAccount")
   public ResponseDTO<List<ServiceAccountRequestDTO>> listServiceAccounts(
       @QueryParam("accountIdentifier") String accountIdentifier,
       @Optional @QueryParam("orgIdentifier") String orgIdentifier,

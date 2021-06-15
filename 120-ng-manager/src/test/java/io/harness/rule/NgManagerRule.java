@@ -12,6 +12,8 @@ import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ng.serviceaccounts.service.api.ServiceAccountService;
+import io.harness.ng.serviceaccounts.service.impl.ServiceAccountServiceImpl;
 import io.harness.ng.userprofile.commons.SCMType;
 import io.harness.ng.userprofile.entities.AwsCodeCommitSCM.AwsCodeCommitSCMMapper;
 import io.harness.ng.userprofile.entities.AzureDevOpsSCM.AzureDevOpsSCMMapper;
@@ -78,6 +80,7 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
         bind(HPersistence.class).to(MongoPersistence.class);
         bind(ConnectorGitSyncHelper.class).toInstance(mock(ConnectorGitSyncHelper.class));
         bind(GitBranchingHelper.class).toInstance(mock(GitBranchingHelper.class));
+        bind(ServiceAccountService.class).to(ServiceAccountServiceImpl.class);
         MapBinder<SCMType, SourceCodeManagerMapper> sourceCodeManagerMapBinder =
             MapBinder.newMapBinder(binder(), SCMType.class, SourceCodeManagerMapper.class);
         sourceCodeManagerMapBinder.addBinding(SCMType.BITBUCKET).to(BitbucketSCMMapper.class);
