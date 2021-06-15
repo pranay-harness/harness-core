@@ -17,6 +17,7 @@ import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
+import io.harness.delegate.task.artifacts.ArtifactDelegateRequestUtils;
 import io.harness.delegate.task.artifacts.ArtifactSourceConstants;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.ArtifactTaskType;
@@ -123,14 +124,9 @@ public class ImagePullSecretUtils {
     AwsConnectorDTO connectorDTO = (AwsConnectorDTO) connectorIntoDTO.getConnectorConfig();
     List<EncryptedDataDetail> encryptionDetails =
         ecrImagePullSecretHelper.getEncryptionDetails(connectorDTO, baseNGAccess);
-    EcrArtifactDelegateRequest ecrRequest = EcrArtifactDelegateRequest.builder()
-                                                .awsConnectorDTO(connectorDTO)
-                                                .encryptedDataDetails(encryptionDetails)
-                                                .imagePath(ecrArtifactOutcome.getImagePath())
-                                                .tag(ecrArtifactOutcome.getTag())
-                                                .sourceType(ArtifactSourceType.ECR)
-                                                .region(ecrArtifactOutcome.getRegion())
-                                                .build();
+    EcrArtifactDelegateRequest ecrRequest = ArtifactDelegateRequestUtils.getEcrDelegateRequest(
+        ecrArtifactOutcome.getImagePath(), ecrArtifactOutcome.getTag(), null, null, ecrArtifactOutcome.getRegion(),
+        connectorRef, connectorDTO, encryptionDetails, ArtifactSourceType.ECR);
     ArtifactTaskExecutionResponse artifactTaskExecutionResponseForImageUrl = ecrImagePullSecretHelper.executeSyncTask(
         ambiance, ecrRequest, ArtifactTaskType.GET_IMAGE_URL, baseNGAccess, "Ecr Get image URL failure due to error");
     String imageUrl =
