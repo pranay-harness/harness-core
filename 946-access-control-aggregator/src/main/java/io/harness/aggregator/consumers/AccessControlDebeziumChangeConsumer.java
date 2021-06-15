@@ -72,8 +72,10 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
         retry.executeSupplier(() -> handleEvent(changeEvent));
       } catch (Exception exception) {
         log.error(
-            "Exception caught when trying to process event: {}. Retrying this event with exponential backoff now...",
-            changeEvent, exception);
+            String.format(
+                "Exception caught when trying to process event: [%s]. Retrying this event with exponential backoff now...",
+                changeEvent),
+            exception);
         changeEventFailureHandler.handle(changeEvent, exception);
       }
       recordCommitter.markProcessed(changeEvent);
