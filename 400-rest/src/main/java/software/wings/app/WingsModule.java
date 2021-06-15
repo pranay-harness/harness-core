@@ -31,6 +31,8 @@ import io.harness.ccm.budget.BudgetService;
 import io.harness.ccm.budget.BudgetServiceImpl;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
+import io.harness.ccm.cluster.InstanceDataService;
+import io.harness.ccm.cluster.InstanceDataServiceImpl;
 import io.harness.ccm.communication.CECommunicationsService;
 import io.harness.ccm.communication.CECommunicationsServiceImpl;
 import io.harness.ccm.communication.CESlackWebhookService;
@@ -74,6 +76,7 @@ import io.harness.delegate.DelegateConfigurationServiceProvider;
 import io.harness.delegate.DelegatePropertiesServiceProvider;
 import io.harness.delegate.chartmuseum.NGChartMuseumService;
 import io.harness.delegate.chartmuseum.NGChartMuseumServiceImpl;
+import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
 import io.harness.encryptors.CustomEncryptor;
@@ -163,6 +166,7 @@ import io.harness.secrets.setupusage.builders.ConfigFileSetupUsageBuilder;
 import io.harness.secrets.setupusage.builders.SecretManagerSetupUsageBuilder;
 import io.harness.secrets.setupusage.builders.ServiceVariableSetupUsageBuilder;
 import io.harness.secrets.setupusage.builders.SettingAttributeSetupUsageBuilder;
+import io.harness.secrets.setupusage.builders.TriggerSetupUsageBuilder;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.seeddata.SampleDataProviderService;
 import io.harness.seeddata.SampleDataProviderServiceImpl;
@@ -907,6 +911,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
         .annotatedWith(Names.named("BackgroundSchedule"))
         .toInstance(configuration.getBackgroundSchedulerConfig());
     bind(PipelineConfig.class).toInstance(configuration.getPipelineConfig());
+    bind(DelegateConfiguration.class).toInstance(DelegateConfiguration.builder().build());
     bind(QueueController.class).to(ConfigurationController.class);
     bind(HPersistence.class).to(WingsMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
@@ -1101,6 +1106,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(GcpBillingService.class).to(GcpBillingServiceImpl.class);
     bind(PreAggregateBillingService.class).to(PreAggregateBillingServiceImpl.class);
     bind(DelegateTokenService.class).to(DelegateTokenServiceImpl.class);
+    bind(InstanceDataService.class).to(InstanceDataServiceImpl.class);
 
     bind(WingsMongoExportImport.class);
 
@@ -1577,6 +1583,10 @@ public class WingsModule extends AbstractModule implements ServersModule {
         .bind(SecretSetupUsageBuilder.class)
         .annotatedWith(Names.named(SecretSetupUsageBuilders.SECRET_MANAGER_CONFIG_SETUP_USAGE_BUILDER.getName()))
         .to(SecretManagerSetupUsageBuilder.class);
+    binder()
+        .bind(SecretSetupUsageBuilder.class)
+        .annotatedWith(Names.named(SecretSetupUsageBuilders.TRIGGER_SETUP_USAGE_BUILDER.getName()))
+        .to(TriggerSetupUsageBuilder.class);
   }
 
   private void bindGcpMarketplaceProductHandlers() {

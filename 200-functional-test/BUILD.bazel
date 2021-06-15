@@ -33,14 +33,13 @@ java_library(
 
 test_dependencies = [
     "@maven//:com_github_tomakehurst_wiremock_jre8_standalone",
-    "@delegate//:org_apache_httpcomponents_httpmime",
+    "@maven//:org_apache_httpcomponents_httpmime",
 ] + [
     "@maven//:com_google_guava_guava",
     "//:lombok",
     "//960-persistence:supporter-test",
     "//210-command-library-xxxxxxxxmodule",
     "//230-model-test:module",
-    "//280-batch-processing:module",
     "//350-event-xxxxxxxxmodule",
     "//400-rest:module",
     "//910-delegate-service-driver:module",
@@ -83,6 +82,7 @@ java_library(
         "//200-functional-test/src/test/resources:resource",
     ] + ["//:resource"] + [
         "//260-delegate:module_deploy",
+        "//280-batch-processing:module_deploy.jar",
         "//310-ci-manager:module_deploy.jar",
         "//350-event-xxxxxxxxmodule_deploy.jar",
         "//360-cg-manager:module_deploy.jar",

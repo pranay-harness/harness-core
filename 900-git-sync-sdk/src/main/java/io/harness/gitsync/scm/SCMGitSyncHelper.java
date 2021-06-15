@@ -116,6 +116,7 @@ public class SCMGitSyncHelper {
       return UserPrincipal.newBuilder()
           .setEmail(StringValue.of(userPrincipal.getEmail()))
           .setUserId(StringValue.of(userPrincipal.getName()))
+          .setUserName(StringValue.of(userPrincipal.getUsername()))
           .build();
     }
     throw new InvalidRequestException("User not set for push event.");

@@ -1,6 +1,8 @@
 package io.harness.batch.processing.service.impl;
 
 import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData;
+import static io.harness.ccm.commons.constants.Constants.ZONE_OFFSET;
+import static io.harness.ccm.commons.utils.TimescaleUtils.retryRun;
 import static io.harness.timescaledb.Tables.NODE_INFO;
 import static io.harness.timescaledb.Tables.POD_INFO;
 import static io.harness.timescaledb.Tables.WORKLOAD_INFO;
@@ -8,7 +10,6 @@ import static io.harness.timescaledb.Tables.WORKLOAD_INFO;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
 
-import io.harness.annotations.retry.RetryOnException;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.service.intfc.InstanceInfoTimescaleDAO;
@@ -23,7 +24,6 @@ import io.harness.timescaledb.tables.records.PodInfoRecord;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
@@ -42,10 +42,6 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
   private final DSLContext dslContext;
-
-  private static final int RETRY_COUNT = 3;
-  private static final int SLEEP_DURATION = 100;
-  private static final ZoneOffset ZONE_OFFSET = ZoneOffset.UTC;
 
   @Autowired
   public InstanceInfoTimescaleDAOImpl(DSLContext dslContext) {
@@ -200,17 +196,16 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
     }
   }
 
-  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
-  private static void insertOne(@NotNull InsertFinalStep<? extends Record> finalStep) {
-    finalStep.execute();
+  // AOP @RetryOnException is not working here, reason not known
+  private void insertOne(@NotNull InsertFinalStep<? extends Record> finalStep) {
+    retryRun(finalStep::execute);
   }
 
-  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
+  // AOP @RetryOnException is not working here, reason not known
   private static void updateOne(@NotNull UpdateFinalStep<? extends Record> finalStep) {
-    finalStep.execute();
+    retryRun(finalStep::execute);
   }
 
-  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
   private static <R extends Record> int bulkInsert(
       @NotNull final Table<R> table, @NotNull final List<R> records, @NotNull final DSLContext dslContext) {
     if (records.isEmpty()) {

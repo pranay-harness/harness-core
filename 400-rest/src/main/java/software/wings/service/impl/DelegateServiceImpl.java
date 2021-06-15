@@ -262,9 +262,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 @ValidateOnExecution
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
-@BreakDependencyOn("io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander")
-@BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandRequest")
-@BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters")
 @BreakDependencyOn("software.wings.service.intfc.AccountService")
 @OwnedBy(DEL)
 public class DelegateServiceImpl implements DelegateService {
@@ -1267,6 +1264,12 @@ public class DelegateServiceImpl implements DelegateService {
               .put("scmVersion", mainConfiguration.getScmVersion())
               .put("delegateGrpcServicePort", String.valueOf(delegateGrpcConfig.getPort()))
               .put("kubernetesAccountLabel", getAccountIdentifier(inquiry.getAccountId()));
+
+      if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES_ONPREM) {
+        params.put("managerTarget", mainConfiguration.getGrpcOnpremDelegateClientConfig().getTarget());
+        params.put("managerAuthority", mainConfiguration.getGrpcOnpremDelegateClientConfig().getAuthority());
+      }
+
       if (isNotBlank(inquiry.getDelegateName())) {
         params.put("delegateName", inquiry.getDelegateName());
       }

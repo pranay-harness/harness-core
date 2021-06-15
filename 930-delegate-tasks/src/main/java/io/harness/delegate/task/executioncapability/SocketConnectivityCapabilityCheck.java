@@ -60,10 +60,10 @@ public class SocketConnectivityCapabilityCheck implements CapabilityCheck, Proto
   public static boolean connectableHost(String host, int port) {
     try (Socket socket = new Socket()) {
       socket.connect(new InetSocketAddress(host, port), 5000); // 5 sec timeout
-      log.info("[Delegate Capability] Socket Connection Succeeded for url " + host + "on port" + port);
+      log.info("[Delegate Capability] Socket Connection Succeeded for url " + host + " on port " + port);
       return true;
     } catch (IOException ignored) {
-      log.error("[Delegate Capability] Socket Connection Failed for url " + host + "on port" + port);
+      log.error("[Delegate Capability] Socket Connection Failed for url " + host + " on port " + port);
     }
     return false; // Either timeout or unreachable or failed DNS lookup.
   }

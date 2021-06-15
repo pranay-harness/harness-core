@@ -48,8 +48,9 @@ public class ExceptionManager {
       return processedException;
     } catch (Exception ex) {
       log.error("Exception occured while handling error in exception manager", ex);
+      String errorMessage = ex.getMessage() == null ? "Unexpected error" : ex.getMessage();
       return NestedExceptionUtils.hintWithExplanationException(HintException.HINT_UNEXPECTED_ERROR,
-          ExplanationException.EXPLANATION_UNEXPECTED_ERROR, new GeneralException(ex.getMessage()));
+          ExplanationException.EXPLANATION_UNEXPECTED_ERROR, new GeneralException(errorMessage));
     }
   }
 
@@ -113,7 +114,8 @@ public class ExceptionManager {
 
   private WingsException prepareUnhandledExceptionResponse(Exception exception) {
     // default is to wrap unknown exception into wings exception using its message
-    return new GeneralException(exception.getMessage());
+    String errorMessage = exception.getMessage() == null ? "Unexpected error" : exception.getMessage();
+    return new GeneralException(errorMessage);
   }
 
   private void setExceptionCause(WingsException exception, Exception cause) throws IllegalAccessException {

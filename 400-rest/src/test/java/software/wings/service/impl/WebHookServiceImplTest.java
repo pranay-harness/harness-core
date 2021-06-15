@@ -6,6 +6,7 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.GITHUB_WEBHOOK_AUTHENTICATION;
 import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.INDER;
@@ -47,6 +48,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.FeatureName;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
+import io.harness.beans.SecretChangeLog.SecretChangeLogKeys;
+import io.harness.beans.SecretUsageLog;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -1294,5 +1299,54 @@ public class WebHookServiceImplTest extends WingsBaseTest {
                                ImmutableMap.of("action", GithubAction.OPENED.getValue()), httpHeaders, null))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Webhook secret present in Harness and GITHUB might be different");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldUpdateSecretRuntimUsagePostSuccesfulExecution() throws IOException, InterruptedException {
+    Trigger webhookTrigger = Trigger.builder()
+                                 .workflowId(PIPELINE_ID)
+                                 .uuid(TRIGGER_ID)
+                                 .appId(APP_ID)
+                                 .name(TRIGGER_NAME)
+                                 .webHookToken(token)
+                                 .condition(WebHookTriggerCondition.builder()
+                                                .webhookSource(WebhookSource.GITHUB)
+                                                .eventTypes(Collections.singletonList(WebhookEventType.PULL_REQUEST))
+                                                .actions(Arrays.asList(GithubAction.CLOSED))
+                                                .webHookToken(WebHookToken.builder().webHookToken(token).build())
+                                                .webHookSecret(WEBHOOK_SECRET)
+                                                .build())
+                                 .build();
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(webhookTrigger);
+    doReturn(true).when(featureFlagService).isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNT_ID);
+    doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
+    doReturn("x-hub-signature-256").when(httpHeaders).getHeaderString(X_HUB_SIGNATURE_256);
+    doReturn(
+        Optional.of(
+            EncryptedDataDetail.builder().encryptedData(EncryptedRecordData.builder().kmsId("id").build()).build()))
+        .when(secretManager)
+        .encryptedDataDetails(ACCOUNT_ID, null, WEBHOOK_SECRET, null);
+    doReturn(WebHookTriggerResponseData.builder().executionStatus(SUCCESS).isWebhookAuthenticated(true).build())
+        .when(delegateService)
+        .executeTask(any(DelegateTask.class));
+
+    File file = new File("400-rest/src/test/resources/software/wings/service/impl/webhook/github_pull_request.json");
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
+    wingsPersistence.save(execution);
+
+    WebHookResponse response = (WebHookResponse) webHookService.executeByEvent(token, payLoad, httpHeaders).getEntity();
+    assertThat(response).isNotNull();
+    assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+    PageResponse<SecretUsageLog> pageResponse = wingsPersistence.query(SecretUsageLog.class,
+        aPageRequest()
+            .addFilter(SecretChangeLogKeys.encryptedDataId, SearchFilter.Operator.EQ, WEBHOOK_SECRET)
+            .build());
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.getResponse()).isNotNull().hasSize(1);
+    assertThat(pageResponse.getResponse().get(0).getWorkflowExecutionId()).isEqualTo(execution.getUuid());
   }
 }

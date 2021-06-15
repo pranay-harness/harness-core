@@ -11,5 +11,5 @@ import lombok.experimental.FieldNameConstants;
 public class GitToHarnessProcessingResponseDTO {
   List<FileProcessingResponseDTO> fileResponses;
   String accountId;
-  String processingStageFailure;
+  MsvcProcessingFailureStage msvcProcessingFailureStage;
 }

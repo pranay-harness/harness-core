@@ -376,10 +376,24 @@ public class BillingDataQueryBuilder {
       groupBy.add(QLCCMEntityGroupBy.ClusterName);
     }
 
-    if (!shouldUseHourlyData(filters, accountId)) {
-      selectQuery.addCustomFromTable(schema.getBillingDataTable());
+    if (!isGroupByHour(groupByTime) && !shouldUseHourlyData(filters, accountId)) {
+      if (featureFlagService.isEnabled(CE_BILLING_DATA_PRE_AGGREGATION, accountId)
+          && isValidGroupByForPreAggregation(groupBy) && areFiltersValidForPreAggregation(filters)
+          && areAggregationsValidForPreAggregation(aggregateFunction)) {
+        selectQuery.addCustomFromTable(BILLING_DATA_PRE_AGGREGATED_TABLE);
+        aggregateFunction = getSupportedAggregations(aggregateFunction);
+      } else {
+        selectQuery.addCustomFromTable(schema.getBillingDataTable());
+      }
     } else {
-      selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      if (featureFlagService.isEnabled(CE_BILLING_DATA_HOURLY_PRE_AGGREGATION, accountId)
+          && isValidGroupByForPreAggregation(groupBy) && areFiltersValidForPreAggregation(filters)
+          && areAggregationsValidForPreAggregation(aggregateFunction)) {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_PRE_AGGREGATED_TABLE);
+        aggregateFunction = getSupportedAggregations(aggregateFunction);
+      } else {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      }
     }
 
     decorateQueryWithAggregations(selectQuery, aggregateFunction, fieldNames);
@@ -957,11 +971,13 @@ public class BillingDataQueryBuilder {
       List<QLBillingDataFilter> filters) {
     List<String> instanceTypes = new ArrayList<>();
     boolean isNodeAndPodQuery = false;
+    boolean isNodeQuery = false;
     for (QLCCMEntityGroupBy aggregation : groupBy) {
       switch (aggregation) {
         case Node:
           instanceTypes.add("K8S_NODE");
           isNodeAndPodQuery = true;
+          isNodeQuery = true;
           break;
         case Pod:
           instanceTypes.add("K8S_POD");
@@ -984,14 +1000,16 @@ public class BillingDataQueryBuilder {
               .build());
       // Adding groupBy with corresponding selectField
       addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getInstanceId(), true);
-      addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getInstanceName(), true);
-
       addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getInstanceType(), false);
-      addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getNamespace(), false);
-      addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getCloudProvider(), false);
       addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getClusterName(), false);
-      addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getClusterId(), false);
-      addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getWorkloadName(), false);
+
+      if (!isNodeQuery) {
+        addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getInstanceName(), true);
+        addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getNamespace(), false);
+        addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getCloudProvider(), false);
+        addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getClusterId(), false);
+        addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getWorkloadName(), false);
+      }
     }
   }
 
@@ -1760,7 +1778,7 @@ public class BillingDataQueryBuilder {
   // Checking if any non supported group by for pre-aggregation is present
   private boolean isValidGroupByForPreAggregation(List<QLCCMEntityGroupBy> entityGroupBy) {
     return !entityGroupBy.stream().anyMatch(groupBy
-        -> groupBy == QLCCMEntityGroupBy.Pod || groupBy == QLCCMEntityGroupBy.Node || groupBy == QLCCMEntityGroupBy.PV
+        -> groupBy == QLCCMEntityGroupBy.Pod || groupBy == QLCCMEntityGroupBy.PV
             || groupBy == QLCCMEntityGroupBy.CloudServiceName || groupBy == QLCCMEntityGroupBy.TaskId
             || groupBy == QLCCMEntityGroupBy.LaunchType);
   }

@@ -9,6 +9,8 @@ import static io.harness.provision.TerraformConstants.TERRAFORM_VARIABLES_FILE_N
 import static io.harness.provision.TerraformConstants.TF_VAR_FILES_DIR;
 import static io.harness.provision.TerraformConstants.TF_WORKING_DIR;
 
+import static software.wings.beans.LogHelper.color;
+
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -25,12 +27,17 @@ import io.harness.git.model.GitBaseRequest;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.PlanJsonLogOutputStream;
+import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.terraform.TerraformHelperUtils;
 import io.harness.terraform.request.TerraformExecuteStepRequest;
+
+import software.wings.beans.LogColor;
+import software.wings.beans.LogWeight;
 
 import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -108,14 +115,22 @@ public class TerraformPlanTaskHandler extends TerraformAbstractTaskHandler {
 
       File tfStateFile = TerraformHelperUtils.getTerraformStateFile(scriptDirectory, taskParameters.getWorkspace());
 
-      String stateFileId = terraformBaseHelper.uploadTfStateFile(
+      String uploadedTfStateFile = terraformBaseHelper.uploadTfStateFile(
           taskParameters.getAccountId(), delegateId, taskId, taskParameters.getEntityId(), tfStateFile);
+
+      logCallback.saveExecutionLog(color("\nEncrypting terraform plan \n", LogColor.Yellow, LogWeight.Bold), INFO,
+          CommandExecutionStatus.RUNNING);
+
+      String planName = terraformBaseHelper.getPlanName(taskParameters.getTerraformCommand());
+
+      EncryptedRecordData encryptedTfPlan = terraformBaseHelper.encryptPlan(
+          Files.readAllBytes(Paths.get(scriptDirectory, planName)), planName, taskParameters.getEncryptionConfig());
 
       return TerraformTaskNGResponse.builder()
           .commitIdForConfigFilesMap(commitIdToFetchedFilesMap)
-          .encryptedTfPlan(taskParameters.getEncryptedTfPlan())
+          .encryptedTfPlan(encryptedTfPlan)
           .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-          .stateFileId(stateFileId)
+          .stateFileId(uploadedTfStateFile)
           .build();
 
     } catch (TerraformCommandExecutionException terraformCommandExecutionException) {

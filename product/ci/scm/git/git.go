@@ -246,6 +246,61 @@ func CompareCommits(ctx context.Context, request *pb.CompareCommitsRequest, log 
 	return out, nil
 }
 
+func GetAuthenticatedUser(ctx context.Context, request *pb.GetAuthenticatedUserRequest, log *zap.SugaredLogger) (out *pb.GetAuthenticatedUserResponse, err error) {
+	start := time.Now()
+	log.Infow("GetAuthenticatedUser starting")
+
+	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
+	if err != nil {
+		log.Errorw("GetAuthenticatedUser failure", "bad provider", request.GetProvider(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
+
+	response, _, err := client.Users.Find(ctx)
+	if err != nil {
+		log.Errorw("GetAuthenticatedUser failure", "provider", request.GetProvider(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
+	log.Infow("GetAuthenticatedUser success", "elapsed_time_ms", utils.TimeSince(start))
+
+	out = &pb.GetAuthenticatedUserResponse{
+		Username: response.Name,
+	}
+	return out, nil
+}
+
+func GetUserRepos(ctx context.Context, request *pb.GetUserReposRequest, log *zap.SugaredLogger) (out *pb.GetUserReposResponse, err error) {
+	start := time.Now()
+	log.Infow("GetUserRepos starting")
+
+	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
+	if err != nil {
+		log.Errorw("GetUserRepos failure", "bad provider", request.GetProvider(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
+
+	repoList, response , err := client.Repositories.List(ctx, scm.ListOptions{Page: int(request.GetPagination().GetPage())})
+
+	if err != nil {
+		log.Errorw("GetUserRepos failure", "provider", request.GetProvider(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		out = &pb.GetUserReposResponse{
+			Status: int32(response.Status),
+			Error: err.Error(),
+		}
+		return out, nil
+	}
+	log.Infow("GetUserRepos success", "elapsed_time_ms", utils.TimeSince(start))
+
+	out = &pb.GetUserReposResponse{
+		Status: int32(response.Status),
+		Repos: convertRepoList(repoList),
+		Pagination: &pb.PageResponse{
+			Next: int32(response.Page.Next),
+		},
+	}
+	return out, nil
+}
+
 func convertChangesList(from []*scm.Change) (to []*pb.PRFile) {
 	for _, v := range from {
 		to = append(to, convertChange(v))
@@ -257,6 +312,14 @@ func convertCommitsList(from []*scm.Commit) (to []*pb.Commit) {
 	for _, v := range from {
 		convertedCommit, _ := converter.ConvertCommit(v)
 		to = append(to, convertedCommit)
+	}
+	return to
+}
+
+func convertRepoList(from []*scm.Repository) (to []*pb.Repository) {
+	for _, v := range from {
+		convertedRepository, _ := converter.ConvertRepo(v)
+		to = append(to, convertedRepository)
 	}
 	return to
 }

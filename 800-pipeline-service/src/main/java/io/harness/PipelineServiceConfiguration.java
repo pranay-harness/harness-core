@@ -74,6 +74,8 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("useRedisForInterrupts") private Boolean useRedisForInterrupts;
   @JsonProperty("useRedisForOrchestrationEvents") private Boolean useRedisForOrchestrationEvents;
   @JsonProperty("useRedisForSdkResponseEvents") private Boolean useRedisForSdkResponseEvents;
+  @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
+  @JsonProperty(value = "enableAudit") private boolean enableAudit;
 
   private String managerServiceSecret;
   private String managerTarget;
@@ -83,7 +85,6 @@ public class PipelineServiceConfiguration extends Configuration {
   private PipelineServiceIteratorsConfig iteratorsConfig;
   private boolean shouldDeployWithGitSync;
   private GitSdkConfiguration gitSdkConfiguration;
-
   public PipelineServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
     defaultServerFactory.setJerseyRootPath("/api");

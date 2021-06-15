@@ -12,6 +12,7 @@ import io.harness.pms.contracts.execution.AsyncExecutableMode;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.steps.StepSpecTypeConstants;
@@ -33,8 +34,8 @@ public class JiraApprovalStep extends AsyncExecutableWithRollback {
   @Inject private ApprovalInstanceService approvalInstanceService;
 
   @Override
-  public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, StepElementParameters stepParameters, StepInputPackage inputPackage) {
+  public AsyncExecutableResponse executeAsync(Ambiance ambiance, StepElementParameters stepParameters,
+      StepInputPackage inputPackage, PassThroughData passThroughData) {
     JiraApprovalInstance approvalInstance = JiraApprovalInstance.fromStepParameters(ambiance, stepParameters);
     approvalInstance = (JiraApprovalInstance) approvalInstanceService.save(approvalInstance);
     return AsyncExecutableResponse.newBuilder()

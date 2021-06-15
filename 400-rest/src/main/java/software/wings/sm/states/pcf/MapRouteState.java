@@ -1,6 +1,8 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.validation.Validator.notNullCheck;
@@ -56,6 +58,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDP)
@@ -72,6 +76,7 @@ public class MapRouteState extends State {
   @Inject private transient PcfStateHelper pcfStateHelper;
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject @Transient protected transient LogService logService;
+  @Getter @Setter private List<String> tags;
 
   public static final String PCF_MAP_ROUTE_COMMAND = "PCF Map Route";
 
@@ -149,12 +154,19 @@ public class MapRouteState extends State {
           context.prepareSweepingOutputInquiryBuilder()
               .name(pcfStateHelper.obtainSwapRouteSweepingOutputName(context, true))
               .build());
+
+      if (isEmpty(tags) && isNotEmpty(swapRouteRollbackSweepingOutputPcf.getTags())) {
+        tags = swapRouteRollbackSweepingOutputPcf.getTags();
+      }
+
       requestConfigData = swapRouteRollbackSweepingOutputPcf.getPcfRouteUpdateRequestConfigData();
       requestConfigData.setRollback(true);
       requestConfigData.setMapRoutesOperation(!requestConfigData.isMapRoutesOperation());
     } else {
       requestConfigData = getPcfRouteUpdateRequestConfigData(setupSweepingOutputPcf, infrastructureMapping);
     }
+
+    List<String> renderedTags = pcfStateHelper.getRenderedTags(context, tags);
 
     return pcfStateHelper.queueDelegateTaskForRouteUpdate(
         PcfRouteUpdateQueueRequestData.builder()
@@ -169,7 +181,8 @@ public class MapRouteState extends State {
             .requestConfigData(requestConfigData)
             .encryptedDataDetails(encryptedDetails)
             .build(),
-        setupSweepingOutputPcf, context.getStateExecutionInstanceId(), isSelectionLogsTrackingForTasksEnabled());
+        setupSweepingOutputPcf, context.getStateExecutionInstanceId(), isSelectionLogsTrackingForTasksEnabled(),
+        renderedTags);
   }
 
   private PcfRouteUpdateRequestConfigData getPcfRouteUpdateRequestConfigData(

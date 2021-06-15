@@ -14,6 +14,7 @@ portal.iml
 /.m2
 jacoco-it.exec
 
+*.swp
 *.ipr
 *.iws
 *.orig

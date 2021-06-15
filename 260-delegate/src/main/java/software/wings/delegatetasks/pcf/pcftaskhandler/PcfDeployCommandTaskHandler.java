@@ -18,6 +18,8 @@ import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -55,6 +57,7 @@ import org.cloudfoundry.operations.applications.ApplicationDetail;
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(HarnessTeam.CDP)
 public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
   /**
    * This method is responsible for upsizing new application instances and downsizing previous application instances.
@@ -99,6 +102,9 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
               .spaceName(pcfCommandDeployRequest.getSpace())
               .timeOutIntervalInMins(pcfCommandDeployRequest.getTimeoutIntervalInMin())
               .useCFCLI(pcfCommandDeployRequest.isUseCfCLI())
+              .cfCliPath(pcfCommandTaskHelper.getCfCliPathOnDelegate(
+                  pcfCommandDeployRequest.isUseCfCLI(), pcfCommandDeployRequest.getCfCliVersion()))
+              .cfCliVersion(pcfCommandDeployRequest.getCfCliVersion())
               .limitPcfThreads(pcfCommandDeployRequest.isLimitPcfThreads())
               .ignorePcfConnectionContextCache(pcfCommandDeployRequest.isIgnorePcfConnectionContextCache())
               .build();

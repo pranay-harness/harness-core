@@ -1,5 +1,7 @@
 package io.harness.steps.cf;
 
+import io.harness.pms.yaml.ParameterField;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -24,7 +26,9 @@ public class RemoveTargetsToVariationTargetMapYaml implements PatchInstruction {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class RemoveTargetsToVariationTargetMapYamlSpec {
-    private String variation;
-    private List<String> targets;
+    private ParameterField<String> variation;
+    private ParameterField<List<String>> targets;
+    private ParameterField<String> identifier;
+    private ParameterField<String> name;
   }
 }

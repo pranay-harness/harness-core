@@ -59,9 +59,7 @@ public class FlagConfigurationStepInfo implements PMSStepInfo {
 
   @Override
   public SpecParameters getSpecParameters() {
-    return FlagConfigurationStepParameters
-        .builder()
-        //.identifier(identifier)
+    return FlagConfigurationStepParameters.builder()
         .name(name)
         .feature(feature)
         .environment(environment)

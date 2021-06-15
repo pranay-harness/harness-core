@@ -41,8 +41,9 @@ public class AsyncStrategy extends ProgressableStrategy {
     NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
     Ambiance ambiance = nodeExecution.getAmbiance();
     AsyncExecutable asyncExecutable = extractStep(nodeExecution);
-    AsyncExecutableResponse asyncExecutableResponse = asyncExecutable.executeAsync(ambiance,
-        sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
+    AsyncExecutableResponse asyncExecutableResponse =
+        asyncExecutable.executeAsync(ambiance, sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution),
+            invokerPackage.getInputPackage(), invokerPackage.getPassThroughData());
     handleResponse(nodeExecution, asyncExecutableResponse);
   }
 

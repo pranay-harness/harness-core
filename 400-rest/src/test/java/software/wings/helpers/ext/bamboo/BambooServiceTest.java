@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.bamboo;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 
@@ -28,6 +29,7 @@ import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.InvalidArtifactServerException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -47,6 +49,7 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.inject.Inject;
 import java.io.FileNotFoundException;
+import java.util.Collections;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
@@ -337,5 +340,18 @@ public class BambooServiceTest extends WingsBaseTest {
                              .willReturn(aResponse().withStatus(400).withBody("{\"message\" : \"Bad Request\"}")));
     actual = bambooService.getBuildResultStatus(bambooConfig, null, "failingBuild");
     assertThat(actual).isNull();
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionIfPasswordIsNotDecrypted() {
+    BambooConfig bambooConfigPasswordEncrypted =
+        BambooConfig.builder().password(null).encryptedPassword("encrypted").build();
+    assertThatThrownBy(()
+                           -> ((BambooServiceImpl) bambooService)
+                                  .getBasicAuthCredentials(bambooConfigPasswordEncrypted, Collections.emptyList()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Failed to decrypt password for Bamboo connector");
   }
 }

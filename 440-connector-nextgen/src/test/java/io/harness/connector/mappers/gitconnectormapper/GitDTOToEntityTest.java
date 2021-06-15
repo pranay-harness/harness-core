@@ -44,6 +44,7 @@ public class GitDTOToEntityTest extends CategoryTest {
     String userName = "userName";
     String passwordIdentifier = "passwordIdentifier";
     String passwordReference = Scope.ACCOUNT.getYamlRepresentation() + "." + passwordIdentifier;
+    String validationRepo = "validationRepo";
 
     SecretRefData passwordRef = SecretRefHelper.createSecretRef(passwordReference);
     CustomCommitAttributes customCommitAttributes = CustomCommitAttributes.builder()
@@ -60,12 +61,14 @@ public class GitDTOToEntityTest extends CategoryTest {
                                     .gitAuthType(HTTP)
                                     .gitConnectionType(ACCOUNT)
                                     .url(url)
+                                    .validationRepo(validationRepo)
                                     .gitAuth(httpAuthentication)
                                     .build();
     GitConfig gitConfig = gitDTOToEntity.toConnectorEntity(gitConfigDTO);
     assertThat(gitConfig).isNotNull();
     assertThat(gitConfig.isSupportsGitSync()).isTrue();
     assertThat(gitConfig.getUrl()).isEqualTo(url);
+    assertThat(gitConfig.getValidationRepo()).isEqualTo(validationRepo);
     assertThat(gitConfig.getConnectionType()).isEqualTo(ACCOUNT);
     assertThat(gitConfig.getAuthType()).isEqualTo(HTTP);
     assertThat(gitConfig.getCustomCommitAttributes()).isEqualTo(customCommitAttributes);

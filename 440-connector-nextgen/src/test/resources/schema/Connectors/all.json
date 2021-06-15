@@ -681,6 +681,7 @@
       "required": [
         "containerName",
         "directoryName",
+        "reportName",
         "storageAccountName"
       ],
       "properties": {
@@ -688,6 +689,9 @@
           "type": "string"
         },
         "directoryName": {
+          "type": "string"
+        },
+        "reportName": {
           "type": "string"
         },
         "storageAccountName": {
@@ -819,6 +823,9 @@
               ]
             },
             "url": {
+              "type": "string"
+            },
+            "validationRepo": {
               "type": "string"
             }
           }
@@ -2036,6 +2043,9 @@
             },
             "url": {
               "type": "string"
+            },
+            "validationRepo": {
+              "type": "string"
             }
           }
         },
@@ -2313,6 +2323,9 @@
               ]
             },
             "url": {
+              "type": "string"
+            },
+            "validationRepo": {
               "type": "string"
             }
           }
@@ -2608,6 +2621,9 @@
               ]
             },
             "url": {
+              "type": "string"
+            },
+            "validationRepo": {
               "type": "string"
             }
           }

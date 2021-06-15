@@ -32,6 +32,8 @@ public class InterruptEventListener extends QueueListener<io.harness.pms.interru
                                         .setType(event.getInterruptType())
                                         .setInterruptUuid(event.getInterruptUuid())
                                         .setNotifyId(event.getNotifyId())
+                                        .setAmbiance(event.getNodeExecution().getAmbiance())
+                                        .setStepParameters(event.getNodeExecution().getResolvedStepParametersBytes())
                                         .putAllMetadata(CollectionUtils.emptyIfNull(event.getMetadata()));
     interruptEventHandler.handleEvent(populateResponse(event.getNodeExecution(), interruptEventBuilder));
   }

@@ -58,15 +58,15 @@ def main(event, context):
             jsonData["tenant_id"] = ps[2]
 
     monthfolder = ps[-1]  # last folder in path
-    reportYear = monthfolder.split("-")[0][:4]
-    reportMonth = monthfolder.split("-")[0][4:6]
+    jsonData["reportYear"] = monthfolder.split("-")[0][:4]
+    jsonData["reportMonth"] = monthfolder.split("-")[0][4:6]
 
     connector_id = ps[1]  # second from beginning is connector id in mongo
 
     accountIdBQ = re.sub('[^0-9a-z]', '_', jsonData.get("accountId").lower())
     jsonData["datasetName"] = "BillingReport_%s" % (accountIdBQ)
 
-    jsonData["tableSuffix"] = "%s_%s_%s" % (reportYear, reportMonth, connector_id)
+    jsonData["tableSuffix"] = "%s_%s_%s" % (jsonData["reportYear"], jsonData["reportMonth"], connector_id)
     jsonData["tableName"] = f"azureBilling_{jsonData['tableSuffix']}"
     jsonData["tableId"] = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], jsonData["tableName"])
 
@@ -263,7 +263,7 @@ def setAvailableColumns(jsonData):
 def ingest_data_into_preagg(jsonData, azure_column_mapping):
     ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
     tableName = "%s.%s" % (ds, "preAggregated")
-    year, month, _ = jsonData["tableSuffix"].split('_')
+    year, month = jsonData["reportYear"], jsonData["reportMonth"]
     date_start = "%s-%s-01" % (year, month)
     date_end = "%s-%s-%s" % (year, month, monthrange(int(year), int(month))[1])
     print_("Loading into %s preAggregated table..." % tableName)
@@ -300,10 +300,10 @@ def ingest_data_into_preagg(jsonData, azure_column_mapping):
 
 
 def ingest_data_into_unified(jsonData, azure_column_mapping):
-    create_bq_udf()
+    # create_bq_udf() # Enable this only when needed.
     ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
     tableName = "%s.%s" % (ds, "unifiedTable")
-    year, month, _ = jsonData["tableSuffix"].split('_')
+    year, month = jsonData["reportYear"], jsonData["reportMonth"]
     date_start = "%s-%s-01" % (year, month)
     date_end = "%s-%s-%s" % (year, month, monthrange(int(year), int(month))[1])
     print_("Loading into %s table..." % tableName)
@@ -402,9 +402,11 @@ def create_bq_udf():
                 return output;
                 \""";
     """ % PROJECTID
-
-    query_job = client.query(query)
-    query_job.result()
+    try:
+        query_job = client.query(query)
+        query_job.result()
+    except Exception as e:
+        print_(e)
 
 
 def alter_preagg_table(jsonData):

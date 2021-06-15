@@ -8,23 +8,16 @@ import static java.util.Collections.singletonList;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.config.PublisherConfiguration;
-import io.harness.config.WorkersConfiguration;
+import io.harness.cache.CacheConfig;
 import io.harness.configuration.DeployMode;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
-import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.lock.DistributedLockImplementation;
-import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.redis.RedisConfig;
-import io.harness.scheduler.SchedulerConfig;
 import io.harness.stream.AtmosphereBroadcaster;
 
-import software.wings.DataStorageMode;
-import software.wings.app.PortalConfig;
 import software.wings.beans.HttpMethod;
-import software.wings.cdn.CdnConfig;
 import software.wings.jre.JreConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
@@ -64,34 +57,20 @@ public class DelegateServiceConfig extends Configuration implements AssetsBundle
           .mimeTypes(of("js", "application/json; charset=UTF-8", "zip", "application/zip"))
           .build();
 
-  @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = MongoConfig.builder().build();
-  @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
-  @JsonProperty("events-mongo") private MongoConfig eventsMongo = MongoConfig.builder().uri("").build();
-  @JsonProperty private PortalConfig portal = new PortalConfig();
-  @JsonProperty(defaultValue = "true") private boolean enableIterators = true;
-  @JsonProperty("backgroundScheduler") private SchedulerConfig backgroundSchedulerConfig = new SchedulerConfig();
-  @JsonProperty("serviceScheduler") private SchedulerConfig serviceSchedulerConfig = new SchedulerConfig();
-  @JsonProperty("watcherMetadataUrl") private String watcherMetadataUrl;
-  @JsonProperty("delegateMetadataUrl") private String delegateMetadataUrl;
-  @JsonProperty(defaultValue = "KUBERNETES") private DeployMode deployMode = DeployMode.KUBERNETES;
-  @JsonProperty("featuresEnabled") private String featureNames;
-  @JsonProperty("executionLogStorageMode") private DataStorageMode executionLogsStorageMode;
-  @JsonProperty("fileStorageMode") private DataStorageMode fileStorageMode;
   @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
   @JsonProperty("redisAtmosphereConfig") private RedisConfig redisAtmosphereConfig;
-  @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
-  @JsonProperty("grpcDelegateServiceClientConfig") private GrpcClientConfig grpcDelegateServiceClientConfig;
-  @JsonProperty("grpcClientConfig") private GrpcClientConfig grpcClientConfig;
-  @JsonProperty("workers") private WorkersConfiguration workers;
-  @JsonProperty("publishers") private PublisherConfiguration publisherConfiguration;
   @JsonProperty("currentJre") private String currentJre;
-  @JsonProperty("migrateToJre") private String migrateToJre;
   @JsonProperty("jreConfigs") private Map<String, JreConfig> jreConfigs;
-  @JsonProperty("cdnConfig") private CdnConfig cdnConfig;
   @JsonProperty("atmosphereBroadcaster") private AtmosphereBroadcaster atmosphereBroadcaster;
-  @JsonProperty("delegateGrpcServicePort") private Integer delegateGrpcServicePort;
-  @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfig logStreamingServiceConfig;
+  @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
+  @JsonProperty("delegateServiceUrl") private String delegateServiceUrl;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
+  @JsonProperty(defaultValue = "KUBERNETES") private DeployMode deployMode = DeployMode.KUBERNETES;
+  @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
+  @JsonProperty("grpcServerClassicConfig") private GrpcServerConfig grpcServerClassicConfig;
+  @JsonProperty("delegateServiceSecret") private String delegateServiceSecret;
+  @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = MongoConfig.builder().build();
 
   private int applicationPort;
   private boolean sslEnabled;
@@ -103,7 +82,7 @@ public class DelegateServiceConfig extends Configuration implements AssetsBundle
    */
   public DelegateServiceConfig() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
-    defaultServerFactory.setJerseyRootPath("/api");
+    defaultServerFactory.setJerseyRootPath("/delegate");
     defaultServerFactory.setRegisterDefaultExceptionMappers(false);
     defaultServerFactory.setAdminContextPath("/admin");
     defaultServerFactory.setAdminConnectors(singletonList(getDefaultAdminConnectorFactory()));
