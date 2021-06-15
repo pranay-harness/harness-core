@@ -13,6 +13,7 @@ import static io.harness.ng.core.SecretManagementModule.SECRET_FILE_SERVICE;
 import static io.harness.ng.core.SecretManagementModule.SECRET_TEXT_SERVICE;
 import static io.harness.ng.core.SecretManagementModule.SSH_SECRET_SERVICE;
 import static io.harness.remote.client.RestClientUtils.getResponse;
+import static io.harness.secretmanagerclient.SecretType.SecretFile;
 import static io.harness.secretmanagerclient.SecretType.SecretText;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -161,6 +162,22 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     }
 
     EncryptedDataDTO encryptedData = getService(dto.getType()).create(accountIdentifier, dto);
+    if (SecretFile.equals(dto.getType())) {
+      SecretFileSpecDTO specDTO = (SecretFileSpecDTO) dto.getSpec();
+      SecretFileDTO secretFileDTO = SecretFileDTO.builder()
+                                        .account(accountIdentifier)
+                                        .org(dto.getOrgIdentifier())
+                                        .project(dto.getProjectIdentifier())
+                                        .identifier(dto.getIdentifier())
+                                        .name(dto.getName())
+                                        .description(dto.getDescription())
+                                        .tags(null)
+                                        .secretManager(specDTO.getSecretManagerIdentifier())
+                                        .type(dto.getType())
+                                        .build();
+      encryptedData =
+          getResponse(secretManagerClient.createSecretFile(getRequestBody(JsonUtils.asJson(secretFileDTO)), null));
+    }
     if (Optional.ofNullable(encryptedData).isPresent()) {
       secretEntityReferenceHelper.createSetupUsageForSecretManager(encryptedData);
       Secret secret = ngSecretService.create(accountIdentifier, dto, true);
