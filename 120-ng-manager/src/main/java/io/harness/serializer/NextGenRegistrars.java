@@ -50,6 +50,7 @@ public class NextGenRegistrars {
           .add(InvitesMorphiaRegistrar.class)
           .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
           .addAll(LicenseManagerRegistrars.morphiaRegistrars)
+          .addAll(SignupRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =

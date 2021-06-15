@@ -74,7 +74,8 @@ public class SignupTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
     MongoClient mongoClient = new MongoClient(new MongoClientURI("mongodb://localhost:7457"));
 
     modules.add(new SignupModule(ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(),
-        "test_secret", "Service", SignupNotificationConfiguration.builder().build()));
+        "test_secret", "Service", SignupNotificationConfiguration.builder().build(), "http://localhost:8181/ng/#/",
+        "http://localhost:8181/auth/#/"));
 
     modules.add(new ProviderModule() {
       @Provides

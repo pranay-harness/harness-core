@@ -677,16 +677,8 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public String generateVerificationUrl(String userId, String accountId) throws URISyntaxException {
-    EmailVerificationToken emailVerificationToken =
-        wingsPersistence.saveAndGet(EmailVerificationToken.class, new EmailVerificationToken(userId));
-    return buildAbsoluteUrl(
-        configuration.getPortal().getVerificationUrl() + "/" + emailVerificationToken.getToken(), accountId);
-  }
-
-  @Override
-  public String generateLoginUrl(String accountId) throws URISyntaxException {
-    return buildAbsoluteUrl("/login", accountId);
+  public void setUserEmailVerified(String userId) {
+    wingsPersistence.updateFields(User.class, userId, ImmutableMap.of("emailVerified", true));
   }
 
   @Override
@@ -858,8 +850,12 @@ public class UserServiceImpl implements UserService {
   }
 
   private void sendVerificationEmail(User user) {
+    EmailVerificationToken emailVerificationToken =
+        wingsPersistence.saveAndGet(EmailVerificationToken.class, new EmailVerificationToken(user.getUuid()));
     try {
-      String verificationUrl = generateVerificationUrl(user.getUuid(), user.getDefaultAccountId());
+      String verificationUrl =
+          buildAbsoluteUrl(configuration.getPortal().getVerificationUrl() + "/" + emailVerificationToken.getToken(),
+              user.getDefaultAccountId());
       Map<String, String> templateModel = getTemplateModel(user.getName(), verificationUrl);
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
