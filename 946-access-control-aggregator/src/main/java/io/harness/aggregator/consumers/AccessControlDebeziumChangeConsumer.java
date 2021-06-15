@@ -1,25 +1,26 @@
 package io.harness.aggregator.consumers;
 
-import io.harness.accesscontrol.AccessControlEntity;
-import io.harness.aggregator.OpType;
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.DuplicateFieldException;
-
 import com.google.inject.Singleton;
+
 import io.debezium.embedded.EmbeddedEngineChangeEvent;
 import io.debezium.engine.ChangeEvent;
 import io.debezium.engine.DebeziumEngine;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import io.harness.accesscontrol.AccessControlEntity;
+import io.harness.aggregator.OpType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.DuplicateFieldException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.springframework.dao.DuplicateKeyException;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Singleton
 @Slf4j
@@ -72,8 +73,10 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
         retry.executeSupplier(() -> handleEvent(changeEvent));
       } catch (Exception exception) {
         log.error(
-            "Exception caught when trying to process event: {}. Retrying this event with exponential backoff now...",
-            changeEvent, exception);
+            String.format(
+                "Exception caught when trying to process event: [%s]. Retrying this event with exponential backoff now...",
+                changeEvent),
+            exception);
         changeEventFailureHandler.handle(changeEvent, exception);
       }
       recordCommitter.markProcessed(changeEvent);
