@@ -529,7 +529,8 @@ public class NgUserServiceImpl implements NgUserService {
       Pageable pageable = PageUtils.getPageRequest(pageRequest);
       List<Project> projects = userMembershipRepository.findProjectList(userId.get(), accountId, pageable);
       List<ProjectDTO> projectDTOList = projects.stream().map(ProjectMapper::writeDTO).collect(Collectors.toList());
-      return new PageImpl<>(projectDTOList, pageable, projectDTOList.size());
+      return new PageImpl<>(
+          projectDTOList, pageable, userMembershipRepository.getProjectCount(userId.get(), accountId));
     } else {
       throw new IllegalStateException("user login required");
     }
