@@ -678,7 +678,8 @@
         "containerName",
         "directoryName",
         "reportName",
-        "storageAccountName"
+        "storageAccountName",
+        "subscriptionId"
       ],
       "properties": {
         "containerName": {
@@ -691,6 +692,9 @@
           "type": "string"
         },
         "storageAccountName": {
+          "type": "string"
+        },
+        "subscriptionId": {
           "type": "string"
         }
       },

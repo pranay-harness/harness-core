@@ -18,4 +18,5 @@ public class BillingExportDetails {
   @NotNull String containerName;
   @NotNull String directoryName;
   @NotNull String reportName;
+  @NotNull String subscriptionId;
 }

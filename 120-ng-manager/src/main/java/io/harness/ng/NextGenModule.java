@@ -132,6 +132,7 @@ import io.harness.pipeline.PipelineRemoteClientModule;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
+import io.harness.remote.CEAzureSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
@@ -298,6 +299,12 @@ public class NextGenModule extends AbstractModule {
   @Singleton
   CEAwsSetupConfig ceAwsSetupConfig() {
     return this.appConfig.getCeAwsSetupConfig();
+  }
+
+  @Provides
+  @Singleton
+  CEAzureSetupConfig ceAzureSetupConfig() {
+    return this.appConfig.getCeAzureSetupConfig();
   }
 
   @Override
