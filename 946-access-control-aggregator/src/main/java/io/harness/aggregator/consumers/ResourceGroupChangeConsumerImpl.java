@@ -78,8 +78,10 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
     } catch (ExecutionException ex) {
       throw new GeneralException("", ex.getCause());
     } catch (InterruptedException ex) {
-      // Should never happen though
       Thread.currentThread().interrupt();
+      throw new GeneralException("", ex);
+    } finally {
+      executorService.shutdown();
     }
 
     log.info("Number of ACLs created: {}", numberOfACLsCreated);
