@@ -46,8 +46,7 @@ public class ScmManagerGitHelper implements ScmGitHelper {
           // If in create file we get same filepath we have to throw new exception.
           final WingsException cause = ExceptionUtils.cause(ErrorCode.SCM_CONFLICT_ERROR, e);
           if (cause != null) {
-            throw new InvalidRequestException(String.format(
-                "A file with name %s already exists in the remote Git repository", gitBranchInfo.getFilePath()));
+            throw new InvalidRequestException("A file or folder with the same name already exists");
           }
           throw e;
         }
