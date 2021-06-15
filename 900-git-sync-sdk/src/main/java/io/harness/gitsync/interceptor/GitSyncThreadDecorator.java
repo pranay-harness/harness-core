@@ -59,7 +59,7 @@ public class GitSyncThreadDecorator implements ContainerRequestFilter, Container
                                          .lastObjectId(lastObjectId)
                                          .folderPath(folderPath)
                                          .isNewBranch(Boolean.valueOf(isNewBranch))
-                                         .findDefaultFromOtherBranches(Boolean.valueOf(findDefaultFromOtherBranches))
+                                         .findDefaultFromOtherRepos(Boolean.valueOf(findDefaultFromOtherBranches))
                                          .baseBranch(baseBranch)
                                          .build();
     if (!GlobalContextManager.isAvailable()) {
