@@ -10,6 +10,7 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
+import io.harness.pms.contracts.triggers.TriggerPayload;
 
 import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
@@ -43,6 +44,7 @@ public class PlanExecutionMetadata implements PersistentEntity, UuidAware {
   private String yaml;
   private String processedYaml;
   private String triggerJsonPayload;
+  private TriggerPayload triggerPayload;
 
   @Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
 

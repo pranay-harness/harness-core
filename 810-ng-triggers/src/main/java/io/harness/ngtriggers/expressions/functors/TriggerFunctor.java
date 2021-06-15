@@ -9,7 +9,7 @@ import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecutionMetadata;
 import io.harness.expression.LateBindingValue;
-import io.harness.ngtriggers.helpers.TriggerAmbianceHelper;
+import io.harness.ngtriggers.helpers.TriggerHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.yaml.utils.JsonPipelineUtils;
 
@@ -34,7 +34,7 @@ public class TriggerFunctor implements LateBindingValue {
             .orElseThrow(()
                              -> new IllegalStateException(
                                  "No Metadata present for planExecution :" + ambiance.getPlanExecutionId()));
-    Map<String, Object> jsonObject = TriggerAmbianceHelper.buildJsonObjectFromAmbiance(ambiance);
+    Map<String, Object> jsonObject = TriggerHelper.buildJsonObjectFromAmbiance(metadata.getTriggerPayload());
     jsonObject.put(EVENT_PAYLOAD, metadata.getTriggerJsonPayload());
     // payload
     try {

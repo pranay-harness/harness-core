@@ -56,6 +56,7 @@ public class SdkOrchestrationEventHandler extends NodeBaseEventHandler<Orchestra
         .status(event.getStatus())
         .resolvedStepParameters(event.getStepParameters().toStringUtf8())
         .serviceName(event.getServiceName())
+        .triggerPayload(event.getTriggerPayload())
         .build();
   }
 }
