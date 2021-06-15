@@ -130,6 +130,7 @@ public class PmsSdkInitHelper {
         .setSdkModuleInfo(SdkModuleInfo.newBuilder().setDisplayName(moduleType.getDisplayName()).build())
         .setFacilitatorEventConsumerConfig(sdkConfiguration.getFacilitationEventConsumerConfig())
         .setNodeStartEventConsumerConfig(sdkConfiguration.getNodeStartEventConsumerConfig())
+        .setProgressEventConsumerConfig(sdkConfiguration.getProgressEventConsumerConfig())
         .build();
   }
 

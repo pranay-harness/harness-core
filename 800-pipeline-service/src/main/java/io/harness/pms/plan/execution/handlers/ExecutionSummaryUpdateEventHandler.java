@@ -7,7 +7,7 @@ import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.engine.observers.NodeUpdateObserver;
 import io.harness.execution.NodeExecution;
 import io.harness.observer.AsyncInformObserver;
-import io.harness.pms.plan.execution.ExecutionSummaryUpdateUtils;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 import io.harness.steps.StepSpecTypeConstants;
@@ -42,7 +42,9 @@ public class ExecutionSummaryUpdateEventHandler implements NodeUpdateObserver, A
   public void updatePipelineLevelInfo(String planExecutionId, NodeExecution nodeExecution) {
     if (Objects.equals(nodeExecution.getNode().getGroup(), PIPELINE)) {
       Update update = new Update();
-      ExecutionSummaryUpdateUtils.addPipelineUpdateCriteria(update, planExecutionId, nodeExecution);
+      if (StatusUtils.isFinalStatus(nodeExecution.getStatus())) {
+        update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.endTs, nodeExecution.getEndTs());
+      }
       Criteria criteria =
           Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId);
       Query query = new Query(criteria);
@@ -51,11 +53,14 @@ public class ExecutionSummaryUpdateEventHandler implements NodeUpdateObserver, A
   }
 
   public void updateStageLevelInfo(String planExecutionId, NodeExecution nodeExecution) {
-    // TODO: Do this better
     if (Objects.equals(nodeExecution.getNode().getGroup(), STAGE.name())
         || Objects.equals(nodeExecution.getNode().getStepType().getType(), StepSpecTypeConstants.BARRIER)) {
       Update update = new Update();
-      ExecutionSummaryUpdateUtils.addStageUpdateCriteria(update, planExecutionId, nodeExecution);
+      String stageUuid = nodeExecution.getNode().getUuid();
+      if (StatusUtils.isFinalStatus(nodeExecution.getStatus())) {
+        update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".endTs",
+            nodeExecution.getEndTs());
+      }
       Criteria criteria =
           Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId);
       Query query = new Query(criteria);

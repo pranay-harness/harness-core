@@ -20,4 +20,5 @@ public class BillingExportSpecDTO {
   @NotNull String containerName;
   @NotNull String directoryName;
   @NotNull String reportName;
+  @NotNull String subscriptionId;
 }

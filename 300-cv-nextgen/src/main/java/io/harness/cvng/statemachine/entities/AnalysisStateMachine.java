@@ -66,7 +66,7 @@ public final class AnalysisStateMachine
   private String verificationTaskId;
   private AnalysisState currentState;
   private List<AnalysisState> completedStates;
-  private AnalysisStatus status;
+  @FdIndex private AnalysisStatus status;
 
   private long nextAttemptTime;
 

@@ -18,6 +18,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @Builder
@@ -28,7 +29,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(HarnessTeam.CV)
 public class PrometheusConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
-  @NotNull String url;
+  @NotNull @NotBlank String url;
   Set<String> delegateSelectors;
 
   public String getUrl() {

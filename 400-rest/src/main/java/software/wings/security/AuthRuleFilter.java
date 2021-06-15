@@ -433,7 +433,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
   private void validateAccountStatus(String accountId, boolean isHarnessUserExemptedRequest) {
     String accountStatus = accountService.getAccountStatus(accountId);
+    log.info("Testing: accountstatus for accountId {} is {}", accountId, accountStatus);
     if (AccountStatus.DELETED.equals(accountStatus)) {
+      log.error("Testing: account {} does not exist with status {}", accountId, accountStatus);
       throw new WingsException(ACCOUNT_DOES_NOT_EXIST, USER);
     } else if (AccountStatus.INACTIVE.equals(accountStatus) && !isHarnessUserExemptedRequest) {
       Account account = accountService.getFromCache(accountId);

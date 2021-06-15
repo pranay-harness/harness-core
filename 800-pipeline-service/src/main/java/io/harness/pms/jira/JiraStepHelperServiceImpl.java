@@ -15,6 +15,7 @@ import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.delegate.task.jira.JiraTaskNGParameters;
 import io.harness.delegate.task.jira.JiraTaskNGParameters.JiraTaskNGParametersBuilder;
 import io.harness.delegate.task.jira.JiraTaskNGResponse;
+import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.NGAccess;
@@ -89,7 +90,8 @@ public class JiraStepHelperServiceImpl implements JiraStepHelperService {
         params.getDelegateSelectors()
             .stream()
             .map(s -> TaskSelector.newBuilder().setSelector(s).build())
-            .collect(Collectors.toList()));
+            .collect(Collectors.toList()),
+        Scope.PROJECT);
   }
 
   @Override

@@ -2,6 +2,8 @@ package io.harness.pms.sdk;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.ng.DbAliases;
@@ -32,6 +34,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -54,6 +57,7 @@ public class PmsSdkInstance implements PersistentEntity, UuidAware {
   ConsumerConfig orchestrationEventConsumerConfig;
   ConsumerConfig facilitatorEventConsumerConfig;
   ConsumerConfig nodeStartEventConsumerConfig;
+  ConsumerConfig progressEventConsumerConfig;
 
   @Default @Setter @NonFinal @SchemaIgnore @FdIndex @CreatedDate Long createdAt = System.currentTimeMillis();
   @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate Long lastUpdatedAt;

@@ -64,7 +64,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
-import org.jooq.InsertFinalStep;
 import org.jooq.Record;
 import org.jooq.SelectFinalStep;
 import org.jooq.SelectSelectStep;
@@ -81,7 +80,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 @OwnedBy(CE)
 public class K8sRecommendationDAO {
   private static final int RETRY_COUNT = 3;
-  private static final int SLEEP_DURATION = 200;
+  private static final int SLEEP_DURATION = 100;
+
   private static final String MAXCPU = "maxcpu";
   private static final String MAXMEMORY = "maxmemory";
   private static final String SUMCPU = "sumcpu";
@@ -138,29 +138,31 @@ public class K8sRecommendationDAO {
         .fetchOneInto(RecommendationOverviewStats.class);
   }
 
+  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
   public void insertIntoCeRecommendation(@NonNull String uuid, @NonNull ResourceId workloadId,
       @Nullable Double monthlyCost, @Nullable Double monthlySaving, boolean shouldShowRecommendation,
       @NonNull Instant lastReceivedUntilAt) {
-    insertOne(dslContext.insertInto(CE_RECOMMENDATIONS)
-                  .set(CE_RECOMMENDATIONS.ACCOUNTID, workloadId.getAccountId())
-                  .set(CE_RECOMMENDATIONS.ID, uuid)
-                  // insert cluster-name instead after ClusterRecord from 40-rest is demoted to ce-commons
-                  .set(CE_RECOMMENDATIONS.CLUSTERNAME, workloadId.getClusterId())
-                  .set(CE_RECOMMENDATIONS.NAME, workloadId.getName())
-                  .set(CE_RECOMMENDATIONS.NAMESPACE, workloadId.getNamespace())
-                  .set(CE_RECOMMENDATIONS.RESOURCETYPE, ResourceType.WORKLOAD.name())
-                  .set(CE_RECOMMENDATIONS.MONTHLYCOST, monthlyCost)
-                  .set(CE_RECOMMENDATIONS.MONTHLYSAVING, monthlySaving)
-                  .set(CE_RECOMMENDATIONS.ISVALID, shouldShowRecommendation)
-                  .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
-                  .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow())
-                  .onConflictOnConstraint(CE_RECOMMENDATIONS.getPrimaryKey())
-                  .doUpdate()
-                  .set(CE_RECOMMENDATIONS.MONTHLYCOST, monthlyCost)
-                  .set(CE_RECOMMENDATIONS.MONTHLYSAVING, monthlySaving)
-                  .set(CE_RECOMMENDATIONS.ISVALID, shouldShowRecommendation)
-                  .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
-                  .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow()));
+    dslContext.insertInto(CE_RECOMMENDATIONS)
+        .set(CE_RECOMMENDATIONS.ACCOUNTID, workloadId.getAccountId())
+        .set(CE_RECOMMENDATIONS.ID, uuid)
+        // insert cluster-name instead after ClusterRecord from 40-rest is demoted to ce-commons
+        .set(CE_RECOMMENDATIONS.CLUSTERNAME, workloadId.getClusterId())
+        .set(CE_RECOMMENDATIONS.NAME, workloadId.getName())
+        .set(CE_RECOMMENDATIONS.NAMESPACE, workloadId.getNamespace())
+        .set(CE_RECOMMENDATIONS.RESOURCETYPE, ResourceType.WORKLOAD.name())
+        .set(CE_RECOMMENDATIONS.MONTHLYCOST, monthlyCost)
+        .set(CE_RECOMMENDATIONS.MONTHLYSAVING, monthlySaving)
+        .set(CE_RECOMMENDATIONS.ISVALID, shouldShowRecommendation)
+        .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
+        .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow())
+        .onConflictOnConstraint(CE_RECOMMENDATIONS.getPrimaryKey())
+        .doUpdate()
+        .set(CE_RECOMMENDATIONS.MONTHLYCOST, monthlyCost)
+        .set(CE_RECOMMENDATIONS.MONTHLYSAVING, monthlySaving)
+        .set(CE_RECOMMENDATIONS.ISVALID, shouldShowRecommendation)
+        .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
+        .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow())
+        .execute();
   }
 
   @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
@@ -251,30 +253,27 @@ public class K8sRecommendationDAO {
         .asTable();
   }
 
+  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
   public void insertNodePoolAggregated(@NonNull JobConstants jobConstants, @NonNull NodePoolId nodePoolId,
       @NonNull TotalResourceUsage totalResourceUsage) {
-    insertOne(dslContext.insertInto(NODE_POOL_AGGREGATED)
-                  .set(NODE_POOL_AGGREGATED.ACCOUNTID, jobConstants.getAccountId())
-                  .set(NODE_POOL_AGGREGATED.CLUSTERID, nodePoolId.getClusterid())
-                  .set(NODE_POOL_AGGREGATED.NAME, nodePoolId.getNodepoolname())
-                  .set(NODE_POOL_AGGREGATED.STARTTIME, toOffsetDateTime(jobConstants.getJobStartTime()))
-                  .set(NODE_POOL_AGGREGATED.ENDTIME, toOffsetDateTime(jobConstants.getJobEndTime()))
-                  .set(NODE_POOL_AGGREGATED.SUMCPU, totalResourceUsage.getSumcpu())
-                  .set(NODE_POOL_AGGREGATED.SUMMEMORY, totalResourceUsage.getSummemory())
-                  .set(NODE_POOL_AGGREGATED.MAXCPU, totalResourceUsage.getMaxcpu())
-                  .set(NODE_POOL_AGGREGATED.MAXMEMORY, totalResourceUsage.getMaxmemory())
-                  .onConflictOnConstraint(Keys.NODE_POOL_AGGREGATED_UNIQUE_RECORD_INDEX)
-                  .doUpdate()
-                  .set(NODE_POOL_AGGREGATED.SUMCPU, totalResourceUsage.getSumcpu())
-                  .set(NODE_POOL_AGGREGATED.SUMMEMORY, totalResourceUsage.getSummemory())
-                  .set(NODE_POOL_AGGREGATED.MAXCPU, totalResourceUsage.getMaxcpu())
-                  .set(NODE_POOL_AGGREGATED.MAXMEMORY, totalResourceUsage.getMaxmemory())
-                  .set(NODE_POOL_AGGREGATED.UPDATEDAT, offsetDateTimeNow()));
-  }
-
-  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
-  private static void insertOne(@NonNull InsertFinalStep<? extends Record> finalStep) {
-    finalStep.execute();
+    dslContext.insertInto(NODE_POOL_AGGREGATED)
+        .set(NODE_POOL_AGGREGATED.ACCOUNTID, jobConstants.getAccountId())
+        .set(NODE_POOL_AGGREGATED.CLUSTERID, nodePoolId.getClusterid())
+        .set(NODE_POOL_AGGREGATED.NAME, nodePoolId.getNodepoolname())
+        .set(NODE_POOL_AGGREGATED.STARTTIME, toOffsetDateTime(jobConstants.getJobStartTime()))
+        .set(NODE_POOL_AGGREGATED.ENDTIME, toOffsetDateTime(jobConstants.getJobEndTime()))
+        .set(NODE_POOL_AGGREGATED.SUMCPU, totalResourceUsage.getSumcpu())
+        .set(NODE_POOL_AGGREGATED.SUMMEMORY, totalResourceUsage.getSummemory())
+        .set(NODE_POOL_AGGREGATED.MAXCPU, totalResourceUsage.getMaxcpu())
+        .set(NODE_POOL_AGGREGATED.MAXMEMORY, totalResourceUsage.getMaxmemory())
+        .onConflictOnConstraint(Keys.NODE_POOL_AGGREGATED_UNIQUE_RECORD_INDEX)
+        .doUpdate()
+        .set(NODE_POOL_AGGREGATED.SUMCPU, totalResourceUsage.getSumcpu())
+        .set(NODE_POOL_AGGREGATED.SUMMEMORY, totalResourceUsage.getSummemory())
+        .set(NODE_POOL_AGGREGATED.MAXCPU, totalResourceUsage.getMaxcpu())
+        .set(NODE_POOL_AGGREGATED.MAXMEMORY, totalResourceUsage.getMaxmemory())
+        .set(NODE_POOL_AGGREGATED.UPDATEDAT, offsetDateTimeNow())
+        .execute();
   }
 
   @RetryOnException(
@@ -304,9 +303,9 @@ public class K8sRecommendationDAO {
   }
 
   @NonNull
-  public K8sServiceProvider getServiceProvider(String accountId, NodePoolId nodePoolId) {
+  public K8sServiceProvider getServiceProvider(JobConstants jobConstants, NodePoolId nodePoolId) {
     InstanceData instanceData = hPersistence.createQuery(InstanceData.class)
-                                    .filter(InstanceDataKeys.accountId, accountId)
+                                    .filter(InstanceDataKeys.accountId, jobConstants.getAccountId())
                                     .filter(InstanceDataKeys.clusterId, nodePoolId.getClusterid())
                                     .filter(InstanceDataKeys.instanceType, InstanceType.K8S_NODE)
                                     // currently we are only computing recommendation for non-null node_pool_name
@@ -327,9 +326,12 @@ public class K8sRecommendationDAO {
         return defaultK8sServiceProvider();
       }
 
+      int nodeCount = getNodeCount(jobConstants, nodePoolId);
+
       return K8sServiceProvider.builder()
           .region(region)
           .instanceFamily(instanceFamily)
+          .nodeCount(nodeCount)
           .cloudProvider(cloudProvider)
           .instanceCategory(instanceCategory)
           .build();
@@ -377,37 +379,42 @@ public class K8sRecommendationDAO {
     return hPersistence.upsert(query, updateOperations, HPersistence.upsertReturnNewOptions).getUuid();
   }
 
+  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
   public void updateCeRecommendation(String entityUuid, JobConstants jobConstants, NodePoolId nodePoolId,
       RecommendationOverviewStats stats, Instant lastReceivedUntilAt) {
-    insertOne(dslContext.insertInto(CE_RECOMMENDATIONS)
-                  .set(CE_RECOMMENDATIONS.ACCOUNTID, jobConstants.getAccountId())
-                  .set(CE_RECOMMENDATIONS.ID, entityUuid)
-                  // insert cluster-name instead after ClusterRecord from 40-rest is demoted to ce-commons
-                  .set(CE_RECOMMENDATIONS.CLUSTERNAME, nodePoolId.getClusterid())
-                  .set(CE_RECOMMENDATIONS.NAME, nodePoolId.getNodepoolname())
-                  .set(CE_RECOMMENDATIONS.RESOURCETYPE, ResourceType.NODE_POOL.name())
-                  .set(CE_RECOMMENDATIONS.MONTHLYCOST, stats.getTotalMonthlyCost())
-                  .set(CE_RECOMMENDATIONS.MONTHLYSAVING, stats.getTotalMonthlySaving())
-                  .set(CE_RECOMMENDATIONS.ISVALID, true)
-                  .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
-                  .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow())
-                  .onConflictOnConstraint(CE_RECOMMENDATIONS.getPrimaryKey())
-                  .doUpdate()
-                  .set(CE_RECOMMENDATIONS.MONTHLYCOST, stats.getTotalMonthlyCost())
-                  .set(CE_RECOMMENDATIONS.MONTHLYSAVING, stats.getTotalMonthlySaving())
-                  .set(CE_RECOMMENDATIONS.ISVALID, true)
-                  .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
-                  .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow()));
+    dslContext.insertInto(CE_RECOMMENDATIONS)
+        .set(CE_RECOMMENDATIONS.ACCOUNTID, jobConstants.getAccountId())
+        .set(CE_RECOMMENDATIONS.ID, entityUuid)
+        // insert cluster-name instead after ClusterRecord from 40-rest is demoted to ce-commons
+        .set(CE_RECOMMENDATIONS.CLUSTERNAME, nodePoolId.getClusterid())
+        .set(CE_RECOMMENDATIONS.NAME, nodePoolId.getNodepoolname())
+        .set(CE_RECOMMENDATIONS.RESOURCETYPE, ResourceType.NODE_POOL.name())
+        .set(CE_RECOMMENDATIONS.MONTHLYCOST, stats.getTotalMonthlyCost())
+        .set(CE_RECOMMENDATIONS.MONTHLYSAVING, stats.getTotalMonthlySaving())
+        .set(CE_RECOMMENDATIONS.ISVALID, true)
+        .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
+        .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow())
+        .onConflictOnConstraint(CE_RECOMMENDATIONS.getPrimaryKey())
+        .doUpdate()
+        .set(CE_RECOMMENDATIONS.MONTHLYCOST, stats.getTotalMonthlyCost())
+        .set(CE_RECOMMENDATIONS.MONTHLYSAVING, stats.getTotalMonthlySaving())
+        .set(CE_RECOMMENDATIONS.ISVALID, true)
+        .set(CE_RECOMMENDATIONS.LASTPROCESSEDAT, toOffsetDateTime(lastReceivedUntilAt))
+        .set(CE_RECOMMENDATIONS.UPDATEDAT, offsetDateTimeNow())
+        .execute();
   }
 
-  public int getNodeCount(@NonNull JobConstants jobConstants, @NonNull NodePoolId nodePoolId) {
+  private int getNodeCount(@NonNull JobConstants jobConstants, @NonNull NodePoolId nodePoolId) {
     // intellij is flagging it as nullptr possibility, since the result of count will always be a number, so it is safe
     // to assume that the unwrapping of the response will null cause nullptr
-    return dslContext.selectCount()
-        .from(NODE_INFO)
-        .where(NODE_INFO.ACCOUNTID.eq(jobConstants.getAccountId()), NODE_INFO.CLUSTERID.eq(nodePoolId.getClusterid()),
-            NODE_INFO.NODEPOOLNAME.eq(nodePoolId.getNodepoolname()),
-            isAliveAtInstant(NODE_INFO.STARTTIME, NODE_INFO.STOPTIME, toInstant(jobConstants.getJobEndTime())))
-        .fetchOne(0, int.class);
+    return TimescaleUtils.retryRun(()
+                                       -> dslContext.selectCount()
+                                              .from(NODE_INFO)
+                                              .where(NODE_INFO.ACCOUNTID.eq(jobConstants.getAccountId()),
+                                                  NODE_INFO.CLUSTERID.eq(nodePoolId.getClusterid()),
+                                                  NODE_INFO.NODEPOOLNAME.eq(nodePoolId.getNodepoolname()),
+                                                  isAliveAtInstant(NODE_INFO.STARTTIME, NODE_INFO.STOPTIME,
+                                                      toInstant(jobConstants.getJobEndTime())))
+                                              .fetchOne(0, int.class));
   }
 }

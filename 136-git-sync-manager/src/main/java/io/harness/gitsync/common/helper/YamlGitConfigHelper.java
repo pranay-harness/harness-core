@@ -9,9 +9,11 @@ import io.harness.gitsync.common.dtos.YamlGitConfigGitFileChangeMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -53,5 +55,13 @@ public class YamlGitConfigHelper {
 
     log.error("Couldn't identify filePaths {} ", unkownPaths);
     return yamlGitConfigGitFileChangeMaps;
+  }
+
+  // Parse root folders from all yaml git configs
+  public Set<String> getRootFolderList(List<YamlGitConfigDTO> yamlGitConfigDTOList) {
+    Set<String> rootFolderList = new HashSet<>();
+    yamlGitConfigDTOList.forEach(yamlGitConfigDTO
+        -> yamlGitConfigDTO.getRootFolders().forEach(rootFolder -> rootFolderList.add(rootFolder.getRootFolder())));
+    return rootFolderList;
   }
 }

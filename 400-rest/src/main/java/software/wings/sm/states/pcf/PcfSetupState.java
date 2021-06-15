@@ -252,8 +252,6 @@ public class PcfSetupState extends State {
     PcfInfrastructureMapping pcfInfrastructureMapping =
         (PcfInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
-    Activity activity = updateActivity(activityId, app.getUuid(), artifact, artifactStream);
-
     SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
     PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
@@ -294,7 +292,7 @@ public class PcfSetupState extends State {
 
     PcfCommandSetupRequest pcfCommandSetupRequest =
         PcfCommandSetupRequest.builder()
-            .activityId(activity.getUuid())
+            .activityId(activityId)
             .appId(app.getUuid())
             .accountId(app.getAccountId())
             .commandName(PCF_SETUP_COMMAND)
@@ -337,7 +335,7 @@ public class PcfSetupState extends State {
 
     PcfSetupStateExecutionData stateExecutionData =
         PcfSetupStateExecutionData.builder()
-            .activityId(activity.getUuid())
+            .activityId(activityId)
             .accountId(app.getAccountId())
             .appId(app.getUuid())
             .envId(env.getUuid())
@@ -744,6 +742,12 @@ public class PcfSetupState extends State {
 
     List<CommandUnit> commandUnitList = getCommandUnitList(remoteManifestType);
 
+    PhaseElement phaseElement = executionContext.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+    ServiceElement serviceElement = phaseElement.getServiceElement();
+    Artifact artifact =
+        ((DeploymentExecutionContext) executionContext).getDefaultArtifactForService(serviceElement.getUuid());
+    notNullCheck("Artifact Can not be null", artifact);
+
     ActivityBuilder activityBuilder = pcfStateHelper.getActivityBuilder(PcfActivityBuilderCreationData.builder()
                                                                             .appName(app.getName())
                                                                             .appId(app.getUuid())
@@ -756,17 +760,12 @@ public class PcfSetupState extends State {
                                                                             .environment(env)
                                                                             .build());
 
+    activityBuilder.artifactId(artifact.getUuid());
+    activityBuilder.artifactName(artifact.getDisplayName());
+    ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
+    activityBuilder.artifactStreamId(artifactStream.getUuid());
+    activityBuilder.artifactStreamName(artifactStream.getSourceName());
     return activityService.save(activityBuilder.build());
-  }
-
-  private Activity updateActivity(String activityId, String appId, Artifact artifact, ArtifactStream artifactStream) {
-    Activity activity = activityService.get(activityId, appId);
-    activity.setArtifactStreamId(artifactStream.getUuid());
-    activity.setArtifactStreamName(artifactStream.getSourceName());
-    activity.setArtifactName(artifact.getDisplayName());
-    activity.setArtifactId(artifact.getUuid());
-
-    return activityService.save(activity);
   }
 
   private ExecutionResponse executeGitTask(

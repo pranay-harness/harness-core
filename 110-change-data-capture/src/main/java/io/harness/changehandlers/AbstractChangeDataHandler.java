@@ -25,7 +25,13 @@ public abstract class AbstractChangeDataHandler implements ChangeHandler {
   @Override
   public boolean handleChange(ChangeEvent<?> changeEvent, String tableName, String[] fields) {
     log.info("In TimeScale Change Handler: {}, {}, {}", changeEvent, tableName, fields);
-    Map<String, String> columnValueMapping = getColumnValueMapping(changeEvent, fields);
+    Map<String, String> columnValueMapping = null;
+    try {
+      columnValueMapping = getColumnValueMapping(changeEvent, fields);
+    } catch (Exception e) {
+      log.info(String.format("Not able to parse this event %s", changeEvent));
+    }
+
     switch (changeEvent.getChangeType()) {
       case INSERT:
         if (columnValueMapping != null) {

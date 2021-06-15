@@ -1,9 +1,6 @@
 package software.wings.service.impl.appdynamics;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
-import static io.harness.cvng.core.services.CVNextGenConstants.ERRORS_PACK_IDENTIFIER;
-import static io.harness.cvng.core.services.CVNextGenConstants.INFRASTRUCTURE_PACK_IDENTIFIER;
-import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
 
@@ -18,26 +15,19 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.beans.AppdynamicsValidationResponse;
-import io.harness.cvng.beans.MetricPackDTO;
-import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
-import io.harness.cvng.beans.appd.AppdynamicsMetricPackDataValidationRequest;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.task.DataCollectionExecutorService;
-import io.harness.encryption.SecretRefData;
 import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.SecretDecryptionService;
-import io.harness.serializer.YamlUtils;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppDynamicsConfig;
@@ -46,7 +36,6 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.SyncTaskContext;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;
 import software.wings.resources.AppdynamicsResource;
@@ -57,11 +46,8 @@ import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.security.EncryptionService;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -312,89 +298,6 @@ public class AppdynamicsApiTest extends WingsBaseTest {
             createApiCallLog(accountId, null));
     assertThat(tierBTMetricData).hasSize(2);
     assertThat(tierBTMetricData).isEqualTo(btData);
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testGetMetricPackData() throws IOException {
-    Call<List<AppdynamicsTier>> tierRestCall = mock(Call.class);
-    handleClone(tierRestCall);
-    when(tierRestCall.execute())
-        .thenReturn(Response.success(Lists.newArrayList(
-            AppdynamicsTier.builder().name(UUID.randomUUID().toString()).id(random.nextInt()).build())));
-    when(appdynamicsRestClient.getTierDetails(anyString(), anyLong(), anyLong())).thenReturn(tierRestCall);
-
-    Call<List<AppdynamicsMetricData>> metricDataSuccessCall = mock(Call.class);
-    handleClone(metricDataSuccessCall);
-    when(metricDataSuccessCall.execute())
-        .thenReturn(Response.success(
-            Lists.newArrayList(AppdynamicsMetricData.builder()
-                                   .metricName(generateUuid())
-                                   .metricValues(Lists.newArrayList(
-                                       AppdynamicsMetricDataValue.builder().value(random.nextDouble()).build()))
-                                   .build())));
-    Call<List<AppdynamicsMetricData>> metricDataNoDataCall = mock(Call.class);
-    handleClone(metricDataNoDataCall);
-    when(metricDataNoDataCall.execute())
-        .thenReturn(Response.success(Lists.newArrayList(
-            AppdynamicsMetricData.builder().metricName(generateUuid()).metricValues(Lists.newArrayList()).build())));
-
-    Call<List<AppdynamicsMetricData>> metricDataErrorCall = mock(Call.class);
-    handleClone(metricDataErrorCall);
-    doThrow(new DataCollectionException("invalid request")).when(metricDataErrorCall).execute();
-    when(appdynamicsRestClient.getMetricDataTimeRange(
-             anyString(), anyLong(), anyString(), anyLong(), anyLong(), anyBoolean()))
-        .thenAnswer(invocationOnMock -> {
-          final String metricPath = invocationOnMock.getArgumentAt(2, String.class);
-          if (metricPath.contains("Exceptions")) {
-            return metricDataNoDataCall;
-          }
-          if (metricPath.contains("CPU")) {
-            return metricDataErrorCall;
-          }
-          return metricDataSuccessCall;
-        });
-    YamlUtils yamlUtils = new YamlUtils();
-    final String metricPackYaml = Resources.toString(
-        AppdynamicsApiTest.class.getResource("/appdynamics/app-dynamics-metric-packs-list.yaml"), Charsets.UTF_8);
-    final List<MetricPackDTO> metricPacks = yamlUtils.read(metricPackYaml, new TypeReference<List<MetricPackDTO>>() {});
-
-    final Set<AppdynamicsValidationResponse> metricPacksData = appdynamicsService.getMetricPackData(accountId,
-        generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid(),
-        AppdynamicsMetricPackDataValidationRequest.builder()
-            .connector(AppDynamicsConnectorDTO.builder()
-                           .controllerUrl("https://www.google.com")
-                           .accountname(generateUuid())
-                           .username(generateUuid())
-                           .passwordRef(SecretRefData.builder()
-                                            .identifier(generateUuid())
-                                            .decryptedValue(generateUuid().toCharArray())
-                                            .build())
-                           .build())
-            .metricPacks(metricPacks)
-            .build());
-    assertThat(metricPacksData.size()).isEqualTo(metricPacks.size());
-    metricPacksData.forEach(metricPackData -> {
-      if (metricPackData.getMetricPackName().equals(PERFORMANCE_PACK_IDENTIFIER)) {
-        assertThat(metricPackData.getOverallStatus()).isEqualTo(ThirdPartyApiResponseStatus.SUCCESS);
-      }
-
-      if (metricPackData.getMetricPackName().equals(ERRORS_PACK_IDENTIFIER)) {
-        assertThat(metricPackData.getOverallStatus()).isEqualTo(ThirdPartyApiResponseStatus.NO_DATA);
-      }
-
-      if (metricPackData.getMetricPackName().equals(INFRASTRUCTURE_PACK_IDENTIFIER)) {
-        assertThat(metricPackData.getOverallStatus()).isEqualTo(ThirdPartyApiResponseStatus.FAILED);
-        metricPackData.getValues().forEach(response -> {
-          if (response.getMetricName().contains("CPU")) {
-            assertThat(response.getApiResponseStatus()).isEqualTo(ThirdPartyApiResponseStatus.FAILED);
-            assertThat(response.getErrorMessage())
-                .isEqualTo("DataCollectionException: " + DataCollectionException.class.getName() + ": invalid request");
-          }
-        });
-      }
-    });
   }
 
   private String saveAppdynamicsConfig() {

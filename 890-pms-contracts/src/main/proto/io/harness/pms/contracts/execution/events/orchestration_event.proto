@@ -8,6 +8,7 @@ import "io/harness/pms/contracts/execution/events/orchestration_event_type.proto
 import "io/harness/pms/contracts/execution/node_execution_proto.proto";
 import "io/harness/pms/contracts/execution/status.proto";
 import "google/protobuf/timestamp.proto";
+import "io/harness/pms/contracts/triggers/trigger_payload.proto";
 
 option java_multiple_files = true;
 
@@ -18,4 +19,5 @@ message OrchestrationEvent {
   bytes stepParameters = 5;
   io.harness.pms.contracts.execution.Status status = 6;
   string serviceName = 7;
+  triggers.TriggerPayload triggerPayload = 8;
 }

@@ -109,7 +109,7 @@ public class GitInfoPopulatorForConnector {
       String accountId, String orgId, String projectId, List<String> connectorIdentifiers, String repo, String branch) {
     List<ConnectorResponseDTO> connectorResponseDTOS = new ArrayList<>();
     final GitEntityInfo newBranch =
-        GitEntityInfo.builder().branch(branch).yamlGitConfigId(repo).findDefaultFromOtherBranches(true).build();
+        GitEntityInfo.builder().branch(branch).yamlGitConfigId(repo).findDefaultFromOtherRepos(true).build();
     try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
       GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(newBranch).build());
       Page<ConnectorResponseDTO> connectorPage = null;

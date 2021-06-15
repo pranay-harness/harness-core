@@ -141,6 +141,7 @@ public class ConnectorServiceImpl implements ConnectorService {
          AutoLogContext ignore2 =
              new ConnectorLogContext(connector.getConnectorInfo().getIdentifier(), OVERRIDE_ERROR)) {
       ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
+      connectorInfo.getConnectorConfig().validate();
       boolean isHarnessManagedSecretManager =
           harnessManagedConnectorHelper.isHarnessManagedSecretManager(connectorInfo);
       boolean isDefaultBranchConnector = gitSyncSdkService.isDefaultBranch(accountIdentifier,
@@ -220,10 +221,13 @@ public class ConnectorServiceImpl implements ConnectorService {
       boolean isDefaultBranchConnector = gitSyncSdkService.isDefaultBranch(accountIdentifier,
           connector.getConnectorInfo().getOrgIdentifier(), connector.getConnectorInfo().getProjectIdentifier());
       ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
+
+      connectorInfo.getConnectorConfig().validate();
       validateTheUpdateRequestIsValid(connectorInfo, accountIdentifier);
       if (GitContextHelper.isUpdateToNewBranch()) {
         return create(connector, accountIdentifier, ChangeType.MODIFY);
       }
+
       ConnectorResponseDTO connectorResponse =
           getConnectorService(connectorInfo.getConnectorType()).update(connector, accountIdentifier);
       if (isDefaultBranchConnector) {

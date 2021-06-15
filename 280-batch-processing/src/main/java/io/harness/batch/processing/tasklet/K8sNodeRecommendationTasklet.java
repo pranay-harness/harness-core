@@ -33,6 +33,9 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import retrofit2.Response;
 
+/**
+ * This class is stateful as of now, we are not processing accounts in parallel.
+ */
 @Slf4j
 @OwnedBy(CE)
 public class K8sNodeRecommendationTasklet implements Tasklet {
@@ -40,8 +43,6 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
   @Autowired private BanzaiRecommenderClient banzaiRecommenderClient;
   @Autowired private VMPricingService vmPricingService;
 
-  // TODO(REVIEWER): Verify that the tasklet instance are not shared between parallel execution and this class is
-  // stateful.
   private JobConstants jobConstants;
 
   @Override
@@ -64,7 +65,7 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
       try {
         calculateAndSaveRecommendation(nodePoolId, totalResourceUsage);
       } catch (InvalidRequestException ex) {
-        log.error("Not generating recommendation for: {} with TRU: {}", nodePoolId, totalResourceUsage, ex);
+        log.warn("Not generating recommendation for: {} with TRU: {}", nodePoolId, totalResourceUsage, ex);
       }
     }
 
@@ -86,8 +87,7 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
 
   private void calculateAndSaveRecommendation(
       @NonNull NodePoolId nodePoolId, @NonNull TotalResourceUsage totalResourceUsage) {
-    K8sServiceProvider serviceProvider =
-        k8sRecommendationDAO.getServiceProvider(jobConstants.getAccountId(), nodePoolId);
+    K8sServiceProvider serviceProvider = k8sRecommendationDAO.getServiceProvider(jobConstants, nodePoolId);
     log.info("serviceProvider: {}", serviceProvider);
 
     RecommendationResponse recommendation = getRecommendation(serviceProvider, totalResourceUsage);
@@ -96,7 +96,7 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
     String mongoEntityId = k8sRecommendationDAO.insertNodeRecommendationResponse(
         jobConstants, nodePoolId, totalResourceUsage, serviceProvider, recommendation);
 
-    RecommendationOverviewStats stats = getMonthlyCostAndSaving(nodePoolId, serviceProvider, recommendation);
+    RecommendationOverviewStats stats = getMonthlyCostAndSaving(serviceProvider, recommendation);
     log.info("The monthly stat is: {}", stats);
 
     k8sRecommendationDAO.updateCeRecommendation(mongoEntityId, jobConstants, nodePoolId, stats, Instant.now());
@@ -114,12 +114,23 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
                 serviceProvider.getCloudProvider().getK8sService(), serviceProvider.getRegion(), request)
             .execute();
 
-    if (response.isSuccessful()) {
-      return response.body();
+    if (!response.isSuccessful()) {
+      log.error("banzaiRecommenderClient response: {}", response);
+      throw new ConnectException("Failed to get/parse response from banzai recommender");
     }
 
-    log.error("banzaiRecommenderClient response: {}", response);
-    throw new ConnectException("Failed to get/parse response from banzai recommender");
+    RecommendationResponse recommendation = response.body();
+    recommendation.setInstanceCategory(InstanceCategory.ON_DEMAND);
+
+    if (InstanceCategory.SPOT.equals(serviceProvider.getInstanceCategory())) {
+      double totalSpotPrice =
+          recommendation.getAccuracy().getMasterPrice() + recommendation.getAccuracy().getSpotPrice();
+      recommendation.getAccuracy().setTotalPrice(totalSpotPrice);
+
+      recommendation.setInstanceCategory(InstanceCategory.SPOT);
+    }
+
+    return recommendation;
   }
 
   private static RecommendClusterRequest constructRequest(TotalResourceUsage totalResourceUsage) {
@@ -147,20 +158,11 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
   }
 
   private RecommendationOverviewStats getMonthlyCostAndSaving(
-      NodePoolId nodePoolId, K8sServiceProvider serviceProvider, RecommendationResponse recommendation) {
-    int nodeCount = k8sRecommendationDAO.getNodeCount(jobConstants, nodePoolId);
-    log.info("nodeCount: {}", nodeCount);
-
+      @NonNull K8sServiceProvider serviceProvider, @NonNull RecommendationResponse recommendation) {
     double currentPricePerVm = getCurrentInstancePrice(serviceProvider);
 
-    double currentHourlyCost = currentPricePerVm * (double) nodeCount;
+    double currentHourlyCost = currentPricePerVm * (double) serviceProvider.getNodeCount();
     double recommendedHourlyCost = recommendation.getAccuracy().getTotalPrice();
-
-    if (InstanceCategory.SPOT.equals(serviceProvider.getInstanceCategory())) {
-      recommendedHourlyCost =
-          recommendation.getAccuracy().getMasterPrice() + recommendation.getAccuracy().getSpotPrice();
-      recommendation.getAccuracy().setTotalPrice(recommendedHourlyCost);
-    }
 
     final double toMonthly = 24 * 30;
     return RecommendationOverviewStats.builder()

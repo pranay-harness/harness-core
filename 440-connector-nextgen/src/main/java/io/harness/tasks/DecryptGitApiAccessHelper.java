@@ -1,6 +1,7 @@
 package io.harness.tasks;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.utils.DelegateOwner.getNGTaskSetupAbstractionsWithOwner;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
@@ -25,6 +26,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -45,17 +47,21 @@ public class DecryptGitApiAccessHelper {
         GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmConnector);
     List<EncryptedDataDetail> encryptedDataDetailsForAPIAccess =
         getEncryptedDataDetailsForAPIAccess(apiAccessDecryptableEntity, baseNGAccess);
-    return executeDecryptionTask(scmConnector, accountId, encryptedDataDetailsForAPIAccess);
+    return executeDecryptionTask(
+        scmConnector, accountId, orgIdentifier, projectIdentifier, encryptedDataDetailsForAPIAccess);
   }
 
-  private ScmConnector executeDecryptionTask(
-      ScmConnector scmConnector, String accountIdentifier, List<EncryptedDataDetail> encryptedDataDetailsForAPIAccess) {
+  private ScmConnector executeDecryptionTask(ScmConnector scmConnector, String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, List<EncryptedDataDetail> encryptedDataDetailsForAPIAccess) {
     DecryptGitAPiAccessTaskParams apiAccessTaskParams = DecryptGitAPiAccessTaskParams.builder()
                                                             .scmConnector(scmConnector)
                                                             .encryptedDataDetails(encryptedDataDetailsForAPIAccess)
                                                             .build();
+    final Map<String, String> ngTaskSetupAbstractionsWithOwner =
+        getNGTaskSetupAbstractionsWithOwner(accountIdentifier, orgIdentifier, projectIdentifier);
     DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                   .accountId(accountIdentifier)
+                                                  .taskSetupAbstractions(ngTaskSetupAbstractionsWithOwner)
                                                   .taskType(TaskType.NG_DECRYT_GIT_API_ACCESS_TASK.name())
                                                   .taskParameters(apiAccessTaskParams)
                                                   .executionTimeout(Duration.ofMinutes(2))

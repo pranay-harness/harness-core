@@ -109,7 +109,7 @@ import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.DelegateLogContext;
-import io.harness.delegate.utils.DelegateEntityOwnerMapper;
+import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.environment.SystemEnvironment;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.eventsframework.EventsFrameworkConstants;
@@ -2096,12 +2096,12 @@ public class DelegateServiceImpl implements DelegateService {
                                                            .setIdentifier(StringValue.of(delegateGroupId));
 
       if (owner != null) {
-        String orgIdentifier = DelegateEntityOwnerMapper.extractOrgIdFromOwnerIdentifier(owner.getIdentifier());
+        String orgIdentifier = DelegateEntityOwnerHelper.extractOrgIdFromOwnerIdentifier(owner.getIdentifier());
         if (isNotBlank(orgIdentifier)) {
           entityChangeDTOBuilder.setOrgIdentifier(StringValue.of(orgIdentifier));
         }
 
-        String projectIdentifier = DelegateEntityOwnerMapper.extractProjectIdFromOwnerIdentifier(owner.getIdentifier());
+        String projectIdentifier = DelegateEntityOwnerHelper.extractProjectIdFromOwnerIdentifier(owner.getIdentifier());
         if (isNotBlank(projectIdentifier)) {
           entityChangeDTOBuilder.setProjectIdentifier(StringValue.of(projectIdentifier));
         }
@@ -2265,7 +2265,7 @@ public class DelegateServiceImpl implements DelegateService {
     boolean isNgDelegate = isNotBlank(delegateParams.getSessionIdentifier());
 
     DelegateEntityOwner owner =
-        DelegateEntityOwnerMapper.buildOwner(delegateParams.getOrgIdentifier(), delegateParams.getProjectIdentifier());
+        DelegateEntityOwnerHelper.buildOwner(delegateParams.getOrgIdentifier(), delegateParams.getProjectIdentifier());
 
     Delegate delegate =
         Delegate.builder()
@@ -2756,7 +2756,7 @@ public class DelegateServiceImpl implements DelegateService {
     K8sConfigDetails k8sConfigDetails =
         delegateSetupDetails != null ? delegateSetupDetails.getK8sConfigDetails() : null;
 
-    DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgIdentifier, projectIdentifier);
+    DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgIdentifier, projectIdentifier);
 
     Query<DelegateGroup> query = this.persistence.createQuery(DelegateGroup.class)
                                      .filter(DelegateGroupKeys.accountId, accountId)

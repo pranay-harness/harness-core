@@ -9,7 +9,7 @@ import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorConnectivityDetails;
 import io.harness.connector.ConnectorConnectivityDetails.ConnectorConnectivityDetailsKeys;
 import io.harness.data.validator.EntityIdentifier;
-import io.harness.data.validator.EntityName;
+import io.harness.data.validator.NGEntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.gitsync.persistance.GitSyncableEntity;
@@ -55,7 +55,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public abstract class Connector implements PersistentEntity, NGAccountAccess, GitSyncableEntity {
   @Id @org.mongodb.morphia.annotations.Id String id;
   @NotEmpty @EntityIdentifier String identifier;
-  @NotEmpty @EntityName String name;
+  @NotEmpty @NGEntityName String name;
   @NotEmpty io.harness.encryption.Scope scope;
   String description;
   @Trimmed @NotEmpty String accountIdentifier;

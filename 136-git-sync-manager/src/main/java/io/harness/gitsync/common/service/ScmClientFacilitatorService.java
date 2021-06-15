@@ -12,6 +12,7 @@ import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.ng.beans.PageRequest;
 
 import java.util.List;
+import java.util.Set;
 
 // Don't inject this directly go through ScmClientOrchestrator.
 @OwnedBy(DX)
@@ -29,7 +30,7 @@ public interface ScmClientFacilitatorService {
       String yamlGitConfigRef, GitPRCreateRequest gitCreatePRRequest);
 
   List<GitFileChangeDTO> listFilesOfBranches(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String yamlGitConfigIdentifier, List<String> foldersList, String branchName);
+      String yamlGitConfigIdentifier, Set<String> foldersList, String branchName);
 
   List<GitFileChangeDTO> listFilesByFilePaths(
       YamlGitConfigDTO yamlGitConfigDTO, List<String> filePaths, String branchName);

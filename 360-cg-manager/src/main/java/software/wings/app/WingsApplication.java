@@ -219,6 +219,7 @@ import software.wings.service.impl.infrastructuredefinition.InfrastructureDefini
 import software.wings.service.impl.instance.DeploymentEventListener;
 import software.wings.service.impl.instance.InstanceEventListener;
 import software.wings.service.impl.instance.InstanceSyncPerpetualTaskMigrationJob;
+import software.wings.service.impl.trigger.ScheduledTriggerHandler;
 import software.wings.service.impl.yaml.YamlPushServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -1030,6 +1031,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(EncryptedDataAwsKmsToGcpKmsMigrationHandler.class).registerIterators();
     injector.getInstance(ResourceLookupSyncHandler.class).registerIterators();
     injector.getInstance(AccessRequestHandler.class).registerIterators();
+    injector.getInstance(ScheduledTriggerHandler.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {

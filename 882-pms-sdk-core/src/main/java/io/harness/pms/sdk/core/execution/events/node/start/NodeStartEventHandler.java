@@ -1,5 +1,7 @@
 package io.harness.pms.sdk.core.execution.events.node.start;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.start.NodeStartEvent;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
@@ -10,7 +12,7 @@ import io.harness.pms.sdk.core.execution.ExecutableProcessorFactory;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
-import io.harness.pms.sdk.core.execution.events.node.NodeBaseEventHandler;
+import io.harness.pms.sdk.core.execution.events.NodeBaseEventHandler;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -18,10 +20,13 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
 public class NodeStartEventHandler extends NodeBaseEventHandler<NodeStartEvent> {
   @Inject private ExecutableProcessorFactory executableProcessorFactory;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;

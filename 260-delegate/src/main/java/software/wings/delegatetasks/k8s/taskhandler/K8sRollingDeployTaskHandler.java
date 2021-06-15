@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
+import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.k8s.K8sCommandUnitConstants.Apply;
 import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
 import static io.harness.k8s.K8sCommandUnitConstants.Init;
@@ -213,7 +214,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
           .k8sTaskResponse(rollingSetupResponse)
           .build();
     } catch (Exception ex) {
-      executionLogCallback.saveExecutionLog(ex.getMessage(), ERROR, FAILURE);
+      executionLogCallback.saveExecutionLog(getMessage(ex), ERROR, FAILURE);
       saveRelease(k8sRollingDeployTaskParameters, Status.Failed);
       throw ex;
     }
@@ -229,6 +230,14 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
             "No previous successful deployment found, So no pruning required", INFO, CommandExecutionStatus.SUCCESS);
         return emptyList();
       }
+
+      if (isEmpty(previousSuccessfulRelease.getResourcesWithSpec())) {
+        executionLogCallback.saveExecutionLog(
+            "Previous successful deployment executed with pruning disabled, Pruning can't be done", INFO,
+            CommandExecutionStatus.SUCCESS);
+        return emptyList();
+      }
+
       List<KubernetesResourceId> resourceIdsToBePruned =
           k8sTaskHelperBase.getResourcesToBePrunedInOrder(previousSuccessfulRelease.getResourcesWithSpec(), resources);
       if (isEmpty(resourceIdsToBePruned)) {
@@ -244,7 +253,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       return prunedResources;
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog("Failed to delete resources while pruning", WARN, RUNNING);
-      executionLogCallback.saveExecutionLog(ex.getMessage(), WARN, SUCCESS);
+      executionLogCallback.saveExecutionLog(getMessage(ex), WARN, SUCCESS);
       return emptyList();
     }
   }
@@ -303,7 +312,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       return k8sTaskHelperBase.dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
     } catch (Exception e) {
       log.error("Exception:", e);
-      executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR);
+      executionLogCallback.saveExecutionLog(getMessage(e), ERROR);
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
     }
@@ -350,7 +359,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       }
     } catch (Exception e) {
       log.error("Exception:", e);
-      executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      executionLogCallback.saveExecutionLog(getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
       return false;
     }
 

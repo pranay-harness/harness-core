@@ -120,10 +120,8 @@ public class WhitelistServiceImpl implements WhitelistService {
 
   @Override
   public boolean checkIfFeatureIsEnabledAndWhitelisting(String accountId, String ipAddress, FeatureName featureName) {
-    if (featureName != null) {
-      if (!featureFlagService.isEnabled(featureName, accountId)) {
-        return true;
-      }
+    if (featureName != null && !featureFlagService.isEnabled(featureName, accountId)) {
+      return true;
     }
     return isValidIPAddress(accountId, ipAddress);
   }

@@ -35,6 +35,8 @@ import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.engine.pms.data.PmsSweepingOutputServiceImpl;
 import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.engine.pms.tasks.TaskExecutor;
+import io.harness.engine.progress.publisher.ProgressEventPublisher;
+import io.harness.engine.progress.publisher.RedisProgressEventPublisher;
 import io.harness.exception.exceptionmanager.ExceptionModule;
 import io.harness.govern.ServersModule;
 import io.harness.pms.NoopFeatureFlagServiceImpl;
@@ -138,6 +140,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     install(new OrchestrationEventsFrameworkModule(config.getEventsFrameworkConfiguration()));
     bind(InterruptEventPublisher.class).to(RedisInterruptEventPublisher.class);
     bind(FacilitateEventPublisher.class).to(RedisFacilitateEventPublisher.class).in(Singleton.class);
+    bind(ProgressEventPublisher.class).to(RedisProgressEventPublisher.class).in(Singleton.class);
   }
 
   @Provides
