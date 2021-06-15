@@ -539,7 +539,7 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public String getAccountStatus(String accountId) {
     Account account = getFromCacheWithFallback(accountId);
-    LicenseInfo licenseInfo = account.getLicenseInfo();
+    LicenseInfo licenseInfo = account != null ? account.getLicenseInfo() : null;
     return licenseInfo == null ? AccountStatus.ACTIVE : licenseInfo.getAccountStatus();
   }
 
@@ -553,6 +553,9 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public Account getFromCacheWithFallback(String accountId) {
+    if (isBlank(accountId)) {
+      return null;
+    }
     Account account = dbCache.get(Account.class, accountId);
     if (account == null) {
       // Some false nulls have been observed. Verify by querying directly from db.
