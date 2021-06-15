@@ -7,6 +7,7 @@ import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
@@ -35,20 +36,19 @@ public class ResourceGroupAsyncReconciliationHandler implements MongoPersistence
 
   @Override
   public void handle(ResourceGroup resourceGroup) {
-    int resourceSelectorsCountBeforeValidation = resourceGroup.getResourceSelectors().size();
-    if (resourceGroupValidatorService.validateAndFilterInvalidResourceSelectors(resourceGroup)
-        && resourceGroup.getResourceSelectors().size() != resourceSelectorsCountBeforeValidation) {
-      resourceGroupService.update(ResourceGroupMapper.toDTO(resourceGroup));
+    if (resourceGroupValidatorService.sanitizeResourceSelectors(resourceGroup)) {
+      resourceGroupService.update(ResourceGroupMapper.toDTO(resourceGroup), false);
     } else {
-      resourceGroupService.delete(resourceGroup.getIdentifier(), resourceGroup.getAccountIdentifier(),
-          resourceGroup.getOrgIdentifier(), resourceGroup.getProjectIdentifier(), true);
+      resourceGroupService.delete(Scope.of(resourceGroup.getAccountIdentifier(), resourceGroup.getOrgIdentifier(),
+                                      resourceGroup.getProjectIdentifier()),
+          resourceGroup.getIdentifier(), true);
     }
   }
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
-            .name("ResourceGroupAsyncReconciliation")
+            .name("ResourceGroupReconciliationIterator")
             .poolSize(3)
             .interval(ofMinutes(1))
             .build(),
@@ -56,8 +56,8 @@ public class ResourceGroupAsyncReconciliationHandler implements MongoPersistence
         MongoPersistenceIterator.<ResourceGroup, SpringFilterExpander>builder()
             .clazz(ResourceGroup.class)
             .fieldName(ResourceGroupKeys.nextIteration)
-            .targetInterval(ofHours(2))
-            .acceptableNoAlertDelay(ofHours(2))
+            .targetInterval(ofHours(1))
+            .acceptableNoAlertDelay(ofHours(1))
             .handler(this)
             .schedulingType(REGULAR)
             .persistenceProvider(new SpringPersistenceProvider<>(mongoTemplate))

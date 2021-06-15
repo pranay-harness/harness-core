@@ -128,13 +128,13 @@ public class HarnessResourceGroupResource {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(RESOURCE_GROUP, identifier), EDIT_RESOURCEGROUP_PERMISSION);
     Optional<ResourceGroupResponse> resourceGroupResponseOpt =
-        resourceGroupService.update(resourceGroupRequest.getResourceGroup());
+        resourceGroupService.update(resourceGroupRequest.getResourceGroup(), true);
     return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
   }
 
   @DELETE
   @Path("{identifier}")
-  @ApiOperation(value = "Deletes a resource group", nickname = "deleteResourceGroup")
+  @ApiOperation(value = "Delete a resource group", nickname = "deleteResourceGroup")
   @Produces("application/json")
   @Consumes()
   public ResponseDTO<Boolean> delete(@NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,

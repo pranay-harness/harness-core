@@ -100,17 +100,16 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   private ResourceGroup create(ResourceGroup resourceGroup) {
-    boolean valid = resourceGroupValidatorService.validateAndFilterInvalidResourceSelectors(resourceGroup);
-    if (valid) {
-      return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
-        ResourceGroup savedResourceGroup = resourceGroupRepository.save(resourceGroup);
-        outboxService.save(new ResourceGroupCreateEvent(
-            savedResourceGroup.getAccountIdentifier(), ResourceGroupMapper.toDTO(savedResourceGroup)));
-        return savedResourceGroup;
-      }));
-    } else {
+    boolean sanitized = resourceGroupValidatorService.sanitizeResourceSelectors(resourceGroup);
+    if (sanitized && resourceGroup.getResourceSelectors().isEmpty()) {
       throw new InvalidRequestException("All selected resources are invalid");
     }
+    return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
+      ResourceGroup savedResourceGroup = resourceGroupRepository.save(resourceGroup);
+      outboxService.save(new ResourceGroupCreateEvent(
+          savedResourceGroup.getAccountIdentifier(), ResourceGroupMapper.toDTO(savedResourceGroup)));
+      return savedResourceGroup;
+    }));
   }
 
   @Override
@@ -181,7 +180,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   @Override
-  public Optional<ResourceGroupResponse> update(ResourceGroupDTO resourceGroupDTO) {
+  public Optional<ResourceGroupResponse> update(ResourceGroupDTO resourceGroupDTO, boolean sanitizeResourceSelectors) {
     Optional<ResourceGroup> resourceGroupOpt =
         getResourceGroup(resourceGroupDTO.getScope(), resourceGroupDTO.getIdentifier());
     if (!resourceGroupOpt.isPresent()) {
@@ -190,9 +189,11 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
               resourceGroupDTO.getIdentifier(), resourceGroupDTO.getScope()));
     }
     ResourceGroup updatedResourceGroup = ResourceGroupMapper.fromDTO(resourceGroupDTO);
-    boolean valid = resourceGroupValidatorService.validateAndFilterInvalidResourceSelectors(updatedResourceGroup);
-    if (!valid) {
-      throw new InvalidRequestException("All selected resources are invalid");
+    if (sanitizeResourceSelectors) {
+      boolean sanitized = resourceGroupValidatorService.sanitizeResourceSelectors(updatedResourceGroup);
+      if (sanitized && updatedResourceGroup.getResourceSelectors().isEmpty()) {
+        throw new InvalidRequestException("All selected resources are invalid");
+      }
     }
     ResourceGroup savedResourceGroup = resourceGroupOpt.get();
     if (savedResourceGroup.getHarnessManaged().equals(TRUE)) {

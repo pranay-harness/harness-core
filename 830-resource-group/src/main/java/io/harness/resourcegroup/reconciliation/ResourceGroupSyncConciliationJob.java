@@ -8,11 +8,11 @@ import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.AC
 import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.ORGANIZATION;
 import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.PROJECT;
 
-import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.beans.Scope;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
-import io.harness.lock.PersistentLocker;
+import io.harness.exception.UnexpectedException;
 import io.harness.resourcegroup.framework.remote.mapper.ResourceGroupMapper;
 import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
@@ -24,13 +24,10 @@ import io.harness.resourcegroup.model.StaticResourceSelector.StaticResourceSelec
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -38,26 +35,21 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class ResourceGroupSyncConciliationJob implements Runnable {
-  private static final int WAIT_TIME_IN_SECONDS = 10;
-  static String DEFAULT_RESOURCE_GROUP_NAME = "All Resources";
-  static String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
-  static String DESCRIPTION_FORMAT = "All the resources in this %s are included in this resource group.";
-  static String LOCK_NAME = ResourceGroupSyncConciliationJob.class.getName();
+  private static final int WAIT_TIME_IN_SECONDS = 30;
+
   Consumer redisConsumer;
   Map<String, Resource> resourceMap;
   ResourceGroupService resourceGroupService;
   String serviceId;
 
-  @Inject
-  public ResourceGroupSyncConciliationJob(@Named(EventsFrameworkConstants.ENTITY_CRUD) Consumer redisConsumer,
-      Map<String, Resource> resourceMap, ResourceGroupService resourceGroupService, PersistentLocker persistentLocker,
-      @Named("serviceId") String serviceId) {
+  public ResourceGroupSyncConciliationJob(Consumer redisConsumer, Map<String, Resource> resourceMap,
+      ResourceGroupService resourceGroupService, String serviceId) {
     this.redisConsumer = redisConsumer;
     this.resourceGroupService = resourceGroupService;
     this.serviceId = serviceId;
@@ -70,23 +62,24 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
 
   @Override
   public void run() {
-    log.info("Started the consumer for resource group concliation");
+    log.info("ResourceGroupSyncConciliationJob started");
     SecurityContextBuilder.setContext(new ServicePrincipal(serviceId));
     try {
       while (!Thread.currentThread().isInterrupted()) {
         readEventsFrameworkMessages();
       }
-    } catch (Exception ex) {
-      log.error("resource group concliation consumer unexpectedly stopped", ex);
+    } catch (InterruptedException ex) {
+      Thread.currentThread().interrupt();
+    } finally {
+      SecurityContextBuilder.unsetCompleteContext();
     }
-    SecurityContextBuilder.unsetCompleteContext();
   }
 
   private void readEventsFrameworkMessages() throws InterruptedException {
     try {
       pollAndProcessMessages();
     } catch (EventsFrameworkDownException e) {
-      log.error("Events framework is down for resource group concliation consumer. Retrying again...", e);
+      log.error("Events framework is down. Retrying", e);
       TimeUnit.SECONDS.sleep(WAIT_TIME_IN_SECONDS);
     }
   }
@@ -94,91 +87,91 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
   private void pollAndProcessMessages() {
     List<Message> messages;
     String messageId;
-    boolean messageProcessed;
     messages = redisConsumer.read(Duration.ofSeconds(WAIT_TIME_IN_SECONDS));
     for (Message message : messages) {
       messageId = message.getId();
-      messageProcessed = handleMessage(message);
-      if (messageProcessed) {
-        redisConsumer.acknowledge(messageId);
-      }
+      handleMessage(message);
+      redisConsumer.acknowledge(messageId);
     }
   }
 
-  private boolean handleMessage(Message message) {
+  private void handleMessage(Message message) {
     try {
-      return processMessage(message);
+      processMessage(message);
     } catch (Exception ex) {
-      // This is not evicted from events framework so that it can be processed
-      // by other consumer if the error is a runtime error
       log.error(String.format("Error occurred in processing message with id %s", message.getId()), ex);
-      return false;
     }
   }
 
-  private boolean processMessage(Message message) {
-    boolean success = true;
+  private void processMessage(Message message) {
     if (!message.hasMessage()) {
-      return success;
+      return;
     }
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
     if (metadataMap == null || !metadataMap.containsKey(ACTION) || !metadataMap.containsKey(ENTITY_TYPE)) {
-      return success;
+      return;
     }
 
     String entityType = metadataMap.get(ENTITY_TYPE);
     if (!resourceMap.containsKey(entityType)) {
-      return success;
+      return;
     }
     ResourceInfo resourceInfo = resourceMap.get(entityType).getResourceInfoFromEvent(message);
     if (Objects.isNull(resourceInfo)) {
-      return success;
+      return;
     }
     String action = metadataMap.get(ACTION);
-    success = processMessage(resourceInfo, action);
-    return success;
+    processMessage(resourceInfo, action);
   }
 
-  private boolean processMessage(ResourceInfo resourceInfo, String action) {
+  private void processMessage(ResourceInfo resourceInfo, String action) {
     switch (action) {
       case DELETE_ACTION:
-        return handleDeleteEvent(resourceInfo);
+        handleDeleteEvent(resourceInfo);
+        break;
       case CREATE_ACTION:
-        return handleCreateEvent(resourceInfo);
+        handleCreateEvent(resourceInfo);
+        break;
       default:
-        return true;
+        break;
     }
   }
 
-  private boolean handleDeleteEvent(ResourceInfo resourceInfo) {
-    if (isScope(resourceInfo.getResourceType())) {
-      return true;
-    }
-    Criteria criteria = getCriteriaForResourceDeleteEvent(resourceInfo);
+  private boolean handleCreateEvent(ResourceInfo resourceInfo) {
     String resourceType = resourceInfo.getResourceType();
+    if (resourceType.equals(PROJECT) || resourceType.equals(ORGANIZATION) || resourceType.equals(ACCOUNT)) {
+      resourceGroupService.createManagedResourceGroup(Scope.of(
+          resourceInfo.getAccountIdentifier(), resourceInfo.getOrgIdentifier(), resourceInfo.getProjectIdentifier()));
+    }
+    return true;
+  }
+
+  private void handleDeleteEvent(ResourceInfo resource) {
+    if (isScope(resource.getResourceType())) {
+      return;
+    }
+
     int counter = 0;
     int maxLimit = 50;
     while (counter < maxLimit) {
-      Pageable pageable = org.springframework.data.domain.PageRequest.of(counter, 20);
-      Page<ResourceGroup> resourceGroupsPage = resourceGroupService.list(criteria, pageable);
+      Page<ResourceGroup> resourceGroupsPage =
+          resourceGroupService.list(getResourceGroupsWithResource(resource), PageRequest.of(counter, 20));
       if (!resourceGroupsPage.hasContent()) {
         break;
       }
       for (ResourceGroup resourceGroup : resourceGroupsPage.getContent()) {
-        deleteResourceFromGroup(resourceInfo, resourceType, resourceGroup);
-        resourceGroupService.update(ResourceGroupMapper.toDTO(resourceGroup));
+        deleteResourceFromResourceGroup(resource, resourceGroup);
+        resourceGroupService.update(ResourceGroupMapper.toDTO(resourceGroup), false);
       }
       counter++;
     }
-    return true;
   }
 
   private boolean isScope(String resourceType) {
     return resourceType.equals(ACCOUNT) || resourceType.equals(ORGANIZATION) || resourceType.equals(PROJECT);
   }
 
-  private Criteria getCriteriaForResourceDeleteEvent(ResourceInfo resourceInfo) {
-    String resourceType = resourceInfo.getResourceType();
+  private Criteria getResourceGroupsWithResource(ResourceInfo resourceInfo) {
     Criteria criteria = Criteria.where(ResourceGroupKeys.accountIdentifier)
                             .is(resourceInfo.getAccountIdentifier())
                             .and(ResourceGroupKeys.orgIdentifier)
@@ -186,9 +179,6 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
                             .and(ResourceGroupKeys.projectIdentifier)
                             .is(resourceInfo.getProjectIdentifier());
 
-    if (isScope(resourceType)) {
-      return criteria;
-    }
     criteria.and(ResourceGroupKeys.resourceSelectors)
         .elemMatch(Criteria.where(StaticResourceSelectorKeys.resourceType)
                        .is(resourceInfo.getResourceType())
@@ -197,32 +187,15 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
     return criteria;
   }
 
-  private void deleteResourceFromGroup(ResourceInfo resourceInfo, String resourceType, ResourceGroup resourceGroup) {
-    Optional<StaticResourceSelector> resourceSelectorOpt = resourceGroup.getResourceSelectors()
-                                                               .stream()
-                                                               .filter(StaticResourceSelector.class ::isInstance)
-                                                               .map(StaticResourceSelector.class ::cast)
-                                                               .filter(rs -> rs.getResourceType().equals(resourceType))
-                                                               .findFirst();
-    if (!resourceSelectorOpt.isPresent()) {
-      throw new IllegalStateException("Panic situation. Must have StaticResourceSelector for " + resourceType);
-    }
-    StaticResourceSelector resourceSelector = resourceSelectorOpt.get();
-    boolean isRemoved = resourceSelector.getIdentifiers().remove(resourceInfo.getResourceIdentifier());
-    if (!isRemoved) {
-      throw new IllegalStateException(
-          "Panic situation. Must have resourceIdentifier " + resourceInfo.getResourceIdentifier());
-    }
-    if (resourceSelector.getIdentifiers().isEmpty()) {
-      resourceGroup.getResourceSelectors().remove(resourceSelector);
-    }
-  }
+  private void deleteResourceFromResourceGroup(ResourceInfo resource, ResourceGroup resourceGroup) {
+    List<StaticResourceSelector> resourceSelectors =
+        resourceGroup.getResourceSelectors()
+            .stream()
+            .filter(StaticResourceSelector.class ::isInstance)
+            .map(StaticResourceSelector.class ::cast)
+            .filter(rs -> rs.getResourceType().equals(resource.getResourceType()))
+            .collect(Collectors.toList());
 
-  private boolean handleCreateEvent(ResourceInfo resourceInfo) {
-    String resourceType = resourceInfo.getResourceType();
-    if (resourceType.equals(PROJECT) || resourceType.equals(ORGANIZATION) || resourceType.equals(ACCOUNT)) {
-      resourceGroupService.createManagedResourceGroup(resourceInfo.getAccountIdentifier());
-    }
-    return true;
+    resourceSelectors.forEach(rs -> rs.getIdentifiers().remove(resource.getResourceIdentifier()));
   }
 }

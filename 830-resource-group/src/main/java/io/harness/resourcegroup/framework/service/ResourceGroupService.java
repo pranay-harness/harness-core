@@ -26,7 +26,7 @@ public interface ResourceGroupService {
 
   Page<ResourceGroup> list(Criteria criteria, Pageable pageable);
 
-  Optional<ResourceGroupResponse> update(ResourceGroupDTO resourceGroupDTO);
+  Optional<ResourceGroupResponse> update(ResourceGroupDTO resourceGroupDTO, boolean sanitizeResourceSelectors);
 
   void delete(Scope scope, String identifier, boolean deleteIfRoleAssignmentsExists);
 }

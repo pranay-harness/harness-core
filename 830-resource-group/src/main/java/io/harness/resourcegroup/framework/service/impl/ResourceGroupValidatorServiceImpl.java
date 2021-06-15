@@ -13,6 +13,7 @@ import io.harness.resourcegroup.model.ResourceSelector;
 import io.harness.resourcegroup.model.StaticResourceSelector;
 
 import com.google.inject.Inject;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -27,24 +28,35 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
   Map<String, Resource> resourceMap;
 
   @Override
-  public boolean validateAndFilterInvalidResourceSelectors(ResourceGroup resourceGroup) {
+  public boolean sanitizeResourceSelectors(ResourceGroup resourceGroup) {
     Scope scope = Scope.builder()
                       .accountIdentifier(resourceGroup.getAccountIdentifier())
                       .orgIdentifier(resourceGroup.getOrgIdentifier())
                       .projectIdentifier(resourceGroup.getProjectIdentifier())
                       .build();
-    boolean valid = false;
-    for (ResourceSelector resourceSelector : resourceGroup.getResourceSelectors()) {
+
+    boolean sanitized = false;
+    for (Iterator<ResourceSelector> iterator = resourceGroup.getResourceSelectors().iterator(); iterator.hasNext();) {
+      ResourceSelector resourceSelector = iterator.next();
       if (resourceSelector instanceof StaticResourceSelector) {
-        valid |= validateAndSanitizeStaticResourceSelector(scope, (StaticResourceSelector) resourceSelector);
+        StaticResourceSelector staticResourceSelector = (StaticResourceSelector) resourceSelector;
+        sanitized |= sanitizeStaticResourceSelector(scope, staticResourceSelector);
+        if (sanitized && staticResourceSelector.getIdentifiers().isEmpty()) {
+          iterator.remove();
+        }
       } else if (resourceSelector instanceof DynamicResourceSelector) {
-        valid |= validateAndSanitizeDynamicResourceSelector(scope, (DynamicResourceSelector) resourceSelector);
+        DynamicResourceSelector dynamicResourceSelector = (DynamicResourceSelector) resourceSelector;
+        if (!isValidDynamicResourceSelector(scope, dynamicResourceSelector)) {
+          iterator.remove();
+          sanitized = true;
+        }
       }
     }
-    return valid;
+
+    return sanitized;
   }
 
-  private boolean validateAndSanitizeDynamicResourceSelector(Scope scope, DynamicResourceSelector resourceSelector) {
+  private boolean isValidDynamicResourceSelector(Scope scope, DynamicResourceSelector resourceSelector) {
     String resourceType = resourceSelector.getResourceType();
     ScopeLevel scopeLevel =
         ScopeLevel.of(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier());
@@ -54,7 +66,7 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
         && resourceMap.get(resourceType).getSelectorKind().contains(DYNAMIC);
   }
 
-  private boolean validateAndSanitizeStaticResourceSelector(Scope scope, StaticResourceSelector resourceSelector) {
+  private boolean sanitizeStaticResourceSelector(Scope scope, StaticResourceSelector resourceSelector) {
     String resourceType = resourceSelector.getResourceType();
     List<String> resourceIds = resourceSelector.getIdentifiers();
     ScopeLevel scopeLevel =
@@ -74,11 +86,8 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
                                         .filter(validationResult::get)
                                         .mapToObj(resourceIds::get)
                                         .collect(Collectors.toList());
-    if (validResourceIds.isEmpty()) {
-      return false;
-    } else {
-      resourceSelector.setIdentifiers(validResourceIds);
-      return true;
-    }
+    resourceSelector.setIdentifiers(validResourceIds);
+
+    return resourceIds.size() != validResourceIds.size();
   }
 }
