@@ -25,7 +25,8 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
-import io.harness.event.OrchestrationEndEventHandler;
+import io.harness.engine.interrupts.OrchestrationEndInterruptHandler;
+import io.harness.event.OrchestrationEndGraphHandler;
 import io.harness.event.OrchestrationLogPublisher;
 import io.harness.event.OrchestrationStartEventHandler;
 import io.harness.exception.GeneralException;
@@ -380,7 +381,9 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     OrchestrationEngine orchestrationEngine = injector.getInstance(Key.get(OrchestrationEngine.class));
     orchestrationEngine.getOrchestrationEndSubject().register(
-        injector.getInstance(Key.get(OrchestrationEndEventHandler.class)));
+        injector.getInstance(Key.get(OrchestrationEndGraphHandler.class)));
+    orchestrationEngine.getOrchestrationEndSubject().register(
+        injector.getInstance(Key.get(OrchestrationEndInterruptHandler.class)));
 
     SdkResponseEventMessageListener sdkResponseEventMessageListener =
         injector.getInstance(SdkResponseEventMessageListener.class);

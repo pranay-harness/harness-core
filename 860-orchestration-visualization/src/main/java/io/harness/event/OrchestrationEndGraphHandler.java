@@ -20,13 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PIPELINE)
 @Slf4j
 @Singleton
-public class OrchestrationEndEventHandler implements AsyncInformObserver, OrchestrationEndObserver {
+public class OrchestrationEndGraphHandler implements AsyncInformObserver, OrchestrationEndObserver {
   private final ExecutorService executorService;
   private final PlanExecutionService planExecutionService;
   private final GraphGenerationService graphGenerationService;
 
   @Inject
-  public OrchestrationEndEventHandler(
+  public OrchestrationEndGraphHandler(
       @Named("OrchestrationVisualizationExecutorService") ExecutorService executorService,
       PlanExecutionService planExecutionService, GraphGenerationService graphGenerationService) {
     this.executorService = executorService;
