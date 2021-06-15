@@ -451,7 +451,8 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     final CreateBranchResponse createBranchResponse =
         createNewBranchFromDefault(slug, gitProvider, branch, latestShaOfBranch, scmBlockingStub);
     try {
-      ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(createBranchResponse.getStatus(), null);
+      ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
+          createBranchResponse.getStatus(), createBranchResponse.getError());
     } catch (ScmException e) {
       throw new ExplanationException(String.format("Failed to create branch %s", branch), e);
     }
@@ -471,7 +472,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
                                           .build();
     final CreatePRResponse prResponse = scmBlockingStub.createPR(createPRRequest);
     try {
-      ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(prResponse.getStatus(), null);
+      ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(prResponse.getStatus(), prResponse.getError());
     } catch (WingsException e) {
       if (ErrorCode.SCM_NOT_MODIFIED.equals(e.getCode())) {
         throw new ExplanationException("A PR already exist for given branches", e);
