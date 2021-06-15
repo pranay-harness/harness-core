@@ -29,7 +29,7 @@ import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
-import io.harness.delegate.utils.DelegateEntityOwnerMapper;
+import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.service.impl.DelegateSetupServiceImpl;
@@ -228,12 +228,12 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     DelegateGroup orgGroup = DelegateGroup.builder()
                                  .accountId(accountId)
                                  .ng(true)
-                                 .owner(DelegateEntityOwnerMapper.buildOwner(orgId, null))
+                                 .owner(DelegateEntityOwnerHelper.buildOwner(orgId, null))
                                  .build();
     DelegateGroup projectGroup = DelegateGroup.builder()
                                      .accountId(accountId)
                                      .ng(true)
-                                     .owner(DelegateEntityOwnerMapper.buildOwner(orgId, projectId))
+                                     .owner(DelegateEntityOwnerHelper.buildOwner(orgId, projectId))
                                      .build();
     persistence.save(Arrays.asList(acctGroup, orgGroup, projectGroup));
 
@@ -579,12 +579,12 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     DelegateGroup orgGroup = DelegateGroup.builder()
                                  .accountId(accountId)
                                  .ng(true)
-                                 .owner(DelegateEntityOwnerMapper.buildOwner(orgId, null))
+                                 .owner(DelegateEntityOwnerHelper.buildOwner(orgId, null))
                                  .build();
     DelegateGroup projectGroup = DelegateGroup.builder()
                                      .accountId(accountId)
                                      .ng(true)
-                                     .owner(DelegateEntityOwnerMapper.buildOwner(orgId, projectId))
+                                     .owner(DelegateEntityOwnerHelper.buildOwner(orgId, projectId))
                                      .build();
     persistence.save(Arrays.asList(deletedGroup, acctGroup, orgGroup, projectGroup));
 
@@ -610,14 +610,14 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
                                .ng(true)
                                .delegateGroupId(orgGroup.getUuid())
                                .status(DelegateInstanceStatus.ENABLED)
-                               .owner(DelegateEntityOwnerMapper.buildOwner(orgId, null))
+                               .owner(DelegateEntityOwnerHelper.buildOwner(orgId, null))
                                .build();
     Delegate projectDelegate = Delegate.builder()
                                    .accountId(accountId)
                                    .ng(true)
                                    .delegateGroupId(projectGroup.getUuid())
                                    .status(DelegateInstanceStatus.ENABLED)
-                                   .owner(DelegateEntityOwnerMapper.buildOwner(orgId, projectId))
+                                   .owner(DelegateEntityOwnerHelper.buildOwner(orgId, projectId))
                                    .build();
 
     persistence.saveBatch(Arrays.asList(cgDelegate, deletedDelegate, acctDelegate, orgDelegate, projectDelegate));
@@ -672,13 +672,13 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     final DelegateProfile acctDelegateProfile =
         DelegateProfile.builder().accountId(accountId).name("acct").ng(true).build();
 
-    final DelegateEntityOwner orgOwner = DelegateEntityOwnerMapper.buildOwner(orgId, null);
+    final DelegateEntityOwner orgOwner = DelegateEntityOwnerHelper.buildOwner(orgId, null);
     final DelegateProfile primaryOrgDelegateProfile =
         DelegateProfile.builder().accountId(accountId).name("primary").ng(true).primary(true).owner(orgOwner).build();
     final DelegateProfile orgDelegateProfile =
         DelegateProfile.builder().accountId(accountId).name("org").ng(true).owner(orgOwner).build();
 
-    final DelegateEntityOwner projectOwner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
+    final DelegateEntityOwner projectOwner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
     final DelegateProfile primaryProjectDelegateProfile = DelegateProfile.builder()
                                                               .accountId(accountId)
                                                               .name("primary")

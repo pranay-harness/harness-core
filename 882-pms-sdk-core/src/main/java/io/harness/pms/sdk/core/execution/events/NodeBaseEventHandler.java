@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.core.execution.events.node;
+package io.harness.pms.sdk.core.execution.events;
 
 import io.harness.data.structure.CollectionUtils;
 import io.harness.logging.AutoLogContext;

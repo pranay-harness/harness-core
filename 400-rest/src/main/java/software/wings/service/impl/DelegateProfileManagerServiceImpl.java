@@ -30,7 +30,9 @@ import io.harness.delegateprofile.ProfileId;
 import io.harness.delegateprofile.ProfileScopingRule;
 import io.harness.delegateprofile.ProfileSelector;
 import io.harness.delegateprofile.ScopingValues;
+import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.DelegateProfileServiceGrpcClient;
 import io.harness.paging.PageRequestGrpc;
 
@@ -76,8 +78,13 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
 
   @Override
   public PageResponse<DelegateProfileDetails> list(String accountId, PageRequest<DelegateProfileDetails> pageRequest) {
-    DelegateProfilePageResponseGrpc pageResponse = delegateProfileServiceGrpcClient.listProfiles(
-        AccountId.newBuilder().setId(accountId).build(), convert(pageRequest), false, null, null);
+    DelegateProfilePageResponseGrpc pageResponse;
+    try {
+      pageResponse = delegateProfileServiceGrpcClient.listProfiles(
+          AccountId.newBuilder().setId(accountId).build(), convert(pageRequest), false, null, null);
+    } catch (DelegateServiceDriverException ex) {
+      throw new InvalidRequestException(ex.getMessage(), ex);
+    }
 
     if (pageResponse == null) {
       return null;
@@ -88,8 +95,13 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
 
   @Override
   public DelegateProfileDetails get(String accountId, String delegateProfileId) {
-    DelegateProfileGrpc delegateProfileGrpc = delegateProfileServiceGrpcClient.getProfile(
-        AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(delegateProfileId).build());
+    DelegateProfileGrpc delegateProfileGrpc;
+    try {
+      delegateProfileGrpc = delegateProfileServiceGrpcClient.getProfile(
+          AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(delegateProfileId).build());
+    } catch (DelegateServiceDriverException ex) {
+      throw new InvalidRequestException(ex.getMessage(), ex);
+    }
 
     if (delegateProfileGrpc == null) {
       return null;
@@ -101,8 +113,13 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
   @Override
   public DelegateProfileDetails update(DelegateProfileDetails delegateProfile) {
     validateScopingRules(delegateProfile.getScopingRules());
-    DelegateProfileGrpc updateDelegateProfileGrpc =
-        delegateProfileServiceGrpcClient.updateProfile(convert(delegateProfile));
+
+    DelegateProfileGrpc updateDelegateProfileGrpc;
+    try {
+      updateDelegateProfileGrpc = delegateProfileServiceGrpcClient.updateProfile(convert(delegateProfile));
+    } catch (DelegateServiceDriverException ex) {
+      throw new InvalidRequestException(ex.getMessage(), ex);
+    }
 
     if (updateDelegateProfileGrpc == null) {
       return null;
@@ -117,9 +134,14 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
     validateScopingRules(scopingRules);
     List<ProfileScopingRule> grpcScopingRules = convert(scopingRules);
 
-    DelegateProfileGrpc delegateProfileGrpc =
-        delegateProfileServiceGrpcClient.updateProfileScopingRules(AccountId.newBuilder().setId(accountId).build(),
-            ProfileId.newBuilder().setId(delegateProfileId).build(), grpcScopingRules);
+    DelegateProfileGrpc delegateProfileGrpc;
+    try {
+      delegateProfileGrpc =
+          delegateProfileServiceGrpcClient.updateProfileScopingRules(AccountId.newBuilder().setId(accountId).build(),
+              ProfileId.newBuilder().setId(delegateProfileId).build(), grpcScopingRules);
+    } catch (DelegateServiceDriverException ex) {
+      throw new InvalidRequestException(ex.getMessage(), ex);
+    }
 
     if (delegateProfileGrpc == null) {
       return null;
@@ -132,9 +154,14 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
   public DelegateProfileDetails updateSelectors(String accountId, String delegateProfileId, List<String> selectors) {
     List<ProfileSelector> grpcSelectors = convertToProfileSelector(selectors);
 
-    DelegateProfileGrpc delegateProfileGrpc =
-        delegateProfileServiceGrpcClient.updateProfileSelectors(AccountId.newBuilder().setId(accountId).build(),
-            ProfileId.newBuilder().setId(delegateProfileId).build(), grpcSelectors);
+    DelegateProfileGrpc delegateProfileGrpc;
+    try {
+      delegateProfileGrpc =
+          delegateProfileServiceGrpcClient.updateProfileSelectors(AccountId.newBuilder().setId(accountId).build(),
+              ProfileId.newBuilder().setId(delegateProfileId).build(), grpcSelectors);
+    } catch (DelegateServiceDriverException ex) {
+      throw new InvalidRequestException(ex.getMessage(), ex);
+    }
 
     if (delegateProfileGrpc == null) {
       return null;
@@ -146,7 +173,13 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
   @Override
   public DelegateProfileDetails add(DelegateProfileDetails delegateProfile) {
     validateScopingRules(delegateProfile.getScopingRules());
-    DelegateProfileGrpc delegateProfileGrpc = delegateProfileServiceGrpcClient.addProfile(convert(delegateProfile));
+
+    DelegateProfileGrpc delegateProfileGrpc;
+    try {
+      delegateProfileGrpc = delegateProfileServiceGrpcClient.addProfile(convert(delegateProfile));
+    } catch (DelegateServiceDriverException ex) {
+      throw new InvalidRequestException(ex.getMessage(), ex);
+    }
 
     if (delegateProfileGrpc == null) {
       return null;
@@ -157,8 +190,12 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
 
   @Override
   public void delete(String accountId, String delegateProfileId) {
-    delegateProfileServiceGrpcClient.deleteProfile(
-        AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(delegateProfileId).build());
+    try {
+      delegateProfileServiceGrpcClient.deleteProfile(
+          AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(delegateProfileId).build());
+    } catch (DelegateServiceDriverException ex) {
+      throw new InvalidRequestException(ex.getMessage(), ex);
+    }
   }
 
   @VisibleForTesting

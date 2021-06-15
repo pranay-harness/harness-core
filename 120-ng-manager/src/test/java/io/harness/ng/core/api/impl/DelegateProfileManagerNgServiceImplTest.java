@@ -33,6 +33,10 @@ import io.harness.delegateprofile.ProfileScopingRule;
 import io.harness.delegateprofile.ScopingValues;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.grpc.DelegateProfileServiceGrpcClient;
+import io.harness.ng.core.events.DelegateConfigurationCreateEvent;
+import io.harness.ng.core.events.DelegateConfigurationDeleteEvent;
+import io.harness.ng.core.events.DelegateConfigurationUpdateEvent;
+import io.harness.outbox.api.OutboxService;
 import io.harness.owner.OrgIdentifier;
 import io.harness.owner.ProjectIdentifier;
 import io.harness.paging.PageRequestGrpc;
@@ -42,6 +46,8 @@ import io.harness.rule.OwnerRule;
 
 import software.wings.beans.Environment;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +56,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -66,13 +73,15 @@ public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
 
   @Mock private DelegateProfileServiceGrpcClient delegateProfileServiceGrpcClient;
   @Mock private HPersistence hPersistence;
+  @Mock private OutboxService outboxService;
   @InjectMocks @Inject private DelegateProfileManagerNgServiceImpl delegateProfileManagerNgService;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     initMocks(this);
+    FieldUtils.writeField(delegateProfileManagerNgService, "outboxService", outboxService, true);
   }
 
   @Test
@@ -134,6 +143,7 @@ public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
     scopingEntities.put(ENV_ID_FIELD, ScopingValues.newBuilder().addAllValue(Arrays.asList("env1", "env2")).build());
 
     DelegateProfileDetailsNg profileDetail = DelegateProfileDetailsNg.builder()
+                                                 .uuid(generateUuid())
                                                  .accountId(TEST_ACCOUNT_ID)
                                                  .name("test")
                                                  .description("description")
@@ -159,9 +169,15 @@ public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
     when(delegateProfileServiceGrpcClient.updateProfile(any(DelegateProfileGrpc.class)))
         .thenReturn(null)
         .thenReturn(delegateProfileGrpc);
+    when(delegateProfileServiceGrpcClient.getProfile(any(AccountId.class), any(ProfileId.class)))
+        .thenReturn(delegateProfileGrpc);
 
     DelegateProfileDetailsNg updatedDelegateProfileDetails = delegateProfileManagerNgService.update(profileDetail);
     assertThat(updatedDelegateProfileDetails).isNull();
+
+    ArgumentCaptor<DelegateConfigurationUpdateEvent> configCaptor =
+        ArgumentCaptor.forClass(DelegateConfigurationUpdateEvent.class);
+    when(outboxService.save(configCaptor.capture())).thenReturn(null);
 
     updatedDelegateProfileDetails = delegateProfileManagerNgService.update(profileDetail);
     assertThat(updatedDelegateProfileDetails).isNotNull();
@@ -170,6 +186,13 @@ public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
     assertThat(updatedDelegateProfileDetails.getAccountId()).isEqualTo(TEST_ACCOUNT_ID);
     assertThat(updatedDelegateProfileDetails.getDescription()).isEqualTo("description");
     assertThat(updatedDelegateProfileDetails.getScopingRules().get(0).getDescription()).isEqualTo("test");
+
+    DelegateConfigurationUpdateEvent delegateConfigurationUpdateEvent = configCaptor.getValue();
+    assertThat(delegateConfigurationUpdateEvent.getAccountIdentifier()).isEqualTo(TEST_ACCOUNT_ID);
+    assertThat(delegateConfigurationUpdateEvent.getOrgIdentifier()).isNull();
+    assertThat(delegateConfigurationUpdateEvent.getProjectIdentifier()).isNull();
+    assertThat(delegateConfigurationUpdateEvent.getOldProfile()).isNotNull();
+    assertThat(delegateConfigurationUpdateEvent.getNewProfile()).isNotNull();
   }
 
   @Test
@@ -234,8 +257,10 @@ public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
             .build();
 
     ArgumentCaptor<DelegateProfileGrpc> captor = ArgumentCaptor.forClass(DelegateProfileGrpc.class);
-
     when(delegateProfileServiceGrpcClient.addProfile(captor.capture())).thenReturn(delegateProfileGrpc);
+    ArgumentCaptor<DelegateConfigurationCreateEvent> configCaptor =
+        ArgumentCaptor.forClass(DelegateConfigurationCreateEvent.class);
+    when(outboxService.save(configCaptor.capture())).thenReturn(null);
 
     DelegateProfileDetailsNg result = delegateProfileManagerNgService.add(profileDetail);
     assertThat(result).isNotNull().isEqualToIgnoringGivenFields(profileDetail, DelegateProfileKeys.uuid);
@@ -244,6 +269,34 @@ public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
     assertThat(capturedProfile.getNg()).isTrue();
     assertThat(capturedProfile.getOrgIdentifier().getId()).isEqualTo("orgId");
     assertThat(capturedProfile.getProjectIdentifier().getId()).isEqualTo("projectId");
+
+    DelegateConfigurationCreateEvent delegateConfigurationCreateEvent = configCaptor.getValue();
+    assertThat(delegateConfigurationCreateEvent.getAccountIdentifier()).isEqualTo(TEST_ACCOUNT_ID);
+    assertThat(delegateConfigurationCreateEvent.getOrgIdentifier())
+        .isEqualTo(delegateProfileGrpc.getOrgIdentifier().getId());
+    assertThat(delegateConfigurationCreateEvent.getProjectIdentifier())
+        .isEqualTo(delegateProfileGrpc.getProjectIdentifier().getId());
+
+    assertThat(delegateConfigurationCreateEvent.getDelegateProfile().getAccountId()).isEqualTo(TEST_ACCOUNT_ID);
+    assertThat(delegateConfigurationCreateEvent.getDelegateProfile().getOrgIdentifier())
+        .isEqualTo(delegateProfileGrpc.getOrgIdentifier().getId());
+    assertThat(delegateConfigurationCreateEvent.getDelegateProfile().getProjectIdentifier())
+        .isEqualTo(delegateProfileGrpc.getProjectIdentifier().getId());
+    assertThat(delegateConfigurationCreateEvent.getDelegateProfile().getName())
+        .isEqualTo(delegateProfileGrpc.getName());
+    assertThat(delegateConfigurationCreateEvent.getDelegateProfile().getDescription())
+        .isEqualTo(delegateProfileGrpc.getDescription());
+    assertThat(delegateConfigurationCreateEvent.getDelegateProfile().isPrimary())
+        .isEqualTo(delegateProfileGrpc.getPrimary());
+    assertThat(delegateConfigurationCreateEvent.getDelegateProfile().isApprovalRequired())
+        .isEqualTo(delegateProfileGrpc.getApprovalRequired());
+    assertThat(delegateConfigurationCreateEvent.getDelegateProfile().getStartupScript())
+        .isEqualTo(delegateProfileGrpc.getStartupScript());
+    assertThat(delegateConfigurationCreateEvent.getDelegateProfile().getScopingRules())
+        .isEqualTo(Lists.newArrayList(ScopingRuleDetailsNg.builder()
+                                          .description("test")
+                                          .environmentIds(Sets.newHashSet("env1", "env2"))
+                                          .build()));
   }
 
   @Test
@@ -316,11 +369,14 @@ public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
   @Owner(developers = OwnerRule.NICOLAS)
   @Category(UnitTests.class)
   public void shouldDelete() {
+    when(delegateProfileServiceGrpcClient.getProfile(any(AccountId.class), any(ProfileId.class)))
+        .thenReturn(DelegateProfileGrpc.newBuilder().build());
     delegateProfileManagerNgService.delete(TEST_ACCOUNT_ID, TEST_DELEGATE_PROFILE_ID);
 
     AccountId accountId = AccountId.newBuilder().setId(TEST_ACCOUNT_ID).build();
     ProfileId profileId = ProfileId.newBuilder().setId(TEST_DELEGATE_PROFILE_ID).build();
     verify(delegateProfileServiceGrpcClient, times(1)).deleteProfile(eq(accountId), eq(profileId));
+    verify(outboxService, times(1)).save(any(DelegateConfigurationDeleteEvent.class));
   }
 
   @Test

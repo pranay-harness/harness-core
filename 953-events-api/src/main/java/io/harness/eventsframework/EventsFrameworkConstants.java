@@ -51,6 +51,10 @@ public final class EventsFrameworkConstants {
   public static final int PIPELINE_NODE_START_EVENT_BATCH_SIZE = 10;
   public static final int PIPELINE_NODE_START_EVENT_MAX_TOPIC_SIZE = 5000;
 
+  public static final String PIPELINE_PROGRESS_EVENT_TOPIC = "pipeline_node_progress";
+  public static final int PIPELINE_PROGRESS_BATCH_SIZE = 10;
+  public static final int PIPELINE_PROGRESS_MAX_TOPIC_SIZE = 5000;
+
   public static final int DEFAULT_TOPIC_SIZE = 10000;
   public static final int USER_MEMBERSHIP_TOPIC_SIZE = 100000;
   public static final int ENTITY_CRUD_MAX_TOPIC_SIZE = 100000;

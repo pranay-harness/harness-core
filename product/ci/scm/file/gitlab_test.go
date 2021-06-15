@@ -153,8 +153,10 @@ func TestFindFilesInBranchGitlab(t *testing.T) {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.FindFilesInBranchRequest{
-		Slug:   "tphoney/test_repo",
-		Branch: "master",
+		Slug: "tphoney/test_repo",
+		Type: &pb.FindFilesInBranchRequest_Branch{
+			Branch: "main",
+		},
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_Gitlab{
 				Gitlab: &pb.GitlabProvider{

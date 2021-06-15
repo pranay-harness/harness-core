@@ -127,7 +127,6 @@ import software.wings.service.impl.AppLogContext;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.TriggerLogContext;
 import software.wings.service.impl.deployment.checks.DeploymentFreezeUtils;
-import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -135,7 +134,6 @@ import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
-import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HarnessTagService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
@@ -201,6 +199,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
+  @Inject private ScheduledTriggerHandler scheduledTriggerHandler;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private HarnessTagService harnessTagService;
   @Inject private YamlPushService yamlPushService;
@@ -221,8 +220,6 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private WebhookTriggerProcessor webhookTriggerProcessor;
   @Inject private TriggerExecutionService triggerExecutionService;
   @Inject private AuditServiceHelper auditServiceHelper;
-  @Inject private AuthService authService;
-  @Inject private AuthHandler authHandler;
   @Inject private ResourceLookupService resourceLookupService;
   @Inject private TriggerAuthHandler triggerAuthHandler;
   @Inject private ArtifactStreamHelper artifactStreamHelper;
@@ -294,6 +291,7 @@ public class TriggerServiceImpl implements TriggerService {
     String accountId = appService.getAccountIdByAppId(trigger.getAppId());
     trigger.setAccountId(accountId);
     validateInput(trigger, null);
+    updateNextIterations(trigger);
     Trigger savedTrigger =
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
     if (trigger.getCondition().getConditionType() == SCHEDULED) {
@@ -341,6 +339,7 @@ public class TriggerServiceImpl implements TriggerService {
 
     validateInput(trigger, existingTrigger);
 
+    updateNextIterations(trigger);
     Trigger updatedTrigger =
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
     addOrUpdateCronForScheduledJob(trigger, existingTrigger);
@@ -932,7 +931,7 @@ public class TriggerServiceImpl implements TriggerService {
         return;
       }
       if (trigger.isDisabled()) {
-        log.info("Trigger rejected due to slowness in the product");
+        log.info(TRIGGER_SLOWNESS_ERROR_MESSAGE);
         return;
       }
       log.info("Received scheduled trigger for appId {} and Trigger Id {} with the scheduled fire time {} ",
@@ -2073,12 +2072,22 @@ public class TriggerServiceImpl implements TriggerService {
       if (trigger.getCondition().getConditionType() == SCHEDULED) {
         TriggerKey triggerKey = new TriggerKey(trigger.getUuid(), ScheduledTriggerJob.GROUP);
         jobScheduler.rescheduleJob(triggerKey, ScheduledTriggerJob.getQuartzTrigger(trigger));
+        jobScheduler.pauseJob(trigger.getUuid(), ScheduledTriggerJob.GROUP);
       } else {
         jobScheduler.deleteJob(existingTrigger.getUuid(), ScheduledTriggerJob.GROUP);
       }
     } else if (trigger.getCondition().getConditionType() == SCHEDULED) {
       String accountId = appService.getAccountIdByAppId(trigger.getAppId());
       ScheduledTriggerJob.add(jobScheduler, accountId, trigger.getAppId(), trigger.getUuid(), trigger);
+      jobScheduler.pauseJob(trigger.getUuid(), ScheduledTriggerJob.GROUP);
+    }
+  }
+
+  private void updateNextIterations(Trigger trigger) {
+    trigger.setNextIterations(new ArrayList<>());
+    if (trigger.getCondition().getConditionType() == SCHEDULED) {
+      trigger.recalculateNextIterations(TriggerKeys.nextIterations, true, 0);
+      scheduledTriggerHandler.wakeup();
     }
   }
 

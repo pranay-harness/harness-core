@@ -21,6 +21,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @Builder
@@ -31,7 +32,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(HarnessTeam.CV)
 public class SumoLogicConnectorDTO extends ConnectorConfigDTO implements DecryptableEntity, DelegateSelectable {
-  @NotNull String url;
+  @NotNull @NotBlank String url;
   @NotNull @SecretReference @ApiModelProperty(dataType = "string") SecretRefData accessIdRef;
   @NotNull @SecretReference @ApiModelProperty(dataType = "string") SecretRefData accessKeyRef;
   Set<String> delegateSelectors;

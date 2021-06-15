@@ -42,7 +42,8 @@ public class ProcessingResponseMapper {
         GitToHarnessProcessingResponseDTO.builder()
             .accountId(processingResponse.getAccountId())
             .fileResponses(fileProcessingResponseDTOList);
-    if (processingFailureStage != null) {
+    // If response is error response, then set the failure stage
+    if (processingResponse.getIsError()) {
       gitToHarnessProcessingResponseDTOBuilder.msvcProcessingFailureStage(
           MsvcProcessingFailureStage.valueOf(processingFailureStage.toString()));
     }

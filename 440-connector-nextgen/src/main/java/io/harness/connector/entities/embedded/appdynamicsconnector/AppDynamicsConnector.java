@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsAuthType;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -15,6 +16,7 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AppDynamicsConnectorKeys")
 @Entity(value = "connectors", noClassnameStored = true)
@@ -26,7 +28,6 @@ public class AppDynamicsConnector extends Connector {
   private String accountname;
   private String passwordRef;
   private String controllerUrl;
-  private String accountId;
   private AppDynamicsAuthType authType;
   private String clientId;
   private String clientSecret;

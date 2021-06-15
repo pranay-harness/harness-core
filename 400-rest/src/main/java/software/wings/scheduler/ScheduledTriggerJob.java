@@ -1,11 +1,13 @@
 package software.wings.scheduler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 import static software.wings.common.Constants.APP_ID_KEY;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.scheduler.PersistentScheduler;
 
 import software.wings.beans.trigger.ScheduledTriggerCondition;
@@ -27,6 +29,7 @@ import org.quartz.TriggerBuilder;
 /**
  * Created by sgurubelli on 10/26/17.
  */
+@OwnedBy(CDC)
 @Slf4j
 public class ScheduledTriggerJob implements Job {
   public static final String GROUP = "SCHEDULED_TRIGGER_CRON_GROUP";
@@ -73,13 +76,14 @@ public class ScheduledTriggerJob implements Job {
     String triggerId = jobExecutionContext.getMergedJobDataMap().getString(TRIGGER_ID_KEY);
     String appId = jobExecutionContext.getMergedJobDataMap().getString(APP_ID_KEY);
     String accountId = jobExecutionContext.getMergedJobDataMap().getString(ACCOUNT_ID_KEY);
-
     Trigger trigger = wingsPersistence.getWithAppId(Trigger.class, appId, triggerId);
     if (trigger == null || trigger.getCondition().getConditionType() != SCHEDULED) {
       log.info("Trigger not found or wrong type. Deleting job associated to it");
       jobScheduler.deleteJob(triggerId, GROUP);
       return;
     }
+    log.warn("Trigger running with quartz scheduler and not iterator framework with appId - {} and triggerId - {}",
+        appId, triggerId);
     log.info("Triggering scheduled job for appId {} and triggerId {} with the scheduled fire time {}", appId, triggerId,
         jobExecutionContext.getNextFireTime());
     triggerService.triggerScheduledExecutionAsync(trigger, jobExecutionContext.getNextFireTime());

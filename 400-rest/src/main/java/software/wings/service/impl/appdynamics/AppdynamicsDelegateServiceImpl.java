@@ -7,17 +7,10 @@ import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTE
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.getUnsafeHttpClient;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
-import io.harness.cvng.beans.AppdynamicsValidationResponse;
-import io.harness.cvng.beans.AppdynamicsValidationResponse.AppdynamicsMetricValueValidationResponse;
-import io.harness.cvng.beans.AppdynamicsValidationResponse.AppdynamicsValidationResponseBuilder;
-import io.harness.cvng.beans.MetricPackDTO;
-import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
-import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.task.DataCollectionExecutorService;
-import io.harness.exception.ExceptionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
@@ -37,7 +30,6 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -50,7 +42,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
@@ -395,72 +386,6 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
         .loadResponse(VerificationLoadResponse.builder().isLoadPresent(true).loadResponse(tierMetrics).build())
         .dataForNode(metricsData)
         .build();
-  }
-
-  @Override
-  public Set<AppdynamicsValidationResponse> getMetricPackData(AppDynamicsConnectorDTO appDynamicsConnectorDTO,
-      List<EncryptedDataDetail> encryptionDetails, String appName, String tierName, String requestGuid,
-      List<MetricPackDTO> metricPacks, Instant startTime, Instant endTime) {
-    Set<AppdynamicsValidationResponse> appdynamicsValidationResponses = new HashSet<>();
-    metricPacks.forEach(metricPack -> {
-      final String metricPackName = metricPack.getIdentifier();
-      final AppdynamicsValidationResponseBuilder appdynamicsValidationResponse =
-          AppdynamicsValidationResponse.builder().metricPackName(metricPackName);
-      List<Callable<AppdynamicsMetricValueValidationResponse>> callables = new ArrayList<>();
-      metricPack.getMetrics()
-          .stream()
-          .filter(metricDefinition -> metricDefinition.isIncluded() && isNotEmpty(metricDefinition.getValidationPath()))
-          .forEach(metricDefinition -> callables.add(() -> {
-            String metricPath =
-                metricDefinition.getValidationPath().replaceAll(CVNextGenConstants.APPD_TIER_ID_PLACEHOLDER, tierName);
-            Call<List<AppdynamicsMetricData>> metriDataRequest =
-                getAppdynamicsRestClient(appDynamicsConnectorDTO)
-                    .getMetricDataTimeRange(getHeaderWithCredentials(appDynamicsConnectorDTO, encryptionDetails),
-                        appName, metricPath, startTime.toEpochMilli(), endTime.toEpochMilli(), true);
-            try {
-              List<AppdynamicsMetricData> appdynamicsMetricData = requestExecutor.executeRequest(
-                  ThirdPartyApiCallLog.createApiCallLog(appDynamicsConnectorDTO.getAccountId(),
-                      metricPackName + ":" + metricDefinition.getName() + ":" + requestGuid),
-                  metriDataRequest);
-
-              if (isEmpty(appdynamicsMetricData) || isEmpty(appdynamicsMetricData.get(0).getMetricValues())) {
-                return AppdynamicsMetricValueValidationResponse.builder()
-                    .metricName(metricDefinition.getName())
-                    .apiResponseStatus(ThirdPartyApiResponseStatus.NO_DATA)
-                    .build();
-              }
-
-              return AppdynamicsMetricValueValidationResponse.builder()
-                  .metricName(metricDefinition.getName())
-                  .apiResponseStatus(ThirdPartyApiResponseStatus.SUCCESS)
-                  .value(appdynamicsMetricData.get(0).getMetricValues().get(0).getValue())
-                  .build();
-            } catch (Exception e) {
-              log.info("Exception while validating for request " + requestGuid, e);
-              return AppdynamicsMetricValueValidationResponse.builder()
-                  .metricName(metricDefinition.getName())
-                  .apiResponseStatus(ThirdPartyApiResponseStatus.FAILED)
-                  .errorMessage(ExceptionUtils.getMessage(e))
-                  .build();
-            }
-          }));
-      final List<Optional<AppdynamicsMetricValueValidationResponse>> metricValidationResponses =
-          dataCollectionService.executeParrallel(callables);
-      AtomicReference<ThirdPartyApiResponseStatus> overAllStatus =
-          new AtomicReference<>(ThirdPartyApiResponseStatus.SUCCESS);
-      metricValidationResponses.forEach(validationResponse -> {
-        if (validationResponse.isPresent()) {
-          final AppdynamicsMetricValueValidationResponse valueValidationResponse = validationResponse.get();
-          if (valueValidationResponse.getApiResponseStatus().compareTo(overAllStatus.get()) > 0) {
-            overAllStatus.set(valueValidationResponse.getApiResponseStatus());
-          }
-          appdynamicsValidationResponse.addValidationResponse(valueValidationResponse);
-        }
-      });
-      appdynamicsValidationResponses.add(appdynamicsValidationResponse.overallStatus(overAllStatus.get()).build());
-    });
-
-    return appdynamicsValidationResponses;
   }
 
   @Override

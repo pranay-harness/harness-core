@@ -7,6 +7,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_FACIL
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_INTERRUPT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_START_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_EVENT_TOPIC;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.waiter.PmsNotifyEventListener.PMS_ORCHESTRATION;
 
@@ -45,6 +46,7 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.monitoring.MonitoringRedisEventObserver;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.OutboxEventPollService;
@@ -55,13 +57,13 @@ import io.harness.pms.approval.ApprovalInstanceHandler;
 import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.plan.Redis;
 import io.harness.pms.event.PMSEventConsumerService;
-import io.harness.pms.exception.WingsExceptionMapper;
 import io.harness.pms.inputset.gitsync.InputSetEntityGitSyncHelper;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTO;
 import io.harness.pms.listener.facilitators.FacilitatorRedisConsumerService;
 import io.harness.pms.listener.interrupts.InterruptRedisConsumerService;
 import io.harness.pms.listener.node.start.NodeStartRedisConsumerService;
 import io.harness.pms.listener.orchestrationevent.OrchestrationEventEventConsumerService;
+import io.harness.pms.listener.progress.ProgressRedisConsumerService;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.observers.InputSetsDeleteObserver;
 import io.harness.pms.notification.orchestration.handlers.NotificationInformHandler;
@@ -79,6 +81,7 @@ import io.harness.pms.plan.creation.PipelineServiceInternalInfoProvider;
 import io.harness.pms.plan.execution.PmsExecutionServiceInfoProvider;
 import io.harness.pms.plan.execution.handlers.ExecutionInfoUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.ExecutionSummaryCreateEventHandler;
+import io.harness.pms.plan.execution.handlers.ExecutionSummaryStatusUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.ExecutionSummaryUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.PipelineStatusUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.PlanStatusEventEmitterHandler;
@@ -102,6 +105,7 @@ import io.harness.serializer.jackson.PipelineServiceJacksonModule;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.service.impl.GraphGenerationServiceImpl;
 import io.harness.steps.barriers.BarrierInitializer;
 import io.harness.steps.barriers.event.BarrierDropper;
 import io.harness.steps.barriers.event.BarrierPositionHelperEventHandler;
@@ -324,6 +328,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(Key.get(NodeExecutionStatusUpdateEventHandler.class)));
     nodeExecutionService.getStepStatusUpdateSubject().register(
         injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
+    nodeExecutionService.getStepStatusUpdateSubject().register(
+        injector.getInstance(Key.get(ExecutionSummaryStatusUpdateEventHandler.class)));
 
     // NodeUpdateObservers
     nodeExecutionService.getNodeUpdateObserverSubject().register(
@@ -373,6 +379,11 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(SdkResponseEventMessageListener.class);
     sdkResponseEventMessageListener.getEventListenerObserverSubject().register(
         injector.getInstance(Key.get(MonitoringRedisEventObserver.class)));
+
+    GraphGenerationServiceImpl graphGenerationService =
+        (GraphGenerationServiceImpl) injector.getInstance(Key.get(GraphGenerationServiceImpl.class));
+    graphGenerationService.getGraphNodeUpdateObserverSubject().register(
+        injector.getInstance(Key.get(ExecutionSummaryStatusUpdateEventHandler.class)));
   }
 
   private void registerCorrelationFilter(Environment environment, Injector injector) {
@@ -437,6 +448,10 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .nodeStartEventConsumerConfig(
             ConsumerConfig.newBuilder()
                 .setRedis(Redis.newBuilder().setTopicName(PIPELINE_NODE_START_EVENT_TOPIC).build())
+                .build())
+        .progressEventConsumerConfig(
+            ConsumerConfig.newBuilder()
+                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_PROGRESS_EVENT_TOPIC).build())
                 .build())
         .build();
   }
@@ -526,6 +541,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     environment.lifecycle().manage(injector.getInstance(OrchestrationEventEventConsumerService.class));
     environment.lifecycle().manage(injector.getInstance(FacilitatorRedisConsumerService.class));
     environment.lifecycle().manage(injector.getInstance(NodeStartRedisConsumerService.class));
+    environment.lifecycle().manage(injector.getInstance(ProgressRedisConsumerService.class));
   }
 
   private void registerCorsFilter(PipelineServiceConfiguration appConfig, Environment environment) {
@@ -549,7 +565,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   private void registerJerseyProviders(Environment environment, Injector injector) {
     environment.jersey().register(JsonProcessingExceptionMapper.class);
     environment.jersey().register(EarlyEofExceptionMapper.class);
-    environment.jersey().register(WingsExceptionMapper.class);
+    environment.jersey().register(WingsExceptionMapperV2.class);
 
     environment.jersey().register(MultiPartFeature.class);
     //    environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));

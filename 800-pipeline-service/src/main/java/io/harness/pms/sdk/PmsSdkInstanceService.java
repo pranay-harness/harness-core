@@ -4,6 +4,8 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 import static org.springframework.data.mongodb.core.query.Update.update;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.lock.AcquiredLock;
@@ -32,6 +34,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 @Singleton
 public class PmsSdkInstanceService extends PmsServiceImplBase {
@@ -89,7 +92,8 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
             .set(PmsSdkInstanceKeys.sdkModuleInfo, request.getSdkModuleInfo())
             .set(PmsSdkInstanceKeys.lastUpdatedAt, System.currentTimeMillis())
             .set(PmsSdkInstanceKeys.facilitatorEventConsumerConfig, request.getFacilitatorEventConsumerConfig())
-            .set(PmsSdkInstanceKeys.nodeStartEventConsumerConfig, request.getNodeStartEventConsumerConfig());
+            .set(PmsSdkInstanceKeys.nodeStartEventConsumerConfig, request.getNodeStartEventConsumerConfig())
+            .set(PmsSdkInstanceKeys.progressEventConsumerConfig, request.getProgressEventConsumerConfig());
     mongoTemplate.findAndModify(
         query, update, new FindAndModifyOptions().upsert(true).returnNew(true), PmsSdkInstance.class);
   }

@@ -26,7 +26,7 @@ import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
-import io.harness.delegate.utils.DelegateEntityOwnerMapper;
+import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Producer;
@@ -68,8 +68,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class DelegateProfileServiceImpl implements DelegateProfileService, AccountCrudObserver {
   public static final String CG_PRIMARY_PROFILE_NAME = "Primary";
   public static final String NG_PRIMARY_PROFILE_NAME = "Primary Configuration";
-  public static final String PRIMARY_PROFILE_DESCRIPTION =
-      "The primary profile for the account"; // FixMe: change description
+  public static final String PRIMARY_PROFILE_DESCRIPTION = "The primary profile for the";
 
   @Inject private HPersistence persistence;
   @Inject private AuditServiceHelper auditServiceHelper;
@@ -245,13 +244,13 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
       if (delegateProfile.getOwner() != null) {
         String orgIdentifier =
-            DelegateEntityOwnerMapper.extractOrgIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
+            DelegateEntityOwnerHelper.extractOrgIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
         if (isNotBlank(orgIdentifier)) {
           entityChangeDTOBuilder.setOrgIdentifier(StringValue.of(orgIdentifier));
         }
 
         String projectIdentifier =
-            DelegateEntityOwnerMapper.extractProjectIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
+            DelegateEntityOwnerHelper.extractProjectIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
         if (isNotBlank(projectIdentifier)) {
           entityChangeDTOBuilder.setProjectIdentifier(StringValue.of(projectIdentifier));
         }
@@ -340,7 +339,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
         .uuid(generateUuid())
         .accountId(accountId)
         .name(getProfileName(owner, isNg))
-        .description(PRIMARY_PROFILE_DESCRIPTION)
+        .description(getProfileDescription(owner, isNg))
         .primary(true)
         .owner(owner)
         .ng(isNg)
@@ -353,6 +352,20 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
       return String.format("%s for %s", NG_PRIMARY_PROFILE_NAME, nameSuffix);
     } else {
       return CG_PRIMARY_PROFILE_NAME;
+    }
+  }
+
+  private String getProfileDescription(final DelegateEntityOwner owner, final boolean isNg) {
+    if (isNg) {
+      if (DelegateEntityOwnerHelper.isAccount(owner)) {
+        return String.format("%s %s", PRIMARY_PROFILE_DESCRIPTION, "account");
+      } else if (DelegateEntityOwnerHelper.isOrganisation(owner)) {
+        return String.format("%s %s organization", PRIMARY_PROFILE_DESCRIPTION, owner.getIdentifier());
+      } else {
+        return String.format("%s %s project", PRIMARY_PROFILE_DESCRIPTION, owner.getIdentifier());
+      }
+    } else {
+      return String.format("%s %s", PRIMARY_PROFILE_DESCRIPTION, "account");
     }
   }
 

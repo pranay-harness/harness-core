@@ -338,8 +338,10 @@ func TestFindFilesInBranch(t *testing.T) {
 	}))
 	defer ts.Close()
 	in := &pb.FindFilesInBranchRequest{
-		Slug:   "tphoney/scm-test",
-		Branch: "main",
+		Slug: "tphoney/scm-test",
+		Type: &pb.FindFilesInBranchRequest_Branch{
+			Branch: "main",
+		},
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_Github{
 				Github: &pb.GithubProvider{
