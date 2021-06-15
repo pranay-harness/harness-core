@@ -27,7 +27,7 @@ public class GitEntityInfo {
   String lastObjectId; // required in case of update file
   boolean isNewBranch;
   boolean isSyncFromGit;
-  @Wither boolean findDefaultFromOtherBranches;
+  @Wither boolean findDefaultFromOtherRepos;
   String baseBranch;
   String commitId; // used for passing commitId in case of g2h.
 

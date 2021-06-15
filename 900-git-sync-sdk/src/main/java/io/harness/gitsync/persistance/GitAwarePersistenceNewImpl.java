@@ -267,7 +267,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
         return createGitSyncCriteriaForRepoAndBranch(null, null, null, entityClass);
       }
       return createGitSyncCriteriaForRepoAndBranch(gitBranchInfo.getYamlGitConfigId(), gitBranchInfo.getBranch(),
-          gitBranchInfo.isFindDefaultFromOtherBranches(), entityClass);
+          gitBranchInfo.isFindDefaultFromOtherRepos(), entityClass);
     }
     return new Criteria();
   }
