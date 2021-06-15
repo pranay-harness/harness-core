@@ -19,12 +19,14 @@ import io.harness.accesscontrol.roles.persistence.repositories.RoleRepository;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SortOrder;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.utils.PageUtils;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
@@ -63,6 +65,11 @@ public class RoleDaoImpl implements RoleDao {
 
   @Override
   public PageResponse<Role> list(PageRequest pageRequest, RoleFilter roleFilter) {
+    if (isEmpty(pageRequest.getSortOrders())) {
+      SortOrder order =
+          SortOrder.Builder.aSortOrder().withField(RoleDBOKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
+      pageRequest.setSortOrders(ImmutableList.of(order));
+    }
     Pageable pageable = PageUtils.getPageRequest(pageRequest);
     Criteria criteria = createCriteriaFromFilter(roleFilter);
     Page<RoleDBO> rolePages = roleRepository.findAll(criteria, pageable);
