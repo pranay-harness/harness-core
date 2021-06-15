@@ -15,6 +15,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.PublicApi;
 import io.harness.signup.dto.OAuthSignupDTO;
 import io.harness.signup.dto.SignupDTO;
+import io.harness.signup.dto.VerifyTokenResponseDTO;
 import io.harness.signup.services.SignupService;
 
 import software.wings.security.annotations.AuthRule;
@@ -72,6 +73,13 @@ public class SignupResource {
   @PublicApi
   public RestResponse<UserInfo> signupOAuth(OAuthSignupDTO dto) {
     return new RestResponse<>(signupService.oAuthSignup(dto));
+  }
+
+  @POST
+  @Path("/verify/{token}")
+  @PublicApi
+  public RestResponse<VerifyTokenResponseDTO> verifyToken(@PathParam("token") String token) {
+    return new RestResponse<>(signupService.verifyToken(token));
   }
 
   @POST

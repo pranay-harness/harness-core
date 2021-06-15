@@ -30,12 +30,15 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
+import io.harness.repositories.SignupVerificationTokenRepository;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.signup.dto.OAuthSignupDTO;
 import io.harness.signup.dto.SignupDTO;
+import io.harness.signup.dto.VerifyTokenResponseDTO;
+import io.harness.signup.entities.SignupVerificationToken;
 import io.harness.signup.notification.EmailType;
 import io.harness.signup.notification.SignupNotificationHelper;
 import io.harness.signup.services.impl.SignupServiceImpl;
@@ -72,16 +75,23 @@ public class SignupServiceImplTest extends CategoryTest {
   @Mock ReCaptchaVerifier reCaptchaVerifier;
   @Mock TelemetryReporter telemetryReporter;
   @Mock SignupNotificationHelper signupNotificationHelper;
+  @Mock SignupVerificationTokenRepository verificationTokenRepository;
   @Mock @Named("NGSignupNotification") ExecutorService executorService;
 
   private static final String EMAIL = "test@test.com";
   private static final String INVALID_EMAIL = "test";
   private static final String PASSWORD = "admin12345";
   private static final String ACCOUNT_ID = "account1";
+  private static final String VERIFY_URL = "register/verify";
+  private static final String NEXT_GEN_MANAGER_URI = "http://localhost:8181/ng/#/";
+  private static final String NEXT_GEN_AUTH_URI = "http://localhost:8181/auth/#/";
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     PowerMockito.mockStatic(SourcePrincipalContextBuilder.class);
+    signupServiceImpl = new SignupServiceImpl(accountService, userClient, signupValidator, reCaptchaVerifier,
+        telemetryReporter, signupNotificationHelper, featureFlagService, verificationTokenRepository, executorService,
+        NEXT_GEN_MANAGER_URI, NEXT_GEN_AUTH_URI);
   }
 
   @Test
@@ -204,13 +214,21 @@ public class SignupServiceImplTest extends CategoryTest {
     Mockito.when(SourcePrincipalContextBuilder.getSourcePrincipal())
         .thenReturn(new UserPrincipal("dummy", EMAIL, "dummy", ACCOUNT_ID));
 
-    UserInfo user = UserInfo.builder().email(EMAIL).build();
+    UserInfo user = UserInfo.builder().defaultAccountId(ACCOUNT_ID).email(EMAIL).build();
     Call<RestResponse<Optional<UserInfo>>> createUserCall = mock(Call.class);
     when(createUserCall.execute()).thenReturn(Response.success(new RestResponse<>(Optional.of(user))));
     when(userClient.getUserById(any())).thenReturn(createUserCall);
+    SignupVerificationToken verificationToken = SignupVerificationToken.builder().userId("1").build();
+    when(verificationTokenRepository.findByUserId("id")).thenReturn(Optional.of(verificationToken));
+    when(verificationTokenRepository.save(any())).thenReturn(verificationToken);
+    when(accountService.getBaseUrl(ACCOUNT_ID, NEXT_GEN_AUTH_URI)).thenReturn(NEXT_GEN_AUTH_URI);
 
     signupServiceImpl.resendVerificationEmail("id");
-    verify(signupNotificationHelper, times(1)).sendSignupNotification(eq(user), eq(EmailType.VERIFY), any());
+    verify(signupNotificationHelper, times(1))
+        .sendSignupNotification(eq(user), eq(EmailType.VERIFY), any(),
+            eq(NEXT_GEN_AUTH_URI + VERIFY_URL + "/" + verificationToken.getToken()));
+    verify(verificationTokenRepository, times(1)).save(any());
+    assertThat(verificationToken.getToken()).isNotNull();
   }
 
   @Test(expected = UnavailableFeatureException.class)
@@ -227,5 +245,23 @@ public class SignupServiceImplTest extends CategoryTest {
   public void testOathSignupWithFeatureFlagOff() {
     when(featureFlagService.isGlobalEnabled(FeatureName.NG_SIGNUP)).thenReturn(false);
     signupServiceImpl.oAuthSignup(OAuthSignupDTO.builder().build());
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testVerifyToken() throws IOException {
+    Call<RestResponse<Boolean>> changeUserVerifiedCall = mock(Call.class);
+    when(changeUserVerifiedCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(userClient.changeUserEmailVerified(any())).thenReturn(changeUserVerifiedCall);
+    when(verificationTokenRepository.findByToken("2"))
+        .thenReturn(Optional.of(SignupVerificationToken.builder()
+                                    .accountIdentifier(ACCOUNT_ID)
+                                    .email(EMAIL)
+                                    .userId("1")
+                                    .token("2")
+                                    .build()));
+    VerifyTokenResponseDTO verifyTokenResponseDTO = signupServiceImpl.verifyToken("2");
+    assertThat(verifyTokenResponseDTO.getAccountIdentifier()).isEqualTo(ACCOUNT_ID);
   }
 }
