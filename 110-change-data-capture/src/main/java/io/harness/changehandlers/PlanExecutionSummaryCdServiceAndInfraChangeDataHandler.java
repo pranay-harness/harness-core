@@ -30,7 +30,12 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
   @Override
   public boolean handleChange(ChangeEvent<?> changeEvent, String tableName, String[] fields) {
     log.info("In TimeScale Change Handler: {}, {}, {}", changeEvent, tableName, fields);
-    Map<String, List<String>> columnValueMapping = getColumnValueMapping(changeEvent, fields);
+    Map<String, List<String>> columnValueMapping = null;
+    try {
+      columnValueMapping = getColumnValueMapping(changeEvent, fields);
+    } catch (Exception e) {
+      log.info(String.format("Not able to parse this event %s", changeEvent));
+    }
     switch (changeEvent.getChangeType()) {
       case INSERT:
         if (columnValueMapping != null) {
@@ -44,6 +49,7 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
               }
             }
             dbOperation(insertSQL(tableName, newColumnValueMapping));
+            newColumnValueMapping.clear();
           }
         }
         break;
@@ -126,14 +132,16 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
       }
 
       // stage - status
-      String service_status = ((BasicDBObject) iteratorObject.getValue()).get("status").toString();
-      if (service_status != null) {
-        if (columnValueMapping.containsKey("service_status")) {
-          columnValueMapping.get("service_status").add(service_status);
-        } else {
-          List<String> service_status_list = new ArrayList<>();
-          service_status_list.add(service_status);
-          columnValueMapping.put("service_status", service_status_list);
+      if (((BasicDBObject) iteratorObject.getValue()).get("status") != null) {
+        String service_status = ((BasicDBObject) iteratorObject.getValue()).get("status").toString();
+        if (service_status != null) {
+          if (columnValueMapping.containsKey("service_status")) {
+            columnValueMapping.get("service_status").add(service_status);
+          } else {
+            List<String> service_status_list = new ArrayList<>();
+            service_status_list.add(service_status);
+            columnValueMapping.put("service_status", service_status_list);
+          }
         }
       }
       // service_startts
@@ -300,7 +308,7 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
           return null;
         }
       } else {
-        return null;
+        return columnValueMapping;
       }
     }
 
