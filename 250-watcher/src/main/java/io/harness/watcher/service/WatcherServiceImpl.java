@@ -458,7 +458,6 @@ public class WatcherServiceImpl implements WatcherService {
       heartbeatData.put(WATCHER_HEARTBEAT, clock.millis());
       heartbeatData.put(WATCHER_PROCESS, getProcessId());
       heartbeatData.put(WATCHER_VERSION, getVersion());
-      log.info("Updating watcher data : ", heartbeatData.get(WATCHER_VERSION));
       messageService.putAllData(WATCHER_DATA, heartbeatData);
     } catch (Exception e) {
       if (e.getMessage().contains(NO_SPACE_LEFT_ON_DEVICE_ERROR)) {
@@ -581,8 +580,6 @@ public class WatcherServiceImpl implements WatcherService {
                 upgradeJre(delegateJreVersion, migrateToJreVersion);
               }
               String delegateVersion = (String) delegateData.get(DELEGATE_VERSION);
-              log.info("Got delegate version from delegateData: {}", delegateVersion);
-              log.info("Got expected delegate version from delegateData: {}", expectedVersions);
               runningVersions.put(delegateVersion, delegateProcess);
               int delegateMinorVersion = getMinorVersion(delegateVersion);
               boolean delegateMinorVersionMismatch =
@@ -968,7 +965,7 @@ public class WatcherServiceImpl implements WatcherService {
     return 0;
   }
 
-  private String getDelegateBuildVersion(String delegateVersion) {
+  private String getDelegateVersionWithPatch(String delegateVersion) {
     if (isNotBlank(delegateVersion)) {
       return delegateVersion.substring(delegateVersion.lastIndexOf('.') + 1);
     }
@@ -1029,7 +1026,7 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void downloadDelegateJar(String version) throws Exception {
-    String minorVersion = getDelegateBuildVersion(version);
+    String minorVersion = getDelegateVersionWithPatch(version);
 
     File finalDestination = new File(version + "/delegate.jar");
     if (finalDestination.exists()) {
@@ -1151,7 +1148,6 @@ public class WatcherServiceImpl implements WatcherService {
             Map<String, Object> delegateData = new HashMap<>();
             delegateData.put(DELEGATE_IS_NEW, true);
             if (version != null) {
-              log.info("Updating delegateData with version: {}", version);
               delegateData.put(DELEGATE_VERSION, version);
             }
             delegateData.put(DELEGATE_HEARTBEAT, clock.millis());
