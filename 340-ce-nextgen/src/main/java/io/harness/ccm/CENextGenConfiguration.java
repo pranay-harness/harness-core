@@ -6,13 +6,13 @@ import static java.util.stream.Collectors.toSet;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.beans.config.AwsConfig;
-import io.harness.ccm.commons.beans.config.AzureConfig;
 import io.harness.ccm.commons.beans.config.GcpConfig;
 import io.harness.cf.CfClientConfig;
 import io.harness.configuration.DeployMode;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.mongo.MongoConfig;
+import io.harness.remote.CEAzureSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
 
@@ -63,7 +63,7 @@ public class CENextGenConfiguration extends Configuration {
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
 
   @JsonProperty(value = "gcpConfig") private GcpConfig gcpConfig;
-  @JsonProperty(value = "azureConfig") private AzureConfig azureConfig;
+  @JsonProperty(value = "ceAzureSetupConfig") private CEAzureSetupConfig ceAzureSetupConfig;
   @JsonProperty(value = "awsConfig") private AwsConfig awsConfig;
 
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {

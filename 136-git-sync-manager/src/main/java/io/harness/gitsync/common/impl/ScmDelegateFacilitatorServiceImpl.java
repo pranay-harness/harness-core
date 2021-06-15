@@ -25,7 +25,9 @@ import io.harness.delegate.task.scm.ScmGitRefTaskParams;
 import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
 import io.harness.delegate.task.scm.ScmPRTaskParams;
 import io.harness.delegate.task.scm.ScmPRTaskResponseData;
+import io.harness.exception.ExplanationException;
 import io.harness.exception.UnexpectedException;
+import io.harness.exception.WingsException;
 import io.harness.gitsync.common.dtos.CreatePRDTO;
 import io.harness.gitsync.common.dtos.GitDiffResultFileListDTO;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
@@ -155,9 +157,14 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     ScmPRTaskResponseData scmCreatePRResponse = (ScmPRTaskResponseData) responseData;
     final CreatePRResponse createPRResponse = scmCreatePRResponse.getCreatePRResponse();
-    ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(createPRResponse.getStatus(),
-        String.format("Could not create the pull request from %s to %s", gitCreatePRRequest.getSourceBranch(),
-            gitCreatePRRequest.getTargetBranch()));
+    try {
+      ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
+          createPRResponse.getStatus(), createPRResponse.getError());
+    } catch (WingsException e) {
+      throw new ExplanationException(String.format("Could not create the pull request from %s to %s",
+                                         gitCreatePRRequest.getSourceBranch(), gitCreatePRRequest.getTargetBranch()),
+          e);
+    }
     return CreatePRDTO.builder().prNumber(createPRResponse.getNumber()).build();
   }
 

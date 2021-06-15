@@ -63,6 +63,7 @@ public class AzureConnectorTestHelper {
         .directoryName(DIRECTORY_NAME)
         .containerName(CONTAINER_NAME)
         .reportName(REPORT_NAME)
+        .subscriptionId(SUBSCRIPTION_ID)
         .build();
   }
 
@@ -72,6 +73,7 @@ public class AzureConnectorTestHelper {
         .containerName(CONTAINER_NAME)
         .directoryName(DIRECTORY_NAME)
         .reportName(REPORT_NAME)
+        .subscriptionId(SUBSCRIPTION_ID)
         .build();
   }
 

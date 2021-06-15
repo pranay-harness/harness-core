@@ -30,6 +30,7 @@ import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.CEAwsSetupConfig;
+import io.harness.remote.CEAzureSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -165,6 +166,12 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
       @Singleton
       CEAwsSetupConfig ceAwsSetupConfig() {
         return CEAwsSetupConfig.builder().build();
+      }
+
+      @Provides
+      @Singleton
+      CEAzureSetupConfig ceAzureSetupConfig() {
+        return CEAzureSetupConfig.builder().build();
       }
     });
     return modules;

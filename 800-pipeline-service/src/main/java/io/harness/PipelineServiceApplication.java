@@ -44,6 +44,10 @@ import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.migration.MigrationProvider;
+import io.harness.migration.NGMigrationSdkInitHelper;
+import io.harness.migration.NGMigrationSdkModule;
+import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.monitoring.MonitoringRedisEventObserver;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
@@ -64,6 +68,7 @@ import io.harness.pms.listener.interrupts.InterruptRedisConsumerService;
 import io.harness.pms.listener.node.start.NodeStartRedisConsumerService;
 import io.harness.pms.listener.orchestrationevent.OrchestrationEventEventConsumerService;
 import io.harness.pms.listener.progress.ProgressRedisConsumerService;
+import io.harness.pms.migration.PipelineCoreMigrationProvider;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.observers.InputSetsDeleteObserver;
 import io.harness.pms.notification.orchestration.handlers.NotificationInformHandler;
@@ -236,6 +241,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     modules.add(new NotificationClientModule(appConfig.getNotificationClientConfiguration()));
     modules.add(PipelineServiceModule.getInstance(appConfig));
     modules.add(new MetricRegistryModule(metricRegistry));
+    modules.add(NGMigrationSdkModule.getInstance());
     if (appConfig.isShouldDeployWithGitSync()) {
       GitSyncSdkConfiguration gitSyncSdkConfiguration = getGitSyncConfiguration(appConfig);
       modules.add(new AbstractGitSyncSdkModule() {
@@ -276,6 +282,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerAuthFilters(appConfig, environment, injector);
     registerHealthCheck(environment, injector);
     registerObservers(injector);
+    registerMigrations(injector);
     EventObserverUtils.registerObservers(injector);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
@@ -586,5 +593,19 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     ExecutorService executorService =
         injector.getInstance(Key.get(ExecutorService.class, Names.named("templateRegistrationExecutorService")));
     executorService.submit(injector.getInstance(NotificationTemplateRegistrar.class));
+  }
+
+  private void registerMigrations(Injector injector) {
+    NGMigrationConfiguration config = getMigrationSdkConfiguration();
+    NGMigrationSdkInitHelper.initialize(injector, config);
+  }
+
+  private NGMigrationConfiguration getMigrationSdkConfiguration() {
+    return NGMigrationConfiguration.builder()
+        .microservice(Microservice.PMS)
+        .migrationProviderList(new ArrayList<Class<? extends MigrationProvider>>() {
+          { add(PipelineCoreMigrationProvider.class); } // Add all migration provider classes here
+        })
+        .build();
   }
 }
