@@ -2,6 +2,8 @@ package io.harness.pms.plan.execution;
 
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
+import static java.lang.String.format;
+
 import io.harness.NGCommonEntityConstants;
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
@@ -13,6 +15,7 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidYamlException;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.annotations.PipelineServiceAuth;
@@ -25,6 +28,7 @@ import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.preflight.PreFlightDTO;
 import io.harness.pms.preflight.service.PreflightService;
 import io.harness.pms.rbac.PipelineRbacPermissions;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 
 import com.google.inject.Inject;
@@ -78,14 +82,19 @@ public class PlanExecutionResource {
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
-      @ApiParam(hidden = true) String inputSetPipelineYaml) throws IOException {
-    PlanExecutionResponseDto planExecutionResponseDto = pipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetPipelineYaml,
-        ExecutionTriggerInfo.newBuilder()
-            .setTriggerType(MANUAL)
-            .setTriggeredBy(triggeredByHelper.getFromSecurityContext())
-            .build());
-    return ResponseDTO.newResponse(planExecutionResponseDto);
+      @ApiParam(hidden = true) String inputSetPipelineYaml) {
+    try {
+      PlanExecutionResponseDto planExecutionResponseDto = pipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(
+          accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetPipelineYaml,
+          ExecutionTriggerInfo.newBuilder()
+              .setTriggerType(MANUAL)
+              .setTriggeredBy(triggeredByHelper.getFromSecurityContext())
+              .build());
+      return ResponseDTO.newResponse(planExecutionResponseDto);
+    } catch (IOException ex) {
+      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+    }
   }
 
   @POST
@@ -101,16 +110,21 @@ public class PlanExecutionResource {
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
-      @NotNull @Valid MergeInputSetRequestDTOPMS mergeInputSetRequestDTO) throws IOException {
-    ExecutionTriggerInfo triggerInfo = ExecutionTriggerInfo.newBuilder()
-                                           .setTriggerType(MANUAL)
-                                           .setTriggeredBy(triggeredByHelper.getFromSecurityContext())
-                                           .build();
-    PlanExecutionResponseDto planExecutionResponseDto =
-        pipelineExecuteHelper.runPipelineWithInputSetReferencesList(accountId, orgIdentifier, projectIdentifier,
-            pipelineIdentifier, mergeInputSetRequestDTO.getInputSetReferences(), gitEntityBasicInfo.getBranch(),
-            gitEntityBasicInfo.getYamlGitConfigId(), triggerInfo);
-    return ResponseDTO.newResponse(planExecutionResponseDto);
+      @NotNull @Valid MergeInputSetRequestDTOPMS mergeInputSetRequestDTO) {
+    try {
+      ExecutionTriggerInfo triggerInfo = ExecutionTriggerInfo.newBuilder()
+                                             .setTriggerType(MANUAL)
+                                             .setTriggeredBy(triggeredByHelper.getFromSecurityContext())
+                                             .build();
+      PlanExecutionResponseDto planExecutionResponseDto =
+          pipelineExecuteHelper.runPipelineWithInputSetReferencesList(accountId, orgIdentifier, projectIdentifier,
+              pipelineIdentifier, mergeInputSetRequestDTO.getInputSetReferences(), gitEntityBasicInfo.getBranch(),
+              gitEntityBasicInfo.getYamlGitConfigId(), triggerInfo);
+      return ResponseDTO.newResponse(planExecutionResponseDto);
+    } catch (IOException ex) {
+      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+    }
   }
 
   @PUT
@@ -172,10 +186,14 @@ public class PlanExecutionResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
-      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo, @ApiParam(hidden = true) String inputSetPipelineYaml)
-      throws IOException {
-    return ResponseDTO.newResponse(preflightService.startPreflightCheck(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetPipelineYaml));
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo, @ApiParam(hidden = true) String inputSetPipelineYaml) {
+    try {
+      return ResponseDTO.newResponse(preflightService.startPreflightCheck(
+          accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetPipelineYaml));
+    } catch (IOException ex) {
+      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+    }
   }
 
   @GET

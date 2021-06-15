@@ -9,9 +9,8 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.FilterCreatorException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.InvalidYamlException;
 import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.contracts.plan.SetupMetadata;
@@ -24,7 +23,6 @@ import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvide
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -35,8 +33,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
+@Slf4j
 @Singleton
 public class FilterCreatorService {
   private final PipelineServiceInfoProvider pipelineServiceInfoProvider;
@@ -61,7 +61,8 @@ public class FilterCreatorService {
           initialDependencies.put(entry.getKey(), YamlField.fromFieldBlob(entry.getValue()));
         }
       } catch (Exception e) {
-        throw new InvalidRequestException("Invalid YAML found in dependency blobs");
+        log.error("Invalid YAML found in dependency blobs", e);
+        throw new InvalidRequestException("Invalid YAML found in dependency blobs", e);
       }
     }
 
@@ -118,16 +119,11 @@ public class FilterCreatorService {
           Object obj = YamlUtils.read(yamlField.getNode().toString(), clazz);
           response = filterJsonCreator.handleNode(
               FilterCreationContext.builder().currentField(yamlField).setupMetadata(setupMetadata).build(), obj);
-        } catch (JsonMappingException e) {
-          // YamlUtils.getFullyQualifiedName() here does not give the full FQN here, hence using a new method.
-          // YamlUtils.getErrorNodePartialFQN() uses exception path to build FQN
-          throw new FilterCreatorException(
-              format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(yamlField.getNode(), e)),
-              ErrorCode.INVALID_YAML_ERROR, e);
         } catch (IOException e) {
-          throw new FilterCreatorException(
-              format("Invalid yaml in node [%s]", YamlUtils.getFullyQualifiedName(yamlField.getNode())),
-              ErrorCode.INVALID_YAML_ERROR, e);
+          // YamlUtils.getErrorNodePartialFQN() uses exception path to build FQN
+          log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(yamlField.getNode(), e)), e);
+          throw new InvalidYamlException(
+              format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(yamlField.getNode(), e)), e);
         }
       }
 
