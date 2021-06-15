@@ -23,6 +23,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -50,11 +51,6 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
   public void consumeUpdateEvent(String id, ResourceGroupDBO updatedResourceGroup) {
     Optional<ResourceGroupDBO> resourceGroup = resourceGroupRepository.findById(id);
     if (!resourceGroup.isPresent()) {
-      return;
-    }
-
-    // skip processing if the resource group is has full scope selected (_all_resources)
-    if (resourceGroup.get().isFullScopeSelected()) {
       return;
     }
 
@@ -116,10 +112,17 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
     public Result call() {
       Set<String> existingResourceSelectors =
           Sets.newHashSet(aclRepository.getDistinctResourceSelectorsInACLs(roleAssignmentDBO.getId()));
+      Set<String> newResourceSelectors = new HashSet<>();
+      if (updatedResourceGroup.isFullScopeSelected()) {
+        newResourceSelectors.add("/*/*");
+      } else if (updatedResourceGroup.getResourceSelectors() != null) {
+        newResourceSelectors = updatedResourceGroup.getResourceSelectors();
+      }
+
       Set<String> resourceSelectorsRemovedFromResourceGroup =
-          Sets.difference(existingResourceSelectors, updatedResourceGroup.getResourceSelectors());
+          Sets.difference(existingResourceSelectors, newResourceSelectors);
       Set<String> resourceSelectorsAddedToResourceGroup =
-          Sets.difference(updatedResourceGroup.getResourceSelectors(), existingResourceSelectors);
+          Sets.difference(newResourceSelectors, existingResourceSelectors);
 
       long numberOfACLsDeleted = aclRepository.deleteByRoleAssignmentIdAndResourceSelectors(
           roleAssignmentDBO.getId(), resourceSelectorsRemovedFromResourceGroup);
