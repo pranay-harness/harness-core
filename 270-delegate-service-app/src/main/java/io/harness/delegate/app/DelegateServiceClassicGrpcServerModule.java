@@ -9,7 +9,6 @@ import io.harness.grpc.exception.WingsExceptionGrpcMapper;
 import io.harness.grpc.server.Connector;
 import io.harness.grpc.server.GrpcServer;
 import io.harness.grpc.server.GrpcServerExceptionHandler;
-import io.harness.service.DelegateServicePingPongService;
 
 import com.google.common.util.concurrent.Service;
 import com.google.inject.AbstractModule;
@@ -44,7 +43,7 @@ public class DelegateServiceClassicGrpcServerModule extends AbstractModule {
     bindableServiceMultibinder.addBinding().toProvider(ProtoReflectionService::newInstance).in(Singleton.class);
     Provider<HealthStatusManager> healthStatusManagerProvider = getProvider(HealthStatusManager.class);
     bindableServiceMultibinder.addBinding().toProvider(() -> healthStatusManagerProvider.get().getHealthService());
-    bindableServiceMultibinder.addBinding().to(DelegateServicePingPongService.class);
+    // bindableServiceMultibinder.addBinding().to(DelegateServicePingPongService.class);
 
     // Service Interceptors
     Provider<Set<ServerInterceptor>> serverInterceptorsProvider =

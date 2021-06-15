@@ -50,8 +50,8 @@ public class DelegateServiceGrpcServerModule extends AbstractModule {
     bindableServiceMultibinder.addBinding().toProvider(ProtoReflectionService::newInstance).in(Singleton.class);
     Provider<HealthStatusManager> healthStatusManagerProvider = getProvider(HealthStatusManager.class);
     bindableServiceMultibinder.addBinding().toProvider(() -> healthStatusManagerProvider.get().getHealthService());
-    bindableServiceMultibinder.addBinding().to(DelegateServicePingPongService.class);
     bindableServiceMultibinder.addBinding().to(DelegateServiceGrpcImpl.class);
+    bindableServiceMultibinder.addBinding().to(DelegateServicePingPongService.class);
 
     MapBinder<String, ServiceInfo> stringServiceInfoMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ServiceInfo.class);
