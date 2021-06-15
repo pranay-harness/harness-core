@@ -58,36 +58,16 @@ public class ChartMuseumClientHelper {
 
   public ChartMuseumServer startS3ChartMuseumServer(String bucket, String basePath, String region,
       boolean useEc2IamCredentials, char[] accessKey, char[] secretKey, boolean useIRSA) throws Exception {
-    log.info(format("boolean useEc2IamCredentials is : %s", useEc2IamCredentials));
-    log.info(format("boolean useIrsa is: %s", useIRSA));
-    log.info(format("bucket: %s basepath: %s region: %s", bucket, basePath, region));
-    if (accessKey == null) {
-      log.info("access key is null");
-    } else {
-      log.info("access key is not null");
-    }
-
-    if (secretKey == null) {
-      log.info("secretKey is null");
-    } else {
-      log.info("secretKey is not null");
-    }
-
-    log.info("getting env");
     Map<String, String> environment = getEnvForAwsConfig(accessKey, secretKey, useEc2IamCredentials, useIRSA);
-    log.info("getting env done");
     String evaluatedTemplate = AMAZON_S3_COMMAND_TEMPLATE.replace("${BUCKET_NAME}", bucket)
                                    .replace("${FOLDER_PATH}", basePath == null ? "" : basePath)
                                    .replace("${REGION}", region);
-    log.info("evaluatedTemplate: " + evaluatedTemplate);
 
     StringBuilder builder = new StringBuilder(128);
     builder.append(encloseWithQuotesIfNeeded(k8sGlobalConfigService.getChartMuseumPath()))
         .append(' ')
         .append(evaluatedTemplate);
 
-    log.info(builder.toString());
-    log.info("method start server begin");
     return startServer(builder.toString(), environment);
   }
 
@@ -127,12 +107,9 @@ public class ChartMuseumClientHelper {
     StringBuffer stringBuffer = null;
 
     log.info(command);
-    log.info("method start server begin");
-    while (retries < CHART_MUSEUM_SERVER_START_RETRIES) {
-      log.info("inside while");
-      port = getNextRandomPort(random);
-      log.info(format("got port: %s", port));
 
+    while (retries < CHART_MUSEUM_SERVER_START_RETRIES) {
+      port = getNextRandomPort(random);
       command = command.replace("${PORT}", Integer.toString(port));
       log.info("Starting server at port {}. Retry #{}", port, retries);
 
@@ -192,14 +169,10 @@ public class ChartMuseumClientHelper {
   static Map<String, String> getEnvForAwsConfig(
       char[] accessKey, char[] secretKey, boolean useEc2IamCredentials, boolean useIRSA) {
     Map<String, String> environment = new HashMap<>();
-    log.info("inside getenv method");
     if (!useEc2IamCredentials && !useIRSA) {
-      log.info("inside if means we are getting env from access key and secret key");
       environment.put(AWS_ACCESS_KEY_ID, new String(accessKey));
       environment.put(AWS_SECRET_ACCESS_KEY, new String(secretKey));
-      log.info("if cluase done");
     }
-    log.info("returning env");
     return environment;
   }
 
