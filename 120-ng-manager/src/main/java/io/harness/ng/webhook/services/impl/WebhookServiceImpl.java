@@ -3,6 +3,7 @@ package io.harness.ng.webhook.services.impl;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.NextGenModule.CONNECTOR_DECORATOR_SERVICE;
+import static io.harness.utils.DelegateOwner.getNGTaskSetupAbstractionsWithOwner;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
@@ -38,6 +39,7 @@ import com.google.inject.name.Named;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
@@ -91,8 +93,12 @@ public class WebhookServiceImpl implements WebhookService {
                                    .target(upsertWebhookRequestDTO.getTarget())
                                    .build())
             .build();
+    final Map<String, String> ngTaskSetupAbstractionsWithOwner =
+        getNGTaskSetupAbstractionsWithOwner(upsertWebhookRequestDTO.getAccountIdentifier(),
+            upsertWebhookRequestDTO.getOrgIdentifier(), upsertWebhookRequestDTO.getProjectIdentifier());
     DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                   .accountId(upsertWebhookRequestDTO.getAccountIdentifier())
+                                                  .taskSetupAbstractions(ngTaskSetupAbstractionsWithOwner)
                                                   .taskType(TaskType.SCM_GIT_WEBHOOK_TASK.name())
                                                   .taskParameters(gitWebhookTaskParams)
                                                   .executionTimeout(Duration.ofMinutes(2))
