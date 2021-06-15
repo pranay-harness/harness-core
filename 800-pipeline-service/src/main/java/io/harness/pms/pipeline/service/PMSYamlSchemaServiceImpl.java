@@ -12,6 +12,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.cf.pipeline.FeatureFlagStageConfig;
 import io.harness.encryption.Scope;
+import io.harness.exception.InvalidYamlException;
 import io.harness.exception.JsonSchemaException;
 import io.harness.exception.JsonSchemaValidationException;
 import io.harness.jackson.JsonNodeUtils;
@@ -381,8 +382,8 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
         throw new JsonSchemaValidationException(String.join("\n", errors));
       }
     } catch (Exception ex) {
-      log.error(ex.getMessage());
-      throw new JsonSchemaValidationException(ex.getMessage());
+      log.error(ex.getMessage(), ex);
+      throw new JsonSchemaValidationException(ex.getMessage(), ex);
     }
   }
 
@@ -394,8 +395,13 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   }
 
   @Override
-  public void validateUniqueFqn(String yaml) throws IOException {
-    FQNUtils.generateFQNMap(YamlUtils.readTree(yaml).getNode().getCurrJsonNode());
+  public void validateUniqueFqn(String yaml) {
+    try {
+      FQNUtils.generateFQNMap(YamlUtils.readTree(yaml).getNode().getCurrJsonNode());
+    } catch (IOException ex) {
+      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+    }
   }
 
   private void removeUnwantedNodes(JsonNode definitions) {

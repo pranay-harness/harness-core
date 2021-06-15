@@ -1,5 +1,7 @@
 package io.harness.pms.helpers;
 
+import static java.lang.String.format;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -47,8 +49,8 @@ public class YamlExpressionResolveHelper {
         return YamlPipelineUtils.writeString(resolvedYamlNode).replace("---\n", "").replace("\"", "");
 
       } catch (IOException ex) {
-        // TODO: (Samarth) Replace with better error message after CDNG-8766 PR is merged
-        throw new InvalidYamlException("Invalid Yaml given");
+        log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+        throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
       }
     }
 
