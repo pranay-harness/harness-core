@@ -66,9 +66,11 @@ public class RoleDaoImpl implements RoleDao {
   @Override
   public PageResponse<Role> list(PageRequest pageRequest, RoleFilter roleFilter) {
     if (isEmpty(pageRequest.getSortOrders())) {
-      SortOrder order =
+      SortOrder managedOrder =
+          SortOrder.Builder.aSortOrder().withField(RoleDBOKeys.managed, SortOrder.OrderType.DESC).build();
+      SortOrder lastModifiedOrder =
           SortOrder.Builder.aSortOrder().withField(RoleDBOKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
-      pageRequest.setSortOrders(ImmutableList.of(order));
+      pageRequest.setSortOrders(ImmutableList.of(managedOrder, lastModifiedOrder));
     }
     Pageable pageable = PageUtils.getPageRequest(pageRequest);
     Criteria criteria = createCriteriaFromFilter(roleFilter);
