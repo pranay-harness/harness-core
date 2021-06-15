@@ -79,13 +79,14 @@ public class PlanExecutionResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) String moduleType,
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @ApiParam(hidden = true) String inputSetPipelineYaml) {
     try {
       PlanExecutionResponseDto planExecutionResponseDto = pipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(
-          accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetPipelineYaml,
+          accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, moduleType, inputSetPipelineYaml,
           ExecutionTriggerInfo.newBuilder()
               .setTriggerType(MANUAL)
               .setTriggeredBy(triggeredByHelper.getFromSecurityContext())
@@ -107,6 +108,7 @@ public class PlanExecutionResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) String moduleType,
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
@@ -118,8 +120,8 @@ public class PlanExecutionResource {
                                              .build();
       PlanExecutionResponseDto planExecutionResponseDto =
           pipelineExecuteHelper.runPipelineWithInputSetReferencesList(accountId, orgIdentifier, projectIdentifier,
-              pipelineIdentifier, mergeInputSetRequestDTO.getInputSetReferences(), gitEntityBasicInfo.getBranch(),
-              gitEntityBasicInfo.getYamlGitConfigId(), triggerInfo);
+              pipelineIdentifier, moduleType, mergeInputSetRequestDTO.getInputSetReferences(),
+              gitEntityBasicInfo.getBranch(), gitEntityBasicInfo.getYamlGitConfigId(), triggerInfo);
       return ResponseDTO.newResponse(planExecutionResponseDto);
     } catch (IOException ex) {
       log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
