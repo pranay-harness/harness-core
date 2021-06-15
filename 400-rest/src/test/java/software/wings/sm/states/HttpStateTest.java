@@ -691,11 +691,13 @@ public class HttpStateTest extends WingsBaseTest {
     assertThat(response.getStateExecutionData())
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
-        .isEqualToComparingOnlyGivenFields(HttpStateExecutionData.builder()
-                                               .assertionStatus("FAILED")
-                                               .httpResponseCode(500)
-                                               .httpResponseBody("MalformedChunkCodingException: Bad chunk header")
-                                               .build(),
+        .isEqualToComparingOnlyGivenFields(
+            HttpStateExecutionData.builder()
+                .assertionStatus("FAILED")
+                .httpResponseCode(500)
+                .httpResponseBody(
+                    "MalformedChunkCodingException: Bad chunk header: lskdu018973t09sylgasjkfg1][]'./.sdlv")
+                .build(),
             "httpUrl", "assertionStatus", "httpResponseCode", "httpResponseBody");
     verify(activityHelperService).createAndSaveActivity(any(), any(), any(), any(), any());
     verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);

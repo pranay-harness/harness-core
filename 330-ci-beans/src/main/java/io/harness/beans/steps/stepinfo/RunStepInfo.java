@@ -12,6 +12,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
+import io.harness.beans.yaml.extended.CIShellType;
 import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.filters.WithConnectorRef;
 import io.harness.pms.contracts.steps.StepType;
@@ -67,15 +68,16 @@ public class RunStepInfo implements CIStepInfo, WithConnectorRef {
   private ContainerResource resources;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> privileged;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
+  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<CIShellType> shell;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "command", "outputVariables", "reports", "envVariables",
-      "image", "connectorRef", "resources", "privileged", "runAsUser"})
+      "image", "connectorRef", "resources", "privileged", "runAsUser", "shell"})
   public RunStepInfo(String identifier, String name, Integer retry, ParameterField<String> command,
       ParameterField<List<String>> outputVariables, UnitTestReport reports,
       ParameterField<Map<String, String>> envVariables, ParameterField<String> image,
       ParameterField<String> connectorRef, ContainerResource resources, ParameterField<Boolean> privileged,
-      ParameterField<Integer> runAsUser) {
+      ParameterField<Integer> runAsUser, ParameterField<CIShellType> shell) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -88,6 +90,7 @@ public class RunStepInfo implements CIStepInfo, WithConnectorRef {
     this.resources = resources;
     this.privileged = privileged;
     this.runAsUser = runAsUser;
+    this.shell = shell;
   }
 
   @Override

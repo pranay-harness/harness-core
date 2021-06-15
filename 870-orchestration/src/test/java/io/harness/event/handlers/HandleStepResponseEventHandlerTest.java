@@ -10,9 +10,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.pms.contracts.execution.events.HandleStepResponseRequest;
+import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
-import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.rule.Owner;
 
 import org.junit.After;
@@ -45,10 +45,10 @@ public class HandleStepResponseEventHandlerTest extends OrchestrationTestBase {
   public void testHandleEvent() {
     HandleStepResponseRequest handleStepResponseRequest = HandleStepResponseRequest.newBuilder().build();
     handleStepResponseEventHandler.handleEvent(
-        SdkResponseEvent.builder()
-            .sdkResponseEventRequest(
+        SdkResponseEventProto.newBuilder()
+            .setSdkResponseEventRequest(
                 SdkResponseEventRequest.newBuilder().setHandleStepResponseRequest(handleStepResponseRequest).build())
-            .sdkResponseEventType(SdkResponseEventType.HANDLE_STEP_RESPONSE)
+            .setSdkResponseEventType(SdkResponseEventType.HANDLE_STEP_RESPONSE)
             .build());
     verify(engine).handleStepResponse(
         handleStepResponseRequest.getNodeExecutionId(), handleStepResponseRequest.getStepResponse());

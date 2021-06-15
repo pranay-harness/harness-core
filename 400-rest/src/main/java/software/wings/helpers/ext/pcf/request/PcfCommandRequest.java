@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.pcf.model.CfCliVersion;
 
 import software.wings.beans.PcfConfig;
 
@@ -32,6 +33,7 @@ public class PcfCommandRequest {
   private boolean useAppAutoscalar;
   private boolean limitPcfThreads;
   private boolean ignorePcfConnectionContextCache;
+  private CfCliVersion cfCliVersion;
 
   public enum PcfCommandType {
     SETUP,

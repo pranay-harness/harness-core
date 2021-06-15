@@ -12,5 +12,5 @@ import java.util.List;
 public interface GitToHarnessProcessorService {
   List<GitToHarnessProcessingResponse> processFiles(String accountId,
       List<GitToHarnessFileProcessingRequest> filesToBeProcessed, String branch, YamlGitConfigDTO yamlGitConfigDTO,
-      String gitToHarnessProgressRecordId);
+      String commitId, String gitToHarnessProgressRecordId);
 }

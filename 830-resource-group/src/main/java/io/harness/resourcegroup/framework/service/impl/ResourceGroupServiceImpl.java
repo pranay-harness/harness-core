@@ -78,7 +78,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   @Inject
   public ResourceGroupServiceImpl(ResourceGroupValidatorServiceImpl resourceGroupValidatorService,
       ResourceGroupRepository resourceGroupRepository, OutboxService outboxService,
-      AccessControlAdminClient accessControlAdminClient,
+      @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient,
       @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate) {
     this.resourceGroupValidatorService = resourceGroupValidatorService;
     this.resourceGroupRepository = resourceGroupRepository;

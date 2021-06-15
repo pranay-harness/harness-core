@@ -3,25 +3,34 @@ package io.harness.gitsync.core.impl;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.core.beans.GitCommit.GIT_COMMIT_PROCESSED_STATUS;
 
+import static org.springframework.data.mongodb.core.query.Update.update;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.helper.GitCommitMapper;
 import io.harness.gitsync.core.beans.GitCommit;
+import io.harness.gitsync.core.beans.GitCommit.GitCommitKeys;
 import io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus;
 import io.harness.gitsync.core.dtos.GitCommitDTO;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.repositories.gitCommit.GitCommitRepository;
 
 import com.google.inject.Inject;
+import com.mongodb.client.result.UpdateResult;
 import java.util.List;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(DX)
 public class GitCommitServiceImpl implements GitCommitService {
   private GitCommitRepository gitCommitRepository;
+  private MongoTemplate mongoTemplate;
 
   @Override
   public GitCommitDTO save(GitCommitDTO gitCommitDTO) {
@@ -77,6 +86,25 @@ public class GitCommitServiceImpl implements GitCommitService {
         gitCommitRepository.findFirstByAccountIdentifierAndRepoURLAndBranchNameOrderByCreatedAtDesc(
             accountIdentifier, repo, branchName);
     return gitCommit.map(GitCommitMapper::toGitCommitDTO);
+  }
+
+  @Override
+  public UpdateResult upsertOnCommitIdAndRepoUrl(GitCommitDTO gitCommitDTO) {
+    Criteria criteria = Criteria.where(GitCommitKeys.commitId)
+                            .is(gitCommitDTO.getCommitId())
+                            .and(GitCommitKeys.repoURL)
+                            .is(gitCommitDTO.getRepoURL());
+    Update update = update(GitCommitKeys.status, gitCommitDTO.getStatus());
+    update.setOnInsert(GitCommitKeys.repoURL, gitCommitDTO.getRepoURL())
+        .set(GitCommitKeys.commitId, gitCommitDTO.getCommitId())
+        .set(GitCommitKeys.accountIdentifier, gitCommitDTO.getAccountIdentifier())
+        .set(GitCommitKeys.branchName, gitCommitDTO.getBranchName())
+        .set(GitCommitKeys.commitMessage, gitCommitDTO.getCommitMessage())
+        .set(GitCommitKeys.gitSyncDirection, gitCommitDTO.getGitSyncDirection())
+        .set(GitCommitKeys.fileProcessingSummary, gitCommitDTO.getFileProcessingSummary())
+        .set(GitCommitKeys.failureReason, gitCommitDTO.getFailureReason());
+
+    return mongoTemplate.upsert(new Query(criteria), update, GitCommit.class);
   }
 
   // -------------------------- PRIVATE METHODS -------------------------------

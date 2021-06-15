@@ -81,6 +81,13 @@ public class AccountResourceNG {
     return new RestResponse<>(accounts.stream().map(AccountMapper::toAccountDTO).collect(Collectors.toList()));
   }
 
+  @PUT
+  @Path("/{accountId}/name")
+  public RestResponse<Account> updateAccountName(
+      @PathParam("accountId") @NotEmpty String accountId, @QueryParam("name") String name) {
+    return new RestResponse<>(accountService.updateAccountName(accountId, name, null));
+  }
+
   @GET
   @Path("/feature-flag-enabled")
   public RestResponse<Boolean> isFeatureFlagEnabled(
@@ -126,7 +133,7 @@ public class AccountResourceNG {
   }
 
   @PUT
-  @Path("/{accountId}/default-experience")
+  @Path("/{accountId}/default-experience-if-applicable")
   public RestResponse<Boolean> updateDefaultExperienceIfApplicable(
       @PathParam("accountId") @AccountIdentifier String accountId,
       @QueryParam("defaultExperience") DefaultExperience defaultExperience) {
@@ -146,5 +153,21 @@ public class AccountResourceNG {
         && account.isCreatedFromNG() // new NG account only
         && account.getCeLicenseInfo() == null // Verify account doesn't work on CG
         && (account.getLicenseInfo() == null || AccountType.TRIAL.equals(account.getLicenseInfo().getAccountType()));
+  }
+
+  /**
+   * This is only intended for an NG user to switch their account experience
+   * Please use updateDefaultExperienceIfApplicable for all internal calls / side effects
+   * @param accountId
+   * @param defaultExperience
+   * @return
+   */
+  @PUT
+  @Path("/{accountId}/default-experience")
+  public RestResponse<AccountDTO> updateDefaultExperience(@PathParam("accountId") @AccountIdentifier String accountId,
+      @QueryParam("defaultExperience") DefaultExperience defaultExperience) {
+    Account account = accountService.get(accountId);
+    account.setDefaultExperience(defaultExperience);
+    return new RestResponse(AccountMapper.toAccountDTO(accountService.update(account)));
   }
 }

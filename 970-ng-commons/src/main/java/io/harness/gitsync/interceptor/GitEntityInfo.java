@@ -24,12 +24,10 @@ public class GitEntityInfo {
   String folderPath;
   String filePath;
   String commitMsg;
-  boolean createPr;
-  String targetBranch;
   String lastObjectId; // required in case of update file
   boolean isNewBranch;
   boolean isSyncFromGit;
-  @Wither boolean findDefaultFromOtherBranches;
+  @Wither boolean findDefaultFromOtherRepos;
   String baseBranch;
   String commitId; // used for passing commitId in case of g2h.
 

@@ -2,6 +2,7 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.EntityType.CONNECTORS;
 import static io.harness.EntityType.SECRETS;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -11,15 +12,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.entitysetupusageclient.EntitySetupUsageHelper;
-import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entitysetupusage.DeleteSetupUsageDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateDTO;
+import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.secretmanagerclient.dto.EncryptedDataDTO;
@@ -35,9 +37,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @Slf4j
+@OwnedBy(PL)
 public class SecretEntityReferenceHelperTest extends CategoryTest {
   @InjectMocks SecretEntityReferenceHelper secretEntityReferenceHelper;
-  @Mock EntitySetupUsageClient entityReferenceClient;
+  @Mock EntitySetupUsageService entitySetupUsageService;
   @Mock Producer eventProducer;
   @Mock EntitySetupUsageHelper entityReferenceHelper;
   @Mock IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;

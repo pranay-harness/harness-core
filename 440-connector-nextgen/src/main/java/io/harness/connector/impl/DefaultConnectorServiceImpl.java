@@ -3,6 +3,7 @@ package io.harness.connector.impl;
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
 import static io.harness.connector.ConnectivityStatus.FAILURE;
+import static io.harness.connector.ConnectivityStatus.UNKNOWN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.errorhandling.NGErrorHelper.DEFAULT_ERROR_SUMMARY;
@@ -38,10 +39,18 @@ import io.harness.connector.services.ConnectorFilterService;
 import io.harness.connector.services.ConnectorHeartbeatService;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.stats.ConnectorStatistics;
+import io.harness.connector.stats.ConnectorStatusStats;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.errorhandling.NGErrorHelper;
@@ -471,11 +480,26 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     // Use Repo URL from parameter instead of using configured URL
     if (isNotEmpty(gitRepoURL)) {
       ScmConnector scmConnector = (ScmConnector) connectorConfig;
-      scmConnector.setUrl(gitRepoURL);
+      setConnectorGitRepo(scmConnector, gitRepoURL);
       connectorInfo.setConnectorConfig(connectorConfig);
     }
     return validateConnector(connector, connectorDTO, connectorInfo, accountIdentifier, orgIdentifier,
         projectIdentifier, connectorIdentifier);
+  }
+
+  private void setConnectorGitRepo(ScmConnector scmConnector, String gitRepoURL) {
+    scmConnector.setUrl(gitRepoURL);
+    if (scmConnector instanceof GitConfigDTO) {
+      ((GitConfigDTO) scmConnector).setGitConnectionType(GitConnectionType.REPO);
+    } else if (scmConnector instanceof GithubConnectorDTO) {
+      ((GithubConnectorDTO) scmConnector).setConnectionType(GitConnectionType.REPO);
+    } else if (scmConnector instanceof GitlabConnectorDTO) {
+      ((GitlabConnectorDTO) scmConnector).setConnectionType(GitConnectionType.REPO);
+    } else if (scmConnector instanceof BitbucketConnectorDTO) {
+      ((BitbucketConnectorDTO) scmConnector).setConnectionType(GitConnectionType.REPO);
+    } else if (scmConnector instanceof AwsCodeCommitConnectorDTO) {
+      ((AwsCodeCommitConnectorDTO) scmConnector).setUrlType(AwsCodeCommitUrlType.REPO);
+    }
   }
 
   private ConnectorValidationResult validateConnector(Connector connector, ConnectorResponseDTO connectorDTO,
@@ -578,7 +602,21 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorStatistics getConnectorStatistics(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return connectorStatisticsHelper.getStats(accountIdentifier, orgIdentifier, projectIdentifier);
+    ConnectorStatistics stats = connectorStatisticsHelper.getStats(accountIdentifier, orgIdentifier, projectIdentifier);
+    changeTheNullStatusToUnknown(stats);
+    return stats;
+  }
+
+  private void changeTheNullStatusToUnknown(ConnectorStatistics stats) {
+    if (stats == null) {
+      return;
+    }
+    List<ConnectorStatusStats> statusStats = stats.getStatusStats();
+    for (ConnectorStatusStats connectorStatusStats : statusStats) {
+      if (connectorStatusStats.getStatus() == null) {
+        connectorStatusStats.setStatus(UNKNOWN);
+      }
+    }
   }
 
   @Override

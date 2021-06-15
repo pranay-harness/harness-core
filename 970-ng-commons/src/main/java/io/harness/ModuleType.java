@@ -11,15 +11,26 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public enum ModuleType {
   @JsonProperty("CD") CD("Continuous Deployment"),
   @JsonProperty("CI") CI("Continuous Integeration"),
-  @JsonProperty("CORE") CORE("Core"),
   @JsonProperty("CV") CV("Continuous Verification"),
   @JsonProperty("CF") CF("Continuous Features"),
-  @JsonProperty("CE") CE("Continuous Efficiency");
+  @JsonProperty("CE") CE("Continuous Efficiency"),
+
+  // Internal
+  @JsonProperty("CORE") CORE("Core", true),
+  @JsonProperty("PMS") PMS("Pipelines", true);
 
   String displayName;
+  boolean internal;
+
   ModuleType(String displayName) {
-    this.displayName = displayName;
+    this(displayName, false);
   }
+
+  ModuleType(String displayName, boolean internal) {
+    this.displayName = displayName;
+    this.internal = internal;
+  }
+
   @JsonCreator
   public static ModuleType fromString(String moduleType) {
     for (ModuleType moduleEnum : ModuleType.values()) {

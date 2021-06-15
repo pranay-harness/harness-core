@@ -1,5 +1,6 @@
 package io.harness.delegate.task.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.k8s.KubernetesHelperService.getKubernetesConfigFromDefaultKubeConfigFile;
 import static io.harness.k8s.KubernetesHelperService.getKubernetesConfigFromServiceAccount;
 import static io.harness.k8s.KubernetesHelperService.isRunningInCluster;
@@ -8,6 +9,7 @@ import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getValueFro
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClientKeyCertDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -24,6 +26,7 @@ import io.harness.k8s.model.OidcGrantType;
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(CDP)
 public class K8sYamlToDelegateDTOMapper {
   public KubernetesConfig createKubernetesConfigFromClusterConfig(KubernetesClusterConfigDTO clusterConfigDTO) {
     return createKubernetesConfigFromClusterConfig(clusterConfigDTO, null);
@@ -73,7 +76,9 @@ public class K8sYamlToDelegateDTOMapper {
         KubernetesClientKeyCertDTO clientKeyCertDTO = (KubernetesClientKeyCertDTO) authDTO.getCredentials();
         kubernetesConfigBuilder.clientCert(clientKeyCertDTO.getClientCertRef().getDecryptedValue());
         kubernetesConfigBuilder.clientKey(clientKeyCertDTO.getClientKeyRef().getDecryptedValue());
-        kubernetesConfigBuilder.clientKeyPassphrase(clientKeyCertDTO.getClientKeyPassphraseRef().getDecryptedValue());
+        kubernetesConfigBuilder.clientKeyPassphrase(clientKeyCertDTO.getClientKeyPassphraseRef() != null
+                ? clientKeyCertDTO.getClientKeyPassphraseRef().getDecryptedValue()
+                : null);
         kubernetesConfigBuilder.clientKeyAlgo(clientKeyCertDTO.getClientKeyAlgo());
         kubernetesConfigBuilder.caCert(
             clientKeyCertDTO.getCaCertRef() != null ? clientKeyCertDTO.getCaCertRef().getDecryptedValue() : null);

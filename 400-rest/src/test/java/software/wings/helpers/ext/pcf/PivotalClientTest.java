@@ -1,8 +1,7 @@
 package software.wings.helpers.ext.pcf;
 
 import static io.harness.pcf.model.PcfConstants.APP_TOKEN;
-import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_APP_LOG_TAILING;
-import static io.harness.pcf.model.PcfConstants.CF_COMMAND_FOR_CHECKING_AUTOSCALAR;
+import static io.harness.pcf.model.PcfConstants.AUTOSCALING_APPS_PLUGIN_NAME;
 import static io.harness.pcf.model.PcfConstants.CF_DOCKER_CREDENTIALS;
 import static io.harness.pcf.model.PcfConstants.CF_HOME;
 import static io.harness.pcf.model.PcfConstants.CF_PLUGIN_HOME;
@@ -48,10 +47,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.filesystem.FileIo;
 import io.harness.pcf.PcfUtils;
 import io.harness.pcf.PivotalClientApiException;
+import io.harness.pcf.cfcli.CfCliCommandResolver;
+import io.harness.pcf.cfcli.CfCliCommandType;
+import io.harness.pcf.model.CfCliVersion;
 import io.harness.pcf.model.PcfRouteInfo;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
@@ -122,7 +126,11 @@ import org.zeroturnaround.exec.StartedProcess;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@OwnedBy(HarnessTeam.CDP)
 public class PivotalClientTest extends CategoryTest {
+  public static final String CF_COMMAND_FOR_APP_LOG_TAILING = "cf logs <APP_NAME>";
+  public static final String CF_COMMAND_FOR_CHECKING_AUTOSCALAR = "cf plugins | grep autoscaling-apps";
+
   @Spy PcfClientImpl pcfClient = new PcfClientImpl();
   @Mock CloudFoundryOperationsWrapper wrapper;
   @Mock CloudFoundryOperations operations;
@@ -785,11 +793,12 @@ public class PivotalClientTest extends CategoryTest {
     doReturn(0).doReturn(1).when(processResult).getExitValue();
 
     doReturn(processExecutor).when(pcfClient).createProccessExecutorForPcfTask(anyLong(), anyString(), anyMap(), any());
-    pcfClient.performConfigureAutoscalar(PcfAppAutoscalarRequestData.builder()
-                                             .autoscalarFilePath(file.getAbsolutePath())
-                                             .timeoutInMins(1)
-                                             .pcfRequestConfig(PcfRequestConfig.builder().build())
-                                             .build(),
+    pcfClient.performConfigureAutoscalar(
+        PcfAppAutoscalarRequestData.builder()
+            .autoscalarFilePath(file.getAbsolutePath())
+            .timeoutInMins(1)
+            .pcfRequestConfig(PcfRequestConfig.builder().cfCliPath("cf").cfCliVersion(CfCliVersion.V6).build())
+            .build(),
         logCallback);
 
     try {
@@ -828,12 +837,13 @@ public class PivotalClientTest extends CategoryTest {
     doReturn("asd").doReturn(null).doReturn(EMPTY).when(processResult).outputUTF8();
     doReturn(processExecutor).when(pcfClient).createProccessExecutorForPcfTask(anyLong(), anyString(), anyMap(), any());
 
-    PcfAppAutoscalarRequestData autoscalarRequestData = PcfAppAutoscalarRequestData.builder()
-                                                            .applicationName(APP_NAME)
-                                                            .applicationGuid(APP_NAME)
-                                                            .timeoutInMins(1)
-                                                            .pcfRequestConfig(PcfRequestConfig.builder().build())
-                                                            .build();
+    PcfAppAutoscalarRequestData autoscalarRequestData =
+        PcfAppAutoscalarRequestData.builder()
+            .applicationName(APP_NAME)
+            .applicationGuid(APP_NAME)
+            .timeoutInMins(1)
+            .pcfRequestConfig(PcfRequestConfig.builder().cfCliPath("cf").cfCliVersion(CfCliVersion.V6).build())
+            .build();
     assertThat(pcfClient.checkIfAppHasAutoscalarAttached(autoscalarRequestData, logCallback)).isTrue();
 
     assertThat(pcfClient.checkIfAppHasAutoscalarAttached(autoscalarRequestData, logCallback)).isFalse();
@@ -922,7 +932,7 @@ public class PivotalClientTest extends CategoryTest {
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
-  public void testCreateExecutorForAutoscalarPluginCheck() throws Exception {
+  public void testCreateExecutorForAutoscalarPluginCheck() {
     Map<String, String> appAutoscalarEnvMapForCustomPlugin = pcfClient.getAppAutoscalarEnvMapForCustomPlugin(
         PcfAppAutoscalarRequestData.builder()
             .pcfRequestConfig(PcfRequestConfig.builder().endpointUrl("test").build())
@@ -930,9 +940,11 @@ public class PivotalClientTest extends CategoryTest {
             .build());
     ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
     doNothing().when(logCallback).saveExecutionLog(anyString());
+    String command =
+        CfCliCommandResolver.getCheckingPluginsCliCommand("cf", CfCliVersion.V6, AUTOSCALING_APPS_PLUGIN_NAME);
 
     ProcessExecutor processExecutor =
-        PcfUtils.createExecutorForAutoscalarPluginCheck(appAutoscalarEnvMapForCustomPlugin);
+        PcfUtils.createExecutorForAutoscalarPluginCheck(command, appAutoscalarEnvMapForCustomPlugin);
 
     assertThat(processExecutor.getCommand()).containsExactly("/bin/bash", "-c", CF_COMMAND_FOR_CHECKING_AUTOSCALAR);
     assertThat(processExecutor.getEnvironment()).isEqualTo(appAutoscalarEnvMapForCustomPlugin);
@@ -944,7 +956,10 @@ public class PivotalClientTest extends CategoryTest {
   public void testGenerateChangeAutoscalarStateCommand() throws Exception {
     PcfClientImpl pcfClient = spy(PcfClientImpl.class);
     PcfAppAutoscalarRequestData autoscalarRequestData =
-        PcfAppAutoscalarRequestData.builder().applicationName(APP_NAME).build();
+        PcfAppAutoscalarRequestData.builder()
+            .applicationName(APP_NAME)
+            .pcfRequestConfig(PcfRequestConfig.builder().cfCliPath("cf").cfCliVersion(CfCliVersion.V6).build())
+            .build();
     String command = pcfClient.generateChangeAutoscalarStateCommand(autoscalarRequestData, true);
     assertThat(command).isEqualTo("cf enable-autoscaling " + APP_NAME);
     command = pcfClient.generateChangeAutoscalarStateCommand(autoscalarRequestData, false);
@@ -1081,7 +1096,8 @@ public class PivotalClientTest extends CategoryTest {
     ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
     doNothing().when(logCallback).saveExecutionLog(anyString());
     ProcessExecutor processExecutorForLogTailing = client.getProcessExecutorForLogTailing(
-        PcfRequestConfig.builder().applicationName(APP_NAME).build(), logCallback);
+        PcfRequestConfig.builder().cfCliPath("cf").cfCliVersion(CfCliVersion.V6).applicationName(APP_NAME).build(),
+        logCallback);
 
     assertThat(processExecutorForLogTailing.getCommand())
         .containsExactly(BIN_BASH, "-c", CF_COMMAND_FOR_APP_LOG_TAILING.replace(APP_TOKEN, APP_NAME));
@@ -1134,6 +1150,8 @@ public class PivotalClientTest extends CategoryTest {
     PcfRequestConfig config = PcfRequestConfig.builder()
                                   .endpointUrl("api.pivotal.io")
                                   .userName("user")
+                                  .cfCliPath("cf")
+                                  .cfCliVersion(CfCliVersion.V6)
                                   .password("passwd")
                                   .orgName("org with space")
                                   .spaceName("space with name")
@@ -1196,6 +1214,8 @@ public class PivotalClientTest extends CategoryTest {
     doNothing().when(mockCallback).saveExecutionLog(anyString());
     PcfRequestConfig requestConfig = PcfRequestConfig.builder()
                                          .useCFCLI(true)
+                                         .cfCliPath("cf")
+                                         .cfCliVersion(CfCliVersion.V6)
                                          .loggedin(false)
                                          .cfHomeDirPath("/cf/home")
                                          .applicationName("App_BG_00")
@@ -1214,11 +1234,11 @@ public class PivotalClientTest extends CategoryTest {
     doReturn(info).when(client).extractRouteInfoFromPath(any(), anyString());
     doReturn(0).when(client).executeCommand(anyString(), any(), any());
     client.executeRoutesOperationForApplicationUsingCli(
-        "cf map-route", requestConfig, singletonList("cdp-10515.z.example.com/path"), mockCallback);
+        CfCliCommandType.MAP_ROUTE, requestConfig, singletonList("cdp-10515.z.example.com/path"), mockCallback);
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
     verify(client).executeCommand(captor.capture(), any(), any());
     String value = captor.getValue();
-    assertThat(value).isEqualTo("cf map-route App_BG_00 example.com --hostname cdp-10515  --path path ");
+    assertThat(value).isEqualTo("cf map-route App_BG_00 example.com --hostname cdp-10515 --path path");
   }
 
   @Test
@@ -1297,8 +1317,7 @@ public class PivotalClientTest extends CategoryTest {
     reset(mockedClient);
     doReturn(false).when(mockedClient).doLogin(any(), any(), anyString());
 
-    PcfRequestConfig pcfRequestConfig =
-        PcfRequestConfig.builder().useCFCLI(true).loggedin(false).applicationName("app").build();
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfigWithCfCliPath();
     ExecutionLogCallback logger = mock(ExecutionLogCallback.class);
     doNothing().when(logger).saveExecutionLog(anyString());
 
@@ -1339,8 +1358,7 @@ public class PivotalClientTest extends CategoryTest {
     reset(mockedClient);
     doReturn(false).when(mockedClient).doLogin(any(), any(), anyString());
 
-    PcfRequestConfig pcfRequestConfig =
-        PcfRequestConfig.builder().useCFCLI(true).loggedin(false).applicationName("app").build();
+    PcfRequestConfig pcfRequestConfig = getPcfRequestConfigWithCfCliPath();
     ExecutionLogCallback logger = mock(ExecutionLogCallback.class);
     doNothing().when(logger).saveExecutionLog(anyString());
 
@@ -1516,7 +1534,7 @@ public class PivotalClientTest extends CategoryTest {
             .applicationGuid(APP_NAME)
             .expectedEnabled(true)
             .timeoutInMins(1)
-            .pcfRequestConfig(PcfRequestConfig.builder().build())
+            .pcfRequestConfig(PcfRequestConfig.builder().cfCliPath("cf").cfCliVersion(CfCliVersion.V6).build())
             .build();
     PcfAppAutoscalarRequestData autoscalarRequestDataWithExpectedEnableFalse =
         PcfAppAutoscalarRequestData.builder()
@@ -1524,7 +1542,7 @@ public class PivotalClientTest extends CategoryTest {
             .applicationGuid(APP_NAME)
             .expectedEnabled(false)
             .timeoutInMins(1)
-            .pcfRequestConfig(PcfRequestConfig.builder().build())
+            .pcfRequestConfig(PcfRequestConfig.builder().cfCliPath("cf").cfCliVersion(CfCliVersion.V6).build())
             .build();
 
     assertThat(
@@ -1710,5 +1728,15 @@ public class PivotalClientTest extends CategoryTest {
     System.clearProperty("http.proxyUser");
     System.clearProperty("http.proxyPassword");
     System.clearProperty("http.nonProxyHosts");
+  }
+
+  private PcfRequestConfig getPcfRequestConfigWithCfCliPath() {
+    return PcfRequestConfig.builder()
+        .useCFCLI(true)
+        .cfCliPath("cf")
+        .cfCliVersion(CfCliVersion.V6)
+        .loggedin(false)
+        .applicationName("app")
+        .build();
   }
 }

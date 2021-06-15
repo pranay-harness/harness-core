@@ -48,21 +48,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/AddSegmentToVariationTargetMapYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "AddSegmentToVariationTargetMap"
               ]
             }
           }
@@ -72,6 +72,10 @@
     },
     "AddSegmentToVariationTargetMapYamlSpec": {
       "type": "object",
+      "required": [
+        "segments",
+        "variation"
+      ],
       "properties": {
         "segments": {
           "type": "array",
@@ -93,21 +97,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/AddTargetsToVariationTargetMapYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "AddTargetsToVariationTargetMap"
               ]
             }
           }
@@ -117,6 +121,10 @@
     },
     "AddTargetsToVariationTargetMapYamlSpec": {
       "type": "object",
+      "required": [
+        "targets",
+        "variation"
+      ],
       "properties": {
         "targets": {
           "type": "array",
@@ -797,8 +805,7 @@
           "required": [
             "environment",
             "feature",
-            "instructions",
-            "state"
+            "instructions"
           ],
           "properties": {
             "environment": {
@@ -828,9 +835,6 @@
                   }
                 ]
               }
-            },
-            "state": {
-              "type": "string"
             }
           }
         }
@@ -2952,6 +2956,9 @@
         },
         {
           "type": "object",
+          "required": [
+            "store"
+          ],
           "properties": {
             "store": {
               "$ref": "#/definitions/StoreConfigWrapper"
@@ -2969,21 +2976,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/RemoveSegmentToVariationTargetMapYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "RemoveSegmentToVariationTargetMap"
               ]
             }
           }
@@ -2993,6 +3000,10 @@
     },
     "RemoveSegmentToVariationTargetMapYamlSpec": {
       "type": "object",
+      "required": [
+        "segments",
+        "variation"
+      ],
       "properties": {
         "segments": {
           "type": "array",
@@ -3014,21 +3025,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/RemoveTargetsToVariationTargetMapYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "RemoveTargetsToVariationTargetMap"
               ]
             }
           }
@@ -3038,6 +3049,10 @@
     },
     "RemoveTargetsToVariationTargetMapYamlSpec": {
       "type": "object",
+      "required": [
+        "targets",
+        "variation"
+      ],
       "properties": {
         "targets": {
           "type": "array",
@@ -3390,21 +3405,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/SetFeatureFlagStateYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "SetFeatureFlagState"
               ]
             }
           }
@@ -3414,6 +3429,9 @@
     },
     "SetFeatureFlagStateYamlSpec": {
       "type": "object",
+      "required": [
+        "state"
+      ],
       "properties": {
         "state": {
           "type": "string"
@@ -4174,6 +4192,10 @@
     },
     "StoreConfigWrapper": {
       "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
       "properties": {
         "metadata": {
           "type": "string"
@@ -4337,6 +4359,10 @@
         },
         {
           "type": "object",
+          "required": [
+            "configuration",
+            "provisionerIdentifier"
+          ],
           "properties": {
             "configuration": {
               "$ref": "#/definitions/TerraformStepConfiguration"
@@ -4406,6 +4432,10 @@
         },
         {
           "type": "object",
+          "required": [
+            "configuration",
+            "provisionerIdentifier"
+          ],
           "properties": {
             "configuration": {
               "$ref": "#/definitions/TerraformStepConfiguration"
@@ -4429,6 +4459,9 @@
     },
     "TerraformExecutionData": {
       "type": "object",
+      "required": [
+        "configFiles"
+      ],
       "properties": {
         "backendConfig": {
           "$ref": "#/definitions/TerraformBackendConfig"
@@ -4479,6 +4512,11 @@
     },
     "TerraformPlanExecutionData": {
       "type": "object",
+      "required": [
+        "command",
+        "configFiles",
+        "secretManagerRef"
+      ],
       "properties": {
         "backendConfig": {
           "$ref": "#/definitions/TerraformBackendConfig"
@@ -4544,6 +4582,10 @@
         },
         {
           "type": "object",
+          "required": [
+            "configuration",
+            "provisionerIdentifier"
+          ],
           "properties": {
             "configuration": {
               "$ref": "#/definitions/TerraformPlanExecutionData"
@@ -4589,6 +4631,9 @@
     },
     "TerraformStepConfiguration": {
       "type": "object",
+      "required": [
+        "type"
+      ],
       "properties": {
         "spec": {
           "$ref": "#/definitions/TerraformExecutionData"
@@ -4606,6 +4651,11 @@
     },
     "TerraformVarFile": {
       "type": "object",
+      "required": [
+        "identifier",
+        "spec",
+        "type"
+      ],
       "properties": {
         "identifier": {
           "type": "string"

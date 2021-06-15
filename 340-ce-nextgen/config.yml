@@ -120,8 +120,9 @@ featureFlagConfig:
 gcpConfig:
   gcpProjectId: gcpProjectIdPlaceHolder
 
-azureConfig:
+ceAzureSetupConfig:
   azureAppClientId: azureAppClientIdPlaceholder
+  azureAppClientSecret: azureAppClientSecretplaceholder
 
 awsConfig:
   harnessAwsAccountId: 108817434118

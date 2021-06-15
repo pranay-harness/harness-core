@@ -1,6 +1,7 @@
 package io.harness.delegate.task.gcp.helpers;
 
 import static io.harness.delegate.task.gcp.helpers.GcpHelperService.LOCATION_DELIMITER;
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.BRETT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,6 +14,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesConfig;
@@ -46,6 +49,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.CDP)
 public class GkeClusterHelperTest extends CategoryTest {
   @Mock private GcpHelperService gcpHelperService;
   @Mock private Container container;
@@ -105,8 +109,10 @@ public class GkeClusterHelperTest extends CategoryTest {
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     when(gcpHelperService.getGkeContainerService(serviceAccountKey, false)).thenReturn(container);
+    when(gcpHelperService.getGkeContainerService(null, true)).thenReturn(container);
     when(gcpHelperService.getSleepIntervalSecs()).thenReturn(0);
     when(gcpHelperService.getTimeoutMins()).thenReturn(1);
+    when(gcpHelperService.getClusterProjectId(any())).thenReturn("project-a");
     when(container.projects()).thenReturn(projects);
     when(projects.locations()).thenReturn(locations);
     when(locations.clusters()).thenReturn(clusters);
@@ -203,6 +209,20 @@ public class GkeClusterHelperTest extends CategoryTest {
     when(clustersGet.execute()).thenReturn(CLUSTER_1);
 
     KubernetesConfig config = gkeClusterHelper.getCluster(serviceAccountKey, false, ZONE_CLUSTER, "default");
+
+    verify(clusters).get(anyString());
+    assertThat(config.getMasterUrl()).isEqualTo("https://1.1.1.1/");
+    assertThat(config.getUsername()).isEqualTo("master1".toCharArray());
+    assertThat(config.getPassword()).isEqualTo("password1".toCharArray());
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldGetClusterWithInheritedCredentials() throws Exception {
+    when(clustersGet.execute()).thenReturn(CLUSTER_1);
+
+    KubernetesConfig config = gkeClusterHelper.getCluster(null, true, ZONE_CLUSTER, "default");
 
     verify(clusters).get(anyString());
     assertThat(config.getMasterUrl()).isEqualTo("https://1.1.1.1/");

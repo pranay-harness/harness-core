@@ -23,10 +23,13 @@ import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 import org.redisson.Redisson;
 import org.redisson.api.RStream;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.StreamMessageId;
+import org.redisson.client.RedisClient;
+import org.redisson.client.RedisClientConfig;
 import org.redisson.client.codec.StringCodec;
 import org.redisson.config.Config;
 import org.redisson.config.ReadMode;
@@ -79,6 +82,37 @@ public class RedisUtils {
     config.setNettyThreads(redisConfig.getNettyThreads());
     config.setUseScriptCache(redisConfig.isUseScriptCache());
     return Redisson.create(config);
+  }
+
+  public RedisClient getLowLevelClient(RedisConfig redisConfig) {
+    RedisClientConfig config = new RedisClientConfig();
+    if (!redisConfig.isSentinel()) {
+      config = config.setAddress(redisConfig.getRedisUrl());
+      String redisPassword = redisConfig.getPassword();
+      String redisUserName = redisConfig.getUserName();
+
+      if (isNotEmpty(redisUserName)) {
+        config.setUsername(redisUserName);
+      }
+
+      if (isNotEmpty(redisPassword)) {
+        config.setPassword(redisPassword);
+      }
+
+      RedisSSLConfig sslConfig = redisConfig.getSslConfig();
+      if (sslConfig != null && sslConfig.isEnabled()) {
+        try {
+          config.setSslTruststore(new File(sslConfig.getCATrustStorePath()).toURI().toURL());
+          config.setSslTruststorePassword(sslConfig.getCATrustStorePassword());
+        } catch (MalformedURLException e) {
+          log.error("Malformed URL provided for Redis SSL CA trustStore file", e);
+          return null;
+        }
+      }
+    } else {
+      throw new NotImplementedException("Sentinel support is not added for low level redis client");
+    }
+    return RedisClient.create(config);
   }
 
   public Timestamp getMessageTimestamp(String messageId) {

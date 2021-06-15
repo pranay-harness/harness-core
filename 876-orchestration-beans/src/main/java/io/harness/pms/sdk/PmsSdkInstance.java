@@ -2,12 +2,12 @@ package io.harness.pms.sdk;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.ng.DbAliases;
-import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.plan.SdkModuleInfo;
@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Setter;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -33,6 +34,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -42,7 +44,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("pmsSdkInstances")
 @HarnessEntity(exportable = false)
 @StoreIn(DbAliases.PMS)
-public class PmsSdkInstance implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public class PmsSdkInstance implements PersistentEntity, UuidAware {
   @Setter @NonFinal @Id @org.mongodb.morphia.annotations.Id String uuid;
 
   @NotNull @FdUniqueIndex String name;
@@ -53,8 +55,13 @@ public class PmsSdkInstance implements PersistentEntity, UuidAware, CreatedAtAwa
 
   ConsumerConfig interruptConsumerConfig;
   ConsumerConfig orchestrationEventConsumerConfig;
+  ConsumerConfig facilitatorEventConsumerConfig;
+  ConsumerConfig nodeStartEventConsumerConfig;
+  ConsumerConfig progressEventConsumerConfig;
 
-  @Setter @NonFinal @SchemaIgnore @FdIndex @CreatedDate long createdAt;
-  @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate long lastUpdatedAt;
+  @Default @Setter @NonFinal @SchemaIgnore @FdIndex @CreatedDate Long createdAt = System.currentTimeMillis();
+  @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate Long lastUpdatedAt;
   @Setter @NonFinal @Version Long version;
+
+  @Default Boolean active = false;
 }

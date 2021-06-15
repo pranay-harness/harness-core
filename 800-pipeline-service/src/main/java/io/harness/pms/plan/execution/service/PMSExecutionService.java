@@ -11,14 +11,15 @@ import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterPropertiesDTO;
 
+import com.google.protobuf.ByteString;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PIPELINE)
 public interface PMSExecutionService {
-  String getInputSetYaml(
-      String accountId, String orgId, String projectId, String planExecutionId, boolean pipelineDeleted);
+  String getInputSetYaml(String accountId, String orgId, String projectId, String planExecutionId,
+      boolean pipelineDeleted, boolean resolveExpressions);
 
   Page<PipelineExecutionSummaryEntity> getPipelineExecutionSummaryEntity(Criteria criteria, Pageable pageable);
 
@@ -32,7 +33,8 @@ public interface PMSExecutionService {
 
   Criteria formCriteria(String accountId, String orgId, String projectId, String pipelineIdentifier,
       String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName,
-      String searchTerm, ExecutionStatus status, boolean myDeployments, boolean pipelineDeleted);
+      String searchTerm, ExecutionStatus status, boolean myDeployments, boolean pipelineDeleted,
+      ByteString gitEntityBasicInfo);
 
   void deleteExecutionsOnPipelineDeletion(PipelineEntity pipelineEntity);
 }

@@ -15,6 +15,7 @@ import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.intfc.OverridesApplier;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -30,8 +31,11 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = StoreConfigWrapperVisitorHelper.class)
 @TypeAlias("storeConfigWrapper")
 public class StoreConfigWrapper implements OverridesApplier<StoreConfigWrapper>, Visitable {
-  String type;
-  @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true) @Wither StoreConfig spec;
+  @NotNull String type;
+  @NotNull
+  @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
+  @Wither
+  StoreConfig spec;
 
   @Builder
   public StoreConfigWrapper(String type, StoreConfig spec) {

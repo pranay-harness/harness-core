@@ -9,6 +9,7 @@ import static io.harness.k8s.model.HelmVersion.V3;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.RAMA;
@@ -21,6 +22,7 @@ import static software.wings.api.DeploymentType.AWS_CODEDEPLOY;
 import static software.wings.api.DeploymentType.CUSTOM;
 import static software.wings.api.DeploymentType.HELM;
 import static software.wings.api.DeploymentType.KUBERNETES;
+import static software.wings.api.DeploymentType.PCF;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.DELETE;
 import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.FETCH;
@@ -69,6 +71,7 @@ import io.harness.k8s.model.HelmVersion;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.pcf.model.CfCliVersion;
 import io.harness.persistence.HPersistence;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
@@ -181,6 +184,47 @@ public class ServiceResourceServiceImplTest extends WingsBaseTest {
     Service helmService = Service.builder().deploymentType(HELM).helmVersion(V3).build();
     serviceResourceService.checkAndSetHelmVersion(helmService);
     assertThat(helmService.getHelmVersion()).isEqualTo(V3);
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testCheckAndSetCfCliVersionWithDefaultV6Version() {
+    Service pcfService = Service.builder().deploymentType(PCF).cfCliVersion(null).build();
+    serviceResourceService.checkAndSetCfCliVersion(pcfService);
+    assertThat(pcfService.getCfCliVersion()).isEqualTo(CfCliVersion.V6);
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testCheckAndSetCfCliVersionWithDefaultV7() {
+    Service pcfService = Service.builder().deploymentType(PCF).cfCliVersion(CfCliVersion.V7).build();
+    serviceResourceService.checkAndSetCfCliVersion(pcfService);
+    assertThat(pcfService.getCfCliVersion()).isEqualTo(CfCliVersion.V7);
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testCheckAndSetCfCliVersionWithValidationError() {
+    Service pcfService = Service.builder().deploymentType(HELM).cfCliVersion(CfCliVersion.V7).build();
+    assertThatThrownBy(() -> serviceResourceService.checkAndSetCfCliVersion(pcfService))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("CfCliVersion is only supported with PCF type of services, found deployment type: [HELM]");
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testUpdateOperationsForCfCliVersionWithValidationError() {
+    Service savedPcfService = Service.builder().deploymentType(HELM).cfCliVersion(CfCliVersion.V6).build();
+    Service newPcfService = Service.builder().deploymentType(PCF).cfCliVersion(CfCliVersion.V6).build();
+
+    assertThatThrownBy(
+        () -> serviceResourceService.updateOperationsForCfCliVersion(savedPcfService, newPcfService, updateOperations))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("CfCliVersion is only supported with PCF type of services, found deployment type: [HELM]");
   }
 
   @Test

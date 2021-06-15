@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus;
 import io.harness.gitsync.core.dtos.GitCommitDTO;
 
+import com.mongodb.client.result.UpdateResult;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,4 +28,6 @@ public interface GitCommitService {
   boolean isCommitAlreadyProcessed(String accountId, String headCommit, String repo, String branch);
 
   Optional<GitCommitDTO> findLastGitCommit(String accountIdentifier, String repo, String branchName);
+
+  UpdateResult upsertOnCommitIdAndRepoUrl(GitCommitDTO gitCommitDTO);
 }

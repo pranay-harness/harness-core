@@ -2,6 +2,7 @@ package io.harness.gitsync.scm;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.beans.gitsync.GitFileDetails.GitFileDetailsBuilder;
+import static io.harness.utils.DelegateOwner.getNGTaskSetupAbstractionsWithOwner;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
@@ -29,6 +30,7 @@ import software.wings.beans.TaskType;
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.time.Duration;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -52,8 +54,11 @@ public class ScmDelegateGitHelper implements ScmGitHelper {
                                               .isNewBranch(infoForPush.isNewBranch())
                                               .baseBranch(gitBranchInfo.getBaseBranch())
                                               .build();
+    final Map<String, String> ngTaskSetupAbstractionsWithOwner = getNGTaskSetupAbstractionsWithOwner(
+        infoForPush.getAccountId(), infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier());
     DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                   .accountId(infoForPush.getAccountId())
+                                                  .taskSetupAbstractions(ngTaskSetupAbstractionsWithOwner)
                                                   .taskType(TaskType.SCM_PUSH_TASK.name())
                                                   .taskParameters(scmPushTaskParams)
                                                   .executionTimeout(Duration.ofMinutes(2))

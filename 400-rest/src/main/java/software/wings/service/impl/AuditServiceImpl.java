@@ -25,6 +25,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.context.GlobalContextData;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.exception.WingsException;
@@ -84,6 +85,7 @@ import com.mongodb.BasicDBObject;
 import io.fabric8.utils.Lists;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -372,7 +374,7 @@ public class AuditServiceImpl implements AuditService {
     log.info("Start: Deleting audit records older than {} time", currentTimeMillis() - retentionMillis);
     try {
       log.info("Start: Deleting audit records older than {} days", days);
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(10), () -> {
         while (true) {
           List<AuditHeader> auditHeaders = wingsPersistence.createQuery(AuditHeader.class, excludeAuthority)
                                                .field(AuditHeaderKeys.createdAt)
@@ -421,7 +423,7 @@ public class AuditServiceImpl implements AuditService {
           }
           sleep(ofSeconds(2L));
         }
-      }, 10L, TimeUnit.MINUTES, true);
+      });
     } catch (Exception ex) {
       log.warn("Failed to delete audit records older than last {} days within 10 minutes.", days, ex);
     }

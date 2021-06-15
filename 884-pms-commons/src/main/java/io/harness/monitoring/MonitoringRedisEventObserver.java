@@ -1,5 +1,7 @@
 package io.harness.monitoring;
 
+import static io.harness.pms.events.PmsEventFrameworkConstants.PIPELINE_MONITORING_ENABLED;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.metrics.ThreadAutoLogContext;
@@ -8,6 +10,8 @@ import io.harness.queue.EventListenerObserver;
 
 import com.google.inject.Inject;
 import com.google.protobuf.Message;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -22,29 +26,26 @@ public class MonitoringRedisEventObserver<T extends Message> implements EventLis
   @Inject MonitoringMetadataExtractorFactory monitoringMetadataExtractorFactory;
 
   @Override
-  public void onListenerEnd(T message) {
-    if (monitoringMetadataExtractorFactory.getMetadataExtractor(message.getClass()) == null) {
-      return;
-    }
-    MonitoringMetadataExtractor<T> monitoringMetadataExtractor =
-        monitoringMetadataExtractorFactory.getMetadataExtractor(message.getClass());
-    try (ThreadAutoLogContext autoLogContext = monitoringMetadataExtractor.metricContext(message)) {
-      metricService.recordMetric(
-          String.format(LISTENER_END_METRIC, monitoringMetadataExtractor.getMetricPrefix(message)),
-          System.currentTimeMillis() - monitoringMetadataExtractor.getCreatedAt(message));
-    }
+  public void onListenerEnd(T message, Map<String, String> metadataMap) {
+    sendMetric(message, LISTENER_END_METRIC, metadataMap);
   }
 
   @Override
-  public void onListenerStart(T message) {
+  public void onListenerStart(T message, Map<String, String> metadataMap) {
+    sendMetric(message, LISTENER_START_METRIC, metadataMap);
+  }
+
+  private void sendMetric(T message, String metricName, Map<String, String> metadataMap) {
     if (monitoringMetadataExtractorFactory.getMetadataExtractor(message.getClass()) == null) {
       return;
     }
     MonitoringMetadataExtractor<T> monitoringMetadataExtractor =
         monitoringMetadataExtractorFactory.getMetadataExtractor(message.getClass());
+    if (!Objects.equals(metadataMap.get(PIPELINE_MONITORING_ENABLED), "true")) {
+      return;
+    }
     try (ThreadAutoLogContext autoLogContext = monitoringMetadataExtractor.metricContext(message)) {
-      metricService.recordMetric(
-          String.format(LISTENER_START_METRIC, monitoringMetadataExtractor.getMetricPrefix(message)),
+      metricService.recordMetric(String.format(metricName, monitoringMetadataExtractor.getMetricPrefix(message)),
           System.currentTimeMillis() - monitoringMetadataExtractor.getCreatedAt(message));
     }
   }

@@ -128,6 +128,7 @@ BAZEL_MODULES="\
   //950-delegate-tasks-beans/src/main/proto:all \
   //950-delegate-tasks-beans:module \
   //950-events-framework:module \
+  //950-events-framework-monitor:module \
   //950-log-client:module \
   //950-ng-audit-commons:module \
   //950-ng-authentication-service:module \

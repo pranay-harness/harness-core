@@ -21,7 +21,9 @@ import io.harness.OrchestrationStepsModule;
 import io.harness.YamlBaseUrlServiceImpl;
 import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
 import io.harness.accesscontrol.AccessControlAdminClientModule;
+import io.harness.account.AbstractAccountModule;
 import io.harness.account.AccountClientModule;
+import io.harness.account.AccountConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
@@ -130,6 +132,7 @@ import io.harness.pipeline.PipelineRemoteClientModule;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
+import io.harness.remote.CEAzureSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
@@ -298,6 +301,12 @@ public class NextGenModule extends AbstractModule {
     return this.appConfig.getCeAwsSetupConfig();
   }
 
+  @Provides
+  @Singleton
+  CEAzureSetupConfig ceAzureSetupConfig() {
+    return this.appConfig.getCeAzureSetupConfig();
+  }
+
   @Override
   protected void configure() {
     install(VersionModule.getInstance());
@@ -367,7 +376,8 @@ public class NextGenModule extends AbstractModule {
     install(new InviteModule(appConfig.getBaseUrls(), appConfig.isNGAuthUIEnabled()));
     install(new SignupModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId(),
-        appConfig.getSignupNotificationConfiguration()));
+        appConfig.getSignupNotificationConfiguration(), appConfig.getBaseUrls().getNextGenUiUrl(),
+        appConfig.getBaseUrls().getNextGenAuthUiUrl()));
     install(ConnectorModule.getInstance());
     install(new GitSyncModule());
     install(new DefaultOrganizationModule());
@@ -386,7 +396,7 @@ public class NextGenModule extends AbstractModule {
     install(new SecretNGManagerClientModule(this.appConfig.getNgManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new DelegateServiceDriverGrpcClientModule(this.appConfig.getNextGenConfig().getManagerServiceSecret(),
-        this.appConfig.getGrpcClientConfig().getTarget(), this.appConfig.getGrpcClientConfig().getAuthority()));
+        this.appConfig.getGrpcClientConfig().getTarget(), this.appConfig.getGrpcClientConfig().getAuthority(), true));
     install(new EntitySetupUsageClientModule(this.appConfig.getNgManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new ModulesClientModule(this.appConfig.getManagerClientConfig(),
@@ -459,6 +469,13 @@ public class NextGenModule extends AbstractModule {
       @Override
       public TelemetryConfiguration telemetryConfiguration() {
         return appConfig.getSegmentConfiguration();
+      }
+    });
+
+    install(new AbstractAccountModule() {
+      @Override
+      public AccountConfig accountConfiguration() {
+        return appConfig.getAccountConfig();
       }
     });
     install(LicenseModule.getInstance());

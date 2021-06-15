@@ -87,5 +87,12 @@ public class OrchestrationStepsModuleRegistrars {
                    .availableAtAccountLevel(false)
                    .clazz(ApprovalStageConfig.class)
                    .build())
+          .add(YamlSchemaRootClass.builder()
+                   .entityType(EntityType.FEATURE_FLAG_STAGE)
+                   .availableAtProjectLevel(true)
+                   .availableAtOrgLevel(false)
+                   .availableAtAccountLevel(false)
+                   .clazz(ApprovalStageConfig.class)
+                   .build())
           .build();
 }

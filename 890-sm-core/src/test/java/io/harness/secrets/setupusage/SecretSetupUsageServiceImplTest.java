@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.UTKARSH;
 import static software.wings.settings.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingVariableTypes.DOCKER;
 import static software.wings.settings.SettingVariableTypes.SERVICE_VARIABLE;
+import static software.wings.settings.SettingVariableTypes.TRIGGER;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -127,12 +128,15 @@ public class SecretSetupUsageServiceImplTest extends SMCoreTestBase {
         new EncryptedDataParent(UUIDGenerator.generateUuid(), DOCKER, "randomFieldName2");
     EncryptedDataParent encryptedDataParent4 = new EncryptedDataParent(commonUuid, AWS, "randomFieldName3");
     EncryptedDataParent encryptedDataParent5 = new EncryptedDataParent(commonUuid, AWS, "randomFieldName4");
+    EncryptedDataParent encryptedDataParent6 =
+        new EncryptedDataParent(UUIDGenerator.generateUuid(), TRIGGER, "randomFieldName5");
 
     encryptedData.addParent(encryptedDataParent1);
     encryptedData.addParent(encryptedDataParent2);
     encryptedData.addParent(encryptedDataParent3);
     encryptedData.addParent(encryptedDataParent4);
     encryptedData.addParent(encryptedDataParent5);
+    encryptedData.addParent(encryptedDataParent6);
     secretsDao.saveSecret(encryptedData);
 
     Map<String, Set<EncryptedDataParent>> parentIdByParentsMap1 = new HashMap<>();
@@ -145,6 +149,9 @@ public class SecretSetupUsageServiceImplTest extends SMCoreTestBase {
     Map<String, Set<EncryptedDataParent>> parentIdByParentsMap3 = new HashMap<>();
     parentIdByParentsMap3.put(commonUuid, Sets.newHashSet(encryptedDataParent4, encryptedDataParent5));
 
+    Map<String, Set<EncryptedDataParent>> parentIdByParentsMap4 = new HashMap<>();
+    parentIdByParentsMap4.put(encryptedDataParent6.getId(), Sets.newHashSet(encryptedDataParent6));
+
     SecretSetupUsage mockUsage1 =
         SecretSetupUsage.builder().entityId(encryptedDataParent1.getId()).type(SERVICE_VARIABLE).build();
     SecretSetupUsage mockUsage2 =
@@ -153,15 +160,18 @@ public class SecretSetupUsageServiceImplTest extends SMCoreTestBase {
         SecretSetupUsage.builder().entityId(encryptedDataParent3.getId()).type(DOCKER).build();
     SecretSetupUsage mockUsage4 = SecretSetupUsage.builder().entityId(commonUuid).type(AWS).build();
     SecretSetupUsage mockUsage5 = SecretSetupUsage.builder().entityId(commonUuid).type(AWS).build();
+    SecretSetupUsage mockUsage6 =
+        SecretSetupUsage.builder().entityId(encryptedDataParent6.getId()).type(TRIGGER).build();
 
     when(secretSetupUsageBuilder.buildSecretSetupUsages(
              Matchers.eq(accountId), eq(encryptedData.getUuid()), any(), eq(encryptionDetail)))
         .thenReturn(Sets.newHashSet(mockUsage1, mockUsage2))
         .thenReturn(Sets.newHashSet(mockUsage3))
-        .thenReturn(Sets.newHashSet(mockUsage4, mockUsage5));
+        .thenReturn(Sets.newHashSet(mockUsage4, mockUsage5))
+        .thenReturn(Sets.newHashSet(mockUsage6));
 
     Set<SecretSetupUsage> expectedResponse =
-        Sets.newHashSet(mockUsage1, mockUsage2, mockUsage3, mockUsage4, mockUsage5);
+        Sets.newHashSet(mockUsage1, mockUsage2, mockUsage3, mockUsage4, mockUsage5, mockUsage6);
 
     Set<SecretSetupUsage> secretSetupUsages =
         secretSetupUsageService.getSecretUsage(accountId, encryptedData.getUuid());
@@ -172,11 +182,14 @@ public class SecretSetupUsageServiceImplTest extends SMCoreTestBase {
     verify(secretSetupUsageBuilderRegistry, times(1)).getSecretSetupUsageBuilder(SERVICE_VARIABLE);
     verify(secretSetupUsageBuilderRegistry, times(1)).getSecretSetupUsageBuilder(DOCKER);
     verify(secretSetupUsageBuilderRegistry, times(1)).getSecretSetupUsageBuilder(AWS);
+    verify(secretSetupUsageBuilderRegistry, times(1)).getSecretSetupUsageBuilder(TRIGGER);
     verify(secretSetupUsageBuilder, times(1))
         .buildSecretSetupUsages(accountId, encryptedData.getUuid(), parentIdByParentsMap1, encryptionDetail);
     verify(secretSetupUsageBuilder, times(1))
         .buildSecretSetupUsages(accountId, encryptedData.getUuid(), parentIdByParentsMap2, encryptionDetail);
     verify(secretSetupUsageBuilder, times(1))
         .buildSecretSetupUsages(accountId, encryptedData.getUuid(), parentIdByParentsMap3, encryptionDetail);
+    verify(secretSetupUsageBuilder, times(1))
+        .buildSecretSetupUsages(accountId, encryptedData.getUuid(), parentIdByParentsMap4, encryptionDetail);
   }
 }

@@ -7,6 +7,8 @@ import static software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.ccm.cluster.InstanceDataService;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -47,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +69,7 @@ public class BillingStatsTimeSeriesDataFetcher
   @Inject private QLBillingStatsHelper statsHelper;
   @Inject BillingDataQueryBuilder billingDataQueryBuilder;
   @Inject CeAccountExpirationChecker accountChecker;
+  @Inject InstanceDataService instanceDataService;
 
   private static final long ONE_DAY_MILLIS = 86400000;
   private static final long ONE_HOUR_SEC = 3600;
@@ -171,6 +175,7 @@ public class BillingStatsTimeSeriesDataFetcher
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeMemoryRequestPointMap = new LinkedHashMap<>();
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeCpuLimitPointMap = new LinkedHashMap<>();
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeCpuRequestPointMap = new LinkedHashMap<>();
+    Set<String> instanceIds = new HashSet<>();
 
     // Checking if namespace should be appended to entity Id in order to distinguish between same workloadNames across
     // Distinct namespaces
@@ -180,6 +185,7 @@ public class BillingStatsTimeSeriesDataFetcher
     boolean addAppIdToEntityId = billingDataQueryBuilder.isApplicationDrillDown(groupByEntityList);
     boolean isKeyTypeInstanceId =
         groupByEntityList.contains(QLCCMEntityGroupBy.Node) || groupByEntityList.contains(QLCCMEntityGroupBy.PV);
+    boolean isKeyTypeNode = groupByEntityList.contains(QLCCMEntityGroupBy.Node);
 
     boolean dataPresent = checkAndAddPrecedingZeroValuedData(
         queryData, resultSet, startTimeFromFilters, qlTimeDataPointMap, addClusterIdToEntityId);
@@ -208,7 +214,6 @@ public class BillingStatsTimeSeriesDataFetcher
 
         String clusterId = "";
         String instanceId = "";
-        String instanceName = "";
         for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
           switch (field.getDataType()) {
             case DOUBLE:
@@ -288,8 +293,7 @@ public class BillingStatsTimeSeriesDataFetcher
                 clusterId = resultSet.getString(field.getFieldName());
               } else if (field == BillingDataMetaDataFields.INSTANCEID) {
                 instanceId = resultSet.getString(field.getFieldName());
-              } else if (field == BillingDataMetaDataFields.INSTANCENAME) {
-                instanceName = resultSet.getString(field.getFieldName());
+                instanceIds.add(instanceId);
               }
               // Group by has been re-arranged such that additional info gets populated first
               if ((addNamespaceToEntityId && field == BillingDataMetaDataFields.NAMESPACE)
@@ -349,11 +353,12 @@ public class BillingStatsTimeSeriesDataFetcher
         }
 
         if (isKeyTypeInstanceId) {
-          dataPointBuilder.key(QLReference.builder()
-                                   .name(instanceName)
-                                   .id(clusterId + BillingStatsDefaultKeys.TOKEN + instanceId)
-                                   .type(BillingDataMetaDataFields.INSTANCEID.name())
-                                   .build());
+          dataPointBuilder.key(
+              QLReference.builder()
+                  .name(statsHelper.getEntityName(BillingDataMetaDataFields.INSTANCEID, instanceId, resultSet))
+                  .id(clusterId + BillingStatsDefaultKeys.TOKEN + instanceId)
+                  .type(BillingDataMetaDataFields.INSTANCEID.name())
+                  .build());
         }
 
         checkDataPointIsValidAndInsert(dataPointBuilder.build(), qlTimeDataPointMap);
@@ -377,6 +382,19 @@ public class BillingStatsTimeSeriesDataFetcher
     QLBillingStackedTimeSeriesDataBuilder timeSeriesDataBuilder = QLBillingStackedTimeSeriesData.builder();
 
     List<QLBillingStackedTimeSeriesDataPoint> dataPoints = prepareStackedTimeSeriesData(queryData, qlTimeDataPointMap);
+
+    if (isKeyTypeNode) {
+      List<InstanceData> instanceData =
+          instanceDataService.fetchInstanceDataForGivenInstances(new ArrayList<>(instanceIds));
+      if (instanceData != null) {
+        Map<String, String> idToName = instanceData.stream().collect(Collectors.toMap(entry
+            -> entry.getClusterId() + BillingStatsDefaultKeys.TOKEN + entry.getInstanceId(),
+            InstanceData::getInstanceName));
+        dataPoints.forEach(dataPoint
+            -> dataPoint.getValues().forEach(value -> value.getKey().setName(idToName.get(value.getKey().getId()))));
+      }
+    }
+
     if (unallocatedCostMapping != null) {
       dataPoints.forEach(dataPoint -> {
         long time = dataPoint.getTime();

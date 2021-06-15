@@ -17,6 +17,9 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesConfig.KubernetesConfigBuilder;
+import io.harness.serializer.JsonUtils;
+
+import software.wings.beans.TaskType;
 
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpStatusCodes;
@@ -32,10 +35,9 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +52,7 @@ public class GkeClusterHelper {
   public KubernetesConfig createCluster(char[] serviceAccountKeyFileContent, boolean useDelegate,
       String locationClusterName, String namespace, Map<String, String> params) {
     Container gkeContainerService = gcpHelperService.getGkeContainerService(serviceAccountKeyFileContent, useDelegate);
-    String projectId = getProjectIdFromCredentials(serviceAccountKeyFileContent);
+    String projectId = getProjectIdFromCredentials(serviceAccountKeyFileContent, useDelegate);
     String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
     String location = locationCluster[0];
     String clusterName = locationCluster[1];
@@ -104,7 +106,7 @@ public class GkeClusterHelper {
   public KubernetesConfig getCluster(
       char[] serviceAccountKeyFileContent, boolean useDelegate, String locationClusterName, String namespace) {
     Container gkeContainerService = gcpHelperService.getGkeContainerService(serviceAccountKeyFileContent, useDelegate);
-    String projectId = getProjectIdFromCredentials(serviceAccountKeyFileContent);
+    String projectId = getProjectIdFromCredentials(serviceAccountKeyFileContent, useDelegate);
     String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
     String location = locationCluster[0];
     String clusterName = locationCluster[1];
@@ -138,7 +140,7 @@ public class GkeClusterHelper {
 
   public List<String> listClusters(char[] serviceAccountKeyFileContent, boolean useDelegate) {
     Container gkeContainerService = gcpHelperService.getGkeContainerService(serviceAccountKeyFileContent, useDelegate);
-    String projectId = getProjectIdFromCredentials(serviceAccountKeyFileContent);
+    String projectId = getProjectIdFromCredentials(serviceAccountKeyFileContent, useDelegate);
     try {
       ListClustersResponse response = gkeContainerService.projects()
                                           .locations()
@@ -208,8 +210,12 @@ public class GkeClusterHelper {
     }
   }
 
-  private String getProjectIdFromCredentials(char[] credentials) {
-    return (String) ((DBObject) JSON.parse(new String(credentials))).get("project_id");
+  private String getProjectIdFromCredentials(char[] serviceAccountKeyFileContent, boolean useDelegate) {
+    if (useDelegate) {
+      return gcpHelperService.getClusterProjectId(TaskType.GCP_TASK.name());
+    } else {
+      return (String) (JsonUtils.asObject(new String(serviceAccountKeyFileContent), HashMap.class)).get("project_id");
+    }
   }
 
   private void logNotFoundOrError(

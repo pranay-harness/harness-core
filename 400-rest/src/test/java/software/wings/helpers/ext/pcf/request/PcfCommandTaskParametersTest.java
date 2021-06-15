@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.pcf.request;
 
+import static io.harness.annotations.dev.HarnessModule._960_API_SERVICES;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.TMACARI;
@@ -11,6 +12,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
@@ -31,6 +33,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(CDP)
+@TargetModule(_960_API_SERVICES)
 public class PcfCommandTaskParametersTest extends WingsBaseTest {
   @Test
   @Owner(developers = {PRASHANT, TMACARI})
@@ -52,8 +55,8 @@ public class PcfCommandTaskParametersTest extends WingsBaseTest {
     List<ExecutionCapability> executionCapabilities = taskParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(4);
     assertThat(executionCapabilities.stream().map(ExecutionCapability::getCapabilityType))
-        .containsExactlyInAnyOrder(CapabilityType.PCF_CONNECTIVITY, CapabilityType.HTTP,
-            CapabilityType.PROCESS_EXECUTOR, CapabilityType.PCF_AUTO_SCALAR);
+        .containsExactlyInAnyOrder(CapabilityType.PCF_CONNECTIVITY, CapabilityType.HTTP, CapabilityType.PCF_INSTALL,
+            CapabilityType.PCF_AUTO_SCALAR);
   }
 
   @Test
@@ -90,7 +93,6 @@ public class PcfCommandTaskParametersTest extends WingsBaseTest {
     List<ExecutionCapability> executionCapabilities = taskParameters.fetchRequiredExecutionCapabilities(null);
     assertThat(executionCapabilities).hasSize(3);
     assertThat(executionCapabilities.stream().map(ExecutionCapability::getCapabilityType))
-        .containsExactlyInAnyOrder(
-            CapabilityType.PCF_CONNECTIVITY, CapabilityType.HTTP, CapabilityType.PROCESS_EXECUTOR);
+        .containsExactlyInAnyOrder(CapabilityType.PCF_CONNECTIVITY, CapabilityType.HTTP, CapabilityType.PCF_INSTALL);
   }
 }

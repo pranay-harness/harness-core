@@ -9,6 +9,7 @@ public enum FileBucket {
   ARTIFACTS,
   AUDITS,
   CONFIGS,
+  CUSTOM_MANIFEST,
   LOGS,
   PLATFORMS,
   TERRAFORM_STATE,

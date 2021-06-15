@@ -46,6 +46,7 @@ public class BitbucketDTOToEntityTest extends CategoryTest {
     final String appId = "appId";
     final String insId = "insId";
     final String privateKeyRef = "privateKeyRef";
+    final String validationRepo = "validationRepo";
 
     final BitbucketAuthenticationDTO bitbucketAuthenticationDTO =
         BitbucketAuthenticationDTO.builder()
@@ -61,12 +62,14 @@ public class BitbucketDTOToEntityTest extends CategoryTest {
 
     final BitbucketConnectorDTO bitbucketConnectorDTO = BitbucketConnectorDTO.builder()
                                                             .url(url)
-                                                            .connectionType(GitConnectionType.REPO)
+                                                            .validationRepo(validationRepo)
+                                                            .connectionType(GitConnectionType.ACCOUNT)
                                                             .authentication(bitbucketAuthenticationDTO)
                                                             .build();
     final BitbucketConnector bitbucketConnector = bitbucketDTOToEntity.toConnectorEntity(bitbucketConnectorDTO);
     assertThat(bitbucketConnector).isNotNull();
     assertThat(bitbucketConnector.getUrl()).isEqualTo(url);
+    assertThat(bitbucketConnector.getValidationRepo()).isEqualTo(validationRepo);
     assertThat(bitbucketConnector.getAuthType()).isEqualTo(HTTP);
     assertThat(bitbucketConnector.getAuthenticationDetails())
         .isEqualTo(BitbucketHttpAuthentication.builder()

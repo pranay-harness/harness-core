@@ -56,13 +56,31 @@ public class ACLDAOImpl implements ACLDAO {
     return "";
   }
 
-  private List<ACL> processACLQueries(List<PermissionCheckDTO> permissionsRequired, Principal principal) {
-    List<ACL> aclList = new ArrayList<>();
-    permissionsRequired.forEach(permissionCheckDTO -> {
-      String scope = getScope(permissionCheckDTO.getResourceScope());
-      List<String> queryStrings = new ArrayList<>();
+  private List<String> getQueryStrings(PermissionCheckDTO permissionCheckDTO, Principal principal) {
+    String scope = getScope(permissionCheckDTO.getResourceScope());
+    List<String> queryStrings = new ArrayList<>();
 
-      // query for resource=/RESOURCE_TYPE/{resourceIdentifier} in given scope
+    // query for resource=/RESOURCE_TYPE/{resourceIdentifier} in given scope
+    if (!StringUtils.isEmpty(permissionCheckDTO.getResourceIdentifier())) {
+      queryStrings.add(getAclQueryString(scope,
+          getResourceSelector(permissionCheckDTO.getResourceType(), permissionCheckDTO.getResourceIdentifier()),
+          principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheckDTO.getPermission()));
+    }
+
+    // query for resource=/RESOURCE_TYPE/* in given scope
+    queryStrings.add(getAclQueryString(scope, getResourceSelector(permissionCheckDTO.getResourceType(), "*"),
+        principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheckDTO.getPermission()));
+
+    // query for resource=/*/* in given scope
+    queryStrings.add(getAclQueryString(scope, getResourceSelector("*", "*"), principal.getPrincipalType().name(),
+        principal.getPrincipalIdentifier(), permissionCheckDTO.getPermission()));
+
+    // if RESOURCE_TYPE is a scope, query for scope = {given_scope}/RESOURCE_TYPE/{resourceIdentifier}
+    if (resourceTypes.contains(permissionCheckDTO.getResourceType())) {
+      scope = scope.concat(PATH_DELIMITER + permissionCheckDTO.getResourceType() + PATH_DELIMITER
+          + permissionCheckDTO.getResourceIdentifier());
+
+      // and resource = /RESOURCE_TYPE/{resourceIdentifier}
       if (!StringUtils.isEmpty(permissionCheckDTO.getResourceIdentifier())) {
         queryStrings.add(getAclQueryString(scope,
             getResourceSelector(permissionCheckDTO.getResourceType(), permissionCheckDTO.getResourceIdentifier()),
@@ -70,51 +88,31 @@ public class ACLDAOImpl implements ACLDAO {
             permissionCheckDTO.getPermission()));
       }
 
-      // query for resource=/RESOURCE_TYPE/* in given scope
+      // and resource = /RESOURCE_TYPE/*
       queryStrings.add(getAclQueryString(scope, getResourceSelector(permissionCheckDTO.getResourceType(), "*"),
           principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheckDTO.getPermission()));
 
-      // query for resource=/*/* in given scope
+      // and resource = /*/*
       queryStrings.add(getAclQueryString(scope, getResourceSelector("*", "*"), principal.getPrincipalType().name(),
           principal.getPrincipalIdentifier(), permissionCheckDTO.getPermission()));
-
-      // if RESOURCE_TYPE is a scope, query for scope = {given_scope}/RESOURCE_TYPE/{resourceIdentifier}
-      if (resourceTypes.contains(permissionCheckDTO.getResourceType())) {
-        scope = scope.concat(PATH_DELIMITER + permissionCheckDTO.getResourceType() + PATH_DELIMITER
-            + permissionCheckDTO.getResourceIdentifier());
-
-        // and resource = /RESOURCE_TYPE/{resourceIdentifier}
-        if (!StringUtils.isEmpty(permissionCheckDTO.getResourceIdentifier())) {
-          queryStrings.add(getAclQueryString(scope,
-              getResourceSelector(permissionCheckDTO.getResourceType(), permissionCheckDTO.getResourceIdentifier()),
-              principal.getPrincipalType().name(), principal.getPrincipalIdentifier(),
-              permissionCheckDTO.getPermission()));
-        }
-
-        // and resource = /RESOURCE_TYPE/*
-        queryStrings.add(getAclQueryString(scope, getResourceSelector(permissionCheckDTO.getResourceType(), "*"),
-            principal.getPrincipalType().name(), principal.getPrincipalIdentifier(),
-            permissionCheckDTO.getPermission()));
-
-        // and resource = /*/*
-        queryStrings.add(getAclQueryString(scope, getResourceSelector("*", "*"), principal.getPrincipalType().name(),
-            principal.getPrincipalIdentifier(), permissionCheckDTO.getPermission()));
-      }
-
-      List<ACL> aclsInDB = aclRepository.getByAclQueryStringInAndEnabled(queryStrings, true);
-
-      if (!aclsInDB.isEmpty()) {
-        aclList.add(aclsInDB.get(0));
-      } else {
-        aclList.add(null);
-      }
-    });
-    return aclList;
+    }
+    return queryStrings;
   }
 
   @Override
-  public List<ACL> get(Principal principal, List<PermissionCheckDTO> permissionsRequired) {
-    return processACLQueries(permissionsRequired, principal);
+  public List<Boolean> checkForAccess(Principal principal, List<PermissionCheckDTO> permissionsRequired) {
+    List<List<String>> aclQueryStringsPerPermission = new ArrayList<>();
+    List<String> aclQueryStrings = new ArrayList<>();
+    permissionsRequired.forEach(permissionCheckDTO -> {
+      List<String> queryStrings = getQueryStrings(permissionCheckDTO, principal);
+      aclQueryStringsPerPermission.add(queryStrings);
+      aclQueryStrings.addAll(queryStrings);
+    });
+
+    Set<String> aclsPresentInDB = aclRepository.getByAclQueryStringInAndEnabled(aclQueryStrings, true);
+    return aclQueryStringsPerPermission.stream()
+        .map(queryStringsForPermission -> queryStringsForPermission.stream().anyMatch(aclsPresentInDB::contains))
+        .collect(Collectors.toList());
   }
 
   @Override

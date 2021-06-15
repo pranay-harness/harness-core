@@ -9,6 +9,7 @@ import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
+import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.tasks.ResponseData;
@@ -30,8 +31,8 @@ public class TestAsyncStep implements AsyncExecutable<TestStepParameters> {
   }
 
   @Override
-  public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, TestStepParameters stepParameters, StepInputPackage inputPackage) {
+  public AsyncExecutableResponse executeAsync(Ambiance ambiance, TestStepParameters stepParameters,
+      StepInputPackage inputPackage, PassThroughData passThroughData) {
     String resumeId = generateUuid();
     waitNotifyEngine.doneWith(resumeId, StringNotifyResponseData.builder().data("SUCCESS").build());
     return AsyncExecutableResponse.newBuilder().addCallbackIds(resumeId).build();

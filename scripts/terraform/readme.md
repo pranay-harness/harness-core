@@ -21,9 +21,12 @@ terraform state list
 ```
 For local testing always set target to only try with updated file instead of applying all the changes.
 ```
-terraform plan -target=module.cvng.google_monitoring_dashboard.cvng_tasks_dashboard
-terraform apply -target=module.cvng.google_monitoring_dashboard.cvng_tasks_dashboard
+terraform plan -target=module.cvng.google_monitoring_dashboard.cvng_dashboard
+terraform apply -target=module.cvng.google_monitoring_dashboard.cvng_dashboard
 ```
 
 ### Google cloud monitoring 
 * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/monitoring_dashboard
+
+### Adding alerts to terraform
+* https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/monitoring_alert_policy

@@ -11,8 +11,8 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/metrics"
 	"github.com/wings-software/portal/product/ci/common/external"
 	"github.com/wings-software/portal/product/ci/engine/consts"
-	"github.com/wings-software/portal/product/ci/engine/executor"
 	"github.com/wings-software/portal/product/ci/engine/grpc"
+	"github.com/wings-software/portal/product/ci/engine/legacy/executor"
 	"go.uber.org/zap"
 )
 

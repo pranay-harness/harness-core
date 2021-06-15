@@ -72,7 +72,6 @@ public class AppDynamicsConnectorTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     appDynamicsConfig = AppDynamicsConnector.builder()
                             .username(userName)
-                            .accountId(accountIdentifier)
                             .accountname(accountName)
                             .controllerUrl(controllerUrl)
                             .passwordRef(password)
@@ -85,7 +84,6 @@ public class AppDynamicsConnectorTest extends CategoryTest {
 
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = AppDynamicsConnectorDTO.builder()
                                                           .username(userName)
-                                                          .accountId(accountIdentifier)
                                                           .accountname(accountName)
                                                           .controllerUrl(controllerUrl)
                                                           .passwordRef(secretRefData)
@@ -143,7 +141,6 @@ public class AppDynamicsConnectorTest extends CategoryTest {
     assertThat(appDynamicsConnectorDTO.getPasswordRef().getScope()).isEqualTo(Scope.ACCOUNT);
     assertThat(appDynamicsConnectorDTO.getAccountname()).isEqualTo(accountName);
     assertThat(appDynamicsConnectorDTO.getControllerUrl()).isEqualTo(controllerUrl);
-    assertThat(appDynamicsConnectorDTO.getAccountId()).isEqualTo(accountIdentifier);
     assertThat(appDynamicsConnectorDTO.getAuthType().name()).isEqualTo(AppDynamicsAuthType.USERNAME_PASSWORD.name());
   }
 }

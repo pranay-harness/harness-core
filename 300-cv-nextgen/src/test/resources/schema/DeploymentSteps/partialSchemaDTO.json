@@ -192,21 +192,21 @@
             {
               "type": "object",
               "required": [
+                "identifier",
                 "spec",
                 "type"
               ],
               "properties": {
+                "identifier": {
+                  "type": "string"
+                },
                 "spec": {
                   "$ref": "#/definitions/cvng/AddSegmentToVariationTargetMapYamlSpec"
                 },
                 "type": {
                   "type": "string",
                   "enum": [
-                    "SetFeatureFlagState",
-                    "AddTargetsToVariationTargetMap",
-                    "RemoveTargetsToVariationTargetMap",
-                    "AddSegmentsToVariationTargetMap",
-                    "RemoveSegmentsToVariationTargetMap"
+                    "AddSegmentToVariationTargetMap"
                   ]
                 }
               }
@@ -216,6 +216,10 @@
         },
         "AddSegmentToVariationTargetMapYamlSpec": {
           "type": "object",
+          "required": [
+            "segments",
+            "variation"
+          ],
           "properties": {
             "segments": {
               "type": "array",
@@ -237,21 +241,21 @@
             {
               "type": "object",
               "required": [
+                "identifier",
                 "spec",
                 "type"
               ],
               "properties": {
+                "identifier": {
+                  "type": "string"
+                },
                 "spec": {
                   "$ref": "#/definitions/cvng/AddTargetsToVariationTargetMapYamlSpec"
                 },
                 "type": {
                   "type": "string",
                   "enum": [
-                    "SetFeatureFlagState",
-                    "AddTargetsToVariationTargetMap",
-                    "RemoveTargetsToVariationTargetMap",
-                    "AddSegmentsToVariationTargetMap",
-                    "RemoveSegmentsToVariationTargetMap"
+                    "AddTargetsToVariationTargetMap"
                   ]
                 }
               }
@@ -261,6 +265,10 @@
         },
         "AddTargetsToVariationTargetMapYamlSpec": {
           "type": "object",
+          "required": [
+            "targets",
+            "variation"
+          ],
           "properties": {
             "targets": {
               "type": "array",
@@ -614,8 +622,7 @@
               "required": [
                 "environment",
                 "feature",
-                "instructions",
-                "state"
+                "instructions"
               ],
               "properties": {
                 "environment": {
@@ -645,9 +652,6 @@
                       }
                     ]
                   }
-                },
-                "state": {
-                  "type": "string"
                 }
               }
             }
@@ -1310,21 +1314,21 @@
             {
               "type": "object",
               "required": [
+                "identifier",
                 "spec",
                 "type"
               ],
               "properties": {
+                "identifier": {
+                  "type": "string"
+                },
                 "spec": {
                   "$ref": "#/definitions/cvng/RemoveSegmentToVariationTargetMapYamlSpec"
                 },
                 "type": {
                   "type": "string",
                   "enum": [
-                    "SetFeatureFlagState",
-                    "AddTargetsToVariationTargetMap",
-                    "RemoveTargetsToVariationTargetMap",
-                    "AddSegmentsToVariationTargetMap",
-                    "RemoveSegmentsToVariationTargetMap"
+                    "RemoveSegmentToVariationTargetMap"
                   ]
                 }
               }
@@ -1334,6 +1338,9 @@
         },
         "RemoveSegmentToVariationTargetMapYamlSpec": {
           "type": "object",
+          "required": [
+            "segments", "variation"
+          ],
           "properties": {
             "segments": {
               "type": "array",
@@ -1355,21 +1362,21 @@
             {
               "type": "object",
               "required": [
+                "identifier",
                 "spec",
                 "type"
               ],
               "properties": {
+                "identifier": {
+                  "type": "string"
+                },
                 "spec": {
                   "$ref": "#/definitions/cvng/RemoveTargetsToVariationTargetMapYamlSpec"
                 },
                 "type": {
                   "type": "string",
                   "enum": [
-                    "SetFeatureFlagState",
-                    "AddTargetsToVariationTargetMap",
-                    "RemoveTargetsToVariationTargetMap",
-                    "AddSegmentsToVariationTargetMap",
-                    "RemoveSegmentsToVariationTargetMap"
+                    "RemoveTargetsToVariationTargetMap"
                   ]
                 }
               }
@@ -1379,6 +1386,10 @@
         },
         "RemoveTargetsToVariationTargetMapYamlSpec": {
           "type": "object",
+          "required": [
+            "targets",
+            "variation"
+          ],
           "properties": {
             "targets": {
               "type": "array",
@@ -1523,21 +1534,21 @@
             {
               "type": "object",
               "required": [
+                "identifier",
                 "spec",
                 "type"
               ],
               "properties": {
+                "identifier": {
+                  "type": "string"
+                },
                 "spec": {
                   "$ref": "#/definitions/cvng/SetFeatureFlagStateYamlSpec"
                 },
                 "type": {
                   "type": "string",
                   "enum": [
-                    "SetFeatureFlagState",
-                    "AddTargetsToVariationTargetMap",
-                    "RemoveTargetsToVariationTargetMap",
-                    "AddSegmentsToVariationTargetMap",
-                    "RemoveSegmentsToVariationTargetMap"
+                    "SetFeatureFlagState"
                   ]
                 }
               }
@@ -1547,6 +1558,9 @@
         },
         "SetFeatureFlagStateYamlSpec": {
           "type": "object",
+          "required": [
+            "state"
+          ],
           "properties": {
             "state": {
               "type": "string"

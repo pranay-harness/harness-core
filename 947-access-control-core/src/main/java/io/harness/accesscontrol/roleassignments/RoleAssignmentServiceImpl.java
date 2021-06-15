@@ -32,7 +32,7 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   @Override
   public RoleAssignment create(RoleAssignment roleAssignment) {
     RoleAssignmentValidationResult result = roleAssignmentValidator.validate(
-        RoleAssignmentValidationRequest.builder().roleAssignment(roleAssignment).build());
+        RoleAssignmentValidationRequest.builder().roleAssignment(roleAssignment).validatePrincipal(false).build());
     if (!result.getPrincipalValidationResult().isValid()) {
       throw new InvalidRequestException(result.getPrincipalValidationResult().getErrorMessage());
     }

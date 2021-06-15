@@ -22,11 +22,12 @@ import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.observer.Subject;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.execution.utils.StatusUtils;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.repositories.PlanExecutionRepository;
+import io.harness.serializer.ProtoUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -149,16 +150,27 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
     return OrchestrationUtils.calculateStatus(nodeExecutions, planExecutionId);
   }
 
+  @Override
+  public Status calculateStatusExcluding(String planExecutionId, String excludedNodeExecutionId) {
+    List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetriesAndStatusIn(
+        planExecutionId, EnumSet.noneOf(Status.class));
+    List<NodeExecution> filtered = nodeExecutions.stream()
+                                       .filter(ne -> !ne.getUuid().equals(excludedNodeExecutionId))
+                                       .collect(Collectors.toList());
+    return OrchestrationUtils.calculateStatus(filtered, planExecutionId);
+  }
+
   public PlanExecution updateCalculatedStatus(String planExecutionId) {
     return updateStatus(planExecutionId, calculateStatus(planExecutionId));
   }
 
   private void emitEvent(PlanExecution planExecution) {
     Ambiance ambiance = buildFromPlanExecution(planExecution);
-    eventEmitter.emitEvent(OrchestrationEvent.builder()
-                               .ambiance(ambiance)
-                               .eventType(OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE)
-                               .status(planExecution.getStatus())
+    eventEmitter.emitEvent(OrchestrationEvent.newBuilder()
+                               .setAmbiance(ambiance)
+                               .setEventType(OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE)
+                               .setStatus(planExecution.getStatus())
+                               .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
                                .build());
     planStatusUpdateSubject.fireInform(PlanStatusUpdateObxxxxxxxx:onPlanStatusUpdate, ambiance);
   }

@@ -306,12 +306,13 @@ public class InviteServiceImpl implements InviteService {
     String projectIdentifier = inviteAcceptResponse.getProjectIdentifier();
 
     String baseUrl = getBaseUrl(accountIdentifier, nextGenUiUrl);
-    String resourceUrl = String.format("%saccount/%s/projects", baseUrl, accountIdentifier);
+    String resourceUrl = String.format("%saccount/%s/home/get-started", baseUrl, accountIdentifier);
     if (isNotEmpty(projectIdentifier)) {
-      resourceUrl = String.format(
-          "%saccount/%s/projects/%s/orgs/%s/details", baseUrl, accountIdentifier, projectIdentifier, orgIdentifier);
+      resourceUrl = String.format("%saccount/%s/home/orgs/%s/projects/%s/details", baseUrl, accountIdentifier,
+          orgIdentifier, projectIdentifier);
     } else if (isNotEmpty(orgIdentifier)) {
-      resourceUrl = String.format("%saccount/%s/admin/organizations/%s", baseUrl, accountIdentifier, orgIdentifier);
+      resourceUrl =
+          String.format("%saccount/%s/home/organizations/%s/details", baseUrl, accountIdentifier, orgIdentifier);
     }
 
     try {

@@ -23,7 +23,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.LogLevel;
-import io.harness.pcf.PcfUtils;
 import io.harness.pcf.PivotalClientApiException;
 
 import software.wings.beans.PcfConfig;
@@ -355,10 +354,6 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
     }
 
     return PCF_CONNECTIVITY_SUCCESS;
-  }
-
-  public static boolean checkIfAppAutoscalarInstalled() throws PivotalClientApiException {
-    return PcfUtils.checkIfAppAutoscalarInstalled();
   }
 
   @Override

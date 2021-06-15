@@ -47,7 +47,7 @@ public class ApplicationReadyListener {
   }
 
   @EventListener(ApplicationReadyEvent.class)
-  void ensureTimescaleConnectivity() {
+  public void ensureTimescaleConnectivity() {
     log.info("Inside ensureTimescaleConnectivity");
     if (Boolean.TRUE.equals(environment.getProperty("ensure-timescale", Boolean.class, Boolean.TRUE))) {
       verify(timeScaleDBService.isValid(), "Unable to connect to timescale db");
@@ -56,7 +56,7 @@ public class ApplicationReadyListener {
   }
 
   @EventListener(ApplicationReadyEvent.class)
-  void ensureIndexForEventsStore(ApplicationReadyEvent applicationReadyEvent) {
+  public void ensureIndexForEventsStore(ApplicationReadyEvent applicationReadyEvent) {
     AdvancedDatastore datastore = hPersistence.getDatastore(EVENTS_STORE);
     IndexManager.Mode indexManagerMode = applicationReadyEvent.getApplicationContext()
                                              .getBean(BatchMainConfig.class)
@@ -67,7 +67,7 @@ public class ApplicationReadyListener {
 
   @EventListener(ApplicationReadyEvent.class)
   @Order(Ordered.HIGHEST_PRECEDENCE)
-  void ensureMongoConnectivity() throws Exception {
+  public void ensureMongoConnectivity() throws Exception {
     log.info("Inside ensureMongoConnectivity");
     try {
       HTimeLimiter.callInterruptible(timeLimiter, hPersistence.healthExpectedResponseTimeout(), () -> {
@@ -82,11 +82,20 @@ public class ApplicationReadyListener {
   }
 
   @EventListener(ApplicationReadyEvent.class)
-  void createLivenessMarker() throws IOException {
+  public void createLivenessMarkerOnReadyEvent() throws IOException {
+    createLivenessMarker();
+  }
+
+  public static void createLivenessMarker() throws IOException {
     File livenessMarker = new File("batch-processing-up");
+    if (livenessMarker.exists()) {
+      log.info("Liveness marker already exists at {}", livenessMarker.getAbsolutePath());
+      return;
+    }
+
     boolean created = livenessMarker.createNewFile();
     if (created) {
-      log.info("Created liveness marker");
+      log.info("Created liveness marker at: {}", livenessMarker.getAbsolutePath());
     } else {
       log.error("Failed to create liveness marker");
     }

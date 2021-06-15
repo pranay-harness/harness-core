@@ -1,7 +1,7 @@
 package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.beans.WebhookEvent.Type.BRANCH;
+import static io.harness.beans.WebhookEvent.Type.PUSH;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -12,7 +12,7 @@ import lombok.Value;
 
 @Value
 @Builder
-@JsonTypeName("Branch")
+@JsonTypeName("Push")
 @OwnedBy(DX)
 public class PushWebhookEvent implements WebhookEvent {
   private String branchName;
@@ -23,6 +23,6 @@ public class PushWebhookEvent implements WebhookEvent {
 
   @Override
   public Type getType() {
-    return BRANCH;
+    return PUSH;
   }
 }

@@ -187,10 +187,13 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
   private ProcessingResponse flattenProcessingResponse(Map<String, FileProcessingResponse> processingResponseMap,
       String accountId, ProcessingFailureStage processingFailureStage) {
     final List<FileProcessingResponse> fileProcessingResponses = new ArrayList<>(processingResponseMap.values());
-    final ProcessingResponse.Builder processingResponseBuilder =
-        ProcessingResponse.newBuilder().addAllResponse(fileProcessingResponses).setAccountId(accountId);
+    final ProcessingResponse.Builder processingResponseBuilder = ProcessingResponse.newBuilder()
+                                                                     .addAllResponse(fileProcessingResponses)
+                                                                     .setAccountId(accountId)
+                                                                     .setIsError(false);
     if (processingFailureStage != null) {
       processingResponseBuilder.setProcessingFailureStage(processingFailureStage);
+      processingResponseBuilder.setIsError(true);
     }
     return processingResponseBuilder.build();
   }

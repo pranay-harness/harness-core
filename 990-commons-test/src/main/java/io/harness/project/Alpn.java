@@ -8,7 +8,13 @@ public class Alpn {
   public static String ARTIFACT_PATH = "/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017";
 
   public static String location() {
-    String alpn = System.getProperty("user.dir") + "/" + ALPN_FILENAME;
+    String alpn = "/harness"
+        + "/" + ALPN_FILENAME;
+    if (new File(alpn).exists()) {
+      return alpn;
+    }
+
+    alpn = System.getProperty("user.dir") + "/" + ALPN_FILENAME;
     if (new File(alpn).exists()) {
       return alpn;
     }

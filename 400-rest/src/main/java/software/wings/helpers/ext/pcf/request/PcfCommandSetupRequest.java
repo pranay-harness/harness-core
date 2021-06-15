@@ -6,6 +6,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.pcf.model.CfCliVersion;
 
 import software.wings.beans.PcfConfig;
 import software.wings.beans.artifact.ArtifactFile;
@@ -55,10 +56,11 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
       Integer timeoutIntervalInMin, Integer maxCount, Integer currentRunningCount, boolean useCurrentCount,
       boolean blueGreen, Integer olderActiveVersionCountToKeep, boolean useCLIForPcfAppCreation,
       PcfManifestsPackage pcfManifestsPackage, boolean useAppAutoscalar, boolean enforceSslValidation,
-      boolean limitPcfThreads, boolean ignorePcfConnectionContextCache, String artifactProcessingScript) {
+      boolean limitPcfThreads, boolean ignorePcfConnectionContextCache, String artifactProcessingScript,
+      CfCliVersion cfCliVersion) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, enforceSslValidation, useAppAutoscalar,
-        limitPcfThreads, ignorePcfConnectionContextCache);
+        limitPcfThreads, ignorePcfConnectionContextCache, cfCliVersion);
     this.releaseNamePrefix = releaseNamePrefix;
     this.manifestYaml = manifestYaml;
     this.artifactFiles = artifactFiles;

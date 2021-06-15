@@ -787,14 +787,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
   @NotNull
   private String getPlanName(TerraformProvisionParameters parameters) {
-    switch (parameters.getCommand()) {
-      case APPLY:
-        return TERRAFORM_PLAN_FILE_OUTPUT_NAME;
-      case DESTROY:
-        return TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME;
-      default:
-        throw new IllegalArgumentException("Invalid Terraform Command : " + parameters.getCommand().name());
-    }
+    return terraformBaseHelper.getPlanName(parameters.getCommand());
   }
 
   public String getLatestCommitSHAFromLocalRepo(GitOperationContext gitOperationContext) {

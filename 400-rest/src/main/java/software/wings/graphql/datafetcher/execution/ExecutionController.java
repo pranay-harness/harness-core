@@ -17,6 +17,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.ExecutionStatus;
+import io.harness.data.parser.CsvParser;
 import io.harness.exception.InvalidRequestException;
 import io.harness.govern.Switch;
 
@@ -417,7 +418,8 @@ public class ExecutionController {
     variableInputs.stream()
         .filter(input
             -> allowedValuesMap.containsKey(input.getName())
-                && !allowedValuesMap.get(input.getName()).contains(input.getVariableValue().getValue()))
+                && !allowedValuesMap.get(input.getName())
+                        .containsAll(CsvParser.parse(input.getVariableValue().getValue())))
         .findAny()
         .ifPresent(input -> {
           throw new InvalidRequestException(

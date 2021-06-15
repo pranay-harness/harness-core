@@ -657,6 +657,7 @@ public class SettingsServiceImpl implements SettingsService {
         && settingAttribute.getValue().getSettingType() == SettingVariableTypes.APM_VERIFICATION) {
       apmVerificationService.addParents(settingAttribute);
     }
+    settingServiceHelper.resetTransientFields(settingAttribute.getValue());
     return settingAttribute;
   }
 

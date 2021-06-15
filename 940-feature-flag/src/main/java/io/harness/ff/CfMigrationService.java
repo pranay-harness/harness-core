@@ -138,28 +138,26 @@ public class CfMigrationService {
   }
 
   void syncFeatureFlagWithCF(FeatureFlag featureFlag) {
-    if (CF.equals(featureFlagConfig.getFeatureFlagSystem()) && featureFlagConfig.isSyncFeaturesToCF()) {
-      log.warn("Not syncing flag [{}] with CF Server since CF Sync is enabled", featureFlag.getName());
-      return;
-    }
+    /**
+     * Sync featureFlag update to CF server if ( CF is enabled or cfMigration is Enabled )
+     */
+    if (CF.equals(featureFlagConfig.getFeatureFlagSystem()) || cfMigrationConfig.isEnabled()) {
+      log.info("CF-SYNC Updating featureFlag [{}] to CF Server", featureFlag.getName());
+      try {
+        addApiKeyHeader(cfAdminApi);
 
-    if (!cfMigrationConfig.isEnabled()) {
-      log.debug("Not syncing flag [{}] with CF Server since CF Migration is disabled", featureFlag.getName());
-      return;
-    }
-    try {
-      addApiKeyHeader(cfAdminApi);
-
-      Feature cfFeature = cfAdminApi.getFeatureFlag(featureFlag.getName(), cfMigrationConfig.getAccount(),
-          cfMigrationConfig.getOrg(), cfMigrationConfig.getProject(), cfMigrationConfig.getEnvironment());
-      if (cfFeature == null) {
-        log.error("CF-SYNC Did not find featureFlag in CF Server, cannot update this featureFlag");
-        return;
+        Feature cfFeature = cfAdminApi.getFeatureFlag(featureFlag.getName(), cfMigrationConfig.getAccount(),
+            cfMigrationConfig.getOrg(), cfMigrationConfig.getProject(), cfMigrationConfig.getEnvironment());
+        if (cfFeature == null) {
+          log.error("CF-SYNC Did not find featureFlag [{}] in CF Server, cannot update this featureFlag",
+              featureFlag.getName());
+          return;
+        }
+        updateFeatureFlagInCF(featureFlag, cfFeature);
+      } catch (Exception e) {
+        log.error("CF-SYNC Failed to sync featureFlag [{}] in environment [{}]", featureFlag.getName(),
+            cfMigrationConfig.getEnvironment(), e);
       }
-      updateFeatureFlagInCF(featureFlag, cfFeature);
-    } catch (Exception e) {
-      log.error("CF-SYNC Failed to sync featureFlag [{}] in environment [{}]", featureFlag.getName(),
-          cfMigrationConfig.getEnvironment(), e);
     }
   }
 
