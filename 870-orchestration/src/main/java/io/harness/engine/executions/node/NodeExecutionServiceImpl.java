@@ -13,6 +13,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
+import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.observers.NodeExecutionStartObserver;
 import io.harness.engine.observers.NodeStatusUpdateObserver;
 import io.harness.engine.observers.NodeUpdateInfo;
@@ -22,6 +23,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
+import io.harness.execution.PlanExecutionMetadata;
 import io.harness.observer.Subject;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
@@ -29,6 +31,7 @@ import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent.Builder;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.serializer.ProtoUtils;
 
@@ -57,6 +60,7 @@ import org.springframework.data.mongodb.core.query.Update;
 public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
+  @Inject private PlanExecutionMetadataService planExecutionMetadataService;
 
   @Getter private final Subject<NodeStatusUpdateObserver> stepStatusUpdateSubject = new Subject<>();
   @Getter private final Subject<NodeExecutionStartObserver> nodeExecutionStartSubject = new Subject<>();
@@ -180,6 +184,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Override
   public NodeExecution save(NodeExecution nodeExecution) {
     if (nodeExecution.getVersion() == null) {
+      // Havnt added triggerPayload in the event as no one is consuming triggerPayload on NodeExecutionStart
       Builder builder = OrchestrationEvent.newBuilder()
                             .setAmbiance(nodeExecution.getAmbiance())
                             .setStatus(nodeExecution.getStatus())
@@ -369,6 +374,16 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     Document resolvedStepParameters = nodeExecution != null ? nodeExecution.getResolvedStepParameters() : null;
     String stepParametersJson = resolvedStepParameters != null ? resolvedStepParameters.toJson() : null;
 
+    TriggerPayload triggerPayload = TriggerPayload.newBuilder().build();
+    if (nodeExecution != null && nodeExecution.getAmbiance() != null) {
+      PlanExecutionMetadata metadata =
+          planExecutionMetadataService.findByPlanExecutionId(nodeExecution.getAmbiance().getPlanExecutionId())
+              .orElseThrow(()
+                               -> new InvalidRequestException("No Metadata present for planExecution :"
+                                   + nodeExecution.getAmbiance().getPlanExecutionId()));
+      triggerPayload = metadata.getTriggerPayload() != null ? metadata.getTriggerPayload() : triggerPayload;
+    }
+
     eventEmitter.emitEvent(OrchestrationEvent.newBuilder()
                                .setAmbiance(nodeExecution.getAmbiance())
                                .setStatus(nodeExecution.getStatus())
@@ -376,6 +391,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
                                .setEventType(orchestrationEventType)
                                .setServiceName(nodeExecution.getNode().getServiceName())
                                .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
+                               .setTriggerPayload(triggerPayload)
                                .build());
   }
 }

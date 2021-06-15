@@ -14,6 +14,7 @@ import io.harness.plan.Plan;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
+import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.helpers.PrincipalInfoHelper;
 import io.harness.pms.merger.helpers.MergeHelper;
@@ -86,7 +87,7 @@ public class PipelineExecuteHelper {
     executionMetadataBuilder.setPrincipalInfo(principalInfoHelper.getPrincipalInfoFromSecurityContext());
 
     PlanExecution planExecution = startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml,
-        executionMetadataBuilder.build(), planExecutionMetadataBuilder);
+        executionMetadataBuilder.build(), planExecutionMetadataBuilder, null);
     return PlanExecutionResponseDto.builder()
         .planExecution(planExecution)
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity.get()))
@@ -128,7 +129,7 @@ public class PipelineExecuteHelper {
     executionMetadataBuilder.setPrincipalInfo(principalInfoHelper.getPrincipalInfoFromSecurityContext());
 
     PlanExecution planExecution = startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml,
-        executionMetadataBuilder.build(), planExecutionMetadataBuilder);
+        executionMetadataBuilder.build(), planExecutionMetadataBuilder, null);
     return PlanExecutionResponseDto.builder()
         .planExecution(planExecution)
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity.get()))
@@ -136,8 +137,8 @@ public class PipelineExecuteHelper {
   }
 
   public PlanExecution startExecution(String accountId, String orgIdentifier, String projectIdentifier, String yaml,
-      ExecutionMetadata executionMetadata, PlanExecutionMetadata.Builder planExecutionMetadataBuuilder)
-      throws IOException {
+      ExecutionMetadata executionMetadata, PlanExecutionMetadata.Builder planExecutionMetadataBuilder,
+      TriggerPayload triggerPayload) throws IOException {
     ExecutionMetadata.Builder executionMetadataBuilder = ExecutionMetadata.newBuilder(executionMetadata);
     // Set git sync branch context in execute metadata. This will be used for plan creation and execution.
     ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
@@ -147,8 +148,9 @@ public class PipelineExecuteHelper {
 
     ExecutionMetadata enhancedExecutionMetadata = executionMetadataBuilder.build();
 
-    PlanCreationBlobResponse resp =
-        planCreatorMergeService.createPlan(yaml, enhancedExecutionMetadata, planExecutionMetadataBuuilder);
+    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(
+        yaml, enhancedExecutionMetadata, planExecutionMetadataBuilder, triggerPayload);
+    planExecutionMetadataBuilder.triggerPayload(triggerPayload);
     Plan plan = PlanExecutionUtils.extractPlan(resp);
     ImmutableMap.Builder<String, String> abstractionsBuilder =
         ImmutableMap.<String, String>builder()
@@ -157,6 +159,6 @@ public class PipelineExecuteHelper {
             .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier);
 
     return orchestrationService.startExecution(
-        plan, abstractionsBuilder.build(), enhancedExecutionMetadata, planExecutionMetadataBuuilder.build());
+        plan, abstractionsBuilder.build(), enhancedExecutionMetadata, planExecutionMetadataBuilder.build());
   }
 }
