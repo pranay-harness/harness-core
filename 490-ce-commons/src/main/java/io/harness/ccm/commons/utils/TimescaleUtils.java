@@ -17,10 +17,16 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
 import org.jooq.Field;
+import org.jooq.RowCountQuery;
 
 @UtilityClass
 @Slf4j
 public class TimescaleUtils {
+  public int execute(@NonNull RowCountQuery finalStep) {
+    return retryRun(finalStep::execute);
+  }
+
+  // TODO(UTSAV): Restrict the default exceptions to java.net.SocketException in future after proper testing.
   @SneakyThrows
   public <E> E retryRun(@NonNull Callable<E> callable) {
     return retryRun(callable, 3, ImmutableSet.of(Exception.class));
