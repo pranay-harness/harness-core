@@ -15,7 +15,6 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
