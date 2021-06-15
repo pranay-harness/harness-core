@@ -9,6 +9,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.PipelineServiceTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.artifacts.ArtifactTaskType;
@@ -32,6 +34,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class EcrImagePullSecretHelperTest extends PipelineServiceTestBase {
   @Mock private SecretManagerClientService secretManagerClientService;
   @Mock private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
@@ -53,7 +56,7 @@ public class EcrImagePullSecretHelperTest extends PipelineServiceTestBase {
                                         .artifactTaskExecutionResponse(artifactTaskExecutionResponse)
                                         .build();
     BinaryResponseData binaryResponseData = BinaryResponseData.builder().build();
-    Ambiance ambiance = Ambiance.newBuilder().build();
+    Ambiance ambiance = Ambiance.newBuilder().putSetupAbstractions("accountId", "accountId").build();
     BaseNGAccess baseNGAccess = BaseNGAccess.builder()
                                     .accountIdentifier("accountId")
                                     .orgIdentifier("orgId")
