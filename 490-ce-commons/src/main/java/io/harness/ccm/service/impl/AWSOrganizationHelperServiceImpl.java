@@ -1,8 +1,4 @@
 package io.harness.ccm.service.impl;
-
-import static io.harness.ccm.setup.service.impl.AWSAccountServiceImpl.getAccountIdFromArn;
-import static io.harness.ccm.setup.service.impl.AWSAccountServiceImpl.getMasterAccountIdFromArn;
-
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
 import io.harness.ccm.commons.entities.billing.CECloudAccount;
@@ -27,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 public class AWSOrganizationHelperServiceImpl implements AWSOrganizationHelperService {
@@ -69,6 +66,14 @@ public class AWSOrganizationHelperServiceImpl implements AWSOrganizationHelperSe
       log.error("Error while getting accounts", ex);
     }
     return Collections.emptyList();
+  }
+
+  public static String getAccountIdFromArn(String arn) {
+    return StringUtils.substringAfterLast(arn, "/");
+  }
+
+  public static String getMasterAccountIdFromArn(String arn) {
+    return StringUtils.substringBefore(StringUtils.substringAfterLast(arn, "iam::"), ":");
   }
 
   @VisibleForTesting
