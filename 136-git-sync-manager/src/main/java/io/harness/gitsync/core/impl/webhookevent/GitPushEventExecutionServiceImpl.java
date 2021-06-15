@@ -41,8 +41,8 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
 
       if (Boolean.TRUE.equals(yamlGitConfigService.isRepoExists(repository.getLink()))) {
         // if unsynced branch exists in this repo, then ignore the event
-        if (gitBranchService.isBranchExists(
-                webhookDTO.getAccountId(), repository.getLink(), repository.getBranch(), BranchSyncStatus.UNSYNCED)) {
+        if (gitBranchService.isBranchExists(webhookDTO.getAccountId(), repository.getLink(),
+                getBranchName(scmParsedWebhookResponse), BranchSyncStatus.UNSYNCED)) {
           log.info("{} : Branch {} exists in UNSYNCED state, ignoring the event : {}", GIT_PUSH_EVENT,
               repository.getBranch(), webhookDTO);
         } else {
@@ -62,9 +62,7 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
   private YamlChangeSetSaveDTO prepareQueueEvent(WebhookDTO webhookDTO) {
     Repository repository = webhookDTO.getParsedResponse().getPush().getRepo();
     String commitId = webhookDTO.getParsedResponse().getPush().getCommit().getSha();
-    String branchRef = webhookDTO.getParsedResponse().getPush().getRef();
-    final int lastIndexOfSlash = branchRef.lastIndexOf('/');
-    final String branchName = branchRef.substring(lastIndexOfSlash + 1);
+    final String branchName = getBranchName(webhookDTO.getParsedResponse());
     return YamlChangeSetSaveDTO.builder()
         .accountId(webhookDTO.getAccountId())
         .branch(branchName)
@@ -78,5 +76,11 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
                                          .headCommitId(commitId)
                                          .build())
         .build();
+  }
+
+  private String getBranchName(ParseWebhookResponse parseWebhookResponse) {
+    String branchRef = parseWebhookResponse.getPush().getRef();
+    final int lastIndexOfSlash = branchRef.lastIndexOf('/');
+    return branchRef.substring(lastIndexOfSlash + 1);
   }
 }
