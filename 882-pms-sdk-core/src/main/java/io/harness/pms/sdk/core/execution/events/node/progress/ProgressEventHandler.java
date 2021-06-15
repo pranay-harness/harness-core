@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.progress.ProgressEvent;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.ExecutableProcessor;
 import io.harness.pms.sdk.core.execution.ExecutableProcessorFactory;
 import io.harness.pms.sdk.core.execution.ProgressPackage;
@@ -27,6 +28,20 @@ import lombok.extern.slf4j.Slf4j;
 public class ProgressEventHandler extends NodeBaseEventHandler<ProgressEvent> {
   @Inject private ExecutableProcessorFactory executableProcessorFactory;
   @Inject private KryoSerializer kryoSerializer;
+
+  @Override
+  protected Map<String, String> extractMetricContext(ProgressEvent message) {
+    return ImmutableMap.<String, String>builder()
+        .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
+        .put("projectIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
+        .put("orgIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
+        .build();
+  }
+
+  @Override
+  protected String getMetricPrefix(ProgressEvent message) {
+    return "progress_event";
+  }
 
   @Override
   @NonNull

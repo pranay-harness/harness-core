@@ -22,7 +22,7 @@ public class InterruptEventMessageListener extends PmsAbstractMessageListener<In
     this.interruptEventHandler = interruptEventHandler;
   }
 
-  public boolean processMessage(InterruptEvent event, Map<String, String> metadataMap) {
+  public boolean processMessage(InterruptEvent event, Map<String, String> metadataMap, Long timestamp) {
     return interruptEventHandler.handleEvent(event);
   }
 }

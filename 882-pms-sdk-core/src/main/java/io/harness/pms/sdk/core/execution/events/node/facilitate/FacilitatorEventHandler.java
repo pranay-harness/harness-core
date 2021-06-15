@@ -8,6 +8,7 @@ import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.refobjects.RefObject;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.execution.events.NodeBaseEventHandler;
@@ -30,6 +31,20 @@ public class FacilitatorEventHandler extends NodeBaseEventHandler<FacilitatorEve
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
+
+  @Override
+  protected Map<String, String> extractMetricContext(FacilitatorEvent message) {
+    return ImmutableMap.<String, String>builder()
+        .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
+        .put("projectIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
+        .put("orgIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
+        .build();
+  }
+
+  @Override
+  protected String getMetricPrefix(FacilitatorEvent message) {
+    return "facilitator_event";
+  }
 
   @Override
   protected Map<String, String> extraLogProperties(FacilitatorEvent event) {

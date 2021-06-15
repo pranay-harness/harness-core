@@ -43,6 +43,19 @@ public class NodeStartEventHandler extends NodeBaseEventHandler<NodeStartEvent> 
   }
 
   @Override
+  protected Map<String, String> extractMetricContext(NodeStartEvent message) {
+    return ImmutableMap.<String, String>builder()
+        .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
+        .put("projectIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
+        .put("orgIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
+        .build();
+  }
+  @Override
+  protected String getMetricPrefix(NodeStartEvent message) {
+    return "start_event";
+  }
+
+  @Override
   public boolean handleEventWithContext(NodeStartEvent nodeStartEvent) {
     try {
       log.info("Starting to handle NodeStart event");
@@ -65,7 +78,7 @@ public class NodeStartEventHandler extends NodeBaseEventHandler<NodeStartEvent> 
       log.info("Successfully handled NodeStart event");
       return true;
     } catch (Exception ex) {
-      log.error("Error while handle NdeStart event", ex);
+      log.error("Error while handle NodeStart event", ex);
       sdkNodeExecutionService.handleStepResponse(AmbianceUtils.obtainCurrentRuntimeId(nodeStartEvent.getAmbiance()),
           NodeExecutionUtils.constructStepResponse(ex));
       return true;

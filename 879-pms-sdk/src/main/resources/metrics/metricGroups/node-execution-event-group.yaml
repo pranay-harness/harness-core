@@ -4,6 +4,3 @@ labels:
   - accountId
   - orgIdentifier
   - projectIdentifier
-  - planExecutionId
-  - module
-  - pipelineIdentifier
