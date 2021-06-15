@@ -333,3 +333,5 @@ replace_key_value cfClientConfig.connectionTimeout "$CF_CLIENT_CONNECTION_TIMEOU
 replace_key_value cfClientConfig.readTimeout "$CF_CLIENT_READ_TIMEOUT"
 replace_key_value featureFlagConfig.featureFlagSystem "$FEATURE_FLAG_SYSTEM"
 replace_key_value featureFlagConfig.syncFeaturesToCF "$SYNC_FEATURES_TO_CF"
+replace_key_value ceAzureSetupConfig.azureAppClientId "$AZURE_APP_CLIENT_ID"
+replace_key_value ceAzureSetupConfig.azureAppClientSecret "$AZURE_APP_CLIENT_SECRET"

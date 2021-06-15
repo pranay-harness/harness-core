@@ -38,6 +38,7 @@ public class CEAzureEntityToDTO implements ConnectorEntityToDTOMapper<CEAzureCon
                                               .directoryName(billingExportDetails.getDirectoryName())
                                               .storageAccountName(billingExportDetails.getStorageAccountName())
                                               .reportName(billingExportDetails.getReportName())
+                                              .subscriptionId(billingExportDetails.getSubscriptionId())
                                               .build());
   }
 }
