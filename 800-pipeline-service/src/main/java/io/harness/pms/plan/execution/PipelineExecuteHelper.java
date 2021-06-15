@@ -52,7 +52,7 @@ public class PipelineExecuteHelper {
 
   public PlanExecutionResponseDto runPipelineWithInputSetPipelineYaml(@NotNull String accountId,
       @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String pipelineIdentifier,
-      String inputSetPipelineYaml, ExecutionTriggerInfo triggerInfo) throws IOException {
+      String moduleType, String inputSetPipelineYaml, ExecutionTriggerInfo triggerInfo) throws IOException {
     Optional<PipelineEntity> pipelineEntity =
         pmsPipelineService.incrementRunSequence(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (!pipelineEntity.isPresent()) {
@@ -64,6 +64,7 @@ public class PipelineExecuteHelper {
     ExecutionMetadata.Builder executionMetadataBuilder = ExecutionMetadata.newBuilder()
                                                              .setExecutionUuid(executionId)
                                                              .setTriggerInfo(triggerInfo)
+                                                             .setModuleType(moduleType)
                                                              .setRunSequence(pipelineEntity.get().getRunSequence());
 
     PlanExecutionMetadata.Builder planExecutionMetadataBuilder =
@@ -93,8 +94,8 @@ public class PipelineExecuteHelper {
   }
 
   public PlanExecutionResponseDto runPipelineWithInputSetReferencesList(String accountId, String orgIdentifier,
-      String projectIdentifier, String pipelineIdentifier, List<String> inputSetReferences, String pipelineBranch,
-      String pipelineRepoID, ExecutionTriggerInfo triggerInfo) throws IOException {
+      String projectIdentifier, String pipelineIdentifier, String moduleType, List<String> inputSetReferences,
+      String pipelineBranch, String pipelineRepoID, ExecutionTriggerInfo triggerInfo) throws IOException {
     Optional<PipelineEntity> pipelineEntity =
         pmsPipelineService.incrementRunSequence(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (!pipelineEntity.isPresent()) {
@@ -105,6 +106,7 @@ public class PipelineExecuteHelper {
     ExecutionMetadata.Builder executionMetadataBuilder = ExecutionMetadata.newBuilder()
                                                              .setExecutionUuid(executionId)
                                                              .setTriggerInfo(triggerInfo)
+                                                             .setModuleType(moduleType)
                                                              .setRunSequence(pipelineEntity.get().getRunSequence());
 
     PlanExecutionMetadata.Builder planExecutionMetadataBuilder =
