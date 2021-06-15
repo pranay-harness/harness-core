@@ -743,6 +743,8 @@ triggers {"name": "artifactSelectionsArtifactStreamId", "background": true} {"ar
 triggers {"name": "conditionAppManifestId", "background": true} {"condition.conditionType": 1, "condition.appManifestId": 1}
 triggers {"name": "conditionArtifactStreamId", "background": true} {"condition.conditionType": 1, "condition.artifactStreamId": 1}
 triggers {"name": "createdAt_1", "background": true} {"createdAt": 1}
+triggers {"name": "nextIterations_1", "background": true} {"nextIterations": 1}
+triggers {"name": "triggerConditionNextIterations", "background": true} {"condition.conditionType": 1, "nextIterations": 1}
 triggers {"name": "webHookToken_1", "background": true} {"webHookToken": 1}
 triggers {"name": "yaml", "unique": true} {"appId": 1, "name": 1}
 userDataSpecifications {"name": "accountId_1", "background": true} {"accountId": 1}
