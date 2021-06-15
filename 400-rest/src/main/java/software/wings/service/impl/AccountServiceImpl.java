@@ -415,9 +415,12 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public boolean updateAccountStatus(String accountId, String accountStatus) {
     Account account = getFromCacheWithFallback(accountId);
-    LicenseInfo licenseInfo = account.getLicenseInfo();
-    licenseInfo.setAccountStatus(accountStatus);
-    return licenseService.updateAccountLicense(accountId, licenseInfo);
+    LicenseInfo licenseInfo = account != null ? account.getLicenseInfo() : null;
+    if (licenseInfo != null) {
+      licenseInfo.setAccountStatus(accountStatus);
+      return licenseService.updateAccountLicense(accountId, licenseInfo);
+    }
+    return false;
   }
 
   private void createDefaultAccountEntities(Account account, boolean shouldCreateSampleApp, boolean fromDataGen) {
