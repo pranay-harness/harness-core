@@ -5,6 +5,7 @@ import static io.harness.pms.events.PmsEventFrameworkConstants.SERVICE_NAME;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.event.MessageListener;
+import io.harness.serializer.ProtoUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
@@ -28,7 +29,8 @@ public abstract class PmsAbstractMessageListener<T extends com.google.protobuf.M
     if (isProcessable(message)) {
       log.info("[PMS_SDK] Starting to process message from {} messageId: {}", this.getClass().getSimpleName(),
           message.getId());
-      boolean processed = processMessage(extractEntity(message), message.getMessage().getMetadataMap());
+      boolean processed = processMessage(extractEntity(message), message.getMessage().getMetadataMap(),
+          ProtoUtils.timestampToUnixMillis(message.getTimestamp()));
       log.info("[PMS_SDK] Processing Finished from {} for messageId: {} returning {}", this.getClass().getSimpleName(),
           message.getId(), processed);
       return processed;
@@ -55,5 +57,5 @@ public abstract class PmsAbstractMessageListener<T extends com.google.protobuf.M
     return false;
   }
 
-  public abstract boolean processMessage(T event, Map<String, String> metadataMap);
+  public abstract boolean processMessage(T event, Map<String, String> metadataMap, Long timestamp);
 }

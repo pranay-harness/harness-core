@@ -5,39 +5,34 @@ import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.consumer.Message;
-import io.harness.execution.utils.SdkResponseListenerHelper;
+import io.harness.execution.utils.RedisSdkResponseHandler;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
-import io.harness.pms.events.base.PmsAbstractBaseMessageListenerWithObservers;
+import io.harness.pms.events.base.PmsAbstractMessageListener;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 @Singleton
-public class SdkResponseEventMessageListener
-    extends PmsAbstractBaseMessageListenerWithObservers<SdkResponseEventProto> {
-  private final SdkResponseListenerHelper sdkResponseListenerHelper;
+public class SdkResponseEventMessageListener extends PmsAbstractMessageListener<SdkResponseEventProto> {
+  private final RedisSdkResponseHandler redisSdkResponseHandler;
 
   @Inject
   public SdkResponseEventMessageListener(
-      @Named(SDK_SERVICE_NAME) String serviceName, SdkResponseListenerHelper sdkResponseListenerHelper) {
+      @Named(SDK_SERVICE_NAME) String serviceName, RedisSdkResponseHandler redisSdkResponseHandler) {
     super(serviceName, SdkResponseEventProto.class);
-    this.sdkResponseListenerHelper = sdkResponseListenerHelper;
+    this.redisSdkResponseHandler = redisSdkResponseHandler;
   }
 
   @Override
-  public boolean processMessageInternal(SdkResponseEventProto sdkResponseEventProto) {
-    try {
-      sdkResponseListenerHelper.handleEvent(sdkResponseEventProto);
-      return true;
-    } catch (Exception ex) {
-      // TODO (prashant) : Handle Failure should we retry here. Currently acknowledging the message ?
-      log.error("Processing failed for SdkResponseEvent", ex);
-      return true;
-    }
+  public boolean processMessage(
+      SdkResponseEventProto sdkResponseEventProto, Map<String, String> metadataMap, Long timestamp) {
+    redisSdkResponseHandler.handleEvent(sdkResponseEventProto, metadataMap, timestamp);
+    return true;
   }
 
   @Override

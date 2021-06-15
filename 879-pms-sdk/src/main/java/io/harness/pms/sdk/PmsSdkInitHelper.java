@@ -91,6 +91,7 @@ public class PmsSdkInitHelper {
   }
 
   private static void registerObserversForEvents(Injector injector) {
+    // Todo(sahil): Remove once all events are migrated to redis
     NodeExecutionEventListener nodeExecutionEventListener = injector.getInstance(NodeExecutionEventListener.class);
     nodeExecutionEventListener.getEventListenerObserverSubject().register(
         injector.getInstance(Key.get(MonitoringEventObserver.class)));
