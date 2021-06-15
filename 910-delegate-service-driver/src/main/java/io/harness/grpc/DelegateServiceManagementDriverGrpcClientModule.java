@@ -1,9 +1,10 @@
 package io.harness.grpc;
 
 import io.harness.delegate.DelegateServiceGrpc;
+import io.harness.delegateprofile.DelegateProfileServiceGrpc;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.auth.ServiceAuthCallCredentials;
-import io.harness.grpc.pingpong.DelegateServicePingPongModule;
+import io.harness.grpc.pingpong.DelegateServicePingPongClient;
 import io.harness.pingpong.DelegateServicePingPongGrpc;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.version.VersionInfo;
@@ -19,6 +20,7 @@ import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import java.util.function.BooleanSupplier;
 import javax.net.ssl.SSLException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,17 +30,19 @@ public class DelegateServiceManagementDriverGrpcClientModule extends ProviderMod
   private final String target;
   private final String authority;
   private final String deployMode = System.getenv().get("DEPLOY_MODE");
+  private final Boolean delegateDriverInstalledInNgService;
 
-  public DelegateServiceManagementDriverGrpcClientModule(String serviceSecret, String target, String authority) {
+  public DelegateServiceManagementDriverGrpcClientModule(
+      String serviceSecret, String target, String authority, boolean delegateDriverInstalledInNgService) {
     this.serviceSecret = serviceSecret;
     this.target = target;
     this.authority = authority;
+    this.delegateDriverInstalledInNgService = delegateDriverInstalledInNgService;
   }
 
   @Override
   protected void configure() {
     bind(DelegateServiceGrpcClient.class).in(Singleton.class);
-    install(new DelegateServicePingPongModule());
   }
 
   @Named("delegate-service-management-channel")
@@ -102,15 +106,13 @@ public class DelegateServiceManagementDriverGrpcClientModule extends ProviderMod
     return new ServiceAuthCallCredentials(serviceSecret, new ServiceTokenGenerator(), "delegate-service-management");
   }
 
-
   @Provides
   @Singleton
   DelegateServicePingPongGrpc.DelegateServicePingPongBlockingStub delegateServicePingPongBlockingStub(
-          @Named("delegate-service-management-channel") Channel channel,
-          @Named("dspp-call-credentials") CallCredentials callCredentials) {
+      @Named("delegate-service-management-channel") Channel channel,
+      @Named("dspp-call-credentials") CallCredentials callCredentials) {
     return DelegateServicePingPongGrpc.newBlockingStub(channel);
   }
-
 
   @Named("dspp-call-credentials")
   @Provides
@@ -119,4 +121,34 @@ public class DelegateServiceManagementDriverGrpcClientModule extends ProviderMod
     return new ServiceAuthCallCredentials(serviceSecret, new ServiceTokenGenerator(), "delegate-service-ping-pong");
   }
 
+  @Provides
+  @Singleton
+  DelegateProfileServiceGrpc.DelegateProfileServiceBlockingStub delegateProfileServiceBlockingStub(
+      @Named("delegate-service-management-channel") Channel channel,
+      @Named("dps-call-credentials") CallCredentials callCredentials) {
+    return DelegateProfileServiceGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
+  }
+
+  @Named("dps-call-credentials")
+  @Provides
+  @Singleton
+  CallCredentials dpsCallCredentials() {
+    return new ServiceAuthCallCredentials(serviceSecret, new ServiceTokenGenerator(), "delegate-profile-service");
+  }
+
+  @Named("driver-installed-in-ng-service")
+  @Provides
+  @Singleton
+  BooleanSupplier isDelegateDriverInstalledInNgServiceSupplier() {
+    return () -> delegateDriverInstalledInNgService;
+  }
+
+  @Provides
+  @Singleton
+  DelegateServicePingPongClient delegateServicePingPongClient(
+      DelegateServicePingPongGrpc.DelegateServicePingPongBlockingStub pingPongServiceBlockingStub,
+      VersionInfoManager versionInfoManager) {
+    return new DelegateServicePingPongClient(
+        pingPongServiceBlockingStub, versionInfoManager.getVersionInfo().getVersion());
+  }
 }

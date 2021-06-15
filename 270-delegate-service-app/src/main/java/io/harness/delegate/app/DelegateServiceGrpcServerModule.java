@@ -2,7 +2,7 @@ package io.harness.delegate.app;
 
 import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.grpc.DelegateServiceGrpcImpl;
-import io.harness.grpc.auth.ServiceAuthServerInterceptor;
+import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.auth.ServiceInfo;
 import io.harness.grpc.auth.ValidateAuthServerInterceptor;
 import io.harness.grpc.exception.GrpcExceptionMapper;
@@ -74,7 +74,7 @@ public class DelegateServiceGrpcServerModule extends AbstractModule {
 
     Multibinder<ServerInterceptor> serverInterceptorMultibinder =
         Multibinder.newSetBinder(binder(), ServerInterceptor.class);
-    serverInterceptorMultibinder.addBinding().to(ServiceAuthServerInterceptor.class);
+    serverInterceptorMultibinder.addBinding().to(DelegateAuthServerInterceptor.class);
 
     serverInterceptorMultibinder.addBinding().toProvider(
         () -> new GrpcServerExceptionHandler(grpcExceptionMappersProvider));
