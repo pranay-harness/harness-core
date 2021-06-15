@@ -4,6 +4,7 @@ import static io.harness.accesscontrol.acl.models.ACL.RESOURCE_GROUP_IDENTIFIER_
 import static io.harness.accesscontrol.acl.models.ACL.ROLE_IDENTIFIER_KEY;
 import static io.harness.accesscontrol.acl.models.ACL.USER_GROUP_IDENTIFIER_KEY;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static org.springframework.data.mongodb.util.MongoDbErrorCodes.isDuplicateKeyCode;
 
@@ -35,7 +36,7 @@ public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
 
   public long insertAllIgnoringDuplicates(List<ACL> acls) {
     try {
-      if (acls == null || acls.isEmpty()) {
+      if (isEmpty(acls)) {
         return 0;
       }
       return mongoTemplate.bulkOps(BulkMode.UNORDERED, ACL.class).insert(acls).execute().getInsertedCount();
