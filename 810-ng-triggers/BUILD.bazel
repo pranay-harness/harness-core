@@ -1,6 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//:macros.bzl", "run_analysis")
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 java_library(
     name = "module",
@@ -8,6 +8,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//870-orchestration:module",
         "//870-yaml-beans:module",
         "//876-orchestration-beans:module",
         "//884-pms-commons:module",

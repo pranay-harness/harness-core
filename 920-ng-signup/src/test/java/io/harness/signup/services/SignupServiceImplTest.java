@@ -21,9 +21,12 @@ import io.harness.CategoryTest;
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.authenticationservice.recaptcha.ReCaptchaVerifier;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.SignupException;
+import io.harness.exception.UnavailableFeatureException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
@@ -62,6 +65,7 @@ import retrofit2.Response;
 @PrepareForTest(SourcePrincipalContextBuilder.class)
 public class SignupServiceImplTest extends CategoryTest {
   @InjectMocks SignupServiceImpl signupServiceImpl;
+  @Mock FeatureFlagService featureFlagService;
   @Mock SignupValidator signupValidator;
   @Mock AccountService accountService;
   @Mock UserClient userClient;
@@ -84,6 +88,7 @@ public class SignupServiceImplTest extends CategoryTest {
   @Owner(developers = NATHAN)
   @Category(UnitTests.class)
   public void testSignup() throws IOException {
+    when(featureFlagService.isGlobalEnabled(FeatureName.NG_SIGNUP)).thenReturn(true);
     SignupDTO signupDTO = SignupDTO.builder().email(EMAIL).password(PASSWORD).build();
     AccountDTO accountDTO = AccountDTO.builder().identifier(ACCOUNT_ID).build();
     UserInfo newUser = UserInfo.builder().email(EMAIL).build();
@@ -110,6 +115,7 @@ public class SignupServiceImplTest extends CategoryTest {
   @Owner(developers = NATHAN)
   @Category(UnitTests.class)
   public void testSignupOAuth() throws IOException {
+    when(featureFlagService.isGlobalEnabled(FeatureName.NG_SIGNUP)).thenReturn(true);
     String name = "testName";
     OAuthSignupDTO oAuthSignupDTO = OAuthSignupDTO.builder().email(EMAIL).name(name).build();
     AccountDTO accountDTO = AccountDTO.builder().identifier(ACCOUNT_ID).build();
@@ -140,6 +146,7 @@ public class SignupServiceImplTest extends CategoryTest {
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
   public void testSignupWithInvalidEmail() {
+    when(featureFlagService.isGlobalEnabled(FeatureName.NG_SIGNUP)).thenReturn(true);
     SignupDTO signupDTO = SignupDTO.builder().email(INVALID_EMAIL).password(PASSWORD).build();
     doThrow(new SignupException("This email is invalid. email=" + INVALID_EMAIL))
         .when(signupValidator)
@@ -158,6 +165,7 @@ public class SignupServiceImplTest extends CategoryTest {
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
   public void testSignupWithInvliadReCaptcha() {
+    when(featureFlagService.isGlobalEnabled(FeatureName.NG_SIGNUP)).thenReturn(true);
     SignupDTO signupDTO = SignupDTO.builder().email(INVALID_EMAIL).password(PASSWORD).build();
     doThrow(new WingsException("")).when(reCaptchaVerifier).verifyInvisibleCaptcha(any());
     try {
@@ -174,6 +182,7 @@ public class SignupServiceImplTest extends CategoryTest {
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
   public void testSignupOAuthWithInvalidEmail() {
+    when(featureFlagService.isGlobalEnabled(FeatureName.NG_SIGNUP)).thenReturn(true);
     OAuthSignupDTO oAuthSignupDTO = OAuthSignupDTO.builder().email(INVALID_EMAIL).name("name").build();
     doThrow(new SignupException("This email is invalid. email=" + INVALID_EMAIL))
         .when(signupValidator)
@@ -202,5 +211,21 @@ public class SignupServiceImplTest extends CategoryTest {
 
     signupServiceImpl.resendVerificationEmail("id");
     verify(signupNotificationHelper, times(1)).sendSignupNotification(eq(user), eq(EmailType.VERIFY), any());
+  }
+
+  @Test(expected = UnavailableFeatureException.class)
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testSignupWithFeatureFlagOff() {
+    when(featureFlagService.isGlobalEnabled(FeatureName.NG_SIGNUP)).thenReturn(false);
+    signupServiceImpl.signup(SignupDTO.builder().build(), null);
+  }
+
+  @Test(expected = UnavailableFeatureException.class)
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testOathSignupWithFeatureFlagOff() {
+    when(featureFlagService.isGlobalEnabled(FeatureName.NG_SIGNUP)).thenReturn(false);
+    signupServiceImpl.oAuthSignup(OAuthSignupDTO.builder().build());
   }
 }

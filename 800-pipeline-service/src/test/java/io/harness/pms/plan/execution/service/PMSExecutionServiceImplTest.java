@@ -47,7 +47,6 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
   private final String INVALID_PLAN_EXECUTION_ID = "InvalidPlanId";
   private final Boolean PIPELINE_DELETED = Boolean.FALSE;
   private String inputSetYaml;
-  private String pipelineYaml;
 
   PipelineExecutionSummaryEntity executionSummaryEntity;
   PipelineEntity pipelineEntity;
@@ -71,7 +70,7 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
                                  .build();
 
     String pipelineYamlFileName = "failure-strategy.yaml";
-    pipelineYaml = Resources.toString(
+    String pipelineYaml = Resources.toString(
         Objects.requireNonNull(classLoader.getResource(pipelineYamlFileName)), StandardCharsets.UTF_8);
 
     pipelineEntity = PipelineEntity.builder()
@@ -89,7 +88,7 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
   @Category(UnitTests.class)
   public void testFormCriteria() {
     Criteria form = pmsExecutionService.formCriteria(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER,
-        null, null, null, null, null, false, !PIPELINE_DELETED);
+        null, null, null, null, null, false, !PIPELINE_DELETED, null);
 
     assertThat(form.getCriteriaObject().get("accountId").toString().contentEquals(ACCOUNT_ID)).isEqualTo(true);
     assertThat(form.getCriteriaObject().get("orgIdentifier").toString().contentEquals(ORG_IDENTIFIER)).isEqualTo(true);
@@ -112,7 +111,7 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
             ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, !PIPELINE_DELETED);
 
     String inputSet = pmsExecutionService.getInputSetYaml(
-        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, PIPELINE_DELETED);
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, PIPELINE_DELETED, false);
 
     assertThat(inputSet).isEqualTo(inputSetYaml);
   }
@@ -128,7 +127,7 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
 
     assertThatThrownBy(()
                            -> pmsExecutionService.getInputSetYaml(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER,
-                               INVALID_PLAN_EXECUTION_ID, PIPELINE_DELETED))
+                               INVALID_PLAN_EXECUTION_ID, PIPELINE_DELETED, false))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Invalid request : Input Set did not exist or pipeline execution has been deleted");
   }

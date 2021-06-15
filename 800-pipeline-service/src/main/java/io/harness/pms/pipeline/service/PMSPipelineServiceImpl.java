@@ -14,24 +14,27 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.InvalidYamlException;
+import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.observer.Subject;
-import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
 import io.harness.pms.pipeline.StepCategory;
+import io.harness.pms.pipeline.StepPalleteInfo;
 import io.harness.pms.pipeline.mappers.PipelineYamlDtoMapper;
 import io.harness.pms.pipeline.observer.PipelineActionObserver;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.variables.VariableCreatorMergeService;
 import io.harness.pms.variables.VariableMergeServiceResponse;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.grpc.StatusRuntimeException;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.Getter;
@@ -71,10 +74,17 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       throw new DuplicateFieldException(format(DUP_KEY_EXP_FORMAT_STRING, pipelineEntity.getIdentifier(),
                                             pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()),
           USER_SRE, ex);
-    } catch (IOException | EventsFrameworkDownException exception) {
-      throw new InvalidRequestException(String.format(
-          "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
-          pipelineEntity.getIdentifier()));
+    } catch (EventsFrameworkDownException ex) {
+      log.error("Events framework is down for Pipeline Service.", ex);
+      throw new InvalidRequestException("Error connecting to systems upstream", ex);
+
+    } catch (IOException ex) {
+      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+
+    } catch (StatusRuntimeException e) {
+      log.error(e.toString());
+      throw new InvalidRequestException("Pipeline could not be created." + e.getMessage());
     }
   }
 
@@ -90,6 +100,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     PMSPipelineServiceHelper.validatePresenceOfRequiredFields(pipelineEntity.getAccountId(),
         pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier());
 
+    if (GitContextHelper.getGitEntityInfo() != null && GitContextHelper.getGitEntityInfo().isNewBranch()) {
+      return makePipelineUpdateCall(pipelineEntity);
+    }
     Optional<PipelineEntity> optionalOriginalEntity =
         pmsPipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
             pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(),
@@ -104,8 +117,12 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
                                     .withDescription(pipelineEntity.getDescription())
                                     .withTags(pipelineEntity.getTags());
 
+    return makePipelineUpdateCall(tempEntity);
+  }
+
+  private PipelineEntity makePipelineUpdateCall(PipelineEntity pipelineEntity) {
     try {
-      PipelineEntity entityWithUpdatedInfo = pmsPipelineServiceHelper.updatePipelineInfo(tempEntity);
+      PipelineEntity entityWithUpdatedInfo = pmsPipelineServiceHelper.updatePipelineInfo(pipelineEntity);
       PipelineEntity updatedResult = pmsPipelineRepository.updatePipelineYaml(
           entityWithUpdatedInfo, PipelineYamlDtoMapper.toDto(entityWithUpdatedInfo));
 
@@ -115,16 +132,25 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
             pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
       }
       return updatedResult;
-    } catch (IOException | EventsFrameworkDownException exception) {
-      throw new InvalidRequestException(String.format(
-          "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
-          pipelineEntity.getIdentifier()));
+    } catch (EventsFrameworkDownException ex) {
+      log.error("Events framework is down for Pipeline Service.", ex);
+      throw new InvalidRequestException("Error connecting to systems upstream", ex);
+
+    } catch (IOException ex) {
+      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+
+    } catch (StatusRuntimeException e) {
+      log.error(e.toString());
+      throw new InvalidRequestException("Pipeline could not be created." + e.getMessage());
     }
   }
 
   @Override
-  public PipelineEntity updatePipelineMetadata(Criteria criteria, Update updateOperations) {
-    return pmsPipelineRepository.updatePipelineMetadata(criteria, updateOperations);
+  public PipelineEntity updatePipelineMetadata(
+      String accountId, String orgIdentifier, String projectIdentifier, Criteria criteria, Update updateOperations) {
+    return pmsPipelineRepository.updatePipelineMetadata(
+        accountId, orgIdentifier, projectIdentifier, criteria, updateOperations);
   }
 
   @Override
@@ -135,7 +161,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
 
     Update update = new Update();
     update.set(PipelineEntityKeys.executionSummaryInfo, executionSummaryInfo);
-    updatePipelineMetadata(criteria, update);
+    updatePipelineMetadata(accountId, orgId, projectId, criteria, update);
   }
 
   @Override
@@ -145,7 +171,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false, null);
     Update update = new Update();
     update.inc(PipelineEntityKeys.runSequence);
-    return Optional.ofNullable(updatePipelineMetadata(criteria, update));
+    return Optional.ofNullable(updatePipelineMetadata(accountId, orgIdentifier, projectIdentifier, criteria, update));
   }
 
   @Override
@@ -181,16 +207,16 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
 
   @Override
   public StepCategory getSteps(String module, String category, String accountId) {
-    Map<String, List<StepInfo>> serviceInstanceNameToSupportedSteps =
-        pmsSdkInstanceService.getInstanceNameToSupportedSteps();
+    Map<String, StepPalleteInfo> serviceInstanceNameToSupportedSteps =
+        pmsSdkInstanceService.getModuleNameToStepPalleteInfo();
     StepCategory stepCategory = pmsPipelineServiceStepHelper.calculateStepsForModuleBasedOnCategory(
-        category, serviceInstanceNameToSupportedSteps.get(module), accountId);
-    for (Map.Entry<String, List<StepInfo>> entry : serviceInstanceNameToSupportedSteps.entrySet()) {
-      if (entry.getKey().equals(module) || EmptyPredicate.isEmpty(entry.getValue())) {
+        category, serviceInstanceNameToSupportedSteps.get(module).getStepTypes(), accountId);
+    for (Map.Entry<String, StepPalleteInfo> entry : serviceInstanceNameToSupportedSteps.entrySet()) {
+      if (entry.getKey().equals(module) || EmptyPredicate.isEmpty(entry.getValue().getStepTypes())) {
         continue;
       }
-      stepCategory.addStepCategory(
-          pmsPipelineServiceStepHelper.calculateStepsForCategory(entry.getKey(), entry.getValue(), accountId));
+      stepCategory.addStepCategory(pmsPipelineServiceStepHelper.calculateStepsForCategory(
+          entry.getValue().getModuleName(), entry.getValue().getStepTypes(), accountId));
     }
     return stepCategory;
   }

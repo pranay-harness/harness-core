@@ -1,7 +1,7 @@
 package io.harness.ngtriggers.eventmapper.filters.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOR_ACCOUNT;
+import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOR_ACCOUNT_SOURCE_REPO;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
 import static java.util.stream.Collectors.toList;
@@ -48,29 +48,32 @@ public class TriggetAccountFilterTest extends CategoryTest {
     NGTriggerEntity t1 = NGTriggerEntity.builder().identifier("T1").build();
     NGTriggerEntity t2 = NGTriggerEntity.builder().identifier("T2").build();
 
+    TriggerWebhookEvent triggerWebhookEvent = TriggerWebhookEvent.builder()
+                                                  .accountId("acc")
+                                                  .orgIdentifier(null)
+                                                  .projectIdentifier("null")
+                                                  .sourceRepoType("GITHUB")
+                                                  .createdAt(0l)
+                                                  .nextIteration(0l)
+                                                  .build();
+
     PowerMockito.doReturn(null)
         .doReturn(Arrays.asList(t1, t2))
         .when(ngTriggerService)
-        .listEnabledTriggersForAccount("acc");
+        .findTriggersForWehbookBySourceRepoType(triggerWebhookEvent, false, true);
 
-    FilterRequestData filterRequestData = FilterRequestData.builder()
-                                              .accountId("acc")
-                                              .webhookPayloadData(WebhookPayloadData.builder()
-                                                                      .originalEvent(TriggerWebhookEvent.builder()
-                                                                                         .accountId("acc")
-                                                                                         .orgIdentifier(null)
-                                                                                         .projectIdentifier("null")
-                                                                                         .sourceRepoType("GITHUB")
-                                                                                         .createdAt(0l)
-                                                                                         .nextIteration(0l)
-                                                                                         .build())
-                                                                      .build())
-                                              .build();
+    FilterRequestData filterRequestData =
+        FilterRequestData.builder()
+            .accountId("acc")
+            .webhookPayloadData(WebhookPayloadData.builder().originalEvent(triggerWebhookEvent).build())
+            .build();
 
     WebhookEventMappingResponse webhookEventMappingResponse = accountTriggerFilter.applyFilter(filterRequestData);
     assertThat(webhookEventMappingResponse.isFailedToFindTrigger()).isTrue();
     assertThat(webhookEventMappingResponse.getWebhookEventResponse().getFinalStatus())
-        .isEqualTo(NO_ENABLED_TRIGGER_FOR_ACCOUNT);
+        .isEqualTo(NO_ENABLED_TRIGGER_FOR_ACCOUNT_SOURCE_REPO);
+    assertThat(webhookEventMappingResponse.getWebhookEventResponse().getMessage())
+        .isEqualTo("No enabled trigger found for Account:acc, SourceRepoType: GITHUB");
 
     webhookEventMappingResponse = accountTriggerFilter.applyFilter(filterRequestData);
     assertThat(webhookEventMappingResponse.isFailedToFindTrigger()).isFalse();

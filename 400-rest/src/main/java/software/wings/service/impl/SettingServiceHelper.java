@@ -60,6 +60,7 @@ import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.UsageRestrictions;
 import software.wings.service.intfc.AccountService;
@@ -405,6 +406,13 @@ public class SettingServiceHelper {
   public void setCertValidationRequired(String accountId, SettingValue settingValue) {
     if (settingValue != null) {
       settingValue.setCertValidationRequired(accountService.isCertValidationRequired(accountId));
+    }
+  }
+
+  public void resetTransientFields(SettingValue settingValue) {
+    if (null != settingValue && SettingVariableTypes.GIT.name().equals(settingValue.getType())) {
+      GitConfig gitConfig = (GitConfig) settingValue;
+      gitConfig.setSshSettingAttribute(null);
     }
   }
 }

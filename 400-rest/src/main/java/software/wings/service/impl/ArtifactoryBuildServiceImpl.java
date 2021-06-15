@@ -13,6 +13,7 @@ import static software.wings.utils.ArtifactType.DOCKER;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.artifactory.ArtifactoryConfigRequest;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -25,6 +26,8 @@ import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.ArtifactoryBuildService;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.mappers.artifact.ArtifactoryConfigToArtifactoryRequestMapper;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryType;
 
@@ -47,6 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   public static final int MANUAL_PULL_ARTIFACTORY_LIMIT = 1000;
   @Inject private ArtifactoryService artifactoryService;
+  @Inject private EncryptionService encryptionService;
 
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
@@ -68,24 +72,24 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   private List<BuildDetails> getBuildsInternal(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, int limit) {
     equalCheck(artifactStreamAttributes.getArtifactStreamType(), ArtifactStreamType.ARTIFACTORY.name());
+    ArtifactoryConfigRequest artifactoryRequest = ArtifactoryConfigToArtifactoryRequestMapper.toArtifactoryRequest(
+        artifactoryConfig, encryptionService, encryptionDetails);
     if (!appId.equals(GLOBAL_APP_ID)) {
       if (artifactStreamAttributes.getArtifactType() == DOCKER
           || RepositoryType.docker.name().equalsIgnoreCase(artifactStreamAttributes.getRepositoryType())) {
-        return artifactoryService.getBuilds(
-            artifactoryConfig, encryptionDetails, artifactStreamAttributes, limit == -1 ? 1000 : limit);
+        return artifactoryService.getBuilds(artifactoryRequest, artifactStreamAttributes, limit == -1 ? 1000 : limit);
       } else {
-        return artifactoryService.getFilePaths(artifactoryConfig, encryptionDetails,
-            artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPattern(),
-            artifactStreamAttributes.getRepositoryType(), limit == -1 ? ARTIFACT_RETENTION_SIZE : limit);
+        return artifactoryService.getFilePaths(artifactoryRequest, artifactStreamAttributes.getJobName(),
+            artifactStreamAttributes.getArtifactPattern(), artifactStreamAttributes.getRepositoryType(),
+            limit == -1 ? ARTIFACT_RETENTION_SIZE : limit);
       }
     } else {
       if (artifactStreamAttributes.getRepositoryType().equals(RepositoryType.docker.name())) {
-        return artifactoryService.getBuilds(
-            artifactoryConfig, encryptionDetails, artifactStreamAttributes, limit == -1 ? 1000 : limit);
+        return artifactoryService.getBuilds(artifactoryRequest, artifactStreamAttributes, limit == -1 ? 1000 : limit);
       } else {
-        return artifactoryService.getFilePaths(artifactoryConfig, encryptionDetails,
-            artifactStreamAttributes.getJobName(), artifactStreamAttributes.getArtifactPattern(),
-            artifactStreamAttributes.getRepositoryType(), limit == -1 ? ARTIFACT_RETENTION_SIZE : limit);
+        return artifactoryService.getFilePaths(artifactoryRequest, artifactStreamAttributes.getJobName(),
+            artifactStreamAttributes.getArtifactPattern(), artifactStreamAttributes.getRepositoryType(),
+            limit == -1 ? ARTIFACT_RETENTION_SIZE : limit);
       }
     }
   }
@@ -100,8 +104,10 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   public List<String> getArtifactPaths(
       String jobName, String groupId, ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails) {
     if (isEmpty(groupId)) {
+      ArtifactoryConfigRequest artifactoryRequest = ArtifactoryConfigToArtifactoryRequestMapper.toArtifactoryRequest(
+          config, encryptionService, encryptionDetails);
       log.info("Retrieving {} repo paths.", jobName);
-      List<String> repoPaths = artifactoryService.getRepoPaths(config, encryptionDetails, jobName);
+      List<String> repoPaths = artifactoryService.getRepoPaths(artifactoryRequest, jobName);
       log.info("Retrieved {} repo paths.", repoPaths.size());
       return repoPaths;
     }
@@ -116,29 +122,37 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
 
   @Override
   public Map<String, String> getPlans(ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    return artifactoryService.getRepositories(config, encryptionDetails);
+    ArtifactoryConfigRequest artifactoryRequest =
+        ArtifactoryConfigToArtifactoryRequestMapper.toArtifactoryRequest(config, encryptionService, encryptionDetails);
+    return artifactoryService.getRepositories(artifactoryRequest);
   }
 
   @Override
   public Map<String, String> getPlans(ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactType artifactType, String repositoryType) {
+    ArtifactoryConfigRequest artifactoryRequest =
+        ArtifactoryConfigToArtifactoryRequestMapper.toArtifactoryRequest(config, encryptionService, encryptionDetails);
     if (RepositoryType.docker.name().equalsIgnoreCase(repositoryType) || artifactType == DOCKER) {
-      return artifactoryService.getRepositories(config, encryptionDetails, DOCKER);
+      return artifactoryService.getRepositories(artifactoryRequest, DOCKER);
     }
-    return artifactoryService.getRepositories(config, encryptionDetails, repositoryType);
+    return artifactoryService.getRepositories(artifactoryRequest, repositoryType);
   }
 
   @Override
   public Map<String, String> getPlans(
       ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails, RepositoryType repositoryType) {
-    return artifactoryService.getRepositories(config, encryptionDetails, repositoryType);
+    ArtifactoryConfigRequest artifactoryRequest =
+        ArtifactoryConfigToArtifactoryRequestMapper.toArtifactoryRequest(config, encryptionService, encryptionDetails);
+    return artifactoryService.getRepositories(artifactoryRequest, repositoryType);
   }
 
   @Override
   public List<String> getGroupIds(
       String repoType, ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails) {
     log.info("Retrieving {} docker images.", repoType);
-    List<String> repoPaths = artifactoryService.getRepoPaths(config, encryptionDetails, repoType);
+    ArtifactoryConfigRequest artifactoryRequest =
+        ArtifactoryConfigToArtifactoryRequestMapper.toArtifactoryRequest(config, encryptionService, encryptionDetails);
+    List<String> repoPaths = artifactoryService.getRepoPaths(artifactoryRequest, repoType);
     log.info("Retrieved {} docker images.", repoPaths.size());
     return repoPaths;
   }
@@ -147,7 +161,9 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   public List<String> getGroupIds(String repositoryName, String repositoryType, ArtifactoryConfig config,
       List<EncryptedDataDetail> encryptionDetails) {
     log.info("Retrieving {} docker images.", repositoryName);
-    List<String> repoPaths = artifactoryService.getRepoPaths(config, encryptionDetails, repositoryName);
+    ArtifactoryConfigRequest artifactoryRequest =
+        ArtifactoryConfigToArtifactoryRequestMapper.toArtifactoryRequest(config, encryptionService, encryptionDetails);
+    List<String> repoPaths = artifactoryService.getRepoPaths(artifactoryRequest, repositoryName);
     log.info("Retrieved {} docker images.", repoPaths.size());
     return repoPaths;
   }
@@ -158,14 +174,18 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
       throw new InvalidArtifactServerException(
           "Could not reach Artifactory Server at : " + config.getArtifactoryUrl(), USER);
     }
-    return artifactoryService.isRunning(config, encryptedDataDetails);
+    ArtifactoryConfigRequest artifactoryRequest = ArtifactoryConfigToArtifactoryRequestMapper.toArtifactoryRequest(
+        config, encryptionService, encryptedDataDetails);
+    return artifactoryService.isRunning(artifactoryRequest);
   }
 
   @Override
   public boolean validateArtifactSource(ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
     if (artifactStreamAttributes.getArtifactPattern() != null) {
-      return artifactoryService.validateArtifactPath(config, encryptionDetails, artifactStreamAttributes.getJobName(),
+      ArtifactoryConfigRequest artifactoryRequest = ArtifactoryConfigToArtifactoryRequestMapper.toArtifactoryRequest(
+          config, encryptionService, encryptionDetails);
+      return artifactoryService.validateArtifactPath(artifactoryRequest, artifactStreamAttributes.getJobName(),
           artifactStreamAttributes.getArtifactPattern(), artifactStreamAttributes.getRepositoryType());
     }
     return true;

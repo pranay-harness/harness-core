@@ -22,13 +22,13 @@ public interface YamlGitConfigRepository extends CrudRepository<YamlGitConfig, S
   List<YamlGitConfig> findByGitConnectorRefAndRepoAndBranchAndAccountId(
       String gitConnectorId, String repo, String branchName, String accountId);
 
-  List<YamlGitConfig> findByRepoAndBranchAndAccountId(String repo, String branch, String accountId);
-
-  Optional<YamlGitConfig> findByUuidAndAccountId(String uuid, String accountId);
-
   Boolean existsByAccountIdAndOrgIdentifierAndProjectIdentifier(
       String accountIdentifier, String organizationIdentifier, String projectIdentifier);
 
   List<YamlGitConfig> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndScopeOrderByCreatedAtDesc(
       String accountId, String orgIdentifier, String projectIdentifier, Scope scope);
+
+  Boolean existsByRepo(String repo);
+
+  List<YamlGitConfig> findByRepo(String repo);
 }

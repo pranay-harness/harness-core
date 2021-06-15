@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
-import io.harness.pms.contracts.advisers.NextStepAdvise;
 import io.harness.pms.contracts.advisers.RetryAdvise;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
@@ -152,10 +151,8 @@ public class RetryAdviserTest extends PmsSdkCoreTestBase {
                                       .build();
     AdviserResponse adviserResponse = retryAdviser.onAdviseEvent(advisingEvent);
 
-    assertThat(adviserResponse.getType()).isEqualTo(AdviseType.NEXT_STEP);
-    assertThat(adviserResponse.getNextStepAdvise()).isNotNull();
-    NextStepAdvise nextStepAdvise = adviserResponse.getNextStepAdvise();
-    assertThat(nextStepAdvise.getNextNodeId()).isEqualTo(DUMMY_NODE_ID);
+    assertThat(adviserResponse.getType()).isEqualTo(AdviseType.IGNORE_FAILURE);
+    assertThat(adviserResponse.getIgnoreFailureAdvise()).isNotNull();
   }
 
   @Test

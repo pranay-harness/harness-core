@@ -10,6 +10,7 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.UnknownEnumTypeException;
+import io.harness.product.ci.scm.proto.CompareCommitsResponse;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.product.ci.scm.proto.ListCommitsInPRResponse;
 import io.harness.product.ci.scm.proto.ListCommitsResponse;
@@ -68,6 +69,15 @@ public class ScmGitRefTask extends AbstractDelegateRunnableTask {
         return ScmGitRefTaskResponseData.builder()
             .gitRefType(scmGitRefTaskParams.getGitRefType())
             .listCommitsInPRResponse(listCommitsInPRResponse.toByteArray())
+            .build();
+      case COMPARE_COMMITS:
+        CompareCommitsResponse compareCommitsResponse = scmDelegateClient.processScmRequest(c
+            -> scmServiceClient.compareCommits(scmGitRefTaskParams.getScmConnector(),
+                scmGitRefTaskParams.getInitialCommitId(), scmGitRefTaskParams.getFinalCommitId(),
+                SCMGrpc.newBlockingStub(c)));
+        return ScmGitRefTaskResponseData.builder()
+            .gitRefType(scmGitRefTaskParams.getGitRefType())
+            .compareCommitsResponse(compareCommitsResponse.toByteArray())
             .build();
       default:
         throw new UnknownEnumTypeException("GitRefType", scmGitRefTaskParams.getGitRefType().toString());

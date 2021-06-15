@@ -10,6 +10,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
+import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceUpdatableEntity;
 import io.harness.cvng.activity.entities.CD10ActivitySource;
 import io.harness.cvng.activity.entities.CDNGActivitySource;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
@@ -20,6 +21,7 @@ import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.cvng.beans.activity.cd10.CD10ActivitySourceDTO;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.services.api.CVEventService;
+import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
@@ -28,6 +30,9 @@ import io.harness.utils.PageUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import com.mongodb.DuplicateKeyException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,6 +45,7 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
   @Inject private HPersistence hPersistence;
   @Inject private VerificationManagerService verificationManagerService;
   @Inject private CVEventService cvEventService;
+  @Inject private Injector injector;
 
   @Override
   public String create(String accountId, ActivitySourceDTO activitySourceDTO) {
@@ -92,22 +98,12 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
           activitySource.getAccountId(), activitySource.getDataCollectionTaskId());
     }
 
-    UpdateOperations<ActivitySource> updateOperations = hPersistence.createUpdateOperations(ActivitySource.class)
-                                                            .set(ActivitySourceKeys.name, activitySourceDTO.getName())
-                                                            .unset(ActivitySourceKeys.dataCollectionTaskId);
+    UpdateOperations<ActivitySource> updateOperations = hPersistence.createUpdateOperations(ActivitySource.class);
 
-    switch (activitySourceDTO.getType()) {
-      case KUBERNETES:
-        KubernetesActivitySource.setUpdateOperations(updateOperations, (KubernetesActivitySourceDTO) activitySourceDTO);
-        break;
-      case HARNESS_CD10:
-        CD10ActivitySource.setUpdateOperations(updateOperations, (CD10ActivitySourceDTO) activitySourceDTO);
-        break;
-      case CDNG:
-        throw new IllegalStateException("CDNG activity can not be updated using the API.");
-      default:
-        throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());
-    }
+    UpdatableEntity<ActivitySource, ActivitySourceDTO> updatableEntity = injector.getInstance(
+        Key.get(ActivitySourceUpdatableEntity.class, Names.named(activitySource.getType().name())));
+    updatableEntity.setUpdateOperations(updateOperations, activitySourceDTO);
+
     hPersistence.update(activitySource, updateOperations);
     return identifier;
   }
@@ -128,32 +124,6 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
     cvEventService.sendKubernetesActivitySourceConnectorCreateEvent(activitySource);
     cvEventService.sendKubernetesActivitySourceServiceCreateEvent(activitySource);
     cvEventService.sendKubernetesActivitySourceEnvironmentCreateEvent(activitySource);
-  }
-
-  private void update(ActivitySourceDTO activitySourceDTO) {
-    ActivitySource activitySource = hPersistence.get(ActivitySource.class, activitySourceDTO.getUuid());
-    if (isNotEmpty(activitySource.getDataCollectionTaskId())) {
-      verificationManagerService.deletePerpetualTask(
-          activitySource.getAccountId(), activitySource.getDataCollectionTaskId());
-    }
-    UpdateOperations<ActivitySource> updateOperations = hPersistence.createUpdateOperations(ActivitySource.class)
-                                                            .set(ActivitySourceKeys.name, activitySourceDTO.getName())
-
-                                                            .unset(ActivitySourceKeys.dataCollectionTaskId);
-
-    switch (activitySourceDTO.getType()) {
-      case KUBERNETES:
-        KubernetesActivitySource.setUpdateOperations(updateOperations, (KubernetesActivitySourceDTO) activitySourceDTO);
-        break;
-      case HARNESS_CD10:
-        CD10ActivitySource.setUpdateOperations(updateOperations, (CD10ActivitySourceDTO) activitySourceDTO);
-        break;
-      case CDNG:
-        throw new IllegalStateException("CDNG activity can not be updated using the API.");
-      default:
-        throw new IllegalStateException("Invalid type " + activitySourceDTO.getType());
-    }
-    hPersistence.update(hPersistence.get(ActivitySource.class, activitySourceDTO.getUuid()), updateOperations);
   }
 
   @Override

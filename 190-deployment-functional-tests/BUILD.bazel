@@ -1,7 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//:macros.bzl", "run_analysis")
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -13,7 +13,7 @@ shared_dependencies = [
 
 test_dependencies = [
     "@maven//:com_github_tomakehurst_wiremock_jre8_standalone",
-    "@delegate//:org_apache_httpcomponents_httpmime",
+    "@maven//:org_apache_httpcomponents_httpmime",
 ] + shared_dependencies + [
     "//990-commons-test:module",
     "//200-functional-test:module",

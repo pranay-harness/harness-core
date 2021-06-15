@@ -28,6 +28,7 @@ input PipelineTagFilter {
 
 enum PipelineTagType {
   APPLICATION
+  PIPELINE
 }
 
 # Type for pipeline

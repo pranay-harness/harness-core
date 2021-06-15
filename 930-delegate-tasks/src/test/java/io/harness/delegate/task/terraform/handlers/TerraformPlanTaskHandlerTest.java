@@ -20,6 +20,7 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.terraform.TFTaskType;
 import io.harness.delegate.task.terraform.TerraformBaseHelper;
+import io.harness.delegate.task.terraform.TerraformCommand;
 import io.harness.delegate.task.terraform.TerraformTaskNGParameters;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.encryption.SecretRefData;
@@ -79,6 +80,9 @@ public class TerraformPlanTaskHandlerTest extends CategoryTest {
     when(gitClientHelper.getRepoDirectory(any())).thenReturn("sourceDir");
     File outputFile = new File("sourceDir/terraform-output.tfvars");
     FileUtils.touch(outputFile);
+    File planFile = new File("sourceDir/tfplan");
+    FileUtils.touch(planFile);
+    when(terraformBaseHelper.getPlanName(TerraformCommand.APPLY)).thenReturn("tfplan");
     when(terraformBaseHelper.executeTerraformPlanStep(any()))
         .thenReturn(CliResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build());
     TerraformTaskNGResponse response =
@@ -86,6 +90,7 @@ public class TerraformPlanTaskHandlerTest extends CategoryTest {
     assertThat(response).isNotNull();
     assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     Files.deleteIfExists(Paths.get(outputFile.getPath()));
+    Files.deleteIfExists(Paths.get(planFile.getPath()));
     Files.deleteIfExists(Paths.get("sourceDir"));
   }
 
@@ -112,6 +117,7 @@ public class TerraformPlanTaskHandlerTest extends CategoryTest {
                         .build())
                 .build())
         .planName("planName")
+        .terraformCommand(TerraformCommand.APPLY)
         .build();
   }
 }

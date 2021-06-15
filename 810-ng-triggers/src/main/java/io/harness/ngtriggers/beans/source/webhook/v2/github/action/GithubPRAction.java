@@ -9,13 +9,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @OwnedBy(PIPELINE)
 public enum GithubPRAction implements GitAction {
-  @JsonProperty("Close") CLOSED("close", "Close"),
-  @JsonProperty("Edit") EDITED("edit", "Edit"),
-  @JsonProperty("Open") OPENED("open", "Open"),
-  @JsonProperty("Reopen") REOPENED("reopen", "Reopen"),
-  @JsonProperty("Label") LABELED("label", "Label"),
-  @JsonProperty("Unlabel") UNLABELED("unlabel", "Unlabel"),
-  @JsonProperty("Synchronize") SYNCHRONIZED("sync", "Synchronize");
+  @JsonProperty("Close") CLOSE("close", "Close"),
+  @JsonProperty("Edit") EDIT("edit", "Edit"),
+  @JsonProperty("Open") OPEN("open", "Open"),
+  @JsonProperty("Reopen") REOPEN("reopen", "Reopen"),
+  @JsonProperty("Label") LABEL("label", "Label"),
+  @JsonProperty("Unlabel") UNLABEL("unlabel", "Unlabel"),
+  @JsonProperty("Synchronize") SYNCHRONIZE("sync", "Synchronize");
 
   private String value;
   private String parsedValue;

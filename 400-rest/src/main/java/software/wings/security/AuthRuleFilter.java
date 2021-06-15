@@ -28,6 +28,7 @@ import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.HarnessApiKeyAuth;
+import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
@@ -228,8 +229,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     if (isDelegateRequest(requestContext) || isLearningEngineServiceRequest(requestContext)
-        || isIdentityServiceRequest(requestContext) || isAdminPortalRequest(requestContext)
-        || isNextGenManagerRequest()) {
+        || isIdentityServiceRequest(requestContext) || isAdminPortalRequest(requestContext) || isNextGenManagerRequest()
+        || isInternalAPI()) {
       return;
     }
 
@@ -432,7 +433,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
   private void validateAccountStatus(String accountId, boolean isHarnessUserExemptedRequest) {
     String accountStatus = accountService.getAccountStatus(accountId);
+    log.info("Testing: accountstatus for accountId {} is {}", accountId, accountStatus);
     if (AccountStatus.DELETED.equals(accountStatus)) {
+      log.error("Testing: account {} does not exist with status {}", accountId, accountStatus);
       throw new WingsException(ACCOUNT_DOES_NOT_EXIST, USER);
     } else if (AccountStatus.INACTIVE.equals(accountStatus) && !isHarnessUserExemptedRequest) {
       Account account = accountService.getFromCache(accountId);
@@ -709,6 +712,13 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     Method resourceMethod = resourceInfo.getResourceMethod();
 
     return resourceMethod.getAnnotation(ListAPI.class) != null || resourceClass.getAnnotation(ListAPI.class) != null;
+  }
+
+  private boolean isInternalAPI() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method resourceMethod = resourceInfo.getResourceMethod();
+    return resourceMethod.getAnnotation(InternalApi.class) != null
+        || resourceClass.getAnnotation(InternalApi.class) != null;
   }
 
   public PermissionAttribute buildPermissionAttribute(AuthRule authRule, String httpMethod, ResourceType resourceType) {

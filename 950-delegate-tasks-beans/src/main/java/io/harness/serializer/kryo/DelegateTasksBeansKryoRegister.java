@@ -79,6 +79,7 @@ import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
 import io.harness.delegate.beans.ci.pod.PVCParams;
 import io.harness.delegate.beans.ci.pod.PodParams;
 import io.harness.delegate.beans.ci.pod.SSHKeyDetails;
+import io.harness.delegate.beans.ci.pod.SecretParams;
 import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
 import io.harness.delegate.beans.ci.status.BuildStatusPushResponse;
@@ -132,6 +133,7 @@ import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.beans.executioncapability.LiteEngineConnectionCapability;
 import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
 import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
+import io.harness.delegate.beans.executioncapability.PcfInstallationCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.beans.executioncapability.SftpCapability;
@@ -369,6 +371,20 @@ import io.harness.secretmanagerclient.ValueType;
 import io.harness.serializer.KryoRegistrar;
 
 import software.wings.beans.TaskType;
+import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
+import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
+import software.wings.service.impl.appdynamics.AppdynamicsMetric;
+import software.wings.service.impl.appdynamics.AppdynamicsMetric.AppdynamicsMetricType;
+import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
+import software.wings.service.impl.appdynamics.AppdynamicsMetricDataValue;
+import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.impl.newrelic.NewRelicApplication;
+import software.wings.service.impl.newrelic.NewRelicApplication.NewRelicApplications;
+import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
+import software.wings.service.impl.newrelic.NewRelicMetric;
+import software.wings.service.impl.newrelic.NewRelicMetricData;
+import software.wings.service.impl.newrelic.NewRelicMetricData.NewRelicMetricSlice;
+import software.wings.service.impl.newrelic.NewRelicMetricData.NewRelicMetricTimeSlice;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.google.protobuf.UnknownFieldSet;
@@ -742,6 +758,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ScmPushTaskParams.class, 553286);
     kryo.register(ScmPushTaskResponseData.class, 553287);
     kryo.register(PushTaskType.class, 553288);
+    kryo.register(PcfInstallationCapability.class, 553289);
 
     kryo.register(ArtifactMetadata.class, 543301);
     kryo.register(ArtifactMetadataType.class, 543302);
@@ -770,5 +787,25 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GitFileTaskResponseData.class, 543123);
     kryo.register(GitFileTaskType.class, 543124);
     kryo.register(CVConnectorValidationParams.class, 543322);
+
+    kryo.register(SecretParams.class, 543325);
+    kryo.register(SecretParams.Type.class, 543326);
+
+    kryo.register(AppdynamicsBusinessTransaction.class, 543327);
+    kryo.register(AppdynamicsMetricType.class, 543328);
+    kryo.register(AppdynamicsMetric.class, 543329);
+    kryo.register(AppdynamicsMetricData.class, 543330);
+    kryo.register(AppdynamicsMetricDataValue.class, 543331);
+    kryo.register(AppdynamicsTier.class, 543332);
+    kryo.register(VerificationNodeDataSetupResponse.VerificationLoadResponse.class, 543333);
+    kryo.register(VerificationNodeDataSetupResponse.class, 543334);
+
+    kryo.register(NewRelicApplication.class, 543350);
+    kryo.register(NewRelicApplications.class, 543351);
+    kryo.register(NewRelicApplicationInstance.class, 543352);
+    kryo.register(NewRelicMetric.class, 543353);
+    kryo.register(NewRelicMetricSlice.class, 543354);
+    kryo.register(NewRelicMetricTimeSlice.class, 543355);
+    kryo.register(NewRelicMetricData.class, 543356);
   }
 }

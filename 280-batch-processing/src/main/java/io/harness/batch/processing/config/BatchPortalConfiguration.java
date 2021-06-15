@@ -6,6 +6,7 @@ import io.harness.cf.CfMigrationConfig;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.govern.ProviderModule;
 import io.harness.serializer.PersistenceRegistrars;
 
@@ -85,7 +86,12 @@ public class BatchPortalConfiguration {
 
       @Override
       public CfMigrationConfig cfMigrationConfig() {
-        return batchMainConfig.getCfMigrationConfig();
+        return CfMigrationConfig.builder().build();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return batchMainConfig.getFeatureFlagConfig();
       }
     };
   }

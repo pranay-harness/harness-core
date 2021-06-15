@@ -8,19 +8,21 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 @OwnedBy(CDP)
 @Data
 @NoArgsConstructor
 public class TerraformVarFile {
-  String type;
-  @NonNull String identifier;
+  @NotNull String type;
+  @NotNull String identifier;
 
-  @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true) TerraformVarFileSpec spec;
+  @NotNull
+  @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
+  TerraformVarFileSpec spec;
 
   @Builder
   public TerraformVarFile(String type, TerraformVarFileSpec spec, String identifier) {

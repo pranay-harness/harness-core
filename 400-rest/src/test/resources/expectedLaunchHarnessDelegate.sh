@@ -2,7 +2,7 @@
 
 sudo docker pull harness/delegate:latest
 
-sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
+sudo docker run -d --restart unless-stopped --hostname=$(hostname -f | head -c 63) \
 -e ACCOUNT_ID=ACCOUNT_ID \
 -e ACCOUNT_SECRET=TOKEN_VALUE \
 -e MANAGER_HOST_AND_PORT=https://localhost:9090 \
@@ -30,8 +30,9 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e JRE_VERSION=1.8.0_242 \
 -e HELM3_PATH= \
 -e HELM_PATH= \
+-e CF_CLI6_PATH= \
+-e CF_CLI7_PATH= \
 -e KUSTOMIZE_PATH= \
 -e OC_PATH= \
 -e KUBECTL_PATH= \
--e MANAGER_SERVICE_SECRET=********** \
 harness/delegate:latest

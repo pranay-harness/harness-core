@@ -10,6 +10,7 @@ import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.git.model.ChangeType;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +29,15 @@ public interface ConnectorCrudService {
   Optional<ConnectorResponseDTO> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
 
+  Optional<ConnectorResponseDTO> getByName(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String name, boolean isDeletedAllowed);
+
+  Optional<ConnectorResponseDTO> getFromBranch(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifier, String repo, String branch);
+
   ConnectorResponseDTO create(ConnectorDTO connector, String accountIdentifier);
+
+  ConnectorResponseDTO create(ConnectorDTO connector, String accountIdentifier, ChangeType gitChangeType);
 
   ConnectorResponseDTO update(ConnectorDTO connectorRequestDTO, String accountIdentifier);
 

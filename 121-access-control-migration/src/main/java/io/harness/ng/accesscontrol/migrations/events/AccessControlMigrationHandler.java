@@ -40,6 +40,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -85,7 +86,7 @@ public class AccessControlMigrationHandler implements MessageListener {
   @Inject
   public AccessControlMigrationHandler(ProjectService projectService, OrganizationService organizationService,
       AccessControlMigrationService accessControlMigrationService, NgUserService ngUserService,
-      AccessControlAdminClient accessControlAdminClient, UserClient userClient) {
+      @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient, UserClient userClient) {
     this.projectService = projectService;
     this.orgService = organizationService;
     this.accessControlMigrationService = accessControlMigrationService;
@@ -189,8 +190,8 @@ public class AccessControlMigrationHandler implements MessageListener {
     int maxIterations = 50;
     Set<UserInfo> users = new HashSet<>();
     while (maxIterations > 0) {
-      PageResponse<UserInfo> usersPage =
-          RestClientUtils.getResponse(userClient.list(accountId, String.valueOf(offset), String.valueOf(limit), null));
+      PageResponse<UserInfo> usersPage = RestClientUtils.getResponse(
+          userClient.list(accountId, String.valueOf(offset), String.valueOf(limit), null, true));
       if (isEmpty(usersPage.getResponse())) {
         break;
       }

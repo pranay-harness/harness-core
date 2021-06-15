@@ -3,8 +3,6 @@
 !!!custom_delegateSyncTaskResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 !!!custom_delegateTaskProgressResponses {"name": "processAfter_1", "background": true} {"processAfter": 1}
 !!!custom_delegateTaskProgressResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-SdkResponseEvent {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
-SdkResponseEvent {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 accessControlMigrations {"name": "accountId_1", "background": true} {"accountId": 1}
 accounts {"name": "accountBackgroundJobCheckIteration_1", "background": true} {"accountBackgroundJobCheckIteration": 1}
 accounts {"name": "accountDeletionIteration_1", "background": true} {"accountDeletionIteration": 1}
@@ -92,6 +90,7 @@ cache {"name": "accountId_1", "background": true} {"accountId": 1}
 cache {"name": "unique_commutative", "unique": true} {"_id": 1, "contextValue": 1}
 cache {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 cacheEntities {"name": "createdAt_1", "background": true} {"createdAt": 1}
+cacheEntities {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 capabilityRequirement {"name": "accountId_1", "background": true} {"accountId": 1}
 capabilityRequirement {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 capabilitySubjectPermission {"name": "accountId_1", "background": true} {"accountId": 1}
@@ -177,6 +176,7 @@ delegateConnections {"name": "index2", "background": true} {"accountId": 1, "del
 delegateConnections {"name": "lastHeartbeatIndex", "background": true} {"disconnected": 1, "lastHeartbeat": 1}
 delegateConnections {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 delegateGroups {"name": "byAccount", "unique": true} {"accountId": 1, "name": 1}
+delegateGroups {"name": "byAcctNgOwner", "background": true} {"accountId": 1, "ng": 1, "owner": 1}
 delegateGroups {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 delegateInsightsSummary {"name": "byAcctGrpTimeType", "background": true} {"accountId": 1, "delegateGroupId": 1, "periodStartTime": 1, "insightsType": 1}
 delegatePerpetualTaskUsageInsights {"name": "timestamp_1", "background": true} {"timestamp": 1}
@@ -348,6 +348,7 @@ gitSyncError {"name": "previousErrors_idx_for_app_filter", "background": true} {
 gitSyncErrorNG {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 gitSyncWebhook {"name": "appId_1", "background": true} {"appId": 1}
 gitSyncWebhook {"name": "createdAt_1", "background": true} {"createdAt": 1}
+gitToHarnessProgress {"name": "yamlChangeSetId_1", "background": true} {"yamlChangeSetId": 1}
 governanceConfig {"name": "accountId_1", "background": true} {"accountId": 1}
 governanceConfig {"name": "enableNextCloseIterations_nextCloseIterations", "background": true} {"enableNextCloseIterations": 1, "nextCloseIterations": 1}
 governanceConfig {"name": "enableNextIterations_nextIterations", "background": true} {"enableNextIterations": 1, "nextIterations": 1}
@@ -418,8 +419,6 @@ instanceStats {"name": "timestamp_1", "background": true} {"timestamp": 1}
 instanceStats {"name": "unique_account_timestamp", "unique": true} {"accountId": 1, "timestamp": 1}
 instanceSyncPerpetualTasksInfo {"name": "accountId_1", "background": true} {"accountId": 1}
 instanceSyncPerpetualTasksInfo {"name": "infrastructureMappingId_1", "background": true} {"infrastructureMappingId": 1}
-interruptEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
-interruptEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 invites {"name": "ng_invite_account_org_project_identifiers_email_role_deleted", "background": true} {"deleted": 1, "email": 1, "accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
 invites {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 kmsTransitionEvent2 {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
@@ -530,9 +529,6 @@ notifyQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 notifyQueue {"name": "waitInstanceId_1", "unique": true} {"waitInstanceId": 1}
 notifyResponses {"name": "createdAt_1", "background": true} {"createdAt": 1}
 notifyResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-orchestrationEventLog {"name": "createdAt", "background": true} {"createdAt": 1}
-orchestrationEventLog {"name": "planExecutionId_createdAt", "background": true} {"planExecutionId": 1, "createdAt": 1}
-orchestrationEventLog {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 orchestrationEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 orchestrationEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 organizations {"name": "accountIdentifierDeletedHarnessManagedNameWithCollationIdx", "background": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "deleted": 1, "harnessManaged": -1, "name": 1}
@@ -556,6 +552,7 @@ perpetualTask {"name": "assignerIterator", "background": true} {"state": 1, "ass
 perpetualTask {"name": "delegateId_1", "background": true} {"delegateId": 1}
 perpetualTask {"name": "rebalanceIterator", "background": true} {"state": 1, "rebalanceIteration": 1}
 personalization {"name": "unique_identification", "unique": true} {"accountId": 1, "userId": 1}
+pipelineExecutionSummary {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 pipelineExecutions {"name": "appId_1", "background": true} {"appId": 1}
 pipelineExecutions {"name": "createdAt_1", "background": true} {"createdAt": 1}
 pipelineExecutions {"name": "pipelineId_1", "background": true} {"pipelineId": 1}
@@ -790,6 +787,8 @@ triggers {"name": "artifactSelectionsArtifactStreamId", "background": true} {"ar
 triggers {"name": "conditionAppManifestId", "background": true} {"condition.conditionType": 1, "condition.appManifestId": 1}
 triggers {"name": "conditionArtifactStreamId", "background": true} {"condition.conditionType": 1, "condition.artifactStreamId": 1}
 triggers {"name": "createdAt_1", "background": true} {"createdAt": 1}
+triggers {"name": "nextIterations_1", "background": true} {"nextIterations": 1}
+triggers {"name": "triggerConditionNextIterations", "background": true} {"condition.conditionType": 1, "nextIterations": 1}
 triggers {"name": "webHookToken_1", "background": true} {"webHookToken": 1}
 triggers {"name": "yaml", "unique": true} {"appId": 1, "name": 1}
 user-groups {"name": "unique_user_groups_index", "unique": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
@@ -909,6 +908,8 @@ yamlGitConfig {"name": "appId_1", "background": true} {"appId": 1}
 yamlGitConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}
 yamlGitConfig {"name": "unique_locate", "unique": true} {"accountId": 1, "entityId": 1, "entityType": 1}
 yamlGitConfigs {"name": "accountId_orgId_projectId_gitConnectorId_repo_branch_unique_Index", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "gitConnectorRef": 1, "repo": 1, "branch": 1}
+yamlGitConfigs {"name": "repo_1", "background": true} {"repo": 1}
+yamlGitConfigs {"name": "repo_branch_index", "background": true} {"repo": 1, "branch": 1}
 yamlSuccessfulChange {"name": "unique_yaml_file_path", "unique": true} {"accountId": 1, "yamlFilePath": 1}
 yamlSuccessfulChange {"name": "validUntil_1", "background": true, "expireAfterSeconds": 86400} {"validUntil": 1}
 yamlVersion {"name": "appId_1", "background": true} {"appId": 1}

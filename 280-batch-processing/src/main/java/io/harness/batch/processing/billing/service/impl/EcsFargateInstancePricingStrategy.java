@@ -9,8 +9,8 @@ import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService
 import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 
 import java.time.Instant;
 import java.util.Map;

@@ -54,7 +54,7 @@ def main(event, context):
     """
     data = base64.b64decode(event['data']).decode('utf-8')
     jsonData = json.loads(data)
-    print(f"Processing event json:\n {jsonData}")
+    print(f"Processing event json: {jsonData}")
     if event.get("attributes", {}).get("eventType", "") != "TRANSFER_OPERATION_SUCCESS":
         print("Failed transfer operation. Returning")
         return

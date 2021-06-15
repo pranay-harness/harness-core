@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.WingsException;
+import io.harness.exception.exceptionmanager.ExceptionManager;
 import io.harness.gitsync.BranchDetails;
 import io.harness.gitsync.FileInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceImplBase;
@@ -15,8 +16,11 @@ import io.harness.gitsync.PushResponse;
 import io.harness.gitsync.RepoDetails;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
+import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
+import io.harness.security.PrincipalContextData;
+import io.harness.security.dto.UserPrincipal;
 import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;
@@ -34,6 +38,7 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
   @Inject HarnessToGitHelperService harnessToGitHelperService;
   @Inject KryoSerializer kryoSerializer;
   @Inject EntityDetailProtoToRestMapper entityDetailProtoToRestMapper;
+  @Inject ExceptionManager exceptionManager;
 
   @Override
   public void pushFromHarness(PushInfo request, StreamObserver<PushResponse> responseObserver) {
@@ -46,7 +51,9 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
   public void getConnectorInfo(FileInfo request, StreamObserver<InfoForPush> responseObserver) {
     final EntityDetail entityDetailDTO = entityDetailProtoToRestMapper.createEntityDetailDTO(request.getEntityDetail());
     final InfoForPush.Builder pushInfoBuilder = InfoForPush.newBuilder().setStatus(true);
-    try {
+    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+      setUserPrincipal(request);
+
       InfoForGitPush infoForPush =
           harnessToGitHelperService.getInfoForPush(request, entityDetailDTO.getEntityRef(), entityDetailDTO.getType());
       final ByteString connector = ByteString.copyFrom(kryoSerializer.asBytes(infoForPush.getScmConnector()));
@@ -61,20 +68,30 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
           .setDefaultBranchName(infoForPush.getDefaultBranchName())
           .setExecuteOnDelegate(infoForPush.isExecuteOnDelegate());
       if (infoForPush.isExecuteOnDelegate()) {
-        final ByteString encyptedDataDetails =
+        final ByteString encryptedDataDetails =
             ByteString.copyFrom(kryoSerializer.asBytes(infoForPush.getEncryptedDataDetailList()));
-        pushInfoBuilder.setEncryptedDataDetails(BytesValue.of(encyptedDataDetails));
+        pushInfoBuilder.setEncryptedDataDetails(BytesValue.of(encryptedDataDetails));
       }
-    } catch (WingsException e) {
-      pushInfoBuilder.setException(StringValue.of(e.getMessage()));
-      pushInfoBuilder.setStatus(false);
     } catch (Exception e) {
-      log.error("Unknown exception occurred in harness to git grpc.", e);
+      // Using exception Manager to get kryo serializable wings exception out of catched exception.
+      final WingsException wingsException = exceptionManager.processException(e);
+      final ByteString exceptionBytesString = ByteString.copyFrom(kryoSerializer.asBytes(wingsException));
+      pushInfoBuilder.setException(BytesValue.of(exceptionBytesString));
       pushInfoBuilder.setStatus(false);
-      pushInfoBuilder.setException(StringValue.of("Unknown error occurred"));
     }
     responseObserver.onNext(pushInfoBuilder.build());
     responseObserver.onCompleted();
+  }
+
+  private void setUserPrincipal(FileInfo request) {
+    final UserPrincipal userPrincipal = getUserPrincipal(request);
+    GlobalContextManager.upsertGlobalContextRecord(PrincipalContextData.builder().principal(userPrincipal).build());
+  }
+
+  private UserPrincipal getUserPrincipal(FileInfo request) {
+    final io.harness.gitsync.UserPrincipal principalFromProto = request.getUserPrincipal();
+    return new UserPrincipal(principalFromProto.getUserId().getValue(), principalFromProto.getEmail().getValue(),
+        principalFromProto.getUserName().getValue(), request.getAccountId());
   }
 
   @Override

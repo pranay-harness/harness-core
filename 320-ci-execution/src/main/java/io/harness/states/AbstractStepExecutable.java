@@ -6,6 +6,7 @@ import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_PORT;
 import static io.harness.common.CIExecutionConstants.TMP_PATH;
 import static io.harness.states.LiteEngineTaskStep.LE_STATUS_TASK_TYPE;
+import static io.harness.steps.StepUtils.buildAbstractions;
 
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
@@ -38,6 +39,7 @@ import io.harness.delegate.task.stepstatus.StepStatus;
 import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
 import io.harness.delegate.task.stepstatus.artifact.ArtifactMetadata;
+import io.harness.encryption.Scope;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.logstreaming.LogStreamingHelper;
 import io.harness.ngpipeline.common.AmbianceHelper;
@@ -293,10 +295,11 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
             .timeout(timeout)
             .build();
 
-    HDelegateTask task =
-        (HDelegateTask) StepUtils.prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractionsMap());
+    Map<String, String> abstractions = buildAbstractions(ambiance, Scope.PROJECT);
 
-    return executor.queueTask(ambiance.getSetupAbstractionsMap(), task);
+    HDelegateTask task = (HDelegateTask) StepUtils.prepareDelegateTaskInput(accountId, taskData, abstractions);
+
+    return executor.queueTask(abstractions, task);
   }
 
   private String queueParkedDelegateTask(
@@ -309,10 +312,10 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
                                   .timeout(timeout)
                                   .build();
 
-    HDelegateTask task =
-        (HDelegateTask) StepUtils.prepareDelegateTaskInput(accountId, taskData, ambiance.getSetupAbstractionsMap());
+    Map<String, String> abstractions = buildAbstractions(ambiance, Scope.PROJECT);
+    HDelegateTask task = (HDelegateTask) StepUtils.prepareDelegateTaskInput(accountId, taskData, abstractions);
 
-    return executor.queueTask(ambiance.getSetupAbstractionsMap(), task);
+    return executor.queueTask(abstractions, task);
   }
 
   private String getLogKey(Ambiance ambiance) {

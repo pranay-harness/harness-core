@@ -255,7 +255,11 @@ grpcClientConfig:
   target: localhost:9980
   authority: localhost
 
-
+#This will be used only by OnPrem delegates for grpc communication
+grpcOnpremDelegateClientConfig:
+  target: localhost:9880
+  authority: localhost
+  
 mongo:
   uri: mongodb://localhost:27017/harness
   #uri: mongodb://mongo1:30001,mongo2:30002,mongo3:30003/harness
@@ -295,7 +299,7 @@ deployMode: KUBERNETES
 envPath: ""
 
 kubectlVersion: v1.13.2
-scmVersion: 444bed53
+scmVersion: 90882846
 
 portal:
   url: https://localhost:8000
@@ -335,6 +339,10 @@ cfClientConfig:
   analyticsEnabled: true
   connectionTimeout: 10000
   readTimeout: 30000
+
+featureFlagConfig:
+  featureFlagSystem: LOCAL
+  syncFeaturesToCF: false
 
 cfMigrationConfig:
   enabled: false
@@ -529,11 +537,13 @@ jreConfigs:
     jreDirectory: jre1.8.0_191
     jreMacDirectory: jre1.8.0_191.jre
     jreTarPath: jre/8u191/jre-8u191-${OS}-x64.tar.gz
+    alpnJarPath: tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
   openjdk8u242:
     version: 1.8.0_242
     jreDirectory: jdk8u242-b08-jre
     jreMacDirectory: jdk8u242-b08-jre
     jreTarPath: jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
+    alpnJarPath: tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
 
 cdnConfig:
   url: https://qa.harness.io
@@ -543,6 +553,7 @@ cdnConfig:
   watcherJarBasePath: public/shared/watchers/builds
   watcherJarPath: oracle-8u191/%s/watcher.jar
   watcherMetaDataFilePath: public/%s/%s/watchers/current.version
+  alpnJarPath: public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
   cdnJreTarPaths:
     oracle8u191: public/shared/jre/oracle-8u191/jre-8u191-${OS}-x64.tar.gz
     openjdk8u242: public/shared/jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
@@ -588,5 +599,13 @@ delegateGrpcServicePort: 8080
 logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
+
+accessControlClient:
+  enableAccessControl: false
+  accessControlServiceConfig:
+    baseUrl: http://localhost:9006/api/
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 exportAccountDataBatchSize: 1000

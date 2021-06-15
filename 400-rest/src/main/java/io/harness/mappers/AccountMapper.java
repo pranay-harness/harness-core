@@ -20,6 +20,7 @@ public class AccountMapper {
         .identifier(account.getUuid())
         .name(account.getAccountName())
         .companyName(account.getCompanyName())
+        .defaultExperience(account.getDefaultExperience())
         .build();
   }
 
@@ -28,6 +29,7 @@ public class AccountMapper {
         .withUuid(dto.getIdentifier())
         .withAccountName(dto.getName())
         .withCompanyName(dto.getCompanyName())
+        .withDefaultExperience(dto.getDefaultExperience())
         .build();
   }
 
@@ -36,6 +38,7 @@ public class AccountMapper {
         .uuid(account.getUuid())
         .accountName(account.getAccountName())
         .companyName(account.getCompanyName())
+        .createdFromNG(account.isCreatedFromNG())
         .build();
   }
 }

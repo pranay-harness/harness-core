@@ -1,9 +1,9 @@
 package io.harness.event.service.impl;
 
-import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
-import io.harness.ccm.commons.entities.LatestClusterInfo;
+import io.harness.ccm.commons.entities.batch.LastReceivedPublishedMessage;
+import io.harness.ccm.commons.entities.batch.LatestClusterInfo;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.ccm.health.LastReceivedPublishedMessageDao;
-import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.service.intfc.LastReceivedPublishedMessageRepository;
 import io.harness.grpc.IdentifierKeys;
 

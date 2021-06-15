@@ -75,9 +75,13 @@ public class CD10ActivitySource extends ActivitySource {
         .build();
   }
 
-  public static void setUpdateOperations(
-      UpdateOperations<ActivitySource> updateOperations, CD10ActivitySourceDTO activitySourceDTO) {
-    updateOperations.set(CD10ActivitySourceKeys.serviceMappings, activitySourceDTO.getServiceMappings());
-    updateOperations.set(CD10ActivitySourceKeys.envMappings, activitySourceDTO.getEnvMappings());
+  public static class CD10ActivitySourceUpdatableEntity<T extends CD10ActivitySource, D extends CD10ActivitySourceDTO>
+      extends ActivitySourceUpdatableEntity<T, D> {
+    @Override
+    public void setUpdateOperations(UpdateOperations<T> updateOperations, D dto) {
+      setCommonOperations(updateOperations, dto);
+      updateOperations.set(CD10ActivitySourceKeys.serviceMappings, dto.getServiceMappings())
+          .set(CD10ActivitySourceKeys.envMappings, dto.getEnvMappings());
+    }
   }
 }

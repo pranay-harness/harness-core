@@ -48,7 +48,7 @@ public class YamlSchemaProviderTest extends CategoryTest {
   @Before
   public void setup() throws IOException {
     initMocks(this);
-    // this is just for intialization
+    // this is just for initialization
     final List<YamlSchemaRootClass> yamlSchemaRootClasses =
         Collections.singletonList(YamlSchemaRootClass.builder()
                                       .entityType(EntityType.SECRETS)

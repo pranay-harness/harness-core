@@ -127,14 +127,29 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       Query query = new Query().addCriteria(new Criteria()
                                                 .and(YamlChangeSetKeys.accountId)
                                                 .is(accountId)
-                                                .and(YamlChangeSetKeys.status)
-                                                .is(SKIPPED)
                                                 .and(YamlChangeSetKeys.retryCount)
                                                 .gt(maxRetryCount));
       UpdateResult status = yamlChangeSetRepository.update(query, update);
       log.info(
           "Updated the status of [{}] YamlChangeSets to Skipped. Max retry count exceeded", status.getModifiedCount());
     }
+  }
+
+  @Override
+  public boolean updateStatusWithRetryCountIncrement(
+      String accountId, YamlChangeSetStatus currentStatus, YamlChangeSetStatus newStatus, String yamlChangeSetId) {
+    Update updateOps = new Update().set(YamlChangeSetKeys.status, newStatus);
+    updateOps.inc(YamlChangeSetKeys.retryCount);
+
+    Query query = new Query(new Criteria()
+                                .and(YamlChangeSetKeys.accountId)
+                                .is(accountId)
+                                .and(YamlChangeSetKeys.uuid)
+                                .is(yamlChangeSetId)
+                                .and(YamlChangeSetKeys.status)
+                                .is(currentStatus));
+
+    return updateYamlChangeSets(accountId, query, updateOps);
   }
 
   @Override

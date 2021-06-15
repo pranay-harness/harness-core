@@ -7,8 +7,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.rule.Owner;
 
 import software.wings.beans.KubernetesClusterConfig;

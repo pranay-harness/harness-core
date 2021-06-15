@@ -1,9 +1,9 @@
 package io.harness.batch.processing.service.impl;
 
-import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.dao.impl.PricingProfileDaoImpl;
 import io.harness.batch.processing.service.intfc.PricingProfileService;
 import io.harness.ccm.cluster.entities.PricingProfile;
+import io.harness.ccm.commons.beans.billing.InstanceCategory;
 
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class PricingProfileServiceImpl implements PricingProfileService {
-  private PricingProfileDaoImpl pricingProfileDao;
+  private final PricingProfileDaoImpl pricingProfileDao;
 
   @Autowired
   @Inject

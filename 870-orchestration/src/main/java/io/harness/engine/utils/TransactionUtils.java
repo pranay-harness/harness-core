@@ -1,6 +1,7 @@
 package io.harness.engine.utils;
 
 import com.google.inject.Inject;
+import com.mongodb.MongoException;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
@@ -20,6 +21,7 @@ public class TransactionUtils {
               -> log.info("Retrying Transaction. Attempt No. {}", event.getAttemptCount(), event.getLastFailure()))
           .onFailure(event -> log.error("Transaction Failed", event.getFailure()))
           .handle(TransactionException.class)
+          .handle(MongoException.class)
           .handle(MongoTransactionException.class)
           .handle(UncategorizedMongoDbException.class);
 

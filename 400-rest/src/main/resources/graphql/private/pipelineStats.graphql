@@ -1,5 +1,6 @@
 enum PipelineEntityAggregation {
   Application
+  Pipeline
 }
 
 input PipelineAggregation {

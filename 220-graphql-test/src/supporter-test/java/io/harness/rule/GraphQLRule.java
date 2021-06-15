@@ -6,6 +6,7 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.AccessControlClientConfiguration;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheConfig;
@@ -17,12 +18,14 @@ import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.cvng.client.CVNGServiceClient;
+import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.client.GrpcClientConfig;
@@ -31,6 +34,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.security.DelegateTokenAuthenticator;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.TestManagerKryoRegistrar;
@@ -136,6 +140,17 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     configuration.setLogStreamingServiceConfig(
         LogStreamingServiceConfig.builder().baseUrl("http://localhost:8079").serviceToken("token").build());
 
+    configuration.setAccessControlClientConfiguration(
+        AccessControlClientConfiguration.builder()
+            .enableAccessControl(false)
+            .accessControlServiceSecret("token")
+            .accessControlServiceConfig(ServiceHttpClientConfig.builder()
+                                            .baseUrl("http://localhost:9006/api/")
+                                            .readTimeOutSeconds(15)
+                                            .connectTimeOutSeconds(15)
+                                            .build())
+            .build());
+
     MarketoConfig marketoConfig =
         MarketoConfig.builder().clientId("client_id").clientSecret("client_secret_id").enabled(false).build();
     configuration.setMarketoConfig(marketoConfig);
@@ -217,6 +232,11 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
       public CfMigrationConfig cfMigrationConfig() {
         return CfMigrationConfig.builder().build();
       }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return FeatureFlagConfig.builder().build();
+      }
     });
 
     MainConfiguration configuration = getConfiguration("graphQL");
@@ -238,6 +258,13 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
         bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
         CVNGServiceClient mockCVNGServiceClient = mock(CVNGServiceClient.class);
         bind(CVNGServiceClient.class).toInstance(mockCVNGServiceClient);
+      }
+    });
+
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(DelegateTokenAuthenticator.class).to(DelegateTokenAuthenticatorImpl.class).in(Singleton.class);
       }
     });
 

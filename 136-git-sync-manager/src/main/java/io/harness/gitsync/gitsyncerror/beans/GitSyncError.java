@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.encryption.Scope;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.common.beans.GitSyncDirection;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails.GitToHarnessErrorDetailsKeys;
 import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails.HarnessToGitErrorDetailsKeys;
@@ -124,6 +125,4 @@ public class GitSyncError
   public Long obtainNextIteration(String fieldName) {
     return nextIteration;
   }
-
-  public enum GitSyncDirection { GIT_TO_HARNESS, HARNESS_TO_GIT }
 }

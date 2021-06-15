@@ -6,19 +6,24 @@ import static io.harness.rule.OwnerRule.SAMARTH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.PipelineServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.outbox.OutboxEvent;
+import io.harness.outbox.api.impl.OutboxServiceImpl;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.StepCategory;
 import io.harness.pms.pipeline.StepData;
+import io.harness.pms.pipeline.StepPalleteInfo;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
+import io.harness.repositories.pipeline.PMSPipelineRepositoryCustomImpl;
 import io.harness.rule.Owner;
 
 import com.google.common.io.Resources;
@@ -50,6 +55,8 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   @Mock private PmsSdkInstanceService pmsSdkInstanceService;
   @Mock private PMSPipelineServiceStepHelper pmsPipelineServiceStepHelper;
   @Mock private PMSPipelineServiceHelper pmsPipelineServiceHelper;
+  @Mock private PMSPipelineRepositoryCustomImpl pmsPipelineRepositoryCustom;
+  @Mock private OutboxServiceImpl outboxService;
   @InjectMocks private PMSPipelineServiceImpl pmsPipelineService;
   @Inject private PMSPipelineRepository pmsPipelineRepository;
   StepCategory library;
@@ -64,6 +71,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
 
   PipelineEntity pipelineEntity;
   PipelineEntity updatedPipelineEntity;
+  OutboxEvent a = OutboxEvent.builder().build();
 
   @Before
   public void setUp() throws IOException {
@@ -123,28 +131,37 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testGetSteps() {
-    Map<String, List<StepInfo>> serviceInstanceNameToSupportedSteps = new HashMap<>();
+    Map<String, StepPalleteInfo> serviceInstanceNameToSupportedSteps = new HashMap<>();
     serviceInstanceNameToSupportedSteps.put("cd",
-        Collections.singletonList(StepInfo.newBuilder()
-                                      .setName("testStepCD")
-                                      .setType("testStepCD")
-                                      .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
-                                      .build()));
+        StepPalleteInfo.builder()
+            .moduleName("cd")
+            .stepTypes(Collections.singletonList(
+                StepInfo.newBuilder()
+                    .setName("testStepCD")
+                    .setType("testStepCD")
+                    .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
+                    .build()))
+            .build());
     serviceInstanceNameToSupportedSteps.put("cv",
-        Collections.singletonList(StepInfo.newBuilder()
-                                      .setName("testStepCV")
-                                      .setType("testStepCV")
-                                      .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
-                                      .build()));
-    Mockito.when(pmsSdkInstanceService.getInstanceNameToSupportedSteps())
+        StepPalleteInfo.builder()
+            .moduleName("cv")
+            .stepTypes(Collections.singletonList(
+                StepInfo.newBuilder()
+                    .setName("testStepCV")
+                    .setType("testStepCV")
+                    .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
+                    .build()))
+            .build());
+
+    Mockito.when(pmsSdkInstanceService.getModuleNameToStepPalleteInfo())
         .thenReturn(serviceInstanceNameToSupportedSteps);
     Mockito
         .when(pmsPipelineServiceStepHelper.calculateStepsForModuleBasedOnCategory(
-            null, serviceInstanceNameToSupportedSteps.get("cd"), accountId))
+            null, serviceInstanceNameToSupportedSteps.get("cd").getStepTypes(), accountId))
         .thenReturn(library);
     Mockito
         .when(pmsPipelineServiceStepHelper.calculateStepsForCategory(
-            "cv", serviceInstanceNameToSupportedSteps.get("cv"), accountId))
+            "cv", serviceInstanceNameToSupportedSteps.get("cv").getStepTypes(), accountId))
         .thenReturn(cv);
     StepCategory stepCategory = pmsPipelineService.getSteps("cd", null, accountId);
     String expected =
@@ -157,25 +174,34 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testGetStepsWithCategory() {
-    Map<String, List<StepInfo>> serviceInstanceNameToSupportedSteps = new HashMap<>();
+    Map<String, StepPalleteInfo> serviceInstanceNameToSupportedSteps = new HashMap<>();
     serviceInstanceNameToSupportedSteps.put("cd",
-        Collections.singletonList(
-            StepInfo.newBuilder()
-                .setName("testStepCD")
-                .setType("testStepCD")
-                .setStepMetaData(StepMetaData.newBuilder().addCategory("K8S").setFolderPath("Double/Single").build())
-                .build()));
+        StepPalleteInfo.builder()
+            .moduleName("cd")
+            .stepTypes(Collections.singletonList(
+                StepInfo.newBuilder()
+                    .setName("testStepCD")
+                    .setType("testStepCD")
+                    .setStepMetaData(
+                        StepMetaData.newBuilder().addCategory("K8S").setFolderPath("Double/Single").build())
+                    .build()))
+            .build());
     serviceInstanceNameToSupportedSteps.put("cv",
-        Collections.singletonList(StepInfo.newBuilder()
-                                      .setName("testStepCV")
-                                      .setType("testStepCV")
-                                      .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
-                                      .build()));
-    Mockito.when(pmsSdkInstanceService.getInstanceNameToSupportedSteps())
+        StepPalleteInfo.builder()
+            .moduleName("cv")
+            .stepTypes(Collections.singletonList(
+                StepInfo.newBuilder()
+                    .setName("testStepCV")
+                    .setType("testStepCV")
+                    .setStepMetaData(StepMetaData.newBuilder().setFolderPath("Double/Single").build())
+                    .build()))
+            .build());
+
+    Mockito.when(pmsSdkInstanceService.getModuleNameToStepPalleteInfo())
         .thenReturn(serviceInstanceNameToSupportedSteps);
     Mockito
         .when(pmsPipelineServiceStepHelper.calculateStepsForModuleBasedOnCategory(
-            "Terraform", serviceInstanceNameToSupportedSteps.get("cd"), accountId))
+            "Terraform", serviceInstanceNameToSupportedSteps.get("cd").getStepTypes(), accountId))
         .thenReturn(StepCategory.builder()
                         .name("Library")
                         .stepsData(new ArrayList<>())
@@ -183,7 +209,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
                         .build());
     Mockito
         .when(pmsPipelineServiceStepHelper.calculateStepsForCategory(
-            "cv", serviceInstanceNameToSupportedSteps.get("cv"), accountId))
+            "cv", serviceInstanceNameToSupportedSteps.get("cv").getStepTypes(), accountId))
         .thenReturn(cv);
 
     StepCategory stepCategory = pmsPipelineService.getSteps("cd", "Terraform", accountId);
@@ -211,6 +237,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   @Category(UnitTests.class)
   public void testFormCriteriaWithActualData() throws IOException {
     on(pmsPipelineService).set("pmsPipelineRepository", pmsPipelineRepository);
+    doReturn(a).when(outboxService).save(any());
     doReturn(updatedPipelineEntity).when(pmsPipelineServiceHelper).updatePipelineInfo(pipelineEntity);
 
     pmsPipelineService.create(pipelineEntity);

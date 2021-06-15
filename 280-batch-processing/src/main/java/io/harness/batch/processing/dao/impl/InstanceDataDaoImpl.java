@@ -13,11 +13,11 @@ import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
 import io.harness.batch.processing.support.ActiveInstanceIterator;
 import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
-import io.harness.ccm.commons.entities.InstanceData;
-import io.harness.ccm.commons.entities.InstanceData.InstanceDataKeys;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.entities.batch.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData.InstanceDataKeys;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 

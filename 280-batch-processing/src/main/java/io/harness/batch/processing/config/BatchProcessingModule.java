@@ -29,6 +29,8 @@ import io.harness.lock.PersistentLocker;
 import io.harness.lock.noop.PersistentNoopLocker;
 import io.harness.mongo.MongoConfig;
 import io.harness.persistence.HPersistence;
+import io.harness.threading.ExecutorModule;
+import io.harness.time.TimeModule;
 
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
@@ -41,13 +43,12 @@ import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.security.SecretManager;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
+import java.util.concurrent.Executors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -72,6 +73,8 @@ public class BatchProcessingModule extends AbstractModule {
     bind(ViewCustomFieldService.class).to(ViewCustomFieldServiceImpl.class);
     bind(CeAccountExpirationChecker.class).to(CeAccountExpirationCheckerImpl.class);
     bind(AnomalyService.class).to(AnomalyServiceImpl.class);
+    install(new ConnectorResourceClientModule(batchMainConfig.getNgManagerServiceHttpClientConfig(),
+        batchMainConfig.getNgManagerServiceSecret(), BATCH_PROCESSING.getServiceId()));
 
     bindCFServices();
 
@@ -84,11 +87,12 @@ public class BatchProcessingModule extends AbstractModule {
    * NOOP over here
    */
   private void bindCFServices() {
+    ExecutorModule.getInstance().setExecutorService(Executors.newCachedThreadPool());
+    install(ExecutorModule.getInstance());
+    install(TimeModule.getInstance());
+
     bind(PersistentLocker.class).to(PersistentNoopLocker.class).in(Scopes.SINGLETON);
     bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
-    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
-    install(new ConnectorResourceClientModule(batchMainConfig.getNgManagerServiceHttpClientConfig(),
-        batchMainConfig.getNgManagerServiceSecret(), BATCH_PROCESSING.getServiceId()));
   }
 
   private void bindRetryOnExceptionInterceptor() {

@@ -1,0 +1,61 @@
+package io.harness.migrations.all;
+
+import static io.harness.delegate.beans.DelegateType.KUBERNETES;
+import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.persistence.HQuery.excludeAuthority;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.delegate.beans.DelegateGroup;
+import io.harness.delegate.beans.DelegateGroup.DelegateGroupKeys;
+import io.harness.migrations.Migration;
+import io.harness.persistence.HIterator;
+import io.harness.persistence.HPersistence;
+
+import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+
+@Slf4j
+@OwnedBy(HarnessTeam.DEL)
+public class DelegateNgDetailsToDelegateGroupMigration implements Migration {
+  @Inject private HPersistence persistence;
+
+  @Override
+  public void migrate() {
+    log.info("Starting the migration of the Ng delegate details to delegate groups.");
+
+    Query<Delegate> query = persistence.createQuery(Delegate.class, excludeAuthority)
+                                .field(DelegateKeys.delegateGroupId)
+                                .exists()
+                                .field(DelegateKeys.delegateGroupName)
+                                .doesNotExist();
+
+    try (HIterator<Delegate> records = new HIterator<>(query.fetch())) {
+      for (Delegate delegate : records) {
+        try {
+          Query<DelegateGroup> groupQuery = this.persistence.createQuery(DelegateGroup.class, excludeAuthority)
+                                                .filter(DelegateGroupKeys.uuid, delegate.getDelegateGroupId());
+
+          UpdateOperations<DelegateGroup> updateOperations =
+              this.persistence.createUpdateOperations(DelegateGroup.class);
+          setUnset(updateOperations, DelegateGroupKeys.ng, true);
+          setUnset(updateOperations, DelegateGroupKeys.owner, delegate.getOwner());
+          setUnset(updateOperations, DelegateGroupKeys.delegateType, KUBERNETES);
+          setUnset(updateOperations, DelegateGroupKeys.description, delegate.getDescription());
+          setUnset(updateOperations, DelegateGroupKeys.delegateConfigurationId, delegate.getDelegateProfileId());
+          setUnset(updateOperations, DelegateGroupKeys.sizeDetails, delegate.getSizeDetails());
+
+          persistence.findAndModify(groupQuery, updateOperations, HPersistence.returnNewOptions);
+        } catch (Exception ex) {
+          log.error("Unexpected error occurred while copying ng data from delegate {}", delegate.getUuid());
+        }
+      }
+    }
+
+    log.info("The migration of the Ng delegate details to delegate groups has finished.");
+  }
+}

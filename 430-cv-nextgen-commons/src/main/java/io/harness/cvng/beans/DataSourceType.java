@@ -8,6 +8,7 @@ public enum DataSourceType {
   APP_DYNAMICS("Appdynamics"),
   SPLUNK("Splunk"),
   STACKDRIVER("Stackdriver"),
+  STACKDRIVER_LOG("Stackdriver Log"),
   KUBERNETES("Kubernetes"),
   NEW_RELIC("New Relic"),
   PROMETHEUS("Prometheus");

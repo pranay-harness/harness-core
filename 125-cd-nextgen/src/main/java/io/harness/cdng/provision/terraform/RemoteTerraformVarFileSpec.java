@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class RemoteTerraformVarFileSpec implements TerraformVarFileSpec {
-  @JsonProperty("store") StoreConfigWrapper storeConfigWrapper;
+  @NotNull StoreConfigWrapper store;
 
   @Override
   public String getType() {

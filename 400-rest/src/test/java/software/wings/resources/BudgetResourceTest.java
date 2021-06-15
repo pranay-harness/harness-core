@@ -12,8 +12,8 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.budget.Budget;
 import io.harness.ccm.budget.BudgetService;
+import io.harness.ccm.commons.entities.billing.Budget;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 

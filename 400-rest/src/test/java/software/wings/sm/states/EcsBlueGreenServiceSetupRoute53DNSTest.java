@@ -72,6 +72,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.utils.ApplicationManifestUtils;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
@@ -97,6 +98,7 @@ public class EcsBlueGreenServiceSetupRoute53DNSTest extends WingsBaseTest {
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
   @Mock private SweepingOutputService mockSweepingOutputService;
   @Mock private StateExecutionService stateExecutionService;
+  @Mock private ApplicationManifestUtils applicationManifestUtils;
 
   @InjectMocks private EcsBlueGreenServiceSetupRoute53DNS state = new EcsBlueGreenServiceSetupRoute53DNS("stateName");
 

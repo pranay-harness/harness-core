@@ -11,7 +11,7 @@ import io.harness.batch.processing.ccm.PricingSource;
 import io.harness.batch.processing.pricing.service.support.StorageCustomPricingProvider;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.StorageResource;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 import io.harness.rule.Owner;
 
 import java.time.Instant;

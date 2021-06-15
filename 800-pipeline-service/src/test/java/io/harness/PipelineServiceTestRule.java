@@ -19,10 +19,15 @@ import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
+import io.harness.outbox.api.OutboxService;
+import io.harness.outbox.api.impl.OutboxDaoImpl;
+import io.harness.outbox.api.impl.OutboxServiceImpl;
 import io.harness.persistence.HPersistence;
-import io.harness.pms.plan.execution.registrar.PmsOrchestrationEventRegistrar;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
+import io.harness.repositories.outbox.OutboxEventRepository;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
@@ -30,6 +35,7 @@ import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.service.intfc.DelegateSyncService;
+import io.harness.springdata.HTransactionTemplate;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -38,6 +44,7 @@ import io.harness.time.TimeModule;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -58,6 +65,8 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.mongodb.MongoTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @OwnedBy(PIPELINE)
 @Slf4j
@@ -90,6 +99,19 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
             .addAll(PipelineServiceModuleRegistrars.morphiaRegistrars)
             .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
             .build();
+      }
+
+      @Provides
+      @Singleton
+      TransactionTemplate getTransactionTemplate(MongoTransactionManager mongoTransactionManager) {
+        return new HTransactionTemplate(mongoTransactionManager, false);
+      }
+
+      @Provides
+      @Singleton
+      OutboxService getOutboxService(OutboxEventRepository outboxEventRepository) {
+        return new OutboxServiceImpl(
+            new OutboxDaoImpl(outboxEventRepository), NGPipelineObjectMapperHelper.NG_PIPELINE_OBJECT_MAPPER);
       }
 
       @Provides
@@ -138,8 +160,9 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
     modules.add(mongoTypeModule(annotations));
 
     PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
-                                        .serviceName("pmsTest")
-                                        .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers())
+                                        .moduleType(ModuleType.PMS)
+                                        .deploymentMode(SdkDeployMode.LOCAL)
+                                        .engineEventHandlersMap(ImmutableMap.of())
                                         .build();
     modules.add(PmsSdkModule.getInstance(sdkConfig));
     return modules;

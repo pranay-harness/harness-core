@@ -5,7 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.sync.SyncFacilitator;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.cf.FlagConfigurationStep;
 import io.harness.steps.cf.FlagConfigurationStepParameters;
@@ -34,17 +34,15 @@ public class FlagConfigurationStepInfo implements PMSStepInfo {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> feature;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> environment;
   @NotNull List<PatchInstruction> instructions;
-  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> state;
 
   @Builder
-  @ConstructorProperties({"name", "feature", "environment", "instructions", "state"})
+  @ConstructorProperties({"name", "feature", "environment", "instructions"})
   public FlagConfigurationStepInfo(String name, ParameterField<String> feature, ParameterField<String> environment,
-      List<PatchInstruction> instructions, ParameterField<String> state) {
+      List<PatchInstruction> instructions) {
     this.name = name;
     this.feature = feature;
     this.environment = environment;
     this.instructions = instructions;
-    this.state = state;
   }
 
   @Override
@@ -54,18 +52,15 @@ public class FlagConfigurationStepInfo implements PMSStepInfo {
 
   @Override
   public String getFacilitatorType() {
-    return SyncFacilitator.FACILITATOR_TYPE.getType();
+    return OrchestrationFacilitatorType.SYNC;
   }
 
   @Override
   public SpecParameters getSpecParameters() {
-    return FlagConfigurationStepParameters
-        .builder()
-        //.identifier(identifier)
+    return FlagConfigurationStepParameters.builder()
         .name(name)
         .feature(feature)
         .environment(environment)
-        .state(state)
         .instructions(instructions)
         .build();
   }

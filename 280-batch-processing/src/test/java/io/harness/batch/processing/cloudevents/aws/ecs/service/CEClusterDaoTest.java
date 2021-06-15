@@ -6,9 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.batch.processing.BatchProcessingTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.entities.billing.CECluster;
 import io.harness.rule.Owner;
-
-import software.wings.beans.ce.CECluster;
 
 import com.google.inject.Inject;
 import java.util.List;

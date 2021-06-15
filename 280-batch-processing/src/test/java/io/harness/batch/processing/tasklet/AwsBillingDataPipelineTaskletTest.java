@@ -14,8 +14,8 @@ import io.harness.batch.processing.config.BillingDataPipelineConfig;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.batch.processing.service.impl.BillingDataPipelineServiceImpl;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
 import io.harness.rule.Owner;
 import io.harness.testsupport.BaseTaskletTest;
 
@@ -36,7 +36,6 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -60,9 +59,6 @@ public class AwsBillingDataPipelineTaskletTest extends BaseTaskletTest {
 
   @Before
   public void setup() throws IOException {
-    MockitoAnnotations.initMocks(this);
-    mockChunkContext();
-
     SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute()
             .withUuid(settingId)

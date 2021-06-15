@@ -7,6 +7,8 @@ import static io.harness.pms.contracts.execution.Status.PAUSED;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.observers.NodeStatusUpdateHandler;
+import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.utils.StatusUtils;
@@ -16,15 +18,15 @@ import java.util.EnumSet;
 import java.util.List;
 
 @OwnedBy(CDC)
-public class PausedStepStatusUpdate implements StepStatusUpdate {
+public class PausedStepStatusUpdate implements NodeStatusUpdateHandler {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
 
   @Override
-  public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
-    NodeExecution nodeExecution = nodeExecutionService.get(stepStatusUpdateInfo.getNodeExecutionId());
+  public void handleNodeStatusUpdate(NodeUpdateInfo nodeStatusUpdateInfo) {
+    NodeExecution nodeExecution = nodeStatusUpdateInfo.getNodeExecution();
     if (nodeExecution.getParentId() == null) {
-      planExecutionService.updateCalculatedStatus(stepStatusUpdateInfo.getPlanExecutionId());
+      planExecutionService.updateCalculatedStatus(nodeStatusUpdateInfo.getPlanExecutionId());
       return;
     }
     List<NodeExecution> flowingChildren = nodeExecutionService.findByParentIdAndStatusIn(
@@ -32,6 +34,6 @@ public class PausedStepStatusUpdate implements StepStatusUpdate {
     if (isEmpty(flowingChildren)) {
       nodeExecutionService.updateStatusWithOps(nodeExecution.getParentId(), PAUSED, null, EnumSet.noneOf(Status.class));
     }
-    planExecutionService.updateCalculatedStatus(stepStatusUpdateInfo.getPlanExecutionId());
+    planExecutionService.updateCalculatedStatus(nodeStatusUpdateInfo.getPlanExecutionId());
   }
 }

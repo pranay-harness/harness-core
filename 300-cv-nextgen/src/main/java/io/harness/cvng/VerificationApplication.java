@@ -5,6 +5,11 @@ import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.cvng.cdng.services.impl.CVNGNotifyEventListener.CVNG_ORCHESTRATION;
 import static io.harness.cvng.migration.beans.CVNGSchema.CVNGMigrationStatus.RUNNING;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_FACILITATOR_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_INTERRUPT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_START_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_EVENT_TOPIC;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
@@ -13,6 +18,9 @@ import static com.google.inject.matcher.Matchers.not;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.EventObserverUtils;
+import io.harness.ModuleType;
+import io.harness.PipelineServiceUtilityModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.AbstractCfModule;
@@ -66,6 +74,7 @@ import io.harness.cvng.verificationjob.jobs.VerificationJobInstanceTimeoutHandle
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
@@ -89,6 +98,13 @@ import io.harness.notification.module.NotificationClientModule;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.pms.contracts.plan.ConsumerConfig;
+import io.harness.pms.contracts.plan.Redis;
+import io.harness.pms.listener.facilitators.FacilitatorRedisConsumerService;
+import io.harness.pms.listener.interrupts.InterruptRedisConsumerService;
+import io.harness.pms.listener.node.start.NodeStartRedisConsumerService;
+import io.harness.pms.listener.orchestrationevent.OrchestrationEventEventConsumerService;
+import io.harness.pms.listener.progress.ProgressRedisConsumerService;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
@@ -163,6 +179,9 @@ import ru.vyarus.guice.validator.ValidationModule;
 @OwnedBy(HarnessTeam.CV)
 public class VerificationApplication extends Application<VerificationConfiguration> {
   private static String APPLICATION_NAME = "Verification NextGen Application";
+
+  private static String PMS_SERVICE_NAME = "cvng";
+
   private final MetricRegistry metricRegistry = new MetricRegistry();
   private HarnessMetricRegistry harnessMetricRegistry;
   private HPersistence hPersistence;
@@ -252,7 +271,12 @@ public class VerificationApplication extends Application<VerificationConfigurati
 
       @Override
       public CfMigrationConfig cfMigrationConfig() {
-        return configuration.getCfMigrationConfig();
+        return CfMigrationConfig.builder().build();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return configuration.getFeatureFlagConfig();
       }
     });
     modules.add(MetricsInstrumentationModule.builder()
@@ -303,19 +327,23 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new CVNextGenCommonsServiceModule());
     modules.add(new NotificationClientModule(configuration.getNotificationClientConfiguration()));
     modules.add(new CvPersistenceModule());
-    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(configuration)));
     YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
                                                     .requireSchemaInit(true)
                                                     .requireSnippetInit(false)
                                                     .requireValidatorInit(false)
                                                     .build();
+
+    // Pipeline Service Modules
+    PmsSdkConfiguration pmsSdkConfiguration = getPmsSdkConfiguration(configuration);
+    modules.add(PmsSdkModule.getInstance(pmsSdkConfiguration));
+    modules.add(PipelineServiceUtilityModule.getInstance(
+        configuration.getEventsFrameworkConfiguration(), pmsSdkConfiguration.getServiceName()));
+
     Injector injector = Guice.createInjector(modules);
     YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
     initializeServiceSecretKeys();
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
-    if (!configuration.getShouldConfigureWithPMS()) {
-      initMetrics(injector);
-    }
+    initMetrics(injector);
     autoCreateCollectionsAndIndexes(injector);
     registerCorrelationFilter(environment, injector);
     registerAuthFilters(environment, injector, configuration);
@@ -335,6 +363,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerActivityIterator(injector);
     registerVerificationJobInstanceTimeoutIterator(injector);
     registerPipelineSDK(configuration, injector);
+    EventObserverUtils.registerObservers(injector);
     registerWaitEnginePublishers(injector);
     log.info("Leaving startup maintenance mode");
     MaintenanceController.forceMaintenance(false);
@@ -391,7 +420,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
 
     return PmsSdkConfiguration.builder()
         .deploymentMode(remote ? SdkDeployMode.REMOTE : SdkDeployMode.LOCAL)
-        .serviceName("cvng")
+        .moduleType(ModuleType.CV)
         .mongoConfig(config.getPmsMongoConfig())
         .pipelineServiceInfoProviderClass(CVNGPipelineServiceInfoProvider.class)
         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
@@ -402,6 +431,25 @@ public class VerificationApplication extends Application<VerificationConfigurati
         .filterCreationResponseMerger(new CVNGFilterCreationResponseMerger())
         .executionSummaryModuleInfoProviderClass(CVNGModuleInfoProvider.class)
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
+        .interruptConsumerConfig(ConsumerConfig.newBuilder()
+                                     .setRedis(Redis.newBuilder().setTopicName(PIPELINE_INTERRUPT_TOPIC).build())
+                                     .build())
+        .orchestrationEventConsumerConfig(
+            ConsumerConfig.newBuilder()
+                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_ORCHESTRATION_EVENT_TOPIC).build())
+                .build())
+        .facilitationEventConsumerConfig(
+            ConsumerConfig.newBuilder()
+                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_FACILITATOR_EVENT_TOPIC).build())
+                .build())
+        .nodeStartEventConsumerConfig(
+            ConsumerConfig.newBuilder()
+                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_NODE_START_EVENT_TOPIC).build())
+                .build())
+        .progressEventConsumerConfig(
+            ConsumerConfig.newBuilder()
+                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_PROGRESS_EVENT_TOPIC).build())
+                .build())
         .build();
   }
 
@@ -691,6 +739,13 @@ public class VerificationApplication extends Application<VerificationConfigurati
 
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(MaintenanceController.class));
+
+    // Pipeline SDK Consumers
+    environment.lifecycle().manage(injector.getInstance(InterruptRedisConsumerService.class));
+    environment.lifecycle().manage(injector.getInstance(OrchestrationEventEventConsumerService.class));
+    environment.lifecycle().manage(injector.getInstance(FacilitatorRedisConsumerService.class));
+    environment.lifecycle().manage(injector.getInstance(NodeStartRedisConsumerService.class));
+    environment.lifecycle().manage(injector.getInstance(ProgressRedisConsumerService.class));
   }
 
   private void registerResources(Environment environment, Injector injector) {

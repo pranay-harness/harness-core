@@ -170,6 +170,8 @@ if [[ "" != "$CF_MIGRATION_ENVIRONMENT" ]]; then
   yq write -i $CONFIG_FILE cfMigrationConfig.environment "$CF_MIGRATION_ENVIRONMENT"
 fi
 
+replace_key_value featureFlagConfig.featureFlagSystem "$FEATURE_FLAG_SYSTEM"
+replace_key_value featureFlagConfig.syncFeaturesToCF "$SYNC_FEATURES_TO_CF"
 
 
 if [[ "" != "$ELASTICSEARCH_URI" ]]; then
@@ -782,6 +784,14 @@ if [[ "" != "$DELEGATE_SERVICE_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE grpcDelegateServiceClientConfig.authority "$DELEGATE_SERVICE_AUTHORITY"
 fi
 
+if [[ "" != "$DELEGATE_GRPC_TARGET" ]]; then
+  yq write -i $CONFIG_FILE grpcOnpremDelegateClientConfig.target "$DELEGATE_GRPC_TARGET"
+fi
+
+if [[ "" != "$DELEGATE_GRPC_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE grpcOnpremDelegateClientConfig.authority "$DELEGATE_GRPC_AUTHORITY"
+fi
+
 if [[ "" != "$NG_MANAGER_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE grpcClientConfig.authority "$NG_MANAGER_AUTHORITY"
 fi
@@ -812,6 +822,18 @@ fi
 
 if [[ "" != "$LOG_STREAMING_SERVICE_TOKEN" ]]; then
   yq write -i $CONFIG_FILE logStreamingServiceConfig.serviceToken "$LOG_STREAMING_SERVICE_TOKEN"
+fi
+
+if [[ "" != "$ACCESS_CONTROL_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE accessControlClient.enableAccessControl $ACCESS_CONTROL_ENABLED
+fi
+
+if [[ "" != "$ACCESS_CONTROL_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE accessControlClient.accessControlServiceConfig.baseUrl $ACCESS_CONTROL_BASE_URL
+fi
+
+if [[ "" != "$ACCESS_CONTROL_SECRET" ]]; then
+  yq write -i $CONFIG_FILE accessControlClient.accessControlServiceSecret $ACCESS_CONTROL_SECRET
 fi
 
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then

@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.pcf.model.CfCliVersion;
 
 import software.wings.beans.PcfConfig;
 
@@ -25,10 +26,10 @@ public class PcfCommandRouteUpdateRequest extends PcfCommandRequest {
       PcfCommandType pcfCommandType, String organization, String space, PcfConfig pcfConfig, String workflowExecutionId,
       Integer timeoutIntervalInMin, PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData, boolean useCfCLI,
       boolean useAppAutoscalar, boolean enforceSslValidation, boolean limitPcfThreads,
-      boolean ignorePcfConnectionContextCache) {
+      boolean ignorePcfConnectionContextCache, CfCliVersion cfCliVersion) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCfCLI, enforceSslValidation, useAppAutoscalar, limitPcfThreads,
-        ignorePcfConnectionContextCache);
+        ignorePcfConnectionContextCache, cfCliVersion);
     this.pcfRouteUpdateConfigData = pcfRouteUpdateConfigData;
   }
 }

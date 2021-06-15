@@ -202,6 +202,10 @@ if [[ "" != "$ENABLE_DASHBOARD_TIMESCALE" ]]; then
   yq write -i $CONFIG_FILE enableDashboardTimescale $ENABLE_DASHBOARD_TIMESCALE
 fi
 
+if [[ "" != "$MANAGER_SECRET" ]]; then
+  yq write -i $CONFIG_FILE managerServiceSecret "$MANAGER_SECRET"
+fi
+
 if [[ "" != "$MONGO_INDEX_MANAGER_MODE" ]]; then
   yq write -i $CONFIG_FILE cimanager-mongo.indexManagerMode "$MONGO_INDEX_MANAGER_MODE"
 fi

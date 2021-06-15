@@ -35,6 +35,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.nexus.NexusRequest;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -46,6 +47,8 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.service.intfc.NexusBuildService;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.mappers.artifact.NexusConfigToNexusRequestMapper;
 import software.wings.utils.ArtifactType;
 
 import com.google.common.collect.ImmutableMap;
@@ -59,6 +62,7 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.assertj.core.api.Assertions;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.AdditionalMatchers;
@@ -72,13 +76,13 @@ import org.mockito.Mock;
 @TargetModule(_930_DELEGATE_TASKS)
 public class NexusBuildServiceTest extends WingsBaseTest {
   @Mock private NexusService nexusService;
-
+  @Mock private EncryptionService encryptionService;
   @Inject @InjectMocks private NexusBuildService nexusBuildService;
 
   private static final String DEFAULT_NEXUS_URL = "http://localhost:8881/nexus/";
 
-  private NexusConfig nexusConfig =
-      NexusConfig.builder().nexusUrl(DEFAULT_NEXUS_URL).username("admin").password("admin123".toCharArray()).build();
+  private NexusConfig nexusConfig;
+  private NexusRequest nexusRequest;
 
   private static final NexusArtifactStream nexusArtifactStream =
       NexusArtifactStream.builder()
@@ -91,11 +95,18 @@ public class NexusBuildServiceTest extends WingsBaseTest {
           .artifactPaths(Stream.of(ARTIFACT_NAME).collect(toList()))
           .build();
 
+  @Before
+  public void setup() {
+    nexusConfig =
+        NexusConfig.builder().nexusUrl(DEFAULT_NEXUS_URL).username("admin").password("admin123".toCharArray()).build();
+    nexusRequest = NexusConfigToNexusRequestMapper.toNexusRequest(nexusConfig, encryptionService, null);
+  }
+
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetPlans() {
-    when(nexusService.getRepositories(nexusConfig, null))
+    when(nexusService.getRepositories(nexusRequest))
         .thenReturn(ImmutableMap.of("snapshots", "Snapshots", "releases", "Releases"));
     Map<String, String> jobs = nexusBuildService.getPlans(nexusConfig, null);
     assertThat(jobs).hasSize(2).containsEntry("releases", "Releases");
@@ -105,7 +116,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetJobs() {
-    when(nexusService.getRepositories(nexusConfig, null))
+    when(nexusService.getRepositories(nexusRequest))
         .thenReturn(ImmutableMap.of("snapshots", "Snapshots", "releases", "Releases"));
     List<JobDetails> jobs = nexusBuildService.getJobs(nexusConfig, null, Optional.empty());
     List<String> jobNames = nexusBuildService.extractJobNameFromJobDetails(jobs);
@@ -116,12 +127,12 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetArtifactPaths() {
-    when(nexusService.getArtifactPaths(nexusConfig, null, "releases")).thenReturn(Lists.newArrayList("/fakepath"));
-    when(nexusService.getArtifactPaths(nexusConfig, null, "releases", "groupId"))
+    when(nexusService.getArtifactPaths(nexusRequest, "releases")).thenReturn(Lists.newArrayList("/fakepath"));
+    when(nexusService.getArtifactPaths(nexusRequest, "releases", "groupId"))
         .thenReturn(Lists.newArrayList("/fakepath2"));
-    when(nexusService.getArtifactNames(nexusConfig, null, "releases", "groupId"))
+    when(nexusService.getArtifactNames(nexusRequest, "releases", "groupId"))
         .thenReturn(Lists.newArrayList("/fakeName1"));
-    when(nexusService.getArtifactNames(nexusConfig, null, "releases", "groupId", maven.name()))
+    when(nexusService.getArtifactNames(nexusRequest, "releases", "groupId", maven.name()))
         .thenReturn(Lists.newArrayList("/fakeName2"));
 
     List<String> jobs = nexusBuildService.getArtifactPaths("releases", null, nexusConfig, null);
@@ -141,7 +152,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetBuilds() {
-    when(nexusService.getVersions(nexusConfig, null, BUILD_JOB_NAME, ARTIFACT_GROUP_ID, ARTIFACT_NAME, null, null))
+    when(nexusService.getVersions(nexusRequest, BUILD_JOB_NAME, ARTIFACT_GROUP_ID, ARTIFACT_NAME, null, null))
         .thenReturn(
             Lists.newArrayList(aBuildDetails().withNumber("3.0").build(), aBuildDetails().withNumber("2.1.2").build()));
     List<BuildDetails> buildDetails = nexusBuildService.getBuilds(
@@ -173,14 +184,15 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldValidateArtifactServer() {
     // Makes an actual network request to the given nexus url.
-    NexusConfig nexusConfig = NexusConfig.builder()
-                                  .nexusUrl("https://harness.io")
-                                  .username("username")
-                                  .password("password".toCharArray())
-                                  .accountId(ACCOUNT_ID)
-                                  .build();
-    nexusBuildService.validateArtifactServer(nexusConfig, Collections.emptyList());
-    verify(nexusService).isRunning(eq(nexusConfig), eq(Collections.emptyList()));
+    NexusConfig config = NexusConfig.builder()
+                             .nexusUrl("https://harness.io")
+                             .username("username")
+                             .password("password".toCharArray())
+                             .accountId(ACCOUNT_ID)
+                             .build();
+    NexusRequest request = NexusConfigToNexusRequestMapper.toNexusRequest(config, encryptionService, null);
+    nexusBuildService.validateArtifactServer(config, Collections.emptyList());
+    verify(nexusService).isRunning(eq(request));
   }
 
   @Test
@@ -198,10 +210,10 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   public void ShouldCollectPlans() {
     // For Docker ArtifactType
     nexusBuildService.getPlans(nexusConfig, Collections.emptyList(), ArtifactType.DOCKER, docker.name());
-    verify(nexusService).getRepositories(eq(nexusConfig), eq(Collections.emptyList()), eq(docker.name()));
+    verify(nexusService).getRepositories(eq(nexusRequest), eq(docker.name()));
 
     nexusBuildService.getPlans(nexusConfig, Collections.emptyList(), ArtifactType.JAR, maven.name());
-    verify(nexusService).getRepositories(eq(nexusConfig), eq(Collections.emptyList()), eq(maven.name()));
+    verify(nexusService).getRepositories(eq(nexusRequest), eq(maven.name()));
   }
 
   @Test
@@ -221,15 +233,15 @@ public class NexusBuildServiceTest extends WingsBaseTest {
             .sorted(Comparator.reverseOrder())
             .map(i -> BuildDetails.Builder.aBuildDetails().withNumber(String.valueOf(i)).build())
             .collect(toList());
-    when(nexusService.getVersion(AdditionalMatchers.or(eq(nuget.name()), eq(npm.name())), eq(nexusConfig),
-             eq(Collections.emptyList()), eq("someJobName"), eq("someNexusPackage"), eq("someBuildNumber")))
+    when(nexusService.getVersion(AdditionalMatchers.or(eq(nuget.name()), eq(npm.name())), eq(nexusRequest),
+             eq("someJobName"), eq("someNexusPackage"), eq("someBuildNumber")))
         .thenReturn(allBuilds);
 
     BuildDetails actual =
         nexusBuildService.getBuild(APP_ID, nugetAttributes, nexusConfig, Collections.emptyList(), buildNo);
     verify(nexusService)
-        .getVersion(eq(nuget.name()), eq(nexusConfig), eq(Collections.emptyList()), eq("someJobName"),
-            eq("someNexusPackage"), eq("someBuildNumber"));
+        .getVersion(
+            eq(nuget.name()), eq(nexusRequest), eq("someJobName"), eq("someNexusPackage"), eq("someBuildNumber"));
     assertThat(actual).isEqualTo(allBuilds.get(0));
 
     ArtifactStreamAttributes npmAttributes = ArtifactStreamAttributes.builder()
@@ -240,8 +252,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
                                                  .build();
     actual = nexusBuildService.getBuild(APP_ID, npmAttributes, nexusConfig, Collections.emptyList(), buildNo);
     verify(nexusService)
-        .getVersion(eq(npm.name()), eq(nexusConfig), eq(Collections.emptyList()), eq("someJobName"),
-            eq("someNexusPackage"), eq("someBuildNumber"));
+        .getVersion(eq(npm.name()), eq(nexusRequest), eq("someJobName"), eq("someNexusPackage"), eq("someBuildNumber"));
     assertThat(actual).isEqualTo(allBuilds.get(0));
 
     ArtifactStreamAttributes attributes = ArtifactStreamAttributes.builder()
@@ -256,8 +267,8 @@ public class NexusBuildServiceTest extends WingsBaseTest {
                                               .build();
     nexusBuildService.getBuild(APP_ID, attributes, nexusConfig, Collections.emptyList(), buildNo);
     verify(nexusService)
-        .getVersion(eq(nexusConfig), eq(Collections.emptyList()), eq("someJobName"), eq("someGroupID"),
-            eq("someArtifactName"), eq("someExtension"), eq("someClassifier"), eq(buildNo));
+        .getVersion(eq(nexusRequest), eq("someJobName"), eq("someGroupID"), eq("someArtifactName"), eq("someExtension"),
+            eq("someClassifier"), eq(buildNo));
   }
 
   @Test
@@ -270,7 +281,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
                                               .artifactStreamType(ArtifactStreamType.NEXUS.name())
                                               .build();
     nexusBuildService.getBuilds(APP_ID, attributes, nexusConfig, Collections.emptyList());
-    verify(nexusService).getBuilds(eq(nexusConfig), eq(Collections.emptyList()), eq(attributes), anyInt());
+    verify(nexusService).getBuilds(eq(nexusRequest), eq(attributes), anyInt());
   }
 
   @Test
@@ -284,9 +295,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
                                               .artifactStreamType(ArtifactStreamType.NEXUS.name())
                                               .build();
     nexusBuildService.getBuilds(APP_ID, attributes, nexusConfig, Collections.emptyList());
-    verify(nexusService)
-        .getVersions(eq(npm.name()), eq(nexusConfig), eq(Collections.emptyList()), eq("someJobName"),
-            eq("someNexusPackageName"));
+    verify(nexusService).getVersions(eq(npm.name()), eq(nexusRequest), eq("someJobName"), eq("someNexusPackageName"));
 
     attributes = ArtifactStreamAttributes.builder()
                      .jobName("someJobName")
@@ -295,9 +304,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
                      .artifactStreamType(ArtifactStreamType.NEXUS.name())
                      .build();
     nexusBuildService.getBuilds(APP_ID, attributes, nexusConfig, Collections.emptyList());
-    verify(nexusService)
-        .getVersions(eq(npm.name()), eq(nexusConfig), eq(Collections.emptyList()), eq("someJobName"),
-            eq("someNexusPackageName"));
+    verify(nexusService).getVersions(eq(npm.name()), eq(nexusRequest), eq("someJobName"), eq("someNexusPackageName"));
   }
 
   @Test
@@ -307,16 +314,16 @@ public class NexusBuildServiceTest extends WingsBaseTest {
     ArtifactStreamAttributes attributes = ArtifactStreamAttributes.builder().build();
     boolean actual = nexusBuildService.validateArtifactSource(nexusConfig, null, attributes);
     Assertions.assertThat(actual).isTrue();
-    verify(nexusService, never()).existsVersion(any(), any(), any(), any(), any(), any(), any());
+    verify(nexusService, never()).existsVersion(any(), any(), any(), any(), any(), any());
 
     attributes = ArtifactStreamAttributes.builder().extension("someExtension").build();
     actual = nexusBuildService.validateArtifactSource(nexusConfig, null, attributes);
-    verify(nexusService, times(1)).existsVersion(any(), any(), any(), any(), any(), eq("someExtension"), any());
+    verify(nexusService, times(1)).existsVersion(any(), any(), any(), any(), eq("someExtension"), any());
     Assertions.assertThat(actual).isFalse();
 
     attributes = ArtifactStreamAttributes.builder().classifier("someClassifier").build();
     actual = nexusBuildService.validateArtifactSource(nexusConfig, null, attributes);
-    verify(nexusService, times(1)).existsVersion(any(), any(), any(), any(), any(), any(), eq("someClassifier"));
+    verify(nexusService, times(1)).existsVersion(any(), any(), any(), any(), any(), eq("someClassifier"));
     Assertions.assertThat(actual).isFalse();
   }
 
@@ -331,7 +338,6 @@ public class NexusBuildServiceTest extends WingsBaseTest {
                                               .artifactName("artifactName")
                                               .build();
     nexusBuildService.getLastSuccessfulBuild(APP_ID, attributes, nexusConfig, null);
-    verify(nexusService)
-        .getLatestVersion(eq(nexusConfig), eq(null), eq("someJob"), eq("someGroup"), eq("artifactName"));
+    verify(nexusService).getLatestVersion(eq(nexusRequest), eq("someJob"), eq("someGroup"), eq("artifactName"));
   }
 }

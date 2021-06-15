@@ -22,6 +22,7 @@ import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.JsonSchemaValidationException;
+import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
@@ -141,7 +142,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Owner(developers = SAMARTH)
   @Category(UnitTests.class)
   @Ignore("Ignored till Schema validation is behind FF")
-  public void testCreatePipelineWithSchemaErrors() throws IOException {
+  public void testCreatePipelineWithSchemaErrors() {
     doThrow(JsonSchemaValidationException.class)
         .when(pmsYamlSchemaService)
         .validateYamlSchema(ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
@@ -303,10 +304,11 @@ public class PipelineResourceTest extends CategoryTest {
         .when(pmsPipelineService)
         .get(anyString(), anyString(), anyString(), anyString(), anyBoolean());
 
-    Page<PipelineExecutionSummaryDTO> content = pipelineResource
-                                                    .getListOfExecutions(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER,
-                                                        null, null, 0, 10, null, null, null, null, null, false)
-                                                    .getData();
+    Page<PipelineExecutionSummaryDTO> content =
+        pipelineResource
+            .getListOfExecutions(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, null, 0, 10, null, null, null, null,
+                null, false, GitEntityFindInfoDTO.builder().build())
+            .getData();
     assertThat(content).isNotEmpty();
     assertThat(content.getNumberOfElements()).isEqualTo(1);
 

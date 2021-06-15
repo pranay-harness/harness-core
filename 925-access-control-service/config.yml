@@ -134,6 +134,10 @@ userGroupClient:
     enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
   userGroupServiceSecret: ${USER_GROUP_CLIENT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 
+notificationConfig:
+  slackWebhookUrl: ${NOTIFICATION_SLACK_WEBHOOK_URL:-https://hooks.slack.com/services/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}
+  environment: ${NOTIFICATION_ENVIRONMENT:-localhost}
+
 decisionModuleConfig:
 
 aggregatorModuleConfig:
@@ -152,6 +156,7 @@ aggregatorModuleConfig:
     database.include.list: ${DATABASE_INCLUDE_LIST:-accesscontrol}
     collection.include.list: ${COLLECTION_INCLUDE_LIST:-accesscontrol.roles,accesscontrol.roleassignments,accesscontrol.resourcegroups,accesscontrol.usergroups}
   enabled: ${AGGREGATOR_ENABLED:-true}
+  exportMetricsToStackDriver: ${EXPORT_METRICS_TO_STACK_DRIVER:-false}
 
 accessControlPreferenceConfig:
   enabled: ${ACCESS_CONTROL_PREFERENCE_ENABLED:-true}
@@ -173,3 +178,4 @@ outboxPollConfig:
   initialDelayInSeconds: ${OUTBOX_POLL_INITIAL_DELAY:-5}
   pollingIntervalInSeconds: ${OUTBOX_POLL_INTERVAL:-5}
   maximumRetryAttemptsForAnEvent: ${OUTBOX_MAX_RETRY_ATTEMPTS:-7}
+  lockId: AccessControlService

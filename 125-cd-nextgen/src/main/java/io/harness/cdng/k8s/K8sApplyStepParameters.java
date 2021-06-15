@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.k8s.K8sCommandUnitConstants;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -24,8 +25,8 @@ import org.springframework.data.annotation.TypeAlias;
 public class K8sApplyStepParameters extends K8sApplyBaseStepInfo implements K8sSpecParameters {
   @Builder(builderMethodName = "infoBuilder")
   public K8sApplyStepParameters(ParameterField<Boolean> skipDryRun, ParameterField<Boolean> skipSteadyStateCheck,
-      ParameterField<List<String>> filePaths) {
-    super(skipDryRun, skipSteadyStateCheck, filePaths);
+      ParameterField<List<String>> filePaths, ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
+    super(skipDryRun, skipSteadyStateCheck, filePaths, delegateSelectors);
   }
 
   @Nonnull

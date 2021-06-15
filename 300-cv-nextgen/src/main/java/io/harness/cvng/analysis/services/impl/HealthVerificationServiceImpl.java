@@ -83,8 +83,7 @@ public class HealthVerificationServiceImpl implements HealthVerificationService 
             .analysisStatus(status)
             .verificationTaskId(verificationTaskId)
             .startTime(((HealthVerificationJob) jobInstance.getResolvedJob())
-                           .getPreActivityVerificationStartTime(
-                               jobInstance.getStartTime(), jobInstance.getPreActivityVerificationStartTime()))
+                           .getPreActivityVerificationStartTime(jobInstance.getStartTime()))
             .endTime(latestTimeOfAnalysis)
             .isFinalState(isFinalState)
             .log("Health verification completed until time " + latestTimeOfAnalysis)

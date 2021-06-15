@@ -106,7 +106,7 @@ resource "google_monitoring_dashboard" "delegate_dashboard" {
         }
       },
       {
-        "title": "Delegate new processe restarting",
+        "title": "Delegate new process restarting",
         "xyChart": {
           "dataSets": [
             {
@@ -136,7 +136,7 @@ resource "google_monitoring_dashboard" "delegate_dashboard" {
         }
       },
       {
-        "title": "Delegate new processe restarting by account",
+        "title": "Delegate new process restarting by account",
         "xyChart": {
           "dataSets": [
             {

@@ -53,7 +53,6 @@ func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*
 	if err != nil {
 		return &pb.ExecuteStepResponse{}, err
 	}
-	defer rl.Writer.Close()
 
 	lc := external.LogCloser()
 	lc.Add(rl)
@@ -63,23 +62,38 @@ func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*
 	switch x := in.GetStep().GetStep().(type) {
 	case *enginepb.UnitStep_Run:
 		stepOutput, numRetries, err := newRunTask(in.GetStep(), in.GetPrevStepOutputs(), in.GetTmpFilePath(), rl.BaseLogger,
-			rl.Writer, h.logMetrics, h.log).Run(ctx)
+			rl.Writer, false, h.log).Run(ctx)
 		response := &pb.ExecuteStepResponse{
 			Output:     stepOutput,
 			NumRetries: numRetries,
 		}
+		rl.Writer.Close()
+		// Try to improve the error message
+		if err != nil && rl.Writer.Error() != nil {
+			err = fmt.Errorf("%w\n\n%s", err, rl.Writer.Error().Error())
+		}
 		return response, err
 	case *enginepb.UnitStep_RunTests:
-		numRetries, err := newRunTestsTask(in.GetStep(), in.GetTmpFilePath(), rl.BaseLogger, rl.Writer, h.logMetrics, h.log).Run(ctx)
+		numRetries, err := newRunTestsTask(in.GetStep(), in.GetTmpFilePath(), rl.BaseLogger, rl.Writer, false, h.log).Run(ctx)
 		response := &pb.ExecuteStepResponse{
 			NumRetries: numRetries,
 		}
+		rl.Writer.Close()
+		// Try to improve the error message
+		if err != nil && rl.Writer.Error() != nil {
+			err = fmt.Errorf("%w\n\n%s", err, rl.Writer.Error().Error())
+		}
 		return response, err
 	case *enginepb.UnitStep_Plugin:
-		artifact, numRetries, err := newPluginTask(in.GetStep(), in.GetPrevStepOutputs(), rl.BaseLogger, rl.Writer, h.logMetrics, h.log).Run(ctx)
+		artifact, numRetries, err := newPluginTask(in.GetStep(), in.GetPrevStepOutputs(), rl.BaseLogger, rl.Writer, false, h.log).Run(ctx)
 		response := &pb.ExecuteStepResponse{
 			Artifact:   artifact,
 			NumRetries: numRetries,
+		}
+		rl.Writer.Close()
+		// Try to improve the error message
+		if err != nil && rl.Writer.Error() != nil {
+			err = fmt.Errorf("%w\n\n%s", err, rl.Writer.Error().Error())
 		}
 		return response, err
 	case nil:

@@ -67,6 +67,9 @@ mongo:
   transactionsEnabled: false
   aliasDBName: ng-harness
 
+accountConfig:
+  deploymentClusterName: ""
+
 #[secondary-db] : Uncomment the following if you want to connect to another database
 #secondary - mongo:
 #uri : mongodb:  // localhost:27017/cd-nextgen-secondary
@@ -152,6 +155,8 @@ eventsFramework:
       CATrustStorePath: "/tmp/ca_trust_store"
       CATrustStorePassword: ""
 
+distributedLockImplementation: MONGO
+
 redisLockConfig:
   sentinel: false
   masterName: "test"
@@ -164,6 +169,7 @@ redisLockConfig:
   readMode: MASTER
   nettyThreads: 16
   useScriptCache: true
+  userName: ""
   password: ""
 
 pmsSdkGrpcServerConfig:
@@ -185,6 +191,10 @@ ceAwsSetupConfig:
   secretKey: ce_aws_secretKey_placeholder
   destinationBucket: ce_aws_destinationBucket_placeholder
   templateURL: https://continuous-efficiency-templates.s3.amazonaws.com/templateOptimOnly.yaml
+
+ceAzureSetupConfig:
+  azureAppClientId: azureAppClientIdPlaceholder
+  azureAppClientSecret: azureAppClientSecretplaceholder
 
 ciDefaultEntityConfiguration:
   harnessImageUseName: harnessdev
@@ -221,6 +231,7 @@ outboxPollConfig:
   initialDelayInSeconds: 5
   pollingIntervalInSeconds: 5
   maximumRetryAttemptsForAnEvent: 7
+  lockId: NextGenManager
 
 segmentConfiguration:
   enabled: false
@@ -248,7 +259,7 @@ accessControlAdminClient:
 
 gitGrpcClientConfigs:
   pms:
-    target: localhost:12011
+    target: localhost:14001
     authority: localhost
   core:
     target: localhost:13001
@@ -286,17 +297,9 @@ cfClientConfig:
   connectionTimeout: 10000
   readTimeout: 30000
 
-cfMigrationConfig:
-  enabled: false
-  adminUrl : "http://localhost:3000/api/1.0"
-  apiKey: ""
-  account: "default"
-  org: "default_org"
-  project: "project1"
-  environment: "environment1"
-  connectionTimeout: 10000
-  readTimeout: 30000
-
+featureFlagConfig:
+  featureFlagSystem: LOCAL
+  syncFeaturesToCF: false
 
 enableDashboardTimescale: false
 
@@ -329,4 +332,3 @@ signupNotificationConfiguration:
       gcsFileName: "signup_confirmation.txt"
       templateId: "signup_confirmation"
   expireDurationInMinutes: 60
-

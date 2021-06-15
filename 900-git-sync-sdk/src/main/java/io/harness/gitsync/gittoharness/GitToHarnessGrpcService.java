@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(DX)
 public class GitToHarnessGrpcService extends GitToHarnessServiceImplBase {
-  @Inject GitToHarnessProcessor gitToHarnessProcessor;
+  @Inject GitToHarnessSdkProcessor gitToHarnessSdkProcessor;
 
   @Override
   public void syncRequestFromGit(ChangeSet request, StreamObserver<ProcessingResponse> responseObserver) {
@@ -29,8 +29,8 @@ public class GitToHarnessGrpcService extends GitToHarnessServiceImplBase {
       GitToHarnessProcessRequest gitToHarnessRequest, StreamObserver<ProcessingResponse> responseObserver) {
     // todo: add proper ids so that we can check the git flows
     log.info("Grpc request recieved");
-    gitToHarnessProcessor.gitToHarnessProcessingRequest(gitToHarnessRequest);
-    responseObserver.onNext(ProcessingResponse.newBuilder().build());
+    ProcessingResponse processingResponse = gitToHarnessSdkProcessor.gitToHarnessProcessingRequest(gitToHarnessRequest);
+    responseObserver.onNext(processingResponse);
     responseObserver.onCompleted();
     log.info("Grpc request completed");
   }

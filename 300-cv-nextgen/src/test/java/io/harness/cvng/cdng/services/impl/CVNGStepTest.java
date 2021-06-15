@@ -83,7 +83,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     CVNGStepParameter cvngStepParameter = getCvngStepParameter();
 
-    assertThatThrownBy(() -> cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage))
+    assertThatThrownBy(() -> cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null))
         .isInstanceOf(NullPointerException.class)
         .hasMessage("No Job exists for verificationJobIdentifier: 'testJob'");
   }
@@ -97,7 +97,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     CVNGStepParameter cvngStepParameter = getCvngStepParameter();
     AsyncExecutableResponse asyncExecutableResponse =
-        cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage);
+        cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null);
     assertThat(asyncExecutableResponse.getCallbackIdsList()).hasSize(1);
     String activityId = asyncExecutableResponse.getCallbackIds(0);
     CVNGStepTask cvngStepTask =
@@ -157,7 +157,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
         .isEqualTo(FailureInfo.newBuilder()
                        .addFailureData(FailureData.newBuilder()
                                            .setCode(ErrorCode.DEFAULT_ERROR_CODE.name())
-                                           .setLevel(io.harness.eraro.Level.INFO.name())
+                                           .setLevel(io.harness.eraro.Level.ERROR.name())
                                            .addFailureTypes(FailureType.VERIFICATION_FAILURE)
                                            .setMessage("Verification failed")
                                            .build())

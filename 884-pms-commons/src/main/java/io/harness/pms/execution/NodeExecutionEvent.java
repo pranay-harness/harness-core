@@ -45,6 +45,7 @@ public class NodeExecutionEvent extends Queuable implements WithMonitoring {
   @Getter @Setter @NonFinal @CreatedDate Long createdAt;
   @Builder.Default String notifyId = generateUuid();
   @Setter @NonFinal @Version Long version;
+  @Getter @Setter @NonFinal boolean monitoringEnabled;
 
   public AutoLogContext autoLogContext() {
     return new AutoLogContext(logContextMap(), OVERRIDE_NESTS);

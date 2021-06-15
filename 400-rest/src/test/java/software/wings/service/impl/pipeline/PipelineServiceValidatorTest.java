@@ -292,4 +292,46 @@ public class PipelineServiceValidatorTest extends WingsBaseTest {
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Variable var2 should be runtime as var1 is marked runtime");
   }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void validateRuntimeInputsConfigVariableMultipleRelatedFieldsNotRuntime() {
+    PipelineStageElement pipelineStageElement = builder().workflowVariables(ImmutableMap.of("var1", "${abc}")).build();
+    RuntimeInputsConfig runtimeInputsConfig = RuntimeInputsConfig.builder()
+                                                  .runtimeInputVariables(asList("var1"))
+                                                  .timeout(60001L)
+                                                  .userGroupIds(asList("UG_ID"))
+                                                  .timeoutAction(RepairActionCode.END_EXECUTION)
+                                                  .build();
+    pipelineStageElement.setRuntimeInputsConfig(runtimeInputsConfig);
+    when(userGroupService.get(any(), any())).thenReturn(UserGroup.builder().build());
+    assertThatThrownBy(() -> {
+      pipelineServiceValidator.validateRuntimeInputsConfig(pipelineStageElement, "ACCOUNT_ID",
+          Collections.singletonList(
+              aVariable().name("var1").relatedField("var2,var3").entityType(EntityType.ENVIRONMENT).build()));
+    })
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Variables var2, var3 should be runtime as var1 is marked runtime");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void validateRuntimeInputsConfigVariableMultipleRelatedFieldsRuntime() {
+    PipelineStageElement pipelineStageElement =
+        builder().workflowVariables(ImmutableMap.of("var1", "${abc}", "var2", "${def}", "var3", "${ghi}")).build();
+    RuntimeInputsConfig runtimeInputsConfig = RuntimeInputsConfig.builder()
+                                                  .runtimeInputVariables(new ArrayList<>(asList("var1, var2, var3")))
+                                                  .timeout(60001L)
+                                                  .userGroupIds(asList("UG_ID"))
+                                                  .timeoutAction(RepairActionCode.END_EXECUTION)
+                                                  .build();
+    pipelineStageElement.setRuntimeInputsConfig(runtimeInputsConfig);
+    when(userGroupService.get(any(), any())).thenReturn(UserGroup.builder().build());
+    assertThat(pipelineServiceValidator.validateRuntimeInputsConfig(pipelineStageElement, "ACCOUNT_ID",
+                   Collections.singletonList(
+                       aVariable().name("var1").relatedField("var2,var3").entityType(EntityType.ENVIRONMENT).build())))
+        .isTrue();
+  }
 }

@@ -15,5 +15,5 @@ public class VersionInfo {
   private String gitCommit;
   private String gitBranch;
   private String timestamp;
-  private String fullVersionWithPatch;
+  private String patch;
 }

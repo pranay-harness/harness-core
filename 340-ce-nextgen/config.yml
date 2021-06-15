@@ -41,6 +41,10 @@ logging:
       threshold: TRACE
       target: STDOUT
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
+    - type: gke-console
+      threshold: TRACE
+      target: STDOUT
+      stackdriverLogEnabled: false
 
 events-mongo:
   uri: mongodb://localhost:27017/events
@@ -49,6 +53,7 @@ events-mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+  aliasDBName: events
 
 timescaledb:
   timescaledbUrl: "jdbc:postgresql://localhost:5432/harness"
@@ -108,16 +113,17 @@ cfClientConfig:
   connectionTimeout: 10000
   readTimeout: 30000
 
-cfMigrationConfig:
-  enabled: false
-  adminUrl : "http://localhost:3000/api/1.0"
-  apiKey: ""
-  account: "default"
-  org: "default_org"
-  project: "project1"
-  environment: "environment1"
-  connectionTimeout: 10000
-  readTimeout: 30000
+featureFlagConfig:
+  featureFlagSystem: LOCAL
+  syncFeaturesToCF: false
 
-# CloudFormation template for AWS Connector
-awsConnectorTemplate: https://continuous-efficiency-templates.s3.amazonaws.com/templateOptimOnly.yaml
+gcpConfig:
+  gcpProjectId: gcpProjectIdPlaceHolder
+
+ceAzureSetupConfig:
+  azureAppClientId: azureAppClientIdPlaceholder
+  azureAppClientSecret: azureAppClientSecretplaceholder
+
+awsConfig:
+  harnessAwsAccountId: 108817434118
+  awsConnectorTemplate: https://continuous-efficiency-templates.s3.amazonaws.com/templateOptimOnly.yaml

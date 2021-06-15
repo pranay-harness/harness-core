@@ -6,24 +6,30 @@ import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
 
 import io.swagger.annotations.ApiModelProperty;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDP)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldNameConstants(innerTypeName = "K8sScaleBaseStepInfoKeys")
 @TypeAlias("K8sScaleBaseStepInfo")
 public class K8sScaleBaseStepInfo {
   @NotNull InstanceSelectionWrapper instanceSelection;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> workload;
   @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipDryRun;
   @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipSteadyStateCheck;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  ParameterField<List<TaskSelectorYaml>> delegateSelectors;
 }

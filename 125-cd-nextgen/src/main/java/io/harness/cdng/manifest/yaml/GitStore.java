@@ -6,10 +6,10 @@ import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.manifest.ManifestStoreType;
+import io.harness.common.ParameterFieldHelper;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.filters.ConnectorRefExtractorHelper;
 import io.harness.filters.WithConnectorRef;
-import io.harness.ngpipeline.common.ParameterFieldHelper;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.validation.OneOfField;
@@ -23,6 +23,7 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -39,9 +40,12 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("gitStore")
 @OwnedBy(CDP)
 public class GitStore implements GitStoreConfig, Visitable, WithConnectorRef {
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> connectorRef;
+  @NotNull
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  private ParameterField<String> connectorRef;
 
-  @Wither private FetchType gitFetchType;
+  @NotNull @Wither private FetchType gitFetchType;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> branch;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> commitId;
 
@@ -89,10 +93,10 @@ public class GitStore implements GitStoreConfig, Visitable, WithConnectorRef {
       resultantGitStore = resultantGitStore.withGitFetchType(gitStore.getGitFetchType());
     }
     if (!ParameterField.isNull(gitStore.getBranch())) {
-      resultantGitStore = resultantGitStore.withBranch(gitStore.getBranch());
+      resultantGitStore = resultantGitStore.withBranch(gitStore.getBranch()).withCommitId(null);
     }
     if (!ParameterField.isNull(gitStore.getCommitId())) {
-      resultantGitStore = resultantGitStore.withCommitId(gitStore.getCommitId());
+      resultantGitStore = resultantGitStore.withCommitId(gitStore.getCommitId()).withBranch(null);
     }
     if (!ParameterField.isNull(gitStore.getRepoName())) {
       resultantGitStore = resultantGitStore.withRepoName(gitStore.getRepoName());

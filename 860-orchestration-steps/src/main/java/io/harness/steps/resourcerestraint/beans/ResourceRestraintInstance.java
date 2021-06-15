@@ -6,11 +6,18 @@ import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 
+import com.google.common.collect.ImmutableList;
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -32,6 +39,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("resourceRestraintInstance")
 @StoreIn(DbAliases.PMS)
 public class ResourceRestraintInstance implements PersistentEntity, UuidAccess, PersistentRegularIterable {
+  public static final long TTL = 6;
+
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   String claimant;
 
@@ -54,6 +63,8 @@ public class ResourceRestraintInstance implements PersistentEntity, UuidAccess, 
   @Wither @LastModifiedDate Long lastUpdatedAt;
   @Version Long version;
 
+  @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL).toInstant());
+
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
     this.nextIteration = nextIteration;
@@ -62,5 +73,32 @@ public class ResourceRestraintInstance implements PersistentEntity, UuidAccess, 
   @Override
   public Long obtainNextIteration(String fieldName) {
     return nextIteration;
+  }
+
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("resourceRestraintId_resourceUnit_order_idx")
+                 .unique(true)
+                 .field(ResourceRestraintInstanceKeys.resourceRestraintId)
+                 .field(ResourceRestraintInstanceKeys.resourceUnit)
+                 .field(ResourceRestraintInstanceKeys.order)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("resourceRestraintId_order_idx")
+                 .field(ResourceRestraintInstanceKeys.resourceRestraintId)
+                 .field(ResourceRestraintInstanceKeys.order)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("next_iteration_idx")
+                 .field(ResourceRestraintInstanceKeys.state)
+                 .field(ResourceRestraintInstanceKeys.nextIteration)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("releaseEntityType_releaseEntityId_idx")
+                 .field(ResourceRestraintInstanceKeys.releaseEntityType)
+                 .field(ResourceRestraintInstanceKeys.releaseEntityId)
+                 .build())
+        .build();
   }
 }

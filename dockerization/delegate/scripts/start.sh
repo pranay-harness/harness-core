@@ -240,6 +240,14 @@ if [ ! -z "$HELM_PATH" ] && ! `grep helmPath config-delegate.yml > /dev/null` ; 
   echo "helmPath: $HELM_PATH" >> config-delegate.yml
 fi
 
+if [ ! -z "$CF_CLI6_PATH" ] && ! `grep cfCli6Path config-delegate.yml > /dev/null` ; then
+  echo "cfCli6Path: $CF_CLI6_PATH" >> config-delegate.yml
+fi
+
+if [ ! -z "$CF_CLI7_PATH" ] && ! `grep cfCli7Path config-delegate.yml > /dev/null` ; then
+  echo "cfCli7Path: $CF_CLI7_PATH" >> config-delegate.yml
+fi
+
 if [ ! -z "$KUSTOMIZE_PATH" ] && ! `grep kustomizePath config-delegate.yml > /dev/null` ; then
   echo "kustomizePath: $KUSTOMIZE_PATH" >> config-delegate.yml
 fi
@@ -250,10 +258,6 @@ fi
 
 if [ ! -z "$GRPC_SERVICE_CONNECTOR_PORT" ] && ! `grep grpcServiceConnectorPort config-delegate.yml > /dev/null` ; then
   echo "grpcServiceConnectorPort: $GRPC_SERVICE_CONNECTOR_PORT" >> config-delegate.yml
-fi
-
-if [ ! -z "$MANAGER_SERVICE_SECRET" ] && ! `grep managerServiceSecret config-delegate.yml > /dev/null` ; then
-  echo "managerServiceSecret: $MANAGER_SERVICE_SECRET" >> config-delegate.yml
 fi
 
 rm -f -- *.bak

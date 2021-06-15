@@ -15,18 +15,21 @@ import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.DeployMode;
 import io.harness.cvng.client.CVNGClientModule;
+import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.manage.GlobalContextManager;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.UserProvider;
+import io.harness.security.DelegateTokenAuthenticator;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.service.DelegateServiceModule;
@@ -185,6 +188,11 @@ public class DataGenApplication extends Application<MainConfiguration> {
       public CfMigrationConfig cfMigrationConfig() {
         return configuration.getCfMigrationConfig();
       }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return FeatureFlagConfig.builder().build();
+      }
     });
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
@@ -202,6 +210,13 @@ public class DataGenApplication extends Application<MainConfiguration> {
             .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
             .put(DelegateTaskProgressResponse.class, "delegateTaskProgressResponses")
             .build();
+      }
+    });
+
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(DelegateTokenAuthenticator.class).to(DelegateTokenAuthenticatorImpl.class).in(Singleton.class);
       }
     });
 

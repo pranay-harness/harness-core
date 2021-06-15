@@ -12,8 +12,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.dao.BillingDataPipelineRecordDao;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
 import io.harness.rule.Owner;
 
 import java.util.ArrayList;

@@ -14,21 +14,28 @@ import io.harness.gitsync.scm.beans.ScmPushResponse;
 import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.utils.NGYamlUtils;
+import io.harness.utils.RetryUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.transaction.TransactionException;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Singleton
 @OwnedBy(DX)
@@ -40,38 +47,75 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   private SCMGitSyncHelper scmGitSyncHelper;
   private GitSyncMsvcHelper gitSyncMsvcHelper;
   private ObjectMapper objectMapper;
+  private TransactionTemplate transactionTemplate;
+
+  private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
+      "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @Inject
   public GitAwarePersistenceNewImpl(MongoTemplate mongoTemplate, GitSyncSdkService gitSyncSdkService,
       Map<String, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMap, SCMGitSyncHelper scmGitSyncHelper,
-      GitSyncMsvcHelper gitSyncMsvcHelper, @Named("GitSyncObjectMapper") ObjectMapper objectMapper) {
+      GitSyncMsvcHelper gitSyncMsvcHelper, @Named("GitSyncObjectMapper") ObjectMapper objectMapper,
+      TransactionTemplate transactionTemplate) {
     this.mongoTemplate = mongoTemplate;
     this.gitSyncSdkService = gitSyncSdkService;
     this.gitPersistenceHelperServiceMap = gitPersistenceHelperServiceMap;
     this.scmGitSyncHelper = scmGitSyncHelper;
     this.gitSyncMsvcHelper = gitSyncMsvcHelper;
     this.objectMapper = objectMapper;
+    this.transactionTemplate = transactionTemplate;
   }
 
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> B save(
-      B objectToSave, Y yaml, ChangeType changeType, Class<B> entityClass) {
+      B objectToSave, String yaml, ChangeType changeType, Class<B> entityClass, Supplier functor) {
     final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
         gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
     final EntityDetail entityDetail = gitSdkEntityHandlerInterface.getEntityDetail(objectToSave);
-    if (changeType != ChangeType.NONE
-        && isGitSyncEnabled(entityDetail.getEntityRef().getProjectIdentifier(),
-            entityDetail.getEntityRef().getOrgIdentifier(), entityDetail.getEntityRef().getAccountIdentifier())) {
-      final GitEntityInfo gitBranchInfo = getGitEntityInfo();
-      final String yamlString = NGYamlUtils.getYamlString(yaml, objectMapper);
-      final ScmPushResponse scmPushResponse =
-          scmGitSyncHelper.pushToGit(gitBranchInfo, yamlString, changeType, entityDetail);
+    final boolean gitSyncEnabled = isGitSyncEnabled(entityDetail.getEntityRef().getProjectIdentifier(),
+        entityDetail.getEntityRef().getOrgIdentifier(), entityDetail.getEntityRef().getAccountIdentifier());
+    if (changeType != ChangeType.NONE && gitSyncEnabled) {
+      return saveWithGitSyncEnabled(objectToSave, yaml, changeType, entityDetail);
+    }
+    if (changeType == ChangeType.ADD) {
+      objectToSave.setIsFromDefaultBranch(true);
+    }
+    if (!gitSyncEnabled) {
+      return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+        final B mongoSavedObject = mongoTemplate.save(objectToSave);
+        if (functor != null) {
+          functor.get();
+        }
+        return mongoSavedObject;
+      }));
+    }
+    // will come here in case of change type none and git sync enabled.
+    return mongoTemplate.save(objectToSave);
+  }
 
-      updateObjectWithGitMetadata(objectToSave, scmPushResponse);
-      final B savedObjectInMongo = mongoTemplate.save(objectToSave);
+  private <B extends GitSyncableEntity, Y extends YamlDTO> B saveWithGitSyncEnabled(
+      B objectToSave, String yamlString, ChangeType changeType, EntityDetail entityDetail) {
+    final GitEntityInfo gitBranchInfo = getGitEntityInfo();
+    final ScmPushResponse scmPushResponse =
+        scmGitSyncHelper.pushToGit(gitBranchInfo, yamlString, changeType, entityDetail);
 
-      gitSyncMsvcHelper.postPushInformationToGitMsvc(entityDetail, scmPushResponse, gitBranchInfo);
-      return savedObjectInMongo;
+    updateObjectWithGitMetadata(objectToSave, scmPushResponse);
+    final B savedObjectInMongo = mongoTemplate.save(objectToSave);
+
+    gitSyncMsvcHelper.postPushInformationToGitMsvc(entityDetail, scmPushResponse, gitBranchInfo);
+    return savedObjectInMongo;
+  }
+
+  @Override
+  public <B extends GitSyncableEntity, Y extends YamlDTO> B save(
+      B objectToSave, String yaml, ChangeType changeType, Class<B> entityClass) {
+    final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
+        gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
+    final EntityDetail entityDetail = gitSdkEntityHandlerInterface.getEntityDetail(objectToSave);
+    final boolean gitSyncEnabled = isGitSyncEnabled(entityDetail.getEntityRef().getProjectIdentifier(),
+        entityDetail.getEntityRef().getOrgIdentifier(), entityDetail.getEntityRef().getAccountIdentifier());
+    if (changeType != ChangeType.NONE && gitSyncEnabled) {
+      return saveWithGitSyncEnabled(objectToSave, yaml, changeType, entityDetail);
     }
     if (changeType == ChangeType.ADD) {
       objectToSave.setIsFromDefaultBranch(true);
@@ -104,8 +148,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> Long count(
       Criteria criteria, String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
-    final Criteria gitSyncCriteria =
-        updateCriteriaIfGitSyncEnabled(projectIdentifier, orgIdentifier, accountId, entityClass);
+    final Criteria gitSyncCriteria = getCriteriaWithGitSync(projectIdentifier, orgIdentifier, accountId, entityClass);
     List<Criteria> criteriaList = Arrays.asList(criteria, gitSyncCriteria);
     Query query = new Query()
                       .addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])))
@@ -118,8 +161,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> Optional<B> findOne(
       Criteria criteria, String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
-    final Criteria gitSyncCriteria =
-        updateCriteriaIfGitSyncEnabled(projectIdentifier, orgIdentifier, accountId, entityClass);
+    final Criteria gitSyncCriteria = getCriteriaWithGitSync(projectIdentifier, orgIdentifier, accountId, entityClass);
     List<Criteria> criteriaList = Arrays.asList(criteria, gitSyncCriteria);
     Query query =
         new Query().addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])));
@@ -128,10 +170,28 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   }
 
   @Override
+  public <B extends GitSyncableEntity, Y extends YamlDTO> Optional<B> findOne(
+      Criteria criteria, String repo, String branch, Class<B> entityClass) {
+    final Criteria gitSyncCriteria = createGitSyncCriteriaForRepoAndBranch(repo, branch, null, entityClass);
+    List<Criteria> criteriaList = Arrays.asList(criteria, gitSyncCriteria);
+    Query query =
+        new Query().addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])));
+    final B object = mongoTemplate.findOne(query, entityClass);
+    return Optional.ofNullable(object);
+  }
+
+  private <B extends GitSyncableEntity> Criteria createGitSyncCriteriaForRepoAndBranch(
+      String repo, String branch, Boolean isFindDefaultFromOtherBranches, Class<B> entityClass) {
+    if (repo == null || branch == null || repo.equals(DEFAULT) || branch.equals(DEFAULT)) {
+      return getCriteriaWhenGitSyncNotEnabled(entityClass);
+    }
+    return getRepoAndBranchCriteria(repo, branch, isFindDefaultFromOtherBranches, entityClass);
+  }
+
+  @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> List<B> find(Criteria criteria, Pageable pageable,
       String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
-    final Criteria gitSyncCriteria =
-        updateCriteriaIfGitSyncEnabled(projectIdentifier, orgIdentifier, accountId, entityClass);
+    final Criteria gitSyncCriteria = getCriteriaWithGitSync(projectIdentifier, orgIdentifier, accountId, entityClass);
     List<Criteria> criteriaList = Arrays.asList(criteria, gitSyncCriteria);
     Query query = new Query()
                       .addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])))
@@ -142,8 +202,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> boolean exists(
       Criteria criteria, String projectIdentifier, String orgIdentifier, String accountId, Class<B> entityClass) {
-    final Criteria gitSyncCriteria =
-        updateCriteriaIfGitSyncEnabled(projectIdentifier, orgIdentifier, accountId, entityClass);
+    final Criteria gitSyncCriteria = getCriteriaWithGitSync(projectIdentifier, orgIdentifier, accountId, entityClass);
     List<Criteria> criteriaList = Arrays.asList(criteria, gitSyncCriteria);
     Query query =
         new Query().addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()])));
@@ -152,44 +211,63 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
 
   @Override
   public <B extends GitSyncableEntity, Y extends YamlDTO> B save(
+      B objectToSave, ChangeType changeType, Class<B> entityClass, Supplier functor) {
+    final Supplier<Y> yamlFromEntity =
+        gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName()).getYamlFromEntity(objectToSave);
+    final String yamlString = NGYamlUtils.getYamlString(yamlFromEntity.get(), objectMapper);
+    return save(objectToSave, yamlString, changeType, entityClass, functor);
+  }
+
+  @Override
+  public <B extends GitSyncableEntity, Y extends YamlDTO> B save(
       B objectToSave, ChangeType changeType, Class<B> entityClass) {
     final Supplier<Y> yamlFromEntity =
         gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName()).getYamlFromEntity(objectToSave);
-    return save(objectToSave, yamlFromEntity.get(), changeType, entityClass);
+    final String yamlString = NGYamlUtils.getYamlString(yamlFromEntity.get(), objectMapper);
+    return save(objectToSave, yamlString, changeType, entityClass);
   }
 
   private boolean isGitSyncEnabled(String projectIdentifier, String orgIdentifier, String accountIdentifier) {
     return gitSyncSdkService.isGitSyncEnabled(accountIdentifier, orgIdentifier, projectIdentifier);
   }
 
-  private Criteria updateCriteriaIfGitSyncEnabled(
+  private Criteria getCriteriaWhenGitSyncNotEnabled(Class entityClass) {
+    final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
+        gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
+    return new Criteria().andOperator(
+        new Criteria().orOperator(Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).is(true),
+            Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).exists(false)));
+  }
+
+  private Criteria getRepoAndBranchCriteria(
+      String repo, String branch, Boolean isFindDefaultFromOtherBranches, Class entityClass) {
+    final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
+        gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
+    Criteria criteria = new Criteria()
+                            .and(gitSdkEntityHandlerInterface.getBranchKey())
+                            .is(branch)
+                            .and(gitSdkEntityHandlerInterface.getYamlGitConfigRefKey())
+                            .is(repo);
+    if (isFindDefaultFromOtherBranches != null && isFindDefaultFromOtherBranches) {
+      return new Criteria().orOperator(criteria,
+          Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey())
+              .is(true)
+              .and(gitSdkEntityHandlerInterface.getYamlGitConfigRefKey())
+              .ne(repo));
+    }
+    return criteria;
+  }
+
+  @Override
+  public Criteria getCriteriaWithGitSync(
       String projectIdentifier, String orgIdentifier, String accountId, Class entityClass) {
     if (isGitSyncEnabled(projectIdentifier, orgIdentifier, accountId)) {
-      final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
-          gitPersistenceHelperServiceMap.get(entityClass.getCanonicalName());
       final GitEntityInfo gitBranchInfo = getGitEntityInfo();
-      if (gitBranchInfo == null || gitBranchInfo.getYamlGitConfigId() == null || gitBranchInfo.getBranch() == null
-          || gitBranchInfo.getYamlGitConfigId().equals(DEFAULT) || gitBranchInfo.getBranch().equals(DEFAULT)) {
-        return new Criteria().andOperator(
-            new Criteria().orOperator(Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).is(true),
-                Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).exists(false)));
-      } else {
-        // case 1: list from branch only
-        // case 2: list from branch in context and default of others.
-        final Criteria criteria = new Criteria()
-                                      .and(gitSdkEntityHandlerInterface.getBranchKey())
-                                      .is(gitBranchInfo.getBranch())
-                                      .and(gitSdkEntityHandlerInterface.getYamlGitConfigRefKey())
-                                      .is(gitBranchInfo.getYamlGitConfigId());
-        if (gitBranchInfo.isFindDefaultFromOtherBranches()) {
-          return new Criteria().orOperator(criteria,
-              Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey())
-                  .is(true)
-                  .and(gitSdkEntityHandlerInterface.getYamlGitConfigRefKey())
-                  .ne(gitBranchInfo.getYamlGitConfigId()));
-        }
-        return criteria;
+      if (gitBranchInfo == null) {
+        return createGitSyncCriteriaForRepoAndBranch(null, null, null, entityClass);
       }
+      return createGitSyncCriteriaForRepoAndBranch(gitBranchInfo.getYamlGitConfigId(), gitBranchInfo.getBranch(),
+          gitBranchInfo.isFindDefaultFromOtherBranches(), entityClass);
     }
     return new Criteria();
   }

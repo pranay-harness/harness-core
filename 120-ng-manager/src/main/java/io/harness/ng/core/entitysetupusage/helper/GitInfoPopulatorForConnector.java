@@ -88,15 +88,19 @@ public class GitInfoPopulatorForConnector {
       if (fqnConnectorMap.containsKey(fqn)) {
         ConnectorResponseDTO connectorResponseDTO = fqnConnectorMap.get(fqn);
         EntityGitDetails gitDetails = connectorResponseDTO.getGitDetails();
-        String repo = gitDetails.getRepoIdentifier();
-        String branch = gitDetails.getBranch();
-        Boolean isDefault = true;
-        if (repo.equals(referredEntityRepo)) {
-          isDefault = isReferredByBranchDefault;
+        if (gitDetails != null && gitDetails.getRepoIdentifier() != null) {
+          String repo = gitDetails.getRepoIdentifier();
+          String branch = gitDetails.getBranch();
+          boolean isDefault = true;
+          if (referredEntityRepo.equals(repo)) {
+            isDefault = isReferredByBranchDefault;
+          }
+          entityReference.setRepoIdentifier(repo);
+          entityReference.setBranch(branch);
+          entityReference.setIsDefault(isDefault);
+        } else {
+          entityReference.setIsDefault(true);
         }
-        entityReference.setRepoIdentifier(repo);
-        entityReference.setBranch(branch);
-        entityReference.setIsDefault(isDefault);
       }
     }
   }

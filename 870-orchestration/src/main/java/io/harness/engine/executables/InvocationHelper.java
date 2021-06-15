@@ -35,7 +35,6 @@ public class InvocationHelper {
 
   public Map<String, byte[]> buildResponseMap(NodeExecution nodeExecution, Map<String, ByteString> response) {
     Map<String, byte[]> byteResponseMap = new HashMap<>();
-    ExecutionMode mode = nodeExecution.getMode();
     if (accumulationRequired(nodeExecution)) {
       List<NodeExecution> childExecutions =
           nodeExecutionService.fetchNodeExecutionsByParentId(nodeExecution.getUuid(), false);

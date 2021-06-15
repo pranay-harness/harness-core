@@ -6,6 +6,7 @@ import io.harness.AccessControlClientConfiguration;
 import io.harness.DecisionModuleConfiguration;
 import io.harness.accesscontrol.commons.events.EventsConfig;
 import io.harness.accesscontrol.commons.iterators.AccessControlIteratorsConfig;
+import io.harness.accesscontrol.commons.notifications.NotificationConfig;
 import io.harness.accesscontrol.preference.AccessControlPreferenceConfiguration;
 import io.harness.accesscontrol.principals.user.UserClientConfiguration;
 import io.harness.accesscontrol.principals.usergroups.UserGroupClientConfiguration;
@@ -59,6 +60,7 @@ public class AccessControlConfiguration extends Configuration {
   @JsonProperty("resourceGroupClient") private ResourceGroupClientConfiguration resourceGroupClientConfiguration;
   @JsonProperty("userClient") private UserClientConfiguration userClientConfiguration;
   @JsonProperty("userGroupClient") private UserGroupClientConfiguration userGroupClientConfiguration;
+  @JsonProperty("notificationConfig") private NotificationConfig notificationConfig;
   @JsonProperty("decisionModuleConfig") private DecisionModuleConfiguration decisionModuleConfiguration;
   @JsonProperty("aggregatorModuleConfig") private AggregatorConfiguration aggregatorConfiguration;
   @JsonProperty("accessControlPreferenceConfig")

@@ -13,7 +13,7 @@ import io.harness.batch.processing.config.BillingDataPipelineConfig;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineService;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpOrganization;
 import io.harness.ccm.config.GcpOrganizationDao;
@@ -32,7 +32,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -53,8 +52,6 @@ public class GcpBillingDataPipelineTaskletTest extends BaseTaskletTest {
 
   @Before
   public void setup() throws IOException {
-    MockitoAnnotations.initMocks(this);
-    mockChunkContext();
     BillingDataPipelineConfig billingDataPipelineConfig =
         BillingDataPipelineConfig.builder().gcpProjectId(gcpProjectId).build();
     when(mainConfig.getBillingDataPipelineConfig()).thenReturn(billingDataPipelineConfig);

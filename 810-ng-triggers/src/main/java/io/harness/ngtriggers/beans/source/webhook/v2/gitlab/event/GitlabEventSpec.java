@@ -1,6 +1,8 @@
 package io.harness.ngtriggers.beans.source.webhook.v2.gitlab.event;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.ngtriggers.Constants.MERGE_REQUEST_EVENT_TYPE;
+import static io.harness.ngtriggers.Constants.PUSH_EVENT_TYPE;
 
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
@@ -14,8 +16,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = GitlabPRSpec.class, name = "Merge Request")
-  , @JsonSubTypes.Type(value = GitlabPushSpec.class, name = "Push")
+  @JsonSubTypes.Type(value = GitlabPRSpec.class, name = MERGE_REQUEST_EVENT_TYPE)
+  , @JsonSubTypes.Type(value = GitlabPushSpec.class, name = PUSH_EVENT_TYPE)
 })
 @OwnedBy(PIPELINE)
 public interface GitlabEventSpec extends PayloadAware, GitAware {}

@@ -10,7 +10,6 @@ import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 
-import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -21,13 +20,13 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.iterator.PersistenceIteratorFactory;
-import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
-import io.harness.mongo.iterator.filter.SpringFilterExpander;
-import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
+import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.workers.background.AccountStatusBasedEntityProcessController;
 
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.User;
@@ -41,6 +40,7 @@ import software.wings.beans.sso.LdapTestResponse.Status;
 import software.wings.beans.sso.LdapUserResponse;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOSettings.SSOSettingsKeys;
+import software.wings.beans.sso.SSOType;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.LdapFeature;
@@ -105,25 +105,32 @@ public class LdapGroupSyncJobHandler implements MongoPersistenceIterator.Handler
   @Inject private AccountService accountService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject @Named(LdapFeature.FEATURE_NAME) private PremiumFeature ldapFeature;
+  @Inject private MorphiaPersistenceProvider<SSOSettings> persistenceProvider;
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
-        PumpExecutorOptions.builder().name("LdapGroupSyncTask").poolSize(3).interval(ofMinutes(15)).build(),
+        PersistenceIteratorFactory.PumpExecutorOptions.builder()
+            .name("LdapGroupSyncTask")
+            .poolSize(3)
+            .interval(ofMinutes(15))
+            .build(),
         SSOSettings.class,
-        MongoPersistenceIterator.<SSOSettings, SpringFilterExpander>builder()
+        MongoPersistenceIterator.<SSOSettings, MorphiaFilterExpander<SSOSettings>>builder()
             .clazz(SSOSettings.class)
             .fieldName(SSOSettingsKeys.nextIteration)
-            .targetInterval(ofHours(12))
-            .acceptableNoAlertDelay(ofHours(14))
+            .targetInterval(ofMinutes(60))
+            .acceptableNoAlertDelay(ofMinutes(80))
             .handler(this)
+            .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
+            .filterExpander(query -> query.field(SSOSettingsKeys.type).equal(SSOType.LDAP))
             .schedulingType(REGULAR)
-            .persistenceProvider(new SpringPersistenceProvider<>(mongoTemplate))
+            .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 
   @Override
   public void handle(SSOSettings ssoSettings) {
-    if (featureFlagService.isGlobalEnabled(FeatureName.LDAP_GROUP_SYNC_JOB_ITERATOR)
+    if (featureFlagService.isEnabled(FeatureName.LDAP_GROUP_SYNC_JOB_ITERATOR, ssoSettings.getAccountId())
         && ssoSettings instanceof LdapSettings) {
       LdapSettings ldapSettings = (LdapSettings) ssoSettings;
       String accountId = ldapSettings.getAccountId();
@@ -183,6 +190,8 @@ public class LdapGroupSyncJobHandler implements MongoPersistenceIterator.Handler
     if (!removedGroupMembers.containsKey(userGroup)) {
       removedGroupMembers.put(userGroup, Sets.newHashSet());
     }
+    log.info("LDAPIterator: Removing users {} as part of sync with usergroup {} in accountId {}", removedUsers,
+        userGroup.getUuid(), userGroup.getAccountId());
     removedGroupMembers.getOrDefault(userGroup, Sets.newHashSet()).addAll(removedUsers);
   }
 

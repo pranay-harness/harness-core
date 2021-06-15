@@ -21,6 +21,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @Builder
@@ -32,7 +33,7 @@ import lombok.experimental.FieldDefaults;
 @OwnedBy(HarnessTeam.CV)
 public class NewRelicConnectorDTO extends ConnectorConfigDTO implements DecryptableEntity, DelegateSelectable {
   @NotNull String newRelicAccountId;
-  @NotNull String url;
+  @NotNull @NotBlank String url;
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData apiKeyRef;
   Set<String> delegateSelectors;
   @Override

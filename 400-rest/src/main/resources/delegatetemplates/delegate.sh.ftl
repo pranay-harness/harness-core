@@ -89,10 +89,6 @@ fi
 
 export DEPLOY_MODE=${deployMode}
 
-if [[ -z "$MANAGER_SERVICE_SECRET" || "$MANAGER_SERVICE_SECRET" == "null" ]]; then
-  export MANAGER_SERVICE_SECRET=${managerServiceSecret}
-fi
-
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
   DELEGATE_STORAGE_URL=${delegateStorageUrl}
@@ -168,6 +164,19 @@ else
   sed -i.bak "s|^cdnUrl:.*$|cdnUrl: ${cdnUrl}|" config-delegate.yml
 fi
 
+<#if managerTarget??>
+if ! `grep managerTarget config-delegate.yml > /dev/null`; then
+  echo "managerTarget: ${managerTarget}" >> config-delegate.yml
+else
+  sed -i.bak "s|^managerTarget:.*$|managerTarget: ${managerTarget}|" config-delegate.yml
+fi
+if ! `grep managerAuthority config-delegate.yml > /dev/null`; then
+  echo "managerAuthority: ${managerAuthority}" >> config-delegate.yml
+else
+  sed -i.bak "s|^managerAuthority:.*$|managerAuthority: ${managerAuthority}|" config-delegate.yml
+fi
+</#if>
+
 if ! `grep grpcServiceEnabled config-delegate.yml > /dev/null`; then
   echo "grpcServiceEnabled: $GRPC_SERVICE_ENABLED" >> config-delegate.yml
 else
@@ -178,12 +187,6 @@ if ! `grep grpcServiceConnectorPort config-delegate.yml > /dev/null`; then
   echo "grpcServiceConnectorPort: $GRPC_SERVICE_CONNECTOR_PORT" >> config-delegate.yml
 else
   sed -i.bak "s|^grpcServiceConnectorPort:.*$|grpcServiceConnectorPort: $GRPC_SERVICE_CONNECTOR_PORT|" config-delegate.yml
-fi
-
-if ! `grep managerServiceSecret config-delegate.yml > /dev/null`; then
-  echo "managerServiceSecret: $MANAGER_SERVICE_SECRET" >> config-delegate.yml
-else
-  sed -i.bak "s|^managerServiceSecret:.*$|managerServiceSecret: $MANAGER_SERVICE_SECRET|" config-delegate.yml
 fi
 
 if ! `grep logStreamingServiceBaseUrl config-delegate.yml > /dev/null`; then
@@ -202,6 +205,14 @@ fi
 
 if [ ! -z "$KUBECTL_PATH" ] && ! `grep kubectlPath config-delegate.yml > /dev/null` ; then
   echo "kubectlPath: $KUBECTL_PATH" >> config-delegate.yml
+fi
+
+if [ ! -z "$CF_CLI6_PATH" ] && ! `grep cfCli6Path config-delegate.yml > /dev/null` ; then
+  echo "cfCli6Path: $CF_CLI6_PATH" >> config-delegate.yml
+fi
+
+if [ ! -z "$CF_CLI7_PATH" ] && ! `grep cfCli7Path config-delegate.yml > /dev/null` ; then
+  echo "cfCli7Path: $CF_CLI7_PATH" >> config-delegate.yml
 fi
 
 rm -f -- *.bak
@@ -228,7 +239,7 @@ if [[ ! -z $INSTRUMENTATION ]]; then
 fi
 
 if [ ! -e alpn-boot-8.1.13.v20181017.jar ]; then
-  curl $MANAGER_PROXY_CURL -ks https://app.harness.io/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar  --output alpn-boot-8.1.13.v20181017.jar
+  curl $MANAGER_PROXY_CURL -ks $ALPN_BOOT_JAR_URL -o alpn-boot-8.1.13.v20181017.jar
 fi
 
 if [[ $DEPLOY_MODE == "KUBERNETES" ]]; then

@@ -1,81 +1,125 @@
 package io.harness.gitsync.core.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.gitsync.core.beans.GitCommit.GIT_COMMIT_ALL_STATUS_LIST;
 import static io.harness.gitsync.core.beans.GitCommit.GIT_COMMIT_PROCESSED_STATUS;
 
+import static org.springframework.data.mongodb.core.query.Update.update;
+
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.common.helper.GitCommitMapper;
 import io.harness.gitsync.core.beans.GitCommit;
+import io.harness.gitsync.core.beans.GitCommit.GitCommitKeys;
+import io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus;
+import io.harness.gitsync.core.dtos.GitCommitDTO;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.repositories.gitCommit.GitCommitRepository;
 
 import com.google.inject.Inject;
+import com.mongodb.client.result.UpdateResult;
 import java.util.List;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(DX)
 public class GitCommitServiceImpl implements GitCommitService {
   private GitCommitRepository gitCommitRepository;
+  private MongoTemplate mongoTemplate;
 
   @Override
-  public GitCommit save(GitCommit gitCommit) {
-    return gitCommitRepository.save(gitCommit);
+  public GitCommitDTO save(GitCommitDTO gitCommitDTO) {
+    GitCommit gitCommit = prepareGitCommit(gitCommitDTO);
+    GitCommit gitCommitSaved = gitCommitRepository.save(gitCommit);
+    return GitCommitMapper.toGitCommitDTO(gitCommitSaved);
   }
 
   @Override
-  public GitCommit upsertWithYamlGitConfigIdAddition(GitCommit gitCommit) {
-    final Optional<GitCommit> gitCommitInDb =
-        gitCommitRepository.findByAccountIdAndCommitIdAndRepoAndBranchNameAndStatusIn(gitCommit.getAccountId(),
-            gitCommit.getCommitId(), gitCommit.getRepo(), gitCommit.getBranchName(), GIT_COMMIT_ALL_STATUS_LIST);
-    return gitCommitInDb
-        .map(commit -> {
-          if (commit.getStatus() == GitCommit.Status.COMPLETED) {
-            commit.setStatus(gitCommit.getStatus());
-          }
-          commit.setYamlGitConfigIds(gitCommit.getYamlGitConfigIds());
-          return save(commit);
-        })
-        .orElse(save(gitCommit));
+  public Optional<GitCommitDTO> findByAccountIdAndCommitIdAndRepoAndBranchNameAndStatus(
+      String accountId, String commitId, String repo, String branchName, List<GitCommitProcessingStatus> status) {
+    Optional<GitCommit> gitCommit =
+        gitCommitRepository.findByAccountIdentifierAndCommitIdAndRepoURLAndBranchNameAndStatusIn(
+            accountId, commitId, repo, branchName, status);
+    return gitCommit.map(GitCommitMapper::toGitCommitDTO);
   }
 
   @Override
-  public Optional<GitCommit> findByAccountIdAndCommitIdAndRepoAndBranchNameAndStatus(
-      String accountId, String commitId, String repo, String branchName, List<GitCommit.Status> status) {
-    return gitCommitRepository.findByAccountIdAndCommitIdAndRepoAndBranchNameAndStatusIn(
-        accountId, commitId, repo, branchName, status);
-  }
-
-  @Override
-  public Optional<GitCommit> findGitCommitWithProcessedStatus(
+  public Optional<GitCommitDTO> findGitCommitWithProcessedStatus(
       String accountId, String commitId, String repo, String branchName) {
     return findByAccountIdAndCommitIdAndRepoAndBranchNameAndStatus(
         accountId, commitId, repo, branchName, GIT_COMMIT_PROCESSED_STATUS);
   }
 
   @Override
-  public Optional<GitCommit> findLastProcessedGitCommit(String accountId, String repo, String branchName) {
+  public Optional<GitCommitDTO> findLastProcessedGitCommit(String accountId, String repo, String branchName) {
     return findByAccountIdAndCommitIdAndRepoAndBranchName(accountId, repo, branchName, GIT_COMMIT_PROCESSED_STATUS);
   }
 
   @Override
-  public Optional<GitCommit> findByAccountIdAndCommitIdAndRepoAndBranchName(
-      String accountId, String repo, String branchName, List<GitCommit.Status> status) {
-    return gitCommitRepository.findFirstByAccountIdAndRepoAndBranchNameAndStatusInOrderByCreatedAtDesc(
-        accountId, repo, branchName, status);
+  public Optional<GitCommitDTO> findByAccountIdAndCommitIdAndRepoAndBranchName(
+      String accountId, String repo, String branchName, List<GitCommitProcessingStatus> status) {
+    Optional<GitCommit> gitCommit =
+        gitCommitRepository.findFirstByAccountIdentifierAndRepoURLAndBranchNameAndStatusInOrderByCreatedAtDesc(
+            accountId, repo, branchName, status);
+    return gitCommit.map(GitCommitMapper::toGitCommitDTO);
   }
 
   @Override
   public boolean isCommitAlreadyProcessed(String accountId, String headCommit, String repo, String branch) {
-    final Optional<GitCommit> gitCommit = findGitCommitWithProcessedStatus(accountId, headCommit, repo, branch);
-    if (gitCommit.isPresent()) {
-      log.info("Commit [id:{}] already processed [status:{}] on [date:{}]", gitCommit.get().getCommitId(),
-          gitCommit.get().getStatus(), gitCommit.get().getLastUpdatedAt());
+    final Optional<GitCommitDTO> gitCommitDTO = findGitCommitWithProcessedStatus(accountId, headCommit, repo, branch);
+    if (gitCommitDTO.isPresent()) {
+      log.info("Commit [id:{}] already processed [status:{}] on [date:{}]", gitCommitDTO.get().getCommitId(),
+          gitCommitDTO.get().getStatus(), gitCommitDTO.get().getLastUpdatedAt());
       return true;
     }
     return false;
+  }
+
+  @Override
+  public Optional<GitCommitDTO> findLastGitCommit(String accountIdentifier, String repo, String branchName) {
+    Optional<GitCommit> gitCommit =
+        gitCommitRepository.findFirstByAccountIdentifierAndRepoURLAndBranchNameOrderByCreatedAtDesc(
+            accountIdentifier, repo, branchName);
+    return gitCommit.map(GitCommitMapper::toGitCommitDTO);
+  }
+
+  @Override
+  public UpdateResult upsertOnCommitIdAndRepoUrl(GitCommitDTO gitCommitDTO) {
+    Criteria criteria = Criteria.where(GitCommitKeys.commitId)
+                            .is(gitCommitDTO.getCommitId())
+                            .and(GitCommitKeys.repoURL)
+                            .is(gitCommitDTO.getRepoURL());
+    Update update = update(GitCommitKeys.status, gitCommitDTO.getStatus());
+    update.setOnInsert(GitCommitKeys.repoURL, gitCommitDTO.getRepoURL())
+        .set(GitCommitKeys.commitId, gitCommitDTO.getCommitId())
+        .set(GitCommitKeys.accountIdentifier, gitCommitDTO.getAccountIdentifier())
+        .set(GitCommitKeys.branchName, gitCommitDTO.getBranchName())
+        .set(GitCommitKeys.commitMessage, gitCommitDTO.getCommitMessage())
+        .set(GitCommitKeys.gitSyncDirection, gitCommitDTO.getGitSyncDirection())
+        .set(GitCommitKeys.fileProcessingSummary, gitCommitDTO.getFileProcessingSummary())
+        .set(GitCommitKeys.failureReason, gitCommitDTO.getFailureReason());
+
+    return mongoTemplate.upsert(new Query(criteria), update, GitCommit.class);
+  }
+
+  // -------------------------- PRIVATE METHODS -------------------------------
+
+  private GitCommit prepareGitCommit(GitCommitDTO gitCommitDTO) {
+    return GitCommit.builder()
+        .accountIdentifier(gitCommitDTO.getAccountIdentifier())
+        .branchName(gitCommitDTO.getBranchName())
+        .commitId(gitCommitDTO.getCommitId())
+        .commitMessage(gitCommitDTO.getCommitMessage())
+        .failureReason(gitCommitDTO.getFailureReason())
+        .fileProcessingSummary(gitCommitDTO.getFileProcessingSummary())
+        .gitSyncDirection(gitCommitDTO.getGitSyncDirection())
+        .repoURL(gitCommitDTO.getRepoURL())
+        .status(gitCommitDTO.getStatus())
+        .build();
   }
 }

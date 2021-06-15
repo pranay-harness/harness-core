@@ -5,9 +5,9 @@ import static io.harness.network.Http.getOkHttpClientBuilder;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.GeneralException;
 import io.harness.exception.HttpResponseException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.JiraClientException;
 import io.harness.network.Http;
 import io.harness.network.SafeHttpCall;
 
@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -25,6 +26,7 @@ import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.hibernate.validator.constraints.NotBlank;
 import retrofit2.Call;
 import retrofit2.Retrofit;
@@ -35,6 +37,17 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 public class JiraClient {
   private static final int CONNECT_TIMEOUT = 5;
   private static final int READ_TIMEOUT = 15;
+
+  // Comment fields are added to create and update metadata by jira client so that users can add comment as if it was
+  // any other jira field. When jira issue is actually created/updated these fields are handled in s special way.
+  private static final String COMMENT_FIELD_KEY = "comment";
+  private static final String COMMENT_FIELD_NAME = "Comment";
+  private static final JiraFieldNG COMMENT_FIELD =
+      JiraFieldNG.builder()
+          .key(COMMENT_FIELD_KEY)
+          .name(COMMENT_FIELD_NAME)
+          .schema(JiraFieldSchemaNG.builder().type(JiraFieldTypeNG.STRING).build())
+          .build();
 
   private final JiraInternalConfig config;
   private final JiraRestClient restClient;
@@ -136,20 +149,25 @@ public class JiraClient {
    *   - component
    *   - priority
    *   - version
+   * - comment: added as a string field
    *
-   * @param projectKey  the project key - can be null if not known
-   * @param issueType   the issue type - can be null if not known
-   * @param expand      the expand query parameter - if null a default value of `projects.issuetypes.fields` is used
-   * @param fetchStatus should also fetch status
+   * @param projectKey    the project key - can be null if not known
+   * @param issueType     the issue type - can be null if not known
+   * @param expand        the expand query parameter - if null a default value of `projects.issuetypes.fields` is used
+   * @param fetchStatus   should also fetch status
+   * @param ignoreComment should not fetch comment
    * @return the issue create metadata
    */
   public JiraIssueCreateMetadataNG getIssueCreateMetadata(
-      String projectKey, String issueType, String expand, boolean fetchStatus) {
+      String projectKey, String issueType, String expand, boolean fetchStatus, boolean ignoreComment) {
     JiraIssueCreateMetadataNG createMetadata =
         executeCall(restClient.getIssueCreateMetadata(EmptyPredicate.isEmpty(projectKey) ? null : projectKey,
                         EmptyPredicate.isEmpty(issueType) ? null : issueType,
                         EmptyPredicate.isEmpty(expand) ? "projects.issuetypes.fields" : expand),
             "fetching create metadata");
+    if (!ignoreComment) {
+      createMetadata.addField(COMMENT_FIELD);
+    }
 
     if (fetchStatus) {
       if (EmptyPredicate.isEmpty(projectKey)) {
@@ -183,12 +201,16 @@ public class JiraClient {
    *   - component
    *   - priority
    *   - version
+   * - comment: added as a string field
    *
    * @param issueKey  the key of the issue
    * @return the issue update metadata
    */
   public JiraIssueUpdateMetadataNG getIssueUpdateMetadata(@NotBlank String issueKey) {
-    return executeCall(restClient.getIssueUpdateMetadata(issueKey), "fetching update metadata");
+    JiraIssueUpdateMetadataNG issueUpdateMetadata =
+        executeCall(restClient.getIssueUpdateMetadata(issueKey), "fetching update metadata");
+    issueUpdateMetadata.getFields().put(COMMENT_FIELD_NAME, COMMENT_FIELD);
+    return issueUpdateMetadata;
   }
 
   private List<JiraStatusNG> getStatuses() {
@@ -223,7 +245,7 @@ public class JiraClient {
    */
   public JiraIssueNG createIssue(
       @NotBlank String projectKey, @NotBlank String issueTypeName, Map<String, String> fields) {
-    JiraIssueCreateMetadataNG createMetadata = getIssueCreateMetadata(projectKey, issueTypeName, null, false);
+    JiraIssueCreateMetadataNG createMetadata = getIssueCreateMetadata(projectKey, issueTypeName, null, false, false);
     JiraProjectNG project = createMetadata.getProjects().get(projectKey);
     if (project == null) {
       throw new InvalidRequestException(String.format("Invalid project: %s", projectKey));
@@ -235,8 +257,19 @@ public class JiraClient {
           String.format("Invalid issue type in project %s: %s", projectKey, issueTypeName));
     }
 
+    ImmutablePair<Map<String, String>, String> pair = extractCommentField(fields);
+    fields = pair.getLeft();
+    String comment = pair.getRight();
+
+    // Create issue with all non-comment fields.
     JiraCreateIssueRequestNG createIssueRequest = new JiraCreateIssueRequestNG(project, issueType, fields);
     JiraIssueNG issue = executeCall(restClient.createIssue(createIssueRequest), "creating issue");
+
+    // Add comment.
+    if (EmptyPredicate.isNotEmpty(comment)) {
+      executeCall(restClient.addIssueComment(issue.getKey(), new JiraAddIssueCommentRequestNG(comment)),
+          "adding issue comment");
+    }
     return getIssue(issue.getKey(), true);
   }
 
@@ -265,27 +298,72 @@ public class JiraClient {
       @NotBlank String issueKey, String transitionToStatus, String transitionName, Map<String, String> fields) {
     JiraIssueUpdateMetadataNG updateMetadata = getIssueUpdateMetadata(issueKey);
     String transitionId = findIssueTransition(issueKey, transitionToStatus, transitionName);
-    JiraUpdateIssueRequestNG updateIssueRequest = new JiraUpdateIssueRequestNG(updateMetadata, transitionId, fields);
-    executeCall(restClient.updateIssue(issueKey, updateIssueRequest), "updating issue");
+    ImmutablePair<Map<String, String>, String> pair = extractCommentField(fields);
+    fields = pair.getLeft();
+    String comment = pair.getRight();
+
+    // Update all non-comment fields.
+    if (EmptyPredicate.isNotEmpty(fields)) {
+      JiraUpdateIssueRequestNG updateIssueRequest = new JiraUpdateIssueRequestNG(updateMetadata, null, fields);
+      executeCall(restClient.updateIssue(issueKey, updateIssueRequest), "updating issue fields");
+    }
+    // Add comment field.
+    if (EmptyPredicate.isNotEmpty(comment)) {
+      executeCall(
+          restClient.addIssueComment(issueKey, new JiraAddIssueCommentRequestNG(comment)), "adding issue comment");
+    }
+    // Do status transition.
+    if (EmptyPredicate.isNotEmpty(transitionId)) {
+      JiraUpdateIssueRequestNG updateIssueRequest = new JiraUpdateIssueRequestNG(updateMetadata, transitionId, null);
+      executeCall(restClient.transitionIssue(issueKey, updateIssueRequest), "updating issue status");
+    }
     return getIssue(issueKey, true);
   }
 
+  /**
+   * Split fields into non-comment fields and comment field.
+   *
+   * @param fields the issue fields
+   * @return the pair of non-comment fields and comment field
+   */
+  private ImmutablePair<Map<String, String>, String> extractCommentField(Map<String, String> fields) {
+    if (EmptyPredicate.isEmpty(fields)) {
+      return ImmutablePair.of(null, null);
+    }
+
+    // fields map can be an immutable map so making sure it is mutable.
+    fields = new HashMap<>(fields);
+    String comment = fields.get(COMMENT_FIELD_NAME);
+    fields.remove(COMMENT_FIELD_NAME);
+    return ImmutablePair.of(fields, comment);
+  }
+
   private String findIssueTransition(@NotBlank String issueKey, String transitionToStatus, String transitionName) {
-    if (EmptyPredicate.isEmpty(transitionName)) {
+    // If status and transitionName are both empty, nothing to do.
+    if (EmptyPredicate.isEmpty(transitionName) && EmptyPredicate.isEmpty(transitionToStatus)) {
       return null;
     }
 
     JiraIssueTransitionsNG transitions =
         executeCall(restClient.getIssueTransitions(issueKey), "fetching issue transitions");
-    boolean checkTransitionName = EmptyPredicate.isNotEmpty(transitionName);
-    return transitions.getTransitions()
-        .stream()
-        .filter(t
-            -> t.getTo().getName().equals(transitionToStatus)
-                && (!checkTransitionName || t.getName().equals(transitionName)))
-        .findFirst()
-        .map(JiraIssueTransitionNG::getId)
-        .orElse(null);
+    if (EmptyPredicate.isNotEmpty(transitionName)) {
+      // If transitionName is given, find first transition with the given and toStatus, else throw error.
+      return transitions.getTransitions()
+          .stream()
+          .filter(t -> t.getTo().getName().equals(transitionToStatus) && t.getName().equals(transitionName))
+          .findFirst()
+          .map(JiraIssueTransitionNG::getId)
+          .orElseThrow(() -> new JiraClientException(String.format("Invalid transition name: %s", transitionName)));
+    } else {
+      // If transitionName is not given, find first transition with the toStatus, else throw error.
+      return transitions.getTransitions()
+          .stream()
+          .filter(t -> t.getTo().getName().equals(transitionToStatus))
+          .findFirst()
+          .map(JiraIssueTransitionNG::getId)
+          .orElseThrow(
+              () -> new JiraClientException(String.format("Invalid transition to status: %s", transitionToStatus)));
+    }
   }
 
   private <T> T executeCall(Call<T> call, String action) {
@@ -294,8 +372,8 @@ public class JiraClient {
       T resp = SafeHttpCall.executeWithExceptions(call);
       log.info("Response received from: {}", action);
       return resp;
-    } catch (IOException ex) {
-      throw new GeneralException(String.format("Error %s at url [%s]", action, config.getJiraUrl()), ex);
+    } catch (IOException | HttpResponseException ex) {
+      throw new JiraClientException(String.format("Error %s at url [%s]", action, config.getJiraUrl()), ex);
     }
   }
 

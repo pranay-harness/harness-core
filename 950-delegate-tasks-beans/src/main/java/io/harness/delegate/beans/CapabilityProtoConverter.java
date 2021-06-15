@@ -1,5 +1,7 @@
 package io.harness.delegate.beans;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.capability.AwsRegionParameters;
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission;
@@ -11,6 +13,7 @@ import io.harness.capability.KustomizeParameters;
 import io.harness.capability.LiteEngineConnectionParameters;
 import io.harness.capability.PcfAutoScalarParameters;
 import io.harness.capability.PcfConnectivityParameters;
+import io.harness.capability.PcfInstallationParameters;
 import io.harness.capability.ProcessExecutorParameters;
 import io.harness.capability.SftpCapabilityParameters;
 import io.harness.capability.SmbConnectionParameters;
@@ -24,7 +27,9 @@ import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
 import io.harness.delegate.beans.executioncapability.LiteEngineConnectionCapability;
+import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
 import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
+import io.harness.delegate.beans.executioncapability.PcfInstallationCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SftpCapability;
 import io.harness.delegate.beans.executioncapability.SmbConnectionCapability;
@@ -33,6 +38,7 @@ import io.harness.delegate.beans.executioncapability.SocketConnectivityExecution
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.k8s.model.HelmVersion;
 
+@OwnedBy(HarnessTeam.DEL)
 public class CapabilityProtoConverter {
   public static boolean shouldCompareResults(CapabilityParameters parameters) {
     if (parameters == null) {
@@ -46,6 +52,7 @@ public class CapabilityProtoConverter {
       case HTTP_CONNECTION_PARAMETERS:
       case PCF_AUTO_SCALAR_PARAMETERS:
       case PCF_CONNECTIVITY_PARAMETERS:
+      case PCF_INSTALLATION_PARAMETERS:
       case KUSTOMIZE_PARAMETERS:
       case PROCESS_EXECUTOR_PARAMETERS:
       case SFTP_CAPABILITY_PARAMETERS:
@@ -99,12 +106,24 @@ public class CapabilityProtoConverter {
                 KustomizeParameters.newBuilder().setPluginRootDir(kustomizeCapability.getPluginRootDir()))
             .build();
       case PCF_AUTO_SCALAR:
-        return builder.setPcfAutoScalarParameters(PcfAutoScalarParameters.getDefaultInstance()).build();
+        PcfAutoScalarCapability pcfAutoScalarCapability = (PcfAutoScalarCapability) executionCapability;
+        return builder
+            .setPcfAutoScalarParameters(PcfAutoScalarParameters.newBuilder().setCfCliVersion(
+                PcfAutoScalarParameters.CfCliVersion.valueOf(pcfAutoScalarCapability.getVersion().name())))
+            .build();
       case PCF_CONNECTIVITY:
         PcfConnectivityCapability pcfConnectivityCapability = (PcfConnectivityCapability) executionCapability;
         return builder
             .setPcfConnectivityParameters(
                 PcfConnectivityParameters.newBuilder().setEndpointUrl(pcfConnectivityCapability.getEndpointUrl()))
+            .build();
+      case PCF_INSTALL:
+        PcfInstallationCapability pcfInstallationCapability = (PcfInstallationCapability) executionCapability;
+        return builder
+            .setPcfInstallationParameters(PcfInstallationParameters.newBuilder()
+                                              .setCfCliVersion(PcfInstallationParameters.CfCliVersion.valueOf(
+                                                  pcfInstallationCapability.getVersion().name()))
+                                              .build())
             .build();
       case PROCESS_EXECUTOR:
         ProcessExecutorCapability processExecutorCapability = (ProcessExecutorCapability) executionCapability;

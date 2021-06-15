@@ -1,6 +1,7 @@
 package io.harness.ng.core.outbox;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.audit.ResourceTypeConstants.DELEGATE_CONFIGURATION;
 import static io.harness.audit.ResourceTypeConstants.ORGANIZATION;
 import static io.harness.audit.ResourceTypeConstants.PROJECT;
 import static io.harness.audit.ResourceTypeConstants.SECRET;
@@ -22,16 +23,19 @@ public class NextGenOutboxEventHandler implements OutboxEventHandler {
   private final SecretEventHandler secretEventHandler;
   private final UserGroupEventHandler userGroupEventHandler;
   private final UserEventHandler userEventHandler;
+  private final DelegateProfileEventHandler delegateProfileEventHandler;
 
   @Inject
   public NextGenOutboxEventHandler(OrganizationEventHandler organizationEventHandler,
       ProjectEventHandler projectEventHandler, UserGroupEventHandler userGroupEventHandler,
-      SecretEventHandler secretEventHandler, UserEventHandler userEventHandler) {
+      SecretEventHandler secretEventHandler, UserEventHandler userEventHandler,
+      DelegateProfileEventHandler delegateProfileEventHandler) {
     this.organizationEventHandler = organizationEventHandler;
     this.projectEventHandler = projectEventHandler;
     this.userGroupEventHandler = userGroupEventHandler;
     this.secretEventHandler = secretEventHandler;
     this.userEventHandler = userEventHandler;
+    this.delegateProfileEventHandler = delegateProfileEventHandler;
   }
 
   @Override
@@ -54,6 +58,9 @@ public class NextGenOutboxEventHandler implements OutboxEventHandler {
         case USER:
         case "user":
           return userEventHandler.handle(outboxEvent);
+        case DELEGATE_CONFIGURATION:
+        case "delegateconfiguration":
+          return delegateProfileEventHandler.handle(outboxEvent);
         default:
           return false;
       }

@@ -68,6 +68,7 @@ public class ServiceClassLocatorTest extends WingsBaseTest {
   @Inject private UserGroupService userGroupService;
   @Inject private UserService userService;
   @Inject private WhitelistService whitelistService;
+  @Inject private DelegateTaskServiceClassicImpl delegateTaskServiceClassic;
 
   @Test
   @Owner(developers = GEORGE)
@@ -89,7 +90,8 @@ public class ServiceClassLocatorTest extends WingsBaseTest {
               cvConfigurationService, delegateService, governanceConfigService, instanceService,
               limitConfigurationServiceMongo, loginSettingsService, notificationRuleService, notificationSetupService,
               profileService, resourceConstraintService, roleService, secretManager, settingsService, ssoSettingService,
-              templateGalleryService, templateService, userGroupService, userService, whitelistService);
+              templateGalleryService, templateService, userGroupService, userService, whitelistService,
+              delegateTaskServiceClassic);
     }
   }
 }

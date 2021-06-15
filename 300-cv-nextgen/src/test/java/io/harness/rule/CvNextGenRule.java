@@ -14,6 +14,7 @@ import io.harness.cvng.client.VerificationManagerClientModule;
 import io.harness.cvng.core.NGManagerServiceConfig;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.metrics.modules.MetricsModule;
@@ -142,6 +143,11 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       @Override
       public CfMigrationConfig cfMigrationConfig() {
         return CfMigrationConfig.builder().build();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return FeatureFlagConfig.builder().build();
       }
     });
     return modules;

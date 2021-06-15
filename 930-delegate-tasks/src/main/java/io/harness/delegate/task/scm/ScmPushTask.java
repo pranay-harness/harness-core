@@ -3,7 +3,6 @@ package io.harness.delegate.task.scm;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
-import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -52,8 +51,8 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
         CreateFileResponse createFileResponse = scmDelegateClient.processScmRequest(c -> {
           final SCMGrpc.SCMBlockingStub scmBlockingStub = SCMGrpc.newBlockingStub(c);
           if (scmPushTaskParams.isNewBranch()) {
-            scmServiceClient.createNewBranch(scmPushTaskParams.getScmConnector(), scmPushTaskParams.getBaseBranch(),
-                scmPushTaskParams.getGitFileDetails().getBranch(), scmBlockingStub);
+            scmServiceClient.createNewBranch(scmPushTaskParams.getScmConnector(),
+                scmPushTaskParams.getGitFileDetails().getBranch(), scmPushTaskParams.getBaseBranch(), scmBlockingStub);
           }
           return scmServiceClient.createFile(
               scmPushTaskParams.getScmConnector(), scmPushTaskParams.getGitFileDetails(), scmBlockingStub);
@@ -67,11 +66,7 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
       }
       case DELETE: {
         DeleteFileResponse deleteFileResponse = scmDelegateClient.processScmRequest(c
-            -> scmServiceClient.deleteFile(scmPushTaskParams.getScmConnector(),
-                GitFilePathDetails.builder()
-                    .branch(scmPushTaskParams.getGitFileDetails().getBranch())
-                    .filePath(scmPushTaskParams.getGitFileDetails().getFilePath())
-                    .build(),
+            -> scmServiceClient.deleteFile(scmPushTaskParams.getScmConnector(), scmPushTaskParams.getGitFileDetails(),
                 SCMGrpc.newBlockingStub(c)));
         ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
             deleteFileResponse.getStatus(), deleteFileResponse.getError());
@@ -84,8 +79,8 @@ public class ScmPushTask extends AbstractDelegateRunnableTask {
         UpdateFileResponse updateFileResponse = scmDelegateClient.processScmRequest(c -> {
           final SCMGrpc.SCMBlockingStub scmBlockingStub = SCMGrpc.newBlockingStub(c);
           if (scmPushTaskParams.isNewBranch()) {
-            scmServiceClient.createNewBranch(scmPushTaskParams.getScmConnector(), scmPushTaskParams.getBaseBranch(),
-                scmPushTaskParams.getGitFileDetails().getBranch(), scmBlockingStub);
+            scmServiceClient.createNewBranch(scmPushTaskParams.getScmConnector(),
+                scmPushTaskParams.getGitFileDetails().getBranch(), scmPushTaskParams.getBaseBranch(), scmBlockingStub);
           }
           return scmServiceClient.updateFile(
               scmPushTaskParams.getScmConnector(), scmPushTaskParams.getGitFileDetails(), scmBlockingStub);

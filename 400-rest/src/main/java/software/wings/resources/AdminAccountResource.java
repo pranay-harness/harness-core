@@ -3,7 +3,7 @@ package software.wings.resources;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.ccm.commons.dao.CEDataCleanupRequestDao;
-import io.harness.ccm.commons.entities.CEDataCleanupRequest;
+import io.harness.ccm.commons.entities.batch.CEDataCleanupRequest;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.datahandler.models.AccountSummary;
 import io.harness.datahandler.models.FeatureFlagBO;

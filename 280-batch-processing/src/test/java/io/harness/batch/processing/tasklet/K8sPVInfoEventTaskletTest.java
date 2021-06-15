@@ -19,8 +19,8 @@ import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.StorageResource;
-import io.harness.ccm.commons.entities.InstanceData;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.entities.batch.InstanceData;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.PVEvent;
 import io.harness.perpetualtask.k8s.watch.PVInfo;
@@ -44,7 +44,6 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.batch.repeat.RepeatStatus;
 
@@ -72,9 +71,6 @@ public class K8sPVInfoEventTaskletTest extends BaseTaskletTest {
 
   @Before
   public void setup() {
-    MockitoAnnotations.initMocks(this);
-    mockChunkContext();
-
     when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().queryBatchSize(50).build());
     when(instanceDataBulkWriteService.updateList(any())).thenReturn(true);
   }

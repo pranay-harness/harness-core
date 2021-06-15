@@ -131,10 +131,11 @@ message IssueCommentHook {
   Comment comment = 5;
 }
 
-message CreateBranchHook {
-  Action action = 1;
-  Repository repo = 2;
-  User sender = 3;
+message BranchHook {
+  Action action = 1;    // branch hook action can be create or delete
+  Repository repo = 2;  // repository where the event occurred
+  User sender = 3;      // user that triggered the event
+  Reference ref = 4;    // git ref object
 }
 
 message Comment {
@@ -190,7 +191,7 @@ message ParseWebhookResponse {
     PullRequestHook pr = 1;
     PushHook push = 2;
     IssueCommentHook comment = 3;
-    CreateBranchHook createBranch = 4;
+    BranchHook branch = 4;
   }
 }
 
@@ -246,6 +247,11 @@ message Provider {
   bool debug = 9;
 }
 
+/*
+For an invalid page request, next = 0
+For the last valid page response, next = 0
+For other cases, next = request.pageRequest.page + 1 // basically it corresponds to the next valid page
+ */
 message PageResponse {
   int32 next = 1;
 }
@@ -278,26 +284,33 @@ message GetLatestFileRequest {
 message DeleteFileRequest {
   string slug = 1;
   string path = 2;
-  oneof type {
-    string branch = 3;
-    string ref = 4;
-  }
-  Provider provider = 5;
+  string branch = 3;
+  string message = 4;
+  string commit_id = 5;
+  string blob_id = 6;
+  Signature signature = 7;
+  Provider provider = 8;
 }
 
 message DeleteFileResponse {
   int32 status = 1;
   string error = 2;
+  string commit_id = 3;
+  string blob_id = 4;
 }
 
 message CreateFileResponse {
   int32 status = 1;
   string error = 2;
+  string commit_id = 3;
+  string blob_id = 4;
 }
 
 message UpdateFileResponse {
   int32 status = 1;
   string error = 2;
+  string commit_id = 3;
+  string blob_id = 4;
 }
 
 message FileModifyRequest {
@@ -327,7 +340,10 @@ message FileBatchContentResponse {
 
 message FindFilesInBranchRequest {
   string slug = 1;
-  string branch = 2;
+  oneof type {
+    string branch = 2;
+    string ref = 6;
+  }
   string path = 3;
   PageRequest pagination = 4;
   Provider provider = 5;
@@ -393,6 +409,8 @@ message CreatePRRequest {
 
 message CreatePRResponse {
   int32 status = 1;
+  int32 number = 2;
+  string error = 3;
 }
 
 message FindFilesInPRRequest {
@@ -423,6 +441,7 @@ message CreateBranchRequest {
 
 message CreateBranchResponse {
   int32 status = 1;
+  string error = 2;
 }
 
 message GetLatestCommitRequest {
@@ -443,6 +462,19 @@ message ListBranchesRequest {
 
 message ListBranchesResponse {
   repeated string branches = 1;
+  PageResponse pagination = 2;
+}
+
+message CompareCommitsRequest {
+  string slug = 1;
+  string source = 2;
+  string target = 3;
+  PageRequest pagination = 4;
+  Provider provider = 5;
+}
+
+message CompareCommitsResponse {
+  repeated PRFile files = 1;
   PageResponse pagination = 2;
 }
 
@@ -579,6 +611,27 @@ message ListWebhooksResponse {
   PageResponse pagination = 4;
 }
 
+message GetAuthenticatedUserRequest {
+  Provider provider = 1;
+}
+
+message GetAuthenticatedUserResponse {
+  string username = 1;
+  string error = 2;
+}
+
+message GetUserReposRequest {
+  PageRequest pagination = 1;
+  Provider provider = 2;
+}
+
+message GetUserReposResponse {
+  repeated Repository repos = 1;
+  PageResponse pagination = 2;
+  int32 status = 3;
+  string error = 4;
+}
+
 service SCM {
   // RPC to stop tailing on a file.
   rpc ParseWebhook(ParseWebhookRequest) returns (ParseWebhookResponse);
@@ -603,9 +656,14 @@ service SCM {
   rpc GetLatestCommit(GetLatestCommitRequest) returns (GetLatestCommitResponse);
   rpc ListBranches(ListBranchesRequest) returns (ListBranchesResponse);
   rpc ListCommits(ListCommitsRequest) returns (ListCommitsResponse);
+  rpc CompareCommits(CompareCommitsRequest) returns (CompareCommitsResponse);
 
   // Push Request functions.
   rpc ListCommitsInPR(ListCommitsInPRRequest) returns (ListCommitsInPRResponse);
+
+  // User functions
+  rpc GetAuthenticatedUser(GetAuthenticatedUserRequest) returns (GetAuthenticatedUserResponse);
+  rpc GetUserRepos(GetUserReposRequest) returns (GetUserReposResponse);
 
   // repo functions from go-scm
   rpc CreateWebhook(CreateWebhookRequest) returns (CreateWebhookResponse);

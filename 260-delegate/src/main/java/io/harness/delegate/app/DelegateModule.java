@@ -52,9 +52,15 @@ import io.harness.delegate.chartmuseum.NGChartMuseumService;
 import io.harness.delegate.chartmuseum.NGChartMuseumServiceImpl;
 import io.harness.delegate.exceptionhandler.handler.AmazonClientExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.AmazonServiceExceptionHandler;
+import io.harness.delegate.exceptionhandler.handler.AuthenticationExceptionHandler;
+import io.harness.delegate.exceptionhandler.handler.CVConnectorExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.DockerServerExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.GcpClientExceptionHandler;
+import io.harness.delegate.exceptionhandler.handler.InterruptedIOExceptionHandler;
+import io.harness.delegate.exceptionhandler.handler.JGitExceptionHandler;
+import io.harness.delegate.exceptionhandler.handler.SCMExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.SecretExceptionHandler;
+import io.harness.delegate.exceptionhandler.handler.SocketExceptionHandler;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
 import io.harness.delegate.http.HttpTaskNG;
@@ -135,6 +141,7 @@ import io.harness.delegate.task.k8s.K8sTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask;
 import io.harness.delegate.task.k8s.KubernetesValidationHandler;
+import io.harness.delegate.task.manifests.CustomManifestFetchTask;
 import io.harness.delegate.task.manifests.CustomManifestValuesFetchTask;
 import io.harness.delegate.task.nexus.NexusDelegateTask;
 import io.harness.delegate.task.nexus.NexusValidationHandler;
@@ -736,6 +743,16 @@ public class DelegateModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("asyncTaskDispatchExecutor")
+  public ExecutorService asyncTaskDispatchExecutor() {
+    ExecutorService asyncTaskDispatchExecutor = ThreadPool.create(10, 10, 3, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("async-task-dispatch-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { asyncTaskDispatchExecutor.shutdownNow(); }));
+    return asyncTaskDispatchExecutor;
+  }
+
+  @Provides
+  @Singleton
   @Named("jenkinsExecutor")
   public ExecutorService jenkinsExecutor() {
     ExecutorService jenkinsExecutor = ThreadPool.create(1, 40, 1, TimeUnit.SECONDS,
@@ -1182,7 +1199,6 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.APPDYNAMICS_COLLECT_METRIC_DATA_V2).toInstance(MetricsDataCollectionTask.class);
     mapBinder.addBinding(TaskType.APPDYNAMICS_COLLECT_24_7_METRIC_DATA).toInstance(AppdynamicsDataCollectionTask.class);
     mapBinder.addBinding(TaskType.APPDYNAMICS_METRIC_DATA_FOR_NODE).toInstance(ServiceImplDelegateTask.class);
-    mapBinder.addBinding(TaskType.APPDYNAMICS_METRIC_PACK_DATA).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.INSTANA_GET_INFRA_METRICS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.INSTANA_GET_TRACE_METRICS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.INSTANA_COLLECT_METRIC_DATA).toInstance(MetricsDataCollectionTask.class);
@@ -1354,6 +1370,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.CI_CLEANUP).toInstance(CICleanupTask.class);
     mapBinder.addBinding(TaskType.AWS_S3_TASK).toInstance(AwsS3Task.class);
     mapBinder.addBinding(TaskType.CUSTOM_MANIFEST_VALUES_FETCH_TASK).toInstance(CustomManifestValuesFetchTask.class);
+    mapBinder.addBinding(TaskType.CUSTOM_MANIFEST_FETCH_TASK).toInstance(CustomManifestFetchTask.class);
 
     // Add all NG tasks below this.
     mapBinder.addBinding(TaskType.GCP_TASK).toInstance(GcpTask.class);
@@ -1502,6 +1519,10 @@ public class DelegateModule extends AbstractModule {
         .to(CVConnectorValidationHandler.class);
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.PROMETHEUS.getDisplayName())
         .to(CVConnectorValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.SUMOLOGIC.getDisplayName())
+        .to(CVConnectorValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.DYNATRACE.getDisplayName())
+        .to(CVConnectorValidationHandler.class);
   }
 
   private void bindExceptionHandlers() {
@@ -1518,5 +1539,17 @@ public class DelegateModule extends AbstractModule {
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(DockerServerExceptionHandler.class));
     SecretExceptionHandler.exceptions().forEach(
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(SecretExceptionHandler.class));
+    SocketExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(SocketExceptionHandler.class));
+    InterruptedIOExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(InterruptedIOExceptionHandler.class));
+    CVConnectorExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(CVConnectorExceptionHandler.class));
+    JGitExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(JGitExceptionHandler.class));
+    SCMExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(SCMExceptionHandler.class));
+    AuthenticationExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(AuthenticationExceptionHandler.class));
   }
 }

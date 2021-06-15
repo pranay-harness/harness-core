@@ -1,6 +1,6 @@
 package io.harness.batch.processing.config.k8s.recommendation;
 
-import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
+import io.harness.ccm.commons.entities.k8s.recommendation.PartialRecommendationHistogram;
 
 import java.util.HashMap;
 import java.util.Map;

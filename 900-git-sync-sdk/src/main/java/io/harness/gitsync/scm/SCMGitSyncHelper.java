@@ -7,6 +7,7 @@ import static io.harness.gitsync.GitSyncSdkModule.SCM_ON_MANAGER;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.FileInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceBlockingStub;
@@ -55,6 +56,7 @@ public class SCMGitSyncHelper {
           .yamlGitConfigId(gitBranchInfo.getYamlGitConfigId())
           .branch(gitBranchInfo.getBranch())
           .folderPath(gitBranchInfo.getFolderPath())
+          .commitId(gitBranchInfo.getCommitId())
           .build();
     }
     final InfoForGitPush infoForPush = getInfoForPush(gitBranchInfo, entityDetail);
@@ -78,7 +80,9 @@ public class SCMGitSyncHelper {
             .setUserPrincipal(getUserPrincipal())
             .build());
     if (!pushInfo.getStatus()) {
-      throw new InvalidRequestException(pushInfo.getException().getValue());
+      WingsException wingsException =
+          (WingsException) kryoSerializer.asObject(pushInfo.getException().getValue().toByteArray());
+      throw wingsException;
     }
     final ScmConnector scmConnector =
         (ScmConnector) kryoSerializer.asObject(pushInfo.getConnector().getValue().toByteArray());
@@ -112,6 +116,7 @@ public class SCMGitSyncHelper {
       return UserPrincipal.newBuilder()
           .setEmail(StringValue.of(userPrincipal.getEmail()))
           .setUserId(StringValue.of(userPrincipal.getName()))
+          .setUserName(StringValue.of(userPrincipal.getUsername()))
           .build();
     }
     throw new InvalidRequestException("User not set for push event.");

@@ -1,13 +1,20 @@
 package io.harness.accesscontrol;
 
+import static io.harness.remote.client.ClientMode.NON_PRIVILEGED;
+import static io.harness.remote.client.ClientMode.PRIVILEGED;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.remote.client.ClientMode;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 
 @OwnedBy(HarnessTeam.PL)
 public class AccessControlAdminClientModule extends AbstractModule {
@@ -35,14 +42,25 @@ public class AccessControlAdminClientModule extends AbstractModule {
     return new AccessControlAdminHttpClientFactory(
         accessControlAdminClientConfiguration.getAccessControlServiceConfig(),
         accessControlAdminClientConfiguration.getAccessControlServiceSecret(), new ServiceTokenGenerator(),
-        kryoConverterFactory, clientId);
+        kryoConverterFactory, clientId, NON_PRIVILEGED);
+  }
+
+  @Provides
+  @Named("PRIVILEGED")
+  private AccessControlAdminHttpClientFactory accessControlAdminHttpClientFactory(
+      KryoConverterFactory kryoConverterFactory) {
+    return new AccessControlAdminHttpClientFactory(
+        accessControlAdminClientConfiguration.getAccessControlServiceConfig(),
+        accessControlAdminClientConfiguration.getAccessControlServiceSecret(), new ServiceTokenGenerator(),
+        kryoConverterFactory, clientId, PRIVILEGED);
   }
 
   @Override
   protected void configure() {
     bind(AccessControlAdminClient.class).toProvider(AccessControlAdminHttpClientFactory.class).in(Scopes.SINGLETON);
-    registerRequiredBindings();
+    bind(AccessControlAdminClient.class)
+        .annotatedWith(Names.named(ClientMode.PRIVILEGED.name()))
+        .toProvider(Key.get(AccessControlAdminHttpClientFactory.class, Names.named(ClientMode.PRIVILEGED.name())))
+        .in(Scopes.SINGLETON);
   }
-
-  private void registerRequiredBindings() {}
 }

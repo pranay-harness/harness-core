@@ -11,9 +11,11 @@ import (
 	"go.uber.org/zap"
 )
 
+var gitGithubToken = os.Getenv("GITHUB_ACCESS_TOKEN")
+
 // NB make sure there is no existing Branch by this name
 func TestCreateBranchGithub(t *testing.T) {
-	if os.Getenv("GITHUB_ACCESS_TOKEN") == "" {
+	if gitGithubToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.CreateBranchRequest{
@@ -24,7 +26,7 @@ func TestCreateBranchGithub(t *testing.T) {
 			Hook: &pb.Provider_Github{
 				Github: &pb.GithubProvider{
 					Provider: &pb.GithubProvider_AccessToken{
-						AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+						AccessToken: gitGithubToken,
 					},
 				},
 			},
@@ -40,7 +42,7 @@ func TestCreateBranchGithub(t *testing.T) {
 
 // NB make sure there is no existing PR for this branch, or the test will fail.
 func TestCreatePRGithub(t *testing.T) {
-	if os.Getenv("GITHUB_ACCESS_TOKEN") == "" {
+	if gitGithubToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.CreatePRRequest{
@@ -53,7 +55,7 @@ func TestCreatePRGithub(t *testing.T) {
 			Hook: &pb.Provider_Github{
 				Github: &pb.GithubProvider{
 					Provider: &pb.GithubProvider_AccessToken{
-						AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+						AccessToken: gitGithubToken,
 					},
 				},
 			},
@@ -67,7 +69,7 @@ func TestCreatePRGithub(t *testing.T) {
 }
 
 func TestGetLatestCommitGithub(t *testing.T) {
-	if os.Getenv("GITHUB_ACCESS_TOKEN") == "" {
+	if gitGithubToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.GetLatestCommitRequest{
@@ -77,7 +79,7 @@ func TestGetLatestCommitGithub(t *testing.T) {
 			Hook: &pb.Provider_Github{
 				Github: &pb.GithubProvider{
 					Provider: &pb.GithubProvider_AccessToken{
-						AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+						AccessToken: gitGithubToken,
 					},
 				},
 			},
@@ -92,7 +94,7 @@ func TestGetLatestCommitGithub(t *testing.T) {
 }
 
 func TestListCommitsGithub(t *testing.T) {
-	if os.Getenv("GITHUB_ACCESS_TOKEN") == "" {
+	if gitGithubToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.ListCommitsRequest{
@@ -104,7 +106,7 @@ func TestListCommitsGithub(t *testing.T) {
 			Hook: &pb.Provider_Github{
 				Github: &pb.GithubProvider{
 					Provider: &pb.GithubProvider_AccessToken{
-						AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+						AccessToken: gitGithubToken,
 					},
 				},
 			},
@@ -120,7 +122,7 @@ func TestListCommitsGithub(t *testing.T) {
 }
 
 func TestListCommitsPage2Github(t *testing.T) {
-	if os.Getenv("GITHUB_ACCESS_TOKEN") == "" {
+	if gitGithubToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.ListCommitsRequest{
@@ -135,7 +137,7 @@ func TestListCommitsPage2Github(t *testing.T) {
 			Hook: &pb.Provider_Github{
 				Github: &pb.GithubProvider{
 					Provider: &pb.GithubProvider_AccessToken{
-						AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+						AccessToken: gitGithubToken,
 					},
 				},
 			},
@@ -151,7 +153,7 @@ func TestListCommitsPage2Github(t *testing.T) {
 }
 
 func TestListBranchesGithub(t *testing.T) {
-	if os.Getenv("GITHUB_ACCESS_TOKEN") == "" {
+	if gitGithubToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.ListBranchesRequest{
@@ -160,7 +162,7 @@ func TestListBranchesGithub(t *testing.T) {
 			Hook: &pb.Provider_Github{
 				Github: &pb.GithubProvider{
 					Provider: &pb.GithubProvider_AccessToken{
-						AccessToken: os.Getenv("GITHUB_ACCESS_TOKEN"),
+						AccessToken: gitGithubToken,
 					},
 				},
 			},
@@ -172,5 +174,32 @@ func TestListBranchesGithub(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.GreaterOrEqual(t, len(got.Branches), 1, "status matches")
+	assert.Equal(t, int32(0), got.Pagination.Next, "there is no next page")
+}
+
+func TestCompareCommitsGithub(t *testing.T) {
+	if gitGithubToken == "" {
+		t.Skip("Skipping, Acceptance test")
+	}
+	in := &pb.CompareCommitsRequest{
+		Slug:   "tphoney/scm-test",
+		Target: "183d27567e2908b73420634a5bb4b74d616ee74f",
+		Source: "50dd4aed7a243e4057dc3db26b0dbde61abfff5d",
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Github{
+				Github: &pb.GithubProvider{
+					Provider: &pb.GithubProvider_AccessToken{
+						AccessToken: gitGithubToken,
+					},
+				},
+			},
+		},
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := CompareCommits(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.GreaterOrEqual(t, len(got.Files), 1, "1 file is different")
 	assert.Equal(t, int32(0), got.Pagination.Next, "there is no next page")
 }

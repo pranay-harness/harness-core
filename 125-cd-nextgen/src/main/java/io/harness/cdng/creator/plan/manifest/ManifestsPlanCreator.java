@@ -15,10 +15,11 @@ import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
-import io.harness.pms.sdk.core.facilitator.chilidren.ChildrenFacilitator;
-import io.harness.pms.sdk.core.facilitator.sync.SyncFacilitator;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.yaml.ParameterField;
@@ -41,6 +42,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class ManifestsPlanCreator {
   public PlanCreationResponse createPlanForManifestsNode(ServiceConfig serviceConfig) {
+    String manifestsId = UUIDGenerator.generateUuid();
     List<ManifestConfigWrapper> manifestListConfig =
         serviceConfig.getServiceDefinition().getServiceSpec().getManifests();
     ManifestListBuilder manifestListBuilder = new ManifestListBuilder(manifestListConfig);
@@ -62,13 +64,15 @@ public class ManifestsPlanCreator {
             .build();
     PlanNode manifestsNode =
         PlanNode.builder()
-            .uuid("manifests-" + serviceConfig.getServiceDefinition().getUuid())
+            .uuid("manifests-" + manifestsId)
             .stepType(ManifestsStep.STEP_TYPE)
             .name(PlanCreatorConstants.MANIFESTS_NODE_NAME)
             .identifier(YamlTypes.MANIFEST_LIST_CONFIG)
             .stepParameters(stepParameters)
             .facilitatorObtainment(
-                FacilitatorObtainment.newBuilder().setType(ChildrenFacilitator.FACILITATOR_TYPE).build())
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                    .build())
             .skipExpressionChain(false)
             .build();
     planNodes.add(manifestsNode);
@@ -80,12 +84,15 @@ public class ManifestsPlanCreator {
 
   private PlanNode createPlanForManifestNode(String identifier, ManifestInfo manifestInfo) {
     return PlanNode.builder()
-        .uuid(manifestInfo.getUuid())
+        .uuid(UUIDGenerator.generateUuid())
         .stepType(ManifestStep.STEP_TYPE)
         .name(PlanCreatorConstants.MANIFEST_NODE_NAME)
         .identifier(identifier)
         .stepParameters(manifestInfo.getParams())
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(SyncFacilitator.FACILITATOR_TYPE).build())
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                .build())
         .skipExpressionChain(false)
         .build();
   }
@@ -115,11 +122,10 @@ public class ManifestsPlanCreator {
                 String.format("Duplicate identifier: [%s] in manifests", mc.getIdentifier()));
           }
           this.manifests.put(mc.getIdentifier(),
-              new ManifestInfoBuilder(mc.getUuid(),
-                  ManifestStepParameters.builder()
-                      .identifier(mc.getIdentifier())
-                      .type(mc.getType())
-                      .spec(mc.getSpec())));
+              new ManifestInfoBuilder(ManifestStepParameters.builder()
+                                          .identifier(mc.getIdentifier())
+                                          .type(mc.getType())
+                                          .spec(mc.getSpec())));
         });
       }
     }
@@ -176,8 +182,7 @@ public class ManifestsPlanCreator {
       for (ManifestConfigWrapper manifestConfigWrapper : manifestConfigList) {
         ManifestConfig mc = manifestConfigWrapper.getManifest();
         ManifestInfoBuilder manifestInfoBuilder = manifests.computeIfAbsent(mc.getIdentifier(),
-            identifier
-            -> new ManifestInfoBuilder(mc.getUuid(), ManifestStepParameters.builder().identifier(identifier)));
+            identifier -> new ManifestInfoBuilder(ManifestStepParameters.builder().identifier(identifier)));
         consumer.accept(manifestInfoBuilder.getBuilder(), mc.getSpec());
       }
     }
@@ -185,17 +190,15 @@ public class ManifestsPlanCreator {
 
   @Value
   private static class ManifestInfo {
-    String uuid;
     ManifestStepParameters params;
   }
 
   @Value
   private static class ManifestInfoBuilder {
-    String uuid;
     ManifestStepParametersBuilder builder;
 
     ManifestInfo build() {
-      return new ManifestInfo(uuid, builder.build());
+      return new ManifestInfo(builder.build());
     }
   }
 }

@@ -47,7 +47,7 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
 
   @Override
   public TerraformTaskNGResponse executeTaskInternal(TerraformTaskNGParameters taskParameters, String delegateId,
-      String taskId, LogCallback logCallback) throws IOException {
+      String taskId, LogCallback logCallback) throws IOException, TerraformCommandExecutionException {
     GitStoreDelegateConfig confileFileGitStore = taskParameters.getConfigFile().getGitStoreDelegateConfig();
     String scriptPath = confileFileGitStore.getPaths().get(0);
 
@@ -116,6 +116,8 @@ public class TerraformApplyTaskHandler extends TerraformAbstractTaskHandler {
 
       String stateFileId = terraformBaseHelper.uploadTfStateFile(
           taskParameters.getAccountId(), delegateId, taskId, taskParameters.getEntityId(), tfStateFile);
+
+      logCallback.saveExecutionLog("\nDone \n", INFO, CommandExecutionStatus.SUCCESS);
 
       return TerraformTaskNGResponse.builder()
           .outputs(new String(Files.readAllBytes(tfOutputsFile.toPath()), Charsets.UTF_8))

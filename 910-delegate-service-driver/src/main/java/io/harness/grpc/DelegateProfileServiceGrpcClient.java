@@ -36,7 +36,9 @@ import io.harness.virtualstack.VirtualStackUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.rpc.Status;
 import io.grpc.StatusRuntimeException;
+import io.grpc.protobuf.StatusProto;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +74,7 @@ public class DelegateProfileServiceGrpcClient {
 
       return listProfilesResponse.getResponse();
     } catch (StatusRuntimeException ex) {
-      throw new DelegateServiceDriverException("Unexpected error occurred while listing profiles.", ex);
+      throw new DelegateServiceDriverException(getMessage(ex), ex);
     }
   }
 
@@ -87,7 +89,7 @@ public class DelegateProfileServiceGrpcClient {
 
       return getProfileResponse.getProfile();
     } catch (StatusRuntimeException ex) {
-      throw new DelegateServiceDriverException("Unexpected error occurred while getting profile.", ex);
+      throw new DelegateServiceDriverException(getMessage(ex), ex);
     }
   }
 
@@ -102,7 +104,7 @@ public class DelegateProfileServiceGrpcClient {
 
       return addProfileResponse.getProfile();
     } catch (StatusRuntimeException ex) {
-      throw new DelegateServiceDriverException("Unexpected error occurred while adding profile.", ex);
+      throw new DelegateServiceDriverException(getMessage(ex), ex);
     }
   }
 
@@ -121,7 +123,7 @@ public class DelegateProfileServiceGrpcClient {
 
       return updateProfileResponse.getProfile();
     } catch (StatusRuntimeException ex) {
-      throw new DelegateServiceDriverException("Unexpected error occurred while updating profile.", ex);
+      throw new DelegateServiceDriverException(getMessage(ex), ex);
     }
   }
 
@@ -134,7 +136,7 @@ public class DelegateProfileServiceGrpcClient {
               .setProfileId(profileId)
               .build());
     } catch (StatusRuntimeException ex) {
-      throw new DelegateServiceDriverException("Unexpected error occurred while deleting profile.", ex);
+      throw new DelegateServiceDriverException(getMessage(ex), ex);
     }
   }
 
@@ -161,7 +163,7 @@ public class DelegateProfileServiceGrpcClient {
       return updateProfileSelectorsResponse.getProfile();
 
     } catch (StatusRuntimeException ex) {
-      throw new DelegateServiceDriverException("Unexpected error occurred while updating profile selectors.", ex);
+      throw new DelegateServiceDriverException(getMessage(ex), ex);
     }
   }
 
@@ -187,7 +189,7 @@ public class DelegateProfileServiceGrpcClient {
       return updateProfileScopingRulesResponse.getProfile();
 
     } catch (StatusRuntimeException ex) {
-      throw new DelegateServiceDriverException("Unexpected error occurred while updating profile scoping rules.", ex);
+      throw new DelegateServiceDriverException(getMessage(ex), ex);
     }
   }
 
@@ -209,5 +211,10 @@ public class DelegateProfileServiceGrpcClient {
         throw new DelegateServiceDriverException("Scoping rule should have at least one scoping value set!");
       }
     }
+  }
+
+  private String getMessage(StatusRuntimeException ex) {
+    Status status = StatusProto.fromThrowable(ex);
+    return status != null ? status.getMessage() : ex.getMessage();
   }
 }

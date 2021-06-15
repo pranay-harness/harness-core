@@ -17,8 +17,6 @@ import io.harness.cdng.jira.resources.service.JiraResourceService;
 import io.harness.cdng.jira.resources.service.JiraResourceServiceImpl;
 import io.harness.cdng.k8s.resources.gcp.service.GcpResourceService;
 import io.harness.cdng.k8s.resources.gcp.service.impl.GcpResourceServiceImpl;
-import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
-import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionServiceImpl;
 import io.harness.cdng.yaml.CdYamlSchemaService;
 import io.harness.cdng.yaml.CdYamlSchemaServiceImpl;
 import io.harness.ng.core.NGCoreModule;
@@ -51,7 +49,6 @@ public class NGModule extends AbstractModule {
     install(StageTypeToStageExecutionMapperRegistryModule.getInstance());
 
     bind(ArtifactSourceService.class).to(ArtifactSourceServiceImpl.class);
-    bind(NgPipelineExecutionService.class).to(NgPipelineExecutionServiceImpl.class);
     bind(DockerResourceService.class).to(DockerResourceServiceImpl.class);
     bind(GcrResourceService.class).to(GcrResourceServiceImpl.class);
     bind(EcrResourceService.class).to(EcrResourceServiceImpl.class);

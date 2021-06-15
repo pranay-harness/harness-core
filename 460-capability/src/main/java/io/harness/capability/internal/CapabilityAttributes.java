@@ -1,9 +1,12 @@
 package io.harness.capability.internal;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.capability.CapabilityParameters;
 
 import java.time.Duration;
 
+@OwnedBy(HarnessTeam.DEL)
 public class CapabilityAttributes {
   public static Duration getValidityPeriod(CapabilityParameters parameters) {
     switch (parameters.getCapabilityCase()) {
@@ -20,6 +23,8 @@ public class CapabilityAttributes {
       case PCF_AUTO_SCALAR_PARAMETERS:
         return Duration.ofHours(6);
       case PCF_CONNECTIVITY_PARAMETERS:
+        return Duration.ofHours(6);
+      case PCF_INSTALLATION_PARAMETERS:
         return Duration.ofHours(6);
       case KUSTOMIZE_PARAMETERS:
         return Duration.ofHours(6);
@@ -55,6 +60,8 @@ public class CapabilityAttributes {
       case PCF_AUTO_SCALAR_PARAMETERS:
         return Duration.ofHours(4);
       case PCF_CONNECTIVITY_PARAMETERS:
+        return Duration.ofHours(4);
+      case PCF_INSTALLATION_PARAMETERS:
         return Duration.ofHours(4);
       case KUSTOMIZE_PARAMETERS:
         return Duration.ofHours(4);
@@ -92,6 +99,8 @@ public class CapabilityAttributes {
       case PCF_CONNECTIVITY_PARAMETERS:
         return "Checking that PCF resource " + parameters.getPcfConnectivityParameters().getEndpointUrl()
             + " is reachable";
+      case PCF_INSTALLATION_PARAMETERS:
+        return "Checking that CF CLI is installed";
       case KUSTOMIZE_PARAMETERS:
         return "Checking that kustomize is installed at " + parameters.getKustomizeParameters().getPluginRootDir();
       case PROCESS_EXECUTOR_PARAMETERS:

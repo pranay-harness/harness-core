@@ -76,9 +76,8 @@ public class NewRelicResource {
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("connectorIdentifier") @NotNull String connectorIdentifier,
       @QueryParam("appName") @NotNull String appName, @QueryParam("appId") @NotNull String appId,
-      @QueryParam("requestGuid") @NotNull String requestGuid, @NotNull @Valid @Body List<MetricPackDTO> metricPacks,
-      @QueryParam("tracingId") String tracingId) {
+      @QueryParam("requestGuid") @NotNull String requestGuid, @NotNull @Valid @Body List<MetricPackDTO> metricPacks) {
     return ResponseDTO.newResponse(newRelicService.validateData(
-        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, appName, appId, metricPacks, tracingId));
+        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, appName, appId, metricPacks, requestGuid));
   }
 }

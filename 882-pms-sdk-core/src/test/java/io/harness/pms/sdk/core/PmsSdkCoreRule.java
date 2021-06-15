@@ -1,5 +1,7 @@
 package io.harness.pms.sdk.core;
 
+import static io.harness.pms.sdk.core.PmsSdkCoreTestBase.PMS_SDK_CORE_SERVICE_NAME;
+
 import io.harness.PmsCommonsModule;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.factory.ClosingFactory;
@@ -7,6 +9,7 @@ import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.pms.serializer.kryo.PmsContractsKryoRegistrar;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
@@ -53,7 +56,11 @@ public class PmsSdkCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleM
             .build();
     List<Module> modules = new ArrayList<>();
     modules.add(new ClosingFactoryModule(closingFactory));
-    modules.add(PmsSdkCoreModule.getInstance(PmsSdkCoreConfig.builder().sdkDeployMode(SdkDeployMode.LOCAL).build()));
+    modules.add(PmsSdkCoreModule.getInstance(PmsSdkCoreConfig.builder()
+                                                 .serviceName(PMS_SDK_CORE_SERVICE_NAME)
+                                                 .sdkDeployMode(SdkDeployMode.LOCAL)
+                                                 .eventsFrameworkConfiguration(eventsFrameworkConfiguration)
+                                                 .build()));
     modules.add(PmsCommonsModule.getInstance());
     modules.add(mongoTypeModule(annotations));
     modules.add(KryoModule.getInstance());
@@ -78,6 +85,12 @@ public class PmsSdkCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleM
       @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder().build();
+      }
+
+      @Provides
+      @Singleton
+      AsyncWaitEngine waitEngine() {
+        return new TestAsyncWaitEngineImpl();
       }
     });
 

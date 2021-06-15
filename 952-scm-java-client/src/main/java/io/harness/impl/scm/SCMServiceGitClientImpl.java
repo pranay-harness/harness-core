@@ -3,17 +3,18 @@ package io.harness.impl.scm;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FileContentBatchResponse;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.product.ci.scm.proto.CompareCommitsResponse;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.CreateWebhookResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.DeleteWebhookResponse;
-import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
 import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
@@ -31,6 +32,7 @@ import io.harness.service.ScmServiceClient;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,8 +56,8 @@ public class SCMServiceGitClientImpl implements ScmClient {
   }
 
   @Override
-  public DeleteFileResponse deleteFile(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails) {
-    return scmServiceClient.deleteFile(scmConnector, gitFilePathDetails, scmBlockingStub);
+  public DeleteFileResponse deleteFile(ScmConnector scmConnector, GitFileDetails gitFileDetails) {
+    return scmServiceClient.deleteFile(scmConnector, gitFileDetails, scmBlockingStub);
   }
 
   @Override
@@ -110,8 +112,14 @@ public class SCMServiceGitClientImpl implements ScmClient {
   }
 
   @Override
-  public FileBatchContentResponse listFiles(ScmConnector connector, List<String> foldersList, String branch) {
+  public FileContentBatchResponse listFiles(ScmConnector connector, Set<String> foldersList, String branch) {
     return scmServiceClient.listFiles(connector, foldersList, branch, scmBlockingStub);
+  }
+
+  @Override
+  public FileContentBatchResponse listFilesByFilePaths(
+      ScmConnector connector, List<String> filePathsList, String branchName) {
+    return scmServiceClient.listFilesByFilePaths(connector, filePathsList, branchName, scmBlockingStub);
   }
 
   @Override
@@ -142,5 +150,11 @@ public class SCMServiceGitClientImpl implements ScmClient {
   @Override
   public CreateWebhookResponse upsertWebhook(ScmConnector scmConnector, GitWebhookDetails gitWebhookDetails) {
     return scmServiceClient.upsertWebhook(scmConnector, gitWebhookDetails, scmBlockingStub);
+  }
+
+  @Override
+  public CompareCommitsResponse compareCommits(
+      ScmConnector scmConnector, String initialCommitId, String finalCommitId) {
+    return scmServiceClient.compareCommits(scmConnector, initialCommitId, finalCommitId, scmBlockingStub);
   }
 }

@@ -67,9 +67,10 @@ import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.helm.HttpHelmAuthType;
 import io.harness.delegate.beans.connector.helm.HttpHelmAuthenticationDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
+import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.executioncapability.GitConnectionNGCapability;
+import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
@@ -841,11 +842,13 @@ public class K8sStepHelperTest extends CategoryTest {
     doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
 
     doReturn(
-        Optional.of(
-            ConnectorResponseDTO.builder()
-                .connector(
-                    ConnectorInfoDTO.builder().connectorConfig(GitConfigDTO.builder().build()).name("test").build())
-                .build()))
+        Optional.of(ConnectorResponseDTO.builder()
+                        .connector(ConnectorInfoDTO.builder()
+                                       .connectorConfig(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
+                                       .name("test")
+                                       .build())
+
+                        .build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), anyString());
 
@@ -872,7 +875,7 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths().size()).isEqualTo(1);
     assertThat(gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths().get(0))
         .isEqualTo("path/to/k8s/manifest/values.yaml");
-    assertThat(argumentCaptor.getAllValues().get(1)).isInstanceOf(GitConnectionNGCapability.class);
+    assertThat(argumentCaptor.getAllValues().get(1)).isInstanceOf(HttpConnectionExecutionCapability.class);
   }
 
   @Test
@@ -907,11 +910,12 @@ public class K8sStepHelperTest extends CategoryTest {
     doReturn(k8sDirectInfrastructureOutcome).when(outcomeService).resolve(eq(ambiance), eq(infra));
 
     doReturn(
-        Optional.of(
-            ConnectorResponseDTO.builder()
-                .connector(
-                    ConnectorInfoDTO.builder().connectorConfig(GitConfigDTO.builder().build()).name("test").build())
-                .build()))
+        Optional.of(ConnectorResponseDTO.builder()
+                        .connector(ConnectorInfoDTO.builder()
+                                       .connectorConfig(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
+                                       .name("test")
+                                       .build())
+                        .build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), anyString());
 
@@ -938,7 +942,7 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths().size()).isEqualTo(1);
     assertThat(gitFetchFilesConfig.getGitStoreDelegateConfig().getPaths().get(0))
         .isEqualTo("path/to/helm/chart/values.yaml");
-    assertThat(argumentCaptor.getAllValues().get(1)).isInstanceOf(GitConnectionNGCapability.class);
+    assertThat(argumentCaptor.getAllValues().get(1)).isInstanceOf(HttpConnectionExecutionCapability.class);
   }
 
   @Test
@@ -1258,7 +1262,8 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(unitProgresses.get(0).getEndTime()).isNotZero();
     assertThat(unitProgresses.get(0).getStatus()).isEqualTo(UnitStatus.FAILURE);
 
-    verify(mockLogCallback, times(1)).saveExecutionLog(thrownException.getMessage(), LogLevel.ERROR, FAILURE);
+    verify(mockLogCallback, times(1))
+        .saveExecutionLog(ExceptionUtils.getMessage(thrownException), LogLevel.ERROR, FAILURE);
   }
 
   @Test
@@ -1281,5 +1286,22 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(failureData.getFailureTypesList()).contains(FailureType.APPLICATION_FAILURE);
     assertThat(failureData.getCode()).isEqualTo(GENERAL_ERROR.name());
     assertThat(failureData.getMessage()).isEqualTo("Something went wrong");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetParameterFieldBooleanValue() {
+    assertThat(K8sStepHelper.getParameterFieldBooleanValue(
+                   ParameterField.createValueField("true"), "testField", StepElementParameters.builder().build()))
+        .isTrue();
+    assertThat(K8sStepHelper.getParameterFieldBooleanValue(
+                   ParameterField.createValueField("false"), "testField", StepElementParameters.builder().build()))
+        .isFalse();
+
+    assertThatThrownBy(()
+                           -> K8sStepHelper.getParameterFieldBooleanValue(ParameterField.createValueField("absad"),
+                               "testField", StepElementParameters.builder().identifier("test").type("Test").build()))
+        .hasMessageContaining("for field testField in Test step with identifier: test");
   }
 }

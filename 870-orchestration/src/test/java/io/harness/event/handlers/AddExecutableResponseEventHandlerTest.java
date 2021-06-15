@@ -14,9 +14,9 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.resume.EngineResumeCallback;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
+import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
-import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.rule.Owner;
 import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
@@ -56,10 +56,10 @@ public class AddExecutableResponseEventHandlerTest {
     AddExecutableResponseRequest request =
         AddExecutableResponseRequest.newBuilder().setNodeExecutionId("id").setStatus(Status.NO_OP).build();
     addExecutableResponseEventHandler.handleEvent(
-        SdkResponseEvent.builder()
-            .sdkResponseEventRequest(
+        SdkResponseEventProto.newBuilder()
+            .setSdkResponseEventRequest(
                 SdkResponseEventRequest.newBuilder().setAddExecutableResponseRequest(request).build())
-            .sdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
+            .setSdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
             .build());
     verify(nodeExecutionService).update(eq("id"), any());
   }
@@ -71,10 +71,10 @@ public class AddExecutableResponseEventHandlerTest {
     AddExecutableResponseRequest request =
         AddExecutableResponseRequest.newBuilder().setNodeExecutionId("id").setStatus(Status.SUCCEEDED).build();
     addExecutableResponseEventHandler.handleEvent(
-        SdkResponseEvent.builder()
-            .sdkResponseEventRequest(
+        SdkResponseEventProto.newBuilder()
+            .setSdkResponseEventRequest(
                 SdkResponseEventRequest.newBuilder().setAddExecutableResponseRequest(request).build())
-            .sdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
+            .setSdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
             .build());
     verify(nodeExecutionService)
         .updateStatusWithOps(eq("id"), eq(Status.SUCCEEDED), any(), eq(EnumSet.noneOf(Status.class)));
@@ -91,10 +91,10 @@ public class AddExecutableResponseEventHandlerTest {
                                                .addAllCallbackIds(callbackIds)
                                                .build();
     addExecutableResponseEventHandler.handleEvent(
-        SdkResponseEvent.builder()
-            .sdkResponseEventRequest(
+        SdkResponseEventProto.newBuilder()
+            .setSdkResponseEventRequest(
                 SdkResponseEventRequest.newBuilder().setAddExecutableResponseRequest(request).build())
-            .sdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
+            .setSdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
             .build());
     OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(request.getNodeExecutionId()).build();
 

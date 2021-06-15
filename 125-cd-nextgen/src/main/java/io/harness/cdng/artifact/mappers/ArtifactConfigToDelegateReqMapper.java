@@ -9,6 +9,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
+import io.harness.delegate.task.artifacts.ArtifactDelegateRequestUtils;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.ecr.EcrArtifactDelegateRequest;
@@ -29,15 +30,8 @@ public class ArtifactConfigToDelegateReqMapper {
     if (EmptyPredicate.isEmpty(tag) && EmptyPredicate.isEmpty(tagRegex)) {
       tagRegex = "\\*";
     }
-    return DockerArtifactDelegateRequest.builder()
-        .imagePath(artifactConfig.getImagePath().getValue())
-        .tag(tag)
-        .tagRegex(tagRegex)
-        .dockerConnectorDTO(connectorDTO)
-        .encryptedDataDetails(encryptedDataDetails)
-        .connectorRef(connectorRef)
-        .sourceType(ArtifactSourceType.DOCKER_REGISTRY)
-        .build();
+    return ArtifactDelegateRequestUtils.getDockerDelegateRequest(artifactConfig.getImagePath().getValue(), tag,
+        tagRegex, null, connectorRef, connectorDTO, encryptedDataDetails, ArtifactSourceType.DOCKER_REGISTRY);
   }
 
   public GcrArtifactDelegateRequest getGcrDelegateRequest(GcrArtifactConfig gcrArtifactConfig,
@@ -48,16 +42,9 @@ public class ArtifactConfigToDelegateReqMapper {
     if (EmptyPredicate.isEmpty(tag) && EmptyPredicate.isEmpty(tagRegex)) {
       tagRegex = "\\*";
     }
-    return GcrArtifactDelegateRequest.builder()
-        .imagePath(gcrArtifactConfig.getImagePath().getValue())
-        .tag(tag)
-        .tagRegex(tagRegex)
-        .registryHostname(gcrArtifactConfig.getRegistryHostname().getValue())
-        .sourceType(ArtifactSourceType.GCR)
-        .connectorRef(connectorRef)
-        .gcpConnectorDTO(gcpConnectorDTO)
-        .encryptedDataDetails(encryptedDataDetails)
-        .build();
+    return ArtifactDelegateRequestUtils.getGcrDelegateRequest(gcrArtifactConfig.getImagePath().getValue(), tag,
+        tagRegex, null, gcrArtifactConfig.getRegistryHostname().getValue(), connectorRef, gcpConnectorDTO,
+        encryptedDataDetails, ArtifactSourceType.GCR);
   }
 
   public EcrArtifactDelegateRequest getEcrDelegateRequest(EcrArtifactConfig ecrArtifactConfig,
@@ -68,15 +55,8 @@ public class ArtifactConfigToDelegateReqMapper {
     if (EmptyPredicate.isEmpty(tag) && EmptyPredicate.isEmpty(tagRegex)) {
       tagRegex = "\\*";
     }
-    return EcrArtifactDelegateRequest.builder()
-        .imagePath(ecrArtifactConfig.getImagePath().getValue())
-        .tag(tag)
-        .tagRegex(tagRegex)
-        .region(ecrArtifactConfig.getRegion().getValue())
-        .sourceType(ArtifactSourceType.ECR)
-        .awsConnectorDTO(awsConnectorDTO)
-        .connectorRef(connectorRef)
-        .encryptedDataDetails(encryptedDataDetails)
-        .build();
+    return ArtifactDelegateRequestUtils.getEcrDelegateRequest(ecrArtifactConfig.getImagePath().getValue(), tag,
+        tagRegex, null, ecrArtifactConfig.getRegion().getValue(), connectorRef, awsConnectorDTO, encryptedDataDetails,
+        ArtifactSourceType.ECR);
   }
 }

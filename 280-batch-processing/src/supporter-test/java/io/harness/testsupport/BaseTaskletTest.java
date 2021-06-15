@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Before;
 import org.mockito.Mock;
 import org.springframework.batch.core.JobParameter;
 import org.springframework.batch.core.JobParameters;
@@ -22,6 +23,7 @@ public abstract class BaseTaskletTest extends CategoryTest {
 
   @Mock(answer = RETURNS_DEEP_STUBS) protected ChunkContext chunkContext;
 
+  @Before
   public void mockChunkContext() {
     Map<String, JobParameter> parameterMap = new HashMap<>();
     parameterMap.put(CCMJobConstants.JOB_START_DATE, new JobParameter(String.valueOf(START_TIME_MILLIS)));

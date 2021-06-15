@@ -58,7 +58,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SecretMetadata;
 import io.harness.beans.SecretState;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
-import io.harness.ccm.commons.entities.CEMetadataRecord;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.ccm.license.CeLicenseInfo;
@@ -657,6 +657,7 @@ public class SettingsServiceImpl implements SettingsService {
         && settingAttribute.getValue().getSettingType() == SettingVariableTypes.APM_VERIFICATION) {
       apmVerificationService.addParents(settingAttribute);
     }
+    settingServiceHelper.resetTransientFields(settingAttribute.getValue());
     return settingAttribute;
   }
 

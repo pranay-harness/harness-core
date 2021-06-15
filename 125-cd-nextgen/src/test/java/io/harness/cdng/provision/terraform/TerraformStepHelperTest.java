@@ -22,6 +22,7 @@ import io.harness.cdng.manifest.yaml.GitStoreConfigDTO;
 import io.harness.cdng.manifest.yaml.GithubStore;
 import io.harness.cdng.manifest.yaml.GithubStoreDTO;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
+import io.harness.common.ParameterFieldHelper;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
@@ -32,7 +33,6 @@ import io.harness.delegate.task.terraform.RemoteTerraformVarFileInfo;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.delegate.task.terraform.TerraformVarFileInfo;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
-import io.harness.ngpipeline.common.ParameterFieldHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -154,20 +154,19 @@ public class TerraformStepHelperTest extends CategoryTest {
                                     .type("Github")
                                     .build());
     RemoteTerraformVarFileSpec remoteTerraformVarFileSpec = new RemoteTerraformVarFileSpec();
-    remoteTerraformVarFileSpec.setStoreConfigWrapper(
-        StoreConfigWrapper.builder()
-            .spec(GitLabStore.builder()
-                      .branch(ParameterField.createValueField("master"))
-                      .gitFetchType(FetchType.BRANCH)
-                      .folderPath(ParameterField.createValueField("VarFiles/"))
-                      .build())
-            .type("GitLab")
-            .build());
+    remoteTerraformVarFileSpec.setStore(StoreConfigWrapper.builder()
+                                            .spec(GitLabStore.builder()
+                                                      .branch(ParameterField.createValueField("master"))
+                                                      .gitFetchType(FetchType.BRANCH)
+                                                      .folderPath(ParameterField.createValueField("VarFiles/"))
+                                                      .build())
+                                            .type("GitLab")
+                                            .build());
     LinkedHashMap<String, TerraformVarFile> varFilesMap = new LinkedHashMap<>();
     varFilesMap.put("var-file-1",
         TerraformVarFile.builder().identifier("var-file-1").type("Inline").spec(remoteTerraformVarFileSpec).build());
     TerraformApplyStepParameters parameters = TerraformApplyStepParameters.infoBuilder()
-                                                  .configuration(TerrformStepConfigurationParameters.builder()
+                                                  .configuration(TerraformStepConfigurationParameters.builder()
                                                                      .type(TerraformStepConfigurationType.INLINE)
                                                                      .spec(TerraformExecutionDataParameters.builder()
                                                                                .configFiles(configFilesWrapper)
@@ -212,7 +211,7 @@ public class TerraformStepHelperTest extends CategoryTest {
   public void testToTerraformVarFileInfo() {
     Ambiance ambiance = getAmbiance();
     RemoteTerraformVarFileSpec remoteTerraformVarFileSpec = new RemoteTerraformVarFileSpec();
-    remoteTerraformVarFileSpec.setStoreConfigWrapper(
+    remoteTerraformVarFileSpec.setStore(
         StoreConfigWrapper.builder()
             .spec(GitLabStore.builder()
                       .branch(ParameterField.createValueField("master"))

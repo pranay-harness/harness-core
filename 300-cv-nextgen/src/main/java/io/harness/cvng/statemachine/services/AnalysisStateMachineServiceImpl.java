@@ -268,6 +268,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
       }
       firstState.setStatus(AnalysisStatus.CREATED);
       firstState.setInputs(inputForAnalysis);
+      stateMachine.setAccountId(cvConfig.getAccountId());
       stateMachine.setCurrentState(firstState);
     } else {
       VerificationTask verificationTask = verificationTaskService.get(inputForAnalysis.getVerificationTaskId());
@@ -276,7 +277,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
       CVConfig cvConfigForDeployment = cvConfigService.get(verificationTask.getCvConfigId());
       Preconditions.checkNotNull(verificationJobInstance, "verificationJobInstance can not be null");
       Preconditions.checkNotNull(cvConfigForDeployment, "cvConfigForDeployment can not be null");
-
+      stateMachine.setAccountId(verificationTask.getAccountId());
       if (verificationJobInstance.getResolvedJob().getType() == VerificationJobType.HEALTH) {
         createHealthAnalysisState(stateMachine, inputForAnalysis, verificationJobInstance);
       } else {
@@ -293,10 +294,10 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
     healthAnalysisState.setInputs(inputForAnalysis);
     healthAnalysisState.setHealthVerificationPeriod(HealthVerificationPeriod.PRE_ACTIVITY);
     healthAnalysisState.setDuration(verificationJobInstance.getResolvedJob().getDuration());
-    healthAnalysisState.setPreActivityVerificationStartTime(resolvedJob.getPreActivityVerificationStartTime(
-        verificationJobInstance.getStartTime(), verificationJobInstance.getPreActivityVerificationStartTime()));
-    healthAnalysisState.setPostActivityVerificationStartTime(resolvedJob.getPostActivityVerificationStartTime(
-        verificationJobInstance.getStartTime(), verificationJobInstance.getPostActivityVerificationStartTime()));
+    healthAnalysisState.setPreActivityVerificationStartTime(
+        resolvedJob.getPreActivityVerificationStartTime(verificationJobInstance.getStartTime()));
+    healthAnalysisState.setPostActivityVerificationStartTime(
+        resolvedJob.getPostActivityVerificationStartTime(verificationJobInstance.getStartTime()));
     healthAnalysisState.setStatus(AnalysisStatus.CREATED);
     stateMachine.setCurrentState(healthAnalysisState);
   }

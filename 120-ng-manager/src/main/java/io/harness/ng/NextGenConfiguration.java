@@ -5,15 +5,17 @@ import static java.util.stream.Collectors.toSet;
 import io.harness.AccessControlClientConfiguration;
 import io.harness.Microservice;
 import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
+import io.harness.account.AccountConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.CfClientConfig;
-import io.harness.cf.CfMigrationConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.file.FileServiceConfiguration;
 import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
+import io.harness.lock.DistributedLockImplementation;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.NextGenConfig;
@@ -21,6 +23,7 @@ import io.harness.notification.NotificationClientConfiguration;
 import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
+import io.harness.remote.CEAzureSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroupclient.remote.ResourceGroupClientConfig;
 import io.harness.signup.SignupNotificationConfiguration;
@@ -75,12 +78,14 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
   @JsonProperty("ceAwsSetupConfig") private CEAwsSetupConfig ceAwsSetupConfig;
+  @JsonProperty("ceAzureSetupConfig") private CEAzureSetupConfig ceAzureSetupConfig;
   @JsonProperty(value = "enableAudit") private boolean enableAudit;
   @JsonProperty(value = "ngAuthUIEnabled") private boolean isNGAuthUIEnabled;
   @JsonProperty("pmsSdkGrpcServerConfig") private GrpcServerConfig pmsSdkGrpcServerConfig;
   @JsonProperty("pmsGrpcClientConfig") private GrpcClientConfig pmsGrpcClientConfig;
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
+  @JsonProperty("accountConfig") private AccountConfig accountConfig;
   @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfiguration logStreamingServiceConfig;
   @JsonProperty("gitSyncServerConfig") private GrpcServerConfig gitSyncGrpcServerConfig;
   @JsonProperty("gitGrpcClientConfigs") private Map<Microservice, GrpcClientConfig> gitGrpcClientConfigs;
@@ -97,10 +102,11 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty(value = "enableDefaultResourceGroupCreation", defaultValue = "false")
   private boolean enableDefaultResourceGroupCreation;
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
-  @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
+  @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
   @JsonProperty("enableDashboardTimescale") private Boolean enableDashboardTimescale;
   @JsonProperty("yamlSchemaClientConfig") private YamlSchemaClientConfig yamlSchemaClientConfig;
+  @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
   @JsonProperty("signupNotificationConfiguration")
   private SignupNotificationConfiguration signupNotificationConfiguration;
 

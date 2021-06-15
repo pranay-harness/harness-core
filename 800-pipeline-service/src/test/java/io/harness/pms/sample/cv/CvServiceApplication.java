@@ -2,6 +2,7 @@ package io.harness.pms.sample.cv;
 
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.maintenance.MaintenanceController;
@@ -11,7 +12,7 @@ import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
-import io.harness.pms.sdk.core.execution.listeners.NodeExecutionEventListener;
+import io.harness.pms.sdk.core.execution.events.node.NodeExecutionEventListener;
 import io.harness.queue.QueueListenerController;
 
 import com.google.inject.Guice;
@@ -82,7 +83,7 @@ public class CvServiceApplication extends Application<CvServiceConfiguration> {
   private PmsSdkConfiguration getPmsSdkConfiguration(CvServiceConfiguration config) {
     return PmsSdkConfiguration.builder()
         .deploymentMode(SdkDeployMode.REMOTE)
-        .serviceName("cv")
+        .moduleType(ModuleType.CV)
         .mongoConfig(config.getMongoConfig())
         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
         .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())

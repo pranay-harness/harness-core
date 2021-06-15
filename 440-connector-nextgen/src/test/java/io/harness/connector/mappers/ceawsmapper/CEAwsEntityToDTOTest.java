@@ -8,8 +8,8 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.ceawsconnector.CEAwsConfig;
 import io.harness.connector.utils.AWSConnectorTestHelper;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
-import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableList;
@@ -42,12 +42,11 @@ public class CEAwsEntityToDTOTest extends CategoryTest {
   public void testCreateConnectorDTOWithCURDisabled() {
     final CEAwsConfig ceAwsConfig = AWSConnectorTestHelper.createCEAwsConfigEntity();
     ceAwsConfig.setCurAttributes(null);
-    ceAwsConfig.setFeaturesEnabled(ImmutableList.of(CEAwsFeatures.VISIBILITY, CEAwsFeatures.OPTIMIZATION));
+    ceAwsConfig.setFeaturesEnabled(ImmutableList.of(CEFeatures.VISIBILITY, CEFeatures.OPTIMIZATION));
 
     final CEAwsConnectorDTO expectedCeAwsConnectorDTO = AWSConnectorTestHelper.createCEAwsConnectorDTO();
     expectedCeAwsConnectorDTO.setCurAttributes(null);
-    expectedCeAwsConnectorDTO.setFeaturesEnabled(
-        ImmutableList.of(CEAwsFeatures.VISIBILITY, CEAwsFeatures.OPTIMIZATION));
+    expectedCeAwsConnectorDTO.setFeaturesEnabled(ImmutableList.of(CEFeatures.VISIBILITY, CEFeatures.OPTIMIZATION));
 
     assertThat(ceAwsEntityToDTO.createConnectorDTO(ceAwsConfig)).isEqualTo(expectedCeAwsConnectorDTO);
   }

@@ -109,12 +109,19 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
       infraSectionNodeChildId = InfrastructurePmsPlanCreator.getProvisionerNodeId(infraField);
     }
 
+    YamlField infrastructureDefField =
+        Preconditions.checkNotNull(infraField.getNode().getField(YamlTypes.INFRASTRUCTURE_DEF));
+    PlanNode infraDefPlanNode =
+        InfrastructurePmsPlanCreator.getInfraDefPlanNode(infrastructureDefField, infraSectionNodeChildId);
+    planCreationResponseMap.put(infraDefPlanNode.getUuid(),
+        PlanCreationResponse.builder().node(infraDefPlanNode.getUuid(), infraDefPlanNode).build());
+
     YamlNode infraNode = infraField.getNode();
 
     YamlField rcYamlField = constructResourceConstraintYamlField(infraNode);
 
     PlanNode infraSectionPlanNode = InfrastructurePmsPlanCreator.getInfraSectionPlanNode(
-        infraNode, infraSectionNodeChildId, pipelineInfrastructure, kryoSerializer, infraField, rcYamlField);
+        infraNode, infraDefPlanNode.getUuid(), pipelineInfrastructure, kryoSerializer, infraField, rcYamlField);
     planCreationResponseMap.put(
         infraNode.getUuid(), PlanCreationResponse.builder().node(infraNode.getUuid(), infraSectionPlanNode).build());
 
@@ -166,11 +173,11 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
       throw new InvalidRequestException("There should be atleast one failure strategy configured at stage level.");
     }
 
-    // checking stageFailureStrategies is having one strategy with error type as AnyOther and along with that no
+    // checking stageFailureStrategies is having one strategy with error type as AllErrors and along with that no
     // error type is involved
-    if (!GenericStepPMSPlanCreator.containsOnlyAnyOtherErrorInSomeConfig(stageFailureStrategies)) {
+    if (!GenericStepPMSPlanCreator.containsOnlyAllErrorsInSomeConfig(stageFailureStrategies)) {
       throw new InvalidRequestException(
-          "There should be a Failure strategy that contains one error type as AnyOther, with no other error type along with it in that Failure Strategy.");
+          "There should be a Failure strategy that contains one error type as AllErrors, with no other error type along with it in that Failure Strategy.");
     }
   }
 }

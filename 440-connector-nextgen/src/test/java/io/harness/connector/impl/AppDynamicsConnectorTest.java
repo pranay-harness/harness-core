@@ -23,6 +23,7 @@ import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsAuthT
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
+import io.harness.git.model.ChangeType;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -71,7 +72,6 @@ public class AppDynamicsConnectorTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     appDynamicsConfig = AppDynamicsConnector.builder()
                             .username(userName)
-                            .accountId(accountIdentifier)
                             .accountname(accountName)
                             .controllerUrl(controllerUrl)
                             .passwordRef(password)
@@ -84,7 +84,6 @@ public class AppDynamicsConnectorTest extends CategoryTest {
 
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = AppDynamicsConnectorDTO.builder()
                                                           .username(userName)
-                                                          .accountId(accountIdentifier)
                                                           .accountname(accountName)
                                                           .controllerUrl(controllerUrl)
                                                           .passwordRef(secretRefData)
@@ -98,7 +97,7 @@ public class AppDynamicsConnectorTest extends CategoryTest {
                                          .build();
     connectorRequest = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
     connectorResponse = ConnectorResponseDTO.builder().connector(connectorInfo).build();
-    when(connectorRepository.save(appDynamicsConfig, connectorRequest)).thenReturn(appDynamicsConfig);
+    when(connectorRepository.save(appDynamicsConfig, connectorRequest, ChangeType.ADD)).thenReturn(appDynamicsConfig);
     when(connectorMapper.writeDTO(appDynamicsConfig)).thenReturn(connectorResponse);
     when(connectorMapper.toConnector(connectorRequest, accountIdentifier)).thenReturn(appDynamicsConfig);
     doNothing().when(connectorService).assurePredefined(any(), any());
@@ -142,7 +141,6 @@ public class AppDynamicsConnectorTest extends CategoryTest {
     assertThat(appDynamicsConnectorDTO.getPasswordRef().getScope()).isEqualTo(Scope.ACCOUNT);
     assertThat(appDynamicsConnectorDTO.getAccountname()).isEqualTo(accountName);
     assertThat(appDynamicsConnectorDTO.getControllerUrl()).isEqualTo(controllerUrl);
-    assertThat(appDynamicsConnectorDTO.getAccountId()).isEqualTo(accountIdentifier);
     assertThat(appDynamicsConnectorDTO.getAuthType().name()).isEqualTo(AppDynamicsAuthType.USERNAME_PASSWORD.name());
   }
 }

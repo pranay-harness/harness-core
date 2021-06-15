@@ -17,6 +17,7 @@ public class DelegateAgentBeansKryoRegister implements KryoRegistrar {
   public void register(Kryo kryo) {
     kryo.register(DelegateScripts.class, 5002);
     kryo.register(DelegateConfiguration.class, 5469);
+    kryo.register(DelegateConfiguration.Action.class, 15000);
 
     kryo.register(DelegateRegisterResponse.class, 6501);
     kryo.register(DelegateParams.class, 6502);

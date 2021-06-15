@@ -14,7 +14,7 @@ import io.harness.batch.processing.config.BillingDataPipelineConfig;
 import io.harness.batch.processing.dao.intfc.BatchJobScheduledDataDao;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
 import io.harness.rule.Owner;
 
 import com.google.cloud.bigquery.datatransfer.v1.TransferState;

@@ -45,6 +45,7 @@ import static software.wings.beans.delegation.TerragruntProvisionParameters.TIME
 import static software.wings.beans.delegation.TerragruntProvisionParameters.TerragruntCommand.APPLY;
 import static software.wings.beans.delegation.TerragruntProvisionParameters.TerragruntCommand.DESTROY;
 import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.extractVariables;
+import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.fetchTfVarScriptRepositorySource;
 import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.getRenderedTaskTags;
 import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.getRenderedTfVarFiles;
 import static software.wings.helpers.ext.terragrunt.TerragruntStateHelper.handleDefaultWorkspace;
@@ -346,7 +347,7 @@ public abstract class TerragruntProvisionState extends State {
 
     // Currently we allow only one tfVar source
     if (isNotEmpty(tfVarFiles)) {
-      tfVarSource = terragruntStateHelper.fetchTfVarScriptRepositorySource(context, tfVarFiles);
+      tfVarSource = fetchTfVarScriptRepositorySource(context, tfVarFiles);
     } else if (null != tfVarGitFileConfig) {
       tfVarSource = terragruntStateHelper.fetchTfVarGitSource(context, tfVarGitFileConfig);
     }

@@ -6,6 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.ModuleType;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.annotations.dev.HarnessTeam;
@@ -35,7 +36,6 @@ import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueController;
 import io.harness.registrars.CDServiceAdviserRegistrar;
-import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.CDNGRegistrars;
@@ -73,6 +73,7 @@ import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
@@ -145,6 +146,13 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
         objectMapper.registerModule(new PmsBeansJacksonModule());
         return objectMapper;
       }
+
+      @Provides
+      @Named("yaml-schema-subtypes")
+      @Singleton
+      public Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes() {
+        return Mockito.mock(Map.class);
+      }
     });
     modules.add(new AbstractModule() {
       @Override
@@ -206,13 +214,13 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
   private YamlSchemaClientConfig getYamlSchemaClientConfig() {
     return YamlSchemaClientConfig.builder().build();
   }
+
   private PmsSdkConfiguration getPmsSdkConfiguration() {
     return PmsSdkConfiguration.builder()
         .deploymentMode(SdkDeployMode.LOCAL)
-        .serviceName("cd")
+        .moduleType(ModuleType.CD)
         .engineSteps(NgStepRegistrar.getEngineSteps())
         .engineAdvisers(CDServiceAdviserRegistrar.getEngineAdvisers())
-        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
         .build();
   }
 

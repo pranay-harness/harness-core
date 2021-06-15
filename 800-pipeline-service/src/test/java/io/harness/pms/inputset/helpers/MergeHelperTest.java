@@ -170,11 +170,10 @@ public class MergeHelperTest extends CategoryTest {
             + "              identifier: \"httpStep1\"\n"
             + "              type: \"Http\"\n"
             + "              spec:\n"
-            + "                method: \"pipeline.stages.stage[identifier:qaStage].spec.execution.steps.step[identifier:httpStep1].spec.method.\"\n");
+            + "                method: \"pipeline.stages.qaStage.spec.execution.steps.httpStep1.spec.method\"\n");
     assertThat(errorWrapperDTOPMS.getUuidToErrorResponseMap().size()).isEqualTo(1);
-    assertThat(
-        errorWrapperDTOPMS.getUuidToErrorResponseMap().containsKey(
-            "pipeline.stages.stage[identifier:qaStage].spec.execution.steps.step[identifier:httpStep1].spec.method."))
+    assertThat(errorWrapperDTOPMS.getUuidToErrorResponseMap().containsKey(
+                   "pipeline.stages.qaStage.spec.execution.steps.httpStep1.spec.method"))
         .isTrue();
 
     String inputSetFile = "inputSet1.yml";
@@ -267,21 +266,17 @@ public class MergeHelperTest extends CategoryTest {
     assertThat(errorMapWrong).isNotNull();
     Map<String, InputSetErrorResponseDTOPMS> uuidToErrorResponseMap = errorMapWrong.getUuidToErrorResponseMap();
     assertThat(uuidToErrorResponseMap.size()).isEqualTo(5);
-    assertThat(uuidToErrorResponseMap.containsKey("pipeline.variables.[name:port2].value.")).isTrue();
+    assertThat(uuidToErrorResponseMap.containsKey("pipeline.variables.port2")).isTrue();
     assertThat(
         uuidToErrorResponseMap.containsKey(
-            "pipeline.stages.stage[identifier:qaStage].spec.service.serviceDefinition.spec.manifests.manifest[identifier:baseValues].spec.store.spec.connectorRef."))
+            "pipeline.stages.qaStage.spec.service.serviceDefinition.spec.manifests.baseValues.spec.store.spec.connectorRef"))
+        .isTrue();
+    assertThat(uuidToErrorResponseMap.containsKey("pipeline.stages.qaStage.spec.infrastructure.environment.tags.team"))
         .isTrue();
     assertThat(uuidToErrorResponseMap.containsKey(
-                   "pipeline.stages.stage[identifier:qaStage].spec.infrastructure.environment.tags.team."))
+                   "pipeline.stages.qaStage.spec.infrastructure.infrastructureDefinition.spec.namespace"))
         .isTrue();
-    assertThat(
-        uuidToErrorResponseMap.containsKey(
-            "pipeline.stages.stage[identifier:qaStage].spec.infrastructure.infrastructureDefinition.spec.namespace."))
-        .isTrue();
-    assertThat(
-        uuidToErrorResponseMap.containsKey(
-            "pipeline.stages.stage[identifier:qaStage].spec.execution.steps.step[identifier:httpStep2].spec.method."))
+    assertThat(uuidToErrorResponseMap.containsKey("pipeline.stages.qaStage.spec.execution.steps.httpStep2.spec.method"))
         .isTrue();
   }
 }

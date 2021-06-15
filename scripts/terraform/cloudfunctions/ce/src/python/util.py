@@ -45,16 +45,18 @@ def createTable(client, tableName):
         fieldset = clusterDataTableFields
     elif tableName.endswith("preAggregated"):
         fieldset = preAggreagtedTableSchema
+    elif tableName.endswith("awsEc2InventoryMetric"):
+        fieldset = awsEc2InventoryCPUSchema
     elif tableName.split(".")[-1].startswith("awsEc2Inventory"):
         fieldset = awsEc2InventorySchema
-    elif tableName.endswith("awsEc2InventoryCPU"):
-        fieldset = awsEc2InventoryCPUSchema
-    elif tableName.endswith("awsEbsInventory") or tableName.endswith("awsEbsInventoryTemp"):
-        fieldset = awsEbsInventorySchema
     elif tableName.endswith("awsEbsInventoryMetrics"):
         fieldset = awsEbsInventoryMetricsSchema
+    elif tableName.split(".")[-1].startswith("awsEbsInventory"):
+        fieldset = awsEbsInventorySchema
     else:
         fieldset = unifiedTableTableSchema
+
+
 
     for field in fieldset:
         if field.get("type") == "RECORD":
@@ -62,6 +64,9 @@ def createTable(client, tableName):
             schema.append(bigquery.SchemaField(field["name"], field["type"], mode=field["mode"], fields=nested_field))
         else:
             schema.append(bigquery.SchemaField(field["name"], field["type"], mode=field.get("mode", "")))
+    if not schema:
+        print_("Could not find any schema for table %s : %s" % (tableName, schema))
+        return False
     table = bigquery.Table(tableName, schema=schema)
 
     if tableName.endswith("clusterData"):
@@ -74,21 +79,21 @@ def createTable(client, tableName):
             type_=bigquery.TimePartitioningType.DAY,
             field="startTime"  # name of column to use for partitioning
         )
-    elif tableName.split(".")[-1].startswith("awsEc2Inventory") or tableName.endswith("awsEbsInventory") or tableName.endswith("awsEbsInventoryTemp"):
-        table.range_partitioning = bigquery.RangePartitioning(
-            range_=bigquery.PartitionRange(start=0, end=10000, interval=1),
-            field="linkedAccountIdPartition"
-        )
-    elif tableName.endswith("awsEc2InventoryCPU") or tableName.endswith("awsEbsInventoryMetrics"):
+    elif tableName.endswith("awsEc2InventoryMetric") or tableName.endswith("awsEbsInventoryMetrics"):
         table.time_partitioning = bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
             field="addedAt"
         )
-
+    elif tableName.split(".")[-1].startswith("awsEc2Inventory") or tableName.split(".")[-1].startswith("awsEbsInventory"):
+        table.range_partitioning = bigquery.RangePartitioning(
+            range_=bigquery.PartitionRange(start=0, end=10000, interval=1),
+            field="linkedAccountIdPartition"
+        )
 
     try:
         table = client.create_table(table)  # Make an API request.
         print_("Created table {}.{}.{}".format(table.project, table.dataset_id, table.table_id))
     except Exception as e:
-        print_("Error while creating table\n {}".format(e), "WARN")
-
+        print_("Error while creating table\n {}".format(e), "ERROR")
+        return False
+    return True

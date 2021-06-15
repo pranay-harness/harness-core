@@ -1,6 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//:macros.bzl", "run_analysis")
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "//870-yaml-beans:module",
@@ -16,6 +16,9 @@ shared_dependencies = [
     "//954-connector-beans:module",
     "//955-filters-sdk:module",
     "//960-yaml-sdk:module",
+    "@maven//:com_azure_azure_identity",
+    "@maven//:com_azure_azure_storage_blob",
+    "@maven//:com_azure_azure_storage_common",
     "@maven//:com_esotericsoftware_kryo",
     "@maven//:com_fasterxml_jackson_core_jackson_annotations",
     "@maven//:com_google_code_findbugs_annotations",

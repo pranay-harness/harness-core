@@ -30,4 +30,5 @@ public interface ApiKeyService extends OwnedByAccount {
   void evictAndRebuildPermissionsAndRestrictions(String accountId, boolean rebuild);
   void evictPermissionsAndRestrictionsForUserGroup(UserGroup userGroup);
   void loadUserGroupsForApiKeys(List<ApiKeyEntry> apiKeyEntries, String accountId);
+  Boolean isApiKeyValid(@NotEmpty String key, @NotEmpty String accountId);
 }

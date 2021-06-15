@@ -3,17 +3,18 @@ package io.harness.service;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FileContentBatchResponse;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.product.ci.scm.proto.CompareCommitsResponse;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.CreateWebhookResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.DeleteWebhookResponse;
-import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
 import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
@@ -26,6 +27,7 @@ import io.harness.product.ci.scm.proto.ListWebhooksResponse;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
 
 import java.util.List;
+import java.util.Set;
 
 @OwnedBy(DX)
 public interface ScmClient {
@@ -34,7 +36,7 @@ public interface ScmClient {
 
   UpdateFileResponse updateFile(ScmConnector scmConnector, GitFileDetails gitFileDetails);
 
-  DeleteFileResponse deleteFile(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails);
+  DeleteFileResponse deleteFile(ScmConnector scmConnector, GitFileDetails gitFileDetails);
 
   FileContent getFileContent(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails);
 
@@ -57,7 +59,9 @@ public interface ScmClient {
 
   ListCommitsInPRResponse listCommitsInPR(ScmConnector scmConnector, int prNumber);
 
-  FileBatchContentResponse listFiles(ScmConnector connector, List<String> foldersList, String branchName);
+  FileContentBatchResponse listFiles(ScmConnector connector, Set<String> foldersList, String branchName);
+
+  FileContentBatchResponse listFilesByFilePaths(ScmConnector connector, List<String> filePathsList, String branchName);
 
   void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName);
 
@@ -70,4 +74,6 @@ public interface ScmClient {
   ListWebhooksResponse listWebhook(ScmConnector scmConnector);
 
   CreateWebhookResponse upsertWebhook(ScmConnector scmConnector, GitWebhookDetails gitWebhookDetails);
+
+  CompareCommitsResponse compareCommits(ScmConnector scmConnector, String initialCommitId, String finalCommitId);
 }

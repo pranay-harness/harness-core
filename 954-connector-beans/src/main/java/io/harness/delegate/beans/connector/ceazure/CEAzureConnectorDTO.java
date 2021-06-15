@@ -1,6 +1,7 @@
 package io.harness.delegate.beans.connector.ceazure;
 
 import io.harness.beans.DecryptableEntity;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -22,7 +23,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("CEAzureConnector")
 public class CEAzureConnectorDTO extends ConnectorConfigDTO {
-  @NotEmpty(message = "At least one CEAzureConnector should be enabled") List<CEAzureFeatures> featuresEnabled;
+  @NotEmpty(message = "FeaturesEnabled can't be empty") List<CEFeatures> featuresEnabled;
 
   @NotNull String tenantId;
   @NotNull String subscriptionId;

@@ -13,7 +13,8 @@ import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
+import io.harness.ccm.commons.entities.billing.CECluster;
 import io.harness.ccm.health.CEClusterDao;
 import io.harness.exception.InvalidRequestException;
 
@@ -22,7 +23,6 @@ import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.ce.CECluster;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata.BillingDataMetaDataFields;
 import software.wings.service.intfc.SettingsService;
@@ -69,7 +69,11 @@ public class QLBillingStatsHelper {
       throws SQLException {
     switch (field) {
       case INSTANCEID:
-        return resultSet.getString(BillingDataMetaDataFields.INSTANCENAME.getFieldName());
+        try {
+          return resultSet.getString(BillingDataMetaDataFields.INSTANCENAME.getFieldName());
+        } catch (Exception e) {
+          return entityId;
+        }
       default:
         return getEntityName(field, entityId);
     }

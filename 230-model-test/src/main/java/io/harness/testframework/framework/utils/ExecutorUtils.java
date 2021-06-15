@@ -1,6 +1,7 @@
 package io.harness.testframework.framework.utils;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 
@@ -23,6 +24,28 @@ public class ExecutorUtils {
     command.add("-Xloggc:mygclogfilename.gc");
     command.add("-XX:+UseParallelGC");
     command.add("-XX:MaxGCPauseMillis=500");
+  }
+
+  public static String getBazelBinPath() {
+    String home = System.getProperty("user.home");
+    if (home.contains("root")) {
+      home = "/home/jenkins";
+    }
+
+    Path path = Paths.get(home, ".bazel-dirs", "bin");
+    return path.toAbsolutePath().toString();
+  }
+
+  public static Path getJar(String moduleName) {
+    return getJar(moduleName, "module_deploy.jar");
+  }
+
+  public static Path getConfig(String projectRootDirectory, String moduleName, String configFileName) {
+    return Paths.get(projectRootDirectory, moduleName, configFileName);
+  }
+
+  public static Path getJar(String moduleName, String jarFileName) {
+    return Paths.get(getBazelBinPath(), moduleName, jarFileName);
   }
 
   public static void addJar(Path jar, List<String> command) {

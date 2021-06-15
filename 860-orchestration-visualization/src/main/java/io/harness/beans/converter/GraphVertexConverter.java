@@ -6,7 +6,7 @@ import io.harness.beans.GraphVertex;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.execution.NodeExecution;
 
-import java.util.List;
+import java.util.Map;
 import lombok.experimental.UtilityClass;
 import org.bson.Document;
 
@@ -40,7 +40,7 @@ public class GraphVertexConverter {
         .build();
   }
 
-  public GraphVertex convertFrom(NodeExecution nodeExecution, List<Document> outcomes) {
+  public GraphVertex convertFrom(NodeExecution nodeExecution, Map<String, Document> outcomes) {
     return GraphVertex.builder()
         .uuid(nodeExecution.getUuid())
         .ambiance(nodeExecution.getAmbiance())

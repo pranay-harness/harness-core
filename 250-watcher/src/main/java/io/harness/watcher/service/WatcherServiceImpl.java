@@ -3,6 +3,7 @@ package io.harness.watcher.service;
 import static io.harness.concurrent.HTimeLimiter.callInterruptible;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.DelegateConfiguration.Action.SELF_DESTRUCT;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_GO_AHEAD;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_HEARTBEAT;
@@ -74,7 +75,6 @@ import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.message.Message;
 import io.harness.delegate.message.MessageService;
 import io.harness.event.client.impl.tailer.ChronicleEventTailer;
-import io.harness.exception.GeneralException;
 import io.harness.filesystem.FileIo;
 import io.harness.grpc.utils.DelegateGrpcConfigExtractor;
 import io.harness.managerclient.ManagerClientV2;
@@ -449,21 +449,22 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void heartbeat() {
-    if (!isDiskFull()) {
-      try {
-        Map<String, Object> heartbeatData = new HashMap<>();
-        heartbeatData.put(WATCHER_HEARTBEAT, clock.millis());
-        heartbeatData.put(WATCHER_PROCESS, getProcessId());
-        heartbeatData.put(WATCHER_VERSION, getVersion());
-        messageService.putAllData(WATCHER_DATA, heartbeatData);
-      } catch (Exception e) {
-        if (e.getMessage().contains(NO_SPACE_LEFT_ON_DEVICE_ERROR)) {
-          lastAvailableDiskSpace.set(getDiskFreeSpace());
-          log.error("Disk space is full. Free space: {}", lastAvailableDiskSpace.get());
-        } else {
-          log.error("Error putting all watcher data", e);
-          throw e;
-        }
+    if (isDiskFull()) {
+      return;
+    }
+    try {
+      Map<String, Object> heartbeatData = new HashMap<>();
+      heartbeatData.put(WATCHER_HEARTBEAT, clock.millis());
+      heartbeatData.put(WATCHER_PROCESS, getProcessId());
+      heartbeatData.put(WATCHER_VERSION, getVersion());
+      messageService.putAllData(WATCHER_DATA, heartbeatData);
+    } catch (Exception e) {
+      if (e.getMessage().contains(NO_SPACE_LEFT_ON_DEVICE_ERROR)) {
+        lastAvailableDiskSpace.set(getDiskFreeSpace());
+        log.error("Disk space is full. Free space: {}", lastAvailableDiskSpace.get());
+      } else {
+        log.error("Error putting all watcher data", e);
+        throw e;
       }
     }
   }
@@ -924,7 +925,7 @@ public class WatcherServiceImpl implements WatcherService {
   public List<String> findExpectedDelegateVersions() {
     try {
       if (multiVersion) {
-        RestResponse<DelegateConfiguration> restResponse = callInterruptible(timeLimiter, ofSeconds(15),
+        RestResponse<DelegateConfiguration> restResponse = callInterruptible(timeLimiter, ofSeconds(30),
             () -> SafeHttpCall.execute(managerClient.getDelegateConfiguration(watcherConfiguration.getAccountId())));
 
         if (restResponse == null) {
@@ -933,7 +934,11 @@ public class WatcherServiceImpl implements WatcherService {
 
         DelegateConfiguration config = restResponse.getResource();
 
-        return config.getDelegateVersions();
+        if (config != null && config.getAction() == SELF_DESTRUCT) {
+          selfDestruct();
+        }
+
+        return config != null ? config.getDelegateVersions() : null;
       } else {
         String delegateMetadata =
             Http.getResponseStringFromUrl(watcherConfiguration.getDelegateCheckLocation(), 10, 10);
@@ -945,7 +950,7 @@ public class WatcherServiceImpl implements WatcherService {
     } catch (Exception e) {
       log.warn("Unable to fetch delegate version information", e);
     }
-    throw new GeneralException("Couldn't get delegate versions.");
+    return null;
   }
 
   private int getMinorVersion(String delegateVersion) {
@@ -1063,11 +1068,12 @@ public class WatcherServiceImpl implements WatcherService {
             FileUtils.moveFile(downloadDestination, finalDestination);
             log.info("Moved delegate jar version {} to the final location", version);
           } else {
-            log.error("Downloaded delegate jar version {} is corrupted. Removing invalid file.", version);
+            log.warn("Downloaded delegate jar version {} is corrupted. Removing invalid file.", version);
             FileUtils.forceDelete(downloadDestination);
           }
         } catch (Exception ex) {
-          log.error("Unexpected error occurred during jar file verification. File will be deleted.", ex);
+          log.warn("Unexpected error occurred during jar file verification with message: {}. File will be deleted.",
+              ex.getMessage());
         } finally {
           if (downloadDestination.exists()) {
             FileUtils.forceDelete(downloadDestination);
@@ -1126,7 +1132,8 @@ public class WatcherServiceImpl implements WatcherService {
         String newDelegateProcess = null;
 
         if (newDelegate.getProcess().isAlive()) {
-          Message message = messageService.waitForMessage(NEW_DELEGATE, TimeUnit.MINUTES.toMillis(4));
+          Message message =
+              messageService.waitForMessage(NEW_DELEGATE, TimeUnit.MINUTES.toMillis(version == null ? 15 : 4));
           if (message != null) {
             newDelegateProcess = message.getParams().get(0);
             log.info("Got process ID from new delegate: {}", newDelegateProcess);

@@ -1,16 +1,14 @@
 package io.harness.batch.processing.tasklet;
 
-import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
+import static io.harness.ccm.commons.entities.k8s.K8sWorkload.encodeDotsInKey;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterType;
-import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.CloudProviderService;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
 import io.harness.batch.processing.service.intfc.InstanceInfoTimescaleDAO;
@@ -19,13 +17,15 @@ import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.beans.FeatureName;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.beans.billing.InstanceCategory;
+import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.ff.FeatureFlagService;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.NodeInfo;

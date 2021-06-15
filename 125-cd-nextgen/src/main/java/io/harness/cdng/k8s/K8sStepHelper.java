@@ -3,7 +3,10 @@ package io.harness.cdng.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_GCP;
+import static io.harness.common.ParameterFieldHelper.getBooleanParameterFieldValue;
+import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
@@ -14,8 +17,7 @@ import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.UnitStatus.RUNNING;
-import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
-import static io.harness.steps.StepUtils.prepareTaskRequest;
+import static io.harness.steps.StepUtils.prepareTaskRequestWithTaskSelector;
 import static io.harness.validation.Validator.notEmptyCheck;
 
 import static java.lang.String.format;
@@ -94,6 +96,7 @@ import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
 import io.harness.eraro.Level;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepConstants;
 import io.harness.git.model.FetchFilesResult;
@@ -109,6 +112,7 @@ import io.harness.logstreaming.NGLogCallback;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
@@ -556,8 +560,9 @@ public class K8sStepHelper {
 
     String taskName = TaskType.K8S_COMMAND_TASK_NG.getDisplayName() + " : " + k8sDeployRequest.getCommandName();
     K8sSpecParameters k8SSpecParameters = (K8sSpecParameters) stepElementParameters.getSpec();
-    final TaskRequest taskRequest =
-        prepareTaskRequest(ambiance, taskData, kryoSerializer, k8SSpecParameters.getCommandUnits(), taskName);
+    final TaskRequest taskRequest = prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        k8SSpecParameters.getCommandUnits(), taskName,
+        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))));
 
     return TaskChainResponse.builder().taskRequest(taskRequest).chainEnd(true).passThroughData(infrastructure).build();
   }
@@ -712,8 +717,9 @@ public class K8sStepHelper {
 
     String taskName = TaskType.HELM_VALUES_FETCH_NG.getDisplayName();
     K8sSpecParameters k8SSpecParameters = (K8sSpecParameters) stepElementParameters.getSpec();
-    final TaskRequest taskRequest =
-        prepareTaskRequest(ambiance, taskData, kryoSerializer, k8SSpecParameters.getCommandUnits(), taskName);
+    final TaskRequest taskRequest = prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        k8SSpecParameters.getCommandUnits(), taskName,
+        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))));
 
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
                                                         .k8sManifestOutcome(k8sManifestOutcome)
@@ -748,8 +754,9 @@ public class K8sStepHelper {
 
     String taskName = TaskType.GIT_FETCH_NEXT_GEN_TASK.getDisplayName();
     K8sSpecParameters k8SSpecParameters = (K8sSpecParameters) stepElementParameters.getSpec();
-    final TaskRequest taskRequest =
-        prepareTaskRequest(ambiance, taskData, kryoSerializer, k8SSpecParameters.getCommandUnits(), taskName);
+    final TaskRequest taskRequest = prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        k8SSpecParameters.getCommandUnits(), taskName,
+        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))));
 
     return TaskChainResponse.builder()
         .chainEnd(false)
@@ -1010,7 +1017,7 @@ public class K8sStepHelper {
             .map(unitProgress -> {
               if (unitProgress.getStatus() == RUNNING) {
                 LogCallback logCallback = getLogCallback(unitProgress.getUnitName(), ambiance, false);
-                logCallback.saveExecutionLog(exception.getMessage(), LogLevel.ERROR, FAILURE);
+                logCallback.saveExecutionLog(ExceptionUtils.getMessage(exception), LogLevel.ERROR, FAILURE);
                 return UnitProgress.newBuilder(unitProgress)
                     .setStatus(UnitStatus.FAILURE)
                     .setEndTime(System.currentTimeMillis())
@@ -1235,5 +1242,16 @@ public class K8sStepHelper {
 
   public LogCallback getLogCallback(String commandUnitName, Ambiance ambiance, boolean shouldOpenStream) {
     return new NGLogCallback(logStreamingStepClientFactory, ambiance, commandUnitName, shouldOpenStream);
+  }
+
+  public static boolean getParameterFieldBooleanValue(
+      ParameterField<?> fieldValue, String fieldName, StepElementParameters stepElement) {
+    try {
+      return getBooleanParameterFieldValue(fieldValue);
+    } catch (Exception e) {
+      String message = String.format("%s for field %s in %s step with identifier: %s", e.getMessage(), fieldName,
+          stepElement.getType(), stepElement.getIdentifier());
+      throw new InvalidArgumentsException(message);
+    }
   }
 }

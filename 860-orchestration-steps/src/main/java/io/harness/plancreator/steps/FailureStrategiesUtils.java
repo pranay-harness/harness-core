@@ -49,6 +49,7 @@ public class FailureStrategiesUtils {
     EnumMap<NGFailureType, FailureStrategyActionConfig> map = new EnumMap<>(NGFailureType.class);
 
     if (isNotEmpty(failureStrategyConfigList)) {
+      int allErrorsCount = 0;
       for (FailureStrategyConfig failureStrategyConfig : failureStrategyConfigList) {
         for (NGFailureType ngFailureType : failureStrategyConfig.getOnFailure().getErrors()) {
           if (map.containsKey(ngFailureType)
@@ -56,7 +57,26 @@ public class FailureStrategiesUtils {
             throw new InvalidRequestException(
                 "Same error cannot point to multiple failure action - for error : " + ngFailureType.getYamlName());
           }
-          map.put(ngFailureType, failureStrategyConfig.getOnFailure().getAction());
+
+          // Add to put checking if its AllErrors or normal one.
+          if (ngFailureType == NGFailureType.ALL_ERRORS) {
+            allErrorsCount += 1;
+            if (failureStrategyConfig.getOnFailure().getErrors().size() != 1) {
+              throw new InvalidRequestException(
+                  "With AllErrors there cannot be other specified errors defined in same list.");
+            }
+            if (allErrorsCount > 1) {
+              throw new InvalidRequestException(
+                  "AllErrors are defined multiple times either in stage, stepGroup or step failure strategies.");
+            }
+            for (NGFailureType internalFailureType : NGFailureType.values()) {
+              if (internalFailureType != NGFailureType.ALL_ERRORS) {
+                map.put(internalFailureType, failureStrategyConfig.getOnFailure().getAction());
+              }
+            }
+          } else {
+            map.put(ngFailureType, failureStrategyConfig.getOnFailure().getAction());
+          }
         }
       }
     }
@@ -67,23 +87,10 @@ public class FailureStrategiesUtils {
       EnumMap<NGFailureType, FailureStrategyActionConfig> map) {
     Multimap<FailureStrategyActionConfig, FailureType> invertedMap = ArrayListMultimap.create();
 
-    // Handle Other_Errors
-    if (map.containsKey(NGFailureType.ANY_OTHER_ERRORS)) {
-      EnumSet<FailureType> requiredFailureTypes = NGFailureType.getAllFailureTypes();
-      EnumSet<FailureType> mentionedFailureTypes = EnumSet.noneOf(FailureType.class);
-      map.keySet().forEach(ngFailureType -> {
-        EnumSet<FailureType> failureTypes = ngFailureType.getFailureTypes();
-        mentionedFailureTypes.addAll(failureTypes);
-        failureTypes.forEach(failureType -> invertedMap.put(map.get(ngFailureType), failureType));
-      });
-      mentionedFailureTypes.forEach(requiredFailureTypes::remove);
-      invertedMap.putAll(map.get(NGFailureType.ANY_OTHER_ERRORS), requiredFailureTypes);
-    } else {
-      map.keySet().forEach(ngFailureType -> {
-        EnumSet<FailureType> failureTypes = ngFailureType.getFailureTypes();
-        failureTypes.forEach(failureType -> invertedMap.put(map.get(ngFailureType), failureType));
-      });
-    }
+    map.keySet().forEach(ngFailureType -> {
+      EnumSet<FailureType> failureTypes = ngFailureType.getFailureTypes();
+      failureTypes.forEach(failureType -> invertedMap.put(map.get(ngFailureType), failureType));
+    });
     return invertedMap.asMap();
   }
 

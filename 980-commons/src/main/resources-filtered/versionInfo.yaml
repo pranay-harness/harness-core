@@ -6,4 +6,5 @@ buildNo   : ${build.number}
 gitCommit : ${gitCommitId}
 gitBranch : ${gitBranch}
 timestamp : ${buildTimeStamp}
+patch     : ${build.patch}
 fullVersionWithPatch : ${build.fullVersionWithPatch}

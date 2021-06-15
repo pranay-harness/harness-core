@@ -14,7 +14,6 @@ import "920-delegate-service-beans/src/main/proto/io/harness/delegate/progress.p
 import "920-delegate-service-beans/src/main/proto/io/harness/callback/callback.proto";
 import "920-delegate-service-beans/src/main/proto/io/harness/perpetualtask/perpetual_task_client.proto";
 
-import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 

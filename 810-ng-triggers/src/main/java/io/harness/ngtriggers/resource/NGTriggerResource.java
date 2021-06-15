@@ -21,7 +21,7 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ngtriggers.beans.config.NGTriggerConfig;
+import io.harness.ngtriggers.beans.config.NGTriggerConfigV2;
 import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO;
 import io.harness.ngtriggers.beans.dto.NGTriggerResponseDTO;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
@@ -87,8 +87,8 @@ public class NGTriggerResource {
 
   @POST
   @ApiImplicitParams({
-    @ApiImplicitParam(dataTypeClass = NGTriggerConfig.class,
-        dataType = "io.harness.ngtriggers.beans.config.NGTriggerConfig", paramType = "body")
+    @ApiImplicitParam(dataTypeClass = NGTriggerConfigV2.class,
+        dataType = "io.harness.ngtriggers.beans.config.NGTriggerConfigV2", paramType = "body")
   })
   @ApiOperation(value = "Create Trigger", nickname = "createTrigger")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_EXECUTE)
@@ -130,8 +130,8 @@ public class NGTriggerResource {
   @PUT
   @Path("/{triggerIdentifier}")
   @ApiImplicitParams({
-    @ApiImplicitParam(dataTypeClass = NGTriggerConfig.class,
-        dataType = "io.harness.ngtriggers.beans.config.NGTriggerConfig", paramType = "body")
+    @ApiImplicitParam(dataTypeClass = NGTriggerConfigV2.class,
+        dataType = "io.harness.ngtriggers.beans.config.NGTriggerConfigV2", paramType = "body")
   })
   @ApiOperation(value = "Update a trigger by identifier", nickname = "updateTrigger")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_EXECUTE)
@@ -208,7 +208,7 @@ public class NGTriggerResource {
 
     return ResponseDTO.newResponse(getNGPageResponse(
         ngTriggerService.list(criteria, pageRequest)
-            .map(triggerEntity -> ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(triggerEntity, true))));
+            .map(triggerEntity -> ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(triggerEntity, true, false))));
   }
 
   @GET
@@ -229,7 +229,7 @@ public class NGTriggerResource {
     }
 
     return ResponseDTO.newResponse(ngTriggerEntity.get().getVersion().toString(),
-        ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity.get(), true));
+        ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity.get(), true, true));
   }
 
   @GET

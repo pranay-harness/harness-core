@@ -738,6 +738,9 @@
                   "type": "string"
                 }
               ]
+            },
+            "shell": {
+              "type": "string"
             }
           }
         }
@@ -1064,8 +1067,7 @@
           "required": [
             "bucket",
             "connectorRef",
-            "sourcePath",
-            "target"
+            "sourcePath"
           ],
           "properties": {
             "bucket": {

@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 
@@ -23,7 +24,7 @@ public interface DelegateProfileService extends OwnedByAccount {
   DelegateProfile get(String accountId, String delegateProfileId);
   DelegateProfile fetchCgPrimaryProfile(String accountId);
 
-  DelegateProfile fetchNgPrimaryProfile(String accountId);
+  DelegateProfile fetchNgPrimaryProfile(String accountId, DelegateEntityOwner owner);
 
   DelegateProfile update(DelegateProfile delegateProfile);
   DelegateProfile updateScopingRules(

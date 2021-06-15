@@ -190,21 +190,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/AddSegmentToVariationTargetMapYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "AddSegmentToVariationTargetMap"
               ]
             }
           }
@@ -214,6 +214,10 @@
     },
     "AddSegmentToVariationTargetMapYamlSpec": {
       "type": "object",
+      "required": [
+        "segments",
+        "variation"
+      ],
       "properties": {
         "segments": {
           "type": "array",
@@ -235,21 +239,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/AddTargetsToVariationTargetMapYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "AddTargetsToVariationTargetMap"
               ]
             }
           }
@@ -259,6 +263,10 @@
     },
     "AddTargetsToVariationTargetMapYamlSpec": {
       "type": "object",
+      "required": [
+        "targets",
+        "variation"
+      ],
       "properties": {
         "targets": {
           "type": "array",
@@ -612,8 +620,7 @@
           "required": [
             "environment",
             "feature",
-            "instructions",
-            "state"
+            "instructions"
           ],
           "properties": {
             "environment": {
@@ -643,9 +650,6 @@
                   }
                 ]
               }
-            },
-            "state": {
-              "type": "string"
             }
           }
         }
@@ -748,7 +752,10 @@
               "type": "string"
             },
             "delegateSelectors": {
-              "$ref": "#/definitions/ParameterFieldListTaskSelectorYaml"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "headers": {
               "type": "array",
@@ -1098,8 +1105,15 @@
               ]
             },
             "value": {
-              "type": "number",
-              "format": "double"
+              "oneOf": [
+                {
+                  "type": "number",
+                  "format": "double"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           }
         }
@@ -1143,7 +1157,8 @@
           "items": {
             "type": "string",
             "enum": [
-              "AnyOther",
+              "Unknown",
+              "AllErrors",
               "Authentication",
               "Connectivity",
               "Timeout",
@@ -1245,36 +1260,6 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "ParameterFieldListTaskSelectorYaml": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/TaskSelectorYaml"
-          }
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "ParameterFieldString": {
       "type": "object",
       "properties": {
@@ -1327,21 +1312,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/RemoveSegmentToVariationTargetMapYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "RemoveSegmentToVariationTargetMap"
               ]
             }
           }
@@ -1351,6 +1336,10 @@
     },
     "RemoveSegmentToVariationTargetMapYamlSpec": {
       "type": "object",
+      "required": [
+        "segments",
+        "variation"
+      ],
       "properties": {
         "segments": {
           "type": "array",
@@ -1372,21 +1361,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/RemoveTargetsToVariationTargetMapYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "RemoveTargetsToVariationTargetMap"
               ]
             }
           }
@@ -1396,6 +1385,10 @@
     },
     "RemoveTargetsToVariationTargetMapYamlSpec": {
       "type": "object",
+      "required": [
+        "targets",
+        "variation"
+      ],
       "properties": {
         "targets": {
           "type": "array",
@@ -1540,21 +1533,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/SetFeatureFlagStateYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "SetFeatureFlagState"
               ]
             }
           }
@@ -1564,6 +1557,9 @@
     },
     "SetFeatureFlagStateYamlSpec": {
       "type": "object",
+      "required": [
+        "state"
+      ],
       "properties": {
         "state": {
           "type": "string"
@@ -1832,15 +1828,6 @@
           }
         }
       ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "TaskSelectorYaml": {
-      "type": "object",
-      "properties": {
-        "delegateSelectors": {
-          "type": "string"
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "TestVerificationJobSpec": {

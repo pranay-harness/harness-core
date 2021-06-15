@@ -9,6 +9,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.common.ParameterFieldHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.InvalidRequestException;
@@ -16,7 +17,6 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
-import io.harness.ngpipeline.common.ParameterFieldHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
@@ -29,6 +29,7 @@ import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.tags.TagUtils;
 import io.harness.rbac.CDNGRbacPermissions;
 import io.harness.steps.EntityReferenceExtractorUtils;
 
@@ -108,10 +109,12 @@ public class ServiceStep implements SyncExecutable<ServiceStepParameters> {
       }
     }
 
+    TagUtils.removeUuidFromTags(stepParameters.getTags());
+
     return ServiceEntity.builder()
         .identifier(stepParameters.getIdentifier())
         .name(stepParameters.getName())
-        .description(ParameterFieldHelper.getParameterFieldValue(stepParameters.getDescription()))
+        .description(ParameterFieldHelper.getParameterFieldValueHandleValueNull(stepParameters.getDescription()))
         .projectIdentifier(projectIdentifier)
         .orgIdentifier(orgIdentifier)
         .accountId(accountId)

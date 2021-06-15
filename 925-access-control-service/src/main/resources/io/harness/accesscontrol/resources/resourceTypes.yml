@@ -6,6 +6,10 @@
   permissionKey: project
 - identifier: CONNECTOR
   permissionKey: connector
+- identifier: DELEGATE
+  permissionKey: delegate
+- identifier: DELEGATECONFIGURATION
+  permissionKey: delegateconfiguration
 - identifier: SECRET
   permissionKey: secret
 - identifier: PIPELINE
@@ -28,3 +32,9 @@
   permissionKey: license
 - identifier: AUTHSETTING
   permissionKey: authsetting
+- identifier: FEATUREFLAG
+  permissionKey: featureflag
+- identifier: TARGET
+  permissionKey: target
+- identifier: TARGETGROUP
+  permissionKey: targetgroup

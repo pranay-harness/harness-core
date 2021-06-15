@@ -28,7 +28,7 @@ public enum DeploymentType {
   AWS_LAMBDA("AWS Lambda"),
   AMI("AMI"),
   WINRM("Windows Remote Management (WinRM)"),
-  PCF("Pivotal Cloud Foundry"),
+  PCF("Tanzu Application Services"),
   AZURE_VMSS("Azure Virtual Machine Image"),
   AZURE_WEBAPP("Azure Web App"),
   CUSTOM("Custom");

@@ -190,7 +190,10 @@ public class SettingAttribute
   }
 
   @NotEmpty String accountId;
-  @NotEmpty @EntityName @Trimmed(message = "cannot have trailing whitespace") private String name;
+  @NotEmpty
+  @EntityName(displayName = "Display Name")
+  @Trimmed(message = "cannot have trailing whitespace")
+  private String name;
   @Valid private SettingValue value;
   @Valid @Transient private ConnectivityValidationAttributes validationAttributes;
   private SettingCategory category = SettingCategory.SETTING;

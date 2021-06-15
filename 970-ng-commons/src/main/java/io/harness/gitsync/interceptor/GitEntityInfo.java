@@ -24,13 +24,12 @@ public class GitEntityInfo {
   String folderPath;
   String filePath;
   String commitMsg;
-  boolean createPr;
-  String targetBranch;
   String lastObjectId; // required in case of update file
   boolean isNewBranch;
   boolean isSyncFromGit;
   @Wither boolean findDefaultFromOtherBranches;
   String baseBranch;
+  String commitId; // used for passing commitId in case of g2h.
 
   public boolean isNull() {
     // todo @Abhinav Maybe we should use null in place of default

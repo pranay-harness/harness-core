@@ -6,6 +6,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.pcf.model.CfCliVersion;
 
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
@@ -56,10 +57,11 @@ public class PcfCommandDeployRequest extends PcfCommandRequest {
       Integer totalPreviousInstanceCount, List<PcfServiceData> instanceData, ResizeStrategy resizeStrategy,
       List<String> routeMaps, Integer timeoutIntervalInMin, boolean useCfCLI, PcfAppSetupTimeDetails downsizeAppDetail,
       boolean isStandardBlueGreen, PcfManifestsPackage pcfManifestsPackage, boolean useAppAutoscalar,
-      boolean enforceSslValidation, boolean limitPcfThreads, boolean ignorePcfConnectionContextCache) {
+      boolean enforceSslValidation, boolean limitPcfThreads, boolean ignorePcfConnectionContextCache,
+      CfCliVersion cfCliVersion) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCfCLI, enforceSslValidation, useAppAutoscalar, limitPcfThreads,
-        ignorePcfConnectionContextCache);
+        ignorePcfConnectionContextCache, cfCliVersion);
     this.newReleaseName = newReleaseName;
     this.updateCount = updateCount;
     this.downSizeCount = downSizeCount;

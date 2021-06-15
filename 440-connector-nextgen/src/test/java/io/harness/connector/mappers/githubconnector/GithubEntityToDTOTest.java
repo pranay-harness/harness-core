@@ -49,6 +49,7 @@ public class GithubEntityToDTOTest {
     final String insId = "insId";
     final String tokenRef = "tokenRef";
     final String privateKeyRef = "privateKeyRef";
+    final String validationRepo = "validationRepo";
 
     final GithubAuthenticationDTO githubAuthenticationDTO =
         GithubAuthenticationDTO.builder()
@@ -73,7 +74,8 @@ public class GithubEntityToDTOTest {
             .build();
     final GithubConnectorDTO githubConnectorDTO = GithubConnectorDTO.builder()
                                                       .url(url)
-                                                      .connectionType(GitConnectionType.REPO)
+                                                      .validationRepo(validationRepo)
+                                                      .connectionType(GitConnectionType.ACCOUNT)
                                                       .authentication(githubAuthenticationDTO)
                                                       .apiAccess(githubApiAccessDTO)
                                                       .build();
@@ -82,13 +84,14 @@ public class GithubEntityToDTOTest {
         GithubConnector.builder()
             .hasApiAccess(true)
             .url(url)
+            .validationRepo(validationRepo)
             .githubApiAccess(GithubAppApiAccess.builder()
                                  .applicationId(appId)
                                  .installationId(insId)
                                  .privateKeyRef(privateKeyRef)
                                  .build())
             .apiAccessType(GITHUB_APP)
-            .connectionType(GitConnectionType.REPO)
+            .connectionType(GitConnectionType.ACCOUNT)
             .authType(HTTP)
             .authenticationDetails(
                 GithubHttpAuthentication.builder()

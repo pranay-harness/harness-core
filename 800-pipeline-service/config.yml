@@ -48,7 +48,7 @@ grpcClientConfigs:
   cd:
     target: localhost:12101
     authority: localhost
-  cvng:
+  cv:
     target: localhost:12401
     authority: localhost
   ci:
@@ -150,6 +150,7 @@ enableAuth: false
 
 orchestrationStepConfig:
   ffServerBaseUrl: http://127.0.0.1:3000/api/1.0
+  ffServerApiKey: secret
 
 shouldDeployWithGitSync: false
 
@@ -178,4 +179,9 @@ timescaledb:
   logUnclosedConnections: false
   loggerLevel: OFF
 
-useRedisForInterrupts: false
+auditClientConfig:
+  baseUrl: http://localhost:9005/api/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+enableAudit: false

@@ -1,7 +1,7 @@
 package io.harness.batch.processing.billing.service;
 
-import static io.harness.batch.processing.writer.constants.InstanceMetaDataConstants.GCE_STORAGE_CLASS;
-import static io.harness.batch.processing.writer.constants.InstanceMetaDataConstants.PV_TYPE;
+import static io.harness.ccm.commons.constants.InstanceMetaDataConstants.GCE_STORAGE_CLASS;
+import static io.harness.ccm.commons.constants.InstanceMetaDataConstants.PV_TYPE;
 import static io.harness.perpetualtask.k8s.watch.PVInfo.PVType.PV_TYPE_GCE_PERSISTENT_DISK;
 import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.ROHIT;
@@ -21,9 +21,7 @@ import io.harness.batch.processing.billing.service.impl.ComputeInstancePricingSt
 import io.harness.batch.processing.billing.service.impl.EcsFargateInstancePricingStrategy;
 import io.harness.batch.processing.billing.service.impl.StoragePricingStrategy;
 import io.harness.batch.processing.ccm.ClusterType;
-import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.PricingSource;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.data.EcsFargatePricingInfo;
 import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
 import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
@@ -34,13 +32,15 @@ import io.harness.batch.processing.pricing.service.intfc.AzureCustomBillingServi
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.batch.processing.service.intfc.PricingProfileService;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.PricingProfile;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.beans.StorageResource;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.beans.billing.InstanceCategory;
+import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableList;
@@ -581,7 +581,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_POD);
     UtilizationData utilizationData = getUtilization(CPU_UTILIZATION, MEMORY_UTILIZATION);
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
-        instanceData, utilizationData, 86400.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
+        instanceData, utilizationData, 0.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
     assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount())
         .isEqualTo(new BigDecimal("0.3358799999999999625"));
   }
