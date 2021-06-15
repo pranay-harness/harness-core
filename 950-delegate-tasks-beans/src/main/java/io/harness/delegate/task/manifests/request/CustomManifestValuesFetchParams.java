@@ -13,6 +13,7 @@ import io.harness.delegate.task.Cd1ApplicationAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.manifest.CustomManifestSource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +32,7 @@ public class CustomManifestValuesFetchParams
   private String accountId;
   private String appId;
   private Set<String> delegateSelectors;
+  @Expression(ALLOW_SECRETS) private CustomManifestSource customManifestSource;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

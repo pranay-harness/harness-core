@@ -57,6 +57,15 @@ public class CustomManifestServiceImpl implements CustomManifestService {
     return Files.createTempDirectory(SHELL_SCRIPT_TEMP_DIRECTORY_PREFIX).toString();
   }
 
+  @Override
+  @NotNull
+  public String executeCustomSourceScript(String activityId, LogCallback logCallback,
+      @NotNull CustomManifestSource customManifestSource) throws IOException {
+    String defaultSourceWorkingDirectory = getWorkingDirectory();
+    executeScript(customManifestSource.getScript(), defaultSourceWorkingDirectory, activityId, logCallback);
+    return defaultSourceWorkingDirectory;
+  }
+
   private void downloadCustomSource(CustomManifestSource source, String outputDirectory, String workingDirectory,
       LogCallback logCallback) throws IOException {
     if (isNotEmpty(source.getScript())) {
@@ -103,7 +112,8 @@ public class CustomManifestServiceImpl implements CustomManifestService {
     }
   }
 
-  private Collection<CustomSourceFile> readFilesContent(String parentDirectory, List<String> filesPath)
+  @Override
+  public Collection<CustomSourceFile> readFilesContent(String parentDirectory, List<String> filesPath)
       throws IOException {
     List<CustomSourceFile> filesContentList = new ArrayList<>();
     for (String filePath : filesPath) {
