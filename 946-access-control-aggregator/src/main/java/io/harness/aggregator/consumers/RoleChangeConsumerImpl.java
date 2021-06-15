@@ -23,6 +23,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -111,8 +112,11 @@ public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
     public Result call() {
       Set<String> existingPermissions =
           Sets.newHashSet(aclRepository.getDistinctPermissionsInACLsForRoleAssignment(roleAssignmentDBO.getId()));
-      Set<String> permissionsAddedToRole = Sets.difference(updatedRole.getPermissions(), existingPermissions);
-      Set<String> permissionsRemovedFromRole = Sets.difference(existingPermissions, updatedRole.getPermissions());
+      Set<String> permissionsAddedToRole =
+          Sets.difference(updatedRole.getPermissions() == null ? Collections.emptySet() : updatedRole.getPermissions(),
+              existingPermissions);
+      Set<String> permissionsRemovedFromRole = Sets.difference(existingPermissions,
+          updatedRole.getPermissions() == null ? Collections.emptySet() : updatedRole.getPermissions());
 
       long numberOfACLsDeleted =
           aclRepository.deleteByRoleAssignmentIdAndPermissions(roleAssignmentDBO.getId(), permissionsRemovedFromRole);

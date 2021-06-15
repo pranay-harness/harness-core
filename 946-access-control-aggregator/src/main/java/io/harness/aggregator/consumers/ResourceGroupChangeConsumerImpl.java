@@ -23,6 +23,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -116,10 +117,13 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
     public Result call() {
       Set<String> existingResourceSelectors =
           Sets.newHashSet(aclRepository.getDistinctResourceSelectorsInACLs(roleAssignmentDBO.getId()));
-      Set<String> resourceSelectorsRemovedFromResourceGroup =
-          Sets.difference(existingResourceSelectors, updatedResourceGroup.getResourceSelectors());
-      Set<String> resourceSelectorsAddedToResourceGroup =
-          Sets.difference(updatedResourceGroup.getResourceSelectors(), existingResourceSelectors);
+      Set<String> resourceSelectorsRemovedFromResourceGroup = Sets.difference(existingResourceSelectors,
+          updatedResourceGroup.getResourceSelectors() == null ? Collections.emptySet()
+                                                              : updatedResourceGroup.getResourceSelectors());
+      Set<String> resourceSelectorsAddedToResourceGroup = Sets.difference(
+          updatedResourceGroup.getResourceSelectors() == null ? Collections.emptySet()
+                                                              : updatedResourceGroup.getResourceSelectors(),
+          existingResourceSelectors);
 
       long numberOfACLsDeleted = aclRepository.deleteByRoleAssignmentIdAndResourceSelectors(
           roleAssignmentDBO.getId(), resourceSelectorsRemovedFromResourceGroup);

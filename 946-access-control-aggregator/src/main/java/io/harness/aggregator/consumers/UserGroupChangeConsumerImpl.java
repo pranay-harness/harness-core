@@ -22,6 +22,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -113,8 +114,11 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
     public Result call() {
       Set<String> existingPrincipals = Sets.newHashSet(
           Sets.newHashSet(aclRepository.getDistinctPrincipalsInACLsForRoleAssignment(roleAssignmentDBO.getId())));
-      Set<String> principalsAddedToUserGroup = Sets.difference(updatedUserGroup.getUsers(), existingPrincipals);
-      Set<String> principalRemovedFromUserGroup = Sets.difference(existingPrincipals, updatedUserGroup.getUsers());
+      Set<String> principalsAddedToUserGroup =
+          Sets.difference(updatedUserGroup.getUsers() == null ? Collections.emptySet() : updatedUserGroup.getUsers(),
+              existingPrincipals);
+      Set<String> principalRemovedFromUserGroup = Sets.difference(existingPrincipals,
+          updatedUserGroup.getUsers() == null ? Collections.emptySet() : updatedUserGroup.getUsers());
 
       long numberOfACLsDeleted =
           aclRepository.deleteByRoleAssignmentIdAndPrincipals(roleAssignmentDBO.getId(), principalRemovedFromUserGroup);
