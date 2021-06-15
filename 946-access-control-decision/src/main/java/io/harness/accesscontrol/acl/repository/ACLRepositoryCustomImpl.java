@@ -35,6 +35,9 @@ public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
 
   public long insertAllIgnoringDuplicates(List<ACL> acls) {
     try {
+      if (acls == null || acls.isEmpty()) {
+        return 0;
+      }
       return mongoTemplate.bulkOps(BulkMode.UNORDERED, ACL.class).insert(acls).execute().getInsertedCount();
     } catch (BulkOperationException ex) {
       if (ex.getErrors().stream().allMatch(bulkWriteError -> isDuplicateKeyCode(bulkWriteError.getCode()))) {
