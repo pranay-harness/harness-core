@@ -374,8 +374,9 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @QueryParam("resolveExpressions") @DefaultValue("false") boolean resolveExpressions,
       @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
-    return pmsExecutionService.getInputSetYaml(accountId, orgId, projectId, planExecutionId, false);
+    return pmsExecutionService.getInputSetYaml(accountId, orgId, projectId, planExecutionId, false, resolveExpressions);
   }
 
   @GET
