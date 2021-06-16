@@ -31,7 +31,7 @@ require (
 	github.com/jirfag/go-printf-func-name v0.0.0-20200119135958-7558a9eaa5af // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mattn/go-ieproxy v0.0.1 // indirect
-	github.com/mattn/go-zglob v0.0.1
+	github.com/mattn/go-zglob v0.0.3
 	github.com/mitchellh/mapstructure v1.3.1 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/errors v0.9.1
@@ -47,7 +47,10 @@ require (
 	github.com/timakin/bodyclose v0.0.0-20200424151742-cb6215831a94 // indirect
 	github.com/tj/assert v0.0.0-20171129193455-018094318fb0
 	github.com/vdemeester/k8s-pkg-credentialprovider v1.18.1-0.20201019120933-f1d16962a4db
+	github.com/wings-software/portal v0.0.0-20210601143423-52a763a1cb90
 	github.com/wings-software/portal/commons/go/lib v0.0.0-00010101000000-000000000000
+	github.com/wings-software/portal/product/ci/engine v0.0.0-20210601143423-52a763a1cb90
+	github.com/wings-software/portal/product/ci/ti-service v0.0.0-20210601143423-52a763a1cb90
 	github.com/xanzy/go-gitlab v0.32.0 // indirect
 	go.uber.org/zap v1.16.0
 	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
@@ -57,7 +60,7 @@ require (
 	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
 	k8s.io/api v0.20.1
 	mvdan.cc/sh v2.6.4+incompatible
-	mvdan.cc/sh/v3 v3.2.1
+	mvdan.cc/sh/v3 v3.2.4
 	mvdan.cc/unparam v0.0.0-20200501210554-b37ab49443f7 // indirect
 	sourcegraph.com/sqs/pbtypes v1.0.0 // indirect
 )

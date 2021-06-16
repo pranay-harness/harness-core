@@ -132,6 +132,7 @@ func GetSliceDiff(sIDs []int, dIDs []int) []int {
 }
 
 // GetRepoUrl takes the repo address and appends .git at the end if it doesn't ends with .git
+// TODO: Check if this works for SSH access
 func GetRepoUrl(repo string) string {
 	if !strings.HasSuffix(repo, ".git") {
 		repo += ".git"
