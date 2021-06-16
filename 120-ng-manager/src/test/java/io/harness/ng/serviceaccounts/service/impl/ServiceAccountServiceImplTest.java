@@ -100,7 +100,7 @@ public class ServiceAccountServiceImplTest extends NgManagerTestBase {
         .when(serviceAccountRepository)
         .findAllByAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
             accountIdentifier, orgIdentifier, projectIdentifier);
-    List<ServiceAccountRequestDTO> accounts =
+    List<ServiceAccountDTO> accounts =
         serviceAccountService.listServiceAccounts(accountIdentifier, orgIdentifier, projectIdentifier);
     assertThat(accounts.size()).isEqualTo(1);
   }

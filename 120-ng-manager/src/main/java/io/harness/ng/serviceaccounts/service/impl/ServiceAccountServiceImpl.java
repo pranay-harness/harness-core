@@ -72,11 +72,7 @@ public class ServiceAccountServiceImpl implements ServiceAccountService {
         serviceAccountRepository.findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
             accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     Preconditions.checkNotNull(serviceAccount, "Service account with identifier" + identifier + " doesn't exist");
-    return ServiceAccountDTO.builder()
-        .name(serviceAccount.getName())
-        .resourceScope(
-            ResourceScopeMapper.getResourceScope(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier)))
-        .build();
+    return ServiceAccountDTOMapper.getDTOFromServiceAccount(serviceAccount);
   }
 
   @Override
