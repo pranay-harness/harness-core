@@ -146,6 +146,13 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
         map.put(Microservice.CORE, GrpcClientConfig.builder().target("localhost:12001").authority("localhost").build());
         return map;
       }
+
+      @Provides
+      @Named("disableDeserialization")
+      @Singleton
+      public boolean getSerializationForDelegate() {
+        return false;
+      }
     });
     modules.add(KryoModule.getInstance());
     modules.add(mongoTypeModule(annotations));

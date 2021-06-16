@@ -173,6 +173,13 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
       CEAzureSetupConfig ceAzureSetupConfig() {
         return CEAzureSetupConfig.builder().build();
       }
+
+      @Provides
+      @Named("disableDeserialization")
+      @Singleton
+      public boolean getSerializationForDelegate() {
+        return false;
+      }
     });
     return modules;
   }

@@ -50,6 +50,7 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Named;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
@@ -113,6 +114,13 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
         return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
             .addAll(OrchestrationVisualizationModuleRegistrars.springConverters)
             .build();
+      }
+
+      @Provides
+      @Named("disableDeserialization")
+      @Singleton
+      public boolean getSerializationForDelegate() {
+        return false;
       }
     });
 
