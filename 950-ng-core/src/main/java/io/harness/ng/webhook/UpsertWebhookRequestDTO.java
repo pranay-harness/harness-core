@@ -23,7 +23,6 @@ public class UpsertWebhookRequestDTO {
   String orgIdentifier;
   String projectIdentifier;
   @NotNull @NotEmpty String connectorIdentifierRef;
-  @NotNull @NotEmpty String target;
   @NotNull @NotEmpty HookEventType hookEventType;
   String repoURL;
 }

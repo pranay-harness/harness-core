@@ -26,6 +26,7 @@ import io.harness.ng.core.NGCoreModule;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
 import io.harness.ng.userprofile.services.api.SourceCodeManagerService;
+import io.harness.ng.webhook.services.api.WebhookEventService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -106,6 +107,7 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
         bind(ExecutorService.class).toInstance(mock(ExecutorService.class));
         bind(SourceCodeManagerService.class).toInstance(mock(SourceCodeManagerService.class));
         bind(PersistentLocker.class).toInstance(mock(PersistentLocker.class));
+        bind(WebhookEventService.class).toInstance(mock(WebhookEventService.class));
       }
     });
 
