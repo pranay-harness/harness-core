@@ -8,9 +8,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.logging.AutoLogContext;
 import io.harness.manage.GlobalContextManager;
 import io.harness.monitoring.MonitoringContext;
-import io.harness.pms.contracts.advisers.AdviseType;
-import io.harness.pms.contracts.advisers.AdviserObtainment;
-import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
@@ -18,17 +15,13 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
-import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
-import io.harness.pms.execution.AdviseNodeExecutionEventData;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.execution.ResumeNodeExecutionEventData;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
-import io.harness.pms.sdk.core.adviser.Adviser;
-import io.harness.pms.sdk.core.adviser.AdvisingEvent;
 import io.harness.pms.sdk.core.execution.ChainDetails;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.ExecutableProcessor;
@@ -88,9 +81,6 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
     switch (nodeExecutionEventType) {
       case RESUME:
         handled = resumeExecution(event);
-        break;
-      case ADVISE:
-        handled = adviseExecution(event);
         break;
       default:
         throw new UnsupportedOperationException("NodeExecution Event Has no handler" + event.getEventType());
@@ -181,43 +171,5 @@ public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeE
   private boolean isAborted(Map<String, ResponseData> accumulatedResponse) {
     return accumulatedResponse.values().stream().anyMatch(
         stepNotifyResponse -> ABORTED == (((StepResponseNotifyData) stepNotifyResponse).getStatus()));
-  }
-
-  private boolean adviseExecution(NodeExecutionEvent event) {
-    try {
-      NodeExecutionProto nodeExecutionProto = event.getNodeExecution();
-      PlanNodeProto planNodeProto = nodeExecutionProto.getNode();
-      AdviseNodeExecutionEventData data = (AdviseNodeExecutionEventData) event.getEventData();
-      AdviserResponse adviserResponse = null;
-      for (AdviserObtainment obtainment : planNodeProto.getAdviserObtainmentsList()) {
-        Adviser adviser = adviserRegistry.obtain(obtainment.getType());
-        AdvisingEvent advisingEvent = AdvisingEvent.builder()
-                                          .nodeExecution(nodeExecutionProto)
-                                          .toStatus(data.getToStatus())
-                                          .fromStatus(data.getFromStatus())
-                                          .adviserParameters(obtainment.getParameters().toByteArray())
-                                          .build();
-        if (adviser.canAdvise(advisingEvent)) {
-          adviserResponse = adviser.onAdviseEvent(advisingEvent);
-          if (adviserResponse != null) {
-            break;
-          }
-        }
-      }
-
-      if (adviserResponse != null) {
-        sdkNodeExecutionService.handleAdviserResponse(
-            nodeExecutionProto.getUuid(), event.getNotifyId(), adviserResponse);
-      } else {
-        sdkNodeExecutionService.handleAdviserResponse(nodeExecutionProto.getUuid(), event.getNotifyId(),
-            AdviserResponse.newBuilder().setType(AdviseType.UNKNOWN).build());
-      }
-      return true;
-    } catch (Exception ex) {
-      log.error("Error while advising execution", ex);
-      sdkNodeExecutionService.handleEventError(
-          event.getEventType(), event.getNotifyId(), NodeExecutionUtils.constructFailureInfo(ex));
-      return false;
-    }
   }
 }

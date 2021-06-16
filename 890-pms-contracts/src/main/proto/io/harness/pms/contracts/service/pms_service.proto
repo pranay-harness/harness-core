@@ -23,6 +23,7 @@ message InitializeSdkRequest {
   ConsumerConfig facilitatorEventConsumerConfig = 8;
   ConsumerConfig nodeStartEventConsumerConfig = 9;
   ConsumerConfig progressEventConsumerConfig = 10;
+  ConsumerConfig nodeAdviseEventConsumerConfig = 11;
 }
 
 message InitializeSdkResponse {}

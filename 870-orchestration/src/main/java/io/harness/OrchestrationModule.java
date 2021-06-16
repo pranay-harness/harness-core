@@ -12,6 +12,8 @@ import io.harness.delay.AbstractOrchestrationDelayModule;
 import io.harness.engine.NoopTaskExecutor;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.OrchestrationServiceImpl;
+import io.harness.engine.advise.publisher.NodeAdviseEventPublisher;
+import io.harness.engine.advise.publisher.RedisNodeAdviseEventPublisher;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
@@ -141,6 +143,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     bind(InterruptEventPublisher.class).to(RedisInterruptEventPublisher.class);
     bind(FacilitateEventPublisher.class).to(RedisFacilitateEventPublisher.class).in(Singleton.class);
     bind(ProgressEventPublisher.class).to(RedisProgressEventPublisher.class).in(Singleton.class);
+    bind(NodeAdviseEventPublisher.class).to(RedisNodeAdviseEventPublisher.class).in(Singleton.class);
   }
 
   @Provides

@@ -14,6 +14,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delay.DelayEventHelper;
 import io.harness.engine.advise.AdviseHandlerFactory;
 import io.harness.engine.advise.AdviserResponseHandler;
+import io.harness.engine.advise.publisher.NodeAdviseEventPublisher;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executables.InvocationHelper;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -47,7 +48,6 @@ import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto.Builder;
-import io.harness.pms.execution.AdviseNodeExecutionEventData;
 import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.execution.ResumeNodeExecutionEventData;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -105,6 +105,7 @@ public class OrchestrationEngine {
   @Inject private FacilitationHelper facilitationHelper;
   @Inject private FacilitateEventPublisher facilitateEventPublisher;
   @Inject private NodeStartHelper startHelper;
+  @Inject private NodeAdviseEventPublisher nodeAdviseEventPublisher;
 
   @Getter private final Subject<OrchestrationEndObserver> orchestrationEndSubject = new Subject<>();
 
@@ -245,19 +246,10 @@ public class OrchestrationEngine {
   }
 
   public void queueAdvisingEvent(NodeExecution nodeExecution, Status fromStatus) {
-    NodeExecutionEvent adviseEvent = NodeExecutionEvent.builder()
-                                         .eventType(NodeExecutionEventType.ADVISE)
-                                         .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
-                                         .eventData(AdviseNodeExecutionEventData.builder()
-                                                        .toStatus(nodeExecution.getStatus())
-                                                        .fromStatus(fromStatus)
-                                                        .build())
-                                         .build();
-
     transactionUtils.performTransaction(() -> {
-      nodeExecutionEventQueuePublisher.send(adviseEvent);
-      waitNotifyEngine.waitForAllOn(publisherName,
-          EngineAdviseCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build(), adviseEvent.getNotifyId());
+      String notifyId = nodeAdviseEventPublisher.publishEvent(nodeExecution.getUuid(), fromStatus);
+      waitNotifyEngine.waitForAllOn(
+          publisherName, EngineAdviseCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build(), notifyId);
       return null;
     });
   }
