@@ -230,6 +230,7 @@ func (b *RemoteWriter) upload() error {
 			for _, n := range b.nudges {
 				r, err := regexp.Compile(n.GetSearch())
 				if err != nil {
+					b.log.Errorw("error while compiling regex", zap.Error(err))
 					continue
 				}
 				if r.Match([]byte(line.Message)) {
@@ -366,6 +367,6 @@ func split(p []byte) []string {
 }
 
 func formatNudge(line *stream.Line, nudge logs.Nudge) error {
-	return fmt.Errorf("Found possible error on line %d\n Log: %s\n Possible error: %s\n Possible resolution: %s",
-		line.Number, line.Message, nudge.GetError(), nudge.GetResolution())
+	return fmt.Errorf("Found possible error on line %d\n. Log: %s\n. Possible error: %s\n. Possible resolution: %s.",
+		line.Number+1, line.Message, nudge.GetError(), nudge.GetResolution())
 }
