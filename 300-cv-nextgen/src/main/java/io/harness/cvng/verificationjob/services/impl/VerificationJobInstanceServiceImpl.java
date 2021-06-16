@@ -189,7 +189,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     List<CVConfig> cvConfigs = getCVConfigsForVerificationJob(verificationJobInstance.getResolvedJob());
     cvConfigs.forEach(cvConfig -> {
       String verificationTaskId = verificationTaskService.create(
-          cvConfig.getAccountId(), cvConfig.getUuid(), verificationJobInstance.getUuid());
+          cvConfig.getAccountId(), cvConfig.getUuid(), verificationJobInstance.getUuid(), cvConfig.getType());
       log.info("For verificationJobInstance with ID: {}, creating a new health analysis with verificationTaskID {}",
           verificationJobInstance.getUuid(), verificationTaskId);
       orchestrationService.queueAnalysis(verificationTaskId,
@@ -679,7 +679,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       populateMetricPack(cvConfig);
       List<DataCollectionTask> dataCollectionTasks = new ArrayList<>();
       String verificationTaskId = verificationTaskService.create(
-          cvConfig.getAccountId(), cvConfig.getUuid(), verificationJobInstance.getUuid());
+          cvConfig.getAccountId(), cvConfig.getUuid(), verificationJobInstance.getUuid(), cvConfig.getType());
       DataCollectionInfoMapper dataCollectionInfoMapper =
           injector.getInstance(Key.get(DataCollectionInfoMapper.class, Names.named(cvConfig.getType().name())));
 

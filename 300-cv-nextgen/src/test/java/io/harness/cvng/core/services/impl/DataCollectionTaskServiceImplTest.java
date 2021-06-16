@@ -3,6 +3,7 @@ package io.harness.cvng.core.services.impl;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.QUEUED;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.RUNNING;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.SUCCESS;
+import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
 import static io.harness.cvng.core.entities.DeploymentDataCollectionTask.MAX_RETRY_COUNT;
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -870,7 +871,8 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
     verificationJobInstance.setUuid(((TestVerificationJob) verificationJob).getBaselineVerificationJobInstanceId());
 
     verificationJobInstanceService.create(verificationJobInstance);
-    verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid());
+    verificationTaskId =
+        verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
     return verificationJobInstance;
   }
   private VerificationJobDTO newVerificationJobDTO() {

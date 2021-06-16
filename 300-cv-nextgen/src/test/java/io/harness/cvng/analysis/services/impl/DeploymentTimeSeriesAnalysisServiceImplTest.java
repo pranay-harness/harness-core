@@ -85,8 +85,9 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   public void testGetMetrics() {
     verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
+    CVConfig cvConfig = createCVConfig();
     String verificationTaskId =
-        verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
+        verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
 
     deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
 
@@ -142,8 +143,9 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   public void testGetMetrics_withHostNameFilter() {
     verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
+    CVConfig cvConfig = createCVConfig();
     String verificationTaskId =
-        verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
+        verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
     deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
 
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
@@ -172,8 +174,9 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   public void testGetMetrics_withHostNameFilterWithOnlyFewTxn() {
     verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
+    CVConfig cvConfig = createCVConfig();
     String verificationTaskId =
-        verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
+        verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
     deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
 
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
@@ -201,8 +204,9 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   public void testGetMetrics_withWrongHostName() {
     verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
+    CVConfig cvConfig = createCVConfig();
     String verificationTaskId =
-        verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
+        verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
     deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
     TransactionMetricInfoSummaryPageDTO summaryPageDTO =
         deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, "randomNode", 0);
@@ -216,8 +220,9 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   public void testGetMetrics_withAnomalousMetricsFilter() {
     verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
+    CVConfig cvConfig = createCVConfig();
     String verificationTaskId =
-        verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
+        verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
     deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
 
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
@@ -240,8 +245,9 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   public void testGetMetrics_withHostNameAndAnomalousMetricsFilter() {
     verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
+    CVConfig cvConfig = createCVConfig();
     String verificationTaskId =
-        verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
+        verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
     deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
 
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
@@ -268,8 +274,9 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   public void testGetMetrics_withMultipleDeploymentTimeSeriesAnalyses() {
     verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
+    CVConfig cvConfig = createCVConfig();
     String verificationTaskId =
-        verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
+        verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
     deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
 
     DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimeSeriesAnalysis(verificationTaskId);
@@ -303,8 +310,9 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   public void testGetMetrics_withMultiplePages() {
     verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
+    CVConfig cvConfig = createCVConfig();
     String verificationTaskId =
-        verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
+        verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
     DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimeSeriesAnalysis(verificationTaskId);
     List<DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData> transactionSummaries = new ArrayList();
     for (int i = 0; i < 25; i++) {
@@ -345,7 +353,8 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   public void testGetMetrics_withoutDeploymentTimeSeriesAnalysis() {
     verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
-    verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
+    CVConfig cvConfig = createCVConfig();
+    verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
 
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
         deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 0);
@@ -361,7 +370,8 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   public void testGetRecentHighestRiskScore_noData() {
     verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
-    verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
+    CVConfig cvConfig = createCVConfig();
+    verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
     assertThat(deploymentTimeSeriesAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId))
         .isEqualTo(Optional.empty());
   }
@@ -383,8 +393,9 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   public void testGetRecentHighestRiskScore_getLatest() {
     verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
+    CVConfig cvConfig = createCVConfig();
     String verificationTaskId =
-        verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
+        verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
     DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis = createDeploymentTimeSeriesAnalysis(verificationTaskId);
     List<DeploymentTimeSeriesAnalysisDTO.TransactionMetricHostData> transactionSummaries = new ArrayList();
     for (int i = 0; i < 25; i++) {
@@ -404,10 +415,12 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   public void testGetRecentHighestRiskScore_getRecentHighest() {
     verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
+    CVConfig cvConfig = createCVConfig();
     String verificationTaskId1 =
-        verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
+        verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
+    cvConfig = createCVConfig();
     String verificationTaskId2 =
-        verificationTaskService.create(accountId, createCVConfig().getUuid(), verificationJobInstanceId);
+        verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
 
     DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis1 =
         createDeploymentTimeSeriesAnalysis(verificationTaskId1);
