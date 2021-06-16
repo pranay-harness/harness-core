@@ -1,5 +1,7 @@
 package io.harness.delegate.task.aws;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.AwsClient;
 import io.harness.aws.AwsConfig;
 import io.harness.connector.ConnectivityStatus;
@@ -28,10 +30,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class AwsDelegateTask extends AbstractDelegateRunnableTask {
   @Inject private AwsClient awsClient;
   @Inject private AwsNgConfigMapper awsNgConfigMapper;
   @Inject private NGErrorHelper ngErrorHelper;
+  @Inject private AwsS3DelegateTaskHelper awsS3DelegateTaskHelper;
 
   public AwsDelegateTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -57,6 +61,8 @@ public class AwsDelegateTask extends AbstractDelegateRunnableTask {
       // TODO: we can move this to factory method using guice mapbinder later
       case VALIDATE:
         return handleValidateTask(awsTaskParams, encryptionDetails);
+      case LIST_S3_BUCKETS:
+        return awsS3DelegateTaskHelper.getS3Buckets(awsTaskParams);
       default:
         throw new InvalidRequestException("Task type not identified");
     }
