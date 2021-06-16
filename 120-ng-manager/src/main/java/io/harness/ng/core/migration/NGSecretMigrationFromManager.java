@@ -3,6 +3,7 @@ package io.harness.ng.core.migration;
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 import static io.harness.secretmanagerclient.SecretType.SSHKey;
 import static io.harness.secretmanagerclient.SecretType.SecretFile;
@@ -12,6 +13,7 @@ import static io.harness.security.encryption.EncryptionType.KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.encoding.EncodingUtils;
 import io.harness.migration.NGMigration;
 import io.harness.ng.core.api.NGEncryptedDataService;
 import io.harness.ng.core.dao.NGEncryptedDataDao;
@@ -130,10 +132,16 @@ public class NGSecretMigrationFromManager implements NGMigration {
           encryptedDataDao.save(encryptedData);
         } else {
           if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE) {
-            encryptedDataService.createSecretFile(secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData),
-                isEmpty(encryptedData.getEncryptedValue())
-                    ? null
-                    : new ByteArrayInputStream(String.valueOf(encryptedData.getEncryptedValue()).getBytes()));
+            InputStream inputStream = null;
+            if (isNotEmpty(encryptedData.getEncryptedValue())) {
+              if (encryptedData.isBase64Encoded()) {
+                inputStream = new ByteArrayInputStream(EncodingUtils.decodeBase64(encryptedData.getEncryptedValue()));
+              } else {
+                inputStream = new ByteArrayInputStream(encryptedData.getEncryptedValue());
+              }
+            }
+            encryptedDataService.createSecretFile(
+                secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData), inputStream);
           } else {
             encryptedDataService.createSecretText(secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData));
           }
