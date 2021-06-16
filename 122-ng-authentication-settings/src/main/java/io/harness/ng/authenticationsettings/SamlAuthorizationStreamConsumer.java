@@ -1,5 +1,6 @@
 package io.harness.ng.authenticationsettings;
 
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eventsframework.EventsFrameworkConstants.SAML_AUTHORIZATION_ASSERTION;
 
@@ -7,6 +8,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.samlauthorization.samlauthorizationdata.SamlAuthorizationDTO;
+import io.harness.security.SecurityContextBuilder;
+import io.harness.security.dto.ServicePrincipal;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -31,6 +34,7 @@ public class SamlAuthorizationStreamConsumer implements Runnable {
   @Override
   public void run() {
     log.info("Started the consumer for saml assertion stream");
+    SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
     try {
       while (!Thread.currentThread().isInterrupted()) {
         pollAndProcessMessages();
@@ -38,6 +42,7 @@ public class SamlAuthorizationStreamConsumer implements Runnable {
     } catch (Exception ex) {
       log.error("saml assertion stream consumer unexpectedly stopped", ex);
     }
+    SecurityContextBuilder.unsetCompleteContext();
   }
 
   private void pollAndProcessMessages() {
