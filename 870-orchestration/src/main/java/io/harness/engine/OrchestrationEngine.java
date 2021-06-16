@@ -12,9 +12,6 @@ import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delay.DelayEventHelper;
-import io.harness.engine.advise.AdviseHandlerFactory;
-import io.harness.engine.advise.AdviserResponseHandler;
-import io.harness.engine.advise.publisher.NodeAdviseEventPublisher;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executables.InvocationHelper;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -24,7 +21,9 @@ import io.harness.engine.facilitation.RunPreFacilitationChecker;
 import io.harness.engine.facilitation.SkipPreFacilitationChecker;
 import io.harness.engine.facilitation.facilitator.publisher.FacilitateEventPublisher;
 import io.harness.engine.observers.OrchestrationEndObserver;
-import io.harness.engine.pms.EngineAdviseCallback;
+import io.harness.engine.pms.advise.AdviseHandlerFactory;
+import io.harness.engine.pms.advise.AdviserResponseHandler;
+import io.harness.engine.pms.advise.NodeAdviseHelper;
 import io.harness.engine.pms.start.NodeStartHelper;
 import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.engine.utils.TransactionUtils;
@@ -105,7 +104,7 @@ public class OrchestrationEngine {
   @Inject private FacilitationHelper facilitationHelper;
   @Inject private FacilitateEventPublisher facilitateEventPublisher;
   @Inject private NodeStartHelper startHelper;
-  @Inject private NodeAdviseEventPublisher nodeAdviseEventPublisher;
+  @Inject private NodeAdviseHelper adviseHelper;
 
   @Getter private final Subject<OrchestrationEndObserver> orchestrationEndSubject = new Subject<>();
 
@@ -238,20 +237,11 @@ public class OrchestrationEngine {
       endTransition(nodeExecution);
       return;
     }
-    queueAdvisingEvent(updatedNodeExecution, nodeExecution.getStatus());
+    adviseHelper.queueAdvisingEvent(updatedNodeExecution, nodeExecution.getStatus());
   }
 
   public void concludeNodeExecution(NodeExecution nodeExecution, Status status) {
     concludeNodeExecution(nodeExecution, status, EnumSet.noneOf(Status.class));
-  }
-
-  public void queueAdvisingEvent(NodeExecution nodeExecution, Status fromStatus) {
-    transactionUtils.performTransaction(() -> {
-      String notifyId = nodeAdviseEventPublisher.publishEvent(nodeExecution.getUuid(), fromStatus);
-      waitNotifyEngine.waitForAllOn(
-          publisherName, EngineAdviseCallback.builder().nodeExecutionId(nodeExecution.getUuid()).build(), notifyId);
-      return null;
-    });
   }
 
   @VisibleForTesting
@@ -266,7 +256,7 @@ public class OrchestrationEngine {
     if (updatedNodeExecution == null) {
       return;
     }
-    queueAdvisingEvent(updatedNodeExecution, nodeExecution.getStatus());
+    adviseHelper.queueAdvisingEvent(updatedNodeExecution, nodeExecution.getStatus());
   }
 
   public void endTransition(NodeExecution nodeExecution) {

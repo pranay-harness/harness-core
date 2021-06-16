@@ -1,4 +1,4 @@
-package io.harness.engine.advise.publisher;
+package io.harness.engine.pms.advise.publisher;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
