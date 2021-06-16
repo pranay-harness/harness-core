@@ -39,6 +39,7 @@ func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLog
 			sr.Use(AuthMiddleware(config))
 		}
 
+		sr.Get("/info", HandleReportsInfo(db, log))
 		sr.Post("/write", HandleWrite(db, log))
 		sr.Get("/summary", HandleSummary(db, log))
 		sr.Get("/test_cases", HandleTestCases(db, log))
@@ -53,6 +54,7 @@ func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLog
 			sr.Use(AuthMiddleware(config))
 		}
 
+		sr.Get("/info", HandleIntelligenceInfo(db, log))
 		sr.Post("/select", HandleSelect(tidb, db, log))
 		sr.Get("/overview", HandleOverview(db, log))
 		sr.Post("/uploadcg", HandleUploadCg(tidb, db, log))

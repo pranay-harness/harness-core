@@ -9,5 +9,6 @@ public class LastRepositoryInfo {
   private long StartTime;
   private long EndTime;
   private String status;
+  private AuthorInfo author;
   private String commit;
 }

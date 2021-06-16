@@ -26,14 +26,18 @@ public class SignupModule extends AbstractModule {
   private final String managerServiceSecret;
   private final String clientId;
   private final SignupNotificationConfiguration notificationConfiguration;
+  private final String nextGenManagerUri;
+  private final String nextGenAuthUri;
   private static final int NUMBER_OF_NOTIFICATION_THREADS = 10;
 
   public SignupModule(ServiceHttpClientConfig serviceHttpClientConfig, String managerServiceSecret, String clientId,
-      SignupNotificationConfiguration notificationConfiguration) {
+      SignupNotificationConfiguration notificationConfiguration, String nextGenManagerUri, String nextGenAuthUri) {
     this.serviceHttpClientConfig = serviceHttpClientConfig;
     this.managerServiceSecret = managerServiceSecret;
     this.clientId = clientId;
     this.notificationConfiguration = notificationConfiguration;
+    this.nextGenManagerUri = nextGenManagerUri;
+    this.nextGenAuthUri = nextGenAuthUri;
   }
 
   @Override
@@ -58,5 +62,17 @@ public class SignupModule extends AbstractModule {
   @Singleton
   public SignupNotificationConfiguration notificationConfiguration() {
     return notificationConfiguration;
+  }
+
+  @Provides
+  @Named("nextGenManagerUri")
+  public String getNextGenManagerUri() {
+    return nextGenManagerUri;
+  }
+
+  @Provides
+  @Named("nextGenAuthUri")
+  public String getNextGenAuthUri() {
+    return nextGenAuthUri;
   }
 }

@@ -8,7 +8,6 @@ import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PIPELINE_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
-import io.harness.account.AccountClientModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.audit.client.remote.AuditClientModule;
@@ -175,6 +174,7 @@ public class PipelineServiceModule extends AbstractModule {
             .accountClientId(PIPELINE_SERVICE.getServiceId())
             .accountServiceHttpClientConfig(configuration.getManagerClientConfig())
             .accountServiceSecret(configuration.getManagerServiceSecret())
+            .useFeatureFlagService(true)
             .build()));
     install(OrchestrationStepsModule.getInstance(configuration.getOrchestrationStepConfig()));
     install(OrchestrationVisualizationModule.getInstance());
@@ -204,8 +204,6 @@ public class PipelineServiceModule extends AbstractModule {
         PIPELINE_SERVICE.getServiceId()));
     install(new UserGroupClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
-    install(new AccountClientModule(configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(),
-        PIPELINE_SERVICE.getServiceId()));
     install(new DelegateSelectionLogHttpClientModule(configuration.getManagerClientConfig(),
         configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));

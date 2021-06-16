@@ -2,8 +2,7 @@ package handler
 
 import (
 	"io"
-	"net/http"
-	"net/http/pprof"
+	"net/http"	
 
 	"github.com/wings-software/portal/product/log-service/config"
 	"github.com/wings-software/portal/product/log-service/logger"
@@ -33,32 +32,32 @@ func Handler(stream stream.Stream, store store.Store, config config.Config) http
 		return sr
 	}()) // Validates against global token
 
-	// Log service info endpoints
-	// Only accessible from Harness side (admin privileges)
-	// Format: /info
-	r.Mount("/info", func() http.Handler {
-		sr := chi.NewRouter()
-		// Validate the incoming request with a global secret and return info only if the
-		// match is successful. This endpoint should be only accessible from the Harness side.
-		if !config.Secrets.DisableAuth {
-			sr.Use(TokenGenerationMiddleware(config, false))
-		}
-
-		sr.Get("/stream", HandleInfo(stream))
-
-		// Debug endpoints
-		sr.HandleFunc("/debug/pprof/", pprof.Index)
-		sr.HandleFunc("/debug/pprof/heap", pprof.Index)
-		sr.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-		sr.HandleFunc("/debug/pprof/profile", pprof.Profile)
-		sr.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-		sr.HandleFunc("/debug/pprof/trace", pprof.Trace)
-		sr.HandleFunc("/debug/pprof/block", pprof.Index)
-		sr.HandleFunc("/debug/pprof/goroutine", pprof.Index)
-		sr.HandleFunc("/debug/pprof/threadcreate", pprof.Index)
-
-		return sr
-	}())
+	//// Log service info endpoints
+	//// Only accessible from Harness side (admin privileges)
+	//// Format: /info
+	//r.Mount("/info", func() http.Handler {
+	//	sr := chi.NewRouter()
+	//	// Validate the incoming request with a global secret and return info only if the
+	//	// match is successful. This endpoint should be only accessible from the Harness side.
+	//	if !config.Secrets.DisableAuth {
+	//		sr.Use(TokenGenerationMiddleware(config, false))
+	//	}
+	//
+	//	sr.Get("/stream", HandleInfo(stream))
+	//
+	//	// Debug endpoints
+	//	sr.HandleFunc("/debug/pprof/", pprof.Index)
+	//	sr.HandleFunc("/debug/pprof/heap", pprof.Index)
+	//	sr.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	//	sr.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	//	sr.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	//	sr.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	//	sr.HandleFunc("/debug/pprof/block", pprof.Index)
+	//	sr.HandleFunc("/debug/pprof/goroutine", pprof.Index)
+	//	sr.HandleFunc("/debug/pprof/threadcreate", pprof.Index)
+	//
+	//	return sr
+	//}())
 
 	// Log stream endpoints
 	// Format: /token?accountID=&key=

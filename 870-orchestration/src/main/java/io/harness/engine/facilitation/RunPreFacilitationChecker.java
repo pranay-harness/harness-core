@@ -65,7 +65,7 @@ public class RunPreFacilitationChecker extends ExpressionEvalPreFacilitationChec
         }
         return ExecutionCheck.builder().proceed(true).reason("When Condition Evaluated to true").build();
       } catch (Exception ex) {
-        return handleExpressionEvaluationError(nodeExecution.getUuid(), ex);
+        return handleExpressionEvaluationError(ex, whenCondition, ambiance);
       }
     }
     return ExecutionCheck.builder().proceed(true).reason("No when Condition Configured").build();

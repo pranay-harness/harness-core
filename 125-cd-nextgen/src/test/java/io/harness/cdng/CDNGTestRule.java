@@ -153,6 +153,13 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
       public Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes() {
         return Mockito.mock(Map.class);
       }
+
+      @Provides
+      @Named("disableDeserialization")
+      @Singleton
+      public boolean getSerializationForDelegate() {
+        return false;
+      }
     });
     modules.add(new AbstractModule() {
       @Override

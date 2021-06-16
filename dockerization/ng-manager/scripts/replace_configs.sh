@@ -305,6 +305,7 @@ replace_key_value resourceGroupClientConfig.secret "$NEXT_GEN_MANAGER_SECRET"
 replace_key_value baseUrls.currentGenUiUrl "$CURRENT_GEN_UI_URL"
 replace_key_value baseUrls.nextGenUiUrl "$NEXT_GEN_UI_URL"
 replace_key_value baseUrls.nextGenAuthUiUrl "$NG_AUTH_UI_URL"
+replace_key_value baseUrls.webhookBaseUrl "$WEBHOOK_BASE_URL"
 
 replace_key_value ngAuthUIEnabled "$HARNESS_ENABLE_NG_AUTH_UI_PLACEHOLDER"
 

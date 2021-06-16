@@ -23,6 +23,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -48,6 +49,10 @@ public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
 
   @Override
   public void consumeUpdateEvent(String id, RoleDBO updatedRole) {
+    if (updatedRole.getPermissions() == null) {
+      return;
+    }
+
     Optional<RoleDBO> role = roleRepository.findById(id);
     if (!role.isPresent()) {
       return;
@@ -77,8 +82,10 @@ public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
     } catch (ExecutionException ex) {
       throw new GeneralException("", ex.getCause());
     } catch (InterruptedException ex) {
-      // Should never happen though
       Thread.currentThread().interrupt();
+      throw new GeneralException("", ex);
+    } finally {
+      executorService.shutdown();
     }
 
     log.info("Number of ACLs created: {}", numberOfACLsCreated);
@@ -111,8 +118,11 @@ public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
     public Result call() {
       Set<String> existingPermissions =
           Sets.newHashSet(aclRepository.getDistinctPermissionsInACLsForRoleAssignment(roleAssignmentDBO.getId()));
-      Set<String> permissionsAddedToRole = Sets.difference(updatedRole.getPermissions(), existingPermissions);
-      Set<String> permissionsRemovedFromRole = Sets.difference(existingPermissions, updatedRole.getPermissions());
+      Set<String> permissionsAddedToRole =
+          Sets.difference(updatedRole.getPermissions() == null ? Collections.emptySet() : updatedRole.getPermissions(),
+              existingPermissions);
+      Set<String> permissionsRemovedFromRole = Sets.difference(existingPermissions,
+          updatedRole.getPermissions() == null ? Collections.emptySet() : updatedRole.getPermissions());
 
       long numberOfACLsDeleted =
           aclRepository.deleteByRoleAssignmentIdAndPermissions(roleAssignmentDBO.getId(), permissionsRemovedFromRole);

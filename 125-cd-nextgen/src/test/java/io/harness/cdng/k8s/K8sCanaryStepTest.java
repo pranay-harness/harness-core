@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,12 +17,14 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.NGInstanceUnitType;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.task.k8s.K8sCanaryDeployRequest;
 import io.harness.delegate.task.k8s.K8sCanaryDeployResponse;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.steps.common.StepElementParameters;
@@ -181,8 +184,8 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
             .build();
     when(k8sStepHelper.getReleaseName(any())).thenReturn("releaseName");
 
-    StepResponse response =
-        k8sCanaryStep.finalizeExecution(ambiance, stepElementParameters, null, () -> k8sDeployResponse);
+    StepResponse response = k8sCanaryStep.finalizeExecution(
+        ambiance, stepElementParameters, K8sExecutionPassThroughData.builder().build(), () -> k8sDeployResponse);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
     assertThat(response.getStepOutcomes()).hasSize(1);
 
@@ -197,6 +200,25 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
             eq(StepOutcomeGroup.STAGE.name()));
     assertThat(argumentCaptor.getValue().getReleaseName()).isEqualTo("releaseName");
     assertThat(argumentCaptor.getValue().getCanaryWorkload()).isEqualTo("canaryWorkload");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testFinalizeExecutionException() {
+    final StepElementParameters stepElementParameters = StepElementParameters.builder().build();
+    final Exception thrownException = new GeneralException("Something went wrong");
+    final K8sExecutionPassThroughData executionPassThroughData = K8sExecutionPassThroughData.builder().build();
+    final StepResponse stepResponse = StepResponse.builder().status(Status.FAILED).build();
+
+    doReturn(stepResponse).when(k8sStepHelper).handleTaskException(ambiance, executionPassThroughData, thrownException);
+
+    StepResponse response = k8sCanaryStep.finalizeExecution(
+        ambiance, stepElementParameters, executionPassThroughData, () -> { throw thrownException; });
+
+    assertThat(response).isEqualTo(stepResponse);
+
+    verify(k8sStepHelper, times(1)).handleTaskException(ambiance, executionPassThroughData, thrownException);
   }
 
   @Override

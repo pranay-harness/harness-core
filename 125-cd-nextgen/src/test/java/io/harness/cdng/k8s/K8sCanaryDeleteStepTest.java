@@ -21,6 +21,7 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.task.k8s.K8sDeleteRequest;
@@ -85,10 +86,13 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
                                                   .build();
     final TaskChainResponse response =
         TaskChainResponse.builder().taskRequest(TaskRequest.newBuilder().build()).build();
+    final K8sExecutionPassThroughData expectedPassThroughData =
+        K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build();
 
     doReturn(response)
         .when(k8sStepHelper)
-        .queueK8sTask(eq(stepElementParameters), any(K8sDeleteRequest.class), eq(ambiance), eq(infrastructureOutcome));
+        .queueK8sTask(
+            eq(stepElementParameters), any(K8sDeleteRequest.class), eq(ambiance), eq(expectedPassThroughData));
     doReturn(OptionalSweepingOutput.builder().found(true).output(k8sCanaryOutcome).build())
         .when(executionSweepingOutputService)
         .resolveOptional(
@@ -97,7 +101,7 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
     canaryDeleteStep.obtainTask(ambiance, stepElementParameters, stepInputPackage);
     ArgumentCaptor<K8sDeleteRequest> requestCaptor = ArgumentCaptor.forClass(K8sDeleteRequest.class);
     verify(k8sStepHelper)
-        .queueK8sTask(eq(stepElementParameters), requestCaptor.capture(), eq(ambiance), eq(infrastructureOutcome));
+        .queueK8sTask(eq(stepElementParameters), requestCaptor.capture(), eq(ambiance), eq(expectedPassThroughData));
 
     K8sDeleteRequest k8sDeleteRequest = requestCaptor.getValue();
     assertThat(k8sDeleteRequest.getResources()).isEqualTo(canaryWorkload);

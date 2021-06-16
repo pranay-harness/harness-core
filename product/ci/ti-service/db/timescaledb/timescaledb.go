@@ -128,12 +128,12 @@ func (tdb *TimeScaleDb) Write(ctx context.Context, accountId, orgId, projectId, 
 
 // Summary provides test case summary by querying the DB
 func (tdb *TimeScaleDb) Summary(ctx context.Context, accountId, orgId, projectId, pipelineId,
-	buildId, report string) (types.SummaryResponse, error) {
+	buildId, stepId, stageId, report string) (types.SummaryResponse, error) {
 	query := fmt.Sprintf(`
 		SELECT duration_ms, result, name FROM %s WHERE account_id = $1
-		AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6;`, tdb.EvalTable)
+		AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND step_id = $6 AND stage_id = $7 AND report = $8;`, tdb.EvalTable)
 
-	rows, err := tdb.Conn.QueryContext(ctx, query, accountId, orgId, projectId, pipelineId, buildId, report)
+	rows, err := tdb.Conn.QueryContext(ctx, query, accountId, orgId, projectId, pipelineId, buildId, stepId, stageId, report)
 	if err != nil {
 		tdb.Log.Errorw("could not query database for test summary", zap.Error(err))
 		return types.SummaryResponse{}, err
@@ -153,7 +153,6 @@ func (tdb *TimeScaleDb) Summary(ctx context.Context, accountId, orgId, projectId
 		}
 		total++
 		timeTakenMs = timeTakenMs + zdur.ValueOrZero()
-
 		tests = append(tests, types.TestSummary{Name: testName, Status: types.Status(status)})
 	}
 	if rows.Err() != nil {
@@ -162,9 +161,83 @@ func (tdb *TimeScaleDb) Summary(ctx context.Context, accountId, orgId, projectId
 	return types.SummaryResponse{Tests: tests, TotalTests: total, TimeMs: timeTakenMs}, nil
 }
 
+func (tdb *TimeScaleDb) GetReportsInfo(ctx context.Context, accountId, orgId, projectId, pipelineId,
+	buildId string) ([]types.StepInfo, error) {
+	query := fmt.Sprintf(`
+		SELECT DISTINCT step_id, stage_id FROM %s WHERE account_id = $1
+		AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5`, tdb.EvalTable)
+
+	res := []types.StepInfo{}
+	m := make(map[types.StepInfo]struct{})
+
+	rows, err := tdb.Conn.QueryContext(ctx, query, accountId, orgId, projectId, pipelineId, buildId)
+	defer rows.Close()
+	if err != nil {
+		tdb.Log.Errorw("could not query database for test summary", zap.Error(err))
+		return res, err
+	}
+
+	for rows.Next() {
+		var stepId zero.String
+		var stageId zero.String
+		err = rows.Scan(&stepId, &stageId)
+		if err != nil {
+			// Log error and return
+			tdb.Log.Errorw("could not read step/stage response from DB", zap.Error(err))
+			return res, err
+		}
+		info := types.StepInfo{Stage: stageId.ValueOrZero(), Step: stepId.ValueOrZero()}
+		if _, ok := m[info]; !ok {
+			res = append(res, info)
+			m[info] = struct{}{}
+		}
+	}
+	if rows.Err() != nil {
+		return res, rows.Err()
+	}
+	return res, nil
+}
+
+func (tdb *TimeScaleDb) GetIntelligenceInfo(ctx context.Context, accountId, orgId, projectId, pipelineId,
+	buildId string) ([]types.StepInfo, error) {
+	query := fmt.Sprintf(`
+		SELECT DISTINCT step_id, stage_id FROM %s WHERE account_id = $1
+		AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5`, tdb.SelectionTable)
+
+	res := []types.StepInfo{}
+	m := make(map[types.StepInfo]struct{})
+
+	rows, err := tdb.Conn.QueryContext(ctx, query, accountId, orgId, projectId, pipelineId, buildId)
+	defer rows.Close()
+	if err != nil {
+		tdb.Log.Errorw("could not query database for test summary", zap.Error(err))
+		return res, err
+	}
+
+	for rows.Next() {
+		var stepId zero.String
+		var stageId zero.String
+		err = rows.Scan(&stepId, &stageId)
+		if err != nil {
+			// Log error and return
+			tdb.Log.Errorw("could not read step/stage response from DB", zap.Error(err))
+			return res, err
+		}
+		info := types.StepInfo{Stage: stageId.ValueOrZero(), Step: stepId.ValueOrZero()}
+		if _, ok := m[info]; !ok {
+			res = append(res, info)
+			m[info] = struct{}{}
+		}
+	}
+	if rows.Err() != nil {
+		return res, rows.Err()
+	}
+	return res, nil
+}
+
 // GetTestCases returns test cases after querying the DB
 func (tdb *TimeScaleDb) GetTestCases(
-	ctx context.Context, accountID, orgId, projectId, pipelineId, buildId,
+	ctx context.Context, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId,
 	report, suiteName, sortAttribute, status, order, limit, offset string) (types.TestCases, error) {
 	statusFilter := "'failed', 'error', 'passed', 'skipped'"
 	defaultSortAttribute := "name"
@@ -212,10 +285,11 @@ func (tdb *TimeScaleDb) GetTestCases(
 		SELECT name, suite_name, class_name, duration_ms, result, message,
 		description, type, stdout, stderr, COUNT(*) OVER() AS full_count
 		FROM %s
-		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6 AND suite_name = $7 AND result IN (%s)
+		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND step_id = $6 AND stage_id = $7 AND report = $8 AND suite_name = $9 AND result IN (%s)
 		ORDER BY %s %s, %s %s
-		LIMIT $8 OFFSET $9;`, tdb.EvalTable, statusFilter, sortAttribute, order, defaultSortAttribute, defaultOrder)
-	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId, report, suiteName, limit, offset)
+		LIMIT $10 OFFSET $11;`, tdb.EvalTable, statusFilter, sortAttribute, order, defaultSortAttribute, defaultOrder)
+
+	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId, report, suiteName, limit, offset)
 	if err != nil {
 		tdb.Log.Errorw("could not query database for test cases", zap.Error(err))
 		return types.TestCases{}, err
@@ -261,7 +335,7 @@ func (tdb *TimeScaleDb) GetTestCases(
 
 // GetTestSuites returns test suites after querying the DB
 func (tdb *TimeScaleDb) GetTestSuites(
-	ctx context.Context, accountID, orgId, projectId, pipelineId, buildId,
+	ctx context.Context, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId,
 	report, sortAttribute, status, order, limit, offset string) (types.TestSuites, error) {
 	defaultSortAttribute := "suite_name"
 	defaultOrder := asc
@@ -307,11 +381,11 @@ func (tdb *TimeScaleDb) GetTestSuites(
 		SUM(CASE WHEN result = 'failed' OR result = 'error' THEN 1 ELSE 0 END) * 100 / COUNT(*) AS fail_pct,
 		COUNT(*) OVER() AS full_count
 		FROM %s
-		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6 AND result IN (%s)
+		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND step_id = $6 AND stage_id = $7 AND report = $8 AND result IN (%s)
 		GROUP BY suite_name
 		ORDER BY %s %s, %s %s
-		LIMIT $7 OFFSET $8;`, tdb.EvalTable, statusFilter, sortAttribute, order, defaultSortAttribute, defaultOrder)
-	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId, report, limit, offset)
+		LIMIT $9 OFFSET $10;`, tdb.EvalTable, statusFilter, sortAttribute, order, defaultSortAttribute, defaultOrder)
+	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId, report, limit, offset)
 	if err != nil {
 		tdb.Log.Errorw("could not query database for test suites", "error_msg", err)
 		return types.TestSuites{}, err
@@ -359,10 +433,10 @@ func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, accountID, orgId
 					UPDATE %s
 					SET test_count = test_count + $1, test_selected = test_selected + $2,
 					source_code_test = source_code_test + $3, new_test = new_test + $4, updated_test = updated_test + $5
-					WHERE account_id = $6 AND org_id = $7 AND project_id = $8 AND pipeline_id = $9 AND build_id = $10
+					WHERE account_id = $6 AND org_id = $7 AND project_id = $8 AND pipeline_id = $9 AND build_id = $10 AND step_id = $11 AND stage_id = $12
 					`, tdb.SelectionTable)
 		valueArgs = append(valueArgs, s.TotalTests, s.SelectedTests, s.SrcCodeTests, s.NewTests, s.UpdatedTests,
-			accountID, orgId, projectId, pipelineId, buildId)
+			accountID, orgId, projectId, pipelineId, buildId, stepId, stageId)
 	} else {
 		stmt = fmt.Sprintf(
 			`
@@ -384,14 +458,14 @@ func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, accountID, orgId
 
 // GetSelectionOverview provides high level stats for test selection
 func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, accountID, orgId, projectId, pipelineId,
-	buildId string) (types.SelectionOverview, error) {
+	buildId, stepId, stageId string) (types.SelectionOverview, error) {
 	var ztotal, zsrc, znew, zupd zero.Int
 	query := fmt.Sprintf(
 		`
 		SELECT test_count, source_code_test, new_test, updated_test
 		FROM %s
-		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5`, tdb.SelectionTable)
-	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId)
+		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND step_id = $6 AND stage_id = $7`, tdb.SelectionTable)
+	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId)
 	if err != nil {
 		tdb.Log.Errorw("could not query database for selection overview", zap.Error(err))
 		return types.SelectionOverview{}, err

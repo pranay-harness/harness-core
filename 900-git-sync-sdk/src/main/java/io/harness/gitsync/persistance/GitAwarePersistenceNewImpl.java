@@ -138,7 +138,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
     final GitSyncBranchContext gitSyncBranchContext =
         GlobalContextManager.get(GitSyncBranchContext.NG_GIT_SYNC_CONTEXT);
     if (gitSyncBranchContext == null) {
-      log.error("Git branch context set as null even git sync is enabled");
+      log.warn("Git branch context set as null even git sync is enabled");
       // Setting to default branch in case it is not set.
       return GitEntityInfo.builder().yamlGitConfigId(DEFAULT).branch(DEFAULT).build();
     }

@@ -2,6 +2,7 @@ package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_DATA_LENGTH;
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_WINDOW_SIZE;
+import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
@@ -729,7 +730,8 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
       verificationJobInstance.setUuid(((TestVerificationJob) verificationJob).getBaselineVerificationJobInstanceId());
     }
     verificationJobInstanceService.create(verificationJobInstance);
-    verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid());
+    verificationTaskId =
+        verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
     return verificationJobInstance;
   }
   private void fillCommon(LearningEngineTask learningEngineTask, LearningEngineTaskType analysisType) {

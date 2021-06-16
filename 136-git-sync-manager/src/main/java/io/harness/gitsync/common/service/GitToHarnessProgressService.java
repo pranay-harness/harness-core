@@ -33,9 +33,11 @@ public interface GitToHarnessProgressService {
 
   boolean isProgressEventAlreadyProcessedOrInProcess(String repoURL, String commitId, YamlChangeSetEventType eventType);
 
-  GitToHarnessProgressDTO initProgress(
-      YamlChangeSetDTO yamlChangeSetDTO, YamlChangeSetEventType eventType, GitToHarnessProcessingStepType stepType);
+  GitToHarnessProgressDTO initProgress(YamlChangeSetDTO yamlChangeSetDTO, YamlChangeSetEventType eventType,
+      GitToHarnessProcessingStepType stepType, String commitId);
 
   GitToHarnessProgressDTO updateProgressStatus(
       String gitToHarnessProgressRecordId, GitToHarnessProgressStatus gitToHarnessProgressStatus);
+
+  boolean isBranchSyncAlreadyInProgressOrSynced(String repoURL, String branch);
 }

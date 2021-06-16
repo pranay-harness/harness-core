@@ -10,6 +10,7 @@ import static io.harness.gitsync.common.beans.BranchSyncStatus.SYNCED;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConfig;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.HookEventType;
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
@@ -29,6 +30,9 @@ import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.remote.YamlGitConfigMapper;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
+import io.harness.ng.webhook.UpsertWebhookRequestDTO;
+import io.harness.ng.webhook.UpsertWebhookResponseDTO;
+import io.harness.ng.webhook.services.api.WebhookEventService;
 import io.harness.repositories.repositories.yamlGitConfig.YamlGitConfigRepository;
 import io.harness.utils.IdentifierRefHelper;
 
@@ -60,19 +64,21 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private final ExecutorService executorService;
   private final GitBranchService gitBranchService;
   private final GitSyncConnectorHelper gitSyncConnectorHelper;
+  private final WebhookEventService webhookEventService;
 
   @Inject
   public YamlGitConfigServiceImpl(YamlGitConfigRepository yamlGitConfigRepository,
       @Named("connectorDecoratorService") ConnectorService connectorService,
       @Named(EventsFrameworkConstants.GIT_CONFIG_STREAM) Producer gitSyncConfigEventProducer,
-      ExecutorService executorService, GitBranchService gitBranchService,
-      GitSyncConnectorHelper gitSyncConnectorHelper) {
+      ExecutorService executorService, GitBranchService gitBranchService, GitSyncConnectorHelper gitSyncConnectorHelper,
+      WebhookEventService webhookEventService) {
     this.yamlGitConfigRepository = yamlGitConfigRepository;
     this.connectorService = connectorService;
     this.gitSyncConfigEventProducer = gitSyncConfigEventProducer;
     this.executorService = executorService;
     this.gitBranchService = gitBranchService;
     this.gitSyncConnectorHelper = gitSyncConnectorHelper;
+    this.webhookEventService = webhookEventService;
   }
 
   @Override
@@ -214,6 +220,11 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     validateTheGitConfigInput(gitSyncConfigDTO);
     YamlGitConfig yamlGitConfigToBeSaved = toYamlGitConfig(gitSyncConfigDTO, accountId);
     yamlGitConfigToBeSaved.setWebhookToken(CryptoUtils.secureRandAlphaNumString(40));
+    UpsertWebhookResponseDTO upsertWebhookResponseDTO = null;
+    if (isNewRepo(gitSyncConfigDTO.getRepo())) {
+      upsertWebhookResponseDTO = registerWebhook(gitSyncConfigDTO);
+      log.info("Response of Upsert Webhook {}", upsertWebhookResponseDTO);
+    }
     YamlGitConfig savedYamlGitConfig = null;
     try {
       savedYamlGitConfig = yamlGitConfigRepository.save(yamlGitConfigToBeSaved);
@@ -232,6 +243,26 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     });
 
     return YamlGitConfigMapper.toYamlGitConfigDTO(savedYamlGitConfig);
+  }
+
+  private UpsertWebhookResponseDTO registerWebhook(YamlGitConfigDTO gitSyncConfigDTO) {
+    UpsertWebhookRequestDTO upsertWebhookRequest = getUpsertWebhookRequest(gitSyncConfigDTO);
+    return webhookEventService.upsertWebhook(upsertWebhookRequest);
+  }
+
+  private UpsertWebhookRequestDTO getUpsertWebhookRequest(YamlGitConfigDTO gitSyncConfigDTO) {
+    return UpsertWebhookRequestDTO.builder()
+        .accountIdentifier(gitSyncConfigDTO.getAccountIdentifier())
+        .orgIdentifier(gitSyncConfigDTO.getOrganizationIdentifier())
+        .projectIdentifier(gitSyncConfigDTO.getProjectIdentifier())
+        .connectorIdentifierRef(gitSyncConfigDTO.getGitConnectorRef())
+        .hookEventType(HookEventType.TRIGGER_EVENTS)
+        .repoURL(gitSyncConfigDTO.getRepo())
+        .build();
+  }
+
+  private boolean isNewRepo(String repo) {
+    return getByRepo(repo).isEmpty();
   }
 
   private void sendEventForConfigChange(

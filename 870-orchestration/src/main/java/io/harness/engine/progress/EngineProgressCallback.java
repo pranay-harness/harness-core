@@ -3,7 +3,6 @@ package io.harness.engine.progress;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
-import io.harness.engine.NodeExecutionEventQueuePublisher;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.progress.publisher.ProgressEventPublisher;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -25,7 +24,6 @@ import org.springframework.data.annotation.Transient;
 public class EngineProgressCallback implements ProgressCallback {
   @Inject @Transient NodeExecutionService nodeExecutionService;
   @Inject @Transient KryoSerializer kryoSerializer;
-  @Inject @Transient NodeExecutionEventQueuePublisher nodeExecutionEventQueuePublisher;
   @Inject @Transient ProgressEventPublisher progressEventPublisher;
 
   String nodeExecutionId;

@@ -200,7 +200,7 @@ def main(event, context):
 
     if not if_tbl_exists(client, awsEbsInventoryMetricsTableRef):
         print_("%s table does not exists, creating table..." % awsEbsInventoryMetricsTableRef)
-        createTable(client, awsEbsInventoryMetricsTableName)
+        createTable(client, awsEbsInventoryMetricsTableRef)
 
     data_map, added_at = get_ebs_metrics_data(jsonData)
     print_("Total volumes for which Metrics data was fetched: %s" % len(data_map))

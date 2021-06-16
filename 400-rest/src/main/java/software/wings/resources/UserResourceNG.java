@@ -33,7 +33,6 @@ import software.wings.service.intfc.UserService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -229,21 +228,11 @@ public class UserResourceNG {
         twoFactorAuthenticationManager.disableTwoFactorAuthentication(userService.getUserByEmail(emailId)))));
   }
 
-  @POST
-  @Path("/{urlType}/url")
-  public RestResponse<Optional<String>> generateSignupNotificationUrl(
-      @PathParam("urlType") String urlType, @Body UserInfo userInfo) {
-    String url = null;
-    try {
-      if (VERIFY_URL.equals(urlType)) {
-        url = userService.generateVerificationUrl(userInfo.getUuid(), userInfo.getDefaultAccountId());
-      } else if (CONFIRM_URL.equals(urlType)) {
-        url = userService.generateLoginUrl(userInfo.getDefaultAccountId());
-      }
-    } catch (URISyntaxException e) {
-      throw new InvalidRequestException(String.format("URL type [%s] failed to be generated", urlType), e);
-    }
-    return new RestResponse<>(Optional.ofNullable(url));
+  @PUT
+  @Path("/{userId}/verified")
+  public RestResponse<Boolean> verifyToken(@PathParam("userId") String userId) {
+    userService.setUserEmailVerified(userId);
+    return new RestResponse<>(true);
   }
 
   private List<UserInfo> convertUserToNgUser(List<User> userList, boolean requireAdminStatus) {

@@ -3,6 +3,7 @@ package io.harness.cvng.core.services.impl;
 import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
@@ -139,6 +140,7 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
                                                     .connectorIdentifier(connectorIdentifier)
                                                     .accountId(accountId)
                                                     .orgIdentifier(orgIdentifier)
+                                                    .tracingId(generateUuid())
                                                     .projectIdentifier(projectIdentifier)
                                                     .build();
 
@@ -170,6 +172,7 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
                                                     .dataCollectionRequest(request)
                                                     .connectorIdentifier(connectorIdentifier)
                                                     .accountId(accountId)
+                                                    .tracingId(generateUuid())
                                                     .orgIdentifier(orgIdentifier)
                                                     .projectIdentifier(projectIdentifier)
                                                     .build();

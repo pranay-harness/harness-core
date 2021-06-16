@@ -14,6 +14,7 @@ import io.harness.PipelineServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetListTypePMS;
@@ -49,6 +50,7 @@ public class PMSInputSetServiceImplTest extends PipelineServiceTestBase {
   @InjectMocks PMSInputSetServiceImpl pmsInputSetServiceMock;
   @Mock private UpdateResult updateResult;
   @Mock private PMSInputSetRepository inputSetRepository;
+  @Mock private GitSyncSdkService gitSyncSdkService;
 
   String ACCOUNT_ID = "account_id";
   String ORG_IDENTIFIER = "orgId";
