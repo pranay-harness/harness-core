@@ -45,7 +45,7 @@ public class PrometheusResource {
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      @QueryParam("filter") @DefaultValue("") String filter, @QueryParam("tracingId") String tracingId) {
+      @QueryParam("filter") @DefaultValue("") String filter, @NotNull @QueryParam("tracingId") String tracingId) {
     return ResponseDTO.newResponse(
         prometheusService.getMetricNames(accountId, connectorIdentifier, orgIdentifier, projectIdentifier, tracingId));
   }
@@ -58,7 +58,8 @@ public class PrometheusResource {
   public ResponseDTO<List<String>> getLabelNames(@NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("tracingId") String tracingId) {
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      @NotNull @QueryParam("tracingId") String tracingId) {
     return ResponseDTO.newResponse(
         prometheusService.getLabelNames(accountId, connectorIdentifier, orgIdentifier, projectIdentifier, tracingId));
   }
@@ -72,7 +73,7 @@ public class PrometheusResource {
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      @QueryParam("labelName") @NotNull String labelName, @QueryParam("tracingId") String tracingId) {
+      @QueryParam("labelName") @NotNull String labelName, @NotNull @QueryParam("tracingId") String tracingId) {
     return ResponseDTO.newResponse(prometheusService.getLabelValues(
         accountId, connectorIdentifier, orgIdentifier, projectIdentifier, labelName, tracingId));
   }
@@ -86,7 +87,7 @@ public class PrometheusResource {
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("query") @NotNull String query,
-      @QueryParam("tracingId") String tracingId) {
+      @NotNull @QueryParam("tracingId") String tracingId) {
     return ResponseDTO.newResponse(prometheusService.getSampleData(
         accountId, connectorIdentifier, orgIdentifier, projectIdentifier, query, tracingId));
   }

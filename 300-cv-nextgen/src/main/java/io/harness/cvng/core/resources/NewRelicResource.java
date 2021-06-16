@@ -61,7 +61,7 @@ public class NewRelicResource {
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("pageSize") @NotNull int pageSize,
       @QueryParam("offset") @NotNull int offset, @QueryParam("filter") @DefaultValue("") String filter,
-      @QueryParam("tracingId") String tracingId) {
+      @NotNull @QueryParam("tracingId") String tracingId) {
     return ResponseDTO.newResponse(newRelicService.getNewRelicApplications(
         accountId, connectorIdentifier, orgIdentifier, projectIdentifier, filter, tracingId));
   }

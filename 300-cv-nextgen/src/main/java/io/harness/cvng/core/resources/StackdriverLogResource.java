@@ -45,8 +45,8 @@ public class StackdriverLogResource {
   public ResponseDTO<List<LinkedHashMap>> getStackdriverSampleData(@NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("tracingId") String tracingId,
-      @Body LogSampleRequestDTO logSampleRequestDTO) {
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      @NotNull @QueryParam("tracingId") String tracingId, @Body LogSampleRequestDTO logSampleRequestDTO) {
     return ResponseDTO.newResponse(stackdriverService.getSampleLogData(
         accountId, connectorIdentifier, orgIdentifier, projectIdentifier, logSampleRequestDTO.getQuery(), tracingId));
   }
