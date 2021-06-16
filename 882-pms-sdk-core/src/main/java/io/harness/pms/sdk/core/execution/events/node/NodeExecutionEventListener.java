@@ -30,7 +30,6 @@ import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.execution.ResumePackage;
 import io.harness.pms.sdk.core.execution.ResumePackage.ResumePackageBuilder;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
-import io.harness.pms.sdk.core.registries.AdviserRegistry;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.queue.QueueConsumer;
@@ -51,7 +50,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class NodeExecutionEventListener extends QueueListenerWithObservers<NodeExecutionEvent> {
-  @Inject private AdviserRegistry adviserRegistry;
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private ExecutableProcessorFactory executableProcessorFactory;

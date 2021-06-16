@@ -1,10 +1,10 @@
-package io.harness.engine.advise.handlers;
+package io.harness.engine.pms.advise.handlers;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.advise.AdviserResponseHandler;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
+import io.harness.engine.pms.advise.AdviserResponseHandler;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
@@ -17,21 +17,21 @@ import io.harness.serializer.ProtoUtils;
 import com.google.inject.Inject;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class MarkSuccessAdviseHandler implements AdviserResponseHandler {
+public class IgnoreFailureAdviseHandler implements AdviserResponseHandler {
   @Inject private InterruptManager interruptManager;
 
   @Override
-  public void handleAdvise(NodeExecution nodeExecution, AdviserResponse adviserResponse) {
+  public void handleAdvise(NodeExecution nodeExecution, AdviserResponse advise) {
     InterruptPackage interruptPackage =
         InterruptPackage.builder()
             .planExecutionId(nodeExecution.getAmbiance().getPlanExecutionId())
             .nodeExecutionId(nodeExecution.getUuid())
-            .interruptType(InterruptType.MARK_SUCCESS)
+            .interruptType(InterruptType.IGNORE)
             .interruptConfig(
                 InterruptConfig.newBuilder()
                     .setIssuedBy(IssuedBy.newBuilder()
                                      .setAdviserIssuer(
-                                         AdviserIssuer.newBuilder().setAdviserType(AdviseType.MARK_SUCCESS).build())
+                                         AdviserIssuer.newBuilder().setAdviserType(AdviseType.IGNORE_FAILURE).build())
                                      .setIssueTime(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
                                      .build())
                     .build())
