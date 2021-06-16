@@ -92,6 +92,7 @@ import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryValid
 import io.harness.delegate.beans.connector.awscodecommitconnector.AwsCodeCommitTaskParams;
 import io.harness.delegate.beans.connector.awscodecommitconnector.AwsCodeCommitValidationParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsDelegateTaskResponse;
+import io.harness.delegate.beans.connector.awsconnector.AwsS3BucketResponse;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskType;
 import io.harness.delegate.beans.connector.awsconnector.AwsValidateTaskResponse;
@@ -807,5 +808,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(NewRelicMetricSlice.class, 543354);
     kryo.register(NewRelicMetricTimeSlice.class, 543355);
     kryo.register(NewRelicMetricData.class, 543356);
+    kryo.register(AwsS3BucketResponse.class, 543357);
   }
 }

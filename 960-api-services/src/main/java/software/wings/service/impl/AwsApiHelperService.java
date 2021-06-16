@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
@@ -11,6 +12,8 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.AwsCallTracker;
 import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.data.structure.UUIDGenerator;
@@ -56,6 +59,9 @@ import com.amazonaws.services.ecs.model.AmazonECSException;
 import com.amazonaws.services.ecs.model.ClientException;
 import com.amazonaws.services.ecs.model.ClusterNotFoundException;
 import com.amazonaws.services.ecs.model.ServiceNotFoundException;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.google.inject.Inject;
@@ -68,6 +74,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class AwsApiHelperService {
   @Inject private AwsCallTracker tracker;
 
@@ -80,6 +87,12 @@ public class AwsApiHelperService {
     AmazonEC2ClientBuilder builder = AmazonEC2ClientBuilder.standard().withRegion(getRegion(awsConfig));
     attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonEC2Client) builder.build();
+  }
+  public AmazonS3Client getAmazonS3Client(AwsInternalConfig awsConfig, String region) {
+    AmazonS3ClientBuilder builder =
+        AmazonS3ClientBuilder.standard().withRegion(region).withForceGlobalBucketAccessEnabled(Boolean.TRUE);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
+    return (AmazonS3Client) builder.build();
   }
 
   public List<String> listRegions(AwsInternalConfig awsConfig) {
@@ -109,6 +122,23 @@ public class AwsApiHelperService {
       handleAmazonClientException(amazonClientException);
     }
     return new DescribeRepositoriesResult();
+  }
+
+  public List<String> listS3Buckets(AwsInternalConfig awsInternalConfig, String region) {
+    try {
+      tracker.trackS3Call("List Buckets");
+      AmazonS3Client client = getAmazonS3Client(awsInternalConfig, region);
+      List<Bucket> buckets = client.listBuckets();
+      if (isEmpty(buckets)) {
+        return emptyList();
+      }
+      return buckets.stream().map(Bucket::getName).collect(toList());
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return emptyList();
   }
 
   public Map<String, String> fetchLabels(
