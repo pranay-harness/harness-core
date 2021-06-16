@@ -8,6 +8,7 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.serviceaccounts.dto.ServiceAccountRequestDTO;
 import io.harness.ng.serviceaccounts.service.api.ServiceAccountService;
+import io.harness.serviceaccount.ServiceAccountDTO;
 
 import com.google.inject.Inject;
 import com.typesafe.config.Optional;
@@ -47,44 +48,45 @@ public class ServiceAccountResource {
 
   @POST
   @ApiOperation(value = "Create service account", nickname = "createServiceAccount")
-  public ResponseDTO<Void> createServiceAccount(@QueryParam("accountIdentifier") String accountIdentifier,
+  public ResponseDTO<ServiceAccountDTO> createServiceAccount(@QueryParam("accountIdentifier") String accountIdentifier,
       @Optional @QueryParam("orgIdentifier") String orgIdentifier,
       @Optional @QueryParam("projectIdentifier") String projectIdentifier,
       @Valid ServiceAccountRequestDTO serviceAccountRequestDTO) {
-    serviceAccountService.createServiceAccount(
+    ServiceAccountDTO serviceAccountDTO = serviceAccountService.createServiceAccount(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceAccountRequestDTO);
-    return ResponseDTO.newResponse(null);
+    return ResponseDTO.newResponse(serviceAccountDTO);
   }
 
   @PUT
   @Path("{identifier}")
   @ApiOperation(value = "Update service account", nickname = "updateServiceAccount")
-  public ResponseDTO<Void> updateServiceAccount(@QueryParam("accountIdentifier") String accountIdentifier,
+  public ResponseDTO<ServiceAccountDTO> updateServiceAccount(@QueryParam("accountIdentifier") String accountIdentifier,
       @Optional @QueryParam("orgIdentifier") String orgIdentifier,
       @Optional @QueryParam("projectIdentifier") String projectIdentifier, @PathParam("identifier") String identifier,
       @Valid ServiceAccountRequestDTO serviceAccountRequestDTO) {
-    serviceAccountService.updateServiceAccount(
+    ServiceAccountDTO serviceAccountDTO = serviceAccountService.updateServiceAccount(
         accountIdentifier, orgIdentifier, projectIdentifier, identifier, serviceAccountRequestDTO);
-    return ResponseDTO.newResponse(null);
+    return ResponseDTO.newResponse(serviceAccountDTO);
   }
 
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete service account", nickname = "deleteServiceAccount")
-  public ResponseDTO<Void> deleteServiceAccount(@QueryParam("accountIdentifier") String accountIdentifier,
+  public ResponseDTO<Boolean> deleteServiceAccount(@QueryParam("accountIdentifier") String accountIdentifier,
       @Optional @QueryParam("orgIdentifier") String orgIdentifier,
       @Optional @QueryParam("projectIdentifier") String projectIdentifier, @PathParam("identifier") String identifier) {
-    serviceAccountService.deleteServiceAccount(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    return ResponseDTO.newResponse(null);
+    boolean deleted =
+        serviceAccountService.deleteServiceAccount(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    return ResponseDTO.newResponse(deleted);
   }
 
   @GET
   @ApiOperation(value = "List service account", nickname = "listServiceAccount")
-  public ResponseDTO<List<ServiceAccountRequestDTO>> listServiceAccounts(
+  public ResponseDTO<List<ServiceAccountDTO>> listServiceAccounts(
       @QueryParam("accountIdentifier") String accountIdentifier,
       @Optional @QueryParam("orgIdentifier") String orgIdentifier,
       @Optional @QueryParam("projectIdentifier") String projectIdentifier) {
-    List<ServiceAccountRequestDTO> requestDTOS =
+    List<ServiceAccountDTO> requestDTOS =
         serviceAccountService.listServiceAccounts(accountIdentifier, orgIdentifier, projectIdentifier);
     return ResponseDTO.newResponse(requestDTOS);
   }

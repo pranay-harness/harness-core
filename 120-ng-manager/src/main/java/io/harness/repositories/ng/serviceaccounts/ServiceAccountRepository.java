@@ -16,6 +16,6 @@ public interface ServiceAccountRepository extends PagingAndSortingRepository<Ser
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
   List<ServiceAccount> findAllByAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
       String accountIdentifier, String orgIdentifier, String projectIdentifier);
-  void deleteByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
+  long deleteByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 }

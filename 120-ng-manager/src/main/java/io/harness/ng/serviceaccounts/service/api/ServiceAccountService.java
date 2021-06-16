@@ -10,13 +10,12 @@ import java.util.List;
 
 @OwnedBy(PL)
 public interface ServiceAccountService {
-  void createServiceAccount(
+  ServiceAccountDTO createServiceAccount(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, ServiceAccountRequestDTO requestDTO);
-  List<ServiceAccountRequestDTO> listServiceAccounts(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier);
-  void updateServiceAccount(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
-      ServiceAccountRequestDTO requestDTO);
-  void deleteServiceAccount(
+  List<ServiceAccountDTO> listServiceAccounts(String accountIdentifier, String orgIdentifier, String projectIdentifier);
+  ServiceAccountDTO updateServiceAccount(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String identifier, ServiceAccountRequestDTO requestDTO);
+  boolean deleteServiceAccount(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
   ServiceAccountDTO getServiceAccountDTO(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);

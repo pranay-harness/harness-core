@@ -8,6 +8,7 @@ import io.harness.beans.Scope;
 import io.harness.ng.core.mapper.ResourceScopeMapper;
 import io.harness.ng.serviceaccounts.dto.ServiceAccountRequestDTO;
 import io.harness.ng.serviceaccounts.entities.ServiceAccount;
+import io.harness.ng.serviceaccounts.service.ServiceAccountDTOMapper;
 import io.harness.ng.serviceaccounts.service.api.ServiceAccountService;
 import io.harness.repositories.ng.serviceaccounts.ServiceAccountRepository;
 import io.harness.serviceaccount.ServiceAccountDTO;
@@ -24,7 +25,7 @@ public class ServiceAccountServiceImpl implements ServiceAccountService {
   @Inject private ServiceAccountRepository serviceAccountRepository;
 
   @Override
-  public void createServiceAccount(
+  public ServiceAccountDTO createServiceAccount(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, ServiceAccountRequestDTO requestDTO) {
     ServiceAccount existingAccount =
         serviceAccountRepository.findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
@@ -39,26 +40,29 @@ public class ServiceAccountServiceImpl implements ServiceAccountService {
                                         .identifier(requestDTO.getIdentifier())
                                         .description(requestDTO.getDescription())
                                         .build();
-    serviceAccountRepository.save(serviceAccount);
+    serviceAccount = serviceAccountRepository.save(serviceAccount);
+    return ServiceAccountDTOMapper.getDTOFromServiceAccount(serviceAccount);
   }
 
   @Override
-  public void updateServiceAccount(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String identifier, ServiceAccountRequestDTO requestDTO) {
+  public ServiceAccountDTO updateServiceAccount(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String identifier, ServiceAccountRequestDTO requestDTO) {
     ServiceAccount serviceAccount =
         serviceAccountRepository.findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
             accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     Preconditions.checkNotNull(serviceAccount, "Service account with identifier: " + identifier + " doesn't exist");
     serviceAccount.setName(requestDTO.getName());
     serviceAccount.setDescription(requestDTO.getDescription());
-    serviceAccountRepository.save(serviceAccount);
+    serviceAccount = serviceAccountRepository.save(serviceAccount);
+    return ServiceAccountDTOMapper.getDTOFromServiceAccount(serviceAccount);
   }
 
   @Override
-  public void deleteServiceAccount(
+  public boolean deleteServiceAccount(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
-    serviceAccountRepository.deleteByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
+    long deleted = serviceAccountRepository.deleteByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
         accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    return deleted > 0;
   }
 
   @Override
@@ -76,17 +80,16 @@ public class ServiceAccountServiceImpl implements ServiceAccountService {
   }
 
   @Override
-  public List<ServiceAccountRequestDTO> listServiceAccounts(
+  public List<ServiceAccountDTO> listServiceAccounts(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     List<ServiceAccount> serviceAccounts =
         serviceAccountRepository.findAllByAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
             accountIdentifier, orgIdentifier, projectIdentifier);
-    List<ServiceAccountRequestDTO> serviceAccountRequestDTOS = new ArrayList<>();
+    List<ServiceAccountDTO> serviceAccountDTOS = new ArrayList<>();
     if (isNotEmpty(serviceAccounts)) {
-      serviceAccounts.forEach(serviceAccount
-          -> serviceAccountRequestDTOS.add(new ServiceAccountRequestDTO(
-              serviceAccount.getIdentifier(), serviceAccount.getName(), serviceAccount.getDescription())));
+      serviceAccounts.forEach(
+          serviceAccount -> serviceAccountDTOS.add(ServiceAccountDTOMapper.getDTOFromServiceAccount(serviceAccount)));
     }
-    return serviceAccountRequestDTOS;
+    return serviceAccountDTOS;
   }
 }

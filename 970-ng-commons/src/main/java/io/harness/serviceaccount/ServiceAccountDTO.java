@@ -15,6 +15,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(PL)
 public class ServiceAccountDTO {
+  String identifier;
   String name;
+  String description;
   ResourceScope resourceScope;
 }
