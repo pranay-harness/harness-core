@@ -13,10 +13,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.ParametersAreNonnullByDefault;
+import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 @ParametersAreNonnullByDefault
 @Singleton
+@Slf4j
 @OwnedBy(DX)
 public class EntityLookupHelper implements EntityKeySource {
   private final @NonNull Cache<Object, Object> keyCache;
@@ -43,6 +45,7 @@ public class EntityLookupHelper implements EntityKeySource {
   public void updateKey(EntityScopeInfo entityScopeInfo) {
     final IsGitSyncEnabled gitSyncEnabledForScope =
         harnessToGitPushInfoServiceBlockingStub.isGitSyncEnabledForScope(entityScopeInfo);
+    log.info("Invalidating cache {}", entityScopeInfo);
     keyCache.put(entityScopeInfo, gitSyncEnabledForScope.getEnabled());
   }
 }
