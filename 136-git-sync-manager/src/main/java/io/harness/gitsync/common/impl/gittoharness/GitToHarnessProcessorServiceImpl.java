@@ -7,8 +7,6 @@ import static io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus.E
 import static io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus.IN_PROGRESS;
 import static io.harness.gitsync.common.beans.GitToHarnessProcessingStepType.PROCESS_FILES_IN_MSVS;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
 import io.harness.EntityType;
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
@@ -30,6 +28,7 @@ import io.harness.gitsync.common.beans.MsvcProcessingFailureStage;
 import io.harness.gitsync.common.helper.GitChangeSetMapper;
 import io.harness.gitsync.common.helper.GitSyncUtils;
 import io.harness.gitsync.common.service.GitToHarnessProgressService;
+import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorService;
 import io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus;
 import io.harness.gitsync.core.dtos.GitCommitDTO;
@@ -56,12 +55,14 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   Map<Microservice, GitToHarnessServiceGrpc.GitToHarnessServiceBlockingStub> gitToHarnessServiceGrpcClient;
   GitToHarnessProgressService gitToHarnessProgressService;
   GitCommitService gitCommitService;
+  YamlGitConfigService yamlGitConfigService;
 
   @Override
   public List<GitToHarnessProcessingResponse> processFiles(String accountId,
       List<GitToHarnessFileProcessingRequest> fileContentsList, String branchName, YamlGitConfigDTO yamlGitConfigDTO,
       String commitId, String gitToHarnessProgressRecordId) {
-    List<ChangeSet> changeSets = GitChangeSetMapper.toChangeSetList(fileContentsList, accountId);
+    final List<YamlGitConfigDTO> yamlGitConfigs = yamlGitConfigService.getByRepo(yamlGitConfigDTO.getRepo());
+    List<ChangeSet> changeSets = GitChangeSetMapper.toChangeSetList(fileContentsList, accountId, yamlGitConfigs);
     Map<EntityType, List<ChangeSet>> mapOfEntityTypeAndContent = createMapOfEntityTypeAndFileContent(changeSets);
     Map<Microservice, List<ChangeSet>> groupedFilesByMicroservices =
         groupFilesByMicroservices(mapOfEntityTypeAndContent);
@@ -73,17 +74,8 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
           gitToHarnessServiceGrpcClient.get(microservice);
       ChangeSets changeSetForThisMicroservice = ChangeSets.newBuilder().addAllChangeSet(entry.getValue()).build();
       GitToHarnessInfo.Builder gitToHarnessInfo =
-          GitToHarnessInfo.newBuilder()
-              .setRepoUrl(yamlGitConfigDTO.getRepo())
-              .setYamlGitConfigProjectIdentifier(yamlGitConfigDTO.getProjectIdentifier())
-              .setYamlGitConfigId(yamlGitConfigDTO.getIdentifier())
-              .setBranch(branchName);
-      if (isNotBlank(yamlGitConfigDTO.getOrganizationIdentifier())) {
-        gitToHarnessInfo.setYamlGitConfigOrgIdentifier(yamlGitConfigDTO.getOrganizationIdentifier());
-      }
-      if (isNotBlank(yamlGitConfigDTO.getProjectIdentifier())) {
-        gitToHarnessInfo.setYamlGitConfigProjectIdentifier(yamlGitConfigDTO.getProjectIdentifier());
-      }
+          GitToHarnessInfo.newBuilder().setRepoUrl(yamlGitConfigDTO.getRepo()).setBranch(branchName);
+
       GitToHarnessProcessRequest gitToHarnessProcessRequest = GitToHarnessProcessRequest.newBuilder()
                                                                   .setChangeSets(changeSetForThisMicroservice)
                                                                   .setGitToHarnessBranchInfo(gitToHarnessInfo)
