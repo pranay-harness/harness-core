@@ -25,11 +25,11 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
-import io.harness.event.OrchestrationEndEventHandler;
+import io.harness.engine.interrupts.OrchestrationEndInterruptHandler;
+import io.harness.event.OrchestrationEndGraphHandler;
 import io.harness.event.OrchestrationLogPublisher;
 import io.harness.event.OrchestrationStartEventHandler;
 import io.harness.exception.GeneralException;
-import io.harness.execution.consumers.SdkResponseEventMessageListener;
 import io.harness.execution.consumers.SdkResponseEventRedisConsumerService;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
 import io.harness.gitsync.GitSdkConfiguration;
@@ -48,7 +48,6 @@ import io.harness.migration.MigrationProvider;
 import io.harness.migration.NGMigrationSdkInitHelper;
 import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
-import io.harness.monitoring.MonitoringRedisEventObserver;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
@@ -283,7 +282,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerHealthCheck(environment, injector);
     registerObservers(injector);
     registerMigrations(injector);
-    EventObserverUtils.registerObservers(injector);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     injector.getInstance(TriggerWebhookExecutionService.class).registerIterators();
@@ -380,12 +378,9 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     OrchestrationEngine orchestrationEngine = injector.getInstance(Key.get(OrchestrationEngine.class));
     orchestrationEngine.getOrchestrationEndSubject().register(
-        injector.getInstance(Key.get(OrchestrationEndEventHandler.class)));
-
-    SdkResponseEventMessageListener sdkResponseEventMessageListener =
-        injector.getInstance(SdkResponseEventMessageListener.class);
-    sdkResponseEventMessageListener.getEventListenerObserverSubject().register(
-        injector.getInstance(Key.get(MonitoringRedisEventObserver.class)));
+        injector.getInstance(Key.get(OrchestrationEndGraphHandler.class)));
+    orchestrationEngine.getOrchestrationEndSubject().register(
+        injector.getInstance(Key.get(OrchestrationEndInterruptHandler.class)));
 
     GraphGenerationServiceImpl graphGenerationService =
         (GraphGenerationServiceImpl) injector.getInstance(Key.get(GraphGenerationServiceImpl.class));

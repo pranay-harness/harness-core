@@ -67,6 +67,7 @@ nodeExecutionEventQueue {"name": "earliestGet_1", "background": true, "expireAft
 nodeExecutionEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 nodeExecutions {"name": "createdAt_1", "background": true} {"createdAt": 1}
 nodeExecutions {"name": "parentId_status_idx", "background": true} {"parentId": 1, "status": 1, "oldRetry": 1}
+nodeExecutions {"name": "planExecutionId_mode_status_idx", "background": true} {"ambiance.planExecutionId": 1, "mode": 1, "status": 1}
 nodeExecutions {"name": "planExecutionId_notifyId_idx", "background": true} {"ambiance.planExecutionId": 1, "notifyId": 1}
 nodeExecutions {"name": "planExecutionId_oldRetry_idx", "background": true} {"ambiance.planExecutionId": 1, "oldRetry": 1}
 nodeExecutions {"name": "planExecutionId_parentId_status_idx", "background": true} {"ambiance.planExecutionId": 1, "parentId": 1, "status": 1}

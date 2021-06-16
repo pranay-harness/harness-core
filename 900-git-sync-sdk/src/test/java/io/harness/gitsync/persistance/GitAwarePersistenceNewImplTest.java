@@ -286,7 +286,7 @@ public class GitAwarePersistenceNewImplTest extends GitSdkTestBase {
     }
     try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
       final GitEntityInfo finalBranch =
-          GitEntityInfo.builder().branch("branch").yamlGitConfigId("ygs").findDefaultFromOtherBranches(true).build();
+          GitEntityInfo.builder().branch("branch").yamlGitConfigId("ygs").findDefaultFromOtherRepos(true).build();
       GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(finalBranch).build());
       final List<SampleBean> sampleBeans = gitAwarePersistence.find(
           new Criteria(), Pageable.unpaged(), projectIdentifier, orgIdentifier, accountIdentifier, SampleBean.class);

@@ -98,7 +98,6 @@ public class TriggerExecutionHelper {
               .setExecutionUuid(executionId)
               .setTriggerInfo(triggerInfo)
               .setRunSequence(pipelineEntityToExecute.get().getRunSequence())
-              .setTriggerPayload(triggerPayload)
               .setPipelineIdentifier(pipelineEntityToExecute.get().getIdentifier());
 
       PlanExecutionMetadata.Builder planExecutionMetadataBuilder =
@@ -128,7 +127,7 @@ public class TriggerExecutionHelper {
 
       PlanExecution planExecution = pipelineExecuteHelper.startExecution(ngTriggerEntity.getAccountId(),
           ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), pipelineYaml,
-          executionMetaDataBuilder.build(), planExecutionMetadataBuilder);
+          executionMetaDataBuilder.build(), planExecutionMetadataBuilder, triggerPayload);
       // check if abort prev execution needed.
       requestPipelineExecutionAbortForSameExecTagIfNeeded(triggerDetails, planExecution, executionTagForGitEvent);
       return planExecution;

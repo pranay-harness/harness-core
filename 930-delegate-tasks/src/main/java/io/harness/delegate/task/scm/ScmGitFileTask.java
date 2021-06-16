@@ -47,7 +47,7 @@ public class ScmGitFileTask extends AbstractDelegateRunnableTask {
       case GET_FILE_CONTENT_BATCH:
         FileContentBatchResponse fileBatchContentResponse = scmDelegateClient.processScmRequest(c
             -> scmServiceClient.listFiles(scmGitFileTaskParams.getScmConnector(), scmGitFileTaskParams.getFoldersList(),
-                scmGitFileTaskParams.getBranchName(), SCMGrpc.newBlockingStub(c)));
+                scmGitFileTaskParams.getBranch(), SCMGrpc.newBlockingStub(c)));
         return GitFileTaskResponseData.builder()
             .gitFileTaskType(scmGitFileTaskParams.getGitFileTaskType())
             .fileBatchContentResponse(fileBatchContentResponse.getFileBatchContentResponse().toByteArray())
@@ -64,8 +64,16 @@ public class ScmGitFileTask extends AbstractDelegateRunnableTask {
       case GET_FILE_CONTENT_BATCH_BY_FILE_PATHS:
         fileBatchContentResponse = scmDelegateClient.processScmRequest(c
             -> scmServiceClient.listFilesByFilePaths(scmGitFileTaskParams.getScmConnector(),
-                scmGitFileTaskParams.getFilePathsList(), scmGitFileTaskParams.getBranchName(),
-                SCMGrpc.newBlockingStub(c)));
+                scmGitFileTaskParams.getFilePathsList(), scmGitFileTaskParams.getBranch(), SCMGrpc.newBlockingStub(c)));
+        return GitFileTaskResponseData.builder()
+            .gitFileTaskType(scmGitFileTaskParams.getGitFileTaskType())
+            .fileBatchContentResponse(fileBatchContentResponse.getFileBatchContentResponse().toByteArray())
+            .commitId(fileBatchContentResponse.getCommitId())
+            .build();
+      case GET_FILE_CONTENT_BATCH_BY_REF:
+        fileBatchContentResponse = scmDelegateClient.processScmRequest(c
+            -> scmServiceClient.listFilesByCommitId(scmGitFileTaskParams.getScmConnector(),
+                scmGitFileTaskParams.getFilePathsList(), scmGitFileTaskParams.getRef(), SCMGrpc.newBlockingStub(c)));
         return GitFileTaskResponseData.builder()
             .gitFileTaskType(scmGitFileTaskParams.getGitFileTaskType())
             .fileBatchContentResponse(fileBatchContentResponse.getFileBatchContentResponse().toByteArray())

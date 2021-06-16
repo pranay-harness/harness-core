@@ -1,6 +1,6 @@
 package io.harness.engine.interrupts.handlers;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.CollectionUtils.isPresent;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -19,9 +19,9 @@ import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.helpers.AbortHelper;
 import io.harness.exception.InvalidRequestException;
+import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
-import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.waiter.WaitNotifyEngine;
@@ -29,15 +29,14 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
-@OwnedBy(CDC)
 @Slf4j
+@OwnedBy(PIPELINE)
 public class AbortAllInterruptHandler implements InterruptHandler {
   @Inject private InterruptService interruptService;
   @Inject private NodeExecutionService nodeExecutionService;
@@ -83,56 +82,66 @@ public class AbortAllInterruptHandler implements InterruptHandler {
     return interruptService.save(interrupt);
   }
 
+  /**
+   * This method is applicable for parent node i.e stage/stepGroup etc.
+   * For complete pipeline refer Handle interrupt
+   */
   @Override
   public Interrupt handleInterruptForNodeExecution(Interrupt interrupt, String nodeExecutionId) {
     Interrupt updatedInterrupt = interruptService.markProcessing(interrupt.getUuid());
-    EnumSet<Status> flowingStatuses = EnumSet.copyOf(StatusUtils.brokeStatuses());
-    flowingStatuses.addAll(StatusUtils.finalizableStatuses());
+
+    // Fetching all the children leaf nodes for this particular parent node
     List<NodeExecution> allNodeExecutions = nodeExecutionService.findAllChildrenWithStatusIn(
-        interrupt.getPlanExecutionId(), interrupt.getNodeExecutionId(), flowingStatuses, true);
-    List<String> targetIds = allNodeExecutions.stream().map(NodeExecution::getUuid).collect(Collectors.toList());
-    if (!abortHelper.markAbortingStateForParent(
-            updatedInterrupt, StatusUtils.finalizableStatuses(), allNodeExecutions)) {
-      return updatedInterrupt;
-    }
+        interrupt.getPlanExecutionId(), interrupt.getNodeExecutionId(), StatusUtils.finalizableStatuses(), true);
 
-    List<NodeExecution> discontinuingNodeExecutions = nodeExecutionService.fetchNodeExecutionsByStatusAndIdIn(
-        updatedInterrupt.getPlanExecutionId(), DISCONTINUING, targetIds);
+    List<String> targetIds = allNodeExecutions.stream()
+                                 .filter(ne -> ExecutionModeUtils.isLeafMode(ne.getMode()))
+                                 .map(NodeExecution::getUuid)
+                                 .collect(Collectors.toList());
 
-    if (isEmpty(discontinuingNodeExecutions)) {
-      log.warn(
-          "ABORT_ALL Interrupt being ignored as no running instance found for planExecutionId: {} and nodeExecutionId: {}",
-          updatedInterrupt.getUuid(), nodeExecutionId);
-      return interruptService.markProcessed(updatedInterrupt.getUuid(), PROCESSED_SUCCESSFULLY);
-    }
-    return processDiscontinuedInstances(interrupt, updatedInterrupt, discontinuingNodeExecutions);
+    long updatedCount = nodeExecutionService.markLeavesDiscontinuingOnAbort(interrupt.getPlanExecutionId(), targetIds);
+
+    return abortDiscontinuingNodes(updatedInterrupt, updatedCount);
   }
 
   @Override
   public Interrupt handleInterrupt(@NonNull @Valid Interrupt interrupt) {
     Interrupt updatedInterrupt = interruptService.markProcessing(interrupt.getUuid());
-    if (!abortHelper.markAbortingState(updatedInterrupt, StatusUtils.finalizableStatuses())) {
+
+    // Marking all finalizable leaf nodes as DISCONTINUING
+    long updatedCount = nodeExecutionService.markAllLeavesDiscontinuingOnAbort(
+        interrupt.getPlanExecutionId(), StatusUtils.finalizableStatuses());
+
+    return abortDiscontinuingNodes(updatedInterrupt, updatedCount);
+  }
+
+  private Interrupt abortDiscontinuingNodes(Interrupt updatedInterrupt, long updatedCount) {
+    if (updatedCount < 0) {
+      // IF count is less than 0 then the update didn't go through
+      return interruptService.markProcessed(updatedInterrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);
+    } else if (updatedCount == 0) {
+      // If count is 0 that means no running leaf node and hence nothing to do
       return updatedInterrupt;
-    }
+    } else {
+      List<NodeExecution> discontinuingNodeExecutions =
+          nodeExecutionService.fetchNodeExecutionsByStatus(updatedInterrupt.getPlanExecutionId(), DISCONTINUING);
 
-    List<NodeExecution> discontinuingNodeExecutions =
-        nodeExecutionService.fetchNodeExecutionsByStatus(updatedInterrupt.getPlanExecutionId(), DISCONTINUING);
-
-    if (isEmpty(discontinuingNodeExecutions)) {
-      log.warn("ABORT_ALL Interrupt being ignored as no running instance found for planExecutionId: {}",
-          updatedInterrupt.getUuid());
-      return interruptService.markProcessed(updatedInterrupt.getUuid(), PROCESSED_SUCCESSFULLY);
+      if (isEmpty(discontinuingNodeExecutions)) {
+        log.warn("ABORT_ALL Interrupt being ignored as no running instance found for planExecutionId: {}",
+            updatedInterrupt.getUuid());
+        return interruptService.markProcessed(updatedInterrupt.getUuid(), PROCESSED_SUCCESSFULLY);
+      }
+      return processDiscontinuedInstances(updatedInterrupt, discontinuingNodeExecutions);
     }
-    return processDiscontinuedInstances(interrupt, updatedInterrupt, discontinuingNodeExecutions);
   }
 
   private Interrupt processDiscontinuedInstances(
-      Interrupt interrupt, Interrupt updatedInterrupt, List<NodeExecution> discontinuingNodeExecutions) {
+      Interrupt updatedInterrupt, List<NodeExecution> discontinuingNodeExecutions) {
     List<String> notifyIds = new ArrayList<>();
     try {
       for (NodeExecution discontinuingNodeExecution : discontinuingNodeExecutions) {
         abortHelper.discontinueMarkedInstance(discontinuingNodeExecution, updatedInterrupt);
-        notifyIds.add(discontinuingNodeExecution.getUuid() + "|" + interrupt.getUuid());
+        notifyIds.add(discontinuingNodeExecution.getUuid() + "|" + updatedInterrupt.getUuid());
       }
 
     } catch (Exception ex) {

@@ -12,13 +12,13 @@ import static io.harness.timescaledb.Tables.WORKLOAD_INFO;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.ObjectUtils.firstNonNull;
 
-import io.harness.annotations.retry.RetryOnException;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.service.intfc.InstanceInfoTimescaleDAO;
 import io.harness.ccm.commons.beans.JobConstants;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.utils.TimescaleUtils;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec;
@@ -43,8 +43,6 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
-  private static final int RETRY_COUNT = 3;
-  private static final int SLEEP_DURATION = 100;
   private final DSLContext dslContext;
 
   @Autowired
@@ -53,23 +51,21 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
   }
 
   @Override
-  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
   public void insertIntoNodeInfo(@NotNull InstanceInfo instanceInfo) {
     final String nodePoolName =
         getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.NODE_POOL_NAME, instanceInfo.getMetaData());
 
-    dslContext.insertInto(NODE_INFO)
-        .set(NODE_INFO.ACCOUNTID, instanceInfo.getAccountId())
-        .set(NODE_INFO.CLUSTERID, instanceInfo.getClusterId())
-        .set(NODE_INFO.INSTANCEID, instanceInfo.getInstanceId())
-        .set(NODE_INFO.STARTTIME, instantToOffsetDateTime(instanceInfo.getUsageStartTime()))
-        .set(NODE_INFO.NODEPOOLNAME, nodePoolName)
-        .onConflictOnConstraint(Keys.NODE_INFO_UNIQUE_RECORD_INDEX)
-        .doUpdate()
-        .set(NODE_INFO.STARTTIME, instantToOffsetDateTime(instanceInfo.getUsageStartTime()))
-        .set(NODE_INFO.UPDATEDAT, offsetDateTimeNow())
-        .set(NODE_INFO.NODEPOOLNAME, nodePoolName)
-        .execute();
+    TimescaleUtils.execute(dslContext.insertInto(NODE_INFO)
+                               .set(NODE_INFO.ACCOUNTID, instanceInfo.getAccountId())
+                               .set(NODE_INFO.CLUSTERID, instanceInfo.getClusterId())
+                               .set(NODE_INFO.INSTANCEID, instanceInfo.getInstanceId())
+                               .set(NODE_INFO.STARTTIME, instantToOffsetDateTime(instanceInfo.getUsageStartTime()))
+                               .set(NODE_INFO.NODEPOOLNAME, nodePoolName)
+                               .onConflictOnConstraint(Keys.NODE_INFO_UNIQUE_RECORD_INDEX)
+                               .doUpdate()
+                               .set(NODE_INFO.STARTTIME, instantToOffsetDateTime(instanceInfo.getUsageStartTime()))
+                               .set(NODE_INFO.UPDATEDAT, offsetDateTimeNow())
+                               .set(NODE_INFO.NODEPOOLNAME, nodePoolName));
   }
 
   @Override
@@ -78,26 +74,24 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
   }
 
   @Override
-  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
   public void insertIntoWorkloadInfo(@NotNull String accountId, @NotNull K8sWorkloadSpec workloadSpec) {
     int replicas = Integer.parseInt(String.valueOf(workloadSpec.getReplicas()));
 
-    dslContext.insertInto(WORKLOAD_INFO)
-        .set(WORKLOAD_INFO.ACCOUNTID, accountId)
-        .set(WORKLOAD_INFO.CLUSTERID, workloadSpec.getClusterId())
-        .set(WORKLOAD_INFO.WORKLOADID, workloadSpec.getUid())
-        .set(WORKLOAD_INFO.REPLICAS, replicas)
-        .set(WORKLOAD_INFO.TYPE, workloadSpec.getWorkloadKind())
-        .set(WORKLOAD_INFO.NAME, workloadSpec.getWorkloadName())
-        .set(WORKLOAD_INFO.NAMESPACE, workloadSpec.getNamespace())
-        .onConflictOnConstraint(Keys.WORKLOAD_INFO_UNIQUE_RECORD_INDEX)
-        .doUpdate()
-        .set(WORKLOAD_INFO.UPDATEDAT, offsetDateTimeNow())
-        .set(WORKLOAD_INFO.REPLICAS, replicas)
-        .set(WORKLOAD_INFO.TYPE, workloadSpec.getWorkloadKind())
-        .set(WORKLOAD_INFO.NAME, workloadSpec.getWorkloadName())
-        .set(WORKLOAD_INFO.NAMESPACE, workloadSpec.getNamespace())
-        .execute();
+    TimescaleUtils.execute(dslContext.insertInto(WORKLOAD_INFO)
+                               .set(WORKLOAD_INFO.ACCOUNTID, accountId)
+                               .set(WORKLOAD_INFO.CLUSTERID, workloadSpec.getClusterId())
+                               .set(WORKLOAD_INFO.WORKLOADID, workloadSpec.getUid())
+                               .set(WORKLOAD_INFO.REPLICAS, replicas)
+                               .set(WORKLOAD_INFO.TYPE, workloadSpec.getWorkloadKind())
+                               .set(WORKLOAD_INFO.NAME, workloadSpec.getWorkloadName())
+                               .set(WORKLOAD_INFO.NAMESPACE, workloadSpec.getNamespace())
+                               .onConflictOnConstraint(Keys.WORKLOAD_INFO_UNIQUE_RECORD_INDEX)
+                               .doUpdate()
+                               .set(WORKLOAD_INFO.UPDATEDAT, offsetDateTimeNow())
+                               .set(WORKLOAD_INFO.REPLICAS, replicas)
+                               .set(WORKLOAD_INFO.TYPE, workloadSpec.getWorkloadKind())
+                               .set(WORKLOAD_INFO.NAME, workloadSpec.getWorkloadName())
+                               .set(WORKLOAD_INFO.NAMESPACE, workloadSpec.getNamespace()));
   }
 
   @Override
@@ -106,7 +100,6 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
   }
 
   @Override
-  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
   public void insertIntoPodInfo(@NotNull InstanceInfo instanceInfo) {
     final String workloadId =
         getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.WORKLOAD_ID, instanceInfo.getMetaData());
@@ -116,46 +109,42 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
         InstanceMetaDataConstants.ACTUAL_PARENT_RESOURCE_ID, instanceInfo.getMetaData());
     final Resource resource = firstNonNull(instanceInfo.getResource(), Resource.builder().build());
 
-    dslContext.insertInto(POD_INFO)
-        .set(POD_INFO.ACCOUNTID, instanceInfo.getAccountId())
-        .set(POD_INFO.CLUSTERID, instanceInfo.getClusterId())
-        .set(POD_INFO.INSTANCEID, instanceInfo.getInstanceId())
-        .set(POD_INFO.STARTTIME, instantToOffsetDateTime(instanceInfo.getUsageStartTime()))
-        .set(POD_INFO.NAMESPACE, namespace)
-        .set(POD_INFO.NAME, instanceInfo.getInstanceName())
-        .set(POD_INFO.WORKLOADID, workloadId)
-        .set(POD_INFO.CPUREQUEST, resource.getCpuUnits())
-        .set(POD_INFO.MEMORYREQUEST, resource.getMemoryMb())
-        .set(POD_INFO.PARENTNODEID, parentId)
-        .onConflictOnConstraint(Keys.POD_INFO_UNIQUE_RECORD_INDEX)
-        .doUpdate()
-        .set(POD_INFO.STARTTIME, instantToOffsetDateTime(instanceInfo.getUsageStartTime()))
-        .set(POD_INFO.NAMESPACE, namespace)
-        .set(POD_INFO.NAME, instanceInfo.getInstanceName())
-        .set(POD_INFO.WORKLOADID, workloadId)
-        .set(POD_INFO.CPUREQUEST, resource.getCpuUnits())
-        .set(POD_INFO.MEMORYREQUEST, resource.getMemoryMb())
-        .set(POD_INFO.PARENTNODEID, parentId)
-        .set(POD_INFO.UPDATEDAT, offsetDateTimeNow())
-        .execute();
+    TimescaleUtils.execute(dslContext.insertInto(POD_INFO)
+                               .set(POD_INFO.ACCOUNTID, instanceInfo.getAccountId())
+                               .set(POD_INFO.CLUSTERID, instanceInfo.getClusterId())
+                               .set(POD_INFO.INSTANCEID, instanceInfo.getInstanceId())
+                               .set(POD_INFO.STARTTIME, instantToOffsetDateTime(instanceInfo.getUsageStartTime()))
+                               .set(POD_INFO.NAMESPACE, namespace)
+                               .set(POD_INFO.NAME, instanceInfo.getInstanceName())
+                               .set(POD_INFO.WORKLOADID, workloadId)
+                               .set(POD_INFO.CPUREQUEST, resource.getCpuUnits())
+                               .set(POD_INFO.MEMORYREQUEST, resource.getMemoryMb())
+                               .set(POD_INFO.PARENTNODEID, parentId)
+                               .onConflictOnConstraint(Keys.POD_INFO_UNIQUE_RECORD_INDEX)
+                               .doUpdate()
+                               .set(POD_INFO.STARTTIME, instantToOffsetDateTime(instanceInfo.getUsageStartTime()))
+                               .set(POD_INFO.NAMESPACE, namespace)
+                               .set(POD_INFO.NAME, instanceInfo.getInstanceName())
+                               .set(POD_INFO.WORKLOADID, workloadId)
+                               .set(POD_INFO.CPUREQUEST, resource.getCpuUnits())
+                               .set(POD_INFO.MEMORYREQUEST, resource.getMemoryMb())
+                               .set(POD_INFO.PARENTNODEID, parentId)
+                               .set(POD_INFO.UPDATEDAT, offsetDateTimeNow()));
   }
 
   @Override
-  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
   public void updatePodStopEvent(@NotNull List<InstanceEvent> instanceEventList) {
     for (InstanceEvent instanceEvent : instanceEventList) {
-      dslContext.update(POD_INFO)
-          .set(POD_INFO.STOPTIME, instantToOffsetDateTime(instanceEvent.getTimestamp()))
-          .set(POD_INFO.UPDATEDAT, offsetDateTimeNow())
-          .where(POD_INFO.ACCOUNTID.eq(instanceEvent.getAccountId()),
-              POD_INFO.CLUSTERID.eq(instanceEvent.getClusterId()),
-              POD_INFO.INSTANCEID.eq(instanceEvent.getInstanceId()))
-          .execute();
+      TimescaleUtils.execute(dslContext.update(POD_INFO)
+                                 .set(POD_INFO.STOPTIME, instantToOffsetDateTime(instanceEvent.getTimestamp()))
+                                 .set(POD_INFO.UPDATEDAT, offsetDateTimeNow())
+                                 .where(POD_INFO.ACCOUNTID.eq(instanceEvent.getAccountId()),
+                                     POD_INFO.CLUSTERID.eq(instanceEvent.getClusterId()),
+                                     POD_INFO.INSTANCEID.eq(instanceEvent.getInstanceId())));
     }
   }
 
   @Override
-  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
   public void updatePodLifecycleEvent(@NotNull String accountId, @NotNull List<Lifecycle> lifecycleList) {
     for (Lifecycle lifecycle : lifecycleList) {
       UpdateSetMoreStep<PodInfoRecord> updateSetMoreStep =
@@ -171,29 +160,24 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
             POD_INFO.STOPTIME, HTimestamps.toInstant(lifecycle.getTimestamp()).atOffset(ZONE_OFFSET));
       }
 
-      updateSetMoreStep
-          .where(POD_INFO.ACCOUNTID.eq(accountId), POD_INFO.CLUSTERID.eq(lifecycle.getClusterId()),
-              POD_INFO.INSTANCEID.eq(lifecycle.getInstanceId()))
-          .execute();
+      TimescaleUtils.execute(updateSetMoreStep.where(POD_INFO.ACCOUNTID.eq(accountId),
+          POD_INFO.CLUSTERID.eq(lifecycle.getClusterId()), POD_INFO.INSTANCEID.eq(lifecycle.getInstanceId())));
     }
   }
 
   @Override
-  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
   public void updateNodeStopEvent(@NotNull List<InstanceEvent> instanceEventList) {
     for (InstanceEvent instanceEvent : instanceEventList) {
-      dslContext.update(NODE_INFO)
-          .set(NODE_INFO.STOPTIME, instantToOffsetDateTime(instanceEvent.getTimestamp()))
-          .set(NODE_INFO.UPDATEDAT, offsetDateTimeNow())
-          .where(NODE_INFO.ACCOUNTID.eq(instanceEvent.getAccountId()),
-              NODE_INFO.CLUSTERID.eq(instanceEvent.getClusterId()),
-              NODE_INFO.INSTANCEID.eq(instanceEvent.getInstanceId()))
-          .execute();
+      TimescaleUtils.execute(dslContext.update(NODE_INFO)
+                                 .set(NODE_INFO.STOPTIME, instantToOffsetDateTime(instanceEvent.getTimestamp()))
+                                 .set(NODE_INFO.UPDATEDAT, offsetDateTimeNow())
+                                 .where(NODE_INFO.ACCOUNTID.eq(instanceEvent.getAccountId()),
+                                     NODE_INFO.CLUSTERID.eq(instanceEvent.getClusterId()),
+                                     NODE_INFO.INSTANCEID.eq(instanceEvent.getInstanceId())));
     }
   }
 
   @Override
-  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
   public void updateNodeLifecycleEvent(@NotNull String accountId, @NotNull List<Lifecycle> lifecycleList) {
     for (Lifecycle lifecycle : lifecycleList) {
       UpdateSetMoreStep<NodeInfoRecord> updateSetMoreStep =
@@ -208,37 +192,33 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
         updateSetMoreStep = updateSetMoreStep.set(
             NODE_INFO.STOPTIME, HTimestamps.toInstant(lifecycle.getTimestamp()).atOffset(ZONE_OFFSET));
       }
-      updateSetMoreStep.set(NODE_INFO.UPDATEDAT, offsetDateTimeNow())
-          .where(NODE_INFO.ACCOUNTID.eq(accountId), NODE_INFO.CLUSTERID.eq(lifecycle.getClusterId()),
-              NODE_INFO.INSTANCEID.eq(lifecycle.getInstanceId()))
-          .execute();
+      TimescaleUtils.execute(
+          updateSetMoreStep.set(NODE_INFO.UPDATEDAT, offsetDateTimeNow())
+              .where(NODE_INFO.ACCOUNTID.eq(accountId), NODE_INFO.CLUSTERID.eq(lifecycle.getClusterId()),
+                  NODE_INFO.INSTANCEID.eq(lifecycle.getInstanceId())));
     }
   }
 
   @Override
-  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
   public void stopInactiveNodesAtTime(@NotNull JobConstants jobConstants, @NotNull String clusterId,
       @NotNull Instant syncEventTimestamp, @NotNull List<String> activeNodeUidsList) {
-    dslContext.update(NODE_INFO)
-        .set(NODE_INFO.STOPTIME, toOffsetDateTime(syncEventTimestamp))
-        .set(NODE_INFO.UPDATEDAT, offsetDateTimeNow())
-        .where(NODE_INFO.ACCOUNTID.eq(jobConstants.getAccountId()), NODE_INFO.CLUSTERID.eq(clusterId),
-            NODE_INFO.INSTANCEID.notIn(activeNodeUidsList),
-            isAliveAtInstant(NODE_INFO.STARTTIME, NODE_INFO.STOPTIME, syncEventTimestamp))
-        .execute();
+    TimescaleUtils.execute(dslContext.update(NODE_INFO)
+                               .set(NODE_INFO.STOPTIME, toOffsetDateTime(syncEventTimestamp))
+                               .set(NODE_INFO.UPDATEDAT, offsetDateTimeNow())
+                               .where(NODE_INFO.ACCOUNTID.eq(jobConstants.getAccountId()),
+                                   NODE_INFO.CLUSTERID.eq(clusterId), NODE_INFO.INSTANCEID.notIn(activeNodeUidsList),
+                                   isAliveAtInstant(NODE_INFO.STARTTIME, NODE_INFO.STOPTIME, syncEventTimestamp)));
   }
 
   @Override
-  @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
   public void stopInactivePodsAtTime(@NotNull JobConstants jobConstants, @NotNull String clusterId,
       @NotNull Instant syncEventTimestamp, @NotNull List<String> activePodUidsList) {
-    dslContext.update(POD_INFO)
-        .set(POD_INFO.STOPTIME, toOffsetDateTime(syncEventTimestamp))
-        .set(POD_INFO.UPDATEDAT, offsetDateTimeNow())
-        .where(POD_INFO.ACCOUNTID.eq(jobConstants.getAccountId()), POD_INFO.CLUSTERID.eq(clusterId),
-            POD_INFO.INSTANCEID.notIn(activePodUidsList),
-            isAliveAtInstant(POD_INFO.STARTTIME, POD_INFO.STOPTIME, syncEventTimestamp))
-        .execute();
+    TimescaleUtils.execute(dslContext.update(POD_INFO)
+                               .set(POD_INFO.STOPTIME, toOffsetDateTime(syncEventTimestamp))
+                               .set(POD_INFO.UPDATEDAT, offsetDateTimeNow())
+                               .where(POD_INFO.ACCOUNTID.eq(jobConstants.getAccountId()),
+                                   POD_INFO.CLUSTERID.eq(clusterId), POD_INFO.INSTANCEID.notIn(activePodUidsList),
+                                   isAliveAtInstant(POD_INFO.STARTTIME, POD_INFO.STOPTIME, syncEventTimestamp)));
   }
 
   private static <R extends Record> int bulkInsert(

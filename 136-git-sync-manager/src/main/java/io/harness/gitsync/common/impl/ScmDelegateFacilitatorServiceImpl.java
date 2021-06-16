@@ -110,8 +110,8 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     final List<EncryptedDataDetail> encryptionDetails =
         getEncryptedDataDetails(accountIdentifier, orgIdentifier, projectIdentifier, scmConnector);
     final GitFilePathDetails gitFilePathDetails = getGitFilePathDetails(filePath, branch, commitId);
-    final ScmGitFileTaskParams scmGitFileTaskParams =
-        getScmGitFileTaskParams(scmConnector, encryptionDetails, gitFilePathDetails, GitFileTaskType.GET_FILE_CONTENT);
+    final ScmGitFileTaskParams scmGitFileTaskParams = getScmGitFileTaskParams(
+        scmConnector, encryptionDetails, gitFilePathDetails, GitFileTaskType.GET_FILE_CONTENT, null, null);
     DelegateTaskRequest delegateTaskRequest =
         getDelegateTaskRequest(accountIdentifier, yamlGitConfigDTO.getOrganizationIdentifier(),
             yamlGitConfigDTO.getProjectIdentifier(), scmGitFileTaskParams, TaskType.SCM_GIT_FILE_TASK);
@@ -183,7 +183,7 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
         getEncryptedDataDetails(accountIdentifier, orgIdentifier, projectIdentifier, scmConnector);
     ScmGitFileTaskParams scmGitFileTaskParams = ScmGitFileTaskParams.builder()
                                                     .gitFileTaskType(GitFileTaskType.GET_FILE_CONTENT_BATCH)
-                                                    .branchName(branchName)
+                                                    .ref(branchName)
                                                     .scmConnector(scmConnector)
                                                     .foldersList(foldersList)
                                                     .encryptedDataDetails(encryptionDetails)
@@ -210,7 +210,31 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     final List<EncryptedDataDetail> encryptionDetails = getEncryptedDataDetails(yamlGitConfigDTO.getAccountIdentifier(),
         yamlGitConfigDTO.getOrganizationIdentifier(), yamlGitConfigDTO.getProjectIdentifier(), scmConnector);
     final ScmGitFileTaskParams scmGitFileTaskParams = getScmGitFileTaskParams(
-        scmConnector, encryptionDetails, null, GitFileTaskType.GET_FILE_CONTENT_BATCH_BY_FILE_PATHS);
+        scmConnector, encryptionDetails, null, GitFileTaskType.GET_FILE_CONTENT_BATCH_BY_FILE_PATHS, null, branchName);
+    DelegateTaskRequest delegateTaskRequest =
+        getDelegateTaskRequest(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
+            yamlGitConfigDTO.getProjectIdentifier(), scmGitFileTaskParams, TaskType.SCM_GIT_FILE_TASK);
+    final DelegateResponseData delegateResponseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    GitFileTaskResponseData gitFileTaskResponseData = (GitFileTaskResponseData) delegateResponseData;
+    try {
+      return FileBatchResponseMapper.createGitFileChangeList(
+          FileBatchContentResponse.parseFrom(gitFileTaskResponseData.getFileBatchContentResponse()));
+    } catch (InvalidProtocolBufferException e) {
+      throw new UnexpectedException("Unexpected error occurred while doing scm operation");
+    }
+  }
+
+  @Override
+  public List<GitFileChangeDTO> listFilesByCommitId(
+      YamlGitConfigDTO yamlGitConfigDTO, List<String> filePaths, String commitId) {
+    final ScmConnector scmConnector =
+        getScmConnector(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
+            yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getGitConnectorRef());
+    scmConnector.setUrl(yamlGitConfigDTO.getRepo());
+    final List<EncryptedDataDetail> encryptionDetails = getEncryptedDataDetails(yamlGitConfigDTO.getAccountIdentifier(),
+        yamlGitConfigDTO.getOrganizationIdentifier(), yamlGitConfigDTO.getProjectIdentifier(), scmConnector);
+    final ScmGitFileTaskParams scmGitFileTaskParams = getScmGitFileTaskParams(
+        scmConnector, encryptionDetails, null, GitFileTaskType.GET_FILE_CONTENT_BATCH_BY_REF, commitId, null);
     DelegateTaskRequest delegateTaskRequest =
         getDelegateTaskRequest(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
             yamlGitConfigDTO.getProjectIdentifier(), scmGitFileTaskParams, TaskType.SCM_GIT_FILE_TASK);
@@ -302,12 +326,14 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
 
   private ScmGitFileTaskParams getScmGitFileTaskParams(ScmConnector scmConnector,
       List<EncryptedDataDetail> encryptionDetails, GitFilePathDetails gitFilePathDetails,
-      GitFileTaskType gitFileTaskType) {
+      GitFileTaskType gitFileTaskType, String ref, String branch) {
     return ScmGitFileTaskParams.builder()
         .gitFileTaskType(gitFileTaskType)
         .scmConnector(scmConnector)
         .gitFilePathDetails(gitFilePathDetails)
         .encryptedDataDetails(encryptionDetails)
+        .ref(ref)
+        .branch(branch)
         .build();
   }
 }

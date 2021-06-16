@@ -1,6 +1,6 @@
 package io.harness.engine.advise.handlers;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
@@ -19,7 +19,7 @@ import io.harness.serializer.ProtoUtils;
 
 import com.google.inject.Inject;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 public class EndPlanAdviserResponseHandler implements AdviserResponseHandler {
   @Inject private OrchestrationEngine engine;
   @Inject private InterruptManager interruptManager;
@@ -31,7 +31,7 @@ public class EndPlanAdviserResponseHandler implements AdviserResponseHandler {
       InterruptPackage interruptPackage =
           InterruptPackage.builder()
               .planExecutionId(nodeExecution.getAmbiance().getPlanExecutionId())
-              .interruptType(InterruptType.ABORT_ALL)
+              .interruptType(InterruptType.ABORT)
               .nodeExecutionId(nodeExecution.getUuid())
               .interruptConfig(
                   InterruptConfig.newBuilder()

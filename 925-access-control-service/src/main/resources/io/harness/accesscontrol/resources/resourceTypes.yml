@@ -38,3 +38,5 @@
   permissionKey: target
 - identifier: TARGETGROUP
   permissionKey: targetgroup
+- identifier: DASHBOARDS
+  permissionKey: dashboards

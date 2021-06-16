@@ -80,14 +80,14 @@ def main(event, context):
 
     if not if_tbl_exists(client, unifiedTableRef):
         print_("%s table does not exists, creating table..." % unifiedTableRef)
-        createTable(client, unifiedTableTableName)
+        createTable(client, unifiedTableRef)
     else:
         alter_unified_table(jsonData)
         print_("%s table exists" % unifiedTableTableName)
 
     if not if_tbl_exists(client, preAggragatedTableRef):
         print_("%s table does not exists, creating table..." % preAggragatedTableRef)
-        createTable(client, preAggregatedTableTableName)
+        createTable(client, preAggragatedTableRef)
     else:
         alter_preagg_table(jsonData)
         print_("%s table exists" % preAggregatedTableTableName)

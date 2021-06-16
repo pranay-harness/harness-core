@@ -13,7 +13,6 @@ import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCH
 import static java.util.Collections.singletonList;
 
 import io.harness.AuthorizationServiceHeader;
-import io.harness.EventObserverUtils;
 import io.harness.ModuleType;
 import io.harness.PipelineServiceUtilityModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -267,7 +266,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     registerYamlSdk(injector);
     scheduleJobs(injector);
     registerQueueListener(injector);
-    EventObserverUtils.registerObservers(injector);
 
     log.info("Starting app done");
     MaintenanceController.forceMaintenance(false);

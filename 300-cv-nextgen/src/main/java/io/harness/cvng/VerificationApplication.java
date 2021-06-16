@@ -18,7 +18,6 @@ import static com.google.inject.matcher.Matchers.not;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
-import io.harness.EventObserverUtils;
 import io.harness.ModuleType;
 import io.harness.PipelineServiceUtilityModule;
 import io.harness.annotations.dev.HarnessTeam;
@@ -363,7 +362,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerActivityIterator(injector);
     registerVerificationJobInstanceTimeoutIterator(injector);
     registerPipelineSDK(configuration, injector);
-    EventObserverUtils.registerObservers(injector);
     registerWaitEnginePublishers(injector);
     log.info("Leaving startup maintenance mode");
     MaintenanceController.forceMaintenance(false);

@@ -141,6 +141,7 @@ import io.harness.delegate.task.k8s.K8sTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask;
 import io.harness.delegate.task.k8s.KubernetesValidationHandler;
+import io.harness.delegate.task.manifests.CustomManifestFetchTask;
 import io.harness.delegate.task.manifests.CustomManifestValuesFetchTask;
 import io.harness.delegate.task.nexus.NexusDelegateTask;
 import io.harness.delegate.task.nexus.NexusValidationHandler;
@@ -1369,6 +1370,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.CI_CLEANUP).toInstance(CICleanupTask.class);
     mapBinder.addBinding(TaskType.AWS_S3_TASK).toInstance(AwsS3Task.class);
     mapBinder.addBinding(TaskType.CUSTOM_MANIFEST_VALUES_FETCH_TASK).toInstance(CustomManifestValuesFetchTask.class);
+    mapBinder.addBinding(TaskType.CUSTOM_MANIFEST_FETCH_TASK).toInstance(CustomManifestFetchTask.class);
 
     // Add all NG tasks below this.
     mapBinder.addBinding(TaskType.GCP_TASK).toInstance(GcpTask.class);
