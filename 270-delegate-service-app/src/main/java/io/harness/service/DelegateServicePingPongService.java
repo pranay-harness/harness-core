@@ -9,11 +9,11 @@ import io.harness.delegate.task.DelegateLogContext;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-
-import io.grpc.stub.StreamObserver;
 import io.harness.pingpong.DelegateServicePingPongGrpc;
 import io.harness.pingpong.PingDelegateService;
 import io.harness.pingpong.PongDelegateService;
+
+import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
