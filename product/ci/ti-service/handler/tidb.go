@@ -94,12 +94,11 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handler
 	}
 }
 
-func HandleOverview(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleReportsInfo(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		ctx := r.Context()
 
-		// TODO: Use this information while retrieving from TIDB
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam)
 		if err != nil {
 			WriteInternalError(w, err)
@@ -111,7 +110,68 @@ func HandleOverview(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 		pipelineId := r.FormValue(pipelineIdParam)
 		buildId := r.FormValue(buildIdParam)
 
-		overview, err := db.GetSelectionOverview(ctx, accountId, orgId, projectId, pipelineId, buildId)
+		resp, err := db.GetReportsInfo(ctx, accountId, orgId, projectId, pipelineId, buildId)
+		if err != nil {
+			log.Errorw("could not get reports info from DB", zap.Error(err))
+			WriteInternalError(w, err)
+			return
+		}
+
+		// Write the selected tests back
+		WriteJSON(w, resp, 200)
+		log.Infow("retrieved test report info", "account_id", accountId, "time_taken", time.Since(st))
+	}
+}
+
+func HandleIntelligenceInfo(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		st := time.Now()
+		ctx := r.Context()
+
+		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam)
+		if err != nil {
+			WriteInternalError(w, err)
+			return
+		}
+		accountId := r.FormValue(accountIDParam)
+		orgId := r.FormValue(orgIdParam)
+		projectId := r.FormValue(projectIdParam)
+		pipelineId := r.FormValue(pipelineIdParam)
+		buildId := r.FormValue(buildIdParam)
+
+		resp, err := db.GetIntelligenceInfo(ctx, accountId, orgId, projectId, pipelineId, buildId)
+		if err != nil {
+			log.Errorw("could not get test intelligence info from DB", zap.Error(err))
+			WriteInternalError(w, err)
+			return
+		}
+
+		// Write the selected tests back
+		WriteJSON(w, resp, 200)
+		log.Infow("retrieved test intelligence info", "account_id", accountId, "time_taken", time.Since(st))
+	}
+}
+
+func HandleOverview(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		st := time.Now()
+		ctx := r.Context()
+
+		// TODO: Use this information while retrieving from TIDB
+		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, stepIdParam, stageIdParam)
+		if err != nil {
+			WriteInternalError(w, err)
+			return
+		}
+		accountId := r.FormValue(accountIDParam)
+		orgId := r.FormValue(orgIdParam)
+		projectId := r.FormValue(projectIdParam)
+		pipelineId := r.FormValue(pipelineIdParam)
+		buildId := r.FormValue(buildIdParam)
+		stageId := r.FormValue(stageIdParam)
+		stepId := r.FormValue(stepIdParam)
+
+		overview, err := db.GetSelectionOverview(ctx, accountId, orgId, projectId, pipelineId, buildId, stepId, stageId)
 		if err != nil {
 			log.Errorw("could not get TI overview from DB", zap.Error(err))
 			WriteInternalError(w, err)
