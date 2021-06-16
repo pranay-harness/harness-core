@@ -44,7 +44,7 @@ public class AnalysisOrchestrator
   private long lastUpdatedAt;
   private String accountId;
 
-  @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusDays(7).toInstant());
+  @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusDays(30).toInstant());
 
   @FdIndex private Long analysisOrchestrationIteration;
 
