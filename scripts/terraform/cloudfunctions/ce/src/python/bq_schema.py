@@ -1072,7 +1072,7 @@ awsEbsInventorySchema = [
         "type": "STRING"
     },
     {
-        "mode": "REQUIRED",
+        "mode": "NULLABLE",
         "name": "createTime",
         "type": "TIMESTAMP"
     },
@@ -1180,6 +1180,33 @@ awsEbsInventorySchema = [
         ],
         "mode": "REPEATED",
         "name": "tags",
+        "type": "RECORD"
+    },
+    {
+        "fields": [
+            {
+                "name": "createTime",
+                "type": "TIMESTAMP"
+            },
+            {
+                "name": "snapshotId",
+                "type": "STRING"
+            },
+            {
+                "name": "status",
+                "type": "STRING"
+            },
+            {
+                "name": "description",
+                "type": "STRING"
+            },
+            {
+                "name": "encrypted",
+                "type": "BOOLEAN"
+            }
+        ],
+        "mode": "REPEATED",
+        "name": "snapshots",
         "type": "RECORD"
     },
     {
