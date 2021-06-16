@@ -12,6 +12,8 @@ import io.harness.delegate.task.http.HttpTaskParametersNg.HttpTaskParametersNgBu
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.http.HttpHeaderConfig;
+import io.harness.logstreaming.LogStreamingStepClientFactory;
+import io.harness.logstreaming.NGLogCallback;
 import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollback;
@@ -46,10 +48,16 @@ public class HttpStep extends TaskExecutableWithRollback<HttpStepResponse> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.HTTP).build();
 
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
     return StepElementParameters.class;
+  }
+
+  private NGLogCallback getNGLogCallback(LogStreamingStepClientFactory logStreamingStepClientFactory, Ambiance ambiance,
+      String logFix, boolean openStream) {
+    return new NGLogCallback(logStreamingStepClientFactory, ambiance, logFix, openStream);
   }
 
   @Override
@@ -84,6 +92,7 @@ public class HttpStep extends TaskExecutableWithRollback<HttpStepResponse> {
             .taskType(TaskType.HTTP_TASK_NG.name())
             .parameters(new Object[] {httpTaskParametersNgBuilder.build()})
             .build();
+
     return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
         TaskSelectorYaml.toTaskSelector(httpStepParameters.delegateSelectors.getValue()));
   }
@@ -91,16 +100,22 @@ public class HttpStep extends TaskExecutableWithRollback<HttpStepResponse> {
   @Override
   public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepParameters,
       ThrowingSupplier<HttpStepResponse> responseSupplier) throws Exception {
+    NGLogCallback logCallback = getNGLogCallback(logStreamingStepClientFactory, ambiance, null, true);
+
     StepResponseBuilder responseBuilder = StepResponse.builder();
     HttpStepResponse httpStepResponse = responseSupplier.get();
 
     HttpStepParameters httpStepParameters = (HttpStepParameters) stepParameters.getSpec();
+
+    logCallback.saveExecutionLog(
+        String.format("Successfully executed the http request %s .", httpStepParameters.url.getValue()));
+
     Map<String, Object> outputVariables =
         httpStepParameters.getOutputVariables() == null ? null : httpStepParameters.getOutputVariables().getValue();
     Map<String, String> outputVariablesEvaluated = evaluateOutputVariables(outputVariables, httpStepResponse);
 
+    logCallback.saveExecutionLog("Validating the assertions...");
     boolean assertionSuccessful = validateAssertions(httpStepResponse, httpStepParameters);
-
     HttpOutcome executionData = HttpOutcome.builder()
                                     .httpUrl(httpStepParameters.getUrl().getValue())
                                     .httpMethod(httpStepParameters.getMethod().getValue())
@@ -111,17 +126,17 @@ public class HttpStep extends TaskExecutableWithRollback<HttpStepResponse> {
                                     .outputVariables(outputVariablesEvaluated)
                                     .build();
 
-    // Just Place holder for now till we have assertions
-    if (httpStepResponse.getHttpResponseCode() == 500 || !assertionSuccessful) {
+    if (!assertionSuccessful) {
       responseBuilder.status(Status.FAILED);
-      if (!assertionSuccessful) {
-        responseBuilder.failureInfo(FailureInfo.newBuilder().setErrorMessage("assertion failed").build());
-      }
+      responseBuilder.failureInfo(FailureInfo.newBuilder().setErrorMessage("assertion failed").build());
+      logCallback.saveExecutionLog("Assertions failed");
     } else {
       responseBuilder.status(Status.SUCCEEDED);
+      logCallback.saveExecutionLog("Assertions passed");
     }
     responseBuilder.stepOutcome(
         StepOutcome.builder().name(YAMLFieldNameConstants.OUTPUT).outcome(executionData).build());
+
     return responseBuilder.build();
   }
 
