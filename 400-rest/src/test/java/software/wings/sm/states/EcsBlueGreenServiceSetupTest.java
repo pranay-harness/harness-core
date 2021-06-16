@@ -76,6 +76,7 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.utils.ApplicationManifestUtils;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
@@ -101,6 +102,7 @@ public class EcsBlueGreenServiceSetupTest extends WingsBaseTest {
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
   @Mock private SweepingOutputService mockSweepingOutputService;
   @Mock private StateExecutionService stateExecutionService;
+  @Mock private ApplicationManifestUtils applicationManifestUtils;
 
   @InjectMocks private EcsBlueGreenServiceSetup state = new EcsBlueGreenServiceSetup("stateName");
 

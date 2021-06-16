@@ -184,10 +184,10 @@ def main(event, context):
     # Creating tables if they don't exist
     if not if_tbl_exists(client, awsEbsInventoryTableRef):
         print_("%s table does not exists, creating table..." % awsEbsInventoryTableRef)
-        createTable(client, awsEbsInventoryTableName)
+        createTable(client, awsEbsInventoryTableRef)
     if not if_tbl_exists(client, awsEbsInventoryTempTableRef):
         print_("%s table does not exists, creating table..." % awsEbsInventoryTempTableRef)
-        createTable(client, awsEbsInventoryTempTableName)
+        createTable(client, awsEbsInventoryTableRef)
 
     # Updating bq tables
     currentTime = datetime.datetime.utcnow()

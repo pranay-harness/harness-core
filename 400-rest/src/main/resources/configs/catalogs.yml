@@ -417,6 +417,8 @@ TASK_TYPES:
       value: LOG
     - name: Custom Manifest Fetch Values Task
       value: CUSTOM_MANIFEST_VALUES_FETCH_TASK
+    - name: Custom Manifest Fetch Task
+      value: CUSTOM_MANIFEST_FETCH_TASK
     - name: Docker Hub
       value: DOCKER
     - name: Dynatrace
@@ -483,6 +485,8 @@ TASK_TYPES:
       value: SUMO
     - name: Terraform
       value: TERRAFORM
+    - name: Terragrunt
+      value: TERRAGRUNT
     - name: Trigger
       value: TRIGGER
 

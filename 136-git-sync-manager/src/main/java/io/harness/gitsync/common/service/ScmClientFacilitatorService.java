@@ -32,8 +32,13 @@ public interface ScmClientFacilitatorService {
   List<GitFileChangeDTO> listFilesOfBranches(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String yamlGitConfigIdentifier, Set<String> foldersList, String branchName);
 
+  // Find content of the files in branchName at the latest commit id of the branch
   List<GitFileChangeDTO> listFilesByFilePaths(
       YamlGitConfigDTO yamlGitConfigDTO, List<String> filePaths, String branchName);
+
+  // Find content of the files at given commitId
+  List<GitFileChangeDTO> listFilesByCommitId(
+      YamlGitConfigDTO yamlGitConfigDTO, List<String> filePaths, String commitId);
 
   GitDiffResultFileListDTO listCommitsDiffFiles(
       YamlGitConfigDTO yamlGitConfigDTO, String initialCommitId, String finalCommitId);

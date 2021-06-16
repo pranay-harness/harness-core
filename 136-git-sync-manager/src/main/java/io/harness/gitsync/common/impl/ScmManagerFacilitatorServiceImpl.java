@@ -125,6 +125,17 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
   }
 
   @Override
+  public List<GitFileChangeDTO> listFilesByCommitId(
+      YamlGitConfigDTO yamlGitConfigDTO, List<String> filePaths, String commitId) {
+    final ScmConnector decryptedConnector =
+        gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfigDTO, yamlGitConfigDTO.getAccountIdentifier());
+    // todo @mohit: pick commit id from here.
+    final FileContentBatchResponse fileContentBatchResponse =
+        scmClient.listFilesByCommitId(decryptedConnector, filePaths, commitId);
+    return FileBatchResponseMapper.createGitFileChangeList(fileContentBatchResponse.getFileBatchContentResponse());
+  }
+
+  @Override
   public GitDiffResultFileListDTO listCommitsDiffFiles(
       YamlGitConfigDTO yamlGitConfigDTO, String initialCommitId, String finalCommitId) {
     final ScmConnector decryptedConnector =

@@ -594,9 +594,7 @@ public interface UserService extends OwnedByAccount {
 
   boolean safeDeleteUser(String userId, String accountId);
 
-  String generateVerificationUrl(String userId, String accountId) throws URISyntaxException;
-
-  String generateLoginUrl(String accountId) throws URISyntaxException;
+  void setUserEmailVerified(String userId);
 
   boolean isUserPasswordPresent(String accountId, String emailId);
 }

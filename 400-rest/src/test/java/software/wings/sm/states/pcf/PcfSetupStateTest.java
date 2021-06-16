@@ -453,6 +453,8 @@ public class PcfSetupStateTest extends WingsBaseTest {
         .generateManifestMap(any(), anyMap(), any(), any());
 
     ExecutionResponse executionResponse = pcfSetupState.execute(context);
+
+    verify(activityService, times(1)).save(any());
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
 
     PcfSetupStateExecutionData stateExecutionData =

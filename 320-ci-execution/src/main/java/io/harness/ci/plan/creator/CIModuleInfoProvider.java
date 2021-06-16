@@ -19,6 +19,7 @@ import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.triggers.ParsedPayload;
+import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
@@ -96,7 +97,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     }
     ExecutionSource executionSource = null;
     try {
-      executionSource = getWebhookExecutionSource(event.getAmbiance().getMetadata());
+      executionSource = getWebhookExecutionSource(event.getAmbiance().getMetadata(), event.getTriggerPayload());
     } catch (Exception ex) {
       log.error("Failed to retrieve branch and tag for filtering", ex);
     }
@@ -113,10 +114,11 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     return CIStageModuleInfo.builder().build();
   }
 
-  private ExecutionSource getWebhookExecutionSource(ExecutionMetadata executionMetadata) {
+  private ExecutionSource getWebhookExecutionSource(
+      ExecutionMetadata executionMetadata, TriggerPayload triggerPayload) {
     ExecutionTriggerInfo executionTriggerInfo = executionMetadata.getTriggerInfo();
     if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
-      ParsedPayload parsedPayload = executionMetadata.getTriggerPayload().getParsedPayload();
+      ParsedPayload parsedPayload = triggerPayload.getParsedPayload();
       if (parsedPayload != null) {
         return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
       } else {

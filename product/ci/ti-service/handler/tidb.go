@@ -28,7 +28,7 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handler
 
 		// TODO: Use this information while retrieving from TIDB
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam,
-			stageIdParam, stepIdParam, repoParam, shaParam, sourceBranchParam)
+			stageIdParam, stepIdParam, repoParam, targetBranchParam)
 		if err != nil {
 			WriteInternalError(w, err)
 			return
@@ -67,14 +67,14 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handler
 			return
 		}
 
-		// Write changed file information to timescaleDB
-		err = db.WriteDiffFiles(ctx, accountId, orgId, projectId, pipelineId, buildId,
-			stageId, stepId, types.DiffInfo{Sha: sha, Files: req.Files})
-		if err != nil {
-			WriteInternalError(w, err)
-			log.Errorw("api: could not write changed file information", "account_id", accountId,
-				"repo", repo, "source", source, "target", target, "sha", sha, zap.Error(err))
-		}
+		//// Write changed file information to timescaleDB
+		//err = db.WriteDiffFiles(ctx, accountId, orgId, projectId, pipelineId, buildId,
+		//	stageId, stepId, types.DiffInfo{Sha: sha, Files: req.Files})
+		//if err != nil {
+		//	WriteInternalError(w, err)
+		//	log.Errorw("api: could not write changed file information", "account_id", accountId,
+		//		"repo", repo, "source", source, "target", target, "sha", sha, zap.Error(err))
+		//}
 
 		// Classify and write the test selection stats to timescaleDB
 		err = db.WriteSelectedTests(ctx, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, selected, false)
@@ -127,7 +127,7 @@ func HandleOverview(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 
 func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := validate(r, accountIDParam, orgIdParam, projectIdParam, repoParam, sourceBranchParam, targetBranchParam, shaParam)
+		err := validate(r, accountIDParam, orgIdParam, projectIdParam, repoParam, sourceBranchParam, targetBranchParam)
 		if err != nil {
 			WriteBadRequest(w, err)
 			return

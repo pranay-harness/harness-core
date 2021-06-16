@@ -31,6 +31,7 @@ const (
 	logPrefixEnv     = "HARNESS_LOG_PREFIX"
 	serviceLogKeyEnv = "HARNESS_SERVICE_LOG_KEY"
 	secretList       = "HARNESS_SECRETS_LIST"
+	dBranch          = "DRONE_COMMIT_BRANCH"
 	dSourceBranch    = "DRONE_SOURCE_BRANCH"
 	dTargetBranch    = "DRONE_TARGET_BRANCH"
 	dRemoteUrl       = "DRONE_REMOTE_URL"
@@ -82,7 +83,7 @@ func GetChangedFiles(ctx context.Context, workspace string, log *zap.SugaredLogg
 func GetNudges() []logs.Nudge {
 	// <search-term> <resolution> <error-msg>
 	return []logs.Nudge{
-		logs.NewNudge("Killed", "Increase memory resources for the step", errors.New("Out of memory")),
+		logs.NewNudge("[Kk]illed", "Increase memory resources for the step", errors.New("Out of memory")),
 		logs.NewNudge(".*git.* SSL certificate problem",
 			"Set sslVerify to false in CI codebase properties", errors.New("SSL certificate error")),
 	}
@@ -227,6 +228,14 @@ func GetStageId() (string, error) {
 	return stage, nil
 }
 
+func GetBranch() (string, error) {
+	source, ok := os.LookupEnv(dBranch)
+	if !ok {
+		return "", fmt.Errorf("branch variable not set %s", dBranch)
+	}
+	return source, nil
+}
+
 func GetSourceBranch() (string, error) {
 	source, ok := os.LookupEnv(dSourceBranch)
 	if !ok {
@@ -265,4 +274,14 @@ func GetWrkspcPath() (string, error) {
 		return "", fmt.Errorf("workspace path variable not set %s", wrkspcPath)
 	}
 	return path, nil
+}
+
+func IsManualExecution() bool {
+	_, err1 := GetSourceBranch()
+	_, err2 := GetTargetBranch()
+	_, err3 := GetSha()
+	if err1 != nil || err2 != nil || err3 != nil {
+		return true // if any of them are not set, treat as a manual execution
+	}
+	return false
 }

@@ -149,7 +149,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
 
     // Call to SCM api to find diff files in push event commit id and local commit id
     String initialCommitId = gitCommitDTO.get().getCommitId();
-    String finalCommitId = yamlChangeSetDTO.getGitWebhookRequestAttributes().getHeadCommitId();
+    String finalCommitId = getWebhookCommitId(yamlChangeSetDTO);
     GitDiffResultFileListDTO gitDiffResultFileListDTO =
         scmOrchestratorService.processScmRequest(scmClientFacilitatorService
             -> scmClientFacilitatorService.listCommitsDiffFiles(yamlGitConfigDTO, initialCommitId, finalCommitId),
@@ -159,14 +159,15 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
     return gitDiffResultFileListDTO.getPrFileList();
   }
 
-  // Get content for all files
+  // Get content for all files at the incoming webhook's commit id
   private List<GitFileChangeDTO> getAllFileContent(
       YamlChangeSetDTO yamlChangeSetDTO, YamlGitConfigDTO yamlGitConfigDTO, List<GitDiffResultFileDTO> prFile) {
     List<String> filePaths = new ArrayList<>();
     prFile.forEach(file -> filePaths.add(file.getPath()));
 
     return scmOrchestratorService.processScmRequest(scmClientFacilitatorService
-        -> scmClientFacilitatorService.listFilesByFilePaths(yamlGitConfigDTO, filePaths, yamlChangeSetDTO.getBranch()),
+        -> scmClientFacilitatorService.listFilesByCommitId(
+            yamlGitConfigDTO, filePaths, getWebhookCommitId(yamlChangeSetDTO)),
         yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
         yamlGitConfigDTO.getAccountIdentifier());
   }
@@ -200,5 +201,9 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
       }
     });
     return filesToBeProcessed;
+  }
+
+  private String getWebhookCommitId(YamlChangeSetDTO yamlChangeSetDTO) {
+    return yamlChangeSetDTO.getGitWebhookRequestAttributes().getHeadCommitId();
   }
 }

@@ -11,9 +11,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.InterventionWaitTimeoutCallback;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
+import io.harness.execution.PlanExecutionMetadata;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
@@ -43,6 +45,7 @@ import org.junit.experimental.categories.Category;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class InterventionWaitAdviserResponseHandlerTest extends OrchestrationTestBase {
   @Inject InterventionWaitAdviserResponseHandler interventionWaitAdviserResponseHandler;
+  @Inject PlanExecutionMetadataService planExecutionMetadataService;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private TimeoutInstanceRepository timeoutInstanceRepository;
@@ -63,6 +66,9 @@ public class InterventionWaitAdviserResponseHandlerTest extends OrchestrationTes
                             .build();
 
     planExecutionService.save(PlanExecution.builder().uuid(PLAN_EXECUTION_ID).status(Status.RUNNING).build());
+    PlanExecutionMetadata planExecutionMetadata =
+        PlanExecutionMetadata.builder().planExecutionId(PLAN_EXECUTION_ID).build();
+    planExecutionMetadataService.save(planExecutionMetadata);
 
     nodeExecution = NodeExecution.builder()
                         .uuid(NODE_EXECUTION_ID)

@@ -16,8 +16,6 @@ import lombok.NonNull;
 
 @OwnedBy(CDC)
 public interface OrchestrationService {
-  PlanExecution startExecution(@Valid Plan plan, @NonNull ExecutionMetadata metadata);
-
   PlanExecution startExecution(@Valid Plan plan, @NonNull Map<String, String> setupAbstractions,
       ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata);
 
