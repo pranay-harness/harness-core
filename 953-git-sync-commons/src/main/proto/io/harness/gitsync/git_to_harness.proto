@@ -24,6 +24,7 @@ message ChangeSet {
   google.protobuf.StringValue object_id = 4;
   io.harness.gitsync.ChangeType change_type = 5;
   string file_path = 6;
+  YamlGitConfigInfo yaml_git_config_info = 7;
 }
 
 message ProcessingResponse {
@@ -58,11 +59,8 @@ enum ProcessingFailureStage {
 }
 
 message GitToHarnessInfo {
-  string yamlGitConfigOrgIdentifier = 1;
-  string yamlGitConfigProjectIdentifier = 2;
-  string yamlGitConfigId = 3;
-  string branch = 4;
-  string repo_url = 5;
+  string branch = 1;
+  string repo_url = 2;
 }
 
 message GitToHarnessProcessRequest {
@@ -70,4 +68,11 @@ message GitToHarnessProcessRequest {
   GitToHarnessInfo gitToHarnessBranchInfo = 2;
   string account_id = 3;
   google.protobuf.StringValue commit_id = 4;
+}
+
+message YamlGitConfigInfo {
+  google.protobuf.StringValue yaml_git_config_org_identifier = 1;
+  google.protobuf.StringValue yaml_git_config_project_identifier = 2;
+  string yaml_git_config_id = 3;
+  string account_id = 4;
 }
