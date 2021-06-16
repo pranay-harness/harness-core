@@ -194,7 +194,8 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     GitFileTaskResponseData gitFileTaskResponseData = (GitFileTaskResponseData) responseData;
     try {
       return FileBatchResponseMapper.createGitFileChangeList(
-          FileBatchContentResponse.parseFrom(gitFileTaskResponseData.getFileBatchContentResponse()));
+          FileBatchContentResponse.parseFrom(gitFileTaskResponseData.getFileBatchContentResponse()),
+          gitFileTaskResponseData.getCommitId());
     } catch (InvalidProtocolBufferException e) {
       throw new UnexpectedException("Unexpected error occurred while doing scm operation");
     }
@@ -218,7 +219,8 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     GitFileTaskResponseData gitFileTaskResponseData = (GitFileTaskResponseData) delegateResponseData;
     try {
       return FileBatchResponseMapper.createGitFileChangeList(
-          FileBatchContentResponse.parseFrom(gitFileTaskResponseData.getFileBatchContentResponse()));
+          FileBatchContentResponse.parseFrom(gitFileTaskResponseData.getFileBatchContentResponse()),
+          gitFileTaskResponseData.getCommitId());
     } catch (InvalidProtocolBufferException e) {
       throw new UnexpectedException("Unexpected error occurred while doing scm operation");
     }
@@ -242,7 +244,8 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     GitFileTaskResponseData gitFileTaskResponseData = (GitFileTaskResponseData) delegateResponseData;
     try {
       return FileBatchResponseMapper.createGitFileChangeList(
-          FileBatchContentResponse.parseFrom(gitFileTaskResponseData.getFileBatchContentResponse()));
+          FileBatchContentResponse.parseFrom(gitFileTaskResponseData.getFileBatchContentResponse()),
+          gitFileTaskResponseData.getCommitId());
     } catch (InvalidProtocolBufferException e) {
       throw new UnexpectedException("Unexpected error occurred while doing scm operation");
     }

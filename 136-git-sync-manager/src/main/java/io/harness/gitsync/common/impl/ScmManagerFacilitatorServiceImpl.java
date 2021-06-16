@@ -107,10 +107,10 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
       String projectIdentifier, String yamlGitConfigIdentifier, Set<String> foldersList, String branchName) {
     final ScmConnector decryptedConnector = gitSyncConnectorHelper.getDecryptedConnector(
         yamlGitConfigIdentifier, projectIdentifier, orgIdentifier, accountIdentifier);
-    // todo @deepak: pick commit id from here.
     final FileContentBatchResponse fileContentBatchResponse =
         scmClient.listFiles(decryptedConnector, foldersList, branchName);
-    return FileBatchResponseMapper.createGitFileChangeList(fileContentBatchResponse.getFileBatchContentResponse());
+    return FileBatchResponseMapper.createGitFileChangeList(
+        fileContentBatchResponse.getFileBatchContentResponse(), fileContentBatchResponse.getCommitId());
   }
 
   @Override
@@ -121,7 +121,8 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
     // todo @mohit: pick commit id from here.
     final FileContentBatchResponse fileContentBatchResponse =
         scmClient.listFilesByFilePaths(decryptedConnector, filePaths, branchName);
-    return FileBatchResponseMapper.createGitFileChangeList(fileContentBatchResponse.getFileBatchContentResponse());
+    return FileBatchResponseMapper.createGitFileChangeList(
+        fileContentBatchResponse.getFileBatchContentResponse(), fileContentBatchResponse.getCommitId());
   }
 
   @Override
@@ -132,7 +133,8 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
     // todo @mohit: pick commit id from here.
     final FileContentBatchResponse fileContentBatchResponse =
         scmClient.listFilesByCommitId(decryptedConnector, filePaths, commitId);
-    return FileBatchResponseMapper.createGitFileChangeList(fileContentBatchResponse.getFileBatchContentResponse());
+    return FileBatchResponseMapper.createGitFileChangeList(
+        fileContentBatchResponse.getFileBatchContentResponse(), fileContentBatchResponse.getCommitId());
   }
 
   @Override

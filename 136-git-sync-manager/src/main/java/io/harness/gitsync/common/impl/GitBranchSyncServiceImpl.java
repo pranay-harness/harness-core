@@ -2,7 +2,7 @@ package io.harness.gitsync.common.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus.TO_DO;
 
 import static java.util.stream.Collectors.toList;
@@ -67,14 +67,21 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
               .collect(toList());
       gitToHarnessProgressService.updateFilesInProgressRecord(
           gitToHarnessProgressRecord.getUuid(), gitToHarnessFilesToProcess);
-      // todo: get commit id.
+      String commitId = getCommitId(harnessFilesOfBranch);
       gitToHarnessProcessorService.processFiles(accountId, gitToHarnessFilesToProcess, branchName, yamlGitConfig,
-          generateUuid(), gitToHarnessProgressRecord.getUuid());
+          commitId, gitToHarnessProgressRecord.getUuid());
     } catch (Exception ex) {
       log.error("Error encountered while synching the branch {}", branchName, ex);
       gitToHarnessProgressService.updateStepStatus(
           gitToHarnessProgressRecord.getUuid(), GitToHarnessProcessingStepStatus.ERROR);
     }
+  }
+
+  private String getCommitId(List<GitFileChangeDTO> harnessFilesOfBranch) {
+    if (isEmpty(harnessFilesOfBranch)) {
+      return null;
+    }
+    return harnessFilesOfBranch.get(0).getCommitId();
   }
 
   private GitToHarnessProgressDTO saveGitToHarnessStatusRecord(
