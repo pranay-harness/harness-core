@@ -83,4 +83,9 @@ public class ScmGitFileTask extends AbstractDelegateRunnableTask {
         throw new UnknownEnumTypeException("GitFileTaskType", scmGitFileTaskParams.getGitFileTaskType().toString());
     }
   }
+
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
+  }
 }
