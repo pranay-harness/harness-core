@@ -217,7 +217,6 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
     NGEncryptedData encryptedData =
         encryptedDataService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    boolean fromManager = false;
 
     boolean remoteDeletionSuccess = true;
     boolean localDeletionSuccess = false;

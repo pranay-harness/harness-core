@@ -304,6 +304,9 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
       existingEncryptedData.setPath(encryptedData.getPath());
     }
     existingEncryptedData.setName(encryptedData.getName());
+    if (!ngSecretMigrationCompleted) {
+      existingEncryptedData.setEncryptionType(secretManager.getEncryptionType());
+    }
     return encryptedDataDao.save(existingEncryptedData);
   }
 
@@ -417,6 +420,9 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     existingEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
     existingEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
     existingEncryptedData.setBase64Encoded(encryptedData.isBase64Encoded());
+    if (!ngSecretMigrationCompleted) {
+      existingEncryptedData.setEncryptionType(secretManager.getEncryptionType());
+    }
     NGEncryptedData updatedEncryptedData = encryptedDataDao.save(existingEncryptedData);
     if (isNotEmpty(fileContent) && !fromManager && Optional.ofNullable(existingFileId).isPresent()
         && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(existingEncryptedData.getEncryptionType())) {
