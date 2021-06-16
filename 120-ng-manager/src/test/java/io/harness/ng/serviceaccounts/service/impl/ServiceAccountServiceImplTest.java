@@ -6,20 +6,22 @@ import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
 import io.harness.NgManagerTestBase;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.Scope;
 import io.harness.category.element.UnitTests;
+import io.harness.ng.core.ProjectScope;
 import io.harness.ng.serviceaccounts.dto.ServiceAccountRequestDTO;
 import io.harness.ng.serviceaccounts.entities.ServiceAccount;
 import io.harness.ng.serviceaccounts.service.api.ServiceAccountService;
-import io.harness.persistence.HPersistence;
+import io.harness.repositories.ng.serviceaccounts.ServiceAccountRepository;
 import io.harness.rule.Owner;
 import io.harness.serviceaccount.ServiceAccountDTO;
 
+import io.fabric8.utils.Lists;
 import java.util.List;
-import javax.inject.Inject;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,9 +29,8 @@ import org.junit.experimental.categories.Category;
 
 @OwnedBy(PL)
 public class ServiceAccountServiceImplTest extends NgManagerTestBase {
-  @Inject private HPersistence hPersistence;
-  @Inject private ServiceAccountService serviceAccountService;
-
+  private ServiceAccountService serviceAccountService;
+  private ServiceAccountRepository serviceAccountRepository;
   private String accountIdentifier;
   private String orgIdentifier;
   private String projectIdentifier;
@@ -46,35 +47,21 @@ public class ServiceAccountServiceImplTest extends NgManagerTestBase {
     identifier = generateUuid();
     name = generateUuid();
     description = generateUuid();
+    serviceAccountRepository = mock(ServiceAccountRepository.class);
+    serviceAccountService = new ServiceAccountServiceImpl();
 
     serviceAccountRequestDTO = new ServiceAccountRequestDTO(identifier, name, description);
-    FieldUtils.writeField(serviceAccountService, "hPersistence", hPersistence, true);
-  }
-
-  @Test
-  @Owner(developers = SOWMYA)
-  @Category(UnitTests.class)
-  public void testCreateServiceAccount() {
-    serviceAccountService.createServiceAccount(
-        accountIdentifier, orgIdentifier, projectIdentifier, serviceAccountRequestDTO);
-    ServiceAccount serviceAccount = hPersistence.createQuery(ServiceAccount.class).get();
-
-    assertThat(serviceAccount.getAccountIdentifier()).isEqualTo(accountIdentifier);
-    assertThat(serviceAccount.getOrgIdentifier()).isEqualTo(orgIdentifier);
-    assertThat(serviceAccount.getProjectIdentifier()).isEqualTo(projectIdentifier);
-    assertThat(serviceAccount.getIdentifier()).isEqualTo(identifier);
-    assertThat(serviceAccount.getName()).isEqualTo(name);
-    assertThat(serviceAccount.getDescription()).isEqualTo(description);
+    FieldUtils.writeField(serviceAccountService, "serviceAccountRepository", serviceAccountRepository, true);
   }
 
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testCreateServiceAccount_duplicateIdentifier() {
-    serviceAccountService.createServiceAccount(
-        accountIdentifier, orgIdentifier, projectIdentifier, serviceAccountRequestDTO);
-    ServiceAccount serviceAccount = hPersistence.createQuery(ServiceAccount.class).get();
-    assertThat(serviceAccount).isNotNull();
+    doReturn(ServiceAccount.builder().build())
+        .when(serviceAccountRepository)
+        .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
+            accountIdentifier, orgIdentifier, projectIdentifier, identifier);
 
     assertThatThrownBy(()
                            -> serviceAccountService.createServiceAccount(
@@ -86,59 +73,56 @@ public class ServiceAccountServiceImplTest extends NgManagerTestBase {
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
-  public void testUpdateServiceAccount() {
-    serviceAccountService.createServiceAccount(
-        accountIdentifier, orgIdentifier, projectIdentifier, serviceAccountRequestDTO);
-    serviceAccountRequestDTO = new ServiceAccountRequestDTO(identifier, name + "_new", description);
-    serviceAccountService.updateServiceAccount(
-        accountIdentifier, orgIdentifier, projectIdentifier, identifier, serviceAccountRequestDTO);
+  public void testUpdateServiceAccount_noAccountExists() {
+    doReturn(null)
+        .when(serviceAccountRepository)
+        .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
+            accountIdentifier, orgIdentifier, projectIdentifier, identifier);
 
-    ServiceAccount serviceAccount = hPersistence.createQuery(ServiceAccount.class).get();
-
-    assertThat(serviceAccount.getAccountIdentifier()).isEqualTo(accountIdentifier);
-    assertThat(serviceAccount.getOrgIdentifier()).isEqualTo(orgIdentifier);
-    assertThat(serviceAccount.getProjectIdentifier()).isEqualTo(projectIdentifier);
-    assertThat(serviceAccount.getIdentifier()).isEqualTo(identifier);
-    assertThat(serviceAccount.getName()).isEqualTo(name + "_new");
-    assertThat(serviceAccount.getDescription()).isEqualTo(description);
+    assertThatThrownBy(()
+                           -> serviceAccountService.updateServiceAccount(accountIdentifier, orgIdentifier,
+                               projectIdentifier, identifier, serviceAccountRequestDTO))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("Service account with identifier: " + identifier + " doesn't exist");
   }
 
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
-  public void testDeleteServiceAccount() {
-    serviceAccountService.createServiceAccount(
-        accountIdentifier, orgIdentifier, projectIdentifier, serviceAccountRequestDTO);
-    ServiceAccount serviceAccount = hPersistence.createQuery(ServiceAccount.class).get();
-    assertThat(serviceAccount).isNotNull();
-    serviceAccountService.deleteServiceAccount(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    serviceAccount = hPersistence.createQuery(ServiceAccount.class).get();
-    assertThat(serviceAccount).isNull();
-  }
-
-  @Test
-  @Owner(developers = SOWMYA)
-  @Category(UnitTests.class)
-  public void testListServiceAccounts() {
-    serviceAccountService.createServiceAccount(
-        accountIdentifier, orgIdentifier, projectIdentifier, serviceAccountRequestDTO);
+  public void listServiceAccountDTO() {
+    doReturn(Lists.newArrayList(ServiceAccount.builder()
+                                    .name(name)
+                                    .identifier(identifier)
+                                    .accountIdentifier(accountIdentifier)
+                                    .orgIdentifier(orgIdentifier)
+                                    .projectIdentifier(projectIdentifier)
+                                    .build()))
+        .when(serviceAccountRepository)
+        .findAllByAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
+            accountIdentifier, orgIdentifier, projectIdentifier);
     List<ServiceAccountRequestDTO> accounts =
         serviceAccountService.listServiceAccounts(accountIdentifier, orgIdentifier, projectIdentifier);
     assertThat(accounts.size()).isEqualTo(1);
-    accounts = serviceAccountService.listServiceAccounts(accountIdentifier, null, null);
-    assertThat(accounts.size()).isEqualTo(0);
   }
 
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testGetServiceAccountDTO() {
-    serviceAccountService.createServiceAccount(
-        accountIdentifier, orgIdentifier, projectIdentifier, serviceAccountRequestDTO);
+    doReturn(ServiceAccount.builder()
+                 .name(name)
+                 .identifier(identifier)
+                 .accountIdentifier(accountIdentifier)
+                 .orgIdentifier(orgIdentifier)
+                 .projectIdentifier(projectIdentifier)
+                 .build())
+        .when(serviceAccountRepository)
+        .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
+            accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     ServiceAccountDTO account =
         serviceAccountService.getServiceAccountDTO(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     assertThat(account).isNotNull();
     assertThat(account.getName()).isEqualTo(name);
-    assertThat(account.getScope()).isEqualTo(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier));
+    assertThat(account.getResourceScope()).isInstanceOf(ProjectScope.class);
   }
 }

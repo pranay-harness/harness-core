@@ -1,6 +1,9 @@
 package io.harness.serviceaccount;
 
-import io.harness.beans.Scope;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.ResourceScope;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -10,7 +13,8 @@ import lombok.experimental.FieldDefaults;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(PL)
 public class ServiceAccountDTO {
   String name;
-  Scope scope;
+  ResourceScope resourceScope;
 }

@@ -80,7 +80,6 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
         bind(HPersistence.class).to(MongoPersistence.class);
         bind(ConnectorGitSyncHelper.class).toInstance(mock(ConnectorGitSyncHelper.class));
         bind(GitBranchingHelper.class).toInstance(mock(GitBranchingHelper.class));
-        bind(ServiceAccountService.class).to(ServiceAccountServiceImpl.class);
         MapBinder<SCMType, SourceCodeManagerMapper> sourceCodeManagerMapBinder =
             MapBinder.newMapBinder(binder(), SCMType.class, SourceCodeManagerMapper.class);
         sourceCodeManagerMapBinder.addBinding(SCMType.BITBUCKET).to(BitbucketSCMMapper.class);
