@@ -1,11 +1,9 @@
 package io.harness.ng.serviceaccounts.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.datacollection.utils.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.Scope;
-import io.harness.ng.core.mapper.ResourceScopeMapper;
 import io.harness.ng.serviceaccounts.dto.ServiceAccountRequestDTO;
 import io.harness.ng.serviceaccounts.entities.ServiceAccount;
 import io.harness.ng.serviceaccounts.service.ServiceAccountDTOMapper;
@@ -13,11 +11,11 @@ import io.harness.ng.serviceaccounts.service.api.ServiceAccountService;
 import io.harness.repositories.ng.serviceaccounts.ServiceAccountRepository;
 import io.harness.serviceaccount.ServiceAccountDTO;
 
+import com.google.inject.Inject;
 import com.hazelcast.util.Preconditions;
 import groovy.util.logging.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
-import javax.inject.Inject;
 
 @Slf4j
 @OwnedBy(PL)
