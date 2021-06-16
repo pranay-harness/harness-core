@@ -72,13 +72,14 @@ import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.plan.Redis;
+import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
-import io.harness.pms.listener.facilitators.FacilitatorRedisConsumerService;
-import io.harness.pms.listener.interrupts.InterruptRedisConsumerService;
-import io.harness.pms.listener.node.advise.NodeAdviseRedisConsumerService;
-import io.harness.pms.listener.node.start.NodeStartRedisConsumerService;
-import io.harness.pms.listener.orchestrationevent.OrchestrationEventEventConsumerService;
-import io.harness.pms.listener.progress.ProgressRedisConsumerService;
+import io.harness.pms.listener.facilitators.FacilitatorEventRedisConsumer;
+import io.harness.pms.listener.interrupts.InterruptEventRedisConsumer;
+import io.harness.pms.listener.node.advise.NodeAdviseEventRedisConsumer;
+import io.harness.pms.listener.node.start.NodeStartEventRedisConsumer;
+import io.harness.pms.listener.orchestrationevent.OrchestrationEventRedisConsumer;
+import io.harness.pms.listener.progress.ProgressEventRedisConsumer;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
@@ -290,6 +291,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerJobs(injector);
     registerMigrations(injector);
     registerQueueListeners(injector);
+    registerPmsSdkEvents(injector);
 
     intializeGitSync(injector, appConfig);
     //  This is ordered below health registration so that kubernetes deployment readiness check passes under 10 minutes
@@ -387,14 +389,19 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   private void createConsumerThreadsToListenToEvents(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(NGEventConsumerService.class));
     environment.lifecycle().manage(injector.getInstance(GitSyncEventConsumerService.class));
+    environment.lifecycle().manage(injector.getInstance(PipelineEventConsumerController.class));
+  }
 
-    // Pipeline SDK Consumers
-    environment.lifecycle().manage(injector.getInstance(InterruptRedisConsumerService.class));
-    environment.lifecycle().manage(injector.getInstance(OrchestrationEventEventConsumerService.class));
-    environment.lifecycle().manage(injector.getInstance(FacilitatorRedisConsumerService.class));
-    environment.lifecycle().manage(injector.getInstance(NodeStartRedisConsumerService.class));
-    environment.lifecycle().manage(injector.getInstance(ProgressRedisConsumerService.class));
-    environment.lifecycle().manage(injector.getInstance(NodeAdviseRedisConsumerService.class));
+  private void registerPmsSdkEvents(Injector injector) {
+    log.info("Initializing sdk redis abstract consumers...");
+    PipelineEventConsumerController pipelineEventConsumerController =
+        injector.getInstance(PipelineEventConsumerController.class);
+    pipelineEventConsumerController.register(injector.getInstance(InterruptEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(FacilitatorEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class), 5);
+    pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 5);
   }
 
   private void registerYamlSdk(Injector injector) {

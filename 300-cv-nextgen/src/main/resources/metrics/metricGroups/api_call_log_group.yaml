@@ -1,0 +1,6 @@
+name: ApiCallLog
+identifier: api_call_log
+labels:
+  - accountId
+  - provider
+  - verificationType

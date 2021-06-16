@@ -73,7 +73,7 @@ public class GithubApiTokenEvaluator extends ExpressionEvaluator {
     }
 
     private String processStringInternal(String expression) {
-      return expressionEvaluator.renderExpression(expression, evaluatorResponseContext, true);
+      return expressionEvaluator.renderExpression(expression, evaluatorResponseContext, false);
     }
   }
 }

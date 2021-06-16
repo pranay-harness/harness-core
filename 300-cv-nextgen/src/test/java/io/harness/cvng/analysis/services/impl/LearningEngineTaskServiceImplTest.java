@@ -3,6 +3,7 @@ package io.harness.cvng.analysis.services.impl;
 import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType.SERVICE_GUARD_FEEDBACK_ANALYSIS;
 import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS;
 import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType.SERVICE_GUARD_TIME_SERIES;
+import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.PRAVEEN;
@@ -57,7 +58,7 @@ public class LearningEngineTaskServiceImplTest extends CvNextGenTestBase {
     MockitoAnnotations.initMocks(this);
     accountId = generateUuid();
     cvConfigId = generateUuid();
-    verificationTaskId = verificationTaskService.create(accountId, cvConfigId);
+    verificationTaskId = verificationTaskService.create(accountId, cvConfigId, APP_DYNAMICS);
   }
 
   @Test

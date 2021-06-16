@@ -115,6 +115,8 @@ import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.user.service.impl.NgUserServiceImpl;
 import io.harness.ng.core.user.service.impl.UserEntityCrudStreamListener;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
+import io.harness.ng.serviceaccounts.service.api.ServiceAccountService;
+import io.harness.ng.serviceaccounts.service.impl.ServiceAccountServiceImpl;
 import io.harness.ng.userprofile.commons.SCMType;
 import io.harness.ng.userprofile.entities.AwsCodeCommitSCM.AwsCodeCommitSCMMapper;
 import io.harness.ng.userprofile.entities.AzureDevOpsSCM.AzureDevOpsSCMMapper;
@@ -127,6 +129,7 @@ import io.harness.ng.userprofile.services.api.UserInfoService;
 import io.harness.ng.userprofile.services.impl.SourceCodeManagerServiceImpl;
 import io.harness.ng.userprofile.services.impl.UserInfoServiceImpl;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
+import io.harness.ng.webhook.services.api.WebhookEventService;
 import io.harness.ng.webhook.services.api.WebhookService;
 import io.harness.ng.webhook.services.impl.WebhookEventProcessingServiceImpl;
 import io.harness.ng.webhook.services.impl.WebhookServiceImpl;
@@ -366,6 +369,7 @@ public class NextGenModule extends AbstractModule {
         .toProvider(NGLogStreamingClientFactory.builder()
                         .logStreamingServiceBaseUrl(appConfig.getLogStreamingServiceConfig().getBaseUrl())
                         .build());
+    bind(WebhookEventService.class).to(WebhookServiceImpl.class);
 
     install(new AuthenticationSettingsModule(
         this.appConfig.getManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
@@ -450,6 +454,12 @@ public class NextGenModule extends AbstractModule {
       @Singleton
       List<YamlSchemaRootClass> yamlSchemaRootClasses() {
         return ImmutableList.<YamlSchemaRootClass>builder().addAll(NextGenRegistrars.yamlSchemaRegistrars).build();
+      }
+
+      @Provides
+      @Singleton
+      BaseUrls getBaseUrls() {
+        return appConfig.getBaseUrls();
       }
     });
     install(OrchestrationModule.getInstance(getOrchestrationConfig()));
@@ -606,6 +616,7 @@ public class NextGenModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CREATE_BRANCH_EVENT_STREAM))
         .to(GitCreateBranchEventStreamListener.class);
+    bind(ServiceAccountService.class).to(ServiceAccountServiceImpl.class);
   }
 
   private OrchestrationModuleConfig getOrchestrationConfig() {

@@ -100,12 +100,13 @@ import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
 import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.plan.Redis;
-import io.harness.pms.listener.facilitators.FacilitatorRedisConsumerService;
-import io.harness.pms.listener.interrupts.InterruptRedisConsumerService;
-import io.harness.pms.listener.node.advise.NodeAdviseRedisConsumerService;
-import io.harness.pms.listener.node.start.NodeStartRedisConsumerService;
-import io.harness.pms.listener.orchestrationevent.OrchestrationEventEventConsumerService;
-import io.harness.pms.listener.progress.ProgressRedisConsumerService;
+import io.harness.pms.events.base.PipelineEventConsumerController;
+import io.harness.pms.listener.facilitators.FacilitatorEventRedisConsumer;
+import io.harness.pms.listener.interrupts.InterruptEventRedisConsumer;
+import io.harness.pms.listener.node.advise.NodeAdviseEventRedisConsumer;
+import io.harness.pms.listener.node.start.NodeStartEventRedisConsumer;
+import io.harness.pms.listener.orchestrationevent.OrchestrationEventRedisConsumer;
+import io.harness.pms.listener.progress.ProgressEventRedisConsumer;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
@@ -365,6 +366,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerVerificationJobInstanceTimeoutIterator(injector);
     registerPipelineSDK(configuration, injector);
     registerWaitEnginePublishers(injector);
+    registerPmsSdkEvents(injector);
+
     log.info("Leaving startup maintenance mode");
     MaintenanceController.forceMaintenance(false);
     registerUpdateProgressScheduler(injector);
@@ -745,12 +748,19 @@ public class VerificationApplication extends Application<VerificationConfigurati
     environment.lifecycle().manage(injector.getInstance(MaintenanceController.class));
 
     // Pipeline SDK Consumers
-    environment.lifecycle().manage(injector.getInstance(InterruptRedisConsumerService.class));
-    environment.lifecycle().manage(injector.getInstance(OrchestrationEventEventConsumerService.class));
-    environment.lifecycle().manage(injector.getInstance(FacilitatorRedisConsumerService.class));
-    environment.lifecycle().manage(injector.getInstance(NodeStartRedisConsumerService.class));
-    environment.lifecycle().manage(injector.getInstance(ProgressRedisConsumerService.class));
-    environment.lifecycle().manage(injector.getInstance(NodeAdviseRedisConsumerService.class));
+    environment.lifecycle().manage(injector.getInstance(PipelineEventConsumerController.class));
+  }
+
+  private void registerPmsSdkEvents(Injector injector) {
+    log.info("Initializing sdk event redis abstract consumers...");
+    PipelineEventConsumerController pipelineEventConsumerController =
+        injector.getInstance(PipelineEventConsumerController.class);
+    pipelineEventConsumerController.register(injector.getInstance(InterruptEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(FacilitatorEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 1);
   }
 
   private void registerResources(Environment environment, Injector injector) {
