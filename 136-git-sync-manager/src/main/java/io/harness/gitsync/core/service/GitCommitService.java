@@ -29,5 +29,5 @@ public interface GitCommitService {
 
   Optional<GitCommitDTO> findLastGitCommit(String accountIdentifier, String repo, String branchName);
 
-  UpdateResult upsertOnCommitIdAndRepoUrl(GitCommitDTO gitCommitDTO);
+  UpdateResult upsertOnCommitIdAndRepoUrlAndGitSyncDirection(GitCommitDTO gitCommitDTO);
 }

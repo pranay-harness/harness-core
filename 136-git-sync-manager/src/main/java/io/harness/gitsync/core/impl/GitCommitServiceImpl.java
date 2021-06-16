@@ -89,11 +89,13 @@ public class GitCommitServiceImpl implements GitCommitService {
   }
 
   @Override
-  public UpdateResult upsertOnCommitIdAndRepoUrl(GitCommitDTO gitCommitDTO) {
+  public UpdateResult upsertOnCommitIdAndRepoUrlAndGitSyncDirection(GitCommitDTO gitCommitDTO) {
     Criteria criteria = Criteria.where(GitCommitKeys.commitId)
                             .is(gitCommitDTO.getCommitId())
                             .and(GitCommitKeys.repoURL)
-                            .is(gitCommitDTO.getRepoURL());
+                            .is(gitCommitDTO.getRepoURL())
+                            .and(GitCommitKeys.gitSyncDirection)
+                            .is(gitCommitDTO.getGitSyncDirection());
     Update update = update(GitCommitKeys.status, gitCommitDTO.getStatus());
     update.setOnInsert(GitCommitKeys.repoURL, gitCommitDTO.getRepoURL())
         .set(GitCommitKeys.commitId, gitCommitDTO.getCommitId())

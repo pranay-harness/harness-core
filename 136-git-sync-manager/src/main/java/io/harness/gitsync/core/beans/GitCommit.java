@@ -6,7 +6,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.gitsync.common.beans.GitSyncDirection;
 import io.harness.gitsync.gitfileactivity.beans.GitFileProcessingSummary;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -42,9 +44,21 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @OwnedBy(DX)
 public class GitCommit
     implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_commitId_repoURL_gitSyncDirection_idx")
+                 .unique(true)
+                 .field(GitCommitKeys.commitId)
+                 .field(GitCommitKeys.repoURL)
+                 .field(GitCommitKeys.gitSyncDirection)
+                 .build())
+        .build();
+  }
+
   @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id private String uuid;
   private String accountIdentifier;
-  private String commitId;
+  @FdIndex private String commitId;
   @FdIndex private GitCommitProcessingStatus status;
   private FailureReason failureReason;
   private GitFileProcessingSummary fileProcessingSummary;
