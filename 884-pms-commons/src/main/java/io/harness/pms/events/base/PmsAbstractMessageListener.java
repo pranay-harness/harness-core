@@ -24,16 +24,26 @@ public abstract class PmsAbstractMessageListener<T extends com.google.protobuf.M
     this.entityClass = entityClass;
   }
 
+  /**
+   * We are always returning true from this method even if exception occurred. If we return false that means we are do
+   * not ack the message and it would be delivered to the same consumer group again. This can lead to double
+   * notifications
+   */
+
   @Override
   public boolean handleMessage(Message message) {
     if (isProcessable(message)) {
-      log.info("[PMS_SDK] Starting to process message from {} messageId: {}", this.getClass().getSimpleName(),
-          message.getId());
-      boolean processed = processMessage(extractEntity(message), message.getMessage().getMetadataMap(),
-          ProtoUtils.timestampToUnixMillis(message.getTimestamp()));
-      log.info("[PMS_SDK] Processing Finished from {} for messageId: {} returning {}", this.getClass().getSimpleName(),
-          message.getId(), processed);
-      return processed;
+      try {
+        log.info("[PMS_SDK] Starting to process message from {} messageId: {}", this.getClass().getSimpleName(),
+            message.getId());
+        boolean processed = processMessage(extractEntity(message), message.getMessage().getMetadataMap(),
+            ProtoUtils.timestampToUnixMillis(message.getTimestamp()));
+        log.info("[PMS_SDK] Processing Finished from {} for messageId: {} with status {}",
+            this.getClass().getSimpleName(), message.getId(), processed);
+      } catch (Exception ex) {
+        log.info("[PMS_SDK] Exception occurred while processing message from {} for messageId: {}",
+            this.getClass().getSimpleName(), message.getId());
+      }
     }
     return true;
   }
@@ -57,5 +67,8 @@ public abstract class PmsAbstractMessageListener<T extends com.google.protobuf.M
     return false;
   }
 
+  /**
+   * The boolean that we are returning here is just for logging purposes we should infer nothing from the responses
+   */
   public abstract boolean processMessage(T event, Map<String, String> metadataMap, Long timestamp);
 }

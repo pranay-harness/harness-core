@@ -4,6 +4,7 @@ import static io.harness.pms.events.PmsEventFrameworkConstants.PIPELINE_MONITORI
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.metrics.service.api.MetricService;
 
 import com.google.inject.Inject;
 import com.google.protobuf.Message;
@@ -14,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class EventMonitoringServiceImpl implements EventMonitoringService {
-  @Inject io.harness.metrics.service.api.MetricService metricService;
+  @Inject MetricService metricService;
 
   // Todo: Introduce sampling
   public <T extends Message> void sendMetric(

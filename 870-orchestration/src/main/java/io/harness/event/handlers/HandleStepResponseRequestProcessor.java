@@ -11,7 +11,7 @@ import com.google.inject.Singleton;
 
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
-public class HandleStepResponseEventHandler implements SdkResponseEventHandler {
+public class HandleStepResponseRequestProcessor implements SdkResponseProcessor {
   @Inject private OrchestrationEngine engine;
 
   @Override

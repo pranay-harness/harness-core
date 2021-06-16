@@ -25,9 +25,9 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class HandleStepResponseEventHandlerTest extends OrchestrationTestBase {
+public class HandleStepResponseRequestProcessorTest extends OrchestrationTestBase {
   @Mock OrchestrationEngine engine;
-  @InjectMocks HandleStepResponseEventHandler handleStepResponseEventHandler;
+  @InjectMocks HandleStepResponseRequestProcessor handleStepResponseEventHandler;
 
   @Before
   public void setup() {

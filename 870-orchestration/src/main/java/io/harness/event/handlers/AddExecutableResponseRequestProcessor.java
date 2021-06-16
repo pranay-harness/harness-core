@@ -21,7 +21,7 @@ import java.util.List;
 
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
-public class AddExecutableResponseEventHandler implements SdkResponseEventHandler {
+public class AddExecutableResponseRequestProcessor implements SdkResponseProcessor {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) private String publisherName;

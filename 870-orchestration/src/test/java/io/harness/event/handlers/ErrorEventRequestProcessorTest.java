@@ -27,9 +27,9 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class ErrorEventResponseHandlerTest {
+public class ErrorEventRequestProcessorTest {
   @Mock private WaitNotifyEngine waitNotifyEngine;
-  @InjectMocks private ErrorEventResponseHandler errorEventResponseHandler;
+  @InjectMocks private ErrorEventRequestProcessor errorEventResponseHandler;
 
   @Before
   public void setup() {

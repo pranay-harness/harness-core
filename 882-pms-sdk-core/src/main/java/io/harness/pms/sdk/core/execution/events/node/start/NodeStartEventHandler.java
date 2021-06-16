@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.start.NodeStartEvent;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
+import io.harness.pms.events.base.PmsBaseEventHandler;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.ExecutableProcessor;
@@ -12,7 +13,6 @@ import io.harness.pms.sdk.core.execution.ExecutableProcessorFactory;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
-import io.harness.pms.sdk.core.execution.events.NodeBaseEventHandler;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
-public class NodeStartEventHandler extends NodeBaseEventHandler<NodeStartEvent> {
+public class NodeStartEventHandler extends PmsBaseEventHandler<NodeStartEvent> {
   @Inject private ExecutableProcessorFactory executableProcessorFactory;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;

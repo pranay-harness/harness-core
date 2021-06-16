@@ -12,7 +12,7 @@ import com.google.inject.Singleton;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
-public class AdviserEventResponseHandler implements SdkResponseEventHandler {
+public class AdviserResponseRequestProcessor implements SdkResponseProcessor {
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Override

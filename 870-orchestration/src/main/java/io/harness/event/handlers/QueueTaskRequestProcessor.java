@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
-public class QueueTaskResponseHandler implements SdkResponseEventHandler {
+public class QueueTaskRequestProcessor implements SdkResponseProcessor {
   @Inject private Map<TaskCategory, TaskExecutor> taskExecutorMap;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) private String publisherName;
   @Inject private WaitNotifyEngine waitNotifyEngine;

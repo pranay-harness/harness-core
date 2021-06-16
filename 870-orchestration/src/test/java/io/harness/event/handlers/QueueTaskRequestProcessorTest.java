@@ -52,13 +52,13 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class QueueTaskResponseHandlerTest extends OrchestrationTestBase {
+public class QueueTaskRequestProcessorTest extends OrchestrationTestBase {
   private Map<TaskCategory, TaskExecutor> taskExecutorMap = new HashMap<>();
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private NgDelegate2TaskExecutor ngDelegate2TaskExecutor;
   @Mock private NodeExecutionService nodeExecutionService;
 
-  @InjectMocks private QueueTaskResponseHandler queueTaskResponseHandler;
+  @InjectMocks private QueueTaskRequestProcessor queueTaskResponseHandler;
 
   @Captor ArgumentCaptor<String> nExIDCaptor;
   @Captor ArgumentCaptor<Status> sCaptor;

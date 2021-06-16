@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.core.execution.events;
+package io.harness.pms.events.base;
 
 import io.harness.data.structure.CollectionUtils;
 import io.harness.logging.AutoLogContext;
@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.NonNull;
 
-public abstract class NodeBaseEventHandler<T extends Message> {
+public abstract class PmsBaseEventHandler<T extends Message> {
   public static String LISTENER_END_METRIC = "%s_queue_time";
   public static String LISTENER_START_METRIC = "%s_time_in_queue";
 
