@@ -225,17 +225,24 @@ public class StepUtils {
 
   public static TaskRequest prepareTaskRequest(
       Ambiance ambiance, TaskDetails taskDetails, List<String> units, List<TaskSelector> selectors, String taskName) {
+    return prepareTaskRequest(ambiance, taskDetails, units, selectors, taskName, true);
+  }
+
+  public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskDetails taskDetails, List<String> units,
+      List<TaskSelector> selectors, String taskName, boolean withLogs) {
     DelegateTaskRequest delegateTaskRequest =
         DelegateTaskRequest.newBuilder()
             .setAccountId(AmbianceUtils.getAccountId(ambiance))
             .setDetails(taskDetails)
             .setSetupAbstractions(
                 TaskSetupAbstractions.newBuilder().putAllValues(buildAbstractions(ambiance, Scope.PROJECT)).build())
-            .addAllUnits(CollectionUtils.emptyIfNull(units))
-            .addAllLogKeys(CollectionUtils.emptyIfNull(generateLogKeys(ambiance, units)))
+            .addAllUnits(withLogs ? CollectionUtils.emptyIfNull(units) : Collections.emptyList())
+            .addAllLogKeys(
+                withLogs ? CollectionUtils.emptyIfNull(generateLogKeys(ambiance, units)) : Collections.emptyList())
             .addAllSelectors(CollectionUtils.emptyIfNull(selectors))
-            .setLogAbstractions(
-                TaskLogAbstractions.newBuilder().putAllValues(generateLogAbstractions(ambiance)).build())
+            .setLogAbstractions(TaskLogAbstractions.newBuilder()
+                                    .putAllValues(withLogs ? generateLogAbstractions(ambiance) : Collections.emptyMap())
+                                    .build())
             .setTaskName(taskName == null ? taskDetails.getType().getType() : taskName)
             .setSelectionTrackingLogEnabled(true)
             .build();
