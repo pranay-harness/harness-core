@@ -82,7 +82,7 @@ public class GetFilesInFolderForkTask extends RecursiveTask<List<FileChange>> {
             PageRequest.newBuilder().setPage(filesInBranchResponse.getPagination().getNext()).build());
       } catch (Exception ex) {
         log.error(
-            "Error while getting files from git for the ref %s in slug %s for folder %s", ref, slug, folderPath, ex);
+            "Error while getting files from git for the ref {} in slug {} for folder {}", ref, slug, folderPath, ex);
       }
     } while (hasMoreFiles(filesInBranchResponse));
     return allFilesInThisFolder;
