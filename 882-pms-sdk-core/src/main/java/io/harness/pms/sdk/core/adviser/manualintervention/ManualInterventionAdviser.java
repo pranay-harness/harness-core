@@ -3,6 +3,8 @@ package io.harness.pms.sdk.core.adviser.manualintervention;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pms.contracts.execution.Status.INTERVENTION_WAITING;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
@@ -19,6 +21,7 @@ import com.google.inject.Inject;
 import com.google.protobuf.Duration;
 import java.util.Collections;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ManualInterventionAdviser implements Adviser {
   public static final AdviserType ADVISER_TYPE =
       AdviserType.newBuilder().setType(OrchestrationAdviserTypes.MANUAL_INTERVENTION.name()).build();
@@ -48,7 +51,7 @@ public class ManualInterventionAdviser implements Adviser {
     boolean canAdvise = StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus())
         && advisingEvent.getFromStatus() != INTERVENTION_WAITING;
     ManualInterventionAdviserParameters parameters = extractParameters(advisingEvent);
-    FailureInfo failureInfo = advisingEvent.getNodeExecution().getFailureInfo();
+    FailureInfo failureInfo = advisingEvent.getFailureInfo();
     if (failureInfo != null && parameters != null && !isEmpty(failureInfo.getFailureTypesList())) {
       return canAdvise
           && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());

@@ -24,7 +24,7 @@ import com.google.inject.Inject;
 import java.util.Collections;
 import javax.validation.constraints.NotNull;
 
-@OwnedBy(HarnessTeam.CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 public class OnFailRollbackAdviser implements Adviser {
   public static final AdviserType ADVISER_TYPE =
       AdviserType.newBuilder().setType(CommonAdviserTypes.ON_FAIL_ROLLBACK.name()).build();
@@ -36,12 +36,11 @@ public class OnFailRollbackAdviser implements Adviser {
     OnFailRollbackParameters onFailRollbackParameters = extractParameters(advisingEvent);
     String nextNodeId = onFailRollbackParameters.getStrategyToUuid().get(onFailRollbackParameters.getStrategy());
     OptionalSweepingOutput optionalSweepingOutput =
-        executionSweepingOutputService.resolveOptional(advisingEvent.getNodeExecution().getAmbiance(),
+        executionSweepingOutputService.resolveOptional(advisingEvent.getAmbiance(),
             RefObjectUtils.getSweepingOutputRefObject(YAMLFieldNameConstants.USE_ROLLBACK_STRATEGY));
     if (!optionalSweepingOutput.isFound()) {
-      executionSweepingOutputService.consume(advisingEvent.getNodeExecution().getAmbiance(),
-          YAMLFieldNameConstants.USE_ROLLBACK_STRATEGY, OnFailRollbackOutput.builder().nextNodeId(nextNodeId).build(),
-          YAMLFieldNameConstants.PIPELINE_GROUP);
+      executionSweepingOutputService.consume(advisingEvent.getAmbiance(), YAMLFieldNameConstants.USE_ROLLBACK_STRATEGY,
+          OnFailRollbackOutput.builder().nextNodeId(nextNodeId).build(), YAMLFieldNameConstants.PIPELINE_GROUP);
     }
     return AdviserResponse.newBuilder()
         .setNextStepAdvise(NextStepAdvise.newBuilder().build())
@@ -53,7 +52,7 @@ public class OnFailRollbackAdviser implements Adviser {
   public boolean canAdvise(AdvisingEvent advisingEvent) {
     OnFailRollbackParameters parameters = extractParameters(advisingEvent);
     boolean canAdvise = StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus());
-    FailureInfo failureInfo = advisingEvent.getNodeExecution().getFailureInfo();
+    FailureInfo failureInfo = advisingEvent.getFailureInfo();
     if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesList())) {
       return canAdvise
           && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());

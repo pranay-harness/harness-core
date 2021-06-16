@@ -16,25 +16,22 @@ public class InterruptEventHandlerImpl implements InterruptEventHandler {
 
   @Override
   public boolean handleEvent(InterruptEvent event) {
-    boolean handled = false;
     try (AutoLogContext ignore = InterruptEventUtils.obtainLogContext(event)) {
       InterruptType interruptType = event.getType();
       switch (interruptType) {
         case ABORT:
           interruptEventListenerHelper.handleAbort(event);
           log.info("[PMS_SDK] Handled ABORT InterruptEvent Successfully");
-          handled = true;
           break;
         case CUSTOM_FAILURE:
           interruptEventListenerHelper.handleFailure(event);
           log.info("[PMS_SDK] Handled CUSTOM_FAILURE InterruptEvent Successfully");
-          handled = true;
           break;
         default:
           log.warn("No Handling present for Interrupt Event of type : {}", interruptType);
           noop();
       }
     }
-    return handled;
+    return true;
   }
 }
