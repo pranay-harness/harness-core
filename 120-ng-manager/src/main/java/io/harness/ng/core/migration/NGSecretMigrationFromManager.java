@@ -39,6 +39,7 @@ import software.wings.settings.SettingVariableTypes;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.time.Duration;
 import java.util.EnumSet;
 import java.util.List;
@@ -137,7 +138,7 @@ public class NGSecretMigrationFromManager implements NGMigration {
               if (encryptedData.isBase64Encoded()) {
                 inputStream = new ByteArrayInputStream(EncodingUtils.decodeBase64(encryptedData.getEncryptedValue()));
               } else {
-                inputStream = new ByteArrayInputStream(encryptedData.getEncryptedValue());
+                inputStream = new ByteArrayInputStream(String.valueOf(encryptedData.getEncryptedValue()).getBytes());
               }
             }
             encryptedDataService.createSecretFile(
