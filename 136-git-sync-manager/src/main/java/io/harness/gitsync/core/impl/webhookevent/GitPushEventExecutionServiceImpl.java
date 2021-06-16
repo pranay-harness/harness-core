@@ -10,6 +10,7 @@ import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.beans.GitWebhookRequestAttributes;
+import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
 import io.harness.gitsync.core.dtos.YamlChangeSetSaveDTO;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.gitsync.core.service.webhookevent.GitPushEventExecutionService;
@@ -47,7 +48,9 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
               repository.getBranch(), webhookDTO);
         } else {
           // create queue event and pass it to the git queue
-          yamlChangeSetService.save(prepareQueueEvent(webhookDTO));
+          YamlChangeSetDTO yamlChangeSetDTO = yamlChangeSetService.save(prepareQueueEvent(webhookDTO));
+          log.info("{} : Yaml change set queue event id {} created for webhook event id : {}", GIT_PUSH_EVENT,
+              yamlChangeSetDTO.getChangesetId(), webhookDTO.getEventId());
         }
       } else {
         log.info("{} : Repository doesn't exist, ignoring the event : {}", GIT_PUSH_EVENT, repository);
