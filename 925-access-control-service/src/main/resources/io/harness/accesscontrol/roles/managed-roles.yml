@@ -178,6 +178,10 @@ roles:
         - core_authsetting_view
         - core_authsetting_edit
         - core_authsetting_delete
+        - core_serviceaccount_create
+        - core_serviceaccount_view
+        - core_serviceaccount_edit
+        - core_serviceaccount_delete
       allowedScopeLevels:
         - account
       managed: true
