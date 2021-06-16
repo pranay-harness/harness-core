@@ -31,7 +31,6 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import io.dropwizard.lifecycle.Managed;
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
