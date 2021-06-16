@@ -14,4 +14,7 @@ public interface GitToHarnessProgressRepository
     extends CrudRepository<GitToHarnessProgress, String>, GitToHarnessProgressRepositoryCustom {
   GitToHarnessProgress findByRepoUrlAndCommitIdAndEventType(
       String repoUrl, String commitId, YamlChangeSetEventType yamlChangeSetEventType);
+
+  GitToHarnessProgress findByRepoUrlAndBranchAndEventType(
+      String repoURL, String branch, YamlChangeSetEventType eventType);
 }

@@ -67,8 +67,9 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
     }
 
     // Init Progress Record for this event
-    GitToHarnessProgressDTO gitToHarnessProgressRecord = gitToHarnessProgressService.initProgress(
-        yamlChangeSetDTO, YamlChangeSetEventType.BRANCH_PUSH, GitToHarnessProcessingStepType.GET_FILES);
+    GitToHarnessProgressDTO gitToHarnessProgressRecord = gitToHarnessProgressService.initProgress(yamlChangeSetDTO,
+        YamlChangeSetEventType.BRANCH_PUSH, GitToHarnessProcessingStepType.GET_FILES,
+        yamlChangeSetDTO.getGitWebhookRequestAttributes().getHeadCommitId());
 
     try {
       GitToHarnessGetFilesStepResponse gitToHarnessGetFilesStepResponse =
