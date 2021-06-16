@@ -36,8 +36,10 @@ import io.harness.tasks.ResponseData;
 import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.CDP)
+@Slf4j
 public class K8sRollingStep extends TaskChainExecutableWithRollback implements K8sStepExecutor {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLING.getYamlType()).build();
@@ -94,6 +96,7 @@ public class K8sRollingStep extends TaskChainExecutableWithRollback implements K
   public TaskChainResponse executeNextLink(Ambiance ambiance, StepElementParameters stepElementParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseSupplier)
       throws Exception {
+    log.info("Calling executeNextLink");
     return k8sStepHelper.executeNextLink(this, ambiance, stepElementParameters, passThroughData, responseSupplier);
   }
 
@@ -112,6 +115,7 @@ public class K8sRollingStep extends TaskChainExecutableWithRollback implements K
       return k8sStepHelper.handleStepExceptionFailure((StepExceptionPassThroughData) passThroughData);
     }
 
+    log.info("Finalizing execution with passThroughData: " + passThroughData.getClass().getName());
     K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
     StepResponseBuilder stepResponseBuilder =
         StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());

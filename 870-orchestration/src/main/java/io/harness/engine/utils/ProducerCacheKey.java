@@ -10,7 +10,14 @@ import lombok.Value;
 @Value
 @Builder
 class ProducerCacheKey {
-  enum EventCategory { INTERRUPT_EVENT, ORCHESTRATION_EVENT, FACILITATOR_EVENT, NODE_START, PROGRESS_EVENT }
+  enum EventCategory {
+    INTERRUPT_EVENT,
+    ORCHESTRATION_EVENT,
+    FACILITATOR_EVENT,
+    NODE_START,
+    PROGRESS_EVENT,
+    NODE_ADVISE
+  }
   String serviceName;
   EventCategory eventCategory;
 }

@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -92,8 +93,8 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
             .build();
     when(k8sStepHelper.getReleaseName(any())).thenReturn("releaseName");
 
-    StepResponse response =
-        k8sRollingStep.finalizeExecution(ambiance, stepElementParameters, null, () -> k8sDeployResponse);
+    StepResponse response = k8sRollingStep.finalizeExecution(
+        ambiance, stepElementParameters, K8sDirectInfrastructureOutcome.builder().build(), () -> k8sDeployResponse);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
     assertThat(response.getStepOutcomes()).hasSize(1);
 

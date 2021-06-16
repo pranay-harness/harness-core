@@ -17,6 +17,9 @@ public class PmsUtilityConsumerConstants {
   public static final String PT_PROGRESS_LISTENER = "PROGRESS_LISTENER";
   public static final String PT_PROGRESS_CONSUMER = "PROGRESS_CONSUMER";
 
+  public static final String PT_NODE_ADVISE_LISTENER = "NODE_ADVISE_LISTENER";
+  public static final String PT_NODE_ADVISE_CONSUMER = "NODE_ADVISE_CONSUMER";
+
   public static final String PT_ORCHESTRATION_EVENT_CONSUMER = "ORCHESTRATION_EVENT_CONSUMER";
   public static final String PT_ORCHESTRATION_EVENT_LISTENER = "ORCHESTRATION_EVENT_LISTENER";
 }

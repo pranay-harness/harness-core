@@ -4,6 +4,8 @@ import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_FACIL
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_FACILITATOR_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_INTERRUPT_BATCH_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_INTERRUPT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_ADVISE_BATCH_SIZE;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_ADVISE_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_START_EVENT_BATCH_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_START_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_BATCH_SIZE;
@@ -14,6 +16,8 @@ import static io.harness.pms.listener.PmsUtilityConsumerConstants.PT_FACILITATOR
 import static io.harness.pms.listener.PmsUtilityConsumerConstants.PT_FACILITATOR_LISTENER;
 import static io.harness.pms.listener.PmsUtilityConsumerConstants.PT_INTERRUPT_CONSUMER;
 import static io.harness.pms.listener.PmsUtilityConsumerConstants.PT_INTERRUPT_LISTENER;
+import static io.harness.pms.listener.PmsUtilityConsumerConstants.PT_NODE_ADVISE_CONSUMER;
+import static io.harness.pms.listener.PmsUtilityConsumerConstants.PT_NODE_ADVISE_LISTENER;
 import static io.harness.pms.listener.PmsUtilityConsumerConstants.PT_NODE_START_CONSUMER;
 import static io.harness.pms.listener.PmsUtilityConsumerConstants.PT_NODE_START_LISTENER;
 import static io.harness.pms.listener.PmsUtilityConsumerConstants.PT_ORCHESTRATION_EVENT_CONSUMER;
@@ -31,6 +35,7 @@ import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.pms.listener.facilitators.FacilitatorEventMessageListener;
 import io.harness.pms.listener.interrupts.InterruptEventMessageListener;
+import io.harness.pms.listener.node.advise.NodeAdviseEventMessageListener;
 import io.harness.pms.listener.node.start.NodeStartEventMessageListener;
 import io.harness.pms.listener.orchestrationevent.OrchestrationEventMessageListener;
 import io.harness.pms.listener.progress.ProgressEventMessageListener;
@@ -87,6 +92,11 @@ public class PipelineServiceUtilityModule extends AbstractModule {
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
 
+      bind(Consumer.class)
+          .annotatedWith(Names.named(PT_NODE_ADVISE_CONSUMER))
+          .toInstance(
+              NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
+
     } else {
       bind(Consumer.class)
           .annotatedWith(Names.named(PT_INTERRUPT_CONSUMER))
@@ -112,6 +122,11 @@ public class PipelineServiceUtilityModule extends AbstractModule {
           .annotatedWith(Names.named(PT_PROGRESS_CONSUMER))
           .toInstance(RedisConsumer.of(PIPELINE_PROGRESS_EVENT_TOPIC, serviceName, redisConfig, Duration.ofSeconds(10),
               PIPELINE_PROGRESS_BATCH_SIZE));
+
+      bind(Consumer.class)
+          .annotatedWith(Names.named(PT_NODE_ADVISE_CONSUMER))
+          .toInstance(RedisConsumer.of(PIPELINE_NODE_ADVISE_EVENT_TOPIC, serviceName, redisConfig,
+              Duration.ofSeconds(10), PIPELINE_NODE_ADVISE_BATCH_SIZE));
     }
     bind(MessageListener.class)
         .annotatedWith(Names.named(PT_INTERRUPT_LISTENER))
@@ -131,5 +146,8 @@ public class PipelineServiceUtilityModule extends AbstractModule {
         .to(NodeStartEventMessageListener.class);
 
     bind(MessageListener.class).annotatedWith(Names.named(PT_PROGRESS_LISTENER)).to(ProgressEventMessageListener.class);
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(PT_NODE_ADVISE_LISTENER))
+        .to(NodeAdviseEventMessageListener.class);
   }
 }

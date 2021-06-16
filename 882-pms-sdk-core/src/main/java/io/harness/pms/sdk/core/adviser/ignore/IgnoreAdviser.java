@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.core.adviser.ignore;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -20,7 +20,7 @@ import com.google.inject.Inject;
 import java.util.Collections;
 import javax.validation.constraints.NotNull;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 public class IgnoreAdviser implements Adviser {
   public static final AdviserType ADVISER_TYPE =
       AdviserType.newBuilder().setType(OrchestrationAdviserTypes.IGNORE.name()).build();
@@ -39,7 +39,7 @@ public class IgnoreAdviser implements Adviser {
   public boolean canAdvise(AdvisingEvent advisingEvent) {
     IgnoreAdviserParameters parameters = extractParameters(advisingEvent);
     boolean canAdvise = StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus());
-    FailureInfo failureInfo = advisingEvent.getNodeExecution().getFailureInfo();
+    FailureInfo failureInfo = advisingEvent.getFailureInfo();
     if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesList())) {
       return canAdvise
           && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());

@@ -224,7 +224,6 @@ func isValid(t types.RunnableTest) bool {
 }
 
 func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq) (types.SelectTestsResp, error) {
-	mdb.Log.Infow("getTestsToRun call", "req", req)
 	// parse package and class names from the files
 	fileNames := []string{}
 	for _, f := range req.Files {
@@ -235,8 +234,6 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 			matched, _ := zglob.Match(ignore, f.Name)
 			if matched == true {
 				// TODO: (Vistaar) Remove this warning message in prod since it has no context
-				// Keeping for debugging help for now
-				mdb.Log.Warnw(fmt.Sprintf("removing %s from consideration as it matches %s", f, ignore))
 				remove = true
 				break
 			}
@@ -277,6 +274,15 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 		u := types.RunnableTest{Pkg: t.Package, Class: t.Class}
 		methodMap[u] = append(methodMap[u], types.RunnableTest{Pkg: t.Package, Class: t.Class, Method: t.Method})
 		totalTests += 1
+	}
+
+	// If no tests were found in the target branch, we want to run all the tests to generate the callgraph for that branch
+	if req.SelectAll == true || totalTests == 0 {
+		return types.SelectTestsResp{
+			SelectAll:    true,
+			TotalTests:   totalTests,
+			SrcCodeTests: totalTests,
+		}, nil
 	}
 
 	m := make(map[types.RunnableTest]struct{}) // Get unique tests to run

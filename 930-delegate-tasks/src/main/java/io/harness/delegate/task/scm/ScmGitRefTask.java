@@ -83,4 +83,9 @@ public class ScmGitRefTask extends AbstractDelegateRunnableTask {
         throw new UnknownEnumTypeException("GitRefType", scmGitRefTaskParams.getGitRefType().toString());
     }
   }
+
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
+  }
 }

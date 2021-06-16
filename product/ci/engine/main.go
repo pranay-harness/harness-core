@@ -105,6 +105,7 @@ func startServer(rl *logs.RemoteLogger, background bool) {
 		go func() {
 			if err := s.Start(); err != nil {
 				log.Errorw("error in CI engine grpc server", "port", consts.LiteEnginePort, "error_msg", zap.Error(err))
+				rl.Writer.Close()
 			}
 		}()
 	} else {

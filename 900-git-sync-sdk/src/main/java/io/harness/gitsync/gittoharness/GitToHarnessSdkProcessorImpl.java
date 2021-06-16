@@ -151,7 +151,7 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
                            .branch(gitToHarnessBranchInfo.getBranch())
                            .folderPath(folderPath)
                            .filePath(filePath)
-                           .yamlGitConfigId(gitToHarnessBranchInfo.getYamlGitConfigId())
+                           .yamlGitConfigId(changeSet.getYamlGitConfigInfo().getYamlGitConfigId())
                            .lastObjectId(changeSet.getObjectId() == null ? null : changeSet.getObjectId().getValue())
                            .isSyncFromGit(true)
                            .commitId(commitId)
