@@ -25,6 +25,7 @@ import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
 
 import software.wings.beans.TaskType;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -571,6 +572,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                     dataCollectionInfo.getStateExecutionId(), allMetricRecords)) {
               log.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
                   dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
+              throw new DataCollectionException(
+                  "Unable to save metrics elements. Please check delegate logs for details.");
             } else {
               log.info(dataCollectionInfo.getStateType() + ": Sent {} metric records to the server for minute {}",
                   allMetricRecords.size(), dataCollectionMinute);

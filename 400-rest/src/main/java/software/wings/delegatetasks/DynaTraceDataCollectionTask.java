@@ -21,6 +21,7 @@ import io.harness.time.Timestamp;
 
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.TaskType;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
@@ -157,6 +158,8 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
                   dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
             log.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
                 dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
+            throw new DataCollectionException(
+                "Unable to save metrics elements. Please check delegate logs for details.");
           } else {
             log.info("Sent {} Dynatrace metric records to the server for minute {}", recordsToSave.size(),
                 dataCollectionMinute);

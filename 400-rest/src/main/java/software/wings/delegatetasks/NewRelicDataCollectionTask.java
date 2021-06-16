@@ -28,6 +28,7 @@ import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
 
 import software.wings.beans.TaskType;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
@@ -474,6 +475,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           if (!saveHeartBeats(dataCollectionMinForHeartbeat)) {
             log.error("Error saving heartbeat to the database. DatacollectionMin: {} StateexecutionId: {}",
                 dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
+            throw new DataCollectionException(
+                "Unable to save metrics elements. Please check delegate logs for details.");
           }
 
           log.info("done processing parallel tasks {}", callables.size());

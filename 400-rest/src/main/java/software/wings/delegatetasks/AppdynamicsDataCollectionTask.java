@@ -18,6 +18,7 @@ import io.harness.time.Timestamp;
 
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.TaskType;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -362,6 +363,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
                   dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
             log.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
                 dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
+            throw new DataCollectionException(
+                "Unable to save metrics elements. Please check delegate logs for details.");
           } else {
             log.debug("Sent {} appdynamics metric records to the server for minute {} for state {}",
                 recordsToSave.size(), dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
