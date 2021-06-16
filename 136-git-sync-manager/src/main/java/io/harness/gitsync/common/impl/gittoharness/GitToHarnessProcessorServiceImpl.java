@@ -201,7 +201,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
               .status(GitCommitProcessingStatus.COMPLETED)
               .fileProcessingSummary(prepareGitFileProcessingSummary(gitToHarnessProcessingResponses))
               .build();
-      gitCommitService.upsertOnCommitIdAndRepoUrl(gitCommitDTO);
+      gitCommitService.upsertOnCommitIdAndRepoUrlAndGitSyncDirection(gitCommitDTO);
     }
   }
 
