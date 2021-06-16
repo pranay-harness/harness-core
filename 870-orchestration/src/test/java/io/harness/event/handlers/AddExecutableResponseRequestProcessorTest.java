@@ -33,10 +33,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class AddExecutableResponseEventHandlerTest {
+public class AddExecutableResponseRequestProcessorTest {
   @Mock private NodeExecutionService nodeExecutionService;
   @Mock private WaitNotifyEngine waitNotifyEngine;
-  @InjectMocks AddExecutableResponseEventHandler addExecutableResponseEventHandler;
+  @InjectMocks AddExecutableResponseRequestProcessor addExecutableResponseEventHandler;
 
   @Before
   public void setup() {

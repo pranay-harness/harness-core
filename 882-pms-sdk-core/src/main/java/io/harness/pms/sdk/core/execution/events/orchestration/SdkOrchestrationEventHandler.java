@@ -7,11 +7,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent;
+import io.harness.pms.events.base.PmsBaseEventHandler;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
-import io.harness.pms.sdk.core.execution.events.NodeBaseEventHandler;
 import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
 import io.harness.serializer.ProtoUtils;
 
@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PIPELINE)
 @Slf4j
 @Singleton
-public class SdkOrchestrationEventHandler extends NodeBaseEventHandler<OrchestrationEvent> {
+public class SdkOrchestrationEventHandler extends PmsBaseEventHandler<OrchestrationEvent> {
   @Inject private OrchestrationEventHandlerRegistry handlerRegistry;
   @Inject @Named(PmsSdkModuleUtils.SDK_EXECUTOR_NAME) private ExecutorService executorService;
 

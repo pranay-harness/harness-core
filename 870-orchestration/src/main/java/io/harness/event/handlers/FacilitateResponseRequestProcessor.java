@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 @Slf4j
-public class FacilitateResponseRequestHandler implements SdkResponseEventHandler {
+public class FacilitateResponseRequestProcessor implements SdkResponseProcessor {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private OrchestrationEngine orchestrationEngine;
 

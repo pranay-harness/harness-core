@@ -7,18 +7,18 @@ import static org.mockito.Mockito.verify;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.contracts.execution.ExecutionMode;
-import io.harness.pms.contracts.execution.events.FacilitatorResponseRequest;
+import io.harness.pms.contracts.advisers.AdviseType;
+import io.harness.pms.contracts.advisers.AdviserResponse;
+import io.harness.pms.contracts.advisers.EndPlanAdvise;
+import io.harness.pms.contracts.execution.events.AdviserResponseRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
-import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.rule.Owner;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -27,10 +27,9 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class FacilitateEventSdkResponseHandlerTest {
+public class AdviserResponseRequestProcessorTest {
   @Mock private WaitNotifyEngine waitNotifyEngine;
-  @Mock private io.harness.engine.OrchestrationEngine orchestrationEngine;
-  @InjectMocks private FacilitateResponseRequestHandler facilitateResponseRequestHandler;
+  @InjectMocks private AdviserResponseRequestProcessor adviserEventResponseHandler;
 
   @Before
   public void setup() {
@@ -45,20 +44,20 @@ public class FacilitateEventSdkResponseHandlerTest {
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
-  @Ignore("Modify it to use orchestrationEngine inplace of waitEngine")
   public void testHandleAdviseEvent() {
-    FacilitatorResponseRequest request =
-        FacilitatorResponseRequest.newBuilder()
-            .setFacilitatorResponse(FacilitatorResponseProto.newBuilder().setExecutionMode(ExecutionMode.TASK).build())
-            .build();
+    AdviserResponseRequest request = AdviserResponseRequest.newBuilder()
+                                         .setAdviserResponse(AdviserResponse.newBuilder()
+                                                                 .setType(AdviseType.END_PLAN)
+                                                                 .setEndPlanAdvise(EndPlanAdvise.newBuilder().build())
+                                                                 .build())
+                                         .build();
     SdkResponseEventProto sdkResponseEventInternal =
         SdkResponseEventProto.newBuilder()
-            .setSdkResponseEventRequest(
-                SdkResponseEventRequest.newBuilder().setFacilitatorResponseRequest(request).build())
+            .setSdkResponseEventRequest(SdkResponseEventRequest.newBuilder().setAdviserResponseRequest(request).build())
             .build();
-    facilitateResponseRequestHandler.handleEvent(sdkResponseEventInternal);
+    adviserEventResponseHandler.handleEvent(sdkResponseEventInternal);
     verify(waitNotifyEngine)
         .doneWith(request.getNotifyId(),
-            BinaryResponseData.builder().data(request.getFacilitatorResponse().toByteArray()).build());
+            BinaryResponseData.builder().data(request.getAdviserResponse().toByteArray()).build());
   }
 }

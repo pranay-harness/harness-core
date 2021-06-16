@@ -13,7 +13,7 @@ import com.google.inject.Singleton;
 
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
-public class SuspendChainResponseEventHandler implements SdkResponseEventHandler {
+public class SuspendChainRequestProcessor implements SdkResponseProcessor {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private OrchestrationEngine engine;
 

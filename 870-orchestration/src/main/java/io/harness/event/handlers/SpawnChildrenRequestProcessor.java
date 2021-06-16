@@ -34,7 +34,7 @@ import java.util.concurrent.ExecutorService;
 
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
-public class SpawnChildrenResponseEventHandler implements SdkResponseEventHandler {
+public class SpawnChildrenRequestProcessor implements SdkResponseProcessor {
   @Inject private PlanService planService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private OrchestrationEngine engine;

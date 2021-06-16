@@ -16,7 +16,7 @@ import org.bson.Document;
 
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
-public class HandleProgressResponseEventHandler implements SdkResponseEventHandler {
+public class HandleProgressRequestProcessor implements SdkResponseProcessor {
   @Inject private NodeExecutionService nodeExecutionService;
 
   @Override

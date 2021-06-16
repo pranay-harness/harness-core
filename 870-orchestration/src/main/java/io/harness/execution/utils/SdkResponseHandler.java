@@ -2,11 +2,11 @@ package io.harness.execution.utils;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.event.handlers.SdkResponseEventHandler;
+import io.harness.event.handlers.SdkResponseProcessor;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
-import io.harness.pms.sdk.core.execution.events.NodeBaseEventHandler;
-import io.harness.registries.SdkNodeExecutionEventHandlerFactory;
+import io.harness.pms.events.base.PmsBaseEventHandler;
+import io.harness.registries.SdkResponseProcessorFactory;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -15,8 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
-public class RedisSdkResponseHandler extends NodeBaseEventHandler<SdkResponseEventProto> {
-  @Inject private SdkNodeExecutionEventHandlerFactory handlerRegistry;
+public class SdkResponseHandler extends PmsBaseEventHandler<SdkResponseEventProto> {
+  @Inject private SdkResponseProcessorFactory handlerRegistry;
 
   @Override
   protected Map<String, String> extraLogProperties(SdkResponseEventProto event) {
@@ -41,7 +41,7 @@ public class RedisSdkResponseHandler extends NodeBaseEventHandler<SdkResponseEve
   @Override
   protected boolean handleEventWithContext(SdkResponseEventProto event) {
     log.info("Event for SdkResponseEvent received");
-    SdkResponseEventHandler handler = handlerRegistry.getHandler(event.getSdkResponseEventType());
+    SdkResponseProcessor handler = handlerRegistry.getHandler(event.getSdkResponseEventType());
     handler.handleEvent(event);
     return true;
   }
