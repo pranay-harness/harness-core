@@ -11,6 +11,7 @@ import io.harness.serializer.morphia.NgAccessControlMigrationMorphiaRegistrar;
 import io.harness.serializer.morphia.NgUserGroupMorphiaRegistrar;
 import io.harness.serializer.morphia.NgUserMembershipMorphiaRegistrar;
 import io.harness.serializer.morphia.NgUserProfileMorphiaRegistrars;
+import io.harness.serializer.morphia.ServiceAccountMorphiaRegistrars;
 import io.harness.serializer.morphia.WebhookMorphiaRegistrars;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
@@ -51,6 +52,7 @@ public class NextGenRegistrars {
           .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
           .addAll(LicenseManagerRegistrars.morphiaRegistrars)
           .addAll(SignupRegistrars.morphiaRegistrars)
+          .add(ServiceAccountMorphiaRegistrars.class)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =
