@@ -206,7 +206,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: delegate-service
+  name: delegate-service-${delegateName}
   namespace: ${delegateNamespace}
 spec:
   type: ClusterIP

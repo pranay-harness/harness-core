@@ -190,7 +190,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: delegate-service
+  name: delegate-service-${delegateName}
   namespace: harness-delegate
 spec:
   type: ClusterIP
