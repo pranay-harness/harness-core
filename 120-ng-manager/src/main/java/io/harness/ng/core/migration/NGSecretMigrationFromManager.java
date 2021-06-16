@@ -3,7 +3,6 @@ package io.harness.ng.core.migration;
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 import static io.harness.secretmanagerclient.SecretType.SSHKey;
 import static io.harness.secretmanagerclient.SecretType.SecretFile;
@@ -12,14 +11,8 @@ import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.security.encryption.EncryptionType.KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 
-import static java.time.Duration.ofSeconds;
-
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.iterator.PersistenceIteratorFactory;
-import io.harness.mongo.iterator.MongoPersistenceIterator;
-import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
-import io.harness.mongo.iterator.filter.SpringFilterExpander;
-import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
+import io.harness.migration.NGMigration;
 import io.harness.ng.core.api.NGEncryptedDataService;
 import io.harness.ng.core.dao.NGEncryptedDataDao;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
@@ -37,86 +30,74 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import io.harness.secrets.SecretsFileService;
 import io.harness.security.encryption.EncryptionType;
+import io.harness.utils.RetryUtils;
 
 import software.wings.settings.SettingVariableTypes;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import java.io.ByteArrayInputStream;
+import java.time.Duration;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 
-@OwnedBy(PL)
-@Singleton
 @Slf4j
-public class ManagerToNGManagerEncryptedDataMigrationHandler implements Handler<Secret> {
+@OwnedBy(PL)
+public class NGSecretMigrationFromManager implements NGMigration {
   private static final Set<EncryptionType> ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD = EnumSet.of(LOCAL, GCP_KMS, KMS);
-  private final PersistenceIteratorFactory persistenceIteratorFactory;
+  private final RetryPolicy<Object> retryPolicy = RetryUtils.getRetryPolicy(
+      "[Retrying]: Failed migrating Secret; attempt: {}", "[Failed]: Failed migrating Secret; attempt: {}",
+      ImmutableList.of(OptimisticLockingFailureException.class, DuplicateKeyException.class), Duration.ofSeconds(1), 3,
+      log);
+
   private final MongoTemplate mongoTemplate;
   private final SecretManagerClient secretManagerClient;
   private final NGEncryptedDataDao encryptedDataDao;
   private final SecretsFileService secretsFileService;
   private final SecretRepository secretRepository;
   private final NGEncryptedDataService encryptedDataService;
-  private final boolean ngSecretMigrationCompleted;
 
   @Inject
-  public ManagerToNGManagerEncryptedDataMigrationHandler(PersistenceIteratorFactory persistenceIteratorFactory,
-      MongoTemplate mongoTemplate, SecretManagerClient secretManagerClient, NGEncryptedDataDao encryptedDataDao,
-      SecretsFileService secretsFileService, SecretRepository secretRepository,
-      NGEncryptedDataService encryptedDataService,
-      @Named("ngSecretMigrationCompleted") boolean ngSecretMigrationCompleted) {
-    this.persistenceIteratorFactory = persistenceIteratorFactory;
+  public NGSecretMigrationFromManager(MongoTemplate mongoTemplate, SecretManagerClient secretManagerClient,
+      NGEncryptedDataDao encryptedDataDao, SecretsFileService secretsFileService, SecretRepository secretRepository,
+      NGEncryptedDataService encryptedDataService) {
     this.mongoTemplate = mongoTemplate;
     this.secretManagerClient = secretManagerClient;
     this.encryptedDataDao = encryptedDataDao;
     this.secretsFileService = secretsFileService;
     this.secretRepository = secretRepository;
     this.encryptedDataService = encryptedDataService;
-    this.ngSecretMigrationCompleted = ngSecretMigrationCompleted;
-  }
-
-  public void registerIterators() {
-    if (ngSecretMigrationCompleted) {
-      return;
-    }
-    SpringFilterExpander filterExpander = getFilterQuery();
-    registerIteratorWithFactory(filterExpander);
-  }
-
-  private void registerIteratorWithFactory(@NotNull SpringFilterExpander filterExpander) {
-    persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
-        PersistenceIteratorFactory.PumpExecutorOptions.builder()
-            .name(this.getClass().getName())
-            .poolSize(3)
-            .interval(ofSeconds(5))
-            .build(),
-        Secret.class,
-        MongoPersistenceIterator.<Secret, SpringFilterExpander>builder()
-            .clazz(Secret.class)
-            .fieldName(SecretKeys.nextIteration)
-            .targetInterval(ofSeconds(20))
-            .acceptableExecutionTime(ofSeconds(30))
-            .acceptableNoAlertDelay(ofSeconds(60))
-            .filterExpander(filterExpander)
-            .handler(this)
-            .schedulingType(REGULAR)
-            .persistenceProvider(new SpringPersistenceProvider<>(mongoTemplate))
-            .redistribute(true));
-  }
-
-  private SpringFilterExpander getFilterQuery() {
-    return query -> query.addCriteria(Criteria.where(SecretKeys.migratedFromManager).ne(true));
   }
 
   @Override
-  public void handle(Secret secret) {
+  public void migrate() {
+    Criteria criteria = Criteria.where(SecretKeys.migratedFromManager).ne(Boolean.TRUE);
+    List<Secret> secrets = mongoTemplate.find(new Query(criteria), Secret.class);
+    secrets.forEach(this::handleWithCare);
+  }
+
+  private void handleWithCare(Secret secret) {
+    try {
+      Failsafe.with(retryPolicy).run(() -> handle(secret));
+    } catch (Exception exception) {
+      log.error(String.format(
+          "Unexpected error occurred during migration of secret with account %s, org %s, project %s and identifier %s",
+          secret.getAccountIdentifier(), secret.getOrgIdentifier(), secret.getProjectIdentifier(),
+          secret.getIdentifier()));
+    }
+  }
+
+  private void handle(Secret secret) {
     if (!SSHKey.equals(secret.getType())) {
       NGEncryptedData encryptedData = encryptedDataDao.get(secret.getAccountIdentifier(), secret.getOrgIdentifier(),
           secret.getProjectIdentifier(), secret.getIdentifier());
@@ -125,10 +106,8 @@ public class ManagerToNGManagerEncryptedDataMigrationHandler implements Handler<
         encryptedData = fromEncryptedDataMigrationDTO(getResponse(secretManagerClient.getEncryptedDataMigrationDTO(
             secret.getIdentifier(), secret.getAccountIdentifier(), secret.getOrgIdentifier(),
             secret.getProjectIdentifier(), HARNESS_SECRET_MANAGER_IDENTIFIER.equals(secretManagerIdentifier))));
-        boolean dummy = false;
         if (encryptedData == null) {
           encryptedData = getDummyEncryptedData(secret);
-          dummy = true;
         }
         if (encryptedData == null) {
           log.info(String.format(
@@ -151,23 +130,12 @@ public class ManagerToNGManagerEncryptedDataMigrationHandler implements Handler<
           encryptedDataDao.save(encryptedData);
         } else {
           if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE) {
-            if (!dummy) {
-              encryptedDataService.updateSecretFile(secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData),
-                  isEmpty(encryptedData.getEncryptedValue())
-                      ? null
-                      : new ByteArrayInputStream(String.valueOf(encryptedData.getEncryptedValue()).getBytes()));
-            } else {
-              encryptedDataService.createSecretFile(secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData),
-                  isEmpty(encryptedData.getEncryptedValue())
-                      ? null
-                      : new ByteArrayInputStream(String.valueOf(encryptedData.getEncryptedValue()).getBytes()));
-            }
+            encryptedDataService.createSecretFile(secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData),
+                isEmpty(encryptedData.getEncryptedValue())
+                    ? null
+                    : new ByteArrayInputStream(String.valueOf(encryptedData.getEncryptedValue()).getBytes()));
           } else {
-            if (!dummy) {
-              encryptedDataService.updateSecretText(secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData));
-            } else {
-              encryptedDataService.createSecretText(secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData));
-            }
+            encryptedDataService.createSecretText(secret.getAccountIdentifier(), buildSecretDTOV2(encryptedData));
           }
         }
       }
@@ -269,27 +237,6 @@ public class ManagerToNGManagerEncryptedDataMigrationHandler implements Handler<
         .path(encryptedDataMigrationDTO.getPath())
         .base64Encoded(encryptedDataMigrationDTO.isBase64Encoded())
         .type(encryptedDataMigrationDTO.getType())
-        .build();
-  }
-
-  public static EncryptedDataMigrationDTO toEncryptedDataMigrationDTO(NGEncryptedData encryptedData) {
-    if (encryptedData == null) {
-      return null;
-    }
-    return EncryptedDataMigrationDTO.builder()
-        .uuid(encryptedData.getUuid())
-        .accountIdentifier(encryptedData.getAccountIdentifier())
-        .orgIdentifier(encryptedData.getOrgIdentifier())
-        .projectIdentifier(encryptedData.getProjectIdentifier())
-        .identifier(encryptedData.getIdentifier())
-        .name(encryptedData.getName())
-        .encryptionType(encryptedData.getEncryptionType())
-        .kmsId(encryptedData.getSecretManagerIdentifier())
-        .encryptionKey(encryptedData.getEncryptionKey())
-        .encryptedValue(encryptedData.getEncryptedValue())
-        .path(encryptedData.getPath())
-        .base64Encoded(encryptedData.isBase64Encoded())
-        .type(encryptedData.getType())
         .build();
   }
 }

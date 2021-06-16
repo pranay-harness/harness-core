@@ -310,12 +310,6 @@ public class NextGenModule extends AbstractModule {
   }
 
   @Provides
-  @Named("ngSecretMigrationCompleted")
-  public boolean getNgSecretMigrationCompleted() {
-    return Boolean.TRUE.equals(this.appConfig.getNgSecretMigrationCompleted());
-  }
-
-  @Provides
   @Singleton
   CEAzureSetupConfig ceAzureSetupConfig() {
     return this.appConfig.getCeAzureSetupConfig();

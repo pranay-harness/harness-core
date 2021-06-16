@@ -61,7 +61,6 @@ import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
-import io.harness.ng.core.migration.ManagerToNGManagerEncryptedDataMigrationHandler;
 import io.harness.ng.core.user.service.impl.UserMembershipMigrationService;
 import io.harness.ng.core.user.service.impl.UserProjectMigrationService;
 import io.harness.ng.migration.NGCoreMigrationProvider;
@@ -371,7 +370,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   public void registerIterators(Injector injector) {
     injector.getInstance(WebhookEventProcessingService.class).registerIterators();
     injector.getInstance(UserMembershipMigrationService.class).registerIterators();
-    injector.getInstance(ManagerToNGManagerEncryptedDataMigrationHandler.class).registerIterators();
   }
 
   public void registerJobs(Injector injector) {

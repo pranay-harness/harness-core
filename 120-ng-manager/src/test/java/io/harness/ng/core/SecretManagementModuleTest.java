@@ -79,13 +79,6 @@ public class SecretManagementModuleTest extends CategoryTest {
     });
     modules.add(new ProviderModule() {
       @Provides
-      @Named("ngSecretMigrationCompleted")
-      boolean migration() {
-        return true;
-      }
-    });
-    modules.add(new ProviderModule() {
-      @Provides
       @Singleton
       SecretRepository repository() {
         return mock(SecretRepository.class);

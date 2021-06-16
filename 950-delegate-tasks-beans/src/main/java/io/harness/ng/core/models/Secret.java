@@ -5,7 +5,6 @@ import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -14,7 +13,6 @@ import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.secretmanagerclient.SecretType;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.collect.ImmutableList;
@@ -37,7 +35,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("secrets")
 @StoreIn(DbAliases.NG_MANAGER)
-public class Secret implements PersistentRegularIterable {
+public class Secret {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -47,11 +45,6 @@ public class Secret implements PersistentRegularIterable {
                  .field(SecretKeys.orgIdentifier)
                  .field(SecretKeys.projectIdentifier)
                  .field(SecretKeys.identifier)
-                 .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("nextIterationWithMigrationIdx")
-                 .field(SecretKeys.migratedFromManager)
-                 .field(SecretKeys.nextIteration)
                  .build())
         .build();
   }
@@ -90,22 +83,5 @@ public class Secret implements PersistentRegularIterable {
         .build();
   }
 
-  Boolean migratedFromManager;
-  @FdIndex Long nextIteration;
-
-  @Override
-  public void updateNextIteration(String fieldName, long nextIteration) {
-    this.nextIteration = nextIteration;
-  }
-
-  @Override
-  public Long obtainNextIteration(String fieldName) {
-    return this.nextIteration;
-  }
-
-  @JsonIgnore
-  @Override
-  public String getUuid() {
-    return this.id;
-  }
+  @FdIndex Boolean migratedFromManager;
 }
