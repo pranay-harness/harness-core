@@ -38,7 +38,6 @@ import software.wings.service.impl.DelegateConnectionDao;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -173,9 +172,6 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
       groupHostName = getHostNameForGroupedDelegate(groupDelegates.get(0).getHostName());
     }
 
-    Map<String, SelectorType> groupSelectors = new HashMap<>();
-    groupDelegates.forEach(delegate -> groupSelectors.putAll(retrieveDelegateImplicitSelectors(delegate)));
-
     long lastHeartBeat = groupDelegates.stream().mapToLong(Delegate::getLastHeartBeat).max().orElse(0);
 
     List<DelegateGroupListing.DelegateInner> delegateInstanceDetails =
@@ -189,7 +185,7 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
         .delegateDescription(delegateDescription)
         .delegateConfigurationId(delegateConfigurationId)
         .sizeDetails(sizeDetails)
-        .groupImplicitSelectors(groupSelectors)
+        .groupImplicitSelectors(retrieveDelegateGroupImplicitSelectors(delegateGroup))
         .delegateInsightsDetails(retrieveDelegateInsightsDetails(accountId, delegateGroupId))
         .lastHeartBeat(lastHeartBeat)
         .activelyConnected(
@@ -260,6 +256,31 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
     }
 
     return selectorTypeMap;
+  }
+
+  @Override
+  public Map<String, SelectorType> retrieveDelegateGroupImplicitSelectors(final DelegateGroup delegateGroup) {
+    final SortedMap<String, SelectorType> result = new TreeMap<>();
+
+    if (delegateGroup == null) {
+      return result;
+    }
+
+    result.put(delegateGroup.getName().toLowerCase(), SelectorType.GROUP_NAME);
+
+    final DelegateProfile delegateProfile =
+        delegateCache.getDelegateProfile(delegateGroup.getAccountId(), delegateGroup.getDelegateConfigurationId());
+
+    if (delegateProfile != null && isNotBlank(delegateProfile.getName())) {
+      result.put(delegateProfile.getName().toLowerCase(), SelectorType.PROFILE_NAME);
+    }
+
+    if (delegateProfile != null && isNotEmpty(delegateProfile.getSelectors())) {
+      for (final String selector : delegateProfile.getSelectors()) {
+        result.put(selector.toLowerCase(), SelectorType.PROFILE_SELECTORS);
+      }
+    }
+    return result;
   }
 
   @Override
