@@ -52,6 +52,7 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Named;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
@@ -128,6 +129,13 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
         return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
             .addAll(PipelineServiceModuleRegistrars.springConverters)
             .build();
+      }
+
+      @Provides
+      @Named("disableDeserialization")
+      @Singleton
+      public boolean getSerializationForDelegate() {
+        return false;
       }
     });
 
