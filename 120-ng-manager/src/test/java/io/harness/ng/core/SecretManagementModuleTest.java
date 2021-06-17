@@ -12,6 +12,7 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
+import io.harness.ff.FeatureFlagService;
 import io.harness.govern.ProviderModule;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.ng.core.api.NGSecretManagerService;
@@ -111,6 +112,13 @@ public class SecretManagementModuleTest extends CategoryTest {
       @Singleton
       SecretManagerClientService registerNGSecretManagerClientService() {
         return mock(SecretManagerClientService.class);
+      }
+    });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      FeatureFlagService registerFeatureFlagService() {
+        return mock(FeatureFlagService.class);
       }
     });
     modules.add(new EventsFrameworkModule(EventsFrameworkConfiguration.builder()
