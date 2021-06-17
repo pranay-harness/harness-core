@@ -1,6 +1,7 @@
 package io.harness.serviceaccount.remote;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.serviceaccount.ServiceAccountDTO;
 
@@ -18,5 +19,5 @@ public interface ServiceAccountClient {
       @Query(NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) @NotEmpty String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @Query(NGCommonEntityConstants.IDENTIFIER_KEY) List<String> serviceAccountIdentifiers);
+      @Query(NGResourceFilterConstants.IDENTIFIERS) List<String> serviceAccountIdentifiers);
 }

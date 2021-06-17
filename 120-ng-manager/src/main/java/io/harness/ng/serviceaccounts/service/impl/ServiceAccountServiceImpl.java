@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import com.hazelcast.util.Preconditions;
 import groovy.util.logging.Slf4j;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -75,10 +76,17 @@ public class ServiceAccountServiceImpl implements ServiceAccountService {
 
   @Override
   public List<ServiceAccountDTO> listServiceAccounts(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    List<ServiceAccount> serviceAccounts =
-        serviceAccountRepository.findAllByAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
-            accountIdentifier, orgIdentifier, projectIdentifier);
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> identifiers) {
+    List<ServiceAccount> serviceAccounts = Collections.emptyList();
+    if (identifiers.isEmpty()) {
+      serviceAccounts = serviceAccountRepository.findAllByAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
+          accountIdentifier, orgIdentifier, projectIdentifier);
+    } else {
+      serviceAccounts =
+          serviceAccountRepository.findAllByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifierIsIn(
+              accountIdentifier, orgIdentifier, projectIdentifier, identifiers);
+    }
+
     List<ServiceAccountDTO> serviceAccountDTOS = new ArrayList<>();
     if (isNotEmpty(serviceAccounts)) {
       serviceAccounts.forEach(

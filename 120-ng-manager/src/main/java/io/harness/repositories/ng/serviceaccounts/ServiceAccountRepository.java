@@ -14,8 +14,12 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 public interface ServiceAccountRepository extends PagingAndSortingRepository<ServiceAccount, String> {
   ServiceAccount findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
-  List<ServiceAccount> findAllByAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier);
   long deleteByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+
+  List<ServiceAccount> findAllByAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier);
+
+  List<ServiceAccount> findAllByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifierIsIn(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> identifiers);
 }

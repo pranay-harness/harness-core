@@ -2,6 +2,8 @@ package io.harness.ng.serviceaccounts;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -83,11 +85,12 @@ public class ServiceAccountResource {
   @GET
   @ApiOperation(value = "List service account", nickname = "listServiceAccount")
   public ResponseDTO<List<ServiceAccountDTO>> listServiceAccounts(
-      @QueryParam("accountIdentifier") String accountIdentifier,
-      @Optional @QueryParam("orgIdentifier") String orgIdentifier,
-      @Optional @QueryParam("projectIdentifier") String projectIdentifier) {
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Optional @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Optional @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Optional @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers) {
     List<ServiceAccountDTO> requestDTOS =
-        serviceAccountService.listServiceAccounts(accountIdentifier, orgIdentifier, projectIdentifier);
+        serviceAccountService.listServiceAccounts(accountIdentifier, orgIdentifier, projectIdentifier, identifiers);
     return ResponseDTO.newResponse(requestDTOS);
   }
 }
