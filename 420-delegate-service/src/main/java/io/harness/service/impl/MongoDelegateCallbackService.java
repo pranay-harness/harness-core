@@ -76,7 +76,8 @@ public class MongoDelegateCallbackService implements DelegateCallbackService {
     Bson update = new Document("$set", document);
 
     UpdateResult updateResult = asyncTaskResponseCollection.updateOne(filter, update, upsert);
-    log.info("DB acknowledged write operation of async task response: {}.", updateResult.wasAcknowledged());
+    log.info("DB acknowledged write operation of task id: {} progress response: {}.", delegateTaskId,
+        updateResult.wasAcknowledged());
   }
 
   @Override
