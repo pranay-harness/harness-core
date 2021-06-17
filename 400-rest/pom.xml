@@ -351,10 +351,6 @@
             <artifactId>quartz-mongodb</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.offbytwo.jenkins</groupId>
-            <artifactId>jenkins-client</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.openpojo</groupId>
             <artifactId>openpojo</artifactId>
         </dependency>

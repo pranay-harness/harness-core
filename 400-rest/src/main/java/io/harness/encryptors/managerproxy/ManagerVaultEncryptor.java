@@ -1,7 +1,6 @@
 package io.harness.encryptors.managerproxy;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
 import static io.harness.delegatetasks.UpsertSecretTaskType.CREATE;
 import static io.harness.delegatetasks.UpsertSecretTaskType.RENAME;
 import static io.harness.delegatetasks.UpsertSecretTaskType.UPDATE;
@@ -96,7 +95,7 @@ public class ManagerVaultEncryptor implements VaultEncryptor {
                       .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                       .build())
             .accountId(accountId)
-            .setupAbstraction(OWNER, managerEncryptorHelper.getOwner(parameters.getEncryptionConfig()))
+            .setupAbstractions(managerEncryptorHelper.buildAbstractions(parameters.getEncryptionConfig()))
             .build();
 
     try {
@@ -120,16 +119,17 @@ public class ManagerVaultEncryptor implements VaultEncryptor {
     DeleteSecretTaskParameters parameters =
         DeleteSecretTaskParameters.builder().existingRecord(existingRecord).encryptionConfig(encryptionConfig).build();
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .data(TaskData.builder()
-                                              .async(false)
-                                              .taskType(DELETE_SECRET.name())
-                                              .parameters(new Object[] {parameters})
-                                              .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
-                                              .build())
-                                    .accountId(accountId)
-                                    .setupAbstraction(OWNER, managerEncryptorHelper.getOwner(encryptionConfig))
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .data(TaskData.builder()
+                      .async(false)
+                      .taskType(DELETE_SECRET.name())
+                      .parameters(new Object[] {parameters})
+                      .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
+                      .build())
+            .accountId(accountId)
+            .setupAbstractions(managerEncryptorHelper.buildAbstractions(parameters.getEncryptionConfig()))
+            .build();
     try {
       DelegateResponseData delegateResponseData = delegateService.executeTask(delegateTask);
       DelegateTaskUtils.validateDelegateTaskResponse(delegateResponseData);

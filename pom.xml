@@ -854,25 +854,6 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>com.offbytwo.jenkins</groupId>
-                <artifactId>jenkins-client</artifactId>
-                <version>0.3.8</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>commons-lang</groupId>
-                        <artifactId>commons-lang</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>commons-logging</groupId>
-                        <artifactId>commons-logging</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>xml-apis</groupId>
-                        <artifactId>xml-apis</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
                 <groupId>com.palominolabs.metrics</groupId>
                 <artifactId>metrics-guice</artifactId>
                 <version>3.2.0</version>

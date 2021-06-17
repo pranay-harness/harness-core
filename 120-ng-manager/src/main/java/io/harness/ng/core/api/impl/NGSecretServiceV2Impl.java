@@ -1,19 +1,27 @@
 package io.harness.ng.core.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.shared.tasks.NgSetupFields.NG;
+import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
+import io.harness.beans.DelegateTaskRequest.DelegateTaskRequestBuilder;
+import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.SSHTaskParams;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.activityhistory.NGActivityType;
 import io.harness.ng.core.api.NGSecretActivityService;
@@ -43,7 +51,9 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -63,21 +73,25 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
   private final DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   private final SshKeySpecDTOHelper sshKeySpecDTOHelper;
   private final NGSecretActivityService ngSecretActivityService;
-
   private final OutboxService outboxService;
   private final TransactionTemplate transactionTemplate;
   private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
+  private final FeatureFlagService featureFlagService;
+  private static final String PROJECT_OWNER = "%s/%s";
+  private static final String ORG_OWNER = "%s";
 
   @Inject
   public NGSecretServiceV2Impl(SecretRepository secretRepository, DelegateGrpcClientWrapper delegateGrpcClientWrapper,
       SshKeySpecDTOHelper sshKeySpecDTOHelper, NGSecretActivityService ngSecretActivityService,
-      OutboxService outboxService, @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate) {
+      OutboxService outboxService, @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate,
+      FeatureFlagService featureFlagService) {
     this.secretRepository = secretRepository;
     this.outboxService = outboxService;
     this.delegateGrpcClientWrapper = delegateGrpcClientWrapper;
     this.sshKeySpecDTOHelper = sshKeySpecDTOHelper;
     this.ngSecretActivityService = ngSecretActivityService;
     this.transactionTemplate = transactionTemplate;
+    this.featureFlagService = featureFlagService;
   }
 
   @Override
@@ -198,16 +212,19 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
                                       .build();
       List<EncryptedDataDetail> encryptionDetails =
           sshKeySpecDTOHelper.getSSHKeyEncryptionDetails(secretSpecDTO, baseNGAccess);
-      DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
-                                                    .accountId(accountIdentifier)
-                                                    .taskType("NG_SSH_VALIDATION")
-                                                    .taskParameters(SSHTaskParams.builder()
-                                                                        .host(sshKeyValidationMetadata.getHost())
-                                                                        .encryptionDetails(encryptionDetails)
-                                                                        .sshKeySpec(secretSpecDTO)
-                                                                        .build())
-                                                    .executionTimeout(Duration.ofSeconds(45))
-                                                    .build();
+      DelegateTaskRequestBuilder delegateTaskRequestBuilder =
+          DelegateTaskRequest.builder()
+              .accountId(accountIdentifier)
+              .taskType("NG_SSH_VALIDATION")
+              .taskParameters(SSHTaskParams.builder()
+                                  .host(sshKeyValidationMetadata.getHost())
+                                  .encryptionDetails(encryptionDetails)
+                                  .sshKeySpec(secretSpecDTO)
+                                  .build())
+              .taskSetupAbstractions(buildAbstractions(accountIdentifier, orgIdentifier, projectIdentifier))
+              .executionTimeout(Duration.ofSeconds(45));
+
+      DelegateTaskRequest delegateTaskRequest = delegateTaskRequestBuilder.build();
       DelegateResponseData delegateResponseData = this.delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
       if (delegateResponseData instanceof RemoteMethodReturnValueData) {
         return SecretValidationResultDTO.builder()
@@ -229,5 +246,27 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
   public Page<Secret> list(Criteria criteria, int page, int size) {
     return secretRepository.findAll(
         criteria, PageUtils.getPageRequest(page, size, Collections.singletonList(SecretKeys.createdAt + ",desc")));
+  }
+
+  public String getOwner(String accountId, String orgIdentifier, String projectIdentifier) {
+    String owner = null;
+    if (featureFlagService.isEnabled(FeatureName.DELEGATE_OWNERS, accountId)) {
+      if (isNotEmpty(orgIdentifier) && isNotEmpty(projectIdentifier)) {
+        owner = String.format(PROJECT_OWNER, orgIdentifier, projectIdentifier);
+      } else if (isNotEmpty(orgIdentifier)) {
+        owner = String.format(ORG_OWNER, orgIdentifier);
+      }
+    }
+    return owner;
+  }
+
+  public Map<String, String> buildAbstractions(String accountId, String orgIdentifier, String projectIdentifier) {
+    Map<String, String> abstractions = new HashMap<>(2);
+    // Verify if its a Task from NG
+    abstractions.put(OWNER, getOwner(accountId, orgIdentifier, projectIdentifier));
+    if (isNotBlank(orgIdentifier) || isNotBlank(projectIdentifier)) {
+      abstractions.put(NG, "true");
+    }
+    return abstractions;
   }
 }
