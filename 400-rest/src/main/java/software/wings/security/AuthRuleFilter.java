@@ -323,18 +323,10 @@ public class AuthRuleFilter implements ContainerRequestFilter {
           throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
         }
       }
-
-      if (featureFlagService.isEnabled(FeatureName.LIMITED_ACCESS_FOR_HARNESS_USER_GROUP, accountId)) {
-        if (!harnessUserGroupService.isHarnessSupportEnabled(accountId, user.getUuid())) {
-          throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
-        }
-      } else {
-        if (!harnessUserGroupService.isHarnessSupportUser(user.getUuid())
-            || !harnessUserGroupService.isHarnessSupportEnabled(accountId, user.getUuid())) {
-          throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
-        }
+      if (!harnessUserGroupService.isHarnessSupportUser(user.getUuid())
+          || !harnessUserGroupService.isHarnessSupportEnabled(accountId, user.getUuid())) {
+        throw new AccessDeniedException(USER_NOT_AUTHORIZED, USER);
       }
-
       harnessSupportUser = true;
     }
 
