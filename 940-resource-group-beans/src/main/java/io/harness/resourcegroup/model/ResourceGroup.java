@@ -80,8 +80,8 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
   @NotEmpty String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
-  @EntityIdentifier @NotEmpty @Size(max = 128) String identifier;
-  @NGEntityName @NotEmpty @Size(max = 128) String name;
+  @NotEmpty @Size(max = 128) String identifier;
+  @NotEmpty @Size(max = 128) String name;
   @Size(max = 1024) String description;
   @NotEmpty @Size(min = 7, max = 7) String color;
   @Size(max = 128) @Singular List<NGTag> tags;

@@ -24,7 +24,7 @@ public class ResourceGroupMapper {
     if (resourceGroupDTO == null) {
       return null;
     }
-    resourceGroupDTO.validateAndSanitizeResourceSelectors();
+    resourceGroupDTO.sanitizeResourceSelectors();
     ResourceGroupBuilder resourceGroupBuilder =
         ResourceGroup.builder()
             .accountIdentifier(resourceGroupDTO.getAccountIdentifier())

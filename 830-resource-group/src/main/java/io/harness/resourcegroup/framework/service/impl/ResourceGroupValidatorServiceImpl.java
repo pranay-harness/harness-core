@@ -35,25 +35,25 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
                       .projectIdentifier(resourceGroup.getProjectIdentifier())
                       .build();
 
-    boolean sanitized = false;
+    boolean updated = false;
     for (Iterator<ResourceSelector> iterator = resourceGroup.getResourceSelectors().iterator(); iterator.hasNext();) {
       ResourceSelector resourceSelector = iterator.next();
       if (resourceSelector instanceof StaticResourceSelector) {
         StaticResourceSelector staticResourceSelector = (StaticResourceSelector) resourceSelector;
-        sanitized |= sanitizeStaticResourceSelector(scope, staticResourceSelector);
-        if (sanitized && staticResourceSelector.getIdentifiers().isEmpty()) {
+        updated |= sanitizeStaticResourceSelector(scope, staticResourceSelector);
+        if (updated && staticResourceSelector.getIdentifiers().isEmpty()) {
           iterator.remove();
         }
       } else if (resourceSelector instanceof DynamicResourceSelector) {
         DynamicResourceSelector dynamicResourceSelector = (DynamicResourceSelector) resourceSelector;
         if (!isValidDynamicResourceSelector(scope, dynamicResourceSelector)) {
           iterator.remove();
-          sanitized = true;
+          updated = true;
         }
       }
     }
 
-    return sanitized;
+    return updated;
   }
 
   private boolean isValidDynamicResourceSelector(Scope scope, DynamicResourceSelector resourceSelector) {
@@ -68,19 +68,17 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
 
   private boolean sanitizeStaticResourceSelector(Scope scope, StaticResourceSelector resourceSelector) {
     String resourceType = resourceSelector.getResourceType();
-    List<String> resourceIds = resourceSelector.getIdentifiers();
     ScopeLevel scopeLevel =
         ScopeLevel.of(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier());
 
-    if (!resourceMap.containsKey(resourceType)) {
-      return false;
-    }
-
     Resource resource = resourceMap.get(resourceType);
-    if (!resource.getValidScopeLevels().contains(scopeLevel) || !resource.getSelectorKind().contains(STATIC)) {
-      return false;
+    if (resource == null || !resource.getValidScopeLevels().contains(scopeLevel)
+        || !resource.getSelectorKind().contains(STATIC)) {
+      resourceSelector.getIdentifiers().clear();
+      return true;
     }
 
+    List<String> resourceIds = resourceSelector.getIdentifiers();
     List<Boolean> validationResult = resource.validate(resourceIds, scope);
     List<String> validResourceIds = IntStream.range(0, resourceIds.size())
                                         .filter(validationResult::get)

@@ -7,7 +7,6 @@ import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.Scope;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
@@ -36,12 +35,9 @@ public class ResourceGroupAsyncReconciliationHandler implements MongoPersistence
 
   @Override
   public void handle(ResourceGroup resourceGroup) {
-    if (resourceGroupValidatorService.sanitizeResourceSelectors(resourceGroup)) {
+    boolean updated = resourceGroupValidatorService.sanitizeResourceSelectors(resourceGroup);
+    if (updated) {
       resourceGroupService.update(ResourceGroupMapper.toDTO(resourceGroup), false);
-    } else {
-      resourceGroupService.delete(Scope.of(resourceGroup.getAccountIdentifier(), resourceGroup.getOrgIdentifier(),
-                                      resourceGroup.getProjectIdentifier()),
-          resourceGroup.getIdentifier(), true);
     }
   }
 

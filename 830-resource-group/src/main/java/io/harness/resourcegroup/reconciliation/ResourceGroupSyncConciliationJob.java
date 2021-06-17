@@ -12,7 +12,6 @@ import io.harness.beans.Scope;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
-import io.harness.exception.UnexpectedException;
 import io.harness.resourcegroup.framework.remote.mapper.ResourceGroupMapper;
 import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
@@ -90,50 +89,50 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
     messages = redisConsumer.read(Duration.ofSeconds(WAIT_TIME_IN_SECONDS));
     for (Message message : messages) {
       messageId = message.getId();
-      handleMessage(message);
-      redisConsumer.acknowledge(messageId);
+      if (handleMessage(message)) {
+        redisConsumer.acknowledge(messageId);
+      }
     }
   }
 
-  private void handleMessage(Message message) {
+  private boolean handleMessage(Message message) {
     try {
-      processMessage(message);
+      return processMessage(message);
     } catch (Exception ex) {
       log.error(String.format("Error occurred in processing message with id %s", message.getId()), ex);
+      return false;
     }
   }
 
-  private void processMessage(Message message) {
+  private boolean processMessage(Message message) {
     if (!message.hasMessage()) {
-      return;
+      return true;
     }
     Map<String, String> metadataMap = message.getMessage().getMetadataMap();
     if (metadataMap == null || !metadataMap.containsKey(ACTION) || !metadataMap.containsKey(ENTITY_TYPE)) {
-      return;
+      return true;
     }
 
     String entityType = metadataMap.get(ENTITY_TYPE);
     if (!resourceMap.containsKey(entityType)) {
-      return;
+      return true;
     }
     ResourceInfo resourceInfo = resourceMap.get(entityType).getResourceInfoFromEvent(message);
     if (Objects.isNull(resourceInfo)) {
-      return;
+      return true;
     }
     String action = metadataMap.get(ACTION);
-    processMessage(resourceInfo, action);
+    return processMessage(resourceInfo, action);
   }
 
-  private void processMessage(ResourceInfo resourceInfo, String action) {
+  private boolean processMessage(ResourceInfo resourceInfo, String action) {
     switch (action) {
       case DELETE_ACTION:
-        handleDeleteEvent(resourceInfo);
-        break;
+        return handleDeleteEvent(resourceInfo);
       case CREATE_ACTION:
-        handleCreateEvent(resourceInfo);
-        break;
+        return handleCreateEvent(resourceInfo);
       default:
-        break;
+        return true;
     }
   }
 
@@ -146,9 +145,9 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
     return true;
   }
 
-  private void handleDeleteEvent(ResourceInfo resource) {
+  private boolean handleDeleteEvent(ResourceInfo resource) {
     if (isScope(resource.getResourceType())) {
-      return;
+      return true;
     }
 
     int counter = 0;
@@ -165,6 +164,8 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
       }
       counter++;
     }
+
+    return true;
   }
 
   private boolean isScope(String resourceType) {

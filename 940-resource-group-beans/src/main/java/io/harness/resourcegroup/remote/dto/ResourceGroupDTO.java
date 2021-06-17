@@ -42,7 +42,7 @@ public class ResourceGroupDTO {
     return Scope.of(accountIdentifier, orgIdentifier, projectIdentifier);
   }
 
-  public void validateAndSanitizeResourceSelectors() {
+  public void sanitizeResourceSelectors() {
     if (getResourceSelectors() == null) {
       return;
     }
@@ -61,7 +61,7 @@ public class ResourceGroupDTO {
             .collect(toMap(StaticResourceSelector::getResourceType, StaticResourceSelector::getIdentifiers,
                 (oldResourceIds, newResourceIds) -> {
                   oldResourceIds.addAll(newResourceIds);
-                  return oldResourceIds;
+                  return oldResourceIds.stream().distinct().collect(toList());
                 }));
 
     staticResources.forEach(
@@ -69,6 +69,6 @@ public class ResourceGroupDTO {
             -> sanitizedResourceSelectors.add(
                 StaticResourceSelector.builder().resourceType(resourceType).identifiers(identifiers).build()));
 
-    this.resourceSelectors = sanitizedResourceSelectors;
+    resourceSelectors = sanitizedResourceSelectors;
   }
 }

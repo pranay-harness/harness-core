@@ -16,12 +16,14 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @RequiredArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(PL)
-public class CleanupDeletedResourceGroups {
+public class PurgeDeletedResourceGroups {
   private final ResourceGroupRepository resourceGroupRepository;
 
   public void cleanUp() {
+    log.info("Purging Deleted Resource Groups");
     Page<ResourceGroup> deletedResourceGroups =
         resourceGroupRepository.findAll(Criteria.where("deleted").is(Boolean.TRUE), Pageable.unpaged());
     resourceGroupRepository.deleteAll(deletedResourceGroups);
+    log.info("Purged Deleted Resource Groups");
   }
 }

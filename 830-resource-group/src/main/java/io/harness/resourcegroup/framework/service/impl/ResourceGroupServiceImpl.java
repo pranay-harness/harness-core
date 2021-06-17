@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
-import static io.harness.resourcegroup.model.ResourceGroup.ALL_RESOURCES_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 import static io.harness.utils.PageUtils.getPageRequest;
 
@@ -35,7 +34,6 @@ import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.model.ResourceGroup.ResourceGroupKeys;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
-import io.harness.utils.ScopeUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -94,8 +92,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     try {
       create(ResourceGroup.getHarnessManagedResourceGroup(scope));
     } catch (DuplicateKeyException ex) {
-      log.info("Resource group with identifier {}/{} already present", ScopeUtils.toString(scope),
-          ALL_RESOURCES_RESOURCE_GROUP_IDENTIFIER);
+      // Ignore
     }
   }
 
@@ -138,7 +135,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   @Override
-  public void delete(Scope scope, String identifier, boolean deleteIfRoleAssignmentsExists) {
+  public void delete(Scope scope, String identifier) {
     Optional<ResourceGroup> resourceGroupOpt = getResourceGroup(scope, identifier);
     if (!resourceGroupOpt.isPresent()) {
       return;
@@ -152,7 +149,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     PageResponse<RoleAssignmentResponseDTO> pageResponse =
         NGRestUtils.getResponse(accessControlAdminClient.getFilteredRoleAssignments(scope.getAccountIdentifier(),
             scope.getOrgIdentifier(), scope.getProjectIdentifier(), 0, 10, roleAssignmentFilterDTO));
-    if (pageResponse.getPageItemCount() > 0 && !deleteIfRoleAssignmentsExists) {
+    if (pageResponse.getPageItemCount() > 0) {
       throw new InvalidRequestException(
           "There exists role assignments with this resource group. Please delete them first and then try again");
     }
@@ -192,10 +189,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     }
     ResourceGroup updatedResourceGroup = ResourceGroupMapper.fromDTO(resourceGroupDTO);
     if (sanitizeResourceSelectors) {
-      boolean sanitized = resourceGroupValidatorService.sanitizeResourceSelectors(updatedResourceGroup);
-      if (sanitized && updatedResourceGroup.getResourceSelectors().isEmpty()) {
-        throw new InvalidRequestException("All selected resources are invalid");
-      }
+      resourceGroupValidatorService.sanitizeResourceSelectors(updatedResourceGroup);
     }
     ResourceGroup savedResourceGroup = resourceGroupOpt.get();
     if (savedResourceGroup.getHarnessManaged().equals(TRUE)) {

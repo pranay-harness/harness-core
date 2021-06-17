@@ -28,5 +28,5 @@ public interface ResourceGroupService {
 
   Optional<ResourceGroupResponse> update(ResourceGroupDTO resourceGroupDTO, boolean sanitizeResourceSelectors);
 
-  void delete(Scope scope, String identifier, boolean deleteIfRoleAssignmentsExists);
+  void delete(Scope scope, String identifier);
 }

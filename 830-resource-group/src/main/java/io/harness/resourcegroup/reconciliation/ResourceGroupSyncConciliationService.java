@@ -25,7 +25,7 @@ public class ResourceGroupSyncConciliationService implements Managed {
   final String serviceId;
 
   final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor(
-      new ThreadFactoryBuilder().setNameFormat("resourcegroup-reconciliation-sync").build());
+      new ThreadFactoryBuilder().setNameFormat("resourcegroup-reconciliation-job").build());
 
   private Future<?> job;
 
@@ -51,7 +51,7 @@ public class ResourceGroupSyncConciliationService implements Managed {
     if (job != null) {
       job.cancel(true);
     }
-    executorService.shutdown();
-    executorService.awaitTermination(1, TimeUnit.SECONDS);
+    executorService.shutdownNow();
+    executorService.awaitTermination(5, TimeUnit.SECONDS);
   }
 }

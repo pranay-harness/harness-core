@@ -157,7 +157,7 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
 
   private void blockingMigrations(Injector injector) {
     //    This is is temporary one time blocking migration
-    injector.getInstance(CleanupDeletedResourceGroups.class).cleanUp();
+    injector.getInstance(PurgeDeletedResourceGroups.class).cleanUp();
   }
 
   private void registerCommonResources(
