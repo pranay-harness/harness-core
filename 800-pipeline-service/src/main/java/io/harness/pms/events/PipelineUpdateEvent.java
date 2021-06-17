@@ -47,6 +47,6 @@ public class PipelineUpdateEvent implements Event {
   @JsonIgnore
   @Override
   public String getEventType() {
-    return "PipelineUpdated";
+    return PipelineOutboxEvents.PIPELINE_UPDATED;
   }
 }
