@@ -50,7 +50,9 @@ public class StepElementConfig {
   @EntityIdentifier @Pattern(regexp = NGRegexValidatorConstants.IDENTIFIER_PATTERN) String identifier;
   @EntityName @Pattern(regexp = NGRegexValidatorConstants.NAME_PATTERN) String name;
   String description;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<Timeout> timeout;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Pattern(regexp = NGRegexValidatorConstants.TIMEOUT_PATTERN)
+  ParameterField<Timeout> timeout;
   List<FailureStrategyConfig> failureStrategies;
 
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
