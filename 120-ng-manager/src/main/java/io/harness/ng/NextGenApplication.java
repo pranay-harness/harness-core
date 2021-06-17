@@ -47,6 +47,7 @@ import io.harness.gitsync.server.GitSyncGrpcModule;
 import io.harness.gitsync.server.GitSyncServiceConfiguration;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
+import io.harness.licensing.migration.LicenseManagerMigrationProvider;
 import io.harness.logstreaming.LogStreamingModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
@@ -316,7 +317,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     return NGMigrationConfiguration.builder()
         .microservice(Microservice.CORE)
         .migrationProviderList(new ArrayList<Class<? extends MigrationProvider>>() {
-          { add(NGCoreMigrationProvider.class); } // Add all migration provider classes here
+          {
+            add(NGCoreMigrationProvider.class);
+            add(LicenseManagerMigrationProvider.class)
+          } // Add all migration provider classes here
         })
         .build();
   }
