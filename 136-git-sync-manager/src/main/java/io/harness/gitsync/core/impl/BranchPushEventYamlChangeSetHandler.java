@@ -66,6 +66,15 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
       return YamlChangeSetStatus.RUNNING;
     }
 
+    boolean isCommitAlreadyProcessed = gitCommitService.isCommitAlreadyProcessed(yamlChangeSetDTO.getAccountId(),
+        yamlChangeSetDTO.getGitWebhookRequestAttributes().getHeadCommitId(), yamlChangeSetDTO.getRepoUrl(),
+        yamlChangeSetDTO.getBranch());
+    if (isCommitAlreadyProcessed) {
+      log.info("CommitId {} already processed, ignoring the branch push change set event : {}",
+          yamlChangeSetDTO.getGitWebhookRequestAttributes().getHeadCommitId(), yamlChangeSetDTO);
+      return YamlChangeSetStatus.SKIPPED;
+    }
+
     // Init Progress Record for this event
     GitToHarnessProgressDTO gitToHarnessProgressRecord = gitToHarnessProgressService.initProgress(yamlChangeSetDTO,
         YamlChangeSetEventType.BRANCH_PUSH, GitToHarnessProcessingStepType.GET_FILES,
