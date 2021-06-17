@@ -4,8 +4,6 @@ import static io.harness.rule.OwnerRule.ZHUO;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,27 +14,21 @@ import io.harness.category.element.UnitTests;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.notification.channeldetails.EmailChannel;
 import io.harness.notification.notificationclient.NotificationClient;
-import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.signup.SignupNotificationConfiguration;
-import io.harness.user.remote.UserClient;
 
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.Map;
-import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import retrofit2.Call;
-import retrofit2.Response;
 
 public class SignupNotificationHelperTest extends CategoryTest {
   @InjectMocks SignupNotificationHelper signupNotificationHelper;
-  @Mock private UserClient userClient;
   @Mock private NotificationClient notificationClient;
   @Mock private SignupNotificationTemplateLoader catchLoader;
   @Mock private SignupNotificationConfiguration notificationConfiguration;
@@ -64,9 +56,6 @@ public class SignupNotificationHelperTest extends CategoryTest {
                    .email(EMAIL)
                    .build();
 
-    Call<RestResponse<Optional<String>>> request = mock(Call.class);
-    when(userClient.generateSignupNotificationUrl(any(), eq(userInfo))).thenReturn(request);
-    when(request.execute()).thenReturn(Response.success(new RestResponse<>(Optional.of(URL))));
     EmailInfo veriyEmailInfo = EmailInfo.builder().templateId(VERIFY_TEMPLATE_ID).gcsFileName(GCS_FILE_NAME).build();
     EmailInfo confirmEmailInfo = EmailInfo.builder().templateId(CONFIRM_TEMPLATE_ID).gcsFileName(GCS_FILE_NAME).build();
     Map<EmailType, EmailInfo> templates = ImmutableMap.<EmailType, EmailInfo>builder()
@@ -83,7 +72,7 @@ public class SignupNotificationHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testSendVerifyNotification() {
     when(catchLoader.load(any())).thenReturn(true);
-    signupNotificationHelper.sendSignupNotification(userInfo, EmailType.VERIFY, DEFAULT_TEMPLATE_ID);
+    signupNotificationHelper.sendSignupNotification(userInfo, EmailType.VERIFY, DEFAULT_TEMPLATE_ID, URL);
 
     verify(notificationClient, times(1)).sendNotificationAsync(emailChannelCaptor.capture());
     EmailChannel value = emailChannelCaptor.getValue();
@@ -100,7 +89,7 @@ public class SignupNotificationHelperTest extends CategoryTest {
   public void testSendConfirmNotification() {
     when(catchLoader.load(any())).thenReturn(true);
 
-    signupNotificationHelper.sendSignupNotification(userInfo, EmailType.CONFIRM, DEFAULT_TEMPLATE_ID);
+    signupNotificationHelper.sendSignupNotification(userInfo, EmailType.CONFIRM, DEFAULT_TEMPLATE_ID, URL);
 
     verify(notificationClient, times(1)).sendNotificationAsync(emailChannelCaptor.capture());
     EmailChannel value = emailChannelCaptor.getValue();
@@ -117,7 +106,7 @@ public class SignupNotificationHelperTest extends CategoryTest {
   public void testSendVerifyNotificationFailover() {
     when(catchLoader.load(any())).thenReturn(false);
 
-    signupNotificationHelper.sendSignupNotification(userInfo, EmailType.CONFIRM, DEFAULT_TEMPLATE_ID);
+    signupNotificationHelper.sendSignupNotification(userInfo, EmailType.CONFIRM, DEFAULT_TEMPLATE_ID, URL);
 
     verify(notificationClient, times(1)).sendNotificationAsync(emailChannelCaptor.capture());
     EmailChannel value = emailChannelCaptor.getValue();
@@ -134,7 +123,7 @@ public class SignupNotificationHelperTest extends CategoryTest {
   public void testSendConfirmNotificationFailover() {
     when(catchLoader.load(any())).thenReturn(false);
 
-    signupNotificationHelper.sendSignupNotification(userInfo, EmailType.CONFIRM, DEFAULT_TEMPLATE_ID);
+    signupNotificationHelper.sendSignupNotification(userInfo, EmailType.CONFIRM, DEFAULT_TEMPLATE_ID, URL);
 
     verify(notificationClient, times(1)).sendNotificationAsync(emailChannelCaptor.capture());
     EmailChannel value = emailChannelCaptor.getValue();

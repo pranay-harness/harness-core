@@ -5,12 +5,13 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
@@ -29,6 +30,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ManualInterventionAdviserTest extends PmsSdkCoreTestBase {
   public static final String NODE_EXECUTION_ID = generateUuid();
   public static final String NODE_SETUP_ID = generateUuid();
@@ -58,10 +60,9 @@ public class ManualInterventionAdviserTest extends PmsSdkCoreTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestOnAdviseEvent() {
-    NodeExecutionProto nodeExecutionProto = NodeExecutionProto.newBuilder().setAmbiance(ambiance).build();
     AdvisingEvent advisingEvent =
         AdvisingEvent.<ManualInterventionAdviserParameters>builder()
-            .nodeExecution(nodeExecutionProto)
+            .ambiance(ambiance)
             .toStatus(Status.FAILED)
             .adviserParameters(kryoSerializer.asBytes(ManualInterventionAdviserParameters.builder().build()))
             .build();
@@ -76,6 +77,11 @@ public class ManualInterventionAdviserTest extends PmsSdkCoreTestBase {
   public void shouldTestCanAdvise() {
     AdvisingEventBuilder advisingEventBuilder =
         AdvisingEvent.builder()
+            .ambiance(ambiance)
+            .failureInfo(FailureInfo.newBuilder()
+                             .setErrorMessage("Auth Error")
+                             .addAllFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
+                             .build())
             .toStatus(Status.FAILED)
             .fromStatus(Status.RUNNING)
             .adviserParameters(
@@ -83,30 +89,17 @@ public class ManualInterventionAdviserTest extends PmsSdkCoreTestBase {
                                            .applicableFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
                                            .build()));
 
-    NodeExecutionProto nodeExecutionAuthFail =
-        NodeExecutionProto.newBuilder()
-            .setAmbiance(ambiance)
-            .setFailureInfo(FailureInfo.newBuilder()
-                                .setErrorMessage("Auth Error")
-                                .addAllFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
-                                .build())
-            .build();
-
-    AdvisingEvent authFailEvent = advisingEventBuilder.nodeExecution(nodeExecutionAuthFail).build();
+    AdvisingEvent authFailEvent = advisingEventBuilder.build();
 
     boolean canAdvise = manualInterventionAdviser.canAdvise(authFailEvent);
     assertThat(canAdvise).isTrue();
 
-    NodeExecutionProto nodeExecutionAppFail =
-        NodeExecutionProto.newBuilder()
-            .setAmbiance(ambiance)
-            .setFailureInfo(FailureInfo.newBuilder()
-                                .setErrorMessage("Application Error")
-                                .addAllFailureTypes(EnumSet.of(FailureType.APPLICATION_FAILURE))
-                                .build())
-            .build();
-
-    AdvisingEvent appFailEvent = advisingEventBuilder.nodeExecution(nodeExecutionAppFail).build();
+    AdvisingEvent appFailEvent = advisingEventBuilder.ambiance(ambiance)
+                                     .failureInfo(FailureInfo.newBuilder()
+                                                      .setErrorMessage("Application Error")
+                                                      .addAllFailureTypes(EnumSet.of(FailureType.APPLICATION_FAILURE))
+                                                      .build())
+                                     .build();
     canAdvise = manualInterventionAdviser.canAdvise(appFailEvent);
     assertThat(canAdvise).isFalse();
   }
@@ -115,10 +108,9 @@ public class ManualInterventionAdviserTest extends PmsSdkCoreTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestCanAdviseWithFromStatus() {
-    NodeExecutionProto nodeExecutionProto = NodeExecutionProto.newBuilder().setAmbiance(ambiance).build();
     AdvisingEventBuilder advisingEventBuilder =
         AdvisingEvent.builder()
-            .nodeExecution(nodeExecutionProto)
+            .ambiance(ambiance)
             .toStatus(Status.FAILED)
             .fromStatus(Status.INTERVENTION_WAITING)
             .adviserParameters(

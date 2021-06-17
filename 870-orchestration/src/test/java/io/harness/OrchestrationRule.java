@@ -140,6 +140,13 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
       TransactionTemplate getTransactionTemplate(MongoTransactionManager mongoTransactionManager) {
         return new HTransactionTemplate(mongoTransactionManager, false);
       }
+
+      @Provides
+      @Named("disableDeserialization")
+      @Singleton
+      public boolean getSerializationForDelegate() {
+        return false;
+      }
     });
 
     modules.add(new AbstractModule() {

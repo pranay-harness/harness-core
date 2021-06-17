@@ -24,9 +24,10 @@ public class ScmGitFileTaskParams implements TaskParameters, ExecutionCapability
   ScmConnector scmConnector;
   Set<String> foldersList;
   List<String> filePathsList;
-  String branchName;
   List<EncryptedDataDetail> encryptedDataDetails;
   GitFilePathDetails gitFilePathDetails;
+  String ref;
+  String branch;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

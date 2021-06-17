@@ -87,17 +87,28 @@ func collectCg(ctx context.Context, stepID, cgDir string, log *zap.SugaredLogger
 	if err != nil {
 		return err
 	}
+	isManual := external.IsManualExecution()
 	sha, err := external.GetSha()
-	if err != nil {
+	if err != nil && !isManual {
 		return err
 	}
 	source, err := external.GetSourceBranch()
-	if err != nil {
+	if err != nil && !isManual {
 		return err
+	} else if isManual {
+		source, err = external.GetBranch()
+		if err != nil {
+			return err
+		}
 	}
 	target, err := external.GetTargetBranch()
-	if err != nil {
+	if err != nil && !isManual {
 		return err
+	} else if isManual {
+		target, err = external.GetBranch()
+		if err != nil {
+			return err
+		}
 	}
 	// Create TI proxy client (lite engine)
 	client, err := grpcclient.NewTiProxyClient(consts.LiteEnginePort, log)
@@ -192,27 +203,30 @@ func collectTestReports(ctx context.Context, reports []*pb.Report, stepID string
 
 // selectTests takes a list of files which were changed as input and gets the tests
 // to be run corresponding to that.
-func selectTests(ctx context.Context, files []types.File, stepID string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
+func selectTests(ctx context.Context, files []types.File, runSelected bool, stepID string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
 	res := types.SelectTestsResp{}
-	if len(files) == 0 {
-		// No files changed, don't do anything
-		return res, nil
-	}
+	isManual := external.IsManualExecution()
 	repo, err := external.GetRepo()
 	if err != nil {
 		return res, err
 	}
+	// For webhook executions, all the below variables should be set
 	sha, err := external.GetSha()
-	if err != nil {
+	if err != nil && !isManual {
 		return res, err
 	}
 	source, err := external.GetSourceBranch()
-	if err != nil {
+	if err != nil && !isManual {
 		return res, err
 	}
 	target, err := external.GetTargetBranch()
-	if err != nil {
+	if err != nil && !isManual {
 		return res, err
+	} else if isManual {
+		target, err = external.GetBranch()
+		if err != nil {
+			return res, err
+		}
 	}
 	// Create TI proxy client (lite engine)
 	client, err := grpcclient.NewTiProxyClient(consts.LiteEnginePort, log)
@@ -225,7 +239,7 @@ func selectTests(ctx context.Context, files []types.File, stepID string, log *za
 	if err != nil {
 		return res, err
 	}
-	b, err := json.Marshal(&types.SelectTestsReq{Files: files, TiConfig: ticonfig})
+	b, err := json.Marshal(&types.SelectTestsReq{SelectAll: !runSelected, Files: files, TiConfig: ticonfig})
 	if err != nil {
 		return res, err
 	}

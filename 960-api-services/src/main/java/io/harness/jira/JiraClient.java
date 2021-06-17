@@ -127,8 +127,8 @@ public class JiraClient {
         issue.updateJiraBaseUrl(config.getJiraUrl());
       }
       return issue;
-    } catch (HttpResponseException ex) {
-      if (!throwOnInvalidKey && ex.getStatusCode() == 404) {
+    } catch (Exception ex) {
+      if (!throwOnInvalidKey && is404StatusCode(ex)) {
         return null;
       }
       throw ex;
@@ -296,7 +296,16 @@ public class JiraClient {
    */
   public JiraIssueNG updateIssue(
       @NotBlank String issueKey, String transitionToStatus, String transitionName, Map<String, String> fields) {
-    JiraIssueUpdateMetadataNG updateMetadata = getIssueUpdateMetadata(issueKey);
+    JiraIssueUpdateMetadataNG updateMetadata;
+    try {
+      updateMetadata = getIssueUpdateMetadata(issueKey);
+    } catch (Exception ex) {
+      if (is404StatusCode(ex)) {
+        throw new JiraClientException(String.format("Invalid jira issue key: %s", issueKey));
+      }
+      throw ex;
+    }
+
     String transitionId = findIssueTransition(issueKey, transitionToStatus, transitionName);
     ImmutablePair<Map<String, String>, String> pair = extractCommentField(fields);
     fields = pair.getLeft();
@@ -375,6 +384,16 @@ public class JiraClient {
     } catch (IOException | HttpResponseException ex) {
       throw new JiraClientException(String.format("Error %s at url [%s]", action, config.getJiraUrl()), ex);
     }
+  }
+
+  private boolean is404StatusCode(Exception ex) {
+    HttpResponseException httpResponseException = null;
+    if (ex instanceof HttpResponseException) {
+      httpResponseException = (HttpResponseException) ex;
+    } else if (ex.getCause() instanceof HttpResponseException) {
+      httpResponseException = (HttpResponseException) ex.getCause();
+    }
+    return httpResponseException != null && httpResponseException.getStatusCode() == 404;
   }
 
   private JiraRestClient createRestClient() {

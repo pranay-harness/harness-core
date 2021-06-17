@@ -1,5 +1,11 @@
 package io.harness.pms.events.base;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
+import static io.harness.threading.Morpheus.sleep;
+
+import static java.time.Duration.ofSeconds;
+
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
@@ -16,6 +22,7 @@ public abstract class PmsAbstractRedisConsumer implements Runnable {
   private static final int WAIT_TIME_IN_SECONDS = 10;
   private final Consumer redisConsumer;
   private final MessageListener messageListener;
+  private AtomicBoolean shouldStop = new AtomicBoolean(false);
 
   public PmsAbstractRedisConsumer(Consumer redisConsumer, MessageListener messageListener) {
     this.redisConsumer = redisConsumer;
@@ -25,10 +32,17 @@ public abstract class PmsAbstractRedisConsumer implements Runnable {
   @Override
   public void run() {
     log.info("Started the Consumer {}", this.getClass().getSimpleName());
+    String threadName = this.getClass().getSimpleName() + "-handler-" + generateUuid();
+    log.debug("Setting thread name to {}", threadName);
+    Thread.currentThread().setName(threadName);
+
     try {
-      while (!Thread.currentThread().isInterrupted()) {
+      do {
+        while (getMaintenanceFlag()) {
+          sleep(ofSeconds(1));
+        }
         readEventsFrameworkMessages();
-      }
+      } while (!Thread.currentThread().isInterrupted() && !shouldStop.get());
     } catch (Exception ex) {
       log.error("Consumer {} unexpectedly stopped", this.getClass().getSimpleName(), ex);
     }
@@ -74,5 +88,9 @@ public abstract class PmsAbstractRedisConsumer implements Runnable {
       success.set(false);
     }
     return success.get();
+  }
+
+  public void shutDown() {
+    shouldStop.set(true);
   }
 }

@@ -185,7 +185,7 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
                                        .map(s -> TaskSelector.newBuilder().setSelector(s).build())
                                        .collect(Collectors.toList());
 
-    return StepUtils.prepareTaskRequest(ambiance, taskDetails, new ArrayList<>(), selectors, null);
+    return StepUtils.prepareTaskRequest(ambiance, taskDetails, new ArrayList<>(), selectors, null, false);
   }
 
   @Override

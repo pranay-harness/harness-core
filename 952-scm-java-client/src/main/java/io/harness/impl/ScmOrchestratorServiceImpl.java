@@ -123,6 +123,12 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   }
 
   @Override
+  public FileContentBatchResponse listFilesByCommitId(
+      ScmConnector connector, List<String> filePathsList, String commitId) {
+    return scmServiceGitClient.listFilesByCommitId(connector, filePathsList, commitId);
+  }
+
+  @Override
   public void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName) {
     scmServiceGitClient.createNewBranch(scmConnector, branch, defaultBranchName);
   }

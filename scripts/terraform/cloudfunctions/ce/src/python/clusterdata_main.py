@@ -84,14 +84,14 @@ def main(jsonData, context):
     create_dataset(client, jsonData["datasetName"], jsonData.get("accountIdOrig"))
     if not if_tbl_exists(client, clusterDataTableRef):
         print_("%s table does not exists, creating table..." % clusterDataTableRef)
-        createTable(client, clusterDataTableName)
+        createTable(client, clusterDataTableRef)
     else:
         alterClusterTable(client, jsonData)
         print_("%s table exists" % clusterDataTableRef)
 
     if not if_tbl_exists(client, unifiedTableRef):
         print_("%s table does not exists, creating table..." % unifiedTableRef)
-        createTable(client, unifiedTableTableName)
+        createTable(client, unifiedTableRef)
     else:
         print_("%s table exists" % unifiedTableRef)
 

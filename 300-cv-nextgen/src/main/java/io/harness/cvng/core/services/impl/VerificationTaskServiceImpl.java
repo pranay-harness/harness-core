@@ -1,9 +1,14 @@
 
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.cvng.CVConstants.DEPLOYMENT;
+import static io.harness.cvng.CVConstants.LIVE_MONITORING;
+import static io.harness.cvng.CVConstants.TAG_DATA_SOURCE;
+import static io.harness.cvng.CVConstants.TAG_VERIFICATION_TYPE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.CVConstants;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.entities.VerificationTask.VerificationTaskKeys;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -19,24 +24,31 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.groovy.util.Maps;
 
 public class VerificationTaskServiceImpl implements VerificationTaskService {
   @Inject private HPersistence hPersistence;
   @Inject private Clock clock;
+
   // TODO: optimize this and add caching support. Since this collection is immutable
   @Override
-  public String create(String accountId, String cvConfigId) {
+  public String create(String accountId, String cvConfigId, DataSourceType provider) {
     Preconditions.checkNotNull(accountId);
     Preconditions.checkNotNull(cvConfigId);
     // TODO: Change to new generated uuid in a separate PR since it needs more validation.
     VerificationTask verificationTask =
-        VerificationTask.builder().uuid(cvConfigId).accountId(accountId).cvConfigId(cvConfigId).build();
+        VerificationTask.builder()
+            .uuid(cvConfigId)
+            .accountId(accountId)
+            .cvConfigId(cvConfigId)
+            .tags(Maps.of(TAG_DATA_SOURCE, provider.name(), TAG_VERIFICATION_TYPE, LIVE_MONITORING))
+            .build();
     hPersistence.save(verificationTask);
     return verificationTask.getUuid();
   }
 
   @Override
-  public String create(String accountId, String cvConfigId, String verificationJobInstanceId) {
+  public String create(String accountId, String cvConfigId, String verificationJobInstanceId, DataSourceType provider) {
     Preconditions.checkNotNull(accountId, "accountId can not be null");
     Preconditions.checkNotNull(cvConfigId, "cvConfigId can not be null");
     Preconditions.checkNotNull(verificationJobInstanceId, "verificationJobInstanceId can not be null");
@@ -47,6 +59,7 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
             .cvConfigId(cvConfigId)
             .validUntil(Date.from(clock.instant().plus(CVConstants.VERIFICATION_JOB_INSTANCE_EXPIRY_DURATION)))
             .verificationJobInstanceId(verificationJobInstanceId)
+            .tags(Maps.of(TAG_DATA_SOURCE, provider.name(), TAG_VERIFICATION_TYPE, DEPLOYMENT))
             .build();
     hPersistence.save(verificationTask);
     return verificationTask.getUuid();

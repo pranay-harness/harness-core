@@ -2,7 +2,6 @@ package io.harness.gitsync.common.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.GitSyncModule.SCM_ON_DELEGATE;
-import static io.harness.gitsync.common.beans.BranchSyncStatus.SYNCING;
 import static io.harness.gitsync.common.beans.BranchSyncStatus.UNSYNCED;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -17,9 +16,8 @@ import io.harness.gitsync.common.dtos.GitBranchDTO;
 import io.harness.gitsync.common.dtos.GitBranchDTO.SyncedBranchDTOKeys;
 import io.harness.gitsync.common.dtos.GitBranchListDTO;
 import io.harness.gitsync.common.service.GitBranchService;
-import io.harness.gitsync.common.service.HarnessToGitHelperService;
+import io.harness.gitsync.common.service.GitBranchSyncService;
 import io.harness.gitsync.common.service.ScmClientFacilitatorService;
-import io.harness.gitsync.common.service.ScmOrchestratorService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.repositories.gitBranches.GitBranchesRepository;
@@ -47,21 +45,18 @@ public class GitBranchServiceImpl implements GitBranchService {
   private final GitBranchesRepository gitBranchesRepository;
   private final YamlGitConfigService yamlGitConfigService;
   private final ExecutorService executorService;
-  private final HarnessToGitHelperService harnessToGitHelperService;
-  private final ScmOrchestratorService scmOrchestratorService;
   private final ScmClientFacilitatorService scmDelegateService;
+  private final GitBranchSyncService gitBranchSyncService;
 
   @Inject
   public GitBranchServiceImpl(GitBranchesRepository gitBranchesRepository, YamlGitConfigService yamlGitConfigService,
-      ExecutorService executorService, HarnessToGitHelperService harnessToGitHelperService,
-      ScmOrchestratorService scmOrchestratorService,
-      @Named(SCM_ON_DELEGATE) ScmClientFacilitatorService scmDelegateService) {
+      ExecutorService executorService, @Named(SCM_ON_DELEGATE) ScmClientFacilitatorService scmDelegateService,
+      GitBranchSyncService gitBranchSyncService) {
     this.gitBranchesRepository = gitBranchesRepository;
     this.yamlGitConfigService = yamlGitConfigService;
     this.executorService = executorService;
-    this.harnessToGitHelperService = harnessToGitHelperService;
-    this.scmOrchestratorService = scmOrchestratorService;
     this.scmDelegateService = scmDelegateService;
+    this.gitBranchSyncService = gitBranchSyncService;
   }
 
   @Override
@@ -96,12 +91,10 @@ public class GitBranchServiceImpl implements GitBranchService {
     YamlGitConfigDTO yamlGitConfig =
         yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, yamlGitConfigIdentifier);
     checkBranchIsNotAlreadyShortlisted(yamlGitConfig.getRepo(), accountIdentifier, branchName);
-    updateBranchSyncStatus(accountIdentifier, yamlGitConfig.getRepo(), branchName, SYNCING);
-    log.info("Branch sync started {}", branchName);
     executorService.submit(
         ()
-            -> harnessToGitHelperService.processFilesInBranch(accountIdentifier, yamlGitConfigIdentifier,
-                projectIdentifier, orgIdentifier, branchName, null, yamlGitConfig.getRepo()));
+            -> gitBranchSyncService.createBranchSyncEvent(accountIdentifier, orgIdentifier, projectIdentifier,
+                yamlGitConfigIdentifier, yamlGitConfig.getRepo(), branchName, null));
     return true;
   }
 

@@ -5,6 +5,7 @@ import static io.harness.exception.WingsException.USER;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
@@ -88,7 +89,10 @@ public class K8sCanaryDeleteStep extends TaskExecutableWithRollback<K8sDeployRes
                 NGTimeConversionHelper.convertTimeStringToMinutes(stepElementParameters.getTimeout().getValue()))
             .build();
 
-    return k8sStepHelper.queueK8sTask(stepElementParameters, request, ambiance, infrastructure).getTaskRequest();
+    return k8sStepHelper
+        .queueK8sTask(stepElementParameters, request, ambiance,
+            K8sExecutionPassThroughData.builder().infrastructure(infrastructure).build())
+        .getTaskRequest();
   }
 
   @Override
