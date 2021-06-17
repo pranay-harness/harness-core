@@ -18,11 +18,14 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(DX)
 public class YamlChangeSetEventHandlerFactory {
   private BranchPushEventYamlChangeSetHandler branchPushEventYamlChangeSetHandler;
+  private BranchSyncEventYamlChangeSetHandler branchSyncEventYamlChangeSetHandler;
 
   public YamlChangeSetHandler getChangeSetHandler(YamlChangeSetDTO yamlChangeSetDTO) {
     switch (yamlChangeSetDTO.getEventType()) {
       case BRANCH_PUSH:
         return branchPushEventYamlChangeSetHandler;
+      case BRANCH_SYNC:
+        return branchSyncEventYamlChangeSetHandler;
       default:
         throw new UnsupportedOperationException(
             "No yaml change set handler registered for event type : " + yamlChangeSetDTO.getEventType());

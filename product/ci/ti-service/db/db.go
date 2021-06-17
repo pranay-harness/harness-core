@@ -13,14 +13,14 @@ type Db interface {
 		report, repo, sha string, tests ...*types.TestCase) error
 
 	// Summary provides a high-level test case summary
-	Summary(ctx context.Context, accountID, orgId, projectId, pipelineId, buildId, report string) (types.SummaryResponse, error)
+	Summary(ctx context.Context, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId, report string) (types.SummaryResponse, error)
 
 	// GetTestCases returns test cases corresponding to a specific suite
-	GetTestCases(ctx context.Context, accountID, orgId, projectId, pipelineId, buildId,
+	GetTestCases(ctx context.Context, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId,
 		report, suiteName, sortAttribute, status, order, limit, offset string) (types.TestCases, error)
 
 	// GetTestSuites returns suite-level details for the tests
-	GetTestSuites(ctx context.Context, accountID, orgId, projectId, pipelineId, buildId,
+	GetTestSuites(ctx context.Context, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId,
 		report, sortAttribute, status, order, limit, offset string) (types.TestSuites, error)
 
 	// WriteSelectedTests writes selected test information to the underlying DB.
@@ -28,8 +28,7 @@ type Db interface {
 		stageId, stepId string, selected types.SelectTestsResp, upsert bool) error
 
 	// GetSelectionOverview retrieves an overview of the selected tests for the corresponding build.
-	GetSelectionOverview(ctx context.Context, accountID, orgId, projectId, pipelineId,
-		buildId string) (types.SelectionOverview, error)
+	GetSelectionOverview(ctx context.Context, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId string) (types.SelectionOverview, error)
 
 	//  WriteDiffFiles writes modified files for the build. This information is required
 	//  while merging partial call graph.
@@ -40,4 +39,12 @@ type Db interface {
 	// accountID. This is required while merging a partial call graph corresponding to a
 	// push request to remove deleted files from the master call graph.
 	GetDiffFiles(ctx context.Context, accountID string, sha []string) (types.DiffInfo, error)
+
+	// GetReportsInfo returns steps/stages which have reports to show
+	GetReportsInfo(ctx context.Context, accountID, orgId, projectId, pipelineId,
+		buildId string) ([]types.StepInfo, error)
+
+	// GetIntelligenceInfo returns steps/stages which have test intelligence information to show
+	GetIntelligenceInfo(ctx context.Context, accountID, orgId, projectId, pipelineId,
+		buildId string) ([]types.StepInfo, error)
 }

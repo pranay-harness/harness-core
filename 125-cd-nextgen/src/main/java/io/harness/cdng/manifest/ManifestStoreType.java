@@ -1,5 +1,9 @@
 package io.harness.cdng.manifest;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(HarnessTeam.CDP)
 public interface ManifestStoreType {
   String GIT = "Git";
   String LOCAL = "Local";
@@ -16,6 +20,18 @@ public interface ManifestStoreType {
       case GITHUB:
       case BITBUCKET:
       case GITLAB:
+        return true;
+
+      default:
+        return false;
+    }
+  }
+
+  static boolean isInStorageRepository(String manifestType) {
+    switch (manifestType) {
+      case HTTP:
+      case S3:
+      case GCS:
         return true;
 
       default:

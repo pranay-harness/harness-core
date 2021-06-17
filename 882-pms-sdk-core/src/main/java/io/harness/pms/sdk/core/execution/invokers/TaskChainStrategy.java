@@ -29,10 +29,12 @@ import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.util.Collections;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(PIPELINE)
+@Slf4j
 public class TaskChainStrategy extends ProgressableStrategy {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
@@ -60,6 +62,7 @@ public class TaskChainStrategy extends ProgressableStrategy {
     if (chainDetails.isShouldEnd()) {
       StepResponse stepResponse;
       try {
+        log.info("Chain end true: Calling finalizeExecution, nodeExecutionId: {}", nodeExecutionId);
         stepResponse = taskChainExecutable.finalizeExecution(ambiance, stepParameters,
             chainDetails.getPassThroughData(), buildResponseDataSupplier(resumePackage.getResponseDataMap()));
       } catch (Exception e) {

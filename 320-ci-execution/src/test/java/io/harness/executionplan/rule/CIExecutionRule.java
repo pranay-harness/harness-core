@@ -42,6 +42,7 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
@@ -132,6 +133,13 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
       @Singleton
       protected NgDelegate2TaskExecutor ngDelegate2TaskExecutor() {
         return mock(NgDelegate2TaskExecutor.class);
+      }
+
+      @Provides
+      @Named("disableDeserialization")
+      @Singleton
+      public boolean getSerializationForDelegate() {
+        return false;
       }
     });
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration()));

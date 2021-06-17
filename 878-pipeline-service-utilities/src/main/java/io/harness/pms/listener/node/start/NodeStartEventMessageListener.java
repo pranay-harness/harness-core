@@ -3,15 +3,16 @@ package io.harness.pms.listener.node.start;
 import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
 
 import io.harness.pms.contracts.execution.start.NodeStartEvent;
-import io.harness.pms.events.base.PmsAbstractBaseMessageListenerWithObservers;
+import io.harness.pms.events.base.PmsAbstractMessageListener;
 import io.harness.pms.sdk.core.execution.events.node.start.NodeStartEventHandler;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.Map;
 
 @Singleton
-public class NodeStartEventMessageListener extends PmsAbstractBaseMessageListenerWithObservers<NodeStartEvent> {
+public class NodeStartEventMessageListener extends PmsAbstractMessageListener<NodeStartEvent> {
   private final NodeStartEventHandler nodeStartEventHandler;
 
   @Inject
@@ -22,7 +23,7 @@ public class NodeStartEventMessageListener extends PmsAbstractBaseMessageListene
   }
 
   @Override
-  public boolean processMessageInternal(NodeStartEvent event) {
-    return nodeStartEventHandler.handleEvent(event);
+  public boolean processMessage(NodeStartEvent event, Map<String, String> metadataMap, Long timestamp) {
+    return nodeStartEventHandler.handleEvent(event, metadataMap, timestamp);
   }
 }

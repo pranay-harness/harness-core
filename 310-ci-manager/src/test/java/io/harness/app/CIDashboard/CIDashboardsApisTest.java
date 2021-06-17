@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.app.beans.entities.AuthorInfo;
 import io.harness.app.beans.entities.BuildActiveInfo;
 import io.harness.app.beans.entities.BuildCount;
 import io.harness.app.beans.entities.BuildExecutionInfo;
@@ -200,7 +201,7 @@ public class CIDashboardsApisTest {
   @Category(UnitTests.class)
   public void testGetDashboardBuildFailureInfo() {
     String queryRequired =
-        "select name, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, startts, endts  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status in ('FAILED','ABORTED','EXPIRED','IGNOREFAILED','ERRORED') ORDER BY startts DESC LIMIT 5;";
+        "select name, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, author_name, author_avatar, startts, endts  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status in ('FAILED','ABORTED','EXPIRED','IGNOREFAILED','ERRORED') ORDER BY startts DESC LIMIT 5;";
 
     List<BuildFailureInfo> buildFailureInfos = new ArrayList<>();
     buildFailureInfos.add(BuildFailureInfo.builder()
@@ -208,6 +209,7 @@ public class CIDashboardsApisTest {
                               .branch("branch")
                               .commit("commit")
                               .commitID("commitId")
+                              .author(AuthorInfo.builder().name(null).url(null).build())
                               .startTs(20L)
                               .endTs(30L)
                               .build());
@@ -223,7 +225,7 @@ public class CIDashboardsApisTest {
   @Category(UnitTests.class)
   public void testGetDashboardBuildActiveInfo() {
     String queryRequired =
-        "select name, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, startts, status  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status IN ('RUNNING','ASYNCWAITING','TASKWAITING','TIMEDWAITING','PAUSED') ORDER BY startts DESC LIMIT 5;";
+        "select name, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, author_name, author_avatar, startts, status  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status IN ('RUNNING','ASYNCWAITING','TASKWAITING','TIMEDWAITING','PAUSED') ORDER BY startts DESC LIMIT 5;";
 
     List<BuildActiveInfo> buildActiveInfos = new ArrayList<>();
     buildActiveInfos.add(BuildActiveInfo.builder()
@@ -231,6 +233,7 @@ public class CIDashboardsApisTest {
                              .branch("branch")
                              .commit("commit")
                              .commitID("commitId")
+                             .author(AuthorInfo.builder().name(null).url(null).build())
                              .startTs(20L)
                              .endTs(30L)
                              .status("Running")
@@ -255,6 +258,7 @@ public class CIDashboardsApisTest {
     List<Long> time = new ArrayList<>();
     List<Long> endTime = new ArrayList<>();
     List<String> commitMessage = new ArrayList<>();
+    List<AuthorInfo> authorInfoList = new ArrayList<>();
 
     repoName.add("repo1");
     repoName.add("repo2");
@@ -311,8 +315,19 @@ public class CIDashboardsApisTest {
     commitMessage.add("commit108");
     commitMessage.add("commit109");
 
+    authorInfoList.add(AuthorInfo.builder().name("name1").url("url1").build());
+    authorInfoList.add(AuthorInfo.builder().name("name2").url("url2").build());
+    authorInfoList.add(AuthorInfo.builder().name("name3").url("url3").build());
+    authorInfoList.add(AuthorInfo.builder().name("name4").url("url4").build());
+    authorInfoList.add(AuthorInfo.builder().name("name5").url("url5").build());
+
+    authorInfoList.add(AuthorInfo.builder().name("name6").url("url6").build());
+    authorInfoList.add(AuthorInfo.builder().name("name7").url("url7").build());
+    authorInfoList.add(AuthorInfo.builder().name("name8").url("url8").build());
+    authorInfoList.add(AuthorInfo.builder().name("name9").url("url9").build());
+
     String queryRequired =
-        "select moduleinfo_repository, status, startts, endts, moduleinfo_branch_commit_message  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and moduleinfo_repository IS NOT NULL and startts>="
+        "select moduleinfo_repository, status, startts, endts, moduleinfo_branch_commit_message, author_name, author_avatar  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and moduleinfo_repository IS NOT NULL and startts>="
         + previousInterval + " and startts<1619827200000;";
 
     RepositoryInformation repositoryInformation = RepositoryInformation.builder()
@@ -321,6 +336,7 @@ public class CIDashboardsApisTest {
                                                       .commitMessage(commitMessage)
                                                       .startTime(time)
                                                       .endTime(endTime)
+                                                      .authorInfoList(authorInfoList)
                                                       .build();
     doReturn(repositoryInformation).when(ciOverviewDashboardServiceImpl).queryRepositoryCalculator(queryRequired);
 
@@ -415,6 +431,7 @@ public class CIDashboardsApisTest {
                                                    .status(ExecutionStatus.EXPIRED.name())
                                                    .EndTime(-1L)
                                                    .commit("commit103")
+                                                   .author(AuthorInfo.builder().name("name3").url("url3").build())
                                                    .build())
                                .buildCount(2)
                                .countList(repo2)
@@ -429,6 +446,7 @@ public class CIDashboardsApisTest {
                                                    .status(ExecutionStatus.SUCCESS.name())
                                                    .EndTime(-1L)
                                                    .commit("commit104")
+                                                   .author(AuthorInfo.builder().name("name4").url("url4").build())
                                                    .build())
                                .buildCount(1)
                                .countList(repo3)
@@ -443,6 +461,7 @@ public class CIDashboardsApisTest {
                                                    .status(ExecutionStatus.SUCCESS.name())
                                                    .EndTime(-1L)
                                                    .commit("commit105")
+                                                   .author(AuthorInfo.builder().name("name5").url("url5").build())
                                                    .build())
 
                                .buildCount(2)
@@ -480,9 +499,10 @@ public class CIDashboardsApisTest {
                                      .build();
 
     assertThat(failureBuild)
-        .isEqualTo(ciOverviewDashboardServiceImpl.getBuildFailureInfo("pip1", "branch1", "commit1", "id1", 10, 13));
+        .isEqualTo(
+            ciOverviewDashboardServiceImpl.getBuildFailureInfo("pip1", "branch1", "commit1", "id1", 10, 13, null));
     assertThat(activeInfo)
         .isEqualTo(ciOverviewDashboardServiceImpl.getBuildActiveInfo(
-            "pip2", "branch2", "commit2", "id2", 10, ExecutionStatus.RUNNING.name(), 13));
+            "pip2", "branch2", "commit2", "id2", null, 10, ExecutionStatus.RUNNING.name(), 13));
   }
 }

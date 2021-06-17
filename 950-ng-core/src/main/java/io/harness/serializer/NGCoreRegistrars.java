@@ -16,6 +16,7 @@ public class NGCoreRegistrars {
           .addAll(NGCoreBeansRegistrars.kryoRegistrars)
           .addAll(PersistenceRegistrars.kryoRegistrars)
           .addAll(ConnectorBeansRegistrars.kryoRegistrars)
+          .addAll(ScmJavaClientRegistrars.kryoRegistrars)
           .add(NGCoreKryoRegistrar.class)
           .build();
 
@@ -24,6 +25,7 @@ public class NGCoreRegistrars {
           .addAll(NGCoreBeansRegistrars.morphiaRegistrars)
           .addAll(SetupUsageRegistrars.morphiaRegistrars)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
+          .addAll(ScmJavaClientRegistrars.morphiaRegistrars)
           .add(NGCoreMorphiaClassesRegistrar.class)
           .build();
 

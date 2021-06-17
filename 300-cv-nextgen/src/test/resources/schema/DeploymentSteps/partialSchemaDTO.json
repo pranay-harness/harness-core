@@ -20,7 +20,8 @@
         "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
       },
       "timeout": {
-        "type": "string"
+        "type": "string",
+        "pattern": "^(\\d+[smhwd][\\s]?)+$"
       },
       "type": {
         "type": "string"
@@ -1339,7 +1340,8 @@
         "RemoveSegmentToVariationTargetMapYamlSpec": {
           "type": "object",
           "required": [
-            "segments", "variation"
+            "segments",
+            "variation"
           ],
           "properties": {
             "segments": {
@@ -1611,7 +1613,8 @@
               "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
             },
             "timeout": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^(\\d+[smhwd][\\s]?)+$"
             },
             "type": {
               "type": "string",

@@ -1,8 +1,11 @@
 package io.harness.engine.interrupts.helpers;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.exception.InvalidRequestException;
+import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.logging.UnitProgress;
 import io.harness.logging.UnitStatus;
@@ -19,6 +22,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class InterruptHelper {
   @Inject private Map<TaskCategory, TaskExecutor> taskExecutorMap;
 
@@ -44,7 +48,7 @@ public class InterruptHelper {
   public boolean discontinueTaskIfRequired(NodeExecution nodeExecution) {
     Ambiance ambiance = nodeExecution.getAmbiance();
     ExecutableResponse executableResponse = nodeExecution.obtainLatestExecutableResponse();
-    if (executableResponse != null && nodeExecution.isTaskSpawningMode()) {
+    if (executableResponse != null && ExecutionModeUtils.isTaskMode(nodeExecution.getMode())) {
       String taskId;
       TaskCategory taskCategory;
       switch (executableResponse.getResponseCase()) {

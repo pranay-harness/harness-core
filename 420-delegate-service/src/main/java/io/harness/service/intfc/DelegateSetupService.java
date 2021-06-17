@@ -3,6 +3,7 @@ package io.harness.service.intfc;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.DelegateGroup;
 import io.harness.delegate.beans.DelegateGroupDetails;
 import io.harness.delegate.beans.DelegateGroupListing;
 
@@ -22,6 +23,8 @@ public interface DelegateSetupService {
   String getHostNameForGroupedDelegate(String hostname);
 
   Map<String, SelectorType> retrieveDelegateImplicitSelectors(Delegate delegate);
+
+  Map<String, SelectorType> retrieveDelegateGroupImplicitSelectors(DelegateGroup delegateGroup);
 
   List<Boolean> validateDelegateGroups(String accountId, String orgId, String projectId, List<String> identifiers);
 

@@ -1,0 +1,6 @@
+name: Faciliator Metrics Group
+identifier: facilitator_event_group
+labels:
+  - accountId
+  - orgIdentifier
+  - projectIdentifier

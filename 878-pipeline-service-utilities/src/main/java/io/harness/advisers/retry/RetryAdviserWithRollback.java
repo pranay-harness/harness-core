@@ -1,6 +1,6 @@
 package io.harness.advisers.retry;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pms.execution.utils.StatusUtils.retryableStatuses;
 
@@ -19,11 +19,10 @@ import io.harness.pms.contracts.advisers.MarkSuccessAdvise;
 import io.harness.pms.contracts.advisers.NextStepAdvise;
 import io.harness.pms.contracts.advisers.RetryAdvise;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
-import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.serializer.KryoSerializer;
@@ -35,7 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 public class RetryAdviserWithRollback implements Adviser {
   @Inject private KryoSerializer kryoSerializer;
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
@@ -46,26 +45,26 @@ public class RetryAdviserWithRollback implements Adviser {
   @Override
   public AdviserResponse onAdviseEvent(AdvisingEvent advisingEvent) {
     RetryAdviserRollbackParameters parameters = extractParameters(advisingEvent);
-    NodeExecutionProto nodeExecution = advisingEvent.getNodeExecution();
+    int retryCount = advisingEvent.getRetryCount();
 
-    if (NodeExecutionUtils.retryCount(nodeExecution) < parameters.getRetryCount()) {
-      int waitInterval =
-          calculateWaitInterval(parameters.getWaitIntervalList(), NodeExecutionUtils.retryCount(nodeExecution));
+    if (retryCount < parameters.getRetryCount()) {
+      int waitInterval = calculateWaitInterval(parameters.getWaitIntervalList(), retryCount);
       return AdviserResponse.newBuilder()
           .setType(AdviseType.RETRY)
-          .setRetryAdvise(RetryAdvise.newBuilder()
-                              .setRetryNodeExecutionId(nodeExecution.getUuid())
-                              .setWaitInterval(waitInterval)
-                              .build())
+          .setRetryAdvise(
+              RetryAdvise.newBuilder()
+                  .setRetryNodeExecutionId(AmbianceUtils.obtainCurrentRuntimeId(advisingEvent.getAmbiance()))
+                  .setWaitInterval(waitInterval)
+                  .build())
           .build();
     }
-    return handlePostRetry(parameters, advisingEvent.getNodeExecution().getAmbiance());
+    return handlePostRetry(parameters, advisingEvent.getAmbiance());
   }
 
   @Override
   public boolean canAdvise(AdvisingEvent advisingEvent) {
     boolean canAdvise = retryableStatuses().contains(advisingEvent.getToStatus());
-    FailureInfo failureInfo = advisingEvent.getNodeExecution().getFailureInfo();
+    FailureInfo failureInfo = advisingEvent.getFailureInfo();
     RetryAdviserRollbackParameters parameters = extractParameters(advisingEvent);
     if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesList())) {
       return canAdvise

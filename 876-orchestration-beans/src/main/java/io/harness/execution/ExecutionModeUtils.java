@@ -1,11 +1,15 @@
 package io.harness.execution;
 
+import static io.harness.pms.contracts.execution.ExecutionMode.ASYNC;
 import static io.harness.pms.contracts.execution.ExecutionMode.CHILD;
 import static io.harness.pms.contracts.execution.ExecutionMode.CHILDREN;
 import static io.harness.pms.contracts.execution.ExecutionMode.CHILD_CHAIN;
+import static io.harness.pms.contracts.execution.ExecutionMode.SYNC;
 import static io.harness.pms.contracts.execution.ExecutionMode.TASK;
 import static io.harness.pms.contracts.execution.ExecutionMode.TASK_CHAIN;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.execution.ExecutionMode;
 
 import java.util.EnumSet;
@@ -13,6 +17,7 @@ import java.util.Set;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ExecutionModeUtils {
   private final Set<ExecutionMode> CHAIN_MODES = EnumSet.of(TASK_CHAIN, CHILD_CHAIN);
 
@@ -20,8 +25,14 @@ public class ExecutionModeUtils {
 
   private final Set<ExecutionMode> TASK_MODES = EnumSet.of(TASK, TASK_CHAIN);
 
+  private final Set<ExecutionMode> LEAF_MODES = EnumSet.of(TASK, TASK_CHAIN, ASYNC, SYNC);
+
   public Set<ExecutionMode> chainModes() {
     return CHAIN_MODES;
+  }
+
+  public Set<ExecutionMode> leafModes() {
+    return LEAF_MODES;
   }
 
   public boolean isParentMode(ExecutionMode mode) {
@@ -34,5 +45,9 @@ public class ExecutionModeUtils {
 
   public boolean isTaskMode(ExecutionMode mode) {
     return TASK_MODES.contains(mode);
+  }
+
+  public boolean isLeafMode(ExecutionMode mode) {
+    return LEAF_MODES.contains(mode);
   }
 }

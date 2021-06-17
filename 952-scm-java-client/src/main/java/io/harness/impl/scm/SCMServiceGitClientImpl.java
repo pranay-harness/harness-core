@@ -123,6 +123,12 @@ public class SCMServiceGitClientImpl implements ScmClient {
   }
 
   @Override
+  public FileContentBatchResponse listFilesByCommitId(
+      ScmConnector connector, List<String> filePathsList, String commitId) {
+    return scmServiceClient.listFilesByCommitId(connector, filePathsList, commitId, scmBlockingStub);
+  }
+
+  @Override
   public void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName) {
     scmServiceClient.createNewBranch(scmConnector, branch, defaultBranchName, scmBlockingStub);
   }

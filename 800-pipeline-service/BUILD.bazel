@@ -113,6 +113,7 @@ java_library(
         "//930-ng-core-clients:module",
         "//940-notification-client:module",
         "//940-primary-version-manager:module",
+        "//945-ng-audit-client:module",
         "//950-ng-project-n-orgs:module",
         "//950-timeout-engine:module",
         "//953-events-api:module",

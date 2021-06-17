@@ -43,7 +43,7 @@ public class OnFailAdviser implements Adviser {
       return false;
     }
     boolean canAdvise = StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus());
-    FailureInfo failureInfo = advisingEvent.getNodeExecution().getFailureInfo();
+    FailureInfo failureInfo = advisingEvent.getFailureInfo();
     if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesList())) {
       return canAdvise
           && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
