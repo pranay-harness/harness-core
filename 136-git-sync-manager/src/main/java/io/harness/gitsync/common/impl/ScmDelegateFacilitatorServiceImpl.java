@@ -183,7 +183,7 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
         getEncryptedDataDetails(accountIdentifier, orgIdentifier, projectIdentifier, scmConnector);
     ScmGitFileTaskParams scmGitFileTaskParams = ScmGitFileTaskParams.builder()
                                                     .gitFileTaskType(GitFileTaskType.GET_FILE_CONTENT_BATCH)
-                                                    .ref(branchName)
+                                                    .branch(branchName)
                                                     .scmConnector(scmConnector)
                                                     .foldersList(foldersList)
                                                     .encryptedDataDetails(encryptionDetails)

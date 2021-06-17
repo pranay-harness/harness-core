@@ -436,7 +436,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     return PmsSdkConfiguration.builder()
         .deploymentMode(remote ? SdkDeployMode.REMOTE : SdkDeployMode.LOCAL)
         .moduleType(ModuleType.CD)
-        .mongoConfig(appConfig.getPmsMongoConfig())
         .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
         .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
         .pipelineServiceInfoProviderClass(CDNGPlanCreatorProvider.class)
