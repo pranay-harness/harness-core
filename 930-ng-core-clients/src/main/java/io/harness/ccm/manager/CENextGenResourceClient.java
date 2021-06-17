@@ -1,4 +1,4 @@
-package io.harness.cenextgenclient;
+package io.harness.ccm.manager;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 

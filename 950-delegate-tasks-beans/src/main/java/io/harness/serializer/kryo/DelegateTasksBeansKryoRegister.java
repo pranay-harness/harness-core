@@ -51,6 +51,7 @@ import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceConnect
 import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceSettingConstants;
 import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceSettingDTO;
 import io.harness.delegate.beans.azure.registry.AzureRegistryType;
+import io.harness.delegate.beans.ccm.K8sClusterInfo;
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.CIClusterType;
 import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
@@ -815,5 +816,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GcpListBucketsRequest.class, 543358);
     kryo.register(GcpListBucketsResponse.class, 543359);
     kryo.register(GcpBucketDetails.class, 543360);
+
+    kryo.register(K8sClusterInfo.class, 543361);
   }
 }
