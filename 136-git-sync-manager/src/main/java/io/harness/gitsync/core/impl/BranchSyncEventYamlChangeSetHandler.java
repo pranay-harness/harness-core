@@ -54,14 +54,14 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
       return YamlChangeSetStatus.SKIPPED;
     }
 
-    GitBranch gitBranch = gitBranchService.get(accountId, repoURL, branch);
-    if (gitBranch.getBranchSyncStatus() == UNSYNCED) {
-      gitBranchService.updateBranchSyncStatus(accountId, repoURL, branch, SYNCING);
-    } else {
-      log.info("The branch sync for repoUrl [{}], branch [{}] has status [{}], hence skipping", repoURL, branch,
-          gitBranch.getBranchSyncStatus());
-      return YamlChangeSetStatus.SKIPPED;
-    }
+//    GitBranch gitBranch = gitBranchService.get(accountId, repoURL, branch);
+//    if (gitBranch.getBranchSyncStatus() == UNSYNCED) {
+//      gitBranchService.updateBranchSyncStatus(accountId, repoURL, branch, SYNCING);
+//    } else {
+//      log.info("The branch sync for repoUrl [{}], branch [{}] has status [{}], hence skipping", repoURL, branch,
+//          gitBranch.getBranchSyncStatus());
+//      return YamlChangeSetStatus.SKIPPED;
+//    }
 
     // Init Progress Record for this event
     GitToHarnessProgressDTO gitToHarnessProgressRecord = gitToHarnessProgressService.initProgress(

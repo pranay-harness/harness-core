@@ -3,6 +3,7 @@ package io.harness.gitsync.common.impl;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.gitsync.common.beans.BranchSyncStatus.SYNCING;
 
 import static java.util.stream.Collectors.toList;
 
@@ -14,6 +15,7 @@ import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
 import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.helper.YamlGitConfigHelper;
+import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitBranchSyncService;
 import io.harness.gitsync.common.service.GitToHarnessProgressService;
 import io.harness.gitsync.common.service.ScmOrchestratorService;
@@ -42,6 +44,7 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
   GitToHarnessProgressService gitToHarnessProgressService;
   YamlGitConfigService yamlGitConfigService;
   YamlChangeSetService yamlChangeSetService;
+  GitBranchService gitBranchService;
 
   @Override
   public void createBranchSyncEvent(String accountIdentifier, String orgIdentifier, String projectIdentifier,
@@ -60,6 +63,7 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
                                                           .eventMetadata(branchSyncMetadata)
                                                           .build();
     final YamlChangeSetDTO savedChangeSet = yamlChangeSetService.save(yamlChangeSetSaveDTO);
+    gitBranchService.updateBranchSyncStatus(accountIdentifier, repoURL, branch, SYNCING);
     log.info("Created the change set {} to process the branch {} in the repo {}", savedChangeSet.getChangesetId(),
         branch, repoURL);
   }
