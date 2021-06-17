@@ -22,6 +22,7 @@ export VERSION_FILE=preqa_build.properties
 export VERSION=`cat ${VERSION_FILE} |\
     grep 'build.number=' |\
     sed -e 's: *build.number=::g'`
+# shellcheck disable=SC1068
 export cat =${VERSION%??}
 export NEW_VERSION=$(( ${VERSION}+1 ))
 
