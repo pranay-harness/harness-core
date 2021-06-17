@@ -15,6 +15,8 @@ import io.harness.cdng.artifact.service.ArtifactSourceService;
 import io.harness.cdng.artifact.service.impl.ArtifactSourceServiceImpl;
 import io.harness.cdng.buckets.resources.s3.S3ResourceService;
 import io.harness.cdng.buckets.resources.s3.S3ResourceServiceImpl;
+import io.harness.cdng.buckets.resources.service.GcsResourceService;
+import io.harness.cdng.buckets.resources.service.GcsResourceServiceImpl;
 import io.harness.cdng.jira.resources.service.JiraResourceService;
 import io.harness.cdng.jira.resources.service.JiraResourceServiceImpl;
 import io.harness.cdng.k8s.resources.gcp.service.GcpResourceService;
@@ -58,6 +60,7 @@ public class NGModule extends AbstractModule {
     bind(CdYamlSchemaService.class).to(CdYamlSchemaServiceImpl.class);
     bind(GcpResourceService.class).to(GcpResourceServiceImpl.class);
     bind(S3ResourceService.class).to(S3ResourceServiceImpl.class);
+    bind(GcsResourceService.class).to(GcsResourceServiceImpl.class);
 
     MapBinder<String, StageTypeToStageExecutionMapperRegistrar> stageExecutionHelperRegistrarMapBinder =
         MapBinder.newMapBinder(binder(), String.class, StageTypeToStageExecutionMapperRegistrar.class);

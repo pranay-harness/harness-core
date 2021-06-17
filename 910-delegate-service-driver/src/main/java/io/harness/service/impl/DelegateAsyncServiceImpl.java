@@ -55,8 +55,6 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
             persistence.createUpdateOperations(DelegateAsyncTaskResponse.class)
                 .set(DelegateAsyncTaskResponseKeys.processAfter, currentTimeMillis());
 
-        log.info("Async task process for task id {} ", taskResponseQuery.get().getUuid());
-
         DelegateAsyncTaskResponse lockedAsyncTaskResponse =
             persistence.findAndModify(taskResponseQuery, updateOperations, HPersistence.returnNewOptions);
 

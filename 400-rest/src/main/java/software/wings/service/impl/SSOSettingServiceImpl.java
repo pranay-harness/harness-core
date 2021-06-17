@@ -41,6 +41,7 @@ import software.wings.features.api.RestrictedApi;
 import software.wings.features.extractors.LdapSettingsAccountIdExtractor;
 import software.wings.features.extractors.SamlSettingsAccountIdExtractor;
 import software.wings.scheduler.LdapGroupSyncJob;
+import software.wings.scheduler.LdapGroupSyncJobHelper;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.oauth.OauthOptions;
@@ -83,6 +84,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private OauthOptions oauthOptions;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private LdapGroupSyncJobHelper ldapGroupSyncJobHelper;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   static final int ONE_DAY = 86400000;
 
@@ -233,6 +235,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     settings.encryptFields(secretManager);
     LdapSettings savedSettings = wingsPersistence.saveAndGet(LdapSettings.class, settings);
     LdapGroupSyncJob.add(jobScheduler, savedSettings.getAccountId(), savedSettings.getUuid());
+    ldapGroupSyncJobHelper.syncJob(savedSettings);
     auditServiceHelper.reportForAuditingUsingAccountId(settings.getAccountId(), null, settings, Event.Type.CREATE);
     log.info("Auditing creation of LDAP Settings for account={}", settings.getAccountId());
     eventPublishHelper.publishSSOEvent(settings.getAccountId());
@@ -260,6 +263,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
         settings.getAccountId(), oldSettings, savedSettings, Event.Type.UPDATE);
     log.info("Auditing updation of LDAP for account={}", savedSettings.getAccountId());
     LdapGroupSyncJob.add(jobScheduler, savedSettings.getAccountId(), savedSettings.getUuid());
+    ldapGroupSyncJobHelper.syncJob(savedSettings);
     return savedSettings;
   }
 
