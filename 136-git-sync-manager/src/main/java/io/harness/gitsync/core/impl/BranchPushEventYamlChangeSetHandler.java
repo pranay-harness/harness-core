@@ -17,6 +17,7 @@ import io.harness.gitsync.common.dtos.GitToHarnessGetFilesStepRequest;
 import io.harness.gitsync.common.dtos.GitToHarnessGetFilesStepResponse;
 import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepRequest;
 import io.harness.gitsync.common.dtos.GitToHarnessProgressDTO;
+import io.harness.gitsync.common.helper.GitToHarnessProgressHelper;
 import io.harness.gitsync.common.helper.YamlGitConfigHelper;
 import io.harness.gitsync.common.service.GitToHarnessProgressService;
 import io.harness.gitsync.common.service.ScmOrchestratorService;
@@ -49,6 +50,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
   private GitCommitService gitCommitService;
   private GitToHarnessProcessorService gitToHarnessProcessorService;
   private GitToHarnessProgressService gitToHarnessProgressService;
+  private GitToHarnessProgressHelper gitToHarnessProgressHelper;
 
   @Override
   public YamlChangeSetStatus process(YamlChangeSetDTO yamlChangeSetDTO) {
@@ -60,10 +62,12 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
       return YamlChangeSetStatus.SKIPPED;
     }
 
-    if (gitToHarnessProgressService.isProgressEventAlreadyProcessedOrInProcess(repoURL,
-            yamlChangeSetDTO.getGitWebhookRequestAttributes().getHeadCommitId(), YamlChangeSetEventType.BRANCH_PUSH)) {
-      log.info("Event {} already in progress or successfully completed", yamlChangeSetDTO);
-      return YamlChangeSetStatus.RUNNING;
+    YamlChangeSetStatus queueStatus =
+        gitToHarnessProgressHelper.getQueueStatusIfEventInProgressOrAlreadyProcessed(yamlChangeSetDTO);
+    if (queueStatus != null) {
+      log.info("Ignoring event {} with queue status {} as event might be already completed or in process",
+          yamlChangeSetDTO, queueStatus);
+      return queueStatus;
     }
 
     boolean isCommitAlreadyProcessed = gitCommitService.isCommitAlreadyProcessed(yamlChangeSetDTO.getAccountId(),

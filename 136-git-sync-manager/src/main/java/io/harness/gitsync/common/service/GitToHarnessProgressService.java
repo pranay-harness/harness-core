@@ -40,4 +40,7 @@ public interface GitToHarnessProgressService {
       String gitToHarnessProgressRecordId, GitToHarnessProgressStatus gitToHarnessProgressStatus);
 
   boolean isBranchSyncAlreadyInProgressOrSynced(String repoURL, String branch);
+
+  GitToHarnessProgressDTO getByRepoUrlAndCommitIdAndEventType(
+      String repoURL, String commitId, YamlChangeSetEventType eventType);
 }
