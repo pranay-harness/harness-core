@@ -1,14 +1,11 @@
-package io.harness.accesscontrol.principals.user.events;
+package io.harness.accesscontrol.principals.users.events;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.accesscontrol.commons.events.EventHandler;
-import io.harness.accesscontrol.principals.Principal;
-import io.harness.accesscontrol.principals.PrincipalType;
-import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
-import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
+import io.harness.accesscontrol.principals.users.HarnessUserService;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
@@ -21,7 +18,6 @@ import io.harness.eventsframework.schemas.usermembership.UserMembershipDTO;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.Collections;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,12 +25,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class UserMembershipEventHandler implements EventHandler {
-  private final RoleAssignmentService roleAssignmentService;
+  private final HarnessUserService harnessUserService;
   private final ScopeService scopeService;
 
   @Inject
-  public UserMembershipEventHandler(RoleAssignmentService roleAssignmentService, ScopeService scopeService) {
-    this.roleAssignmentService = roleAssignmentService;
+  public UserMembershipEventHandler(HarnessUserService harnessUserService, ScopeService scopeService) {
+    this.harnessUserService = harnessUserService;
     this.scopeService = scopeService;
   }
 
@@ -50,7 +46,7 @@ public class UserMembershipEventHandler implements EventHandler {
       return true;
     }
     try {
-      String userId = userMembershipDTO.getUserId();
+      String userId = stripToNull(userMembershipDTO.getUserId());
       io.harness.eventsframework.schemas.usermembership.Scope eventsScope = userMembershipDTO.getScope();
 
       HarnessScopeParamsBuilder builder =
@@ -60,22 +56,12 @@ public class UserMembershipEventHandler implements EventHandler {
 
       Scope scope = scopeService.buildScopeFromParams(builder.build());
       if (isNotEmpty(userId)) {
-        deleteRoleAssignments(scope, userId);
+        harnessUserService.sync(userId, scope);
       }
     } catch (Exception e) {
       log.error("Could not process the user membership delete event {} due to error", userMembershipDTO, e);
       return false;
     }
     return true;
-  }
-
-  private void deleteRoleAssignments(Scope scope, String principalIdentifier) {
-    RoleAssignmentFilter roleAssignmentFilter =
-        RoleAssignmentFilter.builder()
-            .scopeFilter(scope.toString())
-            .principalFilter(Collections.singleton(
-                Principal.builder().principalIdentifier(principalIdentifier).principalType(PrincipalType.USER).build()))
-            .build();
-    roleAssignmentService.deleteMulti(roleAssignmentFilter);
   }
 }

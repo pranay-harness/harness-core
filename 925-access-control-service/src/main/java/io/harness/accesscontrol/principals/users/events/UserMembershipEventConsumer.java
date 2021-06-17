@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.principals.user.events;
+package io.harness.accesscontrol.principals.users.events;
 
 import io.harness.accesscontrol.commons.events.EventConsumer;
 import io.harness.accesscontrol.commons.events.EventFilter;

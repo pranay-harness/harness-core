@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.principals.user;
+package io.harness.accesscontrol.principals.users;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
