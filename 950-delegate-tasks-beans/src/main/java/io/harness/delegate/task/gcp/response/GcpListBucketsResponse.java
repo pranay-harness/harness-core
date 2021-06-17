@@ -14,10 +14,10 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(CDP)
-public class GcpClusterListTaskResponse implements GcpTaskResponse {
+public class GcpListBucketsResponse implements GcpTaskResponse {
   private DelegateMetaInfo delegateMetaInfo;
   private String errorMessage;
   private ErrorDetail errorDetail;
   private CommandExecutionStatus commandExecutionStatus;
-  private List<String> clusterNames;
+  private List<GcpBucketDetails> buckets;
 }
