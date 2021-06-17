@@ -201,9 +201,7 @@ public class TerraformApplyStep extends TaskExecutableWithRollback<TerraformTask
     stepResponseBuilder.stepOutcome(
         StepResponse.StepOutcome.builder()
             .name(OutcomeExpressionConstants.OUTPUT)
-            .outcome(TerraformApplyOutcome.builder()
-                         .outputs(helper.parseTerraformOutputs(terraformTaskNGResponse.getOutputs()))
-                         .build())
+            .outcome(new TerraformApplyOutcome(helper.parseTerraformOutputs(terraformTaskNGResponse.getOutputs())))
             .build());
   }
 

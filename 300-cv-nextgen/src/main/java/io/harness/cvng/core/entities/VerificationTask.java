@@ -16,8 +16,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
@@ -42,6 +44,7 @@ public final class VerificationTask implements UuidAware, CreatedAtAware, Accoun
         .build();
   }
 
+  @Singular Map<String, String> tags;
   @Id private String uuid;
   private String accountId;
   @FdIndex private long createdAt;

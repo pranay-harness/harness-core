@@ -14,8 +14,8 @@ import java.util.List;
 @OwnedBy(HarnessTeam.DX)
 public enum HookEventType {
   @JsonProperty("TRIGGER_EVENTS")
-  TRIGGER_EVENTS(Arrays.asList(GithubWebhookEvent.GITHUB_CREATE, GithubWebhookEvent.GITHUB_DELETE,
-                     GithubWebhookEvent.GITHUB_DEPLOYMENT),
+  TRIGGER_EVENTS(Arrays.asList(GithubWebhookEvent.GITHUB_CREATE, GithubWebhookEvent.GITHUB_PUSH,
+                     GithubWebhookEvent.GITHUB_DELETE, GithubWebhookEvent.GITHUB_DEPLOYMENT),
       Arrays.asList(GitlabWebhookEvent.GITLAB_COMMENT, GitlabWebhookEvent.GITLAB_ISSUES,
           GitlabWebhookEvent.GITLAB_MERGE, GitlabWebhookEvent.GITLAB_PUSH),
       Arrays.asList(

@@ -46,6 +46,12 @@ resource "google_pubsub_topic" "ce-awsdata-ebs-inventory-topic" {
   project = "${var.projectId}"
 }
 
+# PubSub topic for loading AWS EBS Inventory data into main bq table. scheduler pushes into this
+resource "google_pubsub_topic" "ce-awsdata-ebs-inventory-load-topic" {
+  name = "ce-awsdata-ebs-inventory-load-scheduler"
+  project = "${var.projectId}"
+}
+
 # PubSub topic for AWS EBS Inventory Metrics data pipeline. scheduler pushes into this
 resource "google_pubsub_topic" "ce-awsdata-ebs-metrics-topic" {
   name = "ce-awsdata-ebs-metrics-inventory-scheduler"
@@ -290,6 +296,27 @@ data "archive_file" "ce-awsdata-ebs" {
   }
 }
 
+data "archive_file" "ce-awsdata-ebs-load" {
+  type        = "zip"
+  output_path = "${path.module}/files/ce-awsdata-ebs-load.zip"
+  source {
+    content  = "${file("${path.module}/src/python/aws_ebs_data_load.py")}"
+    filename = "main.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/util.py")}"
+    filename = "util.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/bq_schema.py")}"
+    filename = "bq_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/requirements.txt")}"
+    filename = "requirements.txt"
+  }
+}
+
 data "archive_file" "ce-awsdata-ebs-metrics" {
   type        = "zip"
   output_path = "${path.module}/files/ce-awsdata-ebs-metrics.zip"
@@ -390,6 +417,13 @@ resource "google_storage_bucket_object" "ce-awsdata-ebs-archive" {
   bucket = "${google_storage_bucket.bucket1.name}"
   source = "${path.module}/files/ce-awsdata-ebs.zip"
   depends_on = ["data.archive_file.ce-awsdata-ebs"]
+}
+
+resource "google_storage_bucket_object" "ce-awsdata-ebs-load-archive" {
+  name = "ce-awsdata.${data.archive_file.ce-awsdata-ebs-load.output_md5}.zip"
+  bucket = "${google_storage_bucket.bucket1.name}"
+  source = "${path.module}/files/ce-awsdata-ebs-load.zip"
+  depends_on = ["data.archive_file.ce-awsdata-ebs-load"]
 }
 
 resource "google_storage_bucket_object" "ce-awsdata-ebs-metrics-archive" {
@@ -683,6 +717,33 @@ resource "google_cloudfunctions_function" "ce-awsdata-ebs-function" {
   event_trigger {
     event_type = "google.pubsub.topic.publish"
     resource   = "${google_pubsub_topic.ce-awsdata-ebs-inventory-topic.name}"
+    failure_policy {
+      retry = false
+    }
+  }
+}
+
+resource "google_cloudfunctions_function" "ce-awsdata-ebs-load-function" {
+  name                      = "ce-awsdata-ebs-load-terraform"
+  description               = "This cloudfunction gets triggered upon event in a pubsub topic"
+  entry_point               = "main"
+  available_memory_mb       = 256
+  timeout                   = 540
+  runtime                   = "python38"
+  project                   = "${var.projectId}"
+  region                    = "${var.region}"
+  source_archive_bucket     = "${google_storage_bucket.bucket1.name}"
+  source_archive_object     = "${google_storage_bucket_object.ce-awsdata-ebs-load-archive.name}"
+
+  environment_variables = {
+    disabled = "false"
+    enable_for_accounts = ""
+    GCP_PROJECT = "${var.projectId}"
+  }
+
+  event_trigger {
+    event_type = "google.pubsub.topic.publish"
+    resource   = "${google_pubsub_topic.ce-awsdata-ebs-inventory-load-topic.name}"
     failure_policy {
       retry = false
     }

@@ -12,4 +12,5 @@ public class RepositoryInformation {
   private List<Long> startTime;
   private List<Long> endTime;
   private List<String> commitMessage;
+  private List<AuthorInfo> authorInfoList;
 }

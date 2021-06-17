@@ -113,14 +113,6 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   List<String> adviserTimeoutInstanceIds;
   TimeoutDetails adviserTimeoutDetails;
 
-  public boolean isChildSpawningMode() {
-    return mode == ExecutionMode.CHILD || mode == ExecutionMode.CHILDREN || mode == ExecutionMode.CHILD_CHAIN;
-  }
-
-  public boolean isTaskSpawningMode() {
-    return mode == ExecutionMode.TASK || mode == ExecutionMode.TASK_CHAIN;
-  }
-
   public ExecutableResponse obtainLatestExecutableResponse() {
     if (isEmpty(executableResponses)) {
       return null;
@@ -195,6 +187,12 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
                  .field(NodeExecutionKeys.parentId)
                  .field(NodeExecutionKeys.status)
                  .field(NodeExecutionKeys.oldRetry)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("planExecutionId_mode_status_idx")
+                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.mode)
+                 .field(NodeExecutionKeys.status)
                  .build())
         .add(CompoundMongoIndex.builder().name("previous_id_idx").field(NodeExecutionKeys.previousId).build())
         .build();

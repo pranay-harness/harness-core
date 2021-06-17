@@ -53,8 +53,9 @@ public class AccessControlChangeEventFailureHandler implements ChangeEventFailur
     try {
       String message = String.format(
           "Access Control Aggregator failure: Environment: %s : Could not process change event with key %s and value %s. Exception %s",
-          notificationConfig.getEnvironment(), StringEscapeUtils.escapeJson(changeEvent.key()),
-          StringEscapeUtils.escapeJson(changeEvent.value()), StringEscapeUtils.escapeJson(exception.getMessage()));
+          StringEscapeUtils.escapeJson(notificationConfig.getEnvironment()),
+          StringEscapeUtils.escapeJson(changeEvent.key()), StringEscapeUtils.escapeJson(changeEvent.value()),
+          StringEscapeUtils.escapeJson(exception.getMessage()));
       StrSubstitutor strSubstitutor = new StrSubstitutor(ImmutableMap.of("message", message));
       String finalMessage = strSubstitutor.replace(messageTemplate);
       sendJSONMessage(finalMessage, notificationConfig.getSlackWebhookUrl());

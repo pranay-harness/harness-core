@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.webhook.services.api.WebhookService;
+import io.harness.ng.webhook.services.api.WebhookEventService;
 import io.harness.security.annotations.InternalApi;
 
 import com.google.inject.Inject;
@@ -36,13 +36,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(DX)
 public class WebhookEventResource {
-  private WebhookService webhookService;
+  private WebhookEventService webhookEventService;
 
   @POST
   @InternalApi
   @ApiOperation(hidden = true, value = "Upsert a webhook event", nickname = "webhookUpsert")
   public ResponseDTO<UpsertWebhookResponseDTO> upsertWebhook(@Valid UpsertWebhookRequestDTO upsertWebhookRequest) {
-    final UpsertWebhookResponseDTO upsertWebhookResponse = webhookService.upsertWebhook(upsertWebhookRequest);
+    final UpsertWebhookResponseDTO upsertWebhookResponse = webhookEventService.upsertWebhook(upsertWebhookRequest);
     return ResponseDTO.newResponse(upsertWebhookResponse);
   }
 }

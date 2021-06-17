@@ -460,7 +460,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     ScopeMatchResult scopeMatchResult = ScopeMatchResult.SCOPE_MATCHED;
 
     if (isNotEmpty(scope.getEnvironmentTypes())) {
-      if (shouldFollowWildcardScope(appId, accountId) || shouldFollowWildcardScope(envId, accountId)) {
+      if (shouldFollowWildcardScope(appId) || shouldFollowWildcardScope(envId)) {
         scopeMatchResult = ScopeMatchResult.ALLOWED_WILDCARD;
       } else {
         if (isNotBlank(appId) && isNotBlank(envId)) {
@@ -484,7 +484,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     }
 
     if (isDelegateAllowedForScope(scopeMatchResult) && isNotEmpty(scope.getApplications())) {
-      if (shouldFollowWildcardScope(appId, accountId)) {
+      if (shouldFollowWildcardScope(appId)) {
         scopeMatchResult = ScopeMatchResult.ALLOWED_WILDCARD;
       } else {
         scopeMatchResult = (isNotBlank(appId) && scope.getApplications().contains(appId))
@@ -494,7 +494,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     }
 
     if (isDelegateAllowedForScope(scopeMatchResult) && isNotEmpty(scope.getEnvironments())) {
-      if (shouldFollowWildcardScope(envId, accountId)) {
+      if (shouldFollowWildcardScope(envId)) {
         scopeMatchResult = ScopeMatchResult.ALLOWED_WILDCARD;
       } else {
         scopeMatchResult = (isNotBlank(envId) && scope.getEnvironments().contains(envId))
@@ -504,7 +504,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     }
 
     if (isNotEmpty(scope.getInfrastructureDefinitions()) || isNotEmpty(scope.getServices())) {
-      if (shouldFollowWildcardScope(appId, accountId) || shouldFollowWildcardScope(infraMappingId, accountId)) {
+      if (shouldFollowWildcardScope(appId) || shouldFollowWildcardScope(infraMappingId)) {
         scopeMatchResult = ScopeMatchResult.ALLOWED_WILDCARD;
       } else {
         InfrastructureMapping infrastructureMapping =
@@ -536,9 +536,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     return scopeMatchResult;
   }
 
-  private boolean shouldFollowWildcardScope(String entityId, String accountId) {
-    return isNotBlank(accountId) && featureFlagService.isEnabled(FeatureName.DELEGATE_ADD_WILDCARD_SCOPING, accountId)
-        && StringUtils.equals(entityId, SCOPE_WILDCARD);
+  private boolean shouldFollowWildcardScope(String entityId) {
+    return StringUtils.equals(entityId, SCOPE_WILDCARD);
   }
 
   private boolean isDelegateAllowedForScope(ScopeMatchResult scopeMatchResult) {

@@ -212,7 +212,7 @@ def ingest_data_to_awscur(jsonData):
     # In the new BigQuery dataset, create a reference to a new table for
     # storing the query results.
     tableName = "%s.awscur_%s" % (ds, jsonData["awsCurTableSuffix"])
-    _, year, month = jsonData["tableSuffix"].split('_')
+    year, month = jsonData["reportYear"], jsonData["reportMonth"]
     date_start = "%s-%s-01" % (year, month)
     date_end = "%s-%s-%s" % (year, month, monthrange(int(year), int(month))[1])
     print_("Loading into %s table..." % tableName)

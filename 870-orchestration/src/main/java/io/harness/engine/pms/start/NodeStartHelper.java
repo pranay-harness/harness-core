@@ -1,10 +1,12 @@
 package io.harness.engine.pms.start;
 
+import static io.harness.pms.events.PmsEventFrameworkConstants.PIPELINE_MONITORING_ENABLED;
 import static io.harness.pms.events.PmsEventFrameworkConstants.SERVICE_NAME;
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
 import static java.lang.String.format;
 
+import io.harness.beans.FeatureName;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.engine.ExecutionCheck;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -16,6 +18,7 @@ import io.harness.eventsframework.producer.Message;
 import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.pms.PmsFeatureFlagService;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.start.NodeStartEvent;
@@ -34,13 +37,14 @@ import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -51,6 +55,7 @@ public class NodeStartHelper {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private TimeoutEngine timeoutEngine;
   @Inject private TimeoutRegistry timeoutRegistry;
+  @Inject private PmsFeatureFlagService pmsFeatureFlagService;
 
   public void startNode(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
     ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
@@ -74,10 +79,13 @@ public class NodeStartHelper {
                                         .setMode(nodeExecution.getMode())
                                         .build();
     Producer producer = eventsFrameworkUtils.obtainProducerForNodeStart(nodeExecution.getNode().getServiceName());
-    producer.send(Message.newBuilder()
-                      .putAllMetadata(ImmutableMap.of(SERVICE_NAME, nodeExecution.getNode().getServiceName()))
-                      .setData(nodeStartEvent.toByteString())
-                      .build());
+    Map<String, String> metadataMap = new HashMap<>();
+    metadataMap.put(SERVICE_NAME, nodeExecution.getNode().getServiceName());
+    if (pmsFeatureFlagService.isEnabled(
+            AmbianceUtils.getAccountId(nodeStartEvent.getAmbiance()), FeatureName.PIPELINE_MONITORING)) {
+      metadataMap.put(PIPELINE_MONITORING_ENABLED, "true");
+    }
+    producer.send(Message.newBuilder().putAllMetadata(metadataMap).setData(nodeStartEvent.toByteString()).build());
     log.info("Successfully Sent NodeStart event to the producer");
   }
 

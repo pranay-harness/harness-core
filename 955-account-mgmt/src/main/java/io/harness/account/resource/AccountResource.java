@@ -6,7 +6,6 @@ import io.harness.account.AccountClient;
 import io.harness.account.AccountConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ng.core.account.DefaultExperience;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -27,7 +26,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 @OwnedBy(HarnessTeam.GTM)
@@ -67,8 +65,8 @@ public class AccountResource {
   @Path("{accountIdentifier}/name")
   @ApiOperation(value = "Update Account Name", nickname = "updateAccountNameNG")
   public ResponseDTO<AccountDTO> updateAccountName(
-      @PathParam("accountIdentifier") String accountIdentifier, @QueryParam("name") String name) {
-    AccountDTO accountDTO = RestClientUtils.getResponse(accountClient.updateAccountName(accountIdentifier, name));
+      @PathParam("accountIdentifier") String accountIdentifier, AccountDTO dto) {
+    AccountDTO accountDTO = RestClientUtils.getResponse(accountClient.updateAccountName(accountIdentifier, dto));
 
     return ResponseDTO.newResponse(accountDTO);
   }
@@ -76,10 +74,9 @@ public class AccountResource {
   @PUT
   @Path("{accountIdentifier}/default-experience")
   @ApiOperation(value = "Update Default Experience", nickname = "updateAccountDefaultExperienceNG")
-  public ResponseDTO<AccountDTO> updateDefaultExperience(@PathParam("accountIdentifier") String accountIdentifier,
-      @QueryParam("defaultExperience") DefaultExperience defaultExperience) {
-    AccountDTO accountDTO =
-        RestClientUtils.getResponse(accountClient.updateDefaultExperience(accountIdentifier, defaultExperience));
+  public ResponseDTO<AccountDTO> updateDefaultExperience(
+      @PathParam("accountIdentifier") String accountIdentifier, AccountDTO dto) {
+    AccountDTO accountDTO = RestClientUtils.getResponse(accountClient.updateDefaultExperience(accountIdentifier, dto));
 
     return ResponseDTO.newResponse(accountDTO);
   }

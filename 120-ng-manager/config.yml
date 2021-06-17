@@ -284,6 +284,7 @@ baseUrls:
   currentGenUiUrl: http://localhost:8181/#/
   nextGenUiUrl: http://localhost:8181/ng/#/
   nextGenAuthUiUrl: http://localhost:8181/auth/#/
+  webhookBaseUrl: http://localhost:7457/
 
 ngAuthUIEnabled: false
 

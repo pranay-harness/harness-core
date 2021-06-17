@@ -712,7 +712,8 @@
           "$ref": "#/definitions/StepSpecType"
         },
         "timeout": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(\\d+[smhwd][\\s]?)+$"
         },
         "type": {
           "type": "string"
