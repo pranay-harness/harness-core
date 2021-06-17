@@ -1,14 +1,9 @@
-package io.harness.engine.executables;
+package io.harness.engine.pms.resume;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.pms.resume.publisher.NodeResumeEventPublisher;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
-import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
@@ -22,19 +17,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-@OwnedBy(HarnessTeam.CDC)
-public class InvocationHelper {
-  private final NodeExecutionService nodeExecutionService;
-  private final KryoSerializer kryoSerializer;
+public class NodeResumeHelper {
+  @Inject private NodeExecutionService nodeExecutionService;
+  @Inject private KryoSerializer kryoSerializer;
+  @Inject private NodeResumeEventPublisher nodeResumeEventPublisher;
 
-  @Inject
-  public InvocationHelper(NodeExecutionService nodeExecutionService, KryoSerializer kryoSerializer) {
-    this.nodeExecutionService = nodeExecutionService;
-    this.kryoSerializer = kryoSerializer;
+  public void resume(NodeExecution nodeExecution, Map<String, ByteString> responseMap, boolean isError) {
+    nodeResumeEventPublisher.publishEvent(nodeExecution, buildResponseMap(nodeExecution, responseMap), isError);
   }
 
-  public Map<String, byte[]> buildResponseMap(NodeExecution nodeExecution, Map<String, ByteString> response) {
-    Map<String, byte[]> byteResponseMap = new HashMap<>();
+  private Map<String, ByteString> buildResponseMap(NodeExecution nodeExecution, Map<String, ByteString> response) {
+    Map<String, ByteString> byteResponseMap = new HashMap<>();
     if (accumulationRequired(nodeExecution)) {
       List<NodeExecution> childExecutions =
           nodeExecutionService.fetchNodeExecutionsByParentId(nodeExecution.getUuid(), false);
@@ -49,15 +42,12 @@ public class InvocationHelper {
                                                 .stepOutcomeRefs(childExecution.getOutcomeRefs())
                                                 .adviserResponse(childExecution.getAdviserResponse())
                                                 .build();
-        byteResponseMap.put(node.getUuid(), kryoSerializer.asDeflatedBytes(notifyData));
+        byteResponseMap.put(node.getUuid(), ByteString.copyFrom(kryoSerializer.asDeflatedBytes(notifyData)));
       }
       return byteResponseMap;
     }
 
-    if (isNotEmpty(response)) {
-      response.forEach((k, v) -> byteResponseMap.put(k, v.toByteArray()));
-    }
-    return byteResponseMap;
+    return response;
   }
 
   private boolean accumulationRequired(NodeExecution nodeExecution) {
@@ -68,16 +58,8 @@ public class InvocationHelper {
       return true;
     } else {
       ChildChainExecutableResponse lastChildChainExecutableResponse = Preconditions.checkNotNull(
-          Objects.requireNonNull(obtainLatestExecutableResponse(nodeExecution)).getChildChain());
+          Objects.requireNonNull(nodeExecution.obtainLatestExecutableResponse()).getChildChain());
       return !lastChildChainExecutableResponse.getSuspend();
     }
-  }
-
-  public ExecutableResponse obtainLatestExecutableResponse(NodeExecution nodeExecution) {
-    List<ExecutableResponse> executableResponses = nodeExecution.getExecutableResponses();
-    if (isEmpty(executableResponses)) {
-      return null;
-    }
-    return executableResponses.get(executableResponses.size() - 1);
   }
 }

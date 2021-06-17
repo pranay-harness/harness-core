@@ -1,4 +1,4 @@
-package io.harness.engine.resume;
+package io.harness.engine.pms.resume;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

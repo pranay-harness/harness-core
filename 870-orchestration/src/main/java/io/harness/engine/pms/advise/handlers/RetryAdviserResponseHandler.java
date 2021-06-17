@@ -8,7 +8,7 @@ import io.harness.delay.DelayEventHelper;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.engine.pms.advise.AdviserResponseHandler;
-import io.harness.engine.resume.EngineWaitRetryCallback;
+import io.harness.engine.pms.resume.EngineWaitRetryCallback;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;

@@ -61,4 +61,5 @@ public class PmsSdkConfiguration {
   ConsumerConfig nodeStartEventConsumerConfig;
   ConsumerConfig progressEventConsumerConfig;
   ConsumerConfig nodeAdviseEventConsumerConfig;
+  ConsumerConfig nodeResumeEventConsumerConfig;
 }

@@ -59,6 +59,7 @@ public class PmsSdkInstance implements PersistentEntity, UuidAware {
   ConsumerConfig nodeStartEventConsumerConfig;
   ConsumerConfig progressEventConsumerConfig;
   ConsumerConfig nodeAdviseEventConsumerConfig;
+  ConsumerConfig nodeResumeEventConsumerConfig;
 
   @Default @Setter @NonFinal @SchemaIgnore @FdIndex @CreatedDate Long createdAt = System.currentTimeMillis();
   @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate Long lastUpdatedAt;

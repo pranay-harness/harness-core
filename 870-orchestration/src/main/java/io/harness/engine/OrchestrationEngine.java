@@ -13,7 +13,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delay.DelayEventHelper;
 import io.harness.engine.events.OrchestrationEventEmitter;
-import io.harness.engine.executables.InvocationHelper;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.facilitation.FacilitationHelper;
@@ -24,14 +23,13 @@ import io.harness.engine.observers.OrchestrationEndObserver;
 import io.harness.engine.pms.advise.AdviseHandlerFactory;
 import io.harness.engine.pms.advise.AdviserResponseHandler;
 import io.harness.engine.pms.advise.NodeAdviseHelper;
+import io.harness.engine.pms.resume.EngineWaitResumeCallback;
+import io.harness.engine.pms.resume.NodeResumeHelper;
 import io.harness.engine.pms.start.NodeStartHelper;
-import io.harness.engine.resume.EngineWaitResumeCallback;
-import io.harness.engine.utils.TransactionUtils;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.exceptionmanager.ExceptionManager;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.execution.NodeExecutionMapper;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.logging.AutoLogContext;
@@ -43,12 +41,9 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
-import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto.Builder;
-import io.harness.pms.execution.NodeExecutionEvent;
-import io.harness.pms.execution.ResumeNodeExecutionEventData;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.execution.utils.LevelUtils;
@@ -96,15 +91,13 @@ public class OrchestrationEngine {
   @Inject private PmsEngineExpressionService pmsEngineExpressionService;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
   @Inject private OrchestrationEventEmitter eventEmitter;
-  @Inject private NodeExecutionEventQueuePublisher nodeExecutionEventQueuePublisher;
   @Inject private EndNodeExecutionHelper endNodeExecutionHelper;
-  @Inject private InvocationHelper invocationHelper;
-  @Inject private TransactionUtils transactionUtils;
   @Inject private ExceptionManager exceptionManager;
   @Inject private FacilitationHelper facilitationHelper;
   @Inject private FacilitateEventPublisher facilitateEventPublisher;
   @Inject private NodeStartHelper startHelper;
   @Inject private NodeAdviseHelper adviseHelper;
+  @Inject private NodeResumeHelper resumeHelper;
 
   @Getter private final Subject<OrchestrationEndObserver> orchestrationEndSubject = new Subject<>();
 
@@ -314,22 +307,11 @@ public class OrchestrationEngine {
             nodeExecution.getStatus());
         return;
       }
-
       if (nodeExecution.getStatus() != RUNNING) {
         nodeExecution = Preconditions.checkNotNull(
             nodeExecutionService.updateStatusWithOps(nodeExecutionId, RUNNING, null, EnumSet.noneOf(Status.class)));
       }
-
-      ResumeNodeExecutionEventData data = ResumeNodeExecutionEventData.builder()
-                                              .asyncError(asyncError)
-                                              .response(invocationHelper.buildResponseMap(nodeExecution, response))
-                                              .build();
-      NodeExecutionEvent resumeEvent = NodeExecutionEvent.builder()
-                                           .eventType(NodeExecutionEventType.RESUME)
-                                           .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
-                                           .eventData(data)
-                                           .build();
-      nodeExecutionEventQueuePublisher.send(resumeEvent);
+      resumeHelper.resume(nodeExecution, response, asyncError);
     } catch (Exception exception) {
       log.error("Exception Occurred in resume", exception);
       handleError(ambiance, exception);

@@ -35,6 +35,8 @@ import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.data.PmsOutcomeServiceImpl;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.engine.pms.data.PmsSweepingOutputServiceImpl;
+import io.harness.engine.pms.resume.publisher.NodeResumeEventPublisher;
+import io.harness.engine.pms.resume.publisher.RedisNodeResumeEventPublisher;
 import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.engine.progress.publisher.ProgressEventPublisher;
@@ -144,6 +146,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     bind(FacilitateEventPublisher.class).to(RedisFacilitateEventPublisher.class).in(Singleton.class);
     bind(ProgressEventPublisher.class).to(RedisProgressEventPublisher.class).in(Singleton.class);
     bind(NodeAdviseEventPublisher.class).to(RedisNodeAdviseEventPublisher.class).in(Singleton.class);
+    bind(NodeResumeEventPublisher.class).to(RedisNodeResumeEventPublisher.class).in(Singleton.class);
   }
 
   @Provides
