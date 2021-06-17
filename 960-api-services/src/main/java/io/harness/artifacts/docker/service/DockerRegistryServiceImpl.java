@@ -18,9 +18,8 @@ import io.harness.artifacts.docker.client.DockerRestClientFactory;
 import io.harness.context.MdcGlobalContextData;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidArtifactServerException;
-import io.harness.exception.InvalidCredentialsException;
+import io.harness.exception.NestedExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionMetadataKeys;
 import io.harness.exception.runtime.DockerHubInvalidImageRuntimeRuntimeException;
@@ -55,7 +54,6 @@ import net.jodah.expiringmap.ExpiringMap;
 import okhttp3.Credentials;
 import okhttp3.Headers;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import retrofit2.Response;
 
 /**
@@ -87,7 +85,9 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     } catch (DockerHubServerRuntimeException ex) {
       throw ex;
     } catch (Exception e) {
-      throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, WingsException.USER);
+      throw NestedExceptionUtils.hintWithExplanationException("Could not fetch tags for the image",
+          "Check if the image exists and if the permissions are scoped for the authenticated user",
+          new ArtifactServerException(ExceptionUtils.getMessage(e), e, WingsException.USER));
     }
     // Sorting at build tag for docker artifacts.
     // Don't change this order.
@@ -122,12 +122,14 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
           throw new DockerHubInvalidImageRuntimeRuntimeException(
               "Docker image [" + imageName + "] not found in registry [" + dockerConfig.getDockerRegistryUrl() + "]");
         }
-        throw new InvalidCredentialsException("Invalid Credentials while fetching build details", USER);
+        throw DockerRegistryUtils.unauthorizedException();
       }
     }
 
     if (!isSuccessful(response)) {
-      throw new InvalidArtifactServerException(response.message(), USER);
+      throw NestedExceptionUtils.hintWithExplanationException("Unable to fetch the tags for the image",
+          "Check if the image exists and if the permissions are scoped for the authenticated user",
+          new InvalidArtifactServerException(response.message(), USER));
     }
 
     DockerImageTagResponse dockerImageTagResponse = response.body();
@@ -226,8 +228,10 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
                  .collect(Collectors.toList());
 
     if (builds.isEmpty()) {
-      throw new InvalidArtifactServerException(
-          "There are no builds for this image: " + imageName + " and tagRegex: " + tagRegex, USER);
+      throw NestedExceptionUtils.hintWithExplanationException("Could not get the last successful build",
+          "There are probably no successful builds for this image & check if the tag filter regex is correct",
+          new InvalidArtifactServerException(
+              "There are no builds for this image: " + imageName + " and tagRegex: " + tagRegex, USER));
     }
     return builds.get(0);
   }
@@ -248,7 +252,9 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       }
       return getBuildNumber(dockerConfig, imageName, tag);
     } catch (IOException e) {
-      throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER);
+      throw NestedExceptionUtils.hintWithExplanationException("Unable to fetch the given tag for the image",
+          "The tag provided for the image may be incorrect.",
+          new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER));
     }
   }
 
@@ -264,11 +270,12 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       }
       if (!isSuccessful(response)) {
         // Image not found or user doesn't have permission to list image tags.
-        throw new InvalidArgumentsException(
-            ImmutablePair.of("code", "Image name [" + imageName + "] does not exist in Docker registry."), null, USER);
+        throw DockerRegistryUtils.imageNotFoundException(imageName);
       }
     } catch (IOException e) {
-      throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER);
+      throw NestedExceptionUtils.hintWithExplanationException("The Image was not found.",
+          "Check if the image exists and if the permissions are scoped for the authenticated user",
+          new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER));
     }
     return true;
   }
@@ -291,19 +298,26 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       }
       return builds.get(0);
     } catch (IOException e) {
-      throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER);
+      throw NestedExceptionUtils.hintWithExplanationException("Unable to fetch the given tag for the image",
+          "The tag provided for the image may be incorrect.",
+          new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER));
     }
   }
 
   @Override
   public boolean validateCredentials(DockerInternalConfig dockerConfig) {
     if (!connectableHttpUrl(dockerConfig.getDockerRegistryUrl())) {
-      throw new InvalidArtifactServerException(
-          "Could not reach Docker Registry at : " + dockerConfig.getDockerRegistryUrl(), USER);
+      throw NestedExceptionUtils.hintWithExplanationException(
+          "Check if the Docker Registry URL is correct & reachable from your delegate(s)",
+          "The given Docker Registry URL may be incorrect or not reachable from your delegate(s)",
+          new InvalidArtifactServerException(
+              "Could not reach Docker Registry at : " + dockerConfig.getDockerRegistryUrl(), USER));
     }
     if (dockerConfig.hasCredentials()) {
       if (isEmpty(dockerConfig.getPassword())) {
-        throw new InvalidArtifactServerException("Password is a required field along with Username", USER);
+        throw NestedExceptionUtils.hintWithExplanationException("Invalid Docker Credentials",
+            "Password field value cannot be empty if username field is not empty",
+            new InvalidArtifactServerException("Password is a required field along with Username", USER));
       }
       DockerRegistryRestClient registryRestClient = null;
       String basicAuthHeader;
@@ -351,7 +365,9 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       return isSuccessful(response);
     } catch (IOException ioException) {
       Exception exception = new Exception(ioException);
-      throw new InvalidArtifactServerException(ExceptionUtils.getMessage(exception), USER);
+      throw NestedExceptionUtils.hintWithExplanationException("Invalid Credentials",
+          "Check if the provided credentials are correct",
+          new InvalidArtifactServerException(ExceptionUtils.getMessage(exception), USER));
     }
   }
 
@@ -410,7 +426,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       case 400:
         return false;
       case 401:
-        throw new InvalidArtifactServerException("Invalid Docker Registry credentials", USER);
+        throw DockerRegistryUtils.unauthorizedException();
       default:
         throw new InvalidArtifactServerException(StringUtils.isNotBlank(response.message())
                 ? response.message()
