@@ -17,6 +17,7 @@ import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator
 import io.harness.encryption.Encrypted;
 import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.helper.SettingValueHelper;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesConfig.KubernetesConfigBuilder;
@@ -26,7 +27,6 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
 import software.wings.security.UsageRestrictions;
-import software.wings.service.impl.SettingServiceHelper;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.CloudProviderYaml;
@@ -175,12 +175,12 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     }
 
     if (authType == null) {
-      return SettingServiceHelper.getAllEncryptedSecrets(this);
+      return SettingValueHelper.getAllEncryptedSecrets(this);
     }
 
     switch (authType) {
       case NONE:
-        return SettingServiceHelper.getAllEncryptedSecrets(this);
+        return SettingValueHelper.getAllEncryptedSecrets(this);
       case OIDC:
         return Arrays.asList(encryptedOidcSecret, encryptedOidcClientId, encryptedOidcPassword);
       case SERVICE_ACCOUNT:

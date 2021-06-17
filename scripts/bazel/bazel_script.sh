@@ -82,11 +82,8 @@ BAZEL_MODULES="\
   //860-orchestration-steps:module \
   //860-orchestration-visualization:module \
   //870-cg-orchestration:module \
-  //870-cg-yaml:module \
   //870-orchestration:module \
   //870-yaml-beans:module \
-  //871-cg-beans:module \
-  //871-cg-beans:module \
   //874-orchestration-delay:module \
   //876-orchestration-beans:module \
   //878-pipeline-service-utilities:module \
@@ -145,6 +142,7 @@ BAZEL_MODULES="\
   //953-git-sync-commons:module \
   //954-connector-beans:module \
   //955-account-mgmt:module \
+  //955-cg-yaml:module \
   //955-delegate-beans/src/main/proto:all \
   //955-delegate-beans:module \
   //955-filters-sdk:module \
@@ -152,6 +150,7 @@ BAZEL_MODULES="\
   //955-setup-usage-sdk:module \
   //956-feature-flag-beans:module \
   //958-migration-sdk:module \
+  //959-cg-beans:module \
   //959-file-service-commons:module \
   //959-psql-database-models:module \
   //960-api-services:module \
@@ -353,11 +352,8 @@ build_bazel_module 850-ng-pipeline-commons
 build_bazel_module 860-orchestration-steps
 build_bazel_module 860-orchestration-visualization
 build_bazel_module 870-cg-orchestration
-build_bazel_module 870-cg-yaml
 build_bazel_module 870-orchestration
 build_bazel_module 870-yaml-beans
-build_bazel_module 871-cg-beans
-build_bazel_module 871-cg-beans
 build_bazel_module 874-orchestration-delay
 build_bazel_module 876-orchestration-beans
 build_bazel_module 878-pipeline-service-utilities
@@ -400,12 +396,14 @@ build_bazel_module 952-scm-java-client
 build_bazel_module 953-events-api
 build_bazel_module 953-git-sync-commons
 build_bazel_module 954-connector-beans
+build_bazel_module 955-cg-yaml
 build_bazel_module 955-delegate-beans
 build_bazel_module 955-filters-sdk
 build_bazel_module 955-outbox-sdk
 build_bazel_module 955-setup-usage-sdk
 build_bazel_module 956-feature-flag-beans
 build_bazel_module 958-migration-sdk
+build_bazel_module 959-cg-beans
 build_bazel_module 959-file-service-commons
 build_bazel_module 959-psql-database-models
 build_bazel_module 960-api-services

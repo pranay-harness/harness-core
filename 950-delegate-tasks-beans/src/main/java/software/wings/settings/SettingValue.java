@@ -1,14 +1,12 @@
 package software.wings.settings;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.helper.SettingValueHelper;
 
 import software.wings.security.UsageRestrictions;
-import software.wings.service.impl.SettingServiceHelper;
 import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -27,7 +25,6 @@ import lombok.experimental.FieldNameConstants;
 @OwnedBy(CDP)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = As.EXISTING_PROPERTY)
 @FieldNameConstants(innerTypeName = "SettingValueKeys")
-@TargetModule(_871_CG_BEANS)
 public abstract class SettingValue implements ExecutionCapabilityDemander {
   @Getter @Setter String type;
   @JsonIgnore @SchemaIgnore private boolean isCertValidationRequired;
@@ -65,14 +62,14 @@ public abstract class SettingValue implements ExecutionCapabilityDemander {
   @JsonIgnore
   @SchemaIgnore
   public List<Field> getEncryptedFields() {
-    return SettingServiceHelper.getAllEncryptedFields(this);
+    return SettingValueHelper.getAllEncryptedFields(this);
   }
 
   public abstract String fetchResourceCategory();
 
   // Default Implementation
   public List<String> fetchRelevantEncryptedSecrets() {
-    return SettingServiceHelper.getAllEncryptedSecrets(this);
+    return SettingValueHelper.getAllEncryptedSecrets(this);
   }
 
   public boolean shouldDeleteArtifact(SettingValue prev) {
