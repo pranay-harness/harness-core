@@ -1,8 +1,8 @@
 package io.harness.encryptors.managerproxy;
 
-import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
 import static io.harness.rule.OwnerRule.ARVIND;
 
+import static java.util.Collections.EMPTY_MAP;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -52,9 +52,9 @@ public class ManagerKmsEncryptorTest extends CategoryTest {
         .when(delegateService)
         .executeTask(delegateTaskArgumentCaptor.capture());
 
-    doReturn(ownerValue).when(managerEncryptorHelper).getOwner(any());
+    doReturn(EMPTY_MAP).when(managerEncryptorHelper).buildAbstractions(any());
     managerKmsEncryptor.encryptSecret("key", "value", vaultConfig);
     DelegateTask task = delegateTaskArgumentCaptor.getValue();
-    assertThat(task.getSetupAbstractions().get(OWNER)).isEqualTo(ownerValue);
+    assertThat(task.getSetupAbstractions()).isEmpty();
   }
 }
