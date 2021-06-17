@@ -220,11 +220,11 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     validateTheGitConfigInput(gitSyncConfigDTO);
     YamlGitConfig yamlGitConfigToBeSaved = toYamlGitConfig(gitSyncConfigDTO, accountId);
     yamlGitConfigToBeSaved.setWebhookToken(CryptoUtils.secureRandAlphaNumString(40));
-    UpsertWebhookResponseDTO upsertWebhookResponseDTO = null;
-    if (isNewRepo(gitSyncConfigDTO.getRepo())) {
-      upsertWebhookResponseDTO = registerWebhook(gitSyncConfigDTO);
-      log.info("Response of Upsert Webhook {}", upsertWebhookResponseDTO);
-    }
+    //    UpsertWebhookResponseDTO upsertWebhookResponseDTO = null;
+    //    if (isNewRepo(gitSyncConfigDTO.getRepo())) {
+    //      upsertWebhookResponseDTO = registerWebhook(gitSyncConfigDTO);
+    //      log.info("Response of Upsert Webhook {}", upsertWebhookResponseDTO);
+    //    }
     YamlGitConfig savedYamlGitConfig = null;
     try {
       savedYamlGitConfig = yamlGitConfigRepository.save(yamlGitConfigToBeSaved);
