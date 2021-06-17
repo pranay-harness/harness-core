@@ -16,7 +16,8 @@ class ProducerCacheKey {
     FACILITATOR_EVENT,
     NODE_START,
     PROGRESS_EVENT,
-    NODE_ADVISE
+    NODE_ADVISE,
+    NODE_RESUME
   }
   String serviceName;
   EventCategory eventCategory;

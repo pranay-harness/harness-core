@@ -133,6 +133,7 @@ public class PmsSdkInitHelper {
         .setNodeStartEventConsumerConfig(sdkConfiguration.getNodeStartEventConsumerConfig())
         .setProgressEventConsumerConfig(sdkConfiguration.getProgressEventConsumerConfig())
         .setNodeAdviseEventConsumerConfig(sdkConfiguration.getNodeAdviseEventConsumerConfig())
+        .setNodeResumeEventConsumerConfig(sdkConfiguration.getNodeResumeEventConsumerConfig())
         .build();
   }
 
