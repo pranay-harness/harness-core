@@ -38,6 +38,8 @@ import io.harness.gitsync.GitSyncEntitiesConfiguration;
 import io.harness.gitsync.GitSyncSdkConfiguration;
 import io.harness.gitsync.GitSyncSdkInitHelper;
 import io.harness.gitsync.persistance.GitAwarePersistence;
+import io.harness.gitsync.persistance.GitSyncSdkService;
+import io.harness.gitsync.persistance.NoOpGitSyncSdkServiceImpl;
 import io.harness.gitsync.persistance.testing.NoOpGitAwarePersistenceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthMonitor;
@@ -258,6 +260,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         @Override
         protected void configure() {
           bind(GitAwarePersistence.class).to(NoOpGitAwarePersistenceImpl.class);
+          bind(GitSyncSdkService.class).to(NoOpGitSyncSdkServiceImpl.class);
         }
 
         @Override

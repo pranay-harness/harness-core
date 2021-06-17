@@ -8,27 +8,24 @@ import io.harness.event.Event;
 import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.ResourceScope;
-import io.harness.pms.pipeline.PipelineEntity;
+import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.ImmutableMap;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @OwnedBy(PIPELINE)
 @Getter
-@NoArgsConstructor
-public class PipelineCreateEvent implements Event {
-  private String orgIdentifier;
+@Builder
+@AllArgsConstructor
+public class InputSetCreateEvent implements Event {
   private String accountIdentifier;
+  private String orgIdentifier;
   private String projectIdentifier;
-  private PipelineEntity pipeline;
-  public PipelineCreateEvent(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, PipelineEntity pipeline) {
-    this.accountIdentifier = accountIdentifier;
-    this.orgIdentifier = orgIdentifier;
-    this.projectIdentifier = projectIdentifier;
-    this.pipeline = pipeline;
-  }
+  private String pipelineIdentifier;
+  private InputSetEntity inputSet;
 
   @JsonIgnore
   @Override
@@ -39,12 +36,16 @@ public class PipelineCreateEvent implements Event {
   @JsonIgnore
   @Override
   public Resource getResource() {
-    return Resource.builder().identifier(pipeline.getIdentifier()).type(ResourceTypeConstants.PIPELINE).build();
+    return Resource.builder()
+        .identifier(inputSet.getIdentifier())
+        .type(ResourceTypeConstants.INPUT_SET)
+        .labels(ImmutableMap.<String, String>builder().put("pipelineIdentifier", pipelineIdentifier).build())
+        .build();
   }
 
   @JsonIgnore
   @Override
   public String getEventType() {
-    return PipelineOutboxEvents.PIPELINE_CREATED;
+    return PipelineOutboxEvents.INPUT_SET_CREATED;
   }
 }
