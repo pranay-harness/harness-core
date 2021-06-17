@@ -1,4 +1,4 @@
-package io.harness.cenextgenclient;
+package io.harness.ccm.manager;
 
 import io.harness.remote.client.AbstractHttpClientFactory;
 import io.harness.remote.client.ServiceHttpClientConfig;
