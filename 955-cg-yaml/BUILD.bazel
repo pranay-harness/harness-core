@@ -6,12 +6,12 @@ java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     resources = [
-        "//870-cg-yaml/src/main/resources:resource",
+        "//955-cg-yaml/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
-        "//871-cg-beans:module",
+        "//959-cg-beans:module",
         "//980-commons:module",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_guava",

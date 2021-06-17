@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>871-cg-beans</artifactId>
+    <artifactId>959-cg-beans</artifactId>
     <dependencies>
         <dependency>
             <groupId>software.wings</groupId>
