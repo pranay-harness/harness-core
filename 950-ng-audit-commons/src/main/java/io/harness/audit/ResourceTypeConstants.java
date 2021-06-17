@@ -20,4 +20,5 @@ public class ResourceTypeConstants {
   public static final String PIPELINE = "PIPELINE";
   public static final String INPUT_SET = "INPUT_SET";
   public static final String DELEGATE_CONFIGURATION = "DELEGATE_CONFIGURATION";
+  public static final String SERVICE_ACCOUNT = "SERVICE_ACCOUNT";
 }
