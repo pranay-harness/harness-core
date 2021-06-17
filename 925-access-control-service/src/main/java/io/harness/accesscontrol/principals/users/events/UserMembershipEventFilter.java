@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.principals.user.events;
+package io.harness.accesscontrol.principals.users.events;
 
 import static io.harness.eventsframework.EventsFrameworkConstants.USERMEMBERSHIP;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
