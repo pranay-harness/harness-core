@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
@@ -54,11 +55,13 @@ public abstract class AbstractK8sStepExecutorTestBase extends CategoryTest {
 
   protected <T extends K8sDeployRequest> T executeTask(
       StepElementParameters stepElementParameters, Class<T> requestType) {
+    K8sExecutionPassThroughData passThroughData =
+        K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build();
     getK8sStepExecutor().executeK8sTask(
-        manifestOutcome, ambiance, stepElementParameters, emptyList(), infrastructureOutcome, true);
+        manifestOutcome, ambiance, stepElementParameters, emptyList(), passThroughData, true);
     ArgumentCaptor<T> requestCaptor = ArgumentCaptor.forClass(requestType);
     verify(k8sStepHelper, times(1))
-        .queueK8sTask(eq(stepElementParameters), requestCaptor.capture(), eq(ambiance), eq(infrastructureOutcome));
+        .queueK8sTask(eq(stepElementParameters), requestCaptor.capture(), eq(ambiance), eq(passThroughData));
     return requestCaptor.getValue();
   }
 

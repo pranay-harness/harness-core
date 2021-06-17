@@ -18,6 +18,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.manifest.steps.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
@@ -90,13 +91,16 @@ public class K8sScaleStepTest extends CategoryTest {
             .workload(ParameterField.createValueField("Deployment/test-scale-count-deployment"))
             .build();
 
+    final K8sExecutionPassThroughData executionPassThroughData =
+        K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build();
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
 
     final TaskRequest taskRequest = TaskRequest.newBuilder().build();
     doReturn(TaskChainResponse.builder().taskRequest(taskRequest).build())
         .when(k8sStepHelper)
-        .queueK8sTask(eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance), eq(infrastructureOutcome));
+        .queueK8sTask(
+            eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance), eq(executionPassThroughData));
 
     doReturn(new ManifestsOutcome(serviceOutcome.getManifestResults()))
         .when(outcomeService)
@@ -125,13 +129,16 @@ public class K8sScaleStepTest extends CategoryTest {
             .workload(ParameterField.createValueField("Deployment/test-scale-percentage-deployment"))
             .build();
 
+    final K8sExecutionPassThroughData executionPassThroughData =
+        K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build();
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
 
     final TaskRequest taskRequest = TaskRequest.newBuilder().build();
     doReturn(TaskChainResponse.builder().taskRequest(taskRequest).build())
         .when(k8sStepHelper)
-        .queueK8sTask(eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance), eq(infrastructureOutcome));
+        .queueK8sTask(
+            eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance), eq(executionPassThroughData));
 
     doReturn(new ManifestsOutcome(serviceOutcome.getManifestResults()))
         .when(outcomeService)
@@ -159,13 +166,16 @@ public class K8sScaleStepTest extends CategoryTest {
             .workload(ParameterField.createValueField("Deployment/test-scale-count-deployment"))
             .build();
 
+    final K8sExecutionPassThroughData executionPassThroughData =
+        K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build();
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
 
     final TaskRequest taskRequest = TaskRequest.newBuilder().build();
     doReturn(TaskChainResponse.builder().taskRequest(taskRequest).build())
         .when(k8sStepHelper)
-        .queueK8sTask(eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance), eq(infrastructureOutcome));
+        .queueK8sTask(
+            eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance), eq(executionPassThroughData));
 
     doReturn(new ManifestsOutcome(serviceOutcome.getManifestResults()))
         .when(outcomeService)
@@ -180,8 +190,8 @@ public class K8sScaleStepTest extends CategoryTest {
     ArgumentCaptor<K8sScaleRequest> scaleRequestArgumentCaptor = ArgumentCaptor.forClass(K8sScaleRequest.class);
 
     verify(k8sStepHelper, times(1))
-        .queueK8sTask(
-            eq(stepElementParameters), scaleRequestArgumentCaptor.capture(), eq(ambiance), eq(infrastructureOutcome));
+        .queueK8sTask(eq(stepElementParameters), scaleRequestArgumentCaptor.capture(), eq(ambiance),
+            eq(executionPassThroughData));
     K8sScaleRequest scaleRequest = scaleRequestArgumentCaptor.getValue();
     assertThat(scaleRequest).isNotNull();
     assertThat(scaleRequest.getCommandName()).isEqualTo(K8S_SCALE_COMMAND_NAME);
@@ -211,13 +221,16 @@ public class K8sScaleStepTest extends CategoryTest {
             .workload(ParameterField.createValueField("Deployment/test-scale-percentage-deployment"))
             .build();
 
+    final K8sExecutionPassThroughData executionPassThroughData =
+        K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build();
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
 
     final TaskRequest taskRequest = TaskRequest.newBuilder().build();
     doReturn(TaskChainResponse.builder().taskRequest(taskRequest).build())
         .when(k8sStepHelper)
-        .queueK8sTask(eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance), eq(infrastructureOutcome));
+        .queueK8sTask(
+            eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance), eq(executionPassThroughData));
 
     doReturn(new ManifestsOutcome(serviceOutcome.getManifestResults()))
         .when(outcomeService)
@@ -232,8 +245,8 @@ public class K8sScaleStepTest extends CategoryTest {
     ArgumentCaptor<K8sScaleRequest> scaleRequestArgumentCaptor = ArgumentCaptor.forClass(K8sScaleRequest.class);
 
     verify(k8sStepHelper, times(1))
-        .queueK8sTask(
-            eq(stepElementParameters), scaleRequestArgumentCaptor.capture(), eq(ambiance), eq(infrastructureOutcome));
+        .queueK8sTask(eq(stepElementParameters), scaleRequestArgumentCaptor.capture(), eq(ambiance),
+            eq(executionPassThroughData));
     K8sScaleRequest scaleRequest = scaleRequestArgumentCaptor.getValue();
     assertThat(scaleRequest).isNotNull();
     assertThat(scaleRequest.getCommandName()).isEqualTo(K8S_SCALE_COMMAND_NAME);

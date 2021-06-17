@@ -7,6 +7,7 @@ import io.harness.cdng.k8s.K8sRollingBaseStepInfo.K8sRollingBaseStepInfoKeys;
 import io.harness.cdng.k8s.K8sRollingOutcome.K8sRollingOutcomeBuilder;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
@@ -62,7 +63,8 @@ public class K8sRollingStep extends TaskChainExecutableWithRollback implements K
   @Override
   public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
       StepElementParameters stepElementParameters, List<String> valuesFileContents,
-      InfrastructureOutcome infrastructure, boolean shouldOpenFetchFilesLogStream) {
+      K8sExecutionPassThroughData executionPassThroughData, boolean shouldOpenFetchFilesLogStream) {
+    InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
     K8sRollingStepParameters k8sRollingStepParameters = (K8sRollingStepParameters) stepElementParameters.getSpec();
     boolean skipDryRun = K8sStepHelper.getParameterFieldBooleanValue(
@@ -89,7 +91,8 @@ public class K8sRollingStep extends TaskChainExecutableWithRollback implements K
             .shouldOpenFetchFilesLogStream(shouldOpenFetchFilesLogStream)
             .build();
 
-    return k8sStepHelper.queueK8sTask(stepElementParameters, k8sRollingDeployRequest, ambiance, infrastructure);
+    return k8sStepHelper.queueK8sTask(
+        stepElementParameters, k8sRollingDeployRequest, ambiance, executionPassThroughData);
   }
 
   @Override
@@ -102,7 +105,7 @@ public class K8sRollingStep extends TaskChainExecutableWithRollback implements K
 
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, StepElementParameters stepElementParameters,
-      PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) throws Exception {
+      PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) {
     if (passThroughData instanceof GitFetchResponsePassThroughData) {
       return k8sStepHelper.handleGitTaskFailure((GitFetchResponsePassThroughData) passThroughData);
     }
@@ -116,32 +119,36 @@ public class K8sRollingStep extends TaskChainExecutableWithRollback implements K
     }
 
     log.info("Finalizing execution with passThroughData: " + passThroughData.getClass().getName());
-    K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
-    StepResponseBuilder stepResponseBuilder =
-        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
+    K8sExecutionPassThroughData k8sExecutionPassThroughData = (K8sExecutionPassThroughData) passThroughData;
+    K8sRollingOutcomeBuilder k8sRollingOutcomeBuilder = K8sRollingOutcome.builder().releaseName(
+        k8sStepHelper.getReleaseName(k8sExecutionPassThroughData.getInfrastructure()));
 
-    InfrastructureOutcome infrastructure = (InfrastructureOutcome) passThroughData;
-    K8sRollingOutcomeBuilder k8sRollingOutcomeBuilder =
-        K8sRollingOutcome.builder().releaseName(k8sStepHelper.getReleaseName(infrastructure));
+    try {
+      K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
+      StepResponseBuilder stepResponseBuilder = StepResponse.builder().unitProgressList(
+          k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
 
-    if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.K8S_ROLL_OUT,
-          k8sRollingOutcomeBuilder.build(), StepOutcomeGroup.STAGE.name());
-      return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, stepResponseBuilder).build();
+      if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+        executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.K8S_ROLL_OUT,
+            k8sRollingOutcomeBuilder.build(), StepOutcomeGroup.STAGE.name());
+        return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, stepResponseBuilder).build();
+      }
+
+      K8sRollingDeployResponse k8sTaskResponse =
+          (K8sRollingDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
+      K8sRollingOutcome k8sRollingOutcome =
+          k8sRollingOutcomeBuilder.releaseNumber(k8sTaskResponse.getReleaseNumber()).build();
+      executionSweepingOutputService.consume(
+          ambiance, OutcomeExpressionConstants.K8S_ROLL_OUT, k8sRollingOutcome, StepOutcomeGroup.STAGE.name());
+
+      return stepResponseBuilder.status(Status.SUCCEEDED)
+          .stepOutcome(StepResponse.StepOutcome.builder()
+                           .name(OutcomeExpressionConstants.OUTPUT)
+                           .outcome(k8sRollingOutcome)
+                           .build())
+          .build();
+    } catch (Exception e) {
+      return k8sStepHelper.handleTaskException(ambiance, k8sExecutionPassThroughData, e);
     }
-
-    K8sRollingDeployResponse k8sTaskResponse =
-        (K8sRollingDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
-    K8sRollingOutcome k8sRollingOutcome =
-        k8sRollingOutcomeBuilder.releaseNumber(k8sTaskResponse.getReleaseNumber()).build();
-    executionSweepingOutputService.consume(
-        ambiance, OutcomeExpressionConstants.K8S_ROLL_OUT, k8sRollingOutcome, StepOutcomeGroup.STAGE.name());
-
-    return stepResponseBuilder.status(Status.SUCCEEDED)
-        .stepOutcome(StepResponse.StepOutcome.builder()
-                         .name(OutcomeExpressionConstants.OUTPUT)
-                         .outcome(k8sRollingOutcome)
-                         .build())
-        .build();
   }
 }
