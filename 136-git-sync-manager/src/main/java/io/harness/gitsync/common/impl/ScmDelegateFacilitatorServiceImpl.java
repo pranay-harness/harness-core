@@ -187,6 +187,7 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
                                                     .scmConnector(scmConnector)
                                                     .foldersList(foldersList)
                                                     .encryptedDataDetails(encryptionDetails)
+                                                    .branch(branchName)
                                                     .build();
     DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequest(identifierRef.getAccountIdentifier(),
         orgIdentifier, projectIdentifier, scmGitFileTaskParams, TaskType.SCM_GIT_FILE_TASK);

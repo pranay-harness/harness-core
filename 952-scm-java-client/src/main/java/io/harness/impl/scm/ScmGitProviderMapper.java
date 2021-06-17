@@ -65,12 +65,12 @@ public class ScmGitProviderMapper {
   }
 
   private boolean checkScmSkipVerify() {
-    final String scm_skip_ssl = System.getenv("SCM_SKIP_SSL");
-    boolean skipVerify = "true".equals(scm_skip_ssl);
-    if (skipVerify) {
-      log.info("Skipping verification");
-    }
-    return skipVerify;
+    return true;
+//    boolean skipVerify = "true".equals(scm_skip_ssl);
+//    if (skipVerify) {
+//      log.info("Skipping verification");
+//    }
+//    return skipVerify;
   }
 
   private BitbucketCloudProvider createBitbucketCloudProvider(BitbucketConnectorDTO bitbucketConnector) {

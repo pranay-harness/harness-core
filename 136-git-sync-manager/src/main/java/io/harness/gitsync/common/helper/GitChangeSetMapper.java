@@ -69,8 +69,8 @@ public class GitChangeSetMapper {
     String projectIdentifier;
     try {
       final JsonNode jsonNode = objectMapper.readTree(fileContent.getContent());
-      projectIdentifier = jsonNode.get(0).get(NGCommonEntityConstants.PROJECT_KEY).asText();
-      orgIdentifier = jsonNode.get(0).get(NGCommonEntityConstants.ORG_KEY).asText();
+      projectIdentifier = jsonNode.fields().next().getValue().get(NGCommonEntityConstants.PROJECT_KEY).asText();
+      orgIdentifier = jsonNode.fields().next().getValue().get(NGCommonEntityConstants.ORG_KEY).asText();
     } catch (Exception e) {
       log.error(
           "Ill formed yaml found. Filepath: [{}], Content[{}]", fileContent.getPath(), fileContent.getContent(), e);
