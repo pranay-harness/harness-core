@@ -23,4 +23,17 @@ public class ResourceScopeMapper {
     }
     return new ProjectScope(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier());
   }
+
+  public static Scope getScopeFromResourceScope(ResourceScope resourceScope) {
+    if ("account".equals(resourceScope.getScope())) {
+      return Scope.of(((AccountScope) resourceScope).getAccountIdentifier(), "", "");
+    } else if ("org".equals(resourceScope.getScope())) {
+      OrgScope orgScope = (OrgScope) resourceScope;
+      return Scope.of(orgScope.getAccountIdentifier(), orgScope.getOrgIdentifier(), "");
+    } else {
+      ProjectScope projectScope = (ProjectScope) resourceScope;
+      return Scope.of(
+          projectScope.getAccountIdentifier(), projectScope.getOrgIdentifier(), projectScope.getProjectIdentifier());
+    }
+  }
 }
