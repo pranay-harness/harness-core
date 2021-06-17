@@ -1801,6 +1801,7 @@ maven_install(
         maven_test_artifact("io.fabric8:kubernetes-server-mock:3.1.12"),
         maven_test_artifact("io.fabric8:mockwebxxxxxxxx0.1.0"),
         maven_test_artifact("io.grpc:grpc-testing:1.33.1"),
+        maven_test_artifact("org.junit.jupiter:junit-jupiter-engine:5.4.0"),
         maven_test_artifact("junit:junit:4.12"),
         maven_test_artifact("org.assertj:assertj-core:3.16.1"),
         maven_test_artifact("org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:2.23.1"),
