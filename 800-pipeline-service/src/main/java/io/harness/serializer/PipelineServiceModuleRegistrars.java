@@ -31,6 +31,7 @@ public class PipelineServiceModuleRegistrars {
           .add(DelegateServiceBeansKryoRegistrar.class)
           .add(DelegateAgentBeansKryoRegister.class)
           .add(NGPipelineKryoRegistrar.class)
+          .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
           .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -47,6 +48,7 @@ public class PipelineServiceModuleRegistrars {
           .addAll(GitSyncSdkRegistrar.morphiaRegistrars)
           .addAll(PersistenceRegistrars.morphiaRegistrars)
           .addAll(OutboxEventRegistrars.morphiaRegistrars)
+          .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
           .build();
 
   public final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

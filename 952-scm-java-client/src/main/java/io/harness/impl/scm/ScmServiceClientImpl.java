@@ -403,7 +403,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     try (AutoLogContext ignore1 =
              new RepoBranchLogContext(slug, branchName, latestCommit.getCommitId(), OVERRIDE_ERROR)) {
       List<String> getFilesWhichArePartOfHarness =
-          getFileNames(foldersList, slug, gitProvider, latestCommit.getCommitId(), scmBlockingStub);
+          getFileNames(foldersList, slug, gitProvider, branchName, latestCommit.getCommitId(), scmBlockingStub);
       final FileBatchContentResponse contentOfFiles = getContentOfFiles(
           getFilesWhichArePartOfHarness, slug, gitProvider, latestCommit.getCommitId(), scmBlockingStub);
       return FileContentBatchResponse.builder()
@@ -413,8 +413,8 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     }
   }
 
-  private List<String> getFileNames(
-      Set<String> foldersList, String slug, Provider gitProvider, String ref, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+  private List<String> getFileNames(Set<String> foldersList, String slug, Provider gitProvider, String branch,
+      String ref, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     GetFilesInFolderForkTask getFilesInFolderTask = GetFilesInFolderForkTask.builder()
                                                         .provider(gitProvider)
                                                         .scmBlockingStub(scmBlockingStub)

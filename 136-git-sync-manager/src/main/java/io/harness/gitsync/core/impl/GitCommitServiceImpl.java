@@ -96,7 +96,8 @@ public class GitCommitServiceImpl implements GitCommitService {
                             .is(gitCommitDTO.getRepoURL())
                             .and(GitCommitKeys.gitSyncDirection)
                             .is(gitCommitDTO.getGitSyncDirection());
-    Update update = update(GitCommitKeys.status, gitCommitDTO.getStatus());
+    Update update = update(GitCommitKeys.status, gitCommitDTO.getStatus())
+                        .set(GitCommitKeys.fileProcessingSummary, gitCommitDTO.getFileProcessingSummary());
     update.setOnInsert(GitCommitKeys.repoURL, gitCommitDTO.getRepoURL())
         .set(GitCommitKeys.commitId, gitCommitDTO.getCommitId())
         .set(GitCommitKeys.accountIdentifier, gitCommitDTO.getAccountIdentifier())
