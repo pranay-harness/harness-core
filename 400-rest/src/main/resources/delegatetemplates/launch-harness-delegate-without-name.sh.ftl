@@ -28,5 +28,4 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f | head -c 6
 -e USE_CDN=${useCdn} \
 -e CDN_URL=${cdnUrl} \
 -e JRE_VERSION=${jreVersion} \
--e CLIENT_TOOLS_DOWNLOAD_DISABLED=false \
 ${delegateDockerImage}
