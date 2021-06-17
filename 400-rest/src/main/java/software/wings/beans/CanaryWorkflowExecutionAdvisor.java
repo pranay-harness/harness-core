@@ -432,6 +432,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           return anExecutionEventAdvice().withSkipState(true).withSkipExpression(assertionExpression).build();
         }
       } catch (Exception ex) {
+        log.error("Error while evaluating assertion expression", ex);
         return anExecutionEventAdvice()
             .withSkipState(true)
             .withSkipExpression(assertionExpression)
