@@ -621,6 +621,7 @@ shared_dependencies = [
     "@maven//:stax_stax",
     "@maven//:stax_stax_api",
     "@maven//:wsdl4j_wsdl4j",
+    "@maven//:xerces_xercesImpl",
     "@maven//:xml_apis_xml_apis",
     "@maven//:xml_resolver_xml_resolver",
     "@maven//:xpp3_xpp3",

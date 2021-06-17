@@ -1,43 +1,25 @@
 package io.harness.engine.facilitation;
 
-import static io.harness.pms.contracts.execution.Status.FAILED;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.ExecutionCheck;
 import io.harness.engine.OrchestrationEngine;
-import io.harness.eraro.ErrorCode;
-import io.harness.eraro.Level;
-import io.harness.exception.ExceptionUtils;
-import io.harness.pms.contracts.execution.failure.FailureData;
-import io.harness.pms.contracts.execution.failure.FailureInfo;
-import io.harness.pms.contracts.execution.failure.FailureType;
-import io.harness.pms.contracts.steps.io.StepResponseProto;
+import io.harness.exception.runtime.JexlRuntimeException;
+import io.harness.pms.contracts.ambiance.Ambiance;
 
 import com.google.inject.Inject;
+import org.apache.commons.jexl3.JexlException;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public abstract class ExpressionEvalPreFacilitationChecker extends AbstractPreFacilitationChecker {
   @Inject private OrchestrationEngine orchestrationEngine;
 
-  ExecutionCheck handleExpressionEvaluationError(String nodeExecutionID, Exception ex) {
-    String message = ExceptionUtils.getMessage(ex);
-    StepResponseProto stepResponseProto =
-        StepResponseProto.newBuilder()
-            .setStatus(FAILED)
-            .setFailureInfo(
-                FailureInfo.newBuilder()
-                    .setErrorMessage(String.format("Skip Condition Evaluation failed : %s", message))
-                    .addFailureTypes(FailureType.APPLICATION_FAILURE)
-                    .addFailureData(FailureData.newBuilder()
-                                        .setMessage(String.format("Skip Condition Evaluation failed : %s", message))
-                                        .setLevel(Level.ERROR.name())
-                                        .setCode(ErrorCode.DEFAULT_ERROR_CODE.name())
-                                        .addFailureTypes(FailureType.APPLICATION_FAILURE)
-                                        .build())
-                    .build())
-            .build();
-    orchestrationEngine.handleStepResponse(nodeExecutionID, stepResponseProto);
+  ExecutionCheck handleExpressionEvaluationError(Exception ex, String conditionExpression, Ambiance ambiance) {
+    Exception cascadedException = ex;
+    if (ex instanceof JexlException) {
+      cascadedException = new JexlRuntimeException(conditionExpression, ex);
+    }
+    orchestrationEngine.handleError(ambiance, cascadedException);
     return ExecutionCheck.builder()
         .proceed(false)
         .reason("Error in evaluating configured when condition on step")
