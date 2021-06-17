@@ -12,6 +12,7 @@ import io.harness.plancreator.steps.common.StepElementParameters.StepElementPara
 import io.harness.pms.tags.TagUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.timeout.TimeoutUtils;
+import io.harness.yaml.utils.NGVariablesUtils;
 
 import lombok.experimental.UtilityClass;
 
@@ -54,7 +55,8 @@ public class StepParametersUtils {
     stageBuilder.when(stageElementConfig.getWhen());
     stageBuilder.type(stageElementConfig.getType());
     stageBuilder.uuid(stageElementConfig.getUuid());
-    stageBuilder.originalVariables(stageElementConfig.getVariables());
+    stageBuilder.variables(
+        ParameterField.createValueField(NGVariablesUtils.getMapOfVariables(stageElementConfig.getVariables())));
     stageBuilder.tags(stageElementConfig.getTags());
 
     return stageBuilder;

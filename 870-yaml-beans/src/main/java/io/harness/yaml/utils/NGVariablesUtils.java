@@ -34,6 +34,26 @@ public class NGVariablesUtils {
     return mapOfVariables;
   }
 
+  public Map<String, Object> getMapOfVariables(List<NGVariable> variables) {
+    Map<String, Object> mapOfVariables = new HashMap<>();
+    if (EmptyPredicate.isEmpty(variables)) {
+      return mapOfVariables;
+    }
+    for (NGVariable variable : variables) {
+      if (variable instanceof SecretNGVariable) {
+        SecretNGVariable secretNGVariable = (SecretNGVariable) variable;
+        String secretValue = secretNGVariable.getValue().getValue() != null
+            ? secretNGVariable.getValue().getValue().toSecretRefStringValue()
+            : secretNGVariable.getValue().getExpressionValue();
+        String value = "<+secrets.getValue(\"" + secretValue + "\")>";
+        mapOfVariables.put(variable.getName(), value);
+      } else {
+        mapOfVariables.put(variable.getName(), variable.getCurrentValue());
+      }
+    }
+    return mapOfVariables;
+  }
+
   public Map<String, Object> applyVariableOverrides(
       Map<String, Object> originalVariablesMap, List<NGVariable> overrideVariables, long expressionFunctorToken) {
     if (EmptyPredicate.isEmpty(overrideVariables)) {
