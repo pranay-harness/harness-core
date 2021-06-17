@@ -248,7 +248,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       }
     });
 
-    modules.add(new CIPersistenceModule(configuration.getShouldConfigureWithPMS()));
+    modules.add(new CIPersistenceModule());
     addGuiceValidationModule(modules);
     modules.add(new CIManagerServiceModule(configuration));
     modules.add(YamlSdkModule.getInstance());
@@ -333,7 +333,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .deploymentMode(remote ? SdkDeployMode.REMOTE : SdkDeployMode.LOCAL)
         .moduleType(ModuleType.CI)
         .pipelineServiceInfoProviderClass(CIPipelineServiceInfoProvider.class)
-        .mongoConfig(config.getPmsMongoConfig())
         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
         .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
         .filterCreationResponseMerger(new CIFilterCreationResponseMerger())

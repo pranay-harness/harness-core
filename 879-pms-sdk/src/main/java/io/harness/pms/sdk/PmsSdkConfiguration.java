@@ -6,7 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
-import io.harness.mongo.MongoConfig;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
@@ -35,7 +34,6 @@ import lombok.Value;
 public class PmsSdkConfiguration {
   @Builder.Default SdkDeployMode deploymentMode = SdkDeployMode.LOCAL;
   @NonNull ModuleType moduleType;
-  MongoConfig mongoConfig;
   GrpcServerConfig grpcServerConfig;
   GrpcClientConfig pmsGrpcClientConfig;
   Class<? extends PipelineServiceInfoProvider> pipelineServiceInfoProviderClass;

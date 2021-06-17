@@ -6,18 +6,15 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.metrics.jobs.RecordMetricsJob;
 import io.harness.metrics.service.api.MetricService;
-import io.harness.monitoring.MonitoringEventObserver;
 import io.harness.pms.contracts.plan.InitializeSdkRequest;
 import io.harness.pms.contracts.plan.PmsServiceGrpc;
 import io.harness.pms.contracts.plan.SdkModuleInfo;
 import io.harness.pms.contracts.plan.Types;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.execution.events.node.NodeExecutionEventListener;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
-import io.harness.queue.QueueListenerController;
 
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Injector;
@@ -81,25 +78,11 @@ public class PmsSdkInitHelper {
       Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
       registerSdk(injector, config);
     }
-    registerQueueListeners(injector);
-    registerObserversForEvents(injector);
   }
 
   private static void initializeMetrics(Injector injector) {
     injector.getInstance(MetricService.class).initializeMetrics();
     injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
-  }
-
-  private static void registerObserversForEvents(Injector injector) {
-    // Todo(sahil): Remove once all events are migrated to redis
-    NodeExecutionEventListener nodeExecutionEventListener = injector.getInstance(NodeExecutionEventListener.class);
-    nodeExecutionEventListener.getEventListenerObserverSubject().register(
-        injector.getInstance(Key.get(MonitoringEventObserver.class)));
-  }
-
-  private static void registerQueueListeners(Injector injector) {
-    QueueListenerController queueListenerController = injector.getInstance(Key.get(QueueListenerController.class));
-    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 3);
   }
 
   private static void registerSdk(Injector injector, PmsSdkConfiguration sdkConfiguration) {

@@ -4,7 +4,6 @@ import static io.harness.pms.sdk.core.SdkDeployMode.REMOTE;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.mongo.MongoConfig;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
@@ -14,7 +13,6 @@ import io.harness.pms.sdk.core.resolver.expressions.EngineGrpcExpressionService;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 class PmsSdkProviderModule extends AbstractModule {
@@ -52,12 +50,5 @@ class PmsSdkProviderModule extends AbstractModule {
   @Singleton
   public FilterCreationResponseMerger filterCreationResponseMerger() {
     return config.getFilterCreationResponseMerger();
-  }
-
-  @Provides
-  @Singleton
-  @Named("pmsSdkMongoConfig")
-  public MongoConfig mongoConfig() {
-    return config.getMongoConfig();
   }
 }

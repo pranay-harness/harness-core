@@ -106,7 +106,6 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
       }
     });
     install(OrchestrationBeansModule.getInstance());
-    install(OrchestrationQueueModule.getInstance());
     if (!config.isUseFeatureFlagService()) {
       bind(PmsFeatureFlagService.class).to(NoopFeatureFlagServiceImpl.class);
     } else {
