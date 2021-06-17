@@ -35,5 +35,4 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f | head -c 6
 -e KUSTOMIZE_PATH= \
 -e OC_PATH= \
 -e KUBECTL_PATH= \
--e CLIENT_TOOLS_DOWNLOAD_DISABLED=false \
 harness/delegate:latest

@@ -387,16 +387,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     return Optional.ofNullable(delegateId);
   }
 
-  boolean kubectlInstalled;
-  boolean goTemplateInstalled;
-  boolean harnessPywinrmInstalled;
-  boolean helmInstalled;
-  boolean chartMuseumInstalled;
-  boolean tfConfigInspectInstalled;
-  boolean ocInstalled;
-  boolean kustomizeInstalled;
-  boolean scmInstalled;
-
   @Override
   @SuppressWarnings("unchecked")
   public void run(boolean watched) {
@@ -436,27 +426,15 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         }
       }
 
-      if (delegateConfiguration.isClientToolsDownloadDisabled()) {
-        kubectlInstalled = true;
-        goTemplateInstalled = true;
-        harnessPywinrmInstalled = true;
-        helmInstalled = true;
-        chartMuseumInstalled = true;
-        tfConfigInspectInstalled = true;
-        ocInstalled = true;
-        kustomizeInstalled = true;
-        scmInstalled = true;
-      } else {
-        kubectlInstalled = installKubectl(delegateConfiguration);
-        goTemplateInstalled = installGoTemplateTool(delegateConfiguration);
-        harnessPywinrmInstalled = installHarnessPywinrm(delegateConfiguration);
-        helmInstalled = installHelm(delegateConfiguration);
-        chartMuseumInstalled = installChartMuseum(delegateConfiguration);
-        tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
-        ocInstalled = installOc(delegateConfiguration);
-        kustomizeInstalled = installKustomize(delegateConfiguration);
-        scmInstalled = installScm(delegateConfiguration);
-      }
+      boolean kubectlInstalled = installKubectl(delegateConfiguration);
+      boolean goTemplateInstalled = installGoTemplateTool(delegateConfiguration);
+      boolean harnessPywinrmInstalled = installHarnessPywinrm(delegateConfiguration);
+      boolean helmInstalled = installHelm(delegateConfiguration);
+      boolean chartMuseumInstalled = installChartMuseum(delegateConfiguration);
+      boolean tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
+      boolean ocInstalled = installOc(delegateConfiguration);
+      boolean kustomizeInstalled = installKustomize(delegateConfiguration);
+      boolean scmInstalled = installScm(delegateConfiguration);
 
       logCfCliConfiguration();
 

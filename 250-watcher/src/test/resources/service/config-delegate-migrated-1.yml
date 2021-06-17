@@ -15,4 +15,3 @@ grpcServiceEnabled: false
 grpcServiceConnectors:
 port: 8080
 grpcServiceTokenSecret: j6ErHMBlC2dn6WctNQKt0xfyo_PZuK7ls0Z4d6XCaBg
-clientToolsDownloadDisabled: false
