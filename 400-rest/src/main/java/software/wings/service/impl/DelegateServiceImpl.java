@@ -108,6 +108,8 @@ import io.harness.delegate.beans.K8sConfigDetails;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
+import io.harness.delegate.events.DelegateGroupDeleteEvent;
+import io.harness.delegate.events.DelegateGroupUpsertEvent;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.environment.SystemEnvironment;
@@ -133,6 +135,7 @@ import io.harness.logging.Misc;
 import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
 import io.harness.observer.Subject;
+import io.harness.outbox.api.OutboxService;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UuidAware;
@@ -357,6 +360,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
   @Getter private Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
   @Inject @Getter private Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject;
+  @Inject private OutboxService outboxService;
 
   private LoadingCache<String, String> delegateVersionCache = CacheBuilder.newBuilder()
                                                                   .maximumSize(10000)
@@ -2060,6 +2064,13 @@ public class DelegateServiceImpl implements DelegateService {
     for (Delegate delegate : groupDelegates) {
       delete(accountId, delegate.getUuid(), forceDelete);
     }
+    DelegateGroup delegateGroup = persistence.createQuery(DelegateGroup.class)
+                                      .filter(DelegateGroupKeys.accountId, accountId)
+                                      .filter(DelegateGroupKeys.uuid, delegateGroupId)
+                                      .get();
+    if (delegateGroup == null) {
+      return;
+    }
 
     if (featureFlagService.isEnabled(DO_DELEGATE_PHYSICAL_DELETE, accountId) || forceDelete) {
       persistence.delete(persistence.createQuery(DelegateGroup.class)
@@ -2083,6 +2094,27 @@ public class DelegateServiceImpl implements DelegateService {
       persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
       log.info("Delegate group: {} and all belonging delegates have been marked as deleted.", delegateGroupId);
     }
+
+    outboxService.save(
+        DelegateGroupDeleteEvent.builder()
+            .accountIdentifier(accountId)
+            .orgIdentifier(
+                DelegateEntityOwnerHelper.extractOrgIdFromOwnerIdentifier(delegateGroup.getOwner().getIdentifier()))
+            .projectIdentifier(
+                DelegateEntityOwnerHelper.extractProjectIdFromOwnerIdentifier(delegateGroup.getOwner().getIdentifier()))
+            .delegateGroupId(delegateGroupId)
+            .delegateSetupDetails(DelegateSetupDetails.builder()
+                                      .delegateConfigurationId(delegateGroup.getDelegateConfigurationId())
+                                      .description(delegateGroup.getDescription())
+                                      .k8sConfigDetails(delegateGroup.getK8sConfigDetails())
+                                      .name(delegateGroup.getName())
+                                      .size(delegateGroup.getSizeDetails().getSize())
+                                      .orgIdentifier(DelegateEntityOwnerHelper.extractOrgIdFromOwnerIdentifier(
+                                          delegateGroup.getOwner().getIdentifier()))
+                                      .projectIdentifier(DelegateEntityOwnerHelper.extractProjectIdFromOwnerIdentifier(
+                                          delegateGroup.getOwner().getIdentifier()))
+                                      .build())
+            .build());
 
     DelegateEntityOwner owner = isNotEmpty(groupDelegates) ? groupDelegates.get(0).getOwner() : null;
     publishDelegateChangeEventViaEventFramework(accountId, delegateGroupId, owner, DELETE_ACTION);
@@ -2779,7 +2811,16 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, DelegateGroupKeys.delegateConfigurationId, delegateConfigurationId);
     setUnset(updateOperations, DelegateGroupKeys.sizeDetails, sizeDetails);
 
-    return persistence.upsert(query, updateOperations, HPersistence.upsertReturnNewOptions);
+    DelegateGroup delegateGroup = persistence.upsert(query, updateOperations, HPersistence.upsertReturnNewOptions);
+    outboxService.save(
+        DelegateGroupUpsertEvent.builder()
+            .accountIdentifier(accountId)
+            .orgIdentifier(delegateSetupDetails != null ? delegateSetupDetails.getOrgIdentifier() : null)
+            .projectIdentifier(delegateSetupDetails != null ? delegateSetupDetails.getProjectIdentifier() : null)
+            .delegateGroupId(delegateGroup.getUuid())
+            .delegateSetupDetails(delegateSetupDetails)
+            .build());
+    return delegateGroup;
   }
 
   public void registerHeartbeat(
