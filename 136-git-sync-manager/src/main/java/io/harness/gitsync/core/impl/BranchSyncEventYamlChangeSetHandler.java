@@ -39,7 +39,7 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
 
   @Override
   public YamlChangeSetStatus process(YamlChangeSetDTO yamlChangeSetDTO) {
-    String accountId = yamlChangeSetDTO.getAccountId();
+    String accountIdentifier = yamlChangeSetDTO.getAccountId();
     String repoURL = yamlChangeSetDTO.getRepoUrl();
     String branch = yamlChangeSetDTO.getBranch();
 
@@ -54,10 +54,10 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
       return YamlChangeSetStatus.SKIPPED;
     }
 
-    GitBranch gitBranch = gitBranchService.get(accountId, repoURL, branch);
+    GitBranch gitBranch = gitBranchService.get(accountIdentifier, repoURL, branch);
     if (gitBranch.getBranchSyncStatus() == UNSYNCED) {
-      gitBranchService.updateBranchSyncStatus(accountId, repoURL, branch, SYNCING);
-    } else {
+      gitBranchService.updateBranchSyncStatus(accountIdentifier, repoURL, branch, SYNCING);
+    } else if (gitBranch.getBranchSyncStatus() == SYNCED) {
       log.info("The branch sync for repoUrl [{}], branch [{}] has status [{}], hence skipping", repoURL, branch,
           gitBranch.getBranchSyncStatus());
       return YamlChangeSetStatus.SKIPPED;
