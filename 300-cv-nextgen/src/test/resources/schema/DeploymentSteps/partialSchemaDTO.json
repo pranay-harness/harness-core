@@ -1,6 +1,11 @@
 {
   "schema": {
     "type": "object",
+    "required": [
+      "identifier",
+      "name",
+      "type"
+    ],
     "properties": {
       "description": {
         "type": "string"
@@ -1594,6 +1599,11 @@
         },
         "StepElementConfig": {
           "type": "object",
+          "required": [
+            "identifier",
+            "name",
+            "type"
+          ],
           "properties": {
             "description": {
               "type": "string"

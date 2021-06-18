@@ -21,7 +21,8 @@ import io.harness.cdng.manifest.yaml.GitStoreConfig;
 import io.harness.cdng.manifest.yaml.GitStoreConfigDTO;
 import io.harness.cdng.manifest.yaml.GithubStore;
 import io.harness.cdng.manifest.yaml.GithubStoreDTO;
-import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigType;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
 import io.harness.common.ParameterFieldHelper;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
@@ -88,7 +89,7 @@ public class TerraformStepHelperTest extends CategoryTest {
                                               .gitFetchType(FetchType.BRANCH)
                                               .folderPath(ParameterField.createValueField("Config/"))
                                               .build())
-                                    .type("Github")
+                                    .type(StoreConfigType.GITHUB)
                                     .build());
     InlineTerraformVarFileSpec inlineTerraformVarFileSpec = new InlineTerraformVarFileSpec();
     inlineTerraformVarFileSpec.setContent(ParameterField.createValueField("var-content"));
@@ -151,7 +152,7 @@ public class TerraformStepHelperTest extends CategoryTest {
                                               .gitFetchType(FetchType.BRANCH)
                                               .folderPath(ParameterField.createValueField("Config/"))
                                               .build())
-                                    .type("Github")
+                                    .type(StoreConfigType.GITHUB)
                                     .build());
     RemoteTerraformVarFileSpec remoteTerraformVarFileSpec = new RemoteTerraformVarFileSpec();
     remoteTerraformVarFileSpec.setStore(StoreConfigWrapper.builder()
@@ -160,7 +161,7 @@ public class TerraformStepHelperTest extends CategoryTest {
                                                       .gitFetchType(FetchType.BRANCH)
                                                       .folderPath(ParameterField.createValueField("VarFiles/"))
                                                       .build())
-                                            .type("GitLab")
+                                            .type(StoreConfigType.GITLAB)
                                             .build());
     LinkedHashMap<String, TerraformVarFile> varFilesMap = new LinkedHashMap<>();
     varFilesMap.put("var-file-1",
@@ -219,7 +220,7 @@ public class TerraformStepHelperTest extends CategoryTest {
                       .paths(ParameterField.createValueField(Collections.singletonList("VarFiles/")))
                       .connectorRef(ParameterField.createValueField("ConnectorRef"))
                       .build())
-            .type("GitLab")
+            .type(StoreConfigType.GITLAB)
             .build());
     InlineTerraformVarFileSpec inlineTerraformVarFileSpec = new InlineTerraformVarFileSpec();
     inlineTerraformVarFileSpec.setContent(ParameterField.createValueField("var-content"));
