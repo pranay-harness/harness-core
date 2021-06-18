@@ -24,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-public class NexusHelper {
+public class CGNexusHelper {
   @NotNull
   @SuppressWarnings("squid:S00107")
   public List<BuildDetails> constructBuildDetails(String repoId, String groupId, String artifactName,
