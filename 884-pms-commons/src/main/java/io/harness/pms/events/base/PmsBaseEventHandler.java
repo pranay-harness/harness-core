@@ -36,7 +36,7 @@ public abstract class PmsBaseEventHandler<T extends Message> {
 
   protected abstract String getMetricPrefix(T message);
 
-  public boolean handleEvent(T event, Map<String, String> metadataMap, long createdAt) {
+  public void handleEvent(T event, Map<String, String> metadataMap, long createdAt) {
     try (PmsGitSyncBranchContextGuard ignore1 = gitSyncContext(event); AutoLogContext ignore2 = autoLogContext(event)) {
       ThreadAutoLogContext metricContext =
           new ThreadAutoLogContext(extractMetricContext(event), OverrideBehavior.OVERRIDE_NESTS);
@@ -46,13 +46,12 @@ public abstract class PmsBaseEventHandler<T extends Message> {
                                           .metricContext(metricContext)
                                           .build();
       eventMonitoringService.sendMetric(LISTENER_START_METRIC, monitoringInfo, metadataMap);
-      boolean isSuccess = handleEventWithContext(event);
+      handleEventWithContext(event);
       eventMonitoringService.sendMetric(LISTENER_END_METRIC, monitoringInfo, metadataMap);
-      return isSuccess;
     }
   }
 
-  protected abstract boolean handleEventWithContext(T event);
+  protected abstract void handleEventWithContext(T event);
 
   protected AutoLogContext autoLogContext(T event) {
     Map<String, String> logContext = new HashMap<>();

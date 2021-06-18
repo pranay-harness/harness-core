@@ -58,7 +58,7 @@ public class SdkOrchestrationEventHandler extends PmsBaseEventHandler<Orchestrat
   }
 
   @Override
-  protected boolean handleEventWithContext(OrchestrationEvent event) {
+  protected void handleEventWithContext(OrchestrationEvent event) {
     Set<OrchestrationEventHandler> handlers = handlerRegistry.obtain(event.getEventType());
     if (isNotEmpty(handlers)) {
       handlers.forEach(handler -> executorService.submit(() -> {
@@ -70,7 +70,6 @@ public class SdkOrchestrationEventHandler extends PmsBaseEventHandler<Orchestrat
         }
       }));
     }
-    return true;
   }
 
   private io.harness.pms.sdk.core.events.OrchestrationEvent buildSdkOrchestrationEvent(OrchestrationEvent event) {

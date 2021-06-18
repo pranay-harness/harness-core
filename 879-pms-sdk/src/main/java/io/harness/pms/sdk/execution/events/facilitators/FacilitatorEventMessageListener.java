@@ -23,7 +23,7 @@ public class FacilitatorEventMessageListener extends PmsAbstractMessageListener<
   }
 
   @Override
-  public boolean processMessage(FacilitatorEvent event, Map<String, String> metadataMap, Long timestamp) {
-    return facilitatorEventHandler.handleEvent(event, metadataMap, timestamp);
+  public void processMessage(FacilitatorEvent event, Map<String, String> metadataMap, Long timestamp) {
+    facilitatorEventHandler.handleEvent(event, metadataMap, timestamp);
   }
 }

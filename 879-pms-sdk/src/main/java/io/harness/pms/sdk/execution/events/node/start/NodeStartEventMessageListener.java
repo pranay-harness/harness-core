@@ -23,7 +23,7 @@ public class NodeStartEventMessageListener extends PmsAbstractMessageListener<No
   }
 
   @Override
-  public boolean processMessage(NodeStartEvent event, Map<String, String> metadataMap, Long timestamp) {
-    return nodeStartEventHandler.handleEvent(event, metadataMap, timestamp);
+  public void processMessage(NodeStartEvent event, Map<String, String> metadataMap, Long timestamp) {
+    nodeStartEventHandler.handleEvent(event, metadataMap, timestamp);
   }
 }
