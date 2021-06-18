@@ -220,11 +220,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     validateTheGitConfigInput(gitSyncConfigDTO);
     YamlGitConfig yamlGitConfigToBeSaved = toYamlGitConfig(gitSyncConfigDTO, accountId);
     yamlGitConfigToBeSaved.setWebhookToken(CryptoUtils.secureRandAlphaNumString(40));
-    UpsertWebhookResponseDTO upsertWebhookResponseDTO = null;
-    if (isNewRepo(gitSyncConfigDTO.getRepo())) {
-      upsertWebhookResponseDTO = registerWebhook(gitSyncConfigDTO);
-      log.info("Response of Upsert Webhook {}", upsertWebhookResponseDTO);
-    }
+    registerWebhookAsync(gitSyncConfigDTO);
     YamlGitConfig savedYamlGitConfig = null;
     try {
       savedYamlGitConfig = yamlGitConfigRepository.save(yamlGitConfigToBeSaved);
@@ -243,6 +239,17 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     });
 
     return YamlGitConfigMapper.toYamlGitConfigDTO(savedYamlGitConfig);
+  }
+
+  private void registerWebhookAsync(YamlGitConfigDTO gitSyncConfigDTO) {
+    executorService.submit(() -> saveWebhook(gitSyncConfigDTO));
+  }
+
+  private void saveWebhook(YamlGitConfigDTO gitSyncConfigDTO) {
+    if (isNewRepo(gitSyncConfigDTO.getRepo())) {
+      UpsertWebhookResponseDTO upsertWebhookResponseDTO = registerWebhook(gitSyncConfigDTO);
+      log.info("Response of Upsert Webhook {}", upsertWebhookResponseDTO);
+    }
   }
 
   private UpsertWebhookResponseDTO registerWebhook(YamlGitConfigDTO gitSyncConfigDTO) {
