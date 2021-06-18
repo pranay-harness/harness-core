@@ -343,7 +343,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
   private Map<String, String> getAndUpdateProxyConfigurationSecretData(
       CIK8ContainerParams containerParams, String secretName) {
-    if (proxyVariableHelper.checkIfProxyIsConfigured()) {
+    if (proxyVariableHelper != null && proxyVariableHelper.checkIfProxyIsConfigured()) {
       Map<String, SecretParams> proxyConfiguration = proxyVariableHelper.getProxyConfiguration();
       updateContainer(containerParams, secretName, proxyConfiguration);
       return proxyConfiguration.values().stream().collect(
