@@ -99,6 +99,7 @@ import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.PipelineServiceFacilitatorRegistrar;
 import io.harness.registrars.PipelineServiceStepRegistrar;
+import io.harness.request.RequestContextFilter;
 import io.harness.resource.VersionInfoResource;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -280,6 +281,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerHealthCheck(environment, injector);
     registerObservers(injector);
     registerMigrations(injector);
+    registerRequestContextFilter(environment);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     injector.getInstance(TriggerWebhookExecutionService.class).registerIterators();
@@ -573,6 +575,10 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     ExecutorService executorService =
         injector.getInstance(Key.get(ExecutorService.class, Names.named("templateRegistrationExecutorService")));
     executorService.submit(injector.getInstance(NotificationTemplateRegistrar.class));
+  }
+
+  private void registerRequestContextFilter(Environment environment) {
+    environment.jersey().register(new RequestContextFilter());
   }
 
   private void registerMigrations(Injector injector) {
