@@ -19,4 +19,9 @@ public class CDExecutionSummaryModuleInfoProvider implements ExecutionSummaryMod
   public class SamplePipelineModule implements PipelineModuleInfo {}
 
   public class SampleStageInfo implements StageModuleInfo {}
+
+  @Override
+  public boolean shouldRun(OrchestrationEvent event) {
+    return false;
+  }
 }
