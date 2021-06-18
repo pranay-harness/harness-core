@@ -1,4 +1,4 @@
-package io.harness.engine.utils;
+package io.harness.engine.pms.commons.events;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
 
@@ -18,6 +18,7 @@ import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.plan.Redis;
+import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.sdk.PmsSdkInstance;
 import io.harness.rule.Owner;
 
@@ -30,8 +31,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
-public class OrchestrationEventsFrameworkUtilsTest extends OrchestrationTestBase {
-  @Inject OrchestrationEventsFrameworkUtils eventsFrameworkUtils;
+public class PmsEventSenderTest extends OrchestrationTestBase {
+  @Inject PmsEventSender eventSender;
   @Inject MongoTemplate mongoTemplate;
 
   private static final String TOPIC1 = "topic1";
@@ -55,16 +56,11 @@ public class OrchestrationEventsFrameworkUtilsTest extends OrchestrationTestBase
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
-  public void shouldTestObtainProducerForInterrupt() {
-    Producer producer = eventsFrameworkUtils.obtainProducerForInterrupt(ModuleType.PMS.name());
+  public void shouldTestObtainProducer() {
+    Producer producer = eventSender.obtainProducer(PmsEventCategory.INTERRUPT_EVENT, ModuleType.PMS.name());
     assertThat(((NoOpProducer) producer).getTopicName()).isEqualTo(TOPIC1);
-  }
 
-  @Test
-  @Owner(developers = PRASHANT)
-  @Category(UnitTests.class)
-  public void shouldTestObtainProducerForOrchestrationEvent() {
-    Producer producer = eventsFrameworkUtils.obtainProducerForOrchestrationEvent(ModuleType.PMS.name());
+    producer = eventSender.obtainProducer(PmsEventCategory.ORCHESTRATION_EVENT, ModuleType.PMS.name());
     assertThat(((NoOpProducer) producer).getTopicName()).isEqualTo(TOPIC2);
   }
 
@@ -72,7 +68,7 @@ public class OrchestrationEventsFrameworkUtilsTest extends OrchestrationTestBase
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestCache() {
-    OrchestrationEventsFrameworkUtils spyEventsFrameworkUtils = spy(OrchestrationEventsFrameworkUtils.class);
+    PmsEventSender spyEventsFrameworkUtils = spy(PmsEventSender.class);
     Reflect.on(spyEventsFrameworkUtils)
         .set("moduleConfig",
             OrchestrationModuleConfig.builder()
@@ -91,9 +87,8 @@ public class OrchestrationEventsFrameworkUtilsTest extends OrchestrationTestBase
                  .build())
         .when(spyEventsFrameworkUtils)
         .getPmsSdkInstance(ModuleType.PMS.name());
-
-    spyEventsFrameworkUtils.obtainProducerForOrchestrationEvent(ModuleType.PMS.name());
-    spyEventsFrameworkUtils.obtainProducerForOrchestrationEvent(ModuleType.PMS.name());
+    spyEventsFrameworkUtils.obtainProducer(PmsEventCategory.ORCHESTRATION_EVENT, ModuleType.PMS.name());
+    spyEventsFrameworkUtils.obtainProducer(PmsEventCategory.ORCHESTRATION_EVENT, ModuleType.PMS.name());
 
     verify(spyEventsFrameworkUtils, times(1)).obtainProducer(any(ProducerCacheKey.class));
   }

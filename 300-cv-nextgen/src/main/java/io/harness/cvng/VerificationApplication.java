@@ -5,13 +5,6 @@ import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.cvng.cdng.services.impl.CVNGNotifyEventListener.CVNG_ORCHESTRATION;
 import static io.harness.cvng.migration.beans.CVNGSchema.CVNGMigrationStatus.RUNNING;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_FACILITATOR_EVENT_TOPIC;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_INTERRUPT_TOPIC;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_ADVISE_EVENT_TOPIC;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_RESUME_EVENT_TOPIC;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_START_EVENT_TOPIC;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_EVENT_TOPIC;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
@@ -99,20 +92,18 @@ import io.harness.notification.module.NotificationClientModule;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
-import io.harness.pms.contracts.plan.ConsumerConfig;
-import io.harness.pms.contracts.plan.Redis;
 import io.harness.pms.events.base.PipelineEventConsumerController;
-import io.harness.pms.listener.facilitators.FacilitatorEventRedisConsumer;
-import io.harness.pms.listener.interrupts.InterruptEventRedisConsumer;
-import io.harness.pms.listener.node.advise.NodeAdviseEventRedisConsumer;
-import io.harness.pms.listener.node.resume.NodeResumeEventRedisConsumer;
-import io.harness.pms.listener.node.start.NodeStartEventRedisConsumer;
-import io.harness.pms.listener.orchestrationevent.OrchestrationEventRedisConsumer;
-import io.harness.pms.listener.progress.ProgressEventRedisConsumer;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
+import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.interrupts.InterruptEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.resume.NodeResumeEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.start.NodeStartEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -185,8 +176,6 @@ import ru.vyarus.guice.validator.ValidationModule;
 @OwnedBy(HarnessTeam.CV)
 public class VerificationApplication extends Application<VerificationConfiguration> {
   private static String APPLICATION_NAME = "Verification NextGen Application";
-
-  private static String PMS_SERVICE_NAME = "cvng";
 
   private final MetricRegistry metricRegistry = new MetricRegistry();
   private HarnessMetricRegistry harnessMetricRegistry;
@@ -348,8 +337,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     // Pipeline Service Modules
     PmsSdkConfiguration pmsSdkConfiguration = getPmsSdkConfiguration(configuration);
     modules.add(PmsSdkModule.getInstance(pmsSdkConfiguration));
-    modules.add(PipelineServiceUtilityModule.getInstance(
-        configuration.getEventsFrameworkConfiguration(), pmsSdkConfiguration.getServiceName()));
+    modules.add(PipelineServiceUtilityModule.getInstance());
 
     Injector injector = Guice.createInjector(modules);
     YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
@@ -443,33 +431,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
         .filterCreationResponseMerger(new CVNGFilterCreationResponseMerger())
         .executionSummaryModuleInfoProviderClass(CVNGModuleInfoProvider.class)
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
-        .interruptConsumerConfig(ConsumerConfig.newBuilder()
-                                     .setRedis(Redis.newBuilder().setTopicName(PIPELINE_INTERRUPT_TOPIC).build())
-                                     .build())
-        .orchestrationEventConsumerConfig(
-            ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_ORCHESTRATION_EVENT_TOPIC).build())
-                .build())
-        .facilitationEventConsumerConfig(
-            ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_FACILITATOR_EVENT_TOPIC).build())
-                .build())
-        .nodeStartEventConsumerConfig(
-            ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_NODE_START_EVENT_TOPIC).build())
-                .build())
-        .progressEventConsumerConfig(
-            ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_PROGRESS_EVENT_TOPIC).build())
-                .build())
-        .nodeAdviseEventConsumerConfig(
-            ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_NODE_ADVISE_EVENT_TOPIC).build())
-                .build())
-        .nodeResumeEventConsumerConfig(
-            ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_NODE_RESUME_EVENT_TOPIC).build())
-                .build())
         .build();
   }
 

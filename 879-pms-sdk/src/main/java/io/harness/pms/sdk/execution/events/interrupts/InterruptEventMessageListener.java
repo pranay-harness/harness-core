@@ -1,4 +1,4 @@
-package io.harness.pms.listener.interrupts;
+package io.harness.pms.sdk.execution.events.interrupts;
 
 import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
 

@@ -1,7 +1,8 @@
-package io.harness.engine.utils;
+package io.harness.engine.pms.commons.events;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.events.base.PmsEventCategory;
 
 import lombok.Builder;
 import lombok.Value;
@@ -10,15 +11,6 @@ import lombok.Value;
 @Value
 @Builder
 class ProducerCacheKey {
-  enum EventCategory {
-    INTERRUPT_EVENT,
-    ORCHESTRATION_EVENT,
-    FACILITATOR_EVENT,
-    NODE_START,
-    PROGRESS_EVENT,
-    NODE_ADVISE,
-    NODE_RESUME
-  }
   String serviceName;
-  EventCategory eventCategory;
+  PmsEventCategory eventCategory;
 }

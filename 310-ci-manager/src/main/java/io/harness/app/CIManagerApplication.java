@@ -2,13 +2,6 @@ package io.harness.app;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_FACILITATOR_EVENT_TOPIC;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_INTERRUPT_TOPIC;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_ADVISE_EVENT_TOPIC;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_RESUME_EVENT_TOPIC;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_START_EVENT_TOPIC;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_EVENT_TOPIC;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
@@ -39,21 +32,19 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.Store;
 import io.harness.persistence.UserProvider;
-import io.harness.pms.contracts.plan.ConsumerConfig;
-import io.harness.pms.contracts.plan.Redis;
 import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
-import io.harness.pms.listener.facilitators.FacilitatorEventRedisConsumer;
-import io.harness.pms.listener.interrupts.InterruptEventRedisConsumer;
-import io.harness.pms.listener.node.advise.NodeAdviseEventRedisConsumer;
-import io.harness.pms.listener.node.resume.NodeResumeEventRedisConsumer;
-import io.harness.pms.listener.node.start.NodeStartEventRedisConsumer;
-import io.harness.pms.listener.orchestrationevent.OrchestrationEventRedisConsumer;
-import io.harness.pms.listener.progress.ProgressEventRedisConsumer;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
+import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.interrupts.InterruptEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.resume.NodeResumeEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.start.NodeStartEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -138,8 +129,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
   private static final String APP_NAME = "CI Manager Service Application";
   public static final String BASE_PACKAGE = "io.harness.app.resources";
   public static final String NG_PIPELINE_PACKAGE = "io.harness.ngpipeline";
-
-  public static final String PMS_SERVICE_NAME = "ci";
 
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -256,8 +245,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     // Pipeline Service Modules
     PmsSdkConfiguration pmsSdkConfiguration = getPmsSdkConfiguration(configuration);
     modules.add(PmsSdkModule.getInstance(pmsSdkConfiguration));
-    modules.add(PipelineServiceUtilityModule.getInstance(
-        configuration.getEventsFrameworkConfiguration(), pmsSdkConfiguration.getServiceName()));
+    modules.add(PipelineServiceUtilityModule.getInstance());
 
     Injector injector = Guice.createInjector(modules);
     registerPMSSDK(configuration, injector);
@@ -341,33 +329,6 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())
         .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
-        .interruptConsumerConfig(ConsumerConfig.newBuilder()
-                                     .setRedis(Redis.newBuilder().setTopicName(PIPELINE_INTERRUPT_TOPIC).build())
-                                     .build())
-        .orchestrationEventConsumerConfig(
-            ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_ORCHESTRATION_EVENT_TOPIC).build())
-                .build())
-        .facilitationEventConsumerConfig(
-            ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_FACILITATOR_EVENT_TOPIC).build())
-                .build())
-        .nodeStartEventConsumerConfig(
-            ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_NODE_START_EVENT_TOPIC).build())
-                .build())
-        .progressEventConsumerConfig(
-            ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_PROGRESS_EVENT_TOPIC).build())
-                .build())
-        .nodeAdviseEventConsumerConfig(
-            ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_NODE_ADVISE_EVENT_TOPIC).build())
-                .build())
-        .nodeResumeEventConsumerConfig(
-            ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_NODE_RESUME_EVENT_TOPIC).build())
-                .build())
         .build();
   }
 
@@ -399,10 +360,10 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     pipelineEventConsumerController.register(injector.getInstance(InterruptEventRedisConsumer.class), 1);
     pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class), 2);
     pipelineEventConsumerController.register(injector.getInstance(FacilitatorEventRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class), 5);
-    pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 2);
-    pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 5);
-    pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class), 4);
+    pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 4);
+    pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 4);
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {

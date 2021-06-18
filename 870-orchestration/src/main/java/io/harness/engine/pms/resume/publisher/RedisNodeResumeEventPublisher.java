@@ -1,28 +1,21 @@
 package io.harness.engine.pms.resume.publisher;
 
-import static io.harness.pms.events.PmsEventFrameworkConstants.PIPELINE_MONITORING_ENABLED;
-import static io.harness.pms.events.PmsEventFrameworkConstants.SERVICE_NAME;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
-import io.harness.engine.utils.OrchestrationEventsFrameworkUtils;
-import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.producer.Message;
+import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.execution.NodeExecution;
-import io.harness.pms.PmsFeatureFlagService;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
 import io.harness.pms.contracts.resume.ChainDetails;
 import io.harness.pms.contracts.resume.NodeResumeEvent;
+import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.execution.utils.AmbianceUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
@@ -31,11 +24,12 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 public class RedisNodeResumeEventPublisher implements NodeResumeEventPublisher {
-  @Inject private PmsFeatureFlagService pmsFeatureFlagService;
-  @Inject private OrchestrationEventsFrameworkUtils eventsFrameworkUtils;
+  @Inject private PmsEventSender eventSender;
 
   @Override
   public void publishEvent(NodeExecution nodeExecution, Map<String, ByteString> responseMap, boolean isError) {
+    String serviceName = nodeExecution.getNode().getServiceName();
+    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
     NodeResumeEvent.Builder resumeEventBuilder =
         NodeResumeEvent.newBuilder()
             .setAmbiance(nodeExecution.getAmbiance())
@@ -49,18 +43,9 @@ public class RedisNodeResumeEventPublisher implements NodeResumeEventPublisher {
     if (chainDetails != null) {
       resumeEventBuilder.setChainDetails(chainDetails);
     }
-    Producer producer = eventsFrameworkUtils.obtainProducerForNodeResumeEvent(nodeExecution.getNode().getServiceName());
 
-    // TODO : Refactor this and make generic
-    Map<String, String> metadataMap = new HashMap<>();
-    metadataMap.put(SERVICE_NAME, nodeExecution.getNode().getServiceName());
-    if (pmsFeatureFlagService.isEnabled(
-            AmbianceUtils.getAccountId(nodeExecution.getAmbiance()), FeatureName.PIPELINE_MONITORING)) {
-      metadataMap.put(PIPELINE_MONITORING_ENABLED, "true");
-    }
-
-    producer.send(
-        Message.newBuilder().putAllMetadata(metadataMap).setData(resumeEventBuilder.build().toByteString()).build());
+    eventSender.sendEvent(
+        resumeEventBuilder.build().toByteString(), PmsEventCategory.NODE_RESUME, serviceName, accountId, true);
   }
 
   public ChainDetails buildChainDetails(NodeExecution nodeExecution) {
