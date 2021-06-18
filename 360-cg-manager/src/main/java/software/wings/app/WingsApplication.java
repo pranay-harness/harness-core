@@ -91,7 +91,6 @@ import io.harness.mongo.QuartzCleaner;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.event.MessageListener;
-import io.harness.outbox.OutboxEventPollService;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.CustomDeploymentInstanceSyncClient;
@@ -803,7 +802,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(ArtifactStreamPTaskMigrationJob.class));
     environment.lifecycle().manage(injector.getInstance(InstanceSyncPerpetualTaskMigrationJob.class));
-    environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
   }
 
   private void registerWaitEnginePublishers(Injector injector) {

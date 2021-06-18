@@ -24,8 +24,6 @@ public class DelegateServiceRegistrars {
           .add(DelegateAgentBeansKryoRegister.class)
           .add(DelegateServiceKryoRegister.class)
           .add(RbacCoreKryoRegistrar.class)
-          .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
-          .addAll(OutboxEventRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -35,8 +33,5 @@ public class DelegateServiceRegistrars {
           .addAll(CgOrchestrationRegistrars.morphiaRegistrars)
           .add(DelegateServiceMorphiaRegistrar.class)
           .add(FeatureFlagBeansMorphiaRegistrar.class)
-          .addAll(OutboxEventRegistrars.morphiaRegistrars)
-          .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
-          .addAll(OutboxEventRegistrars.morphiaRegistrars)
           .build();
 }

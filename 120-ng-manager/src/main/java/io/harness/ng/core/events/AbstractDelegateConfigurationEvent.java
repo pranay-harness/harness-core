@@ -1,4 +1,4 @@
-package io.harness.delegate.events;
+package io.harness.ng.core.events;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
