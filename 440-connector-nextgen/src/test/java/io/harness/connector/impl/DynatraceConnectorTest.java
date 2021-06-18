@@ -23,6 +23,7 @@ import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.dynatrace.DynatraceConnectorDTO;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.rule.Owner;
 
@@ -49,6 +50,7 @@ public class DynatraceConnectorTest extends CategoryTest {
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
 
   @InjectMocks @Spy DefaultConnectorServiceImpl connectorService;
+  @Mock GitSyncSdkService gitSyncSdkService;
 
   String url = "https://dynatraceURL.com/";
   String apiToken = "1234_api_token";
@@ -78,9 +80,11 @@ public class DynatraceConnectorTest extends CategoryTest {
                                          .build();
     connectorDTO = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
     connectorResponseDTO = ConnectorResponseDTO.builder().connector(connectorInfo).build();
-    when(connectorRepository.save(dynatraceConnector, connectorDTO, ChangeType.ADD)).thenReturn(dynatraceConnector);
+    when(connectorRepository.save(dynatraceConnector, connectorDTO, ChangeType.ADD, null))
+        .thenReturn(dynatraceConnector);
     when(connectorMapper.writeDTO(dynatraceConnector)).thenReturn(connectorResponseDTO);
     when(connectorMapper.toConnector(connectorDTO, accountIdentifier)).thenReturn(dynatraceConnector);
+    when(gitSyncSdkService.isGitSyncEnabled(accountIdentifier, null, null)).thenReturn(true);
     doNothing().when(connectorService).assurePredefined(any(), any());
   }
 

@@ -24,6 +24,7 @@ import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConne
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -51,6 +52,7 @@ public class AppDynamicsConnectorTest extends CategoryTest {
   @Mock ConnectorRepository connectorRepository;
   @Mock ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
+  @Mock GitSyncSdkService gitSyncSdkService;
 
   @InjectMocks @Spy DefaultConnectorServiceImpl connectorService;
 
@@ -97,9 +99,11 @@ public class AppDynamicsConnectorTest extends CategoryTest {
                                          .build();
     connectorRequest = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
     connectorResponse = ConnectorResponseDTO.builder().connector(connectorInfo).build();
-    when(connectorRepository.save(appDynamicsConfig, connectorRequest, ChangeType.ADD)).thenReturn(appDynamicsConfig);
+    when(connectorRepository.save(appDynamicsConfig, connectorRequest, ChangeType.ADD, null))
+        .thenReturn(appDynamicsConfig);
     when(connectorMapper.writeDTO(appDynamicsConfig)).thenReturn(connectorResponse);
     when(connectorMapper.toConnector(connectorRequest, accountIdentifier)).thenReturn(appDynamicsConfig);
+    when(gitSyncSdkService.isGitSyncEnabled(accountIdentifier, null, null)).thenReturn(true);
     doNothing().when(connectorService).assurePredefined(any(), any());
   }
 
