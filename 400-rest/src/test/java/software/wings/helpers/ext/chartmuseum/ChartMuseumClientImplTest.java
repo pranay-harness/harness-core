@@ -34,13 +34,14 @@ public class ChartMuseumClientImplTest extends WingsBaseTest {
     final String region = "us-west1";
     final String basePath = "base-path";
     AwsConfig awsConfig =
-        AwsConfig.builder().useEc2IamCredentials(true).accessKey(accessKey).secretKey(secretKey).build();
+        AwsConfig.builder().useEc2IamCredentials(true).useIRSA(true).accessKey(accessKey).secretKey(secretKey).build();
     AmazonS3HelmRepoConfig s3HelmRepoConfig =
         AmazonS3HelmRepoConfig.builder().bucketName(bucketName).region(region).build();
 
     chartMuseumClient.startChartMuseumServer(s3HelmRepoConfig, awsConfig, "resource-directory", basePath);
 
-    verify(clientHelper, times(1)).startS3ChartMuseumServer(bucketName, basePath, region, true, accessKey, secretKey);
+    verify(clientHelper, times(1))
+        .startS3ChartMuseumServer(bucketName, basePath, region, true, accessKey, secretKey, true);
   }
 
   @Test

@@ -372,7 +372,7 @@ public class NextGenModule extends AbstractModule {
         return new ThreadLocalUserProvider();
       }
     });
-    install(new NextGenPersistenceModule(appConfig.getShouldConfigureWithPMS()));
+    install(new NextGenPersistenceModule());
     install(new CoreModule());
     install(AccessControlMigrationModule.getInstance());
     install(UserClientModule.getInstance(this.appConfig.getManagerClientConfig(),

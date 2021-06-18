@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.ResourceTypeConstants;
 import io.harness.delegate.beans.DelegateProfileDetailsNg;
+import io.harness.delegate.events.AbstractDelegateConfigurationEvent;
 import io.harness.ng.core.Resource;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

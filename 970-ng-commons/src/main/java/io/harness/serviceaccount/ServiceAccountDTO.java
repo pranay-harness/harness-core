@@ -3,7 +3,6 @@ package io.harness.serviceaccount;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ng.core.ResourceScope;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -18,5 +17,7 @@ public class ServiceAccountDTO {
   String identifier;
   String name;
   String description;
-  ResourceScope resourceScope;
+  String accountIdentifier;
+  String orgIdentifier;
+  String projectIdentifier;
 }

@@ -64,3 +64,220 @@ status:
     plural: ""
   conditions: []
   storedVersions: []
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: as-controller-config
+data:
+  envoy.yaml: >
+    admin:
+      profile_path: /tmp/envoy.prof
+      access_log_path: /tmp/envoy_admin.log
+      address:
+        socket_address: { address: 0.0.0.0, port_value: 9901 }
+    node:
+      cluster: test-cluster
+      id: test-id
+    dynamic_resources:
+      lds_config:
+        resource_api_version: V3
+        api_config_source:
+          api_type: GRPC
+          transport_api_version: V3
+          grpc_services:
+            - envoy_grpc:
+                cluster_name: xds_cluster
+      cds_config:
+        resource_api_version: V3
+        api_config_source:
+          api_type: GRPC
+          transport_api_version: V3
+          grpc_services:
+            - envoy_grpc:
+                cluster_name: xds_cluster
+    static_resources:
+      clusters:
+      - name: xds_cluster
+        connect_timeout: 0.25s
+        type: STRICT_DNS
+        lb_policy: ROUND_ROBIN
+        typed_extension_protocol_options:
+          envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+            "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+            explicit_http_config:
+              http2_protocol_options:
+                connection_keepalive:
+                  interval: 30s
+                  timeout: 5s
+        load_assignment:
+          cluster_name: xds_cluster
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: harness-operator.harness-autostopping.svc.cluster.local
+                    port_value: 18000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ascontroller
+  name: ascontroller
+  namespace: default
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: ascontroller
+  template:
+    metadata:
+      labels:
+        app: ascontroller
+    spec:
+      containers:
+      - args:
+        - -c
+        - /etc/envoy.yaml
+        command:
+        - envoy
+        image: envoyproxy/envoy:v1.18-latest
+        imagePullPolicy: Always
+        name: envoy
+        ports:
+        - containerPort: 10000
+          protocol: TCP
+          name: listener
+        - containerPort: 9901
+          protocol: TCP
+          name: admin
+        resources: {}
+        volumeMounts:
+        - mountPath: /etc/envoy.yaml
+          name: as-controller-config
+          subPath: envoy.yaml
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: as-controller-config
+        name: as-controller-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ascontroller
+  namespace: default
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 10000
+  selector:
+    app: ascontroller
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: harness-operator
+  name: harness-operator
+  namespace: harness-autostopping
+spec:
+  selector:
+    matchLabels:
+      app: harness-operator
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: harness-operator
+    spec:
+      containers:
+      - name: harness-operator
+        image: registry.gitlab.com/lightwing/lightwing/operator:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 18000
+      imagePullSecrets:
+      - name: gitlab-auth
+      serviceAccountName: harness-autostopping-sa
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: harness-operator
+  namespace: harness-autostopping
+  labels:
+    app: harness-operator
+spec:
+  ports:
+  - port: 18000
+    protocol: TCP
+  selector:
+    app: harness-operator
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: harness-autostopping-sa
+  namespace: harness-autostopping
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: harness-autostopping-sa
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: harness-autostopping-sa
+    namespace: harness-autostopping
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: harness-progress
+  name: harness-progress
+  namespace: harness-autostopping
+spec:
+  selector:
+    matchLabels:
+      app: harness-progress
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: harness-progress
+    spec:
+      containers:
+      - name: harness-progress
+        image: registry.gitlab.com/lightwing/lightwing/httpproxy:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8093
+      imagePullSecrets:
+      - name: gitlab-auth
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: harness-progress
+  namespace: harness-autostopping
+  labels:
+    app: harness-progress
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8093
+  selector:
+    app: harness-progress

@@ -134,6 +134,7 @@ import io.harness.yaml.YamlSdkInitHelper;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -177,6 +178,7 @@ import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.reflections.Reflections;
+import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
@@ -264,6 +266,12 @@ public class VerificationApplication extends Application<VerificationConfigurati
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
             .addAll(CvNextGenRegistrars.morphiaConverters)
             .build();
+      }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder().build();
       }
     });
 
@@ -426,7 +434,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
     return PmsSdkConfiguration.builder()
         .deploymentMode(remote ? SdkDeployMode.REMOTE : SdkDeployMode.LOCAL)
         .moduleType(ModuleType.CV)
-        .mongoConfig(config.getPmsMongoConfig())
         .pipelineServiceInfoProviderClass(CVNGPipelineServiceInfoProvider.class)
         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
         .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())

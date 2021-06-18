@@ -436,7 +436,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     return PmsSdkConfiguration.builder()
         .deploymentMode(SdkDeployMode.REMOTE_IN_PROCESS)
         .moduleType(ModuleType.PMS)
-        .mongoConfig(config.getMongoConfig())
         .pipelineServiceInfoProviderClass(PipelineServiceInternalInfoProvider.class)
         .filterCreationResponseMerger(new PipelineServiceFilterCreationResponseMerger())
         .engineSteps(PipelineServiceStepRegistrar.getEngineSteps())
