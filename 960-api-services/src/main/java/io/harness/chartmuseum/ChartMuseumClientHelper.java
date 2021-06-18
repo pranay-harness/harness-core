@@ -57,8 +57,8 @@ public class ChartMuseumClientHelper {
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
 
   public ChartMuseumServer startS3ChartMuseumServer(String bucket, String basePath, String region,
-      boolean useEc2IamCredentials, char[] accessKey, char[] secretKey) throws Exception {
-    Map<String, String> environment = getEnvForAwsConfig(accessKey, secretKey, useEc2IamCredentials);
+      boolean useEc2IamCredentials, char[] accessKey, char[] secretKey, boolean useIRSA) throws Exception {
+    Map<String, String> environment = getEnvForAwsConfig(accessKey, secretKey, useEc2IamCredentials || useIRSA);
     String evaluatedTemplate = AMAZON_S3_COMMAND_TEMPLATE.replace("${BUCKET_NAME}", bucket)
                                    .replace("${FOLDER_PATH}", basePath == null ? "" : basePath)
                                    .replace("${REGION}", region);
@@ -166,9 +166,9 @@ public class ChartMuseumClientHelper {
   }
 
   @VisibleForTesting
-  static Map<String, String> getEnvForAwsConfig(char[] accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+  static Map<String, String> getEnvForAwsConfig(char[] accessKey, char[] secretKey, boolean useIamCredentials) {
     Map<String, String> environment = new HashMap<>();
-    if (!useEc2IamCredentials) {
+    if (!useIamCredentials) {
       environment.put(AWS_ACCESS_KEY_ID, new String(accessKey));
       environment.put(AWS_SECRET_ACCESS_KEY, new String(secretKey));
     }

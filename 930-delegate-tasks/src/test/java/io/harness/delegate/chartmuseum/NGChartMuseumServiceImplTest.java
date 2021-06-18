@@ -93,7 +93,7 @@ public class NGChartMuseumServiceImplTest extends CategoryTest {
 
     ngChartMuseumService.startChartMuseumServer(s3StoreDelegateConfig, "resources");
     verify(clientHelper, times(1))
-        .startS3ChartMuseumServer(bucketName, folderPath, region, inheritFromDelegate, accessKey, secretKey);
+        .startS3ChartMuseumServer(bucketName, folderPath, region, inheritFromDelegate, accessKey, secretKey, false);
   }
 
   @Test
