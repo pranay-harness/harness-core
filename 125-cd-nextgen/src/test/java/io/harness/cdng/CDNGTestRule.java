@@ -3,6 +3,7 @@ package io.harness.cdng;
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 
 import static org.mockito.Mockito.mock;
 
@@ -29,6 +30,9 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
+import io.harness.outbox.api.OutboxService;
+import io.harness.outbox.api.impl.OutboxDaoImpl;
+import io.harness.outbox.api.impl.OutboxServiceImpl;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
@@ -36,6 +40,7 @@ import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueController;
 import io.harness.registrars.CDServiceAdviserRegistrar;
+import io.harness.repositories.outbox.OutboxEventRepository;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.CDNGRegistrars;
@@ -145,6 +150,12 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
         NGPipelineObjectMapperHelper.configureNGObjectMapper(objectMapper);
         objectMapper.registerModule(new PmsBeansJacksonModule());
         return objectMapper;
+      }
+
+      @Provides
+      @Singleton
+      OutboxService getOutboxService(OutboxEventRepository outboxEventRepository) {
+        return new OutboxServiceImpl(new OutboxDaoImpl(outboxEventRepository), NG_DEFAULT_OBJECT_MAPPER);
       }
 
       @Provides

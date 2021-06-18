@@ -338,7 +338,7 @@ aeriform("//950-log-client:module")
 
 aeriform("//950-log-client:tests")
 
-aeriform("//950-ng-audit-commons:module")
+aeriform("//951-ng-audit-commons:module")
 
 aeriform("//950-ng-authentication-service:module")
 

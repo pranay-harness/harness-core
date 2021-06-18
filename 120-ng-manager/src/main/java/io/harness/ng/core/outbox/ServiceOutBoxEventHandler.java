@@ -1,0 +1,162 @@
+package io.harness.ng.core.outbox;
+
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.audit.beans.AuthenticationInfoDTO.fromSecurityPrincipal;
+import static io.harness.ng.core.utils.NGYamlUtils.getYamlString;
+import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
+import static io.harness.security.PrincipalContextData.PRINCIPAL_CONTEXT;
+
+import io.harness.ModuleType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.Action;
+import io.harness.audit.beans.AuditEntry;
+import io.harness.audit.beans.ResourceDTO;
+import io.harness.audit.beans.ResourceScopeDTO;
+import io.harness.audit.client.api.AuditClientService;
+import io.harness.context.GlobalContext;
+import io.harness.ng.core.events.ServiceCreateEvent;
+import io.harness.ng.core.events.ServiceDeleteEvent;
+import io.harness.ng.core.events.ServiceOutboxEvents;
+import io.harness.ng.core.events.ServiceUpdateEvent;
+import io.harness.ng.core.events.ServiceUpsertEvent;
+import io.harness.ng.core.service.entity.ServiceRequest;
+import io.harness.outbox.OutboxEvent;
+import io.harness.outbox.api.OutboxEventHandler;
+import io.harness.security.PrincipalContextData;
+import io.harness.security.dto.Principal;
+import io.harness.security.dto.ServicePrincipal;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Inject;
+import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
+public class ServiceOutBoxEventHandler implements OutboxEventHandler {
+  private final ObjectMapper objectMapper;
+  private final AuditClientService auditClientService;
+
+  @Inject
+  ServiceOutBoxEventHandler(AuditClientService auditClientService) {
+    this.auditClientService = auditClientService;
+    this.objectMapper = NG_DEFAULT_OBJECT_MAPPER;
+  }
+
+  private boolean handlerServiceCreated(OutboxEvent outboxEvent) throws IOException {
+    GlobalContext globalContext = outboxEvent.getGlobalContext();
+    ServiceCreateEvent serviceCreateEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), ServiceCreateEvent.class);
+    AuditEntry auditEntry =
+        AuditEntry.builder()
+            .action(Action.CREATE)
+            .module(ModuleType.CORE)
+            .insertId(outboxEvent.getId())
+            .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+            .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+            .timestamp(outboxEvent.getCreatedAt())
+            .newYaml(getYamlString(ServiceRequest.builder().service(serviceCreateEvent.getService()).build()))
+            .build();
+
+    Principal principal = null;
+    if (globalContext.get(PRINCIPAL_CONTEXT) == null) {
+      principal = new ServicePrincipal(NG_MANAGER.getServiceId());
+    } else if (globalContext.get(PRINCIPAL_CONTEXT) != null) {
+      principal = ((PrincipalContextData) globalContext.get(PRINCIPAL_CONTEXT)).getPrincipal();
+    }
+    return auditClientService.publishAudit(auditEntry, fromSecurityPrincipal(principal), globalContext);
+  }
+
+  private boolean handlerServiceUpserted(OutboxEvent outboxEvent) throws IOException {
+    GlobalContext globalContext = outboxEvent.getGlobalContext();
+    ServiceUpsertEvent serviceUpsertEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), ServiceUpsertEvent.class);
+    AuditEntry auditEntry =
+        AuditEntry.builder()
+            .action(Action.UPSERT)
+            .module(ModuleType.CORE)
+            .insertId(outboxEvent.getId())
+            .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+            .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+            .timestamp(outboxEvent.getCreatedAt())
+            .newYaml(getYamlString(ServiceRequest.builder().service(serviceUpsertEvent.getService()).build()))
+            .build();
+
+    Principal principal = null;
+    if (globalContext.get(PRINCIPAL_CONTEXT) == null) {
+      principal = new ServicePrincipal(NG_MANAGER.getServiceId());
+    } else if (globalContext.get(PRINCIPAL_CONTEXT) != null) {
+      principal = ((PrincipalContextData) globalContext.get(PRINCIPAL_CONTEXT)).getPrincipal();
+    }
+    return auditClientService.publishAudit(auditEntry, fromSecurityPrincipal(principal), globalContext);
+  }
+  private boolean handlerServiceUpdated(OutboxEvent outboxEvent) throws IOException {
+    GlobalContext globalContext = outboxEvent.getGlobalContext();
+    ServiceUpdateEvent serviceUpdateEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), ServiceUpdateEvent.class);
+    AuditEntry auditEntry =
+        AuditEntry.builder()
+            .action(Action.UPSERT)
+            .module(ModuleType.CORE)
+            .insertId(outboxEvent.getId())
+            .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+            .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+            .timestamp(outboxEvent.getCreatedAt())
+            .newYaml(getYamlString(ServiceRequest.builder().service(serviceUpdateEvent.getNewService()).build()))
+            .oldYaml(getYamlString(ServiceRequest.builder().service(serviceUpdateEvent.getOldService()).build()))
+            .build();
+
+    Principal principal = null;
+    if (globalContext.get(PRINCIPAL_CONTEXT) == null) {
+      principal = new ServicePrincipal(NG_MANAGER.getServiceId());
+    } else if (globalContext.get(PRINCIPAL_CONTEXT) != null) {
+      principal = ((PrincipalContextData) globalContext.get(PRINCIPAL_CONTEXT)).getPrincipal();
+    }
+    return auditClientService.publishAudit(auditEntry, fromSecurityPrincipal(principal), globalContext);
+  }
+  private boolean handlerServiceDeleted(OutboxEvent outboxEvent) throws IOException {
+    GlobalContext globalContext = outboxEvent.getGlobalContext();
+    ServiceDeleteEvent serviceDeleteEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), ServiceDeleteEvent.class);
+    AuditEntry auditEntry =
+        AuditEntry.builder()
+            .action(Action.DELETE)
+            .module(ModuleType.CORE)
+            .insertId(outboxEvent.getId())
+            .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
+            .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
+            .timestamp(outboxEvent.getCreatedAt())
+            .oldYaml(getYamlString(ServiceRequest.builder().service(serviceDeleteEvent.getService()).build()))
+            .build();
+
+    Principal principal = null;
+    if (globalContext.get(PRINCIPAL_CONTEXT) == null) {
+      principal = new ServicePrincipal(NG_MANAGER.getServiceId());
+    } else if (globalContext.get(PRINCIPAL_CONTEXT) != null) {
+      principal = ((PrincipalContextData) globalContext.get(PRINCIPAL_CONTEXT)).getPrincipal();
+    }
+    return auditClientService.publishAudit(auditEntry, fromSecurityPrincipal(principal), globalContext);
+  }
+
+  @Override
+  public boolean handle(OutboxEvent outboxEvent) {
+    try {
+      switch (outboxEvent.getEventType()) {
+        case ServiceOutboxEvents.SERVICE_CREATED:
+          return handlerServiceCreated(outboxEvent);
+        case ServiceOutboxEvents.SERVICE_UPSERTED:
+          return handlerServiceUpserted(outboxEvent);
+        case ServiceOutboxEvents.SERVICE_UPDATED:
+          return handlerServiceUpdated(outboxEvent);
+        case ServiceOutboxEvents.SERVICE_DELETED:
+          return handlerServiceDeleted(outboxEvent);
+        default:
+          return false;
+      }
+
+    } catch (IOException ex) {
+      return false;
+    }
+  }
+}

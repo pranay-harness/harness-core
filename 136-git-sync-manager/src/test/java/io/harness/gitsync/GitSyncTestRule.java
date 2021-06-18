@@ -1,6 +1,7 @@
 package io.harness.gitsync;
 
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
+import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 
 import static org.mockito.Mockito.mock;
 
@@ -27,7 +28,11 @@ import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
 import io.harness.ng.userprofile.services.api.SourceCodeManagerService;
 import io.harness.ng.webhook.services.api.WebhookEventService;
+import io.harness.outbox.api.OutboxService;
+import io.harness.outbox.api.impl.OutboxDaoImpl;
+import io.harness.outbox.api.impl.OutboxServiceImpl;
 import io.harness.persistence.HPersistence;
+import io.harness.repositories.outbox.OutboxEventRepository;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoModule;
@@ -138,6 +143,12 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
         return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
             .addAll(ManagerRegistrars.springConverters)
             .build();
+      }
+
+      @Provides
+      @Singleton
+      OutboxService getOutboxService(OutboxEventRepository outboxEventRepository) {
+        return new OutboxServiceImpl(new OutboxDaoImpl(outboxEventRepository), NG_DEFAULT_OBJECT_MAPPER);
       }
 
       @Provides
