@@ -1,4 +1,4 @@
-package io.harness.pms.listener.node.resume;
+package io.harness.pms.sdk.execution.events.node.resume;
 
 import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
 

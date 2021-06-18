@@ -1,7 +1,9 @@
-package io.harness.engine.utils;
+package io.harness.engine.pms.commons.events;
 
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.eventsframework.EventsFrameworkConstants.DUMMY_REDIS_URL;
+import static io.harness.pms.events.PmsEventFrameworkConstants.PIPELINE_MONITORING_ENABLED;
+import static io.harness.pms.events.PmsEventFrameworkConstants.SERVICE_NAME;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
@@ -9,15 +11,18 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.utils.ProducerCacheKey.EventCategory;
+import io.harness.beans.FeatureName;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.PmsFeatureFlagService;
 import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.plan.ConsumerConfig.ConfigCase;
 import io.harness.pms.contracts.plan.Redis;
+import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.sdk.PmsSdkInstance;
 import io.harness.pms.sdk.PmsSdkInstance.PmsSdkInstanceKeys;
 import io.harness.redis.RedisConfig;
@@ -27,13 +32,14 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.ByteString;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
@@ -43,11 +49,12 @@ import org.springframework.data.mongodb.core.query.Query;
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 @Slf4j
-public class OrchestrationEventsFrameworkUtils {
+public class PmsEventSender {
   private static final RetryPolicy<Object> retryPolicy = RetryUtils.getRetryPolicy("Error Getting Producer..Retrying",
       "Failed to obtain producer", Collections.singletonList(ExecutionException.class), Duration.ofMillis(10), 3, log);
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationModuleConfig moduleConfig;
+  @Inject private PmsFeatureFlagService pmsFeatureFlagService;
 
   private final LoadingCache<ProducerCacheKey, Producer> producerCache =
       CacheBuilder.newBuilder()
@@ -60,67 +67,34 @@ public class OrchestrationEventsFrameworkUtils {
             }
           });
 
-  public Producer obtainProducerForInterrupt(@NonNull String serviceName) {
-    return Failsafe.with(retryPolicy)
-        .get(()
-                 -> producerCache.get(ProducerCacheKey.builder()
-                                          .eventCategory(EventCategory.INTERRUPT_EVENT)
-                                          .serviceName(serviceName)
-                                          .build()));
+  public String sendEvent(
+      ByteString eventData, PmsEventCategory eventCategory, String serviceName, String accountId, boolean isMonitored) {
+    log.info("Sending {} event for {} to the producer", eventCategory, serviceName);
+    Producer producer = obtainProducer(eventCategory, serviceName);
+
+    ImmutableMap.Builder<String, String> metadataBuilder =
+        ImmutableMap.<String, String>builder().put(SERVICE_NAME, serviceName);
+    if (isMonitored && pmsFeatureFlagService.isEnabled(accountId, FeatureName.PIPELINE_MONITORING)) {
+      metadataBuilder.put(PIPELINE_MONITORING_ENABLED, "true");
+    }
+
+    String messageId =
+        producer.send(Message.newBuilder().putAllMetadata(metadataBuilder.build()).setData(eventData).build());
+    log.info("Successfully Sent {} event for {} to the producer. MessageId {}", eventCategory, serviceName, messageId);
+    return messageId;
   }
 
-  public Producer obtainProducerForOrchestrationEvent(String serviceName) {
-    return Failsafe.with(retryPolicy)
-        .get(()
-                 -> producerCache.get(ProducerCacheKey.builder()
-                                          .eventCategory(EventCategory.ORCHESTRATION_EVENT)
-                                          .serviceName(serviceName)
-                                          .build()));
-  }
-
-  public Producer obtainProducerForFacilitationEvent(String serviceName) {
-    return Failsafe.with(retryPolicy)
-        .get(()
-                 -> producerCache.get(ProducerCacheKey.builder()
-                                          .eventCategory(EventCategory.FACILITATOR_EVENT)
-                                          .serviceName(serviceName)
-                                          .build()));
-  }
-
-  public Producer obtainProducerForNodeStart(String serviceName) {
-    return Failsafe.with(retryPolicy)
-        .get(()
-                 -> producerCache.get(ProducerCacheKey.builder()
-                                          .eventCategory(EventCategory.NODE_START)
-                                          .serviceName(serviceName)
-                                          .build()));
-  }
-
-  public Producer obtainProducerForProgressEvent(String serviceName) {
-    return Failsafe.with(retryPolicy)
-        .get(()
-                 -> producerCache.get(ProducerCacheKey.builder()
-                                          .eventCategory(EventCategory.PROGRESS_EVENT)
-                                          .serviceName(serviceName)
-                                          .build()));
-  }
-
-  public Producer obtainProducerForNodeAdviseEvent(String serviceName) {
-    return Failsafe.with(retryPolicy)
-        .get(()
-                 -> producerCache.get(ProducerCacheKey.builder()
-                                          .eventCategory(EventCategory.NODE_ADVISE)
-                                          .serviceName(serviceName)
-                                          .build()));
-  }
-
-  public Producer obtainProducerForNodeResumeEvent(String serviceName) {
-    return Failsafe.with(retryPolicy)
-        .get(()
-                 -> producerCache.get(ProducerCacheKey.builder()
-                                          .eventCategory(EventCategory.NODE_RESUME)
-                                          .serviceName(serviceName)
-                                          .build()));
+  @VisibleForTesting
+  Producer obtainProducer(PmsEventCategory eventCategory, String serviceName) {
+    Producer producer =
+        Failsafe.with(retryPolicy)
+            .get(()
+                     -> producerCache.get(
+                         ProducerCacheKey.builder().eventCategory(eventCategory).serviceName(serviceName).build()));
+    if (producer == null) {
+      throw new RuntimeException("Cannot create Event Framework producer");
+    }
+    return producer;
   }
 
   @VisibleForTesting

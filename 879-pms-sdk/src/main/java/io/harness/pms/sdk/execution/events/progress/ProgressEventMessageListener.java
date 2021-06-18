@@ -1,4 +1,4 @@
-package io.harness.pms.listener.progress;
+package io.harness.pms.sdk.execution.events.progress;
 
 import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
 

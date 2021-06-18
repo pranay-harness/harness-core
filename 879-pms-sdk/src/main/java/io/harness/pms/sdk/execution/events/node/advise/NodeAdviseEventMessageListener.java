@@ -1,4 +1,4 @@
-package io.harness.pms.listener.node.advise;
+package io.harness.pms.sdk.execution.events.node.advise;
 
 import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
 

@@ -1,20 +1,15 @@
 package io.harness.engine.pms.start;
 
-import static io.harness.pms.events.PmsEventFrameworkConstants.PIPELINE_MONITORING_ENABLED;
-import static io.harness.pms.events.PmsEventFrameworkConstants.SERVICE_NAME;
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
 import static java.lang.String.format;
 
-import io.harness.beans.FeatureName;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.engine.ExecutionCheck;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionTimeoutCallback;
 import io.harness.engine.interrupts.InterruptService;
-import io.harness.engine.utils.OrchestrationEventsFrameworkUtils;
-import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.producer.Message;
+import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -23,6 +18,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.start.NodeStartEvent;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
+import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.serializer.KryoSerializer;
@@ -42,14 +38,12 @@ import com.google.protobuf.ByteString;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class NodeStartHelper {
-  @Inject private OrchestrationEventsFrameworkUtils eventsFrameworkUtils;
+  @Inject private PmsEventSender eventSender;
   @Inject private InterruptService interruptService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private KryoSerializer kryoSerializer;
@@ -70,6 +64,8 @@ public class NodeStartHelper {
   }
 
   private void sendEvent(NodeExecution nodeExecution, ByteString passThroughData) {
+    String serviceName = nodeExecution.getNode().getServiceName();
+    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
     NodeStartEvent nodeStartEvent = NodeStartEvent.newBuilder()
                                         .setAmbiance(nodeExecution.getAmbiance())
                                         .addAllRefObjects(nodeExecution.getNode().getRebObjectsList())
@@ -78,15 +74,7 @@ public class NodeStartHelper {
                                             nodeExecution.getResolvedStepParameters().toJson())))
                                         .setMode(nodeExecution.getMode())
                                         .build();
-    Producer producer = eventsFrameworkUtils.obtainProducerForNodeStart(nodeExecution.getNode().getServiceName());
-    Map<String, String> metadataMap = new HashMap<>();
-    metadataMap.put(SERVICE_NAME, nodeExecution.getNode().getServiceName());
-    if (pmsFeatureFlagService.isEnabled(
-            AmbianceUtils.getAccountId(nodeStartEvent.getAmbiance()), FeatureName.PIPELINE_MONITORING)) {
-      metadataMap.put(PIPELINE_MONITORING_ENABLED, "true");
-    }
-    producer.send(Message.newBuilder().putAllMetadata(metadataMap).setData(nodeStartEvent.toByteString()).build());
-    log.info("Successfully Sent NodeStart event to the producer");
+    eventSender.sendEvent(nodeStartEvent.toByteString(), PmsEventCategory.NODE_START, serviceName, accountId, true);
   }
 
   private NodeExecution prepareNodeExecutionForInvocation(Ambiance ambiance) {
