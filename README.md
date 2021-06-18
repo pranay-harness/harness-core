@@ -282,7 +282,7 @@ helper shell scripts:
 2. Import `portal` as a Bazel project
    1. Open `File > Import Bazel Project...`
    1. Enter `/path/to/repo/portal` for Workspace, click Next
-   1. Select `Import project view file` and enter `.bazelproject` as the Project view
+   1. Select `Import project view file` and enter `project/bazelproject` as the Project view
 3. Install ClangFormatIJ Plugin: https://plugins.jetbrains.com/plugin/8396-clangformatij
    (use `Ctrl/Cmd-Alt-K` to format current statement or the selection)
 
