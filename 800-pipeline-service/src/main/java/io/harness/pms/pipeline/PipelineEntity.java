@@ -68,6 +68,14 @@ public class PipelineEntity
                  .field(PipelineEntityKeys.yamlGitConfigRef)
                  .field(PipelineEntityKeys.branch)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_organizationId_projectId_lastUpdatedAt")
+                 .field(PipelineEntityKeys.accountId)
+                 .field(PipelineEntityKeys.orgIdentifier)
+                 .field(PipelineEntityKeys.lastUpdatedAt)
+                 .field(PipelineEntityKeys.projectIdentifier)
+                 .build())
+        .add(CompoundMongoIndex.builder().name("lastUpdatedAt_idx").field(PipelineEntityKeys.lastUpdatedAt).build())
         .build();
   }
   @Setter @NonFinal @Id @org.mongodb.morphia.annotations.Id String uuid;
