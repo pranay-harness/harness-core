@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.manifest.ManifestStoreType;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 import io.harness.filters.ConnectorRefExtractorHelper;
 import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
@@ -29,7 +30,8 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(ManifestStoreType.GCS)
 @SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("gcsStore")
-public class GcsStoreConfig implements StoreConfig, Visitable, WithConnectorRef {
+public class GcsStoreConfig
+    implements io.harness.cdng.manifest.yaml.storeConfig.StoreConfig, Visitable, WithConnectorRef {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> connectorRef;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> bucketName;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> folderPath;
@@ -40,12 +42,12 @@ public class GcsStoreConfig implements StoreConfig, Visitable, WithConnectorRef 
   }
 
   @Override
-  public StoreConfig cloneInternal() {
+  public io.harness.cdng.manifest.yaml.storeConfig.StoreConfig cloneInternal() {
     return GcsStoreConfig.builder().connectorRef(connectorRef).bucketName(bucketName).folderPath(folderPath).build();
   }
 
   @Override
-  public StoreConfig applyOverrides(StoreConfig overrideConfig) {
+  public io.harness.cdng.manifest.yaml.storeConfig.StoreConfig applyOverrides(StoreConfig overrideConfig) {
     GcsStoreConfig gcsStoreConfig = (GcsStoreConfig) overrideConfig;
     GcsStoreConfig resultantGcsStore = this;
     if (!ParameterField.isNull(gcsStoreConfig.getConnectorRef())) {

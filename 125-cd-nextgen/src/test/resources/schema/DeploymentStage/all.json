@@ -1427,7 +1427,11 @@
           "$ref": "#/definitions/ExecutionElementConfig"
         },
         "type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "KubernetesDirect",
+            "KubernetesGcp"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -2194,12 +2198,25 @@
     },
     "ManifestConfig": {
       "type": "object",
+      "required": [
+        "identifier",
+        "spec",
+        "type"
+      ],
       "properties": {
         "identifier": {
           "type": "string"
         },
         "type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "HelmChart",
+            "K8sManifest",
+            "Kustomize",
+            "OpenshiftParam",
+            "OpenshiftTemplate",
+            "Values"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -2885,6 +2902,7 @@
     "PrimaryArtifact": {
       "type": "object",
       "required": [
+        "spec",
         "type"
       ],
       "properties": {
@@ -3261,9 +3279,17 @@
     },
     "ServiceDefinition": {
       "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
       "properties": {
         "type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "Kubernetes",
+            "NativeHelm"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -3729,6 +3755,11 @@
     },
     "StepElementConfig": {
       "type": "object",
+      "required": [
+        "identifier",
+        "name",
+        "type"
+      ],
       "properties": {
         "description": {
           "type": "string"
@@ -4202,7 +4233,16 @@
           "type": "string"
         },
         "type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "Git",
+            "Github",
+            "Bitbucket",
+            "GitLab",
+            "Http",
+            "S3",
+            "Gcs"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
