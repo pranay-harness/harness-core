@@ -2,6 +2,7 @@ package io.harness.ng.core.service.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 
 import io.harness.EntityType;
@@ -30,6 +31,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.mongodb.client.result.UpdateResult;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -63,7 +65,7 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Service [%s] under Project[%s], Organization [%s] already exists";
   private static final Integer QUERY_PAGE_SIZE = 10000;
-  private final TransactionTemplate transactionTemplate;
+  @Inject @Named(OUTBOX_TRANSACTION_TEMPLATE) private TransactionTemplate transactionTemplate;
   private final OutboxService outboxService;
   private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
 
