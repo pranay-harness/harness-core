@@ -49,6 +49,7 @@ public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAwar
   private String messageCode;
   private String repoUrl;
   private String branch;
+  @Default private Long cutOffTime = 0L;
 
   // Any special event metadata which has to go back from queue as is can be pushed in this interface.
   EventMetadata eventMetadata;
