@@ -15,7 +15,7 @@ public class KubernetesValidationHandler implements ConnectorValidationHandler {
   public ConnectorValidationResult validate(
       ConnectorValidationParams connectorValidationParams, String accountIdentifier) {
     final K8sValidationParams k8sValidationParams = (K8sValidationParams) connectorValidationParams;
-    return k8sTaskHelperBase.validate(k8sValidationParams.getKubernetesClusterConfigDTO(), accountIdentifier,
-        k8sValidationParams.getEncryptedDataDetails());
+    return k8sTaskHelperBase.validate(
+        k8sValidationParams.getKubernetesClusterConfigDTO(), k8sValidationParams.getEncryptedDataDetails());
   }
 }

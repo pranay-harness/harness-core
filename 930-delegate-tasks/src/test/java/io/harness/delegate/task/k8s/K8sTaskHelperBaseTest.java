@@ -1,6 +1,8 @@
 package io.harness.delegate.task.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType.USER_PASSWORD;
+import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static io.harness.helm.HelmConstants.HELM_RELEASE_LABEL;
 import static io.harness.helm.HelmSubCommandType.TEMPLATE;
 import static io.harness.k8s.manifest.ManifestHelper.processYaml;
@@ -46,6 +48,10 @@ import io.harness.category.element.UnitTests;
 import io.harness.concurent.HTimeLimiterMocker;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
@@ -59,7 +65,12 @@ import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
+import io.harness.exception.ExplanationException;
 import io.harness.exception.GitOperationException;
+import io.harness.exception.HintException;
+import io.harness.exception.UrlNotProvidedException;
+import io.harness.exception.UrlNotReachableException;
+import io.harness.exception.WingsException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.ApplyCommand;
 import io.harness.k8s.kubectl.DeleteCommand;
@@ -80,6 +91,7 @@ import io.harness.logging.LogLevel;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.shell.SshSessionConfig;
 
 import com.google.common.base.Charsets;
@@ -117,11 +129,14 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import me.snowdrop.istio.api.networking.v1alpha3.Subset;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -133,6 +148,7 @@ import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @OwnedBy(CDP)
+@RunWith(JUnitParamsRunner.class)
 public class K8sTaskHelperBaseTest extends CategoryTest {
   private static final KubernetesConfig KUBERNETES_CONFIG = KubernetesConfig.builder().build();
   private static final String DEFAULT = "default";
@@ -148,6 +164,8 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Mock private KustomizeTaskHelper kustomizeTaskHelper;
   @Mock private HelmTaskHelperBase helmTaskHelperBase;
   @Mock private OpenShiftDelegateService openShiftDelegateService;
+  @Mock private K8sYamlToDelegateDTOMapper mockK8sYamlToDelegateDTOMapper;
+  @Mock private SecretDecryptionService mockSecretDecryptionService;
 
   @Inject @InjectMocks private K8sTaskHelperBase k8sTaskHelperBase;
 
@@ -1168,5 +1186,38 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
       resources.add(processYaml(fileContents).get(0));
     });
     return resources;
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  @Parameters(method = "badUrlExceptions")
+  public void testValidateMissingURL(WingsException we) {
+    KubernetesClusterConfigDTO clusterConfigDTO =
+        KubernetesClusterConfigDTO.builder()
+            .credential(KubernetesCredentialDTO.builder()
+                            .kubernetesCredentialType(MANUAL_CREDENTIALS)
+                            .config(KubernetesClusterDetailsDTO.builder()
+                                        .auth(KubernetesAuthDTO.builder().authType(USER_PASSWORD).build())
+                                        .build())
+                            .build())
+            .build();
+    doReturn(KubernetesConfig.builder().build())
+        .when(mockK8sYamlToDelegateDTOMapper)
+        .createKubernetesConfigFromClusterConfig(clusterConfigDTO);
+    doThrow(new UrlNotProvidedException("URL not provided"))
+        .when(mockKubernetesContainerService)
+        .validateMasterUrl(any(KubernetesConfig.class));
+    try {
+      k8sTaskHelperBase.validate(clusterConfigDTO, emptyList());
+    } catch (HintException he) {
+      assertThat(he.getMessage()).contains("master URL");
+      assertThat(he.getCause()).isInstanceOf(ExplanationException.class);
+    }
+  }
+
+  private Object[] badUrlExceptions() {
+    return new Object[] {
+        new UrlNotProvidedException("URL not provided"), new UrlNotReachableException("URL not reachable")};
   }
 }
