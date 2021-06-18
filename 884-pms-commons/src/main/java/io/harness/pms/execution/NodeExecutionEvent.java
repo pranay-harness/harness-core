@@ -56,7 +56,7 @@ public class NodeExecutionEvent extends Queuable implements WithMonitoring {
     logContext.putAll(AmbianceUtils.logContextMap(nodeExecution.getAmbiance()));
     logContext.put("module", nodeExecution.getNode().getServiceName());
     logContext.put("pipelineIdentifier", nodeExecution.getAmbiance().getMetadata().getPipelineIdentifier());
-    return new ThreadAutoLogContext(logContext, OVERRIDE_NESTS);
+    return new ThreadAutoLogContext(logContext);
   }
 
   @Override
