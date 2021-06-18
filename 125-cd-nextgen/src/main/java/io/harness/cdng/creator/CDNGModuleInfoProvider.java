@@ -147,4 +147,11 @@ public class CDNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
     }
     return cdStageModuleInfoBuilder.build();
   }
+
+  @Override
+  public boolean shouldRun(OrchestrationEvent event) {
+    StepType stepType = AmbianceUtils.getCurrentStepType(event.getAmbiance());
+    return isServiceNodeAndCompleted(stepType, event.getStatus())
+        || isInfrastructureNodeAndCompleted(stepType, event.getStatus());
+  }
 }

@@ -22,6 +22,7 @@ import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.encryption.SecretRefData;
+import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -50,6 +51,7 @@ public class SplunkConnectorTest extends CategoryTest {
   @InjectMocks DefaultConnectorServiceImpl connectorService;
   @Mock SecretRefInputValidationHelper secretRefInputValidationHelper;
   @Mock ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
+  @Mock GitSyncSdkService gitSyncSdkService;
 
   String userName = "userName";
   String password = "password";
@@ -94,9 +96,10 @@ public class SplunkConnectorTest extends CategoryTest {
                                          .build();
     connectorRequest = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
     connectorResponse = ConnectorResponseDTO.builder().connector(connectorInfo).build();
-    when(connectorRepository.save(connector, connectorRequest, ADD)).thenReturn(connector);
+    when(connectorRepository.save(connector, connectorRequest, ADD, null)).thenReturn(connector);
     when(connectorMapper.writeDTO(connector)).thenReturn(connectorResponse);
     when(connectorMapper.toConnector(connectorRequest, accountIdentifier)).thenReturn(connector);
+    when(gitSyncSdkService.isGitSyncEnabled(accountIdentifier, null, null)).thenReturn(true);
     doNothing().when(secretRefInputValidationHelper).validateTheSecretInput(any(), any());
   }
 

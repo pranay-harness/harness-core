@@ -1,37 +1,31 @@
 package io.harness.engine.pms.advise.publisher;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.pms.events.PmsEventFrameworkConstants.PIPELINE_MONITORING_ENABLED;
-import static io.harness.pms.events.PmsEventFrameworkConstants.SERVICE_NAME;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.utils.OrchestrationEventsFrameworkUtils;
-import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.producer.Message;
+import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.InterruptEffect;
-import io.harness.pms.PmsFeatureFlagService;
 import io.harness.pms.contracts.advisers.AdviseEvent;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.execution.utils.AmbianceUtils;
 
 import com.google.inject.Inject;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class RedisNodeAdviseEventPublisher implements NodeAdviseEventPublisher {
   @Inject NodeExecutionService nodeExecutionService;
-  @Inject PmsFeatureFlagService pmsFeatureFlagService;
-  @Inject private OrchestrationEventsFrameworkUtils eventsFrameworkUtils;
+  @Inject private PmsEventSender eventSender;
 
   @Override
   public String publishEvent(String nodeExecutionId, Status fromStatus) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    String serviceName = nodeExecution.getNode().getServiceName();
+    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
     AdviseEvent adviseEvent =
         AdviseEvent.newBuilder()
             .setAmbiance(nodeExecution.getAmbiance())
@@ -44,19 +38,8 @@ public class RedisNodeAdviseEventPublisher implements NodeAdviseEventPublisher {
             .setFromStatus(fromStatus)
             .build();
 
-    Producer producer = eventsFrameworkUtils.obtainProducerForNodeAdviseEvent(nodeExecution.getNode().getServiceName());
-
-    // TODO : Refactor this and make generic
-    Map<String, String> metadataMap = new HashMap<>();
-    metadataMap.put(SERVICE_NAME, nodeExecution.getNode().getServiceName());
-    if (pmsFeatureFlagService.isEnabled(
-            AmbianceUtils.getAccountId(nodeExecution.getAmbiance()), FeatureName.PIPELINE_MONITORING)) {
-      metadataMap.put(PIPELINE_MONITORING_ENABLED, "true");
-    }
-
-    producer.send(Message.newBuilder().putAllMetadata(metadataMap).setData(adviseEvent.toByteString()).build());
-
-    return adviseEvent.getNotifyId();
+    return eventSender.sendEvent(
+        adviseEvent.toByteString(), PmsEventCategory.NODE_ADVISE, serviceName, accountId, true);
   }
 
   private boolean isPreviousAdviserExpired(List<InterruptEffect> interruptHistories) {
