@@ -626,12 +626,18 @@ public class ScmServiceClientImpl implements ScmServiceClient {
 
   private String getLatestShaOfBranch(
       String slug, Provider gitProvider, String defaultBranchName, SCMGrpc.SCMBlockingStub scmBlockingStub) {
-    GetLatestCommitResponse latestCommit = scmBlockingStub.getLatestCommit(GetLatestCommitRequest.newBuilder()
-                                                                               .setBranch(defaultBranchName)
-                                                                               .setSlug(slug)
-                                                                               .setProvider(gitProvider)
-                                                                               .build());
-    return latestCommit.getCommitId();
+    try {
+      GetLatestCommitResponse latestCommit = scmBlockingStub.getLatestCommit(GetLatestCommitRequest.newBuilder()
+                                                                                 .setBranch(defaultBranchName)
+                                                                                 .setSlug(slug)
+                                                                                 .setProvider(gitProvider)
+                                                                                 .build());
+      return latestCommit.getCommitId();
+    } catch (Exception ex) {
+      log.error(
+          "Error encountered while getting latest commit of branch [{}] in slug [{}]", defaultBranchName, slug, ex);
+      throw new ExplanationException(ex.getMessage(), ex);
+    }
   }
 
   private String getGithubToken(Provider gitProvider) {

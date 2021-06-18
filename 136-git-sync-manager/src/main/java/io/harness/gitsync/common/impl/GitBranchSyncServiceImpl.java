@@ -100,8 +100,8 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
             .collect(toList());
     gitToHarnessProgressService.updateFilesInProgressRecord(gitToHarnessProgressRecordId, gitToHarnessFilesToProcess);
     String commitId = getCommitId(harnessFilesOfBranch);
-    gitToHarnessProcessorService.processFiles(accountIdentifier, gitToHarnessFilesToProcess, branchName, yamlGitConfig,
-        commitId, gitToHarnessProgressRecordId);
+    gitToHarnessProcessorService.processFiles(accountIdentifier, gitToHarnessFilesToProcess, branchName,
+        yamlGitConfig.getRepo(), commitId, gitToHarnessProgressRecordId);
   }
 
   private String getCommitId(List<GitFileChangeDTO> harnessFilesOfBranch) {
