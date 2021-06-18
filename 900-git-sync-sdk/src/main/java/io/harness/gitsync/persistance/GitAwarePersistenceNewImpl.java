@@ -56,7 +56,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   public GitAwarePersistenceNewImpl(MongoTemplate mongoTemplate, GitSyncSdkService gitSyncSdkService,
       Map<String, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMap, SCMGitSyncHelper scmGitSyncHelper,
       GitSyncMsvcHelper gitSyncMsvcHelper, @Named("GitSyncObjectMapper") ObjectMapper objectMapper,
-      @Named("OUTBOX_TRANSACTION_TEMPLATE") TransactionTemplate transactionTemplate) {
+      TransactionTemplate transactionTemplate) {
     this.mongoTemplate = mongoTemplate;
     this.gitSyncSdkService = gitSyncSdkService;
     this.gitPersistenceHelperServiceMap = gitPersistenceHelperServiceMap;

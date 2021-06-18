@@ -25,7 +25,6 @@ import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.git.model.ChangeType;
-import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.rule.Owner;
 
@@ -61,7 +60,6 @@ public class DatadogConnectorTest extends CategoryTest {
   @Mock ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
   @Mock Map<String, ConnectionValidator> connectionValidatorMap;
   @InjectMocks @Spy DefaultConnectorServiceImpl connectorService;
-  @Mock GitSyncSdkService gitSyncSdkService;
   DatadogConnector datadogConnector;
   DatadogConnectorDTO datadogConnectorDTO;
   ConnectorDTO connectorDTO;
@@ -73,10 +71,9 @@ public class DatadogConnectorTest extends CategoryTest {
     connectorMapper = mock(ConnectorMapper.class);
     MockitoAnnotations.initMocks(this);
     create();
-    when(connectorRepository.save(datadogConnector, connectorDTO, ChangeType.ADD, null)).thenReturn(datadogConnector);
+    when(connectorRepository.save(datadogConnector, connectorDTO, ChangeType.ADD)).thenReturn(datadogConnector);
     when(connectorMapper.writeDTO(datadogConnector)).thenReturn(connectorResponseDTO);
     when(connectorMapper.toConnector(connectorDTO, accountIdentifier)).thenReturn(datadogConnector);
-    when(gitSyncSdkService.isGitSyncEnabled(accountIdentifier, null, null)).thenReturn(true);
     doNothing().when(connectorService).assurePredefined(any(), any());
   }
 
