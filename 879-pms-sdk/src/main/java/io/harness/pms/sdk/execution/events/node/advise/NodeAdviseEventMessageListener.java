@@ -26,7 +26,7 @@ public class NodeAdviseEventMessageListener extends PmsAbstractMessageListener<A
   }
 
   @Override
-  public boolean processMessage(AdviseEvent event, Map<String, String> metadataMap, Long timestamp) {
-    return nodeAdviseEventHandler.handleEvent(event, metadataMap, timestamp);
+  public void processMessage(AdviseEvent event, Map<String, String> metadataMap, Long timestamp) {
+    nodeAdviseEventHandler.handleEvent(event, metadataMap, timestamp);
   }
 }

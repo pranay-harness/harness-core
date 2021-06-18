@@ -15,7 +15,7 @@ public class InterruptEventHandlerImpl implements InterruptEventHandler {
   @Inject private InterruptEventListenerHelper interruptEventListenerHelper;
 
   @Override
-  public boolean handleEvent(InterruptEvent event) {
+  public void handleEvent(InterruptEvent event) {
     try (AutoLogContext ignore = InterruptEventUtils.obtainLogContext(event)) {
       InterruptType interruptType = event.getType();
       switch (interruptType) {
@@ -32,6 +32,5 @@ public class InterruptEventHandlerImpl implements InterruptEventHandler {
           noop();
       }
     }
-    return true;
   }
 }

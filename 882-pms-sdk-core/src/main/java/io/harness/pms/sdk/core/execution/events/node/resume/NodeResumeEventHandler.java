@@ -78,7 +78,7 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
   }
 
   @Override
-  protected boolean handleEventWithContext(NodeResumeEvent event) {
+  protected void handleEventWithContext(NodeResumeEvent event) {
     ExecutableProcessor processor = executableProcessorFactory.obtainProcessor(event.getExecutionMode());
     Map<String, ResponseData> response = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(event.getResponseMap())) {
@@ -101,15 +101,13 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
                                     .build())
                 .build();
         sdkNodeExecutionService.handleStepResponse(nodeExecutionId, stepResponse);
-        return true;
+        return;
       }
 
       processor.handleResume(buildResumePackage(event, response));
-      return true;
     } catch (Exception ex) {
       log.error("Error while resuming execution", ex);
       sdkNodeExecutionService.handleStepResponse(nodeExecutionId, NodeExecutionUtils.constructStepResponse(ex));
-      return false;
     }
   }
 

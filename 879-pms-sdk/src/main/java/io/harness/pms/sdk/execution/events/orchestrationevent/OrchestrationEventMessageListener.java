@@ -30,13 +30,12 @@ public class OrchestrationEventMessageListener extends PmsAbstractMessageListene
   }
 
   @Override
-  public boolean processMessage(OrchestrationEvent event, Map<String, String> metadataMap, Long timestamp) {
+  public void processMessage(OrchestrationEvent event, Map<String, String> metadataMap, Long timestamp) {
     try (AutoLogContext ignore = OrchestrationEventUtils.obtainLogContext(event)) {
       log.info("Orchestration Event Processing Starting for event type {}", event.getEventType());
-      return sdkOrchestrationEventHandler.handleEvent(event, metadataMap, timestamp);
+      sdkOrchestrationEventHandler.handleEvent(event, metadataMap, timestamp);
     } catch (Exception ex) {
       log.error("Orchestration Event Processing failed for event type {}", event.getEventType(), ex);
-      return true;
     }
   }
 }

@@ -62,7 +62,7 @@ public class NodeAdviseEventHandler extends PmsBaseEventHandler<AdviseEvent> {
   }
 
   @Override
-  protected boolean handleEventWithContext(AdviseEvent event) {
+  protected void handleEventWithContext(AdviseEvent event) {
     try {
       log.info("Starting to handle ADVISE event");
 
@@ -98,12 +98,10 @@ public class NodeAdviseEventHandler extends PmsBaseEventHandler<AdviseEvent> {
       }
 
       log.info("ADVISE Event Handled Successfully");
-      return true;
     } catch (Exception ex) {
       log.error("Error while advising execution", ex);
       sdkNodeExecutionService.handleEventError(
           NodeExecutionEventType.ADVISE, event.getNotifyId(), NodeExecutionUtils.constructFailureInfo(ex));
-      return true;
     }
   }
 }
