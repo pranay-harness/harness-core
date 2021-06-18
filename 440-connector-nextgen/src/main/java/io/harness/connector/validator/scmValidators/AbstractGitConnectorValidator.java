@@ -118,7 +118,7 @@ public abstract class AbstractGitConnectorValidator extends AbstractConnectorVal
     final GitConfigDTO gitConfig = getGitConfigFromConnectorConfig(connectorConfigDTO);
     validateFieldsPresent(gitConfig);
     GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) super.validateConnector(
-        connectorConfigDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+        connectorConfigDTO, accountIdentifier, orgIdentifier, projectIdentifier, identifier, false);
     return buildConnectorValidationResult(gitCommandExecutionResponse);
   }
 }

@@ -30,8 +30,15 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class AbstractConnectorValidator implements ConnectionValidator {
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Inject private EncryptionHelper encryptionHelper;
+
   public <T extends ConnectorConfigDTO> DelegateResponseData validateConnector(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    return validateConnector(connectorConfig, accountIdentifier, orgIdentifier, projectIdentifier, identifier, true);
+  }
+
+  public <T extends ConnectorConfigDTO> DelegateResponseData validateConnector(T connectorConfig,
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier,
+      boolean forceExecution) {
     TaskParameters taskParameters =
         getTaskParameters(connectorConfig, accountIdentifier, orgIdentifier, projectIdentifier);
 
@@ -49,7 +56,7 @@ public abstract class AbstractConnectorValidator implements ConnectionValidator 
                                                   .taskParameters(taskParameters)
                                                   .taskSetupAbstractions(ngTaskSetupAbstractionsWithOwner)
                                                   .executionTimeout(Duration.ofMinutes(2))
-                                                  .forceExecute(true)
+                                                  .forceExecute(forceExecution)
                                                   .build();
 
     DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
