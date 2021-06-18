@@ -40,6 +40,6 @@ public class ServiceDeleteEvent implements Event {
   @JsonIgnore
   @Override
   public String getEventType() {
-    return ServiceOutboxEvents.SERVICE_DELETED;
+    return OutboxEventConstants.SERVICE_DELETED;
   }
 }

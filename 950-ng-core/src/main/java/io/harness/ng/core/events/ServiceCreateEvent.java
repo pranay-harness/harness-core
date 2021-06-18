@@ -40,6 +40,6 @@ public class ServiceCreateEvent implements Event {
   @JsonIgnore
   @Override
   public String getEventType() {
-    return ServiceOutboxEvents.SERVICE_CREATED;
+    return OutboxEventConstants.SERVICE_CREATED;
   }
 }

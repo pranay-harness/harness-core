@@ -15,12 +15,12 @@ import io.harness.audit.beans.ResourceDTO;
 import io.harness.audit.beans.ResourceScopeDTO;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.context.GlobalContext;
+import io.harness.ng.core.environment.beans.EnvironmentRequest;
+import io.harness.ng.core.events.EnvironmentCreateEvent;
+import io.harness.ng.core.events.EnvironmentDeleteEvent;
+import io.harness.ng.core.events.EnvironmentUpdatedEvent;
+import io.harness.ng.core.events.EnvironmentUpsertEvent;
 import io.harness.ng.core.events.OutboxEventConstants;
-import io.harness.ng.core.events.ServiceCreateEvent;
-import io.harness.ng.core.events.ServiceDeleteEvent;
-import io.harness.ng.core.events.ServiceUpdateEvent;
-import io.harness.ng.core.events.ServiceUpsertEvent;
-import io.harness.ng.core.service.entity.ServiceRequest;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.security.PrincipalContextData;
@@ -34,20 +34,20 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
-public class ServiceOutBoxEventHandler implements OutboxEventHandler {
+public class EnvironmentEventHandler implements OutboxEventHandler {
   private final ObjectMapper objectMapper;
   private final AuditClientService auditClientService;
 
   @Inject
-  ServiceOutBoxEventHandler(AuditClientService auditClientService) {
+  EnvironmentEventHandler(AuditClientService auditClientService) {
     this.auditClientService = auditClientService;
     this.objectMapper = NG_DEFAULT_OBJECT_MAPPER;
   }
 
-  private boolean handlerServiceCreated(OutboxEvent outboxEvent) throws IOException {
+  private boolean handlerEnvironmentCreated(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-    ServiceCreateEvent serviceCreateEvent =
-        objectMapper.readValue(outboxEvent.getEventData(), ServiceCreateEvent.class);
+    EnvironmentCreateEvent environmentCreateEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), EnvironmentCreateEvent.class);
     AuditEntry auditEntry =
         AuditEntry.builder()
             .action(Action.CREATE)
@@ -56,7 +56,8 @@ public class ServiceOutBoxEventHandler implements OutboxEventHandler {
             .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
             .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
             .timestamp(outboxEvent.getCreatedAt())
-            .newYaml(getYamlString(ServiceRequest.builder().service(serviceCreateEvent.getService()).build()))
+            .newYaml(getYamlString(
+                EnvironmentRequest.builder().environment(environmentCreateEvent.getEnvironment()).build()))
             .build();
 
     Principal principal = null;
@@ -68,10 +69,10 @@ public class ServiceOutBoxEventHandler implements OutboxEventHandler {
     return auditClientService.publishAudit(auditEntry, fromSecurityPrincipal(principal), globalContext);
   }
 
-  private boolean handlerServiceUpserted(OutboxEvent outboxEvent) throws IOException {
+  private boolean handlerEnvironmentUpserted(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-    ServiceUpsertEvent serviceUpsertEvent =
-        objectMapper.readValue(outboxEvent.getEventData(), ServiceUpsertEvent.class);
+    EnvironmentUpsertEvent environmentUpsertEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), EnvironmentUpsertEvent.class);
     AuditEntry auditEntry =
         AuditEntry.builder()
             .action(Action.UPSERT)
@@ -80,7 +81,8 @@ public class ServiceOutBoxEventHandler implements OutboxEventHandler {
             .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
             .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
             .timestamp(outboxEvent.getCreatedAt())
-            .newYaml(getYamlString(ServiceRequest.builder().service(serviceUpsertEvent.getService()).build()))
+            .newYaml(getYamlString(
+                EnvironmentRequest.builder().environment(environmentUpsertEvent.getEnvironment()).build()))
             .build();
 
     Principal principal = null;
@@ -91,20 +93,22 @@ public class ServiceOutBoxEventHandler implements OutboxEventHandler {
     }
     return auditClientService.publishAudit(auditEntry, fromSecurityPrincipal(principal), globalContext);
   }
-  private boolean handlerServiceUpdated(OutboxEvent outboxEvent) throws IOException {
+  private boolean handlerEnvironmentUpdated(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-    ServiceUpdateEvent serviceUpdateEvent =
-        objectMapper.readValue(outboxEvent.getEventData(), ServiceUpdateEvent.class);
+    EnvironmentUpdatedEvent environmentUpdateEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), EnvironmentUpdatedEvent.class);
     AuditEntry auditEntry =
         AuditEntry.builder()
-            .action(Action.UPSERT)
+            .action(Action.UPDATE)
             .module(ModuleType.CORE)
             .insertId(outboxEvent.getId())
             .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
             .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
             .timestamp(outboxEvent.getCreatedAt())
-            .newYaml(getYamlString(ServiceRequest.builder().service(serviceUpdateEvent.getNewService()).build()))
-            .oldYaml(getYamlString(ServiceRequest.builder().service(serviceUpdateEvent.getOldService()).build()))
+            .newYaml(getYamlString(
+                EnvironmentRequest.builder().environment(environmentUpdateEvent.getNewEnvironment()).build()))
+            .oldYaml(getYamlString(
+                EnvironmentRequest.builder().environment(environmentUpdateEvent.getOldEnvironment()).build()))
             .build();
 
     Principal principal = null;
@@ -115,10 +119,10 @@ public class ServiceOutBoxEventHandler implements OutboxEventHandler {
     }
     return auditClientService.publishAudit(auditEntry, fromSecurityPrincipal(principal), globalContext);
   }
-  private boolean handlerServiceDeleted(OutboxEvent outboxEvent) throws IOException {
+  private boolean handlerEnvironmentDeleted(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-    ServiceDeleteEvent serviceDeleteEvent =
-        objectMapper.readValue(outboxEvent.getEventData(), ServiceDeleteEvent.class);
+    EnvironmentDeleteEvent environmentDeleteEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), EnvironmentDeleteEvent.class);
     AuditEntry auditEntry =
         AuditEntry.builder()
             .action(Action.DELETE)
@@ -127,7 +131,8 @@ public class ServiceOutBoxEventHandler implements OutboxEventHandler {
             .resource(ResourceDTO.fromResource(outboxEvent.getResource()))
             .resourceScope(ResourceScopeDTO.fromResourceScope(outboxEvent.getResourceScope()))
             .timestamp(outboxEvent.getCreatedAt())
-            .oldYaml(getYamlString(ServiceRequest.builder().service(serviceDeleteEvent.getService()).build()))
+            .oldYaml(getYamlString(
+                EnvironmentRequest.builder().environment(environmentDeleteEvent.getEnvironment()).build()))
             .build();
 
     Principal principal = null;
@@ -143,14 +148,14 @@ public class ServiceOutBoxEventHandler implements OutboxEventHandler {
   public boolean handle(OutboxEvent outboxEvent) {
     try {
       switch (outboxEvent.getEventType()) {
-        case OutboxEventConstants.SERVICE_CREATED:
-          return handlerServiceCreated(outboxEvent);
-        case OutboxEventConstants.SERVICE_UPSERTED:
-          return handlerServiceUpserted(outboxEvent);
-        case OutboxEventConstants.SERVICE_UPDATED:
-          return handlerServiceUpdated(outboxEvent);
-        case OutboxEventConstants.SERVICE_DELETED:
-          return handlerServiceDeleted(outboxEvent);
+        case OutboxEventConstants.ENVIRONMENT_CREATED:
+          return handlerEnvironmentCreated(outboxEvent);
+        case OutboxEventConstants.ENVIRONMENT_UPSERTED:
+          return handlerEnvironmentUpserted(outboxEvent);
+        case OutboxEventConstants.ENVIRONMENT_UPDATED:
+          return handlerEnvironmentUpdated(outboxEvent);
+        case OutboxEventConstants.ENVIRONMENT_DELETED:
+          return handlerEnvironmentDeleted(outboxEvent);
         default:
           return false;
       }

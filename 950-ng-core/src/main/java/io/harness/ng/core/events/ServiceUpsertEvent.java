@@ -40,6 +40,6 @@ public class ServiceUpsertEvent implements Event {
   @JsonIgnore
   @Override
   public String getEventType() {
-    return ServiceOutboxEvents.SERVICE_UPSERTED;
+    return OutboxEventConstants.SERVICE_UPSERTED;
   }
 }

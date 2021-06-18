@@ -3,6 +3,7 @@ package io.harness.ng.core.outbox;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.audit.ResourceTypeConstants.CONNECTOR;
 import static io.harness.audit.ResourceTypeConstants.DELEGATE_CONFIGURATION;
+import static io.harness.audit.ResourceTypeConstants.ENVIRONMENT;
 import static io.harness.audit.ResourceTypeConstants.ORGANIZATION;
 import static io.harness.audit.ResourceTypeConstants.PROJECT;
 import static io.harness.audit.ResourceTypeConstants.SECRET;
@@ -30,6 +31,7 @@ public class NextGenOutboxEventHandler implements OutboxEventHandler {
   private final DelegateProfileEventHandler delegateProfileEventHandler;
   private final ServiceOutBoxEventHandler serviceOutBoxEventHandler;
   private final ServiceAccountEventHandler serviceAccountEventHandler;
+  private final EnvironmentEventHandler environmentEventHandler;
   private final ConnectorEventHandler connectorEventHandler;
 
   @Inject
@@ -37,7 +39,8 @@ public class NextGenOutboxEventHandler implements OutboxEventHandler {
       ProjectEventHandler projectEventHandler, UserGroupEventHandler userGroupEventHandler,
       SecretEventHandler secretEventHandler, UserEventHandler userEventHandler,
       DelegateProfileEventHandler delegateProfileEventHandler, ServiceOutBoxEventHandler serviceOutBoxEventHandler,
-      ServiceAccountEventHandler serviceAccountEventHandler, ConnectorEventHandler connectorEventHandler) {
+      ServiceAccountEventHandler serviceAccountEventHandler, EnvironmentEventHandler environmentEventHandler,
+      ConnectorEventHandler connectorEventHandler) {
     this.organizationEventHandler = organizationEventHandler;
     this.projectEventHandler = projectEventHandler;
     this.userGroupEventHandler = userGroupEventHandler;
@@ -46,6 +49,7 @@ public class NextGenOutboxEventHandler implements OutboxEventHandler {
     this.delegateProfileEventHandler = delegateProfileEventHandler;
     this.serviceOutBoxEventHandler = serviceOutBoxEventHandler;
     this.serviceAccountEventHandler = serviceAccountEventHandler;
+    this.environmentEventHandler = environmentEventHandler;
     this.connectorEventHandler = connectorEventHandler;
   }
 
@@ -77,6 +81,8 @@ public class NextGenOutboxEventHandler implements OutboxEventHandler {
         case SERVICE_ACCOUNT:
         case "serviceaccount":
           return serviceAccountEventHandler.handle(outboxEvent);
+        case ENVIRONMENT:
+          return environmentEventHandler.handle(outboxEvent);
         case CONNECTOR:
         case "connector":
           return connectorEventHandler.handle(outboxEvent);
