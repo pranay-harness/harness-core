@@ -29,11 +29,15 @@ import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactServerException;
+import io.harness.exception.ExplanationException;
+import io.harness.exception.HintException;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnsupportedOperationException;
 import io.harness.exception.WingsException;
+import io.harness.nexus.NexusClientImpl;
 import io.harness.nexus.NexusRequest;
+import io.harness.nexus.NexusThreeClientImpl;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -587,6 +591,7 @@ public class NexusServiceTest extends WingsBaseTest {
   private String DEFAULT_NEXUS_URL;
 
   @Inject @InjectMocks private NexusService nexusService;
+  @Inject @InjectMocks private NexusClientImpl nexusClient;
 
   private NexusRequest nexusConfig;
   private NexusRequest nexusThreeConfig;
@@ -640,7 +645,7 @@ public class NexusServiceTest extends WingsBaseTest {
                         + " </data>"
                         + "</repositories>")
                     .withHeader("Content-Type", "application/xml")));
-    assertThat(nexusService.getRepositories(nexusConfig, null)).hasSize(1).containsEntry("snapshots", "Snapshots");
+    assertThat(nexusClient.getRepositories(nexusConfig, null)).hasSize(1).containsEntry("snapshots", "Snapshots");
   }
 
   @Test
@@ -742,7 +747,7 @@ public class NexusServiceTest extends WingsBaseTest {
                                              .withStatus(200)
                                              .withFault(Fault.MALFORMED_RESPONSE_CHUNK)
                                              .withHeader("Content-Type", "application/xml")));
-    Map<String, String> repositories = nexusService.getRepositories(nexusConfig, null);
+    Map<String, String> repositories = nexusClient.getRepositories(nexusConfig, null);
     assertThat(repositories).isEmpty();
   }
 
@@ -756,7 +761,11 @@ public class NexusServiceTest extends WingsBaseTest {
                               .username("admin")
                               .password("wings123!".toCharArray())
                               .build();
-    assertThatThrownBy(() -> nexusService.getRepositories(config, null))
+    assertThatThrownBy(() -> nexusClient.getRepositories(config, null))
+        .isInstanceOf(HintException.class)
+        .getCause()
+        .isInstanceOf(ExplanationException.class)
+        .getCause()
         .isInstanceOf(InvalidArtifactServerException.class)
         .hasMessageContaining("INVALID_ARTIFACT_SERVER");
   }
@@ -770,7 +779,11 @@ public class NexusServiceTest extends WingsBaseTest {
                                              .withStatus(200)
                                              .withFault(Fault.EMPTY_RESPONSE)
                                              .withHeader("Content-Type", "application/xml")));
-    assertThatThrownBy(() -> nexusService.getRepositories(nexusConfig, RepositoryFormat.docker.name()))
+    assertThatThrownBy(() -> nexusClient.getRepositories(nexusConfig, RepositoryFormat.docker.name()))
+        .isInstanceOf(HintException.class)
+        .getCause()
+        .isInstanceOf(ExplanationException.class)
+        .getCause()
         .isInstanceOf(WingsException.class)
         .hasMessageContaining(INVALID_ARTIFACT_SERVER.name());
   }
@@ -779,7 +792,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetNugetRepositoriesNexus2x() {
-    Map<String, String> repoMap = nexusService.getRepositories(nexusConfig, RepositoryFormat.nuget.name());
+    Map<String, String> repoMap = nexusClient.getRepositories(nexusConfig, RepositoryFormat.nuget.name());
     assertThat(repoMap.size()).isEqualTo(1);
     assertThat(repoMap).containsKey("MyNuGet");
   }
@@ -788,7 +801,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetNPMRepositoriesNexus2x() {
-    Map<String, String> repoMap = nexusService.getRepositories(nexusConfig, RepositoryFormat.npm.name());
+    Map<String, String> repoMap = nexusClient.getRepositories(nexusConfig, RepositoryFormat.npm.name());
     assertThat(repoMap.size()).isEqualTo(1);
     assertThat(repoMap).containsKey("harness-npm");
   }
@@ -797,7 +810,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetMavenRepositoriesNexus2x() {
-    Map<String, String> repoMap = nexusService.getRepositories(nexusConfig, RepositoryFormat.maven.name());
+    Map<String, String> repoMap = nexusClient.getRepositories(nexusConfig, RepositoryFormat.maven.name());
     assertThat(repoMap.size()).isEqualTo(1);
     assertThat(repoMap).containsKey("Todolist_Snapshots");
   }
@@ -813,6 +826,10 @@ public class NexusServiceTest extends WingsBaseTest {
                                              .withHeader("Content-Type", "application/xml")));
 
     assertThatThrownBy(() -> nexusService.getArtifactPaths(nexusConfig, "releases"))
+        .isInstanceOf(HintException.class)
+        .getCause()
+        .isInstanceOf(ExplanationException.class)
+        .getCause()
         .isInstanceOf(WingsException.class)
         .hasMessageContaining("INVALID_ARTIFACT_SERVER");
   }
@@ -828,6 +845,10 @@ public class NexusServiceTest extends WingsBaseTest {
                                              .withHeader("Content-Type", "application/xml")));
 
     assertThatThrownBy(() -> nexusService.getArtifactPaths(nexusConfig, "releases", "fakepath"))
+        .isInstanceOf(HintException.class)
+        .getCause()
+        .isInstanceOf(ExplanationException.class)
+        .getCause()
         .isInstanceOf(WingsException.class)
         .hasMessageContaining("INVALID_ARTIFACT_SERVER");
   }
@@ -1185,7 +1206,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetDockerRepositories() {
-    assertThat(nexusService.getRepositories(nexusThreeConfig, RepositoryFormat.docker.name()))
+    assertThat(nexusClient.getRepositories(nexusThreeConfig, RepositoryFormat.docker.name()))
         .hasSize(3)
         .containsEntry("docker-group", "docker-group");
   }
@@ -1570,7 +1591,7 @@ public class NexusServiceTest extends WingsBaseTest {
         nexusConfig, artifactStreamAttributes, artifactMetadata, null, null, null, listNotifyResponseData);
   }
 
-  @Test(expected = InvalidArtifactServerException.class)
+  @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testNonMatchingServerAndVersionWithAuthentication() {
@@ -1580,31 +1601,36 @@ public class NexusServiceTest extends WingsBaseTest {
                               .username("admin")
                               .password("wings123!".toCharArray())
                               .build();
-    nexusService.isRunning(config);
+    assertThatThrownBy(() -> nexusClient.isRunning(config))
+        .isInstanceOf(HintException.class)
+        .getCause()
+        .isInstanceOf(ExplanationException.class)
+        .getCause()
+        .isInstanceOf(InvalidArtifactServerException.class);
   }
 
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void testValidConnection() throws IOException {
-    assertThat(nexusService.isRunning(nexusThreeConfig)).isTrue();
-    assertThat(nexusService.isRunning(nexusConfig)).isTrue();
+    assertThat(nexusClient.isRunning(nexusThreeConfig)).isTrue();
+    assertThat(nexusClient.isRunning(nexusConfig)).isTrue();
 
-    NexusThreeServiceImpl nexusThreeService = Mockito.mock(NexusThreeServiceImpl.class);
-    Reflect.on(nexusService).set("nexusThreeService", nexusThreeService);
+    NexusThreeClientImpl nexusThreeService = Mockito.mock(NexusThreeClientImpl.class);
+    Reflect.on(nexusClient).set("nexusThreeService", nexusThreeService);
 
     when(nexusThreeService.isServerValid(any())).thenThrow(new RuntimeException("Some uncaught exception"));
-    assertThat(nexusService.isRunning(nexusThreeConfig)).isTrue();
+    assertThat(nexusClient.isRunning(nexusThreeConfig)).isTrue();
 
-    nexusThreeService = Mockito.mock(NexusThreeServiceImpl.class);
-    Reflect.on(nexusService).set("nexusThreeService", nexusThreeService);
+    nexusThreeService = Mockito.mock(NexusThreeClientImpl.class);
+    Reflect.on(nexusClient).set("nexusThreeService", nexusThreeService);
 
     // Note: Throw any WingsException. This exception may not actually be thrown here.
     when(nexusThreeService.isServerValid(any())).thenThrow(new UnsupportedOperationException("Invalid server"));
-    assertThat(nexusService.isRunning(nexusThreeConfig)).isTrue();
+    assertThat(nexusClient.isRunning(nexusThreeConfig)).isTrue();
   }
 
-  @Test(expected = InvalidArtifactServerException.class)
+  @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testNonMatchingServerAndVersionWithoutAuthentication() {
@@ -1612,7 +1638,13 @@ public class NexusServiceTest extends WingsBaseTest {
                               .nexusUrl(String.format("http://localhost:%d/", wireMockRule2.port()))
                               .version("3.x")
                               .build();
-    nexusService.isRunning(config);
+
+    assertThatThrownBy(() -> nexusClient.isRunning(config))
+        .isInstanceOf(HintException.class)
+        .getCause()
+        .isInstanceOf(ExplanationException.class)
+        .getCause()
+        .isInstanceOf(InvalidArtifactServerException.class);
   }
 
   @Test
@@ -1628,7 +1660,11 @@ public class NexusServiceTest extends WingsBaseTest {
 
     wireMockRule3.stubFor(get(urlEqualTo("/service/rest/v1/repositories")).willReturn(aResponse().withStatus(401)));
 
-    assertThatThrownBy(() -> nexusService.isRunning(config))
+    assertThatThrownBy(() -> nexusClient.isRunning(config))
+        .isInstanceOf(HintException.class)
+        .getCause()
+        .isInstanceOf(ExplanationException.class)
+        .getCause()
         .isInstanceOf(WingsException.class)
         .hasMessageContaining("INVALID_ARTIFACT_SERVER");
   }

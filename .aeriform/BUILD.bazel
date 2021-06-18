@@ -198,8 +198,6 @@ aeriform("//870-cg-orchestration:module")
 
 aeriform("//870-cg-orchestration:tests")
 
-aeriform("//870-cg-yaml:module")
-
 aeriform("//870-orchestration:module")
 
 aeriform("//870-orchestration:tests")
@@ -207,8 +205,6 @@ aeriform("//870-orchestration:tests")
 aeriform("//870-yaml-beans:module")
 
 aeriform("//870-yaml-beans:tests")
-
-aeriform("//871-cg-beans:module")
 
 aeriform("//874-orchestration-delay:module")
 
@@ -390,6 +386,8 @@ aeriform("//955-account-mgmt:module")
 
 aeriform("//955-alert-beans:module")
 
+aeriform("//955-cg-yaml:module")
+
 aeriform("//955-delegate-beans:module")
 
 aeriform("//955-filters-sdk:module")
@@ -411,6 +409,8 @@ aeriform("//958-migration-sdk:module")
 aeriform("//958-migration-sdk:tests")
 
 aeriform("//958-ng-file-service-sdk:module")
+
+aeriform("//959-cg-beans:module")
 
 aeriform("//959-file-service-commons:module")
 

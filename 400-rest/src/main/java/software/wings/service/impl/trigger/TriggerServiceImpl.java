@@ -296,6 +296,7 @@ public class TriggerServiceImpl implements TriggerService {
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
     if (trigger.getCondition().getConditionType() == SCHEDULED) {
       ScheduledTriggerJob.add(jobScheduler, accountId, savedTrigger.getAppId(), savedTrigger.getUuid(), trigger);
+      jobScheduler.pauseJob(trigger.getUuid(), ScheduledTriggerJob.GROUP);
     }
 
     if (featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, trigger.getAccountId())) {

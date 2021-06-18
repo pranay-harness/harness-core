@@ -39,6 +39,8 @@ public interface YamlChangeSetService {
   boolean updateStatusForGivenYamlChangeSets(@NotNull String accountId, @NotNull YamlChangeSetStatus newStatus,
       List<YamlChangeSetStatus> currentStatuses, List<String> yamlChangeSetIds);
 
+  boolean updateStatusAndCutoffTime(String accountId, String changeSetId, YamlChangeSetStatus newStatus);
+
   void markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(@NotNull String accountId, int maxRetryCount);
 
   boolean updateStatusWithRetryCountIncrement(@NotNull String accountId, @NotNull YamlChangeSetStatus currentStatus,
@@ -47,7 +49,7 @@ public interface YamlChangeSetService {
   boolean updateStatusAndIncrementRetryCountForYamlChangeSets(@NotNull String accountId,
       @NotNull YamlChangeSetStatus newStatus, List<YamlChangeSetStatus> currentStatus, List<String> yamlChangeSetIds);
 
-  List<YamlChangeSetDTO> findByAccountIdsStatusLastUpdatedAtLessThan(
+  List<YamlChangeSetDTO> findByAccountIdsStatusCutoffLessThan(
       List<String> runningAccountIdList, @Size(min = 1) List<YamlChangeSetStatus> yamlChangeSetStatuses, long timeout);
 
   List<String> findDistinctAccountIdsByStatus(List<YamlChangeSetStatus> status);

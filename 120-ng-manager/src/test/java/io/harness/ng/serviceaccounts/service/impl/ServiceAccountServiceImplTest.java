@@ -12,7 +12,6 @@ import static org.mockito.Mockito.mock;
 import io.harness.NgManagerTestBase;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.ng.core.ProjectScope;
 import io.harness.ng.serviceaccounts.dto.ServiceAccountRequestDTO;
 import io.harness.ng.serviceaccounts.entities.ServiceAccount;
 import io.harness.ng.serviceaccounts.service.api.ServiceAccountService;
@@ -123,6 +122,6 @@ public class ServiceAccountServiceImplTest extends NgManagerTestBase {
         serviceAccountService.getServiceAccountDTO(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     assertThat(account).isNotNull();
     assertThat(account.getName()).isEqualTo(name);
-    assertThat(account.getResourceScope()).isInstanceOf(ProjectScope.class);
+    assertThat(account.getProjectIdentifier()).isEqualTo(projectIdentifier);
   }
 }

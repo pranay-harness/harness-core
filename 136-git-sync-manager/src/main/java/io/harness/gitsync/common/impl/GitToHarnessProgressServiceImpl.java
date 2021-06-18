@@ -144,4 +144,15 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
     GitToHarnessProgressStatus gitToHarnessProgressStatus = gitToHarnessProgress.getGitToHarnessProgressStatus();
     return !gitToHarnessProgressStatus.isFailureStatus();
   }
+
+  @Override
+  public GitToHarnessProgressDTO getByRepoUrlAndCommitIdAndEventType(
+      String repoURL, String commitId, YamlChangeSetEventType eventType) {
+    GitToHarnessProgress gitToHarnessProgress =
+        gitToHarnessProgressRepository.findByRepoUrlAndCommitIdAndEventType(repoURL, commitId, eventType);
+    if (gitToHarnessProgress != null) {
+      return GitToHarnessProgressMapper.writeDTO(gitToHarnessProgress);
+    }
+    return null;
+  }
 }

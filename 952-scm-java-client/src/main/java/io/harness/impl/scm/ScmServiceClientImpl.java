@@ -291,7 +291,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
       List<String> harnessRelatedFilePaths, String slug, String ref, Provider gitProvider) {
     List<GetFileRequest> getBatchFileRequests = new ArrayList<>();
     // todo @deepak: Add the pagination logic to get the list of file content, once scm provides support
-    for (String path : harnessRelatedFilePaths) {
+    for (String path : emptyIfNull(harnessRelatedFilePaths)) {
       GetFileRequest getFileRequest =
           GetFileRequest.newBuilder().setSlug(slug).setProvider(gitProvider).setRef(ref).setPath(path).build();
       getBatchFileRequests.add(getFileRequest);

@@ -3,6 +3,8 @@ package io.harness.gitsync.common.impl;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.gitsync.common.beans.BranchSyncStatus.SYNCING;
+import static io.harness.gitsync.common.beans.BranchSyncStatus.UNSYNCED;
 
 import static java.util.stream.Collectors.toList;
 
@@ -10,10 +12,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.beans.BranchSyncMetadata;
+import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
 import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.helper.YamlGitConfigHelper;
+import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitBranchSyncService;
 import io.harness.gitsync.common.service.GitToHarnessProgressService;
 import io.harness.gitsync.common.service.ScmOrchestratorService;
@@ -42,10 +46,20 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
   GitToHarnessProgressService gitToHarnessProgressService;
   YamlGitConfigService yamlGitConfigService;
   YamlChangeSetService yamlChangeSetService;
+  GitBranchService gitBranchService;
 
   @Override
   public void createBranchSyncEvent(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String yamlGitConfigIdentifier, String repoURL, String branch, String filePathToBeExcluded) {
+    GitBranch gitBranch = gitBranchService.get(accountIdentifier, repoURL, branch);
+    if (gitBranch == null) {
+      log.info("No record found for the branch [{}] in the repo [{}]", repoURL, branch);
+      return;
+    } else if (gitBranch.getBranchSyncStatus() != UNSYNCED) {
+      log.info("The branch sync for repoUrl [{}], branch [{}] has status [{}], hence skipping", repoURL, branch,
+          gitBranch.getBranchSyncStatus());
+      return;
+    }
     final BranchSyncMetadata branchSyncMetadata = BranchSyncMetadata.builder()
                                                       .fileToBeExcluded(filePathToBeExcluded)
                                                       .orgIdentifier(orgIdentifier)
@@ -60,6 +74,7 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
                                                           .eventMetadata(branchSyncMetadata)
                                                           .build();
     final YamlChangeSetDTO savedChangeSet = yamlChangeSetService.save(yamlChangeSetSaveDTO);
+    gitBranchService.updateBranchSyncStatus(accountIdentifier, repoURL, branch, SYNCING);
     log.info("Created the change set {} to process the branch {} in the repo {}", savedChangeSet.getChangesetId(),
         branch, repoURL);
   }

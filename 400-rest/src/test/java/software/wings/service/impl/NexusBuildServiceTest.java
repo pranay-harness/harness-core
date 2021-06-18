@@ -35,6 +35,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.nexus.NexusClientImpl;
 import io.harness.nexus.NexusRequest;
 import io.harness.rule.Owner;
 
@@ -76,6 +77,7 @@ import org.mockito.Mock;
 @TargetModule(_930_DELEGATE_TASKS)
 public class NexusBuildServiceTest extends WingsBaseTest {
   @Mock private NexusService nexusService;
+  @Mock private NexusClientImpl nexusClient;
   @Mock private EncryptionService encryptionService;
   @Inject @InjectMocks private NexusBuildService nexusBuildService;
 
@@ -106,7 +108,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetPlans() {
-    when(nexusService.getRepositories(nexusRequest))
+    when(nexusClient.getRepositories(nexusRequest))
         .thenReturn(ImmutableMap.of("snapshots", "Snapshots", "releases", "Releases"));
     Map<String, String> jobs = nexusBuildService.getPlans(nexusConfig, null);
     assertThat(jobs).hasSize(2).containsEntry("releases", "Releases");
@@ -116,7 +118,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetJobs() {
-    when(nexusService.getRepositories(nexusRequest))
+    when(nexusClient.getRepositories(nexusRequest))
         .thenReturn(ImmutableMap.of("snapshots", "Snapshots", "releases", "Releases"));
     List<JobDetails> jobs = nexusBuildService.getJobs(nexusConfig, null, Optional.empty());
     List<String> jobNames = nexusBuildService.extractJobNameFromJobDetails(jobs);
@@ -192,7 +194,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
                              .build();
     NexusRequest request = NexusConfigToNexusRequestMapper.toNexusRequest(config, encryptionService, null);
     nexusBuildService.validateArtifactServer(config, Collections.emptyList());
-    verify(nexusService).isRunning(eq(request));
+    verify(nexusClient).isRunning(eq(request));
   }
 
   @Test
@@ -210,10 +212,10 @@ public class NexusBuildServiceTest extends WingsBaseTest {
   public void ShouldCollectPlans() {
     // For Docker ArtifactType
     nexusBuildService.getPlans(nexusConfig, Collections.emptyList(), ArtifactType.DOCKER, docker.name());
-    verify(nexusService).getRepositories(eq(nexusRequest), eq(docker.name()));
+    verify(nexusClient).getRepositories(eq(nexusRequest), eq(docker.name()));
 
     nexusBuildService.getPlans(nexusConfig, Collections.emptyList(), ArtifactType.JAR, maven.name());
-    verify(nexusService).getRepositories(eq(nexusRequest), eq(maven.name()));
+    verify(nexusClient).getRepositories(eq(nexusRequest), eq(maven.name()));
   }
 
   @Test

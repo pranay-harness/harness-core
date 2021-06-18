@@ -1,7 +1,15 @@
 package io.harness.nexus;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.nexus.NexusHelper.isSuccessful;
+
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toMap;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidArtifactServerException;
+import io.harness.exception.NestedExceptionUtils;
 
 import software.wings.utils.RepositoryFormat;
 
@@ -15,6 +23,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 
+@OwnedBy(CDC)
 @Slf4j
 public class NexusTwoClientImpl {
   public Map<String, String> getRepositories(NexusRequest nexusConfig, String repositoryFormat) throws IOException {
@@ -29,7 +38,12 @@ public class NexusTwoClientImpl {
     }
 
     final Response<RepositoryListResourceResponse> response = request.execute();
-    if (NexusHelper.isSuccessful(response)) {
+    if (response.code() == 404) {
+      throw NestedExceptionUtils.hintWithExplanationException("Check if the Nexus URL & version are correct",
+          "The Nexus URL for the connector is incorrect",
+          new InvalidArtifactServerException("Invalid Artifact server", USER));
+    }
+    if (isSuccessful(response)) {
       log.info("Retrieving repositories success");
       if (RepositoryFormat.maven.name().equals(repositoryFormat)) {
         return response.body()

@@ -304,7 +304,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   public BranchDetails getBranchDetails(RepoDetails repoDetails) {
     final YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.get(repoDetails.getProjectIdentifier().getValue(),
         repoDetails.getOrgIdentifier().getValue(), repoDetails.getAccountId(), repoDetails.getYamlGitConfigId());
-    if (yamlGitConfigDTO != null) {
+    if (yamlGitConfigDTO == null) {
       return BranchDetails.newBuilder().build();
     }
     return BranchDetails.newBuilder().setDefaultBranch(yamlGitConfigDTO.getBranch()).build();

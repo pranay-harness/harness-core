@@ -1,20 +1,34 @@
 package io.harness.pms.sdk;
 
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_FACILITATOR_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_INTERRUPT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_ADVISE_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_RESUME_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_START_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_EVENT_TOPIC;
+
 import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.eventsframework.EventsFrameworkConfiguration;
+import io.harness.exception.InvalidRequestException;
 import io.harness.metrics.jobs.RecordMetricsJob;
 import io.harness.metrics.service.api.MetricService;
+import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.plan.InitializeSdkRequest;
 import io.harness.pms.contracts.plan.PmsServiceGrpc;
+import io.harness.pms.contracts.plan.Redis;
 import io.harness.pms.contracts.plan.SdkModuleInfo;
 import io.harness.pms.contracts.plan.Types;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
+import io.harness.redis.RedisConfig;
 
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Injector;
@@ -104,20 +118,63 @@ public class PmsSdkInitHelper {
       Injector injector, PmsSdkConfiguration sdkConfiguration) {
     PipelineServiceInfoProvider infoProvider = injector.getInstance(PipelineServiceInfoProvider.class);
     ModuleType moduleType = sdkConfiguration.getModuleType();
+    EventsFrameworkConfiguration eventsConfig = sdkConfiguration.getEventsFrameworkConfiguration();
     return InitializeSdkRequest.newBuilder()
         .setName(sdkConfiguration.getServiceName())
         .putAllSupportedTypes(PmsSdkInitHelper.calculateSupportedTypes(infoProvider))
         .addAllSupportedSteps(infoProvider.getStepInfo())
         .addAllSupportedStepTypes(calculateStepTypes(injector))
-        .setInterruptConsumerConfig(sdkConfiguration.getInterruptConsumerConfig())
-        .setOrchestrationEventConsumerConfig(sdkConfiguration.getOrchestrationEventConsumerConfig())
         .setSdkModuleInfo(SdkModuleInfo.newBuilder().setDisplayName(moduleType.getDisplayName()).build())
-        .setFacilitatorEventConsumerConfig(sdkConfiguration.getFacilitationEventConsumerConfig())
-        .setNodeStartEventConsumerConfig(sdkConfiguration.getNodeStartEventConsumerConfig())
-        .setProgressEventConsumerConfig(sdkConfiguration.getProgressEventConsumerConfig())
-        .setNodeAdviseEventConsumerConfig(sdkConfiguration.getNodeAdviseEventConsumerConfig())
-        .setNodeResumeEventConsumerConfig(sdkConfiguration.getNodeResumeEventConsumerConfig())
+        .setInterruptConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.INTERRUPT_EVENT))
+        .setOrchestrationEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.ORCHESTRATION_EVENT))
+        .setFacilitatorEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.FACILITATOR_EVENT))
+        .setNodeStartEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_START))
+        .setProgressEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.PROGRESS_EVENT))
+        .setNodeAdviseEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_ADVISE))
+        .setNodeResumeEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_RESUME))
         .build();
+  }
+
+  /**
+   * Absorbing all of this logic inside the SDK. This felt like an overkill for now.
+   * Things internally work exactly the same way. This makes the sdk initialization easier.
+   *
+   * If we feel the need (which i do not think) we would in near future we can expose this mechanism back
+   *
+   */
+  private static ConsumerConfig buildConsumerConfig(
+      EventsFrameworkConfiguration eventsConfig, PmsEventCategory eventCategory) {
+    RedisConfig redisConfig = eventsConfig.getRedisConfig();
+    if (redisConfig != null) {
+      return ConsumerConfig.newBuilder().setRedis(buildConsumerRedisConfig(eventCategory)).build();
+    }
+    throw new UnsupportedOperationException("Only Redis is Supported as Back End");
+  }
+
+  /**
+   * In future if events framework build support for Kafka or any other event backbone we just need
+   * to add some logic here to init with a diff config
+   *
+   */
+  private static Redis buildConsumerRedisConfig(PmsEventCategory eventCategory) {
+    switch (eventCategory) {
+      case INTERRUPT_EVENT:
+        return Redis.newBuilder().setTopicName(PIPELINE_INTERRUPT_TOPIC).build();
+      case ORCHESTRATION_EVENT:
+        return Redis.newBuilder().setTopicName(PIPELINE_ORCHESTRATION_EVENT_TOPIC).build();
+      case FACILITATOR_EVENT:
+        return Redis.newBuilder().setTopicName(PIPELINE_FACILITATOR_EVENT_TOPIC).build();
+      case NODE_START:
+        return Redis.newBuilder().setTopicName(PIPELINE_NODE_START_EVENT_TOPIC).build();
+      case PROGRESS_EVENT:
+        return Redis.newBuilder().setTopicName(PIPELINE_PROGRESS_EVENT_TOPIC).build();
+      case NODE_ADVISE:
+        return Redis.newBuilder().setTopicName(PIPELINE_NODE_ADVISE_EVENT_TOPIC).build();
+      case NODE_RESUME:
+        return Redis.newBuilder().setTopicName(PIPELINE_NODE_RESUME_EVENT_TOPIC).build();
+      default:
+        throw new InvalidRequestException("Not a valid Event Category");
+    }
   }
 
   private static List<StepType> calculateStepTypes(Injector injector) {

@@ -933,8 +933,8 @@ go_repository(
 go_repository(
     name = "com_github_drone_go_scm",
     importpath = "github.com/drone/go-scm",
-    sum = "h1:yBO6lcCeegbEuEaH0QUvJmBVQS/RpYKzuzULHHMT2A4=",
-    version = "v1.15.0",
+    sum = "h1:35m/CcHkYjQ4BlOM7rIIwrki6uDUbUH+Kkb9rv6om3M=",
+    version = "v1.15.1",
 )
 
 go_repository(
@@ -1303,7 +1303,7 @@ plain_artifacts = [
     "io.grpc:grpc-services:1.33.1",
     "io.grpc:grpc-stub:1.33.1",
     "io.gsonfire:gson-fire:1.8.3",
-    "io.harness:ff-java-server-sdk:0.0.8.1",
+    "io.harness:ff-java-server-sdk:1.0.0",
     "io.jsonwebtoken:jjwt:0.9.1",
     "io.kubernetes:client-java-api:9.0.2",
     "io.kubernetes:client-java-extended:9.0.2",
@@ -1661,7 +1661,7 @@ plain_artifacts = [
     "stax:stax-api:1.0.1",
     "stax:stax:1.2.0",
     "wsdl4j:wsdl4j:1.6.3",
-    "xerces:xercesImpl:2.9.1",
+    "xerces:xercesImpl:2.12.0",
     "xml-apis:xml-apis:1.4.01",
     "xml-resolver:xml-resolver:1.2",
     "xpp3:xpp3:1.1.3.3",

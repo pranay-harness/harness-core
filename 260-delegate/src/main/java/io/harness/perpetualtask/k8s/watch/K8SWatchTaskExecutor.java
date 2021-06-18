@@ -7,6 +7,9 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.beans.ccm.K8sClusterInfo;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.task.citasks.cik8handler.K8sConnectorHelper;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.CeExceptionMessage;
 import io.harness.grpc.utils.AnyUtils;
@@ -65,17 +68,19 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   private final ApiClientFactoryImpl apiClientFactory;
   private final KryoSerializer kryoSerializer;
   private final ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  private final K8sConnectorHelper k8sConnectorHelper;
   private final Cache<String, Boolean> recentlyLoggedExceptions;
 
   @Inject
   public K8SWatchTaskExecutor(EventPublisher eventPublisher, K8sWatchServiceDelegate k8sWatchServiceDelegate,
       ApiClientFactoryImpl apiClientFactory, KryoSerializer kryoSerializer,
-      ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper) {
+      ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper, K8sConnectorHelper k8sConnectorHelper) {
     this.eventPublisher = eventPublisher;
     this.k8sWatchServiceDelegate = k8sWatchServiceDelegate;
     this.apiClientFactory = apiClientFactory;
     this.kryoSerializer = kryoSerializer;
     this.containerDeploymentDelegateHelper = containerDeploymentDelegateHelper;
+    this.k8sConnectorHelper = k8sConnectorHelper;
     recentlyLoggedExceptions = Caffeine.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).build();
   }
 
@@ -86,13 +91,10 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
     try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId.getId(), OVERRIDE_ERROR)) {
       try {
         Instant now = Instant.now();
-        String watchId = k8sWatchServiceDelegate.create(watchTaskParams);
-        log.info("Ensured watch exists with id {}.", watchId);
-        K8sClusterConfig k8sClusterConfig =
-            (K8sClusterConfig) kryoSerializer.asObject(watchTaskParams.getK8SClusterConfig().toByteArray());
+        KubernetesConfig kubernetesConfig = getKubernetesConfig(watchTaskParams);
 
-        KubernetesConfig kubernetesConfig =
-            containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig, false);
+        String watchId = k8sWatchServiceDelegate.create(watchTaskParams, kubernetesConfig);
+        log.info("Ensured watch exists with id {}.", watchId);
 
         DefaultK8sMetricsClient k8sMetricsClient =
             new DefaultK8sMetricsClient(apiClientFactory.getClient(kubernetesConfig));
@@ -217,5 +219,23 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
       });
       return true;
     }
+  }
+
+  private KubernetesConfig getKubernetesConfig(K8sWatchTaskParams watchTaskParams) {
+    if (watchTaskParams.getK8SClusterConfig().size() != 0) {
+      // Supporting deprecated K8sWatchTaskParams field
+      K8sClusterConfig k8sClusterConfig =
+          (K8sClusterConfig) kryoSerializer.asObject(watchTaskParams.getK8SClusterConfig().toByteArray());
+
+      return containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig, false);
+    }
+
+    K8sClusterInfo k8sClusterInfo =
+        (K8sClusterInfo) kryoSerializer.asObject(watchTaskParams.getK8SClusterInfo().toByteArray());
+
+    KubernetesConfig kubernetesConfig = k8sConnectorHelper.getKubernetesConfig(
+        (KubernetesClusterConfigDTO) k8sClusterInfo.getConnectorConfigDTO(), k8sClusterInfo.getEncryptedDataDetails());
+
+    return kubernetesConfig;
   }
 }
