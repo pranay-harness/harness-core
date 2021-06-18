@@ -10,7 +10,8 @@ import io.harness.artifacts.docker.beans.DockerImageManifestResponse;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidArtifactServerException;
-import io.harness.exception.InvalidCredentialsException;
+import io.harness.exception.NestedExceptionUtils;
+import io.harness.exception.WingsException;
 
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -96,19 +97,26 @@ public class DockerRegistryUtils {
     if (response.code() == 401) { // unauthorized
       if (getTokenFn == null) {
         // We don't want to retry if getTokenFn is null.
-        throw new InvalidCredentialsException("Invalid docker registry credentials", USER);
+        throw NestedExceptionUtils.hintWithExplanationException("Invalid Credentials",
+            "Check if the provided credentials are correct",
+            new InvalidArtifactServerException("Invalid Docker Registry credentials", USER));
       }
       String token = getTokenFn.apply(response.headers());
       authHeader = "Bearer " + token;
       response = registryRestClient.getImageManifest(authHeader, imageName, tag).execute();
       if (response.code() == 401) {
         // Unauthorized even after retry.
-        throw new InvalidCredentialsException("Invalid docker registry credentials", USER);
+        throw NestedExceptionUtils.hintWithExplanationException("Invalid Credentials",
+            "Check if the provided credentials are correct",
+            new InvalidArtifactServerException("Invalid Docker Registry credentials", USER));
       }
     }
 
     if (!isSuccessful(response)) {
-      throw new InvalidArtifactServerException(response.message(), USER);
+      throw NestedExceptionUtils.hintWithExplanationException(
+          "Failed to fetch tags for image. Check if the image details are correct",
+          "Check if the image exists, the permissions are scoped for the authenticated user & check if the right connector chosen for fetching tags for the image",
+          new InvalidArtifactServerException(response.message(), USER));
     }
 
     checkValidImage(imageName, response);
@@ -121,8 +129,7 @@ public class DockerRegistryUtils {
 
   static void checkValidImage(String imageName, Response response) {
     if (response.code() == 404) { // page not found
-      throw new InvalidArgumentsException(
-          ImmutablePair.of("code", "Image name [" + imageName + "] does not exist in Docker Registry."), null, USER);
+      throw imageNotFoundException(imageName);
     }
   }
 
@@ -143,5 +150,18 @@ public class DockerRegistryUtils {
       }
     }
     return null;
+  }
+
+  public static WingsException unauthorizedException() {
+    return NestedExceptionUtils.hintWithExplanationException("Update the username & password",
+        "Check if the provided credentials are correct",
+        new InvalidArtifactServerException("Invalid Docker Registry credentials", USER));
+  }
+
+  public static WingsException imageNotFoundException(String imageName) {
+    return NestedExceptionUtils.hintWithExplanationException("The Image was not found.",
+        "Check if the image exists and if the permissions are scoped for the authenticated user",
+        new InvalidArgumentsException(
+            ImmutablePair.of("code", "Image name [" + imageName + "] does not exist in Docker Registry."), null, USER));
   }
 }

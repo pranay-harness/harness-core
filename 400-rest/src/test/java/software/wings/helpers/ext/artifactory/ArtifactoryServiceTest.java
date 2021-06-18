@@ -1,24 +1,24 @@
 package software.wings.helpers.ext.artifactory;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
-import static software.wings.utils.ArtifactType.RPM;
-import static software.wings.utils.ArtifactType.WAR;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Matchers.any;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifactory.ArtifactoryClientImpl;
 import io.harness.artifactory.ArtifactoryConfigRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactoryServerException;
+import io.harness.exception.ExplanationException;
+import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -26,41 +26,33 @@ import io.harness.rule.Owner;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.helpers.ext.artifactory.ArtifactoryServiceImpl.ArtifactoryErrorResponse;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.utils.ArtifactType;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.RepositoryType;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.message.BasicStatusLine;
-import org.jfrog.artifactory.client.Artifactory;
 import org.jfrog.artifactory.client.ArtifactoryClientBuilder;
-import org.jfrog.artifactory.client.ArtifactoryResponse;
-import org.jfrog.artifactory.client.impl.ArtifactoryResponseImpl;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(CDC)
 public class ArtifactoryServiceTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @InjectMocks ArtifactoryService artifactoryService = new ArtifactoryServiceImpl();
+  @InjectMocks ArtifactoryClientImpl artifactoryClient = new ArtifactoryClientImpl();
 
   /**
    * The Wire mock rule.
@@ -89,7 +81,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetMavenRepositories() {
-    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, WAR);
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, "");
     assertThat(repositories).isNotNull();
     assertThat(repositories).containsKeys("harness-maven");
     assertThat(repositories).doesNotContainKeys("docker");
@@ -99,7 +91,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetIvyRepositories() {
-    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, WAR);
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, "");
     assertThat(repositories).isNotNull();
     assertThat(repositories).containsKeys("harness-ivy");
     assertThat(repositories).doesNotContainKeys("docker");
@@ -109,7 +101,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetDockerRepositoriesWithArtifactType() {
-    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, ArtifactType.DOCKER);
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, RepositoryType.docker);
     assertThat(repositories).isNotNull();
     assertThat(repositories).containsKeys("docker");
     assertThat(repositories).doesNotContainKeys("harness-maven");
@@ -140,7 +132,7 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldGetRpmRepositories() {
-    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, RPM);
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, "");
     assertThat(repositories).isNotNull();
     assertThat(repositories).containsKeys("harness-rpm");
   }
@@ -319,49 +311,45 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void shouldTestArtifactoryRunning() {
-    assertThat(artifactoryService.isRunning(artifactoryConfig)).isTrue();
+    assertThat(artifactoryClient.isRunning(artifactoryConfig)).isTrue();
   }
 
   @Test
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
-  public void shouldThrowExceptionOnArtifactoryResponseWith407StatusCode() throws IOException, IllegalAccessException {
-    ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
-    Artifactory client = Mockito.mock(Artifactory.class);
-    ArtifactoryResponse artifactoryResponse = Mockito.mock(ArtifactoryResponse.class);
+  public void shouldThrowExceptionOnArtifactoryResponseWith407StatusCode() {
+    ArtifactoryConfigRequest artifactoryConfig =
+        ArtifactoryConfigRequest.builder()
+            .artifactoryUrl(String.format("http://localhost:%d/artifactory-407/", wireMockRule.port()))
+            .username("admin")
+            .password("dummy123!".toCharArray())
+            .build();
 
-    when(artifactoryResponse.getStatusLine())
-        .thenReturn(new BasicStatusLine(new ProtocolVersion("", 1, 1), 407, "407 Related Exception Phrase"));
-    when(service.getArtifactoryClient(artifactoryConfig)).thenReturn(client);
-    when(client.restCall(any())).thenReturn(artifactoryResponse);
-
-    assertThatThrownBy(() -> service.isRunning(artifactoryConfig))
+    assertThatThrownBy(() -> artifactoryClient.isRunning(artifactoryConfig))
+        .isInstanceOf(HintException.class)
+        .getCause()
+        .isInstanceOf(ExplanationException.class)
+        .getCause()
         .isInstanceOf(InvalidRequestException.class)
-        .hasMessageContaining("407 Related Exception Phrase");
+        .hasMessageContaining("Proxy Authentication Required");
   }
 
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  public void shouldThrowExceptionOnArtifactoryResponseWith500StatusCode() throws IOException, IllegalAccessException {
-    ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
-    Artifactory client = Mockito.mock(Artifactory.class);
-    ArtifactoryResponse artifactoryResponse = Mockito.mock(ArtifactoryResponseImpl.class);
+  public void shouldThrowExceptionOnArtifactoryResponseWith500StatusCode() {
+    ArtifactoryConfigRequest artifactoryConfig =
+        ArtifactoryConfigRequest.builder()
+            .artifactoryUrl(String.format("http://localhost:%d/artifactory-500/", wireMockRule.port()))
+            .username("admin")
+            .password("dummy123!".toCharArray())
+            .build();
 
-    when(artifactoryResponse.getStatusLine())
-        .thenReturn(new BasicStatusLine(new ProtocolVersion("", 1, 1), 500, "Internal Server Error"));
-    when(artifactoryResponse.parseBody(ArtifactoryErrorResponse.class))
-        .thenReturn(JsonUtils.convertStringToObj("{\n"
-                + "  \"errors\" : [ {\n"
-                + "    \"status\" : 500,\n"
-                + "    \"message\" : \"Artifactory failed to initialize: check Artifactory logs for errors.\"\n"
-                + "  } ]\n"
-                + "}",
-            ArtifactoryErrorResponse.class));
-    when(service.getArtifactoryClient(artifactoryConfig)).thenReturn(client);
-    when(client.restCall(any())).thenReturn(artifactoryResponse);
-
-    assertThatThrownBy(() -> service.isRunning(artifactoryConfig))
+    assertThatThrownBy(() -> artifactoryClient.isRunning(artifactoryConfig))
+        .isInstanceOf(HintException.class)
+        .getCause()
+        .isInstanceOf(ExplanationException.class)
+        .getCause()
         .isInstanceOf(ArtifactoryServerException.class)
         .hasMessageContaining(
             "Request to server failed with status code: 500 with message - Artifactory failed to initialize: check Artifactory logs for errors.");
@@ -370,26 +358,19 @@ public class ArtifactoryServiceTest extends CategoryTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
-  public void shouldThrowExceptionOnArtifactoryResponseWith500StatusCodeForGetRespositories()
-      throws IOException, IllegalAccessException {
-    ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
-    Artifactory client = Mockito.mock(Artifactory.class);
-    ArtifactoryResponse artifactoryResponse = Mockito.mock(ArtifactoryResponseImpl.class);
+  public void shouldThrowExceptionOnArtifactoryResponseWith500StatusCodeForGetRespositories() {
+    ArtifactoryConfigRequest artifactoryConfig =
+        ArtifactoryConfigRequest.builder()
+            .artifactoryUrl(String.format("http://localhost:%d/artifactory-500/", wireMockRule.port()))
+            .username("admin")
+            .password("dummy123!".toCharArray())
+            .build();
 
-    when(artifactoryResponse.getStatusLine())
-        .thenReturn(new BasicStatusLine(new ProtocolVersion("", 1, 1), 500, "Internal Server Error"));
-    when(artifactoryResponse.parseBody(ArtifactoryErrorResponse.class))
-        .thenReturn(JsonUtils.convertStringToObj("{\n"
-                + "  \"errors\" : [ {\n"
-                + "    \"status\" : 500,\n"
-                + "    \"message\" : \"Artifactory failed to initialize: check Artifactory logs for errors.\"\n"
-                + "  } ]\n"
-                + "}",
-            ArtifactoryErrorResponse.class));
-    when(service.getArtifactoryClient(artifactoryConfig)).thenReturn(client);
-    when(client.restCall(any())).thenReturn(artifactoryResponse);
-
-    assertThatThrownBy(() -> service.getRepositories(artifactoryConfig))
+    assertThatThrownBy(() -> artifactoryService.getRepositories(artifactoryConfig))
+        .isInstanceOf(HintException.class)
+        .getCause()
+        .isInstanceOf(ExplanationException.class)
+        .getCause()
         .isInstanceOf(ArtifactoryServerException.class)
         .hasMessageContaining(
             "Request to server failed with status code: 500 with message - Artifactory failed to initialize: check Artifactory logs for errors.");

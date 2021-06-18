@@ -21,6 +21,7 @@ import static io.harness.steps.StepUtils.prepareTaskRequestWithTaskSelector;
 import static io.harness.validation.Validator.notEmptyCheck;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
@@ -32,6 +33,7 @@ import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.ManifestType;
@@ -473,7 +475,7 @@ public class K8sStepHelper {
           KubernetesAuthCredentialDTO authCredentialDTO = clusterDetailsDTO.getAuth().getCredentials();
           return secretManagerClientService.getEncryptionDetails(ngAccess, authCredentialDTO);
         } else {
-          return Collections.emptyList();
+          return emptyList();
         }
 
       case HTTP_HELM_REPO:
@@ -482,7 +484,7 @@ public class K8sStepHelper {
         if (isNotEmpty(decryptableEntities)) {
           return secretManagerClientService.getEncryptionDetails(ngAccess, decryptableEntities.get(0));
         } else {
-          return Collections.emptyList();
+          return emptyList();
         }
 
       case AWS:
@@ -491,7 +493,7 @@ public class K8sStepHelper {
         if (isNotEmpty(awsDecryptableEntities)) {
           return secretManagerClientService.getEncryptionDetails(ngAccess, awsDecryptableEntities.get(0));
         } else {
-          return Collections.emptyList();
+          return emptyList();
         }
 
       case GCP:
@@ -500,7 +502,7 @@ public class K8sStepHelper {
         if (isNotEmpty(gcpDecryptableEntities)) {
           return secretManagerClientService.getEncryptionDetails(ngAccess, gcpDecryptableEntities.get(0));
         } else {
-          return Collections.emptyList();
+          return emptyList();
         }
 
       case APP_DYNAMICS:
@@ -550,7 +552,7 @@ public class K8sStepHelper {
   }
 
   public TaskChainResponse queueK8sTask(StepElementParameters stepElementParameters, K8sDeployRequest k8sDeployRequest,
-      Ambiance ambiance, InfrastructureOutcome infrastructure) {
+      Ambiance ambiance, K8sExecutionPassThroughData executionPassThroughData) {
     TaskData taskData = TaskData.builder()
                             .parameters(new Object[] {k8sDeployRequest})
                             .taskType(TaskType.K8S_COMMAND_TASK_NG.name())
@@ -564,13 +566,17 @@ public class K8sStepHelper {
         k8SSpecParameters.getCommandUnits(), taskName,
         TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))));
 
-    return TaskChainResponse.builder().taskRequest(taskRequest).chainEnd(true).passThroughData(infrastructure).build();
+    return TaskChainResponse.builder()
+        .taskRequest(taskRequest)
+        .chainEnd(true)
+        .passThroughData(executionPassThroughData)
+        .build();
   }
 
   public List<String> renderValues(
       ManifestOutcome manifestOutcome, Ambiance ambiance, List<String> valuesFileContents) {
     if (isEmpty(valuesFileContents) || ManifestType.Kustomize.equals(manifestOutcome.getType())) {
-      return Collections.emptyList();
+      return emptyList();
     }
 
     List<String> renderedValuesFileContents =
@@ -593,7 +599,7 @@ public class K8sStepHelper {
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
                                                         .k8sManifestOutcome(k8sManifestOutcome)
                                                         .valuesManifestOutcomes(aggregatedValuesManifests)
-                                                        .openshiftParamManifestOutcomes(Collections.emptyList())
+                                                        .openshiftParamManifestOutcomes(emptyList())
                                                         .infrastructure(infrastructure)
                                                         .helmValuesFileContent(helmValuesYamlContent)
                                                         .build();
@@ -618,7 +624,7 @@ public class K8sStepHelper {
 
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
                                                         .k8sManifestOutcome(k8sManifestOutcome)
-                                                        .valuesManifestOutcomes(Collections.emptyList())
+                                                        .valuesManifestOutcomes(emptyList())
                                                         .openshiftParamManifestOutcomes(openshiftParamManifests)
                                                         .infrastructure(infrastructure)
                                                         .build();
@@ -643,8 +649,8 @@ public class K8sStepHelper {
           ambiance, stepElementParameters, infrastructure, k8sManifestOutcome, aggregatedValuesManifests);
     }
 
-    return k8sStepExecutor.executeK8sTask(
-        k8sManifestOutcome, ambiance, stepElementParameters, Collections.emptyList(), infrastructure, true);
+    return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
+        K8sExecutionPassThroughData.builder().infrastructure(infrastructure).build(), true);
   }
 
   private TaskChainResponse prepareGitFetchValuesTaskChainResponse(StoreConfig storeConfig, Ambiance ambiance,
@@ -671,7 +677,7 @@ public class K8sStepHelper {
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
                                                         .k8sManifestOutcome(k8sManifestOutcome)
                                                         .valuesManifestOutcomes(orderedValuesManifests)
-                                                        .openshiftParamManifestOutcomes(Collections.emptyList())
+                                                        .openshiftParamManifestOutcomes(emptyList())
                                                         .infrastructure(infrastructure)
                                                         .build();
 
@@ -724,7 +730,7 @@ public class K8sStepHelper {
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
                                                         .k8sManifestOutcome(k8sManifestOutcome)
                                                         .valuesManifestOutcomes(aggregatedValuesManifests)
-                                                        .openshiftParamManifestOutcomes(Collections.emptyList())
+                                                        .openshiftParamManifestOutcomes(emptyList())
                                                         .infrastructure(infrastructure)
                                                         .build();
 
@@ -841,8 +847,8 @@ public class K8sStepHelper {
 
     ManifestOutcome k8sManifestOutcome = getK8sSupportedManifestOutcome(new LinkedList<>(manifestsOutcome.values()));
     if (ManifestType.Kustomize.equals(k8sManifestOutcome.getType())) {
-      return k8sStepExecutor.executeK8sTask(
-          k8sManifestOutcome, ambiance, stepElementParameters, Collections.emptyList(), infrastructureOutcome, true);
+      return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
+          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true);
     }
 
     if (VALUES_YAML_SUPPORTED_MANIFEST_TYPES.contains(k8sManifestOutcome.getType())) {
@@ -875,13 +881,14 @@ public class K8sStepHelper {
       StepElementParameters stepElementParameters, InfrastructureOutcome infrastructureOutcome) {
     List<OpenshiftParamManifestOutcome> openshiftParamManifests = getOpenshiftParamManifests(manifestOutcomes);
     if (isEmpty(openshiftParamManifests)) {
-      return k8sStepExecutor.executeK8sTask(
-          k8sManifestOutcome, ambiance, stepElementParameters, Collections.emptyList(), infrastructureOutcome, true);
+      return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
+          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true);
     }
     if (!isAnyOcParamRemoteStore(openshiftParamManifests)) {
-      List<String> openshiftParamContentsForLocalStore = Collections.emptyList();
+      List<String> openshiftParamContentsForLocalStore = emptyList();
       return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters,
-          openshiftParamContentsForLocalStore, infrastructureOutcome, true);
+          openshiftParamContentsForLocalStore,
+          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true);
     }
 
     return prepareOpenshiftParamFetchTask(
@@ -896,7 +903,8 @@ public class K8sStepHelper {
     if (isNotEmpty(aggregatedValuesManifests) && !isAnyRemoteStore(aggregatedValuesManifests)) {
       List<String> valuesFileContentsForLocalStore = getValuesFileContentsForLocalStore(aggregatedValuesManifests);
       return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters,
-          valuesFileContentsForLocalStore, infrastructureOutcome, true);
+          valuesFileContentsForLocalStore,
+          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true);
     }
 
     return prepareValuesFetchTask(k8sStepExecutor, ambiance, stepElementParameters, infrastructureOutcome,
@@ -958,7 +966,7 @@ public class K8sStepHelper {
 
   private List<String> getValuesFileContentsForLocalStore(List<ValuesManifestOutcome> aggregatedValuesManifests) {
     // TODO: implement when local store is available
-    return Collections.emptyList();
+    return emptyList();
   }
 
   private boolean isAnyOcParamRemoteStore(@NotEmpty List<OpenshiftParamManifestOutcome> openshiftParamManifests) {
@@ -1001,8 +1009,8 @@ public class K8sStepHelper {
           .build();
     }
 
-    return k8sStepExecutor.executeK8sTask(k8sManifest, ambiance, stepElementParameters, Collections.emptyList(),
-        k8sStepPassThroughData.getInfrastructure(), true);
+    return k8sStepExecutor.executeK8sTask(k8sManifest, ambiance, stepElementParameters, emptyList(),
+        K8sExecutionPassThroughData.builder().infrastructure(k8sStepPassThroughData.getInfrastructure()).build(), true);
   }
 
   private UnitProgressData completeUnitProgressData(
@@ -1055,7 +1063,11 @@ public class K8sStepHelper {
     }
 
     return k8sStepExecutor.executeK8sTask(k8sManifest, ambiance, stepElementParameters, valuesFileContents,
-        k8sStepPassThroughData.getInfrastructure(), false);
+        K8sExecutionPassThroughData.builder()
+            .infrastructure(k8sStepPassThroughData.getInfrastructure())
+            .lastActiveUnitProgressData(gitFetchResponse.getUnitProgressData())
+            .build(),
+        false);
   }
 
   private TaskChainResponse handleHelmValuesFetchResponse(ResponseData responseData, K8sStepExecutor k8sStepExecutor,
@@ -1078,9 +1090,13 @@ public class K8sStepHelper {
           k8sStepPassThroughData.getK8sManifestOutcome(), aggregatedValuesManifest, valuesFileContent);
     } else {
       List<String> valuesFileContents =
-          (isNotEmpty(valuesFileContent)) ? ImmutableList.of(valuesFileContent) : Collections.emptyList();
+          (isNotEmpty(valuesFileContent)) ? ImmutableList.of(valuesFileContent) : emptyList();
       return k8sStepExecutor.executeK8sTask(k8sManifest, ambiance, stepElementParameters, valuesFileContents,
-          k8sStepPassThroughData.getInfrastructure(), false);
+          K8sExecutionPassThroughData.builder()
+              .infrastructure(k8sStepPassThroughData.getInfrastructure())
+              .lastActiveUnitProgressData(helmValuesFetchResponse.getUnitProgressData())
+              .build(),
+          false);
     }
   }
 
@@ -1242,6 +1258,28 @@ public class K8sStepHelper {
 
   public LogCallback getLogCallback(String commandUnitName, Ambiance ambiance, boolean shouldOpenStream) {
     return new NGLogCallback(logStreamingStepClientFactory, ambiance, commandUnitName, shouldOpenStream);
+  }
+
+  public StepResponse handleTaskException(
+      Ambiance ambiance, K8sExecutionPassThroughData executionPassThroughData, Exception e) {
+    UnitProgressData unitProgressData =
+        completeUnitProgressData(executionPassThroughData.getLastActiveUnitProgressData(), ambiance, e);
+    FailureData failureData = FailureData.newBuilder()
+                                  .addFailureTypes(FailureType.APPLICATION_FAILURE)
+                                  .setLevel(Level.ERROR.name())
+                                  .setCode(GENERAL_ERROR.name())
+                                  .setMessage(emptyIfNull(ExceptionUtils.getMessage(e)))
+                                  .build();
+
+    return StepResponse.builder()
+        .unitProgressList(unitProgressData.getUnitProgresses())
+        .status(Status.FAILED)
+        .failureInfo(FailureInfo.newBuilder()
+                         .addAllFailureTypes(failureData.getFailureTypesList())
+                         .setErrorMessage(failureData.getMessage())
+                         .addFailureData(failureData)
+                         .build())
+        .build();
   }
 
   public static boolean getParameterFieldBooleanValue(

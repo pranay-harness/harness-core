@@ -21,7 +21,9 @@ import io.harness.ng.core.event.EntityToEntityProtoHelper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.StringValue;
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -32,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 @Slf4j
 public class GitChangeSetMapper {
-  ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+  private ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
 
   public List<ChangeSet> toChangeSetList(List<GitToHarnessFileProcessingRequest> fileContentsList, String accountId,
       List<YamlGitConfigDTO> yamlGitConfigDTOs) {
@@ -68,9 +70,9 @@ public class GitChangeSetMapper {
     String orgIdentifier;
     String projectIdentifier;
     try {
-      final JsonNode jsonNode = objectMapper.readTree(fileContent.getContent());
-      projectIdentifier = jsonNode.get(0).get(NGCommonEntityConstants.PROJECT_KEY).asText();
-      orgIdentifier = jsonNode.get(0).get(NGCommonEntityConstants.ORG_KEY).asText();
+      final JsonNode jsonNode = convertYamlToJsonNode(fileContent.getContent());
+      projectIdentifier = getKeyInNode(jsonNode, NGCommonEntityConstants.PROJECT_KEY);
+      orgIdentifier = getKeyInNode(jsonNode, NGCommonEntityConstants.ORG_KEY);
     } catch (Exception e) {
       log.error(
           "Ill formed yaml found. Filepath: [{}], Content[{}]", fileContent.getPath(), fileContent.getContent(), e);
@@ -94,6 +96,16 @@ public class GitChangeSetMapper {
       }
       return builder.setYamlGitConfigInfo(yamlGitConfigBuilder.build()).build();
     }
+  }
+
+  @VisibleForTesting
+  static String getKeyInNode(JsonNode jsonNode, String key) {
+    return jsonNode.fields().next().getValue().get(key).asText();
+  }
+
+  @VisibleForTesting
+  JsonNode convertYamlToJsonNode(String yaml) throws IOException {
+    return objectMapper.readTree(yaml);
   }
 
   private Optional<YamlGitConfigDTO> getYamlGitConfigDTO(

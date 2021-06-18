@@ -7,6 +7,7 @@ import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.K8sCanaryBaseStepInfo.K8sCanaryBaseStepInfoKeys;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
@@ -66,7 +67,8 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollback implements K8
   @Override
   public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
       StepElementParameters stepElementParameters, List<String> valuesFileContents,
-      InfrastructureOutcome infrastructure, boolean shouldOpenFetchFilesLogStream) {
+      K8sExecutionPassThroughData executionPassThroughData, boolean shouldOpenFetchFilesLogStream) {
+    final InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
     final String releaseName = k8sStepHelper.getReleaseName(infrastructure);
     final K8sCanaryStepParameters canaryStepParameters = (K8sCanaryStepParameters) stepElementParameters.getSpec();
     final Integer instancesValue = canaryStepParameters.getInstanceSelection().getSpec().getInstances();
@@ -94,12 +96,13 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollback implements K8
             .shouldOpenFetchFilesLogStream(shouldOpenFetchFilesLogStream)
             .build();
 
-    return k8sStepHelper.queueK8sTask(stepElementParameters, k8sCanaryDeployRequest, ambiance, infrastructure);
+    return k8sStepHelper.queueK8sTask(
+        stepElementParameters, k8sCanaryDeployRequest, ambiance, executionPassThroughData);
   }
 
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, StepElementParameters stepElementParameters,
-      PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) throws Exception {
+      PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) {
     if (passThroughData instanceof GitFetchResponsePassThroughData) {
       return k8sStepHelper.handleGitTaskFailure((GitFetchResponsePassThroughData) passThroughData);
     }
@@ -112,32 +115,39 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollback implements K8
       return k8sStepHelper.handleStepExceptionFailure((StepExceptionPassThroughData) passThroughData);
     }
 
-    K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
-    StepResponseBuilder responseBuilder =
-        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
-    InfrastructureOutcome infrastructure = (InfrastructureOutcome) passThroughData;
-    K8sCanaryDeployResponse k8sCanaryDeployResponse =
-        (K8sCanaryDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
+    K8sExecutionPassThroughData executionPassThroughData = (K8sExecutionPassThroughData) passThroughData;
 
-    K8sCanaryOutcome k8sCanaryOutcome = K8sCanaryOutcome.builder()
-                                            .releaseName(k8sStepHelper.getReleaseName(infrastructure))
-                                            .releaseNumber(k8sCanaryDeployResponse.getReleaseNumber())
-                                            .targetInstances(k8sCanaryDeployResponse.getCurrentInstances())
-                                            .canaryWorkload(k8sCanaryDeployResponse.getCanaryWorkload())
-                                            .canaryWorkloadDeployed(k8sCanaryDeployResponse.isCanaryWorkloadDeployed())
-                                            .build();
+    try {
+      K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
+      StepResponseBuilder responseBuilder = StepResponse.builder().unitProgressList(
+          k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
+      InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
+      K8sCanaryDeployResponse k8sCanaryDeployResponse =
+          (K8sCanaryDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
 
-    executionSweepingOutputService.consume(
-        ambiance, OutcomeExpressionConstants.K8S_CANARY_OUTCOME, k8sCanaryOutcome, StepOutcomeGroup.STAGE.name());
-    if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, responseBuilder).build();
+      K8sCanaryOutcome k8sCanaryOutcome =
+          K8sCanaryOutcome.builder()
+              .releaseName(k8sStepHelper.getReleaseName(infrastructure))
+              .releaseNumber(k8sCanaryDeployResponse.getReleaseNumber())
+              .targetInstances(k8sCanaryDeployResponse.getCurrentInstances())
+              .canaryWorkload(k8sCanaryDeployResponse.getCanaryWorkload())
+              .canaryWorkloadDeployed(k8sCanaryDeployResponse.isCanaryWorkloadDeployed())
+              .build();
+
+      executionSweepingOutputService.consume(
+          ambiance, OutcomeExpressionConstants.K8S_CANARY_OUTCOME, k8sCanaryOutcome, StepOutcomeGroup.STAGE.name());
+      if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+        return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, responseBuilder).build();
+      }
+      return responseBuilder.status(Status.SUCCEEDED)
+          .stepOutcome(StepResponse.StepOutcome.builder()
+                           .name(OutcomeExpressionConstants.OUTPUT)
+                           .outcome(k8sCanaryOutcome)
+                           .build())
+          .build();
+    } catch (Exception e) {
+      return k8sStepHelper.handleTaskException(ambiance, executionPassThroughData, e);
     }
-    return responseBuilder.status(Status.SUCCEEDED)
-        .stepOutcome(StepResponse.StepOutcome.builder()
-                         .name(OutcomeExpressionConstants.OUTPUT)
-                         .outcome(k8sCanaryOutcome)
-                         .build())
-        .build();
   }
 
   @Override

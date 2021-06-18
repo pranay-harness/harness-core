@@ -18,7 +18,23 @@ public enum GitToHarnessProgressStatus {
     return terminalFailureStatusList().contains(this);
   }
 
+  public boolean isInProcess() {
+    return inProcessStatusList().contains(this);
+  }
+
+  public boolean isSuccessStatus() {
+    return terminalSuccessStatusList().contains(this);
+  }
+
   private List<GitToHarnessProgressStatus> terminalFailureStatusList() {
     return Arrays.asList(ERROR);
+  }
+
+  private List<GitToHarnessProgressStatus> terminalSuccessStatusList() {
+    return Arrays.asList(DONE);
+  }
+
+  private List<GitToHarnessProgressStatus> inProcessStatusList() {
+    return Arrays.asList(TO_DO, IN_PROCESS);
   }
 }

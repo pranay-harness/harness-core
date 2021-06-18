@@ -15,16 +15,16 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.VIKAS_S;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -36,6 +36,7 @@ import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome.K8sDirectInfrastructureOutcomeBuilder;
 import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.steps.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
@@ -90,6 +91,7 @@ import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestType;
 import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.helm.HelmSubCommandType;
@@ -122,18 +124,19 @@ import io.harness.tasks.ResponseData;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
@@ -147,9 +150,15 @@ public class K8sStepHelperTest extends CategoryTest {
   @Mock private OutcomeService outcomeService;
   @Mock private K8sStepExecutor k8sStepExecutor;
   @Mock private KryoSerializer kryoSerializer;
-  @InjectMocks private K8sStepHelper k8sStepHelper;
+  @Spy @InjectMocks private K8sStepHelper k8sStepHelper;
 
+  @Mock private LogCallback mockLogCallback;
   private final Ambiance ambiance = Ambiance.newBuilder().putSetupAbstractions("accountId", "test-account").build();
+
+  @Before
+  public void setup() {
+    doReturn(mockLogCallback).when(k8sStepHelper).getLogCallback(anyString(), eq(ambiance), anyBoolean());
+  }
 
   @Test
   @Owner(developers = VAIBHAV_SI)
@@ -326,7 +335,7 @@ public class K8sStepHelperTest extends CategoryTest {
             .store(GitStore.builder()
                        .branch(ParameterField.createValueField("test"))
                        .connectorRef(ParameterField.createValueField("org.connectorRef"))
-                       .paths(ParameterField.createValueField(Arrays.asList("file1", "file2")))
+                       .paths(ParameterField.createValueField(asList("file1", "file2")))
                        .build())
             .build();
 
@@ -348,10 +357,10 @@ public class K8sStepHelperTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testGetManifestDelegateConfigForHelmChart() {
-    List<HelmManifestCommandFlag> commandFlags = Arrays.asList(HelmManifestCommandFlag.builder()
-                                                                   .commandType(HelmCommandFlagType.Fetch)
-                                                                   .flag(ParameterField.createValueField("--test"))
-                                                                   .build(),
+    List<HelmManifestCommandFlag> commandFlags = asList(HelmManifestCommandFlag.builder()
+                                                            .commandType(HelmCommandFlagType.Fetch)
+                                                            .flag(ParameterField.createValueField("--test"))
+                                                            .build(),
         HelmManifestCommandFlag.builder()
             .commandType(HelmCommandFlagType.Version)
             .flag(ParameterField.createValueField("--test2"))
@@ -361,7 +370,7 @@ public class K8sStepHelperTest extends CategoryTest {
             .store(GitStore.builder()
                        .branch(ParameterField.createValueField("test"))
                        .connectorRef(ParameterField.createValueField("org.connectorRef"))
-                       .paths(ParameterField.createValueField(Arrays.asList("file1", "file2")))
+                       .paths(ParameterField.createValueField(asList("file1", "file2")))
                        .build())
             .skipResourceVersioning(true)
             .helmVersion(HelmVersion.V3)
@@ -429,7 +438,7 @@ public class K8sStepHelperTest extends CategoryTest {
             .store(GitStore.builder()
                        .branch(ParameterField.createValueField("test"))
                        .connectorRef(ParameterField.createValueField("org.connectorRef"))
-                       .paths(ParameterField.createValueField(Arrays.asList("file1")))
+                       .paths(ParameterField.createValueField(asList("file1")))
                        .folderPath(ParameterField.createValueField("kustomize-dir"))
                        .build())
             .pluginPath("/usr/bin/kustomize")
@@ -494,7 +503,7 @@ public class K8sStepHelperTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void shouldConvertGitAccountRepoWithRepoName() {
-    List<String> paths = Arrays.asList("path/to");
+    List<String> paths = asList("path/to");
     GitStoreConfig gitStoreConfig = GithubStore.builder()
                                         .repoName(ParameterField.createValueField("parent-repo/module"))
                                         .paths(ParameterField.createValueField(paths))
@@ -517,7 +526,7 @@ public class K8sStepHelperTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void shouldNotConvertGitRepoWithRepoName() {
-    List<String> paths = Arrays.asList("path/to");
+    List<String> paths = asList("path/to");
     GitStoreConfig gitStoreConfig = GithubStore.builder()
                                         .repoName(ParameterField.createValueField("parent-repo/module"))
                                         .paths(ParameterField.createValueField(paths))
@@ -541,7 +550,7 @@ public class K8sStepHelperTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void shouldFailGitRepoConversionIfRepoNameIsMissing() {
-    List<String> paths = Arrays.asList("path/to");
+    List<String> paths = asList("path/to");
     GitStoreConfig gitStoreConfig = GithubStore.builder().paths(ParameterField.createValueField(paths)).build();
     ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
     SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
@@ -562,7 +571,7 @@ public class K8sStepHelperTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void shouldTrimFieldsForGetGitStoreDelegateConfig() {
-    List<String> paths = Arrays.asList("test/path1", "test/path2 ", " test/path3", " test/path4 ", "te st/path5 ");
+    List<String> paths = asList("test/path1", "test/path2 ", " test/path3", " test/path4 ", "te st/path5 ");
     GitStoreConfig gitStoreConfig = GithubStore.builder()
                                         .paths(ParameterField.createValueField(paths))
                                         .commitId(ParameterField.createValueField(" commitId "))
@@ -592,7 +601,7 @@ public class K8sStepHelperTest extends CategoryTest {
             .store(GitStore.builder()
                        .branch(ParameterField.createValueField("test"))
                        .connectorRef(ParameterField.createValueField("org.connectorRef"))
-                       .paths(ParameterField.createValueField(Arrays.asList("file1", "file2")))
+                       .paths(ParameterField.createValueField(asList("file1", "file2")))
                        .build())
             .build();
 
@@ -616,7 +625,7 @@ public class K8sStepHelperTest extends CategoryTest {
   public void shouldRenderReversedValuesFilesForOpenshiftManifest() {
     String valueFile1 = "file1";
     String valueFile2 = "file2";
-    List<String> valuesFiles = Arrays.asList(valueFile1, valueFile2);
+    List<String> valuesFiles = asList(valueFile1, valueFile2);
 
     doReturn(valueFile1).when(engineExpressionService).renderExpression(any(), eq(valueFile1));
     doReturn(valueFile2).when(engineExpressionService).renderExpression(any(), eq(valueFile2));
@@ -819,7 +828,7 @@ public class K8sStepHelperTest extends CategoryTest {
         K8sDirectInfrastructureOutcome.builder().namespace("default").build();
     GitStore gitStore = GitStore.builder()
                             .branch(ParameterField.createValueField("master"))
-                            .paths(ParameterField.createValueField(Arrays.asList("path/to/k8s/manifest")))
+                            .paths(ParameterField.createValueField(asList("path/to/k8s/manifest")))
                             .connectorRef(ParameterField.createValueField("git-connector"))
                             .build();
     K8sManifestOutcome k8sManifestOutcome = K8sManifestOutcome.builder().identifier("k8s").store(gitStore).build();
@@ -1180,7 +1189,9 @@ public class K8sStepHelperTest extends CategoryTest {
     ArgumentCaptor<List> valuesFilesContentCaptor = ArgumentCaptor.forClass(List.class);
     verify(k8sStepExecutor, times(1))
         .executeK8sTask(eq(passThroughData.getK8sManifestOutcome()), eq(ambiance), eq(rollingStepElementParams),
-            valuesFilesContentCaptor.capture(), eq(passThroughData.getInfrastructure()), eq(false));
+            valuesFilesContentCaptor.capture(),
+            eq(K8sExecutionPassThroughData.builder().infrastructure(passThroughData.getInfrastructure()).build()),
+            eq(false));
 
     List<String> valuesFilesContent = valuesFilesContentCaptor.getValue();
     assertThat(valuesFilesContent).isNotEmpty();
@@ -1219,16 +1230,13 @@ public class K8sStepHelperTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testExecuteNextLinkInternalStepException() throws Exception {
-    LogCallback mockLogCallback = mock(LogCallback.class);
-    K8sStepHelper spyK8sStepHelper = spy(k8sStepHelper);
-
     StepElementParameters rollingStepElementParams =
         StepElementParameters.builder().spec(K8sRollingStepParameters.infoBuilder().build()).build();
     UnitProgressData unitProgressData =
         UnitProgressData.builder()
-            .unitProgresses(Arrays.asList(
-                UnitProgress.newBuilder().setUnitName("Fetch Files").setStatus(UnitStatus.RUNNING).build(),
-                UnitProgress.newBuilder().setUnitName("Some Unit").setStatus(UnitStatus.SUCCESS).build()))
+            .unitProgresses(
+                asList(UnitProgress.newBuilder().setUnitName("Fetch Files").setStatus(UnitStatus.RUNNING).build(),
+                    UnitProgress.newBuilder().setUnitName("Some Unit").setStatus(UnitStatus.SUCCESS).build()))
             .build();
 
     K8sStepPassThroughData passThroughData = K8sStepPassThroughData.builder()
@@ -1248,10 +1256,14 @@ public class K8sStepHelperTest extends CategoryTest {
     doThrow(thrownException)
         .when(k8sStepExecutor)
         .executeK8sTask(passThroughData.getK8sManifestOutcome(), ambiance, rollingStepElementParams,
-            Collections.emptyList(), passThroughData.getInfrastructure(), false);
-    doReturn(mockLogCallback).when(spyK8sStepHelper).getLogCallback("Fetch Files", ambiance, false);
+            Collections.emptyList(),
+            K8sExecutionPassThroughData.builder()
+                .infrastructure(passThroughData.getInfrastructure())
+                .lastActiveUnitProgressData(unitProgressData)
+                .build(),
+            false);
 
-    TaskChainResponse response = spyK8sStepHelper.executeNextLink(
+    TaskChainResponse response = k8sStepHelper.executeNextLink(
         k8sStepExecutor, ambiance, rollingStepElementParams, passThroughData, responseDataSuplier);
 
     assertThat(response.getPassThroughData()).isInstanceOf(StepExceptionPassThroughData.class);
@@ -1303,5 +1315,32 @@ public class K8sStepHelperTest extends CategoryTest {
                            -> K8sStepHelper.getParameterFieldBooleanValue(ParameterField.createValueField("absad"),
                                "testField", StepElementParameters.builder().identifier("test").type("Test").build()))
         .hasMessageContaining("for field testField in Test step with identifier: test");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleTaskException() {
+    K8sExecutionPassThroughData executionPassThroughData =
+        K8sExecutionPassThroughData.builder()
+            .lastActiveUnitProgressData(
+                UnitProgressData.builder()
+                    .unitProgresses(
+                        asList(UnitProgress.newBuilder().setUnitName("Completed").setStatus(UnitStatus.SUCCESS).build(),
+                            UnitProgress.newBuilder().setUnitName("Running").setStatus(UnitStatus.RUNNING).build()))
+                    .build())
+            .build();
+
+    Exception exception = new GeneralException("Something went wrong");
+
+    StepResponse stepResponse = k8sStepHelper.handleTaskException(ambiance, executionPassThroughData, exception);
+    assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
+    assertThat(stepResponse.getFailureInfo().getFailureDataList()).hasSize(1);
+    assertThat(stepResponse.getFailureInfo().getFailureData(0).getMessage())
+        .isEqualTo(ExceptionUtils.getMessage(exception));
+    assertThat(stepResponse.getUnitProgressList()).hasSize(2);
+    assertThat(stepResponse.getUnitProgressList().get(0).getStatus()).isEqualTo(UnitStatus.SUCCESS);
+    assertThat(stepResponse.getUnitProgressList().get(1).getStatus()).isEqualTo(UnitStatus.FAILURE);
+    assertThat(stepResponse.getUnitProgressList().get(1).getEndTime()).isNotZero();
   }
 }

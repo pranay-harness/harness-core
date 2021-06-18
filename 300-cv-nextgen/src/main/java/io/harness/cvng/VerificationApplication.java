@@ -8,6 +8,7 @@ import static io.harness.cvng.migration.beans.CVNGSchema.CVNGMigrationStatus.RUN
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_FACILITATOR_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_INTERRUPT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_ADVISE_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_RESUME_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_START_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_EVENT_TOPIC;
@@ -104,6 +105,7 @@ import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.listener.facilitators.FacilitatorEventRedisConsumer;
 import io.harness.pms.listener.interrupts.InterruptEventRedisConsumer;
 import io.harness.pms.listener.node.advise.NodeAdviseEventRedisConsumer;
+import io.harness.pms.listener.node.resume.NodeResumeEventRedisConsumer;
 import io.harness.pms.listener.node.start.NodeStartEventRedisConsumer;
 import io.harness.pms.listener.orchestrationevent.OrchestrationEventRedisConsumer;
 import io.harness.pms.listener.progress.ProgressEventRedisConsumer;
@@ -132,6 +134,7 @@ import io.harness.yaml.YamlSdkInitHelper;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -175,6 +178,7 @@ import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.reflections.Reflections;
+import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
@@ -262,6 +266,12 @@ public class VerificationApplication extends Application<VerificationConfigurati
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
             .addAll(CvNextGenRegistrars.morphiaConverters)
             .build();
+      }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder().build();
       }
     });
 
@@ -424,7 +434,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
     return PmsSdkConfiguration.builder()
         .deploymentMode(remote ? SdkDeployMode.REMOTE : SdkDeployMode.LOCAL)
         .moduleType(ModuleType.CV)
-        .mongoConfig(config.getPmsMongoConfig())
         .pipelineServiceInfoProviderClass(CVNGPipelineServiceInfoProvider.class)
         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
         .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
@@ -456,6 +465,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
         .nodeAdviseEventConsumerConfig(
             ConsumerConfig.newBuilder()
                 .setRedis(Redis.newBuilder().setTopicName(PIPELINE_NODE_ADVISE_EVENT_TOPIC).build())
+                .build())
+        .nodeResumeEventConsumerConfig(
+            ConsumerConfig.newBuilder()
+                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_NODE_RESUME_EVENT_TOPIC).build())
                 .build())
         .build();
   }
@@ -761,6 +774,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class), 1);
     pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 1);
     pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 1);
   }
 
   private void registerResources(Environment environment, Injector injector) {

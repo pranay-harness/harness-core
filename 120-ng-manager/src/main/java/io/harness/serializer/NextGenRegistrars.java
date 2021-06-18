@@ -17,6 +17,7 @@ import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import io.serializer.registrars.NGCommonsRegistrars;
 import org.mongodb.morphia.converters.TypeConverter;
 
 @OwnedBy(HarnessTeam.PL)
@@ -29,6 +30,7 @@ public class NextGenRegistrars {
           .addAll(OutboxEventRegistrars.kryoRegistrars)
           .addAll(NGFileServiceRegistrars.kryoRegistrars)
           .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
+          .addAll(NGCommonsRegistrars.kryoRegistrars)
           .add(PipelineServiceUtilKryoRegistrar.class)
           .build();
 

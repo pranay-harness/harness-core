@@ -46,7 +46,6 @@ public class PmsSdkCoreModule extends AbstractModule {
       install(PmsSdkDummyGrpcModule.getInstance());
     }
 
-    install(PmsSdkQueueModule.getInstance(config));
     bind(PMSInterruptService.class).to(PMSInterruptServiceGrpcImpl.class).in(Singleton.class);
     bind(OutcomeService.class).to(OutcomeGrpcServiceImpl.class).in(Singleton.class);
     bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingGrpcOutputService.class).in(Singleton.class);

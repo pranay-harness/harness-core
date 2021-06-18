@@ -63,6 +63,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -88,7 +89,7 @@ public class TerraformStepHelper {
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
   @Inject private FileServiceClientFactory fileService;
-  @Inject private SecretManagerClientService secretManagerClientService;
+  @Named("PRIVILEGED") @Inject private SecretManagerClientService secretManagerClientService;
 
   public String generateFullIdentifier(String provisionerIdentifier, Ambiance ambiance) {
     return String.format("%s/%s/%s/%s", AmbianceHelper.getAccountId(ambiance),

@@ -24,6 +24,7 @@ message InitializeSdkRequest {
   ConsumerConfig nodeStartEventConsumerConfig = 9;
   ConsumerConfig progressEventConsumerConfig = 10;
   ConsumerConfig nodeAdviseEventConsumerConfig = 11;
+  ConsumerConfig nodeResumeEventConsumerConfig = 12;
 }
 
 message InitializeSdkResponse {}

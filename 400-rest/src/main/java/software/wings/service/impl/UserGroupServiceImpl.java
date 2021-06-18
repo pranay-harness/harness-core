@@ -72,6 +72,7 @@ import software.wings.beans.sso.SSOType;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.RbacFeature;
 import software.wings.features.api.UsageLimitedFeature;
+import software.wings.scheduler.LdapGroupSyncJobHelper;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -140,6 +141,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject private CCMSettingService ccmSettingService;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject @Named(RbacFeature.FEATURE_NAME) private UsageLimitedFeature rbacFeature;
+  @Inject private LdapGroupSyncJobHelper ldapGroupSyncJobHelper;
 
   @Override
   public UserGroup save(UserGroup userGroup) {
@@ -774,6 +776,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     if (ssoType == SSOType.LDAP) {
       add(jobScheduler, accountId, ssoId);
+      ldapGroupSyncJobHelper.syncJob(ssoSettings);
     }
 
     return updatedGroup;
