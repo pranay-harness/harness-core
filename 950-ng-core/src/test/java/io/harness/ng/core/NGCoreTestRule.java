@@ -1,5 +1,6 @@
 package io.harness.ng.core;
 
+import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -35,6 +36,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.serializer.registrars.NGCommonsRegistrars;
 import java.lang.annotation.Annotation;
@@ -93,6 +95,7 @@ public class NGCoreTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
       }
 
       @Provides
+      @Named(OUTBOX_TRANSACTION_TEMPLATE)
       @Singleton
       TransactionTemplate getTransactionTemplate(MongoTransactionManager mongoTransactionManager) {
         return new HTransactionTemplate(mongoTransactionManager, false);
