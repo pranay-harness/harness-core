@@ -1,10 +1,13 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
+import static software.wings.beans.CanaryWorkflowExecutionAdvisor.ROLLBACK_PROVISIONERS;
 import static software.wings.service.impl.yaml.handler.workflow.PhaseStepYamlHandler.PHASE_STEP_PROPERTY_NAME;
 
 import static java.util.Collections.emptyList;
@@ -12,6 +15,9 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.HarnessException;
 import io.harness.exception.InvalidRequestException;
@@ -64,6 +70,8 @@ import lombok.Data;
 /**
  * @author rktummala on 10/27/17
  */
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_YAML)
 public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYamlHandler<Y, Workflow> {
   @Inject WorkflowService workflowService;
   @Inject YamlHelper yamlHelper;
@@ -297,6 +305,12 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                 .collect(toList());
       }
 
+      PhaseStep rollbackProvisioners = null;
+      if (isNotEmpty(preDeploymentStepsFinal.getSteps())) {
+        rollbackProvisioners = workflowService.generateRollbackProvisioners(
+            preDeploymentStepsFinal, PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS);
+      }
+
       WorkflowInfo workflowInfo = WorkflowInfo.builder()
                                       .failureStrategies(failureStrategies)
                                       .notificationRules(notificationRules)
@@ -306,6 +320,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                                       .userVariables(userVariables)
                                       .phaseList(phaseList)
                                       .concurrencyStrategy(yaml.getConcurrencyStrategy())
+                                      .rollbackProvisioners(rollbackProvisioners)
                                       .build();
       setOrchestrationWorkflow(workflowInfo, workflow);
 
@@ -557,5 +572,6 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     private List<Variable> userVariables;
     private List<WorkflowPhase> phaseList;
     private String concurrencyStrategy;
+    private PhaseStep rollbackProvisioners;
   }
 }

@@ -83,7 +83,7 @@ public class CvServiceModule extends AbstractModule {
     });
     install(DelegateServiceDriverModule.getInstance(false));
     install(new DelegateServiceDriverGrpcClientModule(
-        config.getManagerServiceSecret(), config.getManagerTarget(), config.getManagerAuthority()));
+        config.getManagerServiceSecret(), config.getManagerTarget(), config.getManagerAuthority(), true));
   }
 
   @Provides

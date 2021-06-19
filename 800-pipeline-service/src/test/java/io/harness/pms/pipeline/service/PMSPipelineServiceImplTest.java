@@ -6,11 +6,14 @@ import static io.harness.rule.OwnerRule.SAMARTH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.PipelineServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.outbox.OutboxEvent;
+import io.harness.outbox.api.impl.OutboxServiceImpl;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
 import io.harness.pms.pipeline.PipelineEntity;
@@ -20,6 +23,7 @@ import io.harness.pms.pipeline.StepData;
 import io.harness.pms.pipeline.StepPalleteInfo;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
+import io.harness.repositories.pipeline.PMSPipelineRepositoryCustomImpl;
 import io.harness.rule.Owner;
 
 import com.google.common.io.Resources;
@@ -51,6 +55,8 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   @Mock private PmsSdkInstanceService pmsSdkInstanceService;
   @Mock private PMSPipelineServiceStepHelper pmsPipelineServiceStepHelper;
   @Mock private PMSPipelineServiceHelper pmsPipelineServiceHelper;
+  @Mock private PMSPipelineRepositoryCustomImpl pmsPipelineRepositoryCustom;
+  @Mock private OutboxServiceImpl outboxService;
   @InjectMocks private PMSPipelineServiceImpl pmsPipelineService;
   @Inject private PMSPipelineRepository pmsPipelineRepository;
   StepCategory library;
@@ -65,6 +71,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
 
   PipelineEntity pipelineEntity;
   PipelineEntity updatedPipelineEntity;
+  OutboxEvent a = OutboxEvent.builder().build();
 
   @Before
   public void setUp() throws IOException {
@@ -230,6 +237,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   @Category(UnitTests.class)
   public void testFormCriteriaWithActualData() throws IOException {
     on(pmsPipelineService).set("pmsPipelineRepository", pmsPipelineRepository);
+    doReturn(a).when(outboxService).save(any());
     doReturn(updatedPipelineEntity).when(pmsPipelineServiceHelper).updatePipelineInfo(pipelineEntity);
 
     pmsPipelineService.create(pipelineEntity);

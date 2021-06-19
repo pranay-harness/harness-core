@@ -6,6 +6,7 @@ import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
 import static io.harness.delegate.beans.connector.scm.GitConnectionType.ACCOUNT;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.pms.execution.utils.StatusUtils.isFinalStatus;
+import static io.harness.steps.StepUtils.buildAbstractions;
 
 import io.harness.PipelineUtils;
 import io.harness.annotations.dev.HarnessTeam;
@@ -18,6 +19,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.task.ci.CIBuildStatusPushParameters;
 import io.harness.delegate.task.ci.GitSCMType;
+import io.harness.encryption.Scope;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.git.GitClientHelper;
 import io.harness.ng.core.NGAccess;
@@ -35,6 +37,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
@@ -98,9 +101,10 @@ public class GitBuildStatusUtility {
       }
 
       if (ciBuildStatusPushParameters.getState() != UNSUPPORTED) {
+        Map<String, String> abstractions = buildAbstractions(ambiance, Scope.PROJECT);
         DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                       .accountId(accountId)
-                                                      .taskSetupAbstractions(ambiance.getSetupAbstractions())
+                                                      .taskSetupAbstractions(abstractions)
                                                       .executionTimeout(java.time.Duration.ofSeconds(60))
                                                       .taskType("BUILD_STATUS")
                                                       .taskParameters(ciBuildStatusPushParameters)
@@ -110,11 +114,11 @@ public class GitBuildStatusUtility {
         String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest, Duration.ZERO);
         log.info("Submitted git status update request for stage {}, planId {}, commitId {}, status {} with taskId {}",
             buildStatusUpdateParameter.getIdentifier(), ambiance.getPlanExecutionId(),
-            buildStatusUpdateParameter.getSha(), buildStatusUpdateParameter.getState(), taskId);
+            buildStatusUpdateParameter.getSha(), ciBuildStatusPushParameters.getState(), taskId);
       } else {
         log.info("Skipping git status update request for stage {}, planId {}, commitId {}, status {}, scm type {}",
             buildStatusUpdateParameter.getIdentifier(), ambiance.getPlanExecutionId(),
-            buildStatusUpdateParameter.getSha(), buildStatusUpdateParameter.getState(),
+            buildStatusUpdateParameter.getSha(), ciBuildStatusPushParameters.getState(),
             ciBuildStatusPushParameters.getGitSCMType());
       }
     }

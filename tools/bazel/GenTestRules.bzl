@@ -18,7 +18,7 @@ def run_tests(**kwargs):
         native.java_test(
             name = test,
             runtime_deps = ["tests"],
-            size = "large",
+            size = "enormous",
             jvm_flags = [
                 "$(HARNESS_ARGS)",
                 "-Xmx1G",

@@ -44,7 +44,6 @@ import io.harness.ng.core.user.entities.UserGroup;
 import io.harness.ng.core.user.entities.UserGroup.UserGroupKeys;
 import io.harness.ng.core.user.remote.dto.UserFilter;
 import io.harness.ng.core.user.service.NgUserService;
-import io.harness.ng.userprofile.services.api.UserInfoService;
 import io.harness.notification.NotificationChannelType;
 import io.harness.outbox.api.OutboxService;
 import io.harness.remote.NGObjectMapperHelper;
@@ -104,9 +103,9 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Inject
   public UserGroupServiceImpl(UserGroupRepository userGroupRepository, UserClient userClient,
-      OutboxService outboxService, AccessControlAdminClient accessControlAdminClient,
-      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, UserInfoService userInfoService,
-      NgUserService ngUserService, AuthSettingsManagerClient managerClient) {
+      OutboxService outboxService, @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient,
+      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, NgUserService ngUserService,
+      AuthSettingsManagerClient managerClient) {
     this.userGroupRepository = userGroupRepository;
     this.userClient = userClient;
     this.outboxService = outboxService;

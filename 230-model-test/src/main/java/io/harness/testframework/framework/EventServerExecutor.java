@@ -4,6 +4,8 @@ import static io.harness.testframework.framework.utils.ExecutorUtils.addConfig;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addGCVMOptions;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJacocoAgentVM;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJar;
+import static io.harness.testframework.framework.utils.ExecutorUtils.getConfig;
+import static io.harness.testframework.framework.utils.ExecutorUtils.getJar;
 
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
@@ -26,7 +28,6 @@ import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactor
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
@@ -42,6 +43,8 @@ import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 @Singleton
 @Slf4j
 public class EventServerExecutor {
+  public static final String MODULE = "350-event-server";
+  public static final String CONFIG_YML = "event-service-config.yml";
   private boolean failedAlready;
 
   @Getter(lazy = true) private final Channel channel = makeChannel();
@@ -66,16 +69,11 @@ public class EventServerExecutor {
           return;
         }
 
-        String home = System.getProperty("user.home");
-        if (home.contains("root")) {
-          home = "/home/jenkins";
-        }
-
         log.info("Execute the event-server from {}", directory);
-        final Path jar = Paths.get(home + "/.bazel-dirs/bin/350-event-server/module_deploy.jar");
+        final Path jar = getJar(MODULE);
         log.info("The event-server jar path is: {}", jar.toString());
 
-        final Path config = Paths.get(directory.getPath(), "350-event-server", "event-service-config.yml");
+        final Path config = getConfig(directory.getPath(), MODULE, CONFIG_YML);
         String alpn = Alpn.location();
 
         for (int i = 0; i < 10; i++) {

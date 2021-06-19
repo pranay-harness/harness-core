@@ -16,12 +16,14 @@ import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.dropwizard.jackson.Jackson;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class NGPipelineObjectMapperHelper {
-  public void configureNGObjectMapper(final ObjectMapper mapper) {
+  public final ObjectMapper NG_PIPELINE_OBJECT_MAPPER = configureNGObjectMapper(Jackson.newObjectMapper());
+  public ObjectMapper configureNGObjectMapper(final ObjectMapper mapper) {
     final AnnotationAwareJsonSubtypeResolver subtypeResolver =
         AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver());
     mapper.setSubtypeResolver(subtypeResolver);
@@ -41,5 +43,6 @@ public class NGPipelineObjectMapperHelper {
     mapper.registerModule(new JavaTimeModule());
     mapper.registerModule(new HarnessJacksonModule());
     mapper.registerModule(new NGHarnessJacksonModule());
+    return mapper;
   }
 }

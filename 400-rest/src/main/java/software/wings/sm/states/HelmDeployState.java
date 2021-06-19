@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.ALL;
+import static io.harness.beans.FeatureName.CUSTOM_MANIFEST;
 import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -10,6 +11,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
 import static io.harness.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER_REGEX;
+import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -17,6 +19,7 @@ import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.HELM_COMMAND_TASK;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
+import static software.wings.beans.appmanifest.StoreType.CUSTOM;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
@@ -47,6 +50,8 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
+import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
+import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -59,6 +64,8 @@ import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.logging.Misc;
+import io.harness.manifest.CustomManifestSource;
+import io.harness.manifest.CustomSourceConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;
 
@@ -162,8 +169,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -258,6 +267,7 @@ public class HelmDeployState extends State {
   protected ExecutionResponse executeInternal(ExecutionContext context) throws InterruptedException {
     boolean valuesInGit = false;
     boolean valuesInHelmChartRepo = false;
+    boolean isCustomManifestSource = false;
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new EnumMap<>(K8sValuesLocation.class);
     Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap = new EnumMap<>(K8sValuesLocation.class);
 
@@ -266,10 +276,14 @@ public class HelmDeployState extends State {
       helmOverrideManifestMap = applicationManifestUtils.getApplicationManifests(context, HELM_CHART_OVERRIDE);
       valuesInHelmChartRepo = applicationManifestUtils.isValuesInHelmChartRepo(context);
       valuesInGit = applicationManifestUtils.isValuesInGit(appManifestMap);
+      isCustomManifestSource = applicationManifestUtils.isCustomManifest(context);
     }
 
-    Activity activity = createActivity(context, getCommandUnits(valuesInGit, valuesInHelmChartRepo));
+    Activity activity =
+        createActivity(context, getCommandUnits(valuesInGit, valuesInHelmChartRepo, isCustomManifestSource));
 
+    boolean isCustomManifestFeatureEnabled =
+        featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, context.getAccountId());
     if (valuesInHelmChartRepo) {
       return executeHelmValuesFetchTask(context, activity.getUuid(), helmOverrideManifestMap);
     }
@@ -277,13 +291,115 @@ public class HelmDeployState extends State {
       return executeGitTask(context, activity.getUuid(), appManifestMap);
     }
 
+    if (isCustomManifestSource) {
+      if (!isCustomManifestFeatureEnabled) {
+        throw new InvalidRequestException("Custom manifest can not be used with feature flag off", USER);
+      }
+      return executeCustomManifestFetchTask(context, activity.getUuid(), appManifestMap);
+    }
+
     return executeHelmTask(context, activity.getUuid(), appManifestMap, helmOverrideManifestMap);
   }
 
-  protected List<CommandUnit> getCommandUnits(boolean valuesInGit, boolean valuesInHelmChartRepo) {
+  private ExecutionResponse executeCustomManifestFetchTask(
+      ExecutionContext context, String activityId, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+    ApplicationManifest applicationManifest = appManifestMap.get(K8sValuesLocation.Service);
+    CustomSourceConfig customSourceConfig = null;
+    if (applicationManifest != null) {
+      customSourceConfig = applicationManifest.getCustomSourceConfig();
+    }
+
+    if (customSourceConfig != null && customSourceConfig.getScript() == null) {
+      throw new InvalidRequestException("Script can not be null for custom manifest source", USER);
+    }
+
+    CustomManifestValuesFetchParams fetchValuesParams =
+        applicationManifestUtils.createCustomManifestValuesFetchParams(context, appManifestMap);
+    fetchValuesParams.setActivityId(activityId);
+    fetchValuesParams.setCommandUnitName(FetchFiles);
+    fetchValuesParams.setAppId(context.getAppId());
+    fetchValuesParams.setDelegateSelectors(getDelegateSelectors(applicationManifest, context));
+
+    // CustomSourceConfig will be null if task is only to fetch value
+    fetchValuesParams.setCustomManifestSource(customSourceConfig == null
+            ? null
+            : CustomManifestSource.builder()
+                  .filePaths(Arrays.asList(customSourceConfig.getPath()))
+                  .script(customSourceConfig.getScript())
+                  .build());
+
+    Environment env = K8sStateHelper.fetchEnvFromExecutionContext(context);
+    ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
+    final int expressionFunctorToken = HashGenerator.generateIntegerHash();
+    String serviceTemplateId = infraMapping == null ? null : serviceTemplateHelper.fetchServiceTemplateId(infraMapping);
+
+    HelmDeployStateExecutionDataBuilder helmDeployStateExecutionDataBuilder =
+        HelmDeployStateExecutionData.builder()
+            .activityId(activityId)
+            .commandName(HELM_COMMAND_NAME)
+            .currentTaskType(TaskType.CUSTOM_MANIFEST_FETCH_TASK)
+            .appManifestMap(appManifestMap);
+
+    StateExecutionContext stateExecutionContext =
+        buildStateExecutionContext(helmDeployStateExecutionDataBuilder, expressionFunctorToken);
+
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(context.getAccountId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env == null ? null : env.getUuid())
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env == null ? null : env.getEnvironmentType().name())
+            .setupAbstraction(
+                Cd1SetupFields.SERVICE_ID_FIELD, infraMapping == null ? null : infraMapping.getServiceId())
+            .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
+            .setupAbstraction(
+                Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMapping == null ? null : infraMapping.getUuid())
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(TaskType.CUSTOM_MANIFEST_FETCH_TASK.name())
+                      .parameters(new Object[] {fetchValuesParams})
+                      .timeout(K8sStateHelper.fetchSafeTimeoutInMillis(getTimeoutMillis(context)))
+                      .expressionFunctorToken(expressionFunctorToken)
+                      .build())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .build();
+
+    renderDelegateTask(context, delegateTask, stateExecutionContext);
+
+    appendDelegateTaskDetails(context, delegateTask);
+    String delegateTaskId = delegateService.queueTask(delegateTask);
+
+    Map<K8sValuesLocation, Collection<String>> valuesFiles = new EnumMap<>(K8sValuesLocation.class);
+    HelmDeployStateExecutionData stateExecutionData = (HelmDeployStateExecutionData) context.getStateExecutionData();
+    if (stateExecutionData != null) {
+      valuesFiles.putAll(stateExecutionData.getValuesFiles());
+    }
+    helmDeployStateExecutionDataBuilder.valuesFiles(valuesFiles);
+
+    return ExecutionResponse.builder()
+        .async(true)
+        .correlationIds(singletonList(delegateTaskId))
+        .stateExecutionData(helmDeployStateExecutionDataBuilder.build())
+        .delegateTaskId(delegateTaskId)
+        .build();
+  }
+
+  private Set<String> getDelegateSelectors(ApplicationManifest applicationManifest, ExecutionContext context) {
+    final Set<String> result = new HashSet<>();
+    if (applicationManifest == null || applicationManifest.getCustomSourceConfig() == null) {
+      return result;
+    }
+
+    result.addAll(k8sStateHelper.getRenderedAndTrimmedSelectors(
+        context, applicationManifest.getCustomSourceConfig().getDelegateSelectors()));
+    return result;
+  }
+
+  protected List<CommandUnit> getCommandUnits(
+      boolean valuesInGit, boolean valuesInHelmChartRepo, boolean isCustomManifestSource) {
     List<CommandUnit> commandUnits = new ArrayList<>();
 
-    if (valuesInGit || valuesInHelmChartRepo) {
+    if (valuesInGit || valuesInHelmChartRepo || isCustomManifestSource) {
       commandUnits.add(new HelmDummyCommandUnit(HelmDummyCommandUnit.FetchFiles));
     }
 
@@ -491,6 +607,9 @@ public class HelmDeployState extends State {
     HelmDeployStateExecutionData helmStateExecutionData =
         (HelmDeployStateExecutionData) context.getStateExecutionData();
 
+    boolean isCustomManifestFeatureEnabled =
+        featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, context.getAccountId());
+
     TaskType taskType = helmStateExecutionData.getCurrentTaskType();
     switch (taskType) {
       case HELM_VALUES_FETCH:
@@ -499,10 +618,52 @@ public class HelmDeployState extends State {
         return handleAsyncResponseForGitFetchFilesTask(context, response);
       case HELM_COMMAND_TASK:
         return handleAsyncResponseForHelmTask(context, response);
-
+      case CUSTOM_MANIFEST_FETCH_TASK:
+        if (isCustomManifestFeatureEnabled) {
+          return handleAsyncCustomManifestFetchTask(context, response);
+        }
+        // fallthrough to ignore branch if FF is not enabled
       default:
         throw new UnsupportedOperationException("Unhandled task type " + taskType);
     }
+  }
+
+  private ExecutionResponse handleAsyncCustomManifestFetchTask(
+      ExecutionContext context, Map<String, ResponseData> response) throws InterruptedException {
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    String appId = workflowStandardParams.getAppId();
+    String activityId = obtainActivityId(context);
+    CustomManifestValuesFetchResponse executionResponse =
+        (CustomManifestValuesFetchResponse) response.values().iterator().next();
+    ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
+
+    if (ExecutionStatus.FAILED == executionStatus) {
+      activityService.updateStatus(activityId, appId, executionStatus);
+      return ExecutionResponse.builder()
+          .executionStatus(executionStatus)
+          .errorMessage(executionResponse.getErrorMessage())
+          .build();
+    }
+
+    HelmDeployStateExecutionData helmDeployStateExecutionData = context.getStateExecutionData();
+    if (executionResponse.getValuesFilesContentMap() != null) {
+      Map<K8sValuesLocation, ApplicationManifest> appManifestMap = helmDeployStateExecutionData.getAppManifestMap();
+      Map<K8sValuesLocation, Collection<String>> valuesFiles =
+          applicationManifestUtils.getValuesFilesFromCustomFetchValuesResponse(
+              context, appManifestMap, executionResponse);
+      helmDeployStateExecutionData.getValuesFiles().putAll(valuesFiles);
+    }
+    helmDeployStateExecutionData.setZippedManifestFileId(executionResponse.getZippedManifestFileId());
+
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
+        applicationManifestUtils.getOverrideApplicationManifests(context, AppManifestKind.VALUES);
+
+    Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap =
+        applicationManifestUtils.getOverrideApplicationManifests(context, HELM_CHART_OVERRIDE);
+
+    return executeHelmTask(context, activityId, appManifestMap, helmOverrideManifestMap);
   }
 
   private ExecutionResponse handleAsyncResponseForHelmFetchTask(
@@ -536,13 +697,28 @@ public class HelmDeployState extends State {
         applicationManifestUtils.getOverrideApplicationManifests(context, HELM_CHART_OVERRIDE);
 
     boolean valuesInGit = applicationManifestUtils.isValuesInGit(appManifestMap);
+    boolean isCustomManifestFeatureEnabled =
+        featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, context.getAccountId());
+
     if (valuesInGit) {
       return executeGitTask(context, activityId, appManifestMap);
+    } else if (isValuesInCustomSource(appManifestMap) && isCustomManifestFeatureEnabled) {
+      return executeCustomManifestFetchTask(context, activityId, appManifestMap);
     } else {
       return executeHelmTask(context, activityId, appManifestMap, helmOverrideManifestMap);
     }
   }
 
+  private boolean isValuesInCustomSource(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+    for (Map.Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
+      ApplicationManifest applicationManifest = entry.getValue();
+      if (StoreType.CUSTOM == applicationManifest.getStoreType()) {
+        return true;
+      }
+    }
+
+    return false;
+  }
   public String obtainActivityId(ExecutionContext context) {
     return ((HelmDeployStateExecutionData) context.getStateExecutionData()).getActivityId();
   }
@@ -840,6 +1016,26 @@ public class HelmDeployState extends State {
                                  .build();
           }
           break;
+
+        case CUSTOM: {
+          if (featureFlagService.isEnabled(CUSTOM_MANIFEST, context.getAccountId())) {
+            HelmDeployStateExecutionData helmDeployStateExecutionData = context.getStateExecutionData();
+            CustomManifestSource customManifestSource =
+                CustomManifestSource.builder()
+                    .filePaths(Arrays.asList(appManifest.getCustomSourceConfig().getPath()))
+                    .script(appManifest.getCustomSourceConfig().getScript())
+                    .zippedManifestFileId(helmDeployStateExecutionData == null
+                            ? null
+                            : helmDeployStateExecutionData.getZippedManifestFileId())
+                    .build();
+            manifestConfig = K8sDelegateManifestConfig.builder()
+                                 .customManifestEnabled(true)
+                                 .customManifestSource(customManifestSource)
+                                 .manifestStoreTypes(CUSTOM)
+                                 .build();
+          }
+          break;
+        }
 
         default:
           throw new InvalidRequestException("Unsupported store type: " + appManifest.getStoreType(), USER);
@@ -1171,9 +1367,15 @@ public class HelmDeployState extends State {
     helmDeployStateExecutionData.getValuesFiles().putAll(valuesFiles);
     Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap =
         applicationManifestUtils.getOverrideApplicationManifests(context, HELM_CHART_OVERRIDE);
+    boolean isCustomManifestFeatureEnabled =
+        featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, context.getAccountId());
 
-    return executeHelmTask(
-        context, activityId, helmDeployStateExecutionData.getAppManifestMap(), helmOverrideManifestMap);
+    if (isValuesInCustomSource(appManifestMap) && isCustomManifestFeatureEnabled) {
+      return executeCustomManifestFetchTask(context, activityId, appManifestMap);
+    } else {
+      return executeHelmTask(
+          context, activityId, helmDeployStateExecutionData.getAppManifestMap(), helmOverrideManifestMap);
+    }
   }
 
   List<String> getValuesYamlOverrides(ExecutionContext context, ContainerServiceParams containerServiceParams,

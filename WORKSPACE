@@ -933,8 +933,8 @@ go_repository(
 go_repository(
     name = "com_github_drone_go_scm",
     importpath = "github.com/drone/go-scm",
-    sum = "h1:yBO6lcCeegbEuEaH0QUvJmBVQS/RpYKzuzULHHMT2A4=",
-    version = "v1.15.0",
+    sum = "h1:35m/CcHkYjQ4BlOM7rIIwrki6uDUbUH+Kkb9rv6om3M=",
+    version = "v1.15.1",
 )
 
 go_repository(
@@ -1303,7 +1303,7 @@ plain_artifacts = [
     "io.grpc:grpc-services:1.33.1",
     "io.grpc:grpc-stub:1.33.1",
     "io.gsonfire:gson-fire:1.8.3",
-    "io.harness:ff-java-server-sdk:0.0.8",
+    "io.harness:ff-java-server-sdk:1.0.0",
     "io.jsonwebtoken:jjwt:0.9.1",
     "io.kubernetes:client-java-api:9.0.2",
     "io.kubernetes:client-java-extended:9.0.2",
@@ -1424,12 +1424,12 @@ plain_artifacts = [
     "org.apache.cxf:cxf-rt-wsdl:3.3.5",
     "org.apache.geronimo.specs:geronimo-jta_1.1_spec:1.1.1",
     "org.apache.geronimo.specs:geronimo-ws-metadata_2.0_spec:1.1.3",
-    "org.apache.httpcomponents:fluent-hc:4.5.1",
-    "org.apache.httpcomponents:httpasyncclient:4.1.1",
-    "org.apache.httpcomponents:httpclient:4.5.10",
-    "org.apache.httpcomponents:httpcore-nio:4.4.12",
-    "org.apache.httpcomponents:httpcore:4.4.1",
-    "org.apache.httpcomponents:httpmime:4.3.6",
+    "org.apache.httpcomponents:fluent-hc:4.5.13",
+    "org.apache.httpcomponents:httpasyncclient:4.1.4",
+    "org.apache.httpcomponents:httpclient:4.5.13",
+    "org.apache.httpcomponents:httpcore-nio:4.4.14",
+    "org.apache.httpcomponents:httpcore:4.4.14",
+    "org.apache.httpcomponents:httpmime:4.5.13",
     "org.apache.ibatis:ibatis-core:3.0",
     "org.apache.kafka:connect-api:2.6.1",
     "org.apache.kafka:connect-runtime:2.6.1",
@@ -1661,7 +1661,7 @@ plain_artifacts = [
     "stax:stax-api:1.0.1",
     "stax:stax:1.2.0",
     "wsdl4j:wsdl4j:1.6.3",
-    "xerces:xercesImpl:2.9.1",
+    "xerces:xercesImpl:2.12.0",
     "xml-apis:xml-apis:1.4.01",
     "xml-resolver:xml-resolver:1.2",
     "xpp3:xpp3:1.1.3.3",
@@ -1848,33 +1848,12 @@ load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
 maven_install(
     name = "maven_harness",
     artifacts = [
-        "io.harness.cv:data-collection-dsl:0.23-RELEASE",
+        "io.harness.cv:data-collection-dsl:0.25-RELEASE",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
         "https://%s:%s@harness.jfrog.io/artifactory/harness-internal" % (JFROG_USERNAME, JFROG_PASSWORD),
     ],
-)
-
-maven_install(
-    name = "delegate",
-    artifacts = [
-        "org.apache.httpcomponents:httpmime:4.5.1",
-    ],
-    repositories = [
-        "https://repo1.maven.org/maven2",
-        "https://harness.jfrog.io/harness/thirdparty-annonymous",
-        "https://dl.bintray.com/michaelklishin/maven",
-        "https://repo.spring.io/plugins-release",
-        "https://palantir.bintray.com/releases",
-        "https://oss.sonatype.org/content/repositories/releases",
-        "https://jitpack.io",
-        "https://jcenter.bintray.com",
-        "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "https://harness.jfrog.io/harness/datacollection-dsl",
-        "http://packages.confluent.io/maven",
-    ],
-    version_conflict_policy = "pinned",
 )
 
 maven_install(

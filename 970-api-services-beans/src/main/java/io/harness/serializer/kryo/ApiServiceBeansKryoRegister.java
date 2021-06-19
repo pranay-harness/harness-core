@@ -76,6 +76,7 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.manifest.CustomManifestSource;
 import io.harness.manifest.CustomSourceFile;
 import io.harness.nexus.NexusRequest;
+import io.harness.pcf.model.CfCliVersion;
 import io.harness.pcf.model.ManifestType;
 import io.harness.provision.TfVarScriptRepositorySource;
 import io.harness.provision.TfVarSource;
@@ -316,6 +317,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(EntityOperationIdentifier.class, 97021);
     kryo.register(EntityOperationIdentifier.EntityOperation.class, 97022);
+    kryo.register(CfCliVersion.class, 97023);
 
     kryo.register(KubernetesResourceId.class, 97031);
   }

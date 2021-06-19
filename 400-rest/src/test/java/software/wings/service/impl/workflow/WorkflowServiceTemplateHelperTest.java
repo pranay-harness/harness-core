@@ -2,6 +2,7 @@ package software.wings.service.impl.workflow;
 
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -17,6 +18,7 @@ import static software.wings.utils.WingsTestConstants.UUID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -349,6 +351,38 @@ public class WorkflowServiceTemplateHelperTest extends WingsBaseTest {
     assertThat(newStepIds).isNotNull().hasSize(2);
     assertThat(oldStepIds).isNotNull().hasSize(2);
     assertThat(newStepIds).isEqualTo(oldStepIds);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldNotChangePhaseStepIdsOnWorkflowUpdate() {
+    PhaseStep oldPhaseStep = getPhaseStep();
+    PhaseStep newPhaseStep = getPhaseStep();
+
+    when(templateService.get(anyString(), anyString())).thenReturn(Template.builder().build());
+    when(templateService.constructEntityFromTemplate(any(), any())).thenReturn(GraphNode.builder().build());
+
+    workflowServiceTemplateHelper.updateLinkedPhaseStepTemplate(oldPhaseStep, newPhaseStep, true);
+
+    assertThat(newPhaseStep.getUuid()).isEqualTo(oldPhaseStep.getUuid());
+  }
+
+  private PhaseStep getPhaseStep() {
+    return PhaseStepBuilder.aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, "Pre deployment")
+        .addStep(GraphNode.builder()
+                     .name("test")
+                     .type(StepType.SHELL_SCRIPT.toString())
+                     .templateUuid("uuid")
+                     .templateVersion("latest")
+                     .build())
+        .addStep(GraphNode.builder()
+                     .name("http-template-test")
+                     .type(StepType.HTTP.toString())
+                     .templateUuid("uuid-2")
+                     .templateVersion("latest")
+                     .build())
+        .build();
   }
 
   private List<WorkflowPhase> getWorkflowPhases(String baseId) {

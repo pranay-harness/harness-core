@@ -9,9 +9,9 @@ import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PIPELINE_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
-import io.harness.account.AccountClientModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
+import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -46,6 +46,11 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.organization.OrganizationClientModule;
+import io.harness.outbox.OutboxPollConfiguration;
+import io.harness.outbox.OutboxSDKConstants;
+import io.harness.outbox.TransactionOutboxModule;
+import io.harness.outbox.api.OutboxEventHandler;
+import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
@@ -61,6 +66,7 @@ import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
 import io.harness.pms.jira.JiraStepHelperServiceImpl;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetServiceImpl;
+import io.harness.pms.outbox.PipelineOutboxEventHandler;
 import io.harness.pms.pipeline.mappers.PipelineFilterPropertiesMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
@@ -104,6 +110,7 @@ import io.harness.tracing.AbstractPersistenceTracerModule;
 import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.schema.client.YamlSchemaClientModule;
 
@@ -120,6 +127,7 @@ import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.dropwizard.jackson.Jackson;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -129,6 +137,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.reflections.Reflections;
 import org.springframework.core.convert.converter.Converter;
 
 @OwnedBy(PIPELINE)
@@ -181,15 +190,17 @@ public class PipelineServiceModule extends AbstractModule {
             .maxPoolSize(100)
             .idleTimeInSecs(500L)
             .eventsFrameworkConfiguration(configuration.getEventsFrameworkConfiguration())
-            .useRedisForInterrupts(configuration.getUseRedisForInterrupts())
-            .useRedisForEvents(configuration.getUseRedisForOrchestrationEvents())
+            .accountClientId(PIPELINE_SERVICE.getServiceId())
+            .accountServiceHttpClientConfig(configuration.getManagerClientConfig())
+            .accountServiceSecret(configuration.getManagerServiceSecret())
+            .useFeatureFlagService(true)
             .build()));
     install(OrchestrationStepsModule.getInstance(configuration.getOrchestrationStepConfig()));
     install(OrchestrationVisualizationModule.getInstance());
     install(PrimaryVersionManagerModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
-        configuration.getManagerTarget(), configuration.getManagerAuthority()));
+        configuration.getManagerTarget(), configuration.getManagerAuthority(), true));
     install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), MANAGER.getServiceId(), ClientMode.PRIVILEGED));
     install(new SecretNGManagerClientModule(configuration.getNgManagerServiceHttpClientConfig(),
@@ -212,15 +223,17 @@ public class PipelineServiceModule extends AbstractModule {
         PIPELINE_SERVICE.getServiceId()));
     install(new UserGroupClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
-    install(new AccountClientModule(configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(),
-        PIPELINE_SERVICE.getServiceId()));
     install(new DelegateSelectionLogHttpClientModule(configuration.getManagerClientConfig(),
         configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
     install(new EntitySetupUsageClientModule(this.configuration.getNgManagerServiceHttpClientConfig(),
         this.configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new LogStreamingModule(configuration.getLogStreamingServiceConfig().getBaseUrl()));
+    install(new AuditClientModule(this.configuration.getAuditClientConfig(),
+        this.configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
+    install(new TransactionOutboxModule());
 
+    bind(OutboxEventHandler.class).to(PipelineOutboxEventHandler.class);
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
     bind(PreflightService.class).to(PreflightServiceImpl.class);
@@ -395,9 +408,35 @@ public class PipelineServiceModule extends AbstractModule {
   }
 
   @Provides
+  @Named("yaml-schema-subtypes")
+  @Singleton
+  public Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes() {
+    Reflections reflections = new Reflections(HarnessPackages.IO_HARNESS);
+
+    Set<Class<? extends StepSpecType>> subTypesOfStepSpecType = reflections.getSubTypesOf(StepSpecType.class);
+    Set<Class<?>> set = new HashSet<>(subTypesOfStepSpecType);
+
+    return ImmutableMap.of(StepSpecType.class, set);
+  }
+
+  @Provides
+  @Singleton
+  public ObjectMapper getYamlSchemaObjectMapperWithoutNamed() {
+    return Jackson.newObjectMapper();
+  }
+
+  @Provides
   @Singleton
   public LogStreamingServiceConfiguration getLogStreamingServiceConfiguration() {
     return configuration.getLogStreamingServiceConfig();
+  }
+
+  @Provides
+  @Singleton
+  public OutboxPollConfiguration getOutboxPollConfiguration() {
+    OutboxPollConfiguration outboxPollConfiguration = OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
+    outboxPollConfiguration.setLockId(PIPELINE_SERVICE.getServiceId());
+    return outboxPollConfiguration;
   }
 
   @Provides

@@ -15,14 +15,10 @@
         {
           "type": "object",
           "required": [
-            "accountId",
             "accountname",
             "controllerUrl"
           ],
           "properties": {
-            "accountId": {
-              "type": "string"
-            },
             "accountname": {
               "type": "string"
             },
@@ -681,7 +677,9 @@
       "required": [
         "containerName",
         "directoryName",
-        "storageAccountName"
+        "reportName",
+        "storageAccountName",
+        "subscriptionId"
       ],
       "properties": {
         "containerName": {
@@ -690,7 +688,13 @@
         "directoryName": {
           "type": "string"
         },
+        "reportName": {
+          "type": "string"
+        },
         "storageAccountName": {
+          "type": "string"
+        },
+        "subscriptionId": {
           "type": "string"
         }
       },
@@ -819,6 +823,9 @@
               ]
             },
             "url": {
+              "type": "string"
+            },
+            "validationRepo": {
               "type": "string"
             }
           }
@@ -1124,6 +1131,7 @@
             "Splunk",
             "AppDynamics",
             "Prometheus",
+            "Dynatrace",
             "Vault",
             "AzureKeyVault",
             "DockerRegistry",
@@ -1340,6 +1348,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/DockerConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Dynatrace"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/DynatraceConnectorDTO"
               }
             }
           }
@@ -1617,21 +1641,6 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "CustomCommitAttributes": {
-      "type": "object",
-      "properties": {
-        "authorEmail": {
-          "type": "string"
-        },
-        "authorName": {
-          "type": "string"
-        },
-        "commitMessage": {
-          "type": "string"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "DatadogConnectorDTO": {
       "allOf": [
         {
@@ -1778,6 +1787,36 @@
               ]
             }
           ]
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "DynatraceConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "apiTokenRef",
+            "url"
+          ],
+          "properties": {
+            "apiTokenRef": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "url": {
+              "type": "string"
+            }
+          }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1977,9 +2016,6 @@
                 "type": "string"
               }
             },
-            "gitSync": {
-              "$ref": "#/definitions/GitSyncConfig"
-            },
             "type": {
               "type": "string",
               "enum": [
@@ -1988,6 +2024,9 @@
               ]
             },
             "url": {
+              "type": "string"
+            },
+            "validationRepo": {
               "type": "string"
             }
           }
@@ -2083,21 +2122,6 @@
           }
         }
       ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "GitSyncConfig": {
-      "type": "object",
-      "properties": {
-        "customCommitAttributes": {
-          "$ref": "#/definitions/CustomCommitAttributes"
-        },
-        "enabled": {
-          "type": "boolean"
-        },
-        "syncEnabled": {
-          "type": "boolean"
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "GithubApiAccess": {
@@ -2266,6 +2290,9 @@
               ]
             },
             "url": {
+              "type": "string"
+            },
+            "validationRepo": {
               "type": "string"
             }
           }
@@ -2561,6 +2588,9 @@
               ]
             },
             "url": {
+              "type": "string"
+            },
+            "validationRepo": {
               "type": "string"
             }
           }
@@ -3007,7 +3037,6 @@
           "type": "object",
           "required": [
             "clientCertRef",
-            "clientKeyPassphraseRef",
             "clientKeyRef"
           ],
           "properties": {
@@ -3423,7 +3452,8 @@
           "type": "object",
           "required": [
             "accountId",
-            "passwordRef"
+            "passwordRef",
+            "splunkUrl"
           ],
           "properties": {
             "accountId": {

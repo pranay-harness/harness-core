@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.resume;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/ambiance/ambiance.proto";
+import "io/harness/pms/contracts/execution/execution_mode.proto";
+import "io/harness/pms/contracts/refobjects/ref_objects.proto";
+import "io/harness/pms/contracts/execution/executable_response.proto";
+
+message NodeResumeEvent {
+  io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;
+  io.harness.pms.contracts.execution.ExecutionMode executionMode = 2;
+  bytes stepParameters = 3;
+  repeated io.harness.pms.contracts.refobjects.RefObject refObjects = 4;
+  bool asyncError = 5;
+  map<string, bytes> response = 6;
+  ChainDetails chainDetails = 7;
+}
+
+message ChainDetails {
+  bool isEnd = 1;
+  bytes passThroughData = 2;
+}

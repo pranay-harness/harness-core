@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.k8s.K8sCommandUnitConstants.DeleteFailedReleaseResources;
 import static io.harness.k8s.K8sCommandUnitConstants.Init;
 import static io.harness.k8s.K8sCommandUnitConstants.RecreatePrunedResource;
@@ -69,7 +70,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
     try {
       success = init(request, k8sDelegateTaskParams, initLogCallback);
     } catch (Exception e) {
-      initLogCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
+      initLogCallback.saveExecutionLog(getMessage(e), ERROR, FAILURE);
       throw e;
     }
 
@@ -88,7 +89,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
       } catch (Exception ex) {
         resourceRecreationStatus = ResourceRecreationStatus.RESOURCE_CREATION_FAILED;
         pruneLogCallback.saveExecutionLog("Failed to recreate pruned resources.", WARN, RUNNING);
-        pruneLogCallback.saveExecutionLog(ex.getMessage(), WARN, SUCCESS);
+        pruneLogCallback.saveExecutionLog(getMessage(ex), WARN, SUCCESS);
       }
     }
 
@@ -115,7 +116,7 @@ public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
       waitForSteadyStateLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
       return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
     } catch (Exception e) {
-      waitForSteadyStateLogCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
+      waitForSteadyStateLogCallback.saveExecutionLog(getMessage(e), ERROR, FAILURE);
       throw e;
     }
   }

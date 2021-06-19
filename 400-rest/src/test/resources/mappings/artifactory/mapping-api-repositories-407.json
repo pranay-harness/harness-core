@@ -1,0 +1,14 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/artifactory-407/api/repositories/"
+  },
+  "response": {
+    "status": 407,
+    "jsonBody": {
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

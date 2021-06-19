@@ -26,6 +26,7 @@ public abstract class ChildrenVariableCreator implements VariableCreator {
     }
     VariableCreationResponse variablesForParentNode = createVariablesForParentNode(ctx, field);
     finalResponse.addYamlProperties(variablesForParentNode.getYamlProperties());
+    finalResponse.addYamlOutputProperties(variablesForParentNode.getYamlOutputProperties());
     finalResponse.addResolvedDependencies(variablesForParentNode.getResolvedDependencies());
     finalResponse.addDependencies(variablesForParentNode.getDependencies());
     return finalResponse;

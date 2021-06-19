@@ -1,5 +1,6 @@
 package io.harness.pms.sdk.core;
 
+import io.harness.ModuleType;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcInProcessServer;
 import io.harness.grpc.server.GrpcServer;
@@ -16,7 +17,6 @@ import io.harness.pms.contracts.service.PmsExecutionServiceGrpc.PmsExecutionServ
 import io.harness.pms.contracts.service.SweepingOutputServiceGrpc;
 import io.harness.pms.contracts.service.SweepingOutputServiceGrpc.SweepingOutputServiceBlockingStub;
 import io.harness.pms.sdk.core.plan.creation.creators.PlanCreatorService;
-import io.harness.pms.utils.PmsConstants;
 import io.harness.version.VersionInfo;
 
 import com.google.common.util.concurrent.Service;
@@ -115,7 +115,7 @@ public class PmsSdkGrpcModule extends AbstractModule {
 
   private Channel getChannel() throws SSLException {
     if (config.getSdkDeployMode() == SdkDeployMode.REMOTE_IN_PROCESS) {
-      return InProcessChannelBuilder.forName(PmsConstants.INTERNAL_SERVICE_NAME).build();
+      return InProcessChannelBuilder.forName(ModuleType.PMS.name().toLowerCase()).build();
     }
 
     GrpcClientConfig clientConfig = config.getGrpcClientConfig();

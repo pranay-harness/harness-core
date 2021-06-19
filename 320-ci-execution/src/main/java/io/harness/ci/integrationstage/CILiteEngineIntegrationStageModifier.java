@@ -47,7 +47,7 @@ public class CILiteEngineIntegrationStageModifier implements StageExecutionModif
     CIExecutionArgs ciExecutionArgs =
         CIExecutionArgs.builder()
             .executionSource(IntegrationStageUtils.buildExecutionSource(
-                executionMetadata, stageElementConfig.getIdentifier(), parameterFieldBuild))
+                planCreationContextValue, stageElementConfig.getIdentifier(), parameterFieldBuild))
             .buildNumberDetails(
                 BuildNumberDetails.builder().buildNumber((long) executionMetadata.getRunSequence()).build())
             .build();

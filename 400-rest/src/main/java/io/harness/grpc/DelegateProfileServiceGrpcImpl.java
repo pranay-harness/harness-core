@@ -21,7 +21,7 @@ import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileBuilder;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
-import io.harness.delegate.utils.DelegateEntityOwnerMapper;
+import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.delegateprofile.AddProfileRequest;
 import io.harness.delegateprofile.AddProfileResponse;
 import io.harness.delegateprofile.DelegateProfileGrpc;
@@ -100,24 +100,14 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
         pageRequest.addFilter(DelegateProfileKeys.ng, SearchFilter.Operator.NOT_EQ, true);
       }
 
-      String orgId = request.getOrgId() != null ? request.getOrgId().getId() : null;
-      String projectId = request.getProjectId() != null ? request.getProjectId().getId() : null;
-      DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
+      DelegateEntityOwner owner =
+          DelegateEntityOwnerHelper.buildOwner(request.getOrgId().getId(), request.getProjectId().getId());
 
       if (owner != null) {
-        pageRequest.addFilter("", SearchFilter.Operator.OR,
-            SearchFilter.builder()
-                .fieldName(DelegateProfileKeys.owner)
-                .op(SearchFilter.Operator.EQ)
-                .fieldValues(new DelegateEntityOwner[] {owner})
-                .build(),
-            SearchFilter.builder()
-                .fieldName(DelegateProfileKeys.primary)
-                .op(SearchFilter.Operator.EQ)
-                .fieldValues(new Boolean[] {true})
-                .build());
+        pageRequest.addFilter(DelegateProfileKeys.owner, SearchFilter.Operator.EQ, owner);
       } else {
         // Account level delegates
+        log.info("Owner doesn't exist, assume account level delegate");
         pageRequest.addFilter(DelegateProfileKeys.owner, SearchFilter.Operator.NOT_EXISTS);
       }
 
@@ -194,7 +184,8 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
       responseObserver.onCompleted();
     } catch (Exception ex) {
       log.error("Unexpected error occurred while processing delete profile request.", ex);
-      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+      responseObserver.onError(
+          io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).withCause(ex).asRuntimeException());
     }
   }
 
@@ -327,9 +318,9 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
 
     if (delegateProfile.getOwner() != null) {
       String orgId =
-          DelegateEntityOwnerMapper.extractOrgIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
+          DelegateEntityOwnerHelper.extractOrgIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
       String projectId =
-          DelegateEntityOwnerMapper.extractProjectIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
+          DelegateEntityOwnerHelper.extractProjectIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
 
       if (isNotBlank(orgId)) {
         delegateProfileGrpcBuilder.setOrgIdentifier(OrgIdentifier.newBuilder().setId(orgId).build());
@@ -403,7 +394,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
     String orgId = delegateProfileGrpc.hasOrgIdentifier() ? delegateProfileGrpc.getOrgIdentifier().getId() : null;
     String projectId =
         delegateProfileGrpc.hasProjectIdentifier() ? delegateProfileGrpc.getProjectIdentifier().getId() : null;
-    DelegateEntityOwner owner = DelegateEntityOwnerMapper.buildOwner(orgId, projectId);
+    DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
     delegateProfileBuilder.owner(owner);
 
     return delegateProfileBuilder.build();

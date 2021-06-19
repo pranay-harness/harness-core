@@ -54,18 +54,12 @@ func (h *tiProxyHandler) SelectTests(ctx context.Context, req *pb.SelectTestsReq
 	if step == "" {
 		return nil, errors.New("step ID not present in request")
 	}
-	sha := req.GetSha()
-	if sha == "" {
-		return nil, errors.New("commit ID not present in request")
-	}
+	sha := req.GetSha() // may not be set for manual execution
 	repo := req.GetRepo()
 	if repo == "" {
 		return nil, errors.New("repo not present in request")
 	}
-	source := req.GetSourceBranch()
-	if source == "" {
-		return nil, errors.New("source branch not present in request")
-	}
+	source := req.GetSourceBranch() // may not be set for manual execution
 	target := req.GetTargetBranch()
 	if target == "" {
 		return nil, errors.New("target branch not present in request")
@@ -183,12 +177,8 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 	res := &pb.UploadCgResponse{}
 	if step == "" {
 		return res, fmt.Errorf("step ID not present in request")
-		return res, nil
 	}
 	sha := req.GetSha()
-	if sha == "" {
-		return res, fmt.Errorf("commit ID not present in request")
-	}
 	repo := req.GetRepo()
 	if repo == "" {
 		return res, fmt.Errorf("repo not present in request")
@@ -216,6 +206,11 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 		return res, errors.Wrap(err, "failed to parse callgraph")
 	}
 	h.log.Infow(fmt.Sprintf("size of nodes parsed is: %d, size of relns parsed is: %d", len(cg.Nodes), len(cg.Relations)))
+	if len(cg.Nodes) == 0 && len(cg.Relations) == 0 {
+		// Skip uploading partial CG if nothing is there to be uploaded
+		h.log.Infow("skipping partial CG upload as there are no nodes and relations")
+		return res, nil
+	}
 	cgMap := cg.ToStringMap()
 	cgSer, err := avro.NewCgphSerialzer(cgSchemaPath)
 	if err != nil {

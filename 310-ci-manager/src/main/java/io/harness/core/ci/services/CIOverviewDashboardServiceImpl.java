@@ -1,5 +1,6 @@
 package io.harness.core.ci.services;
 
+import io.harness.app.beans.entities.AuthorInfo;
 import io.harness.app.beans.entities.BuildActiveInfo;
 import io.harness.app.beans.entities.BuildCount;
 import io.harness.app.beans.entities.BuildExecutionInfo;
@@ -15,9 +16,7 @@ import io.harness.app.beans.entities.RepositoryBuildInfo;
 import io.harness.app.beans.entities.RepositoryInfo;
 import io.harness.app.beans.entities.RepositoryInformation;
 import io.harness.app.beans.entities.StatusAndTime;
-import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -29,7 +28,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -44,8 +42,12 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
   private final long HR_IN_MS = 60 * 60 * 1000;
   private final long DAY_IN_MS = 24 * HR_IN_MS;
 
-  private List<String> failedList =
-      Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(), ExecutionStatus.EXPIRED.name());
+  private List<String> failedList = Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(),
+      ExecutionStatus.EXPIRED.name(), ExecutionStatus.IGNOREFAILED.name(), ExecutionStatus.ERRORED.name());
+
+  private List<String> activeStatusList =
+      Arrays.asList(ExecutionStatus.RUNNING.name(), ExecutionStatus.ASYNCWAITING.name(),
+          ExecutionStatus.TASKWAITING.name(), ExecutionStatus.TIMEDWAITING.name(), ExecutionStatus.PAUSED.name());
 
   private static final int MAX_RETRY_COUNT = 5;
 
@@ -76,7 +78,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
 
   private String queryBuilderFailedStatusOrderBy(String accountId, String orgId, String projectId, long limit) {
     String selectStatusQuery =
-        "select name, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, startts, endts  from "
+        "select name, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, author_name, author_avatar, startts, endts  from "
         + tableName + " where ";
 
     StringBuilder totalBuildSqlBuilder = new StringBuilder();
@@ -107,7 +109,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
 
   private String queryBuilderActiveStatusOrderBy(String accountId, String orgId, String projectId, long limit) {
     String selectStatusQuery =
-        "select name, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, startts, status  from "
+        "select name, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, author_name, author_avatar, startts, status  from "
         + tableName + " where ";
 
     StringBuilder totalBuildSqlBuilder = new StringBuilder(1024);
@@ -125,9 +127,8 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     }
 
     totalBuildSqlBuilder.append("status IN (");
-    EnumSet<Status> activeStatuses = StatusUtils.activeStatuses();
-    for (Status activeStatus : activeStatuses) {
-      totalBuildSqlBuilder.append(" '" + activeStatus.name() + "' ,");
+    for (String active : activeStatusList) {
+      totalBuildSqlBuilder.append(String.format("'%s',", active));
     }
 
     totalBuildSqlBuilder.deleteCharAt(totalBuildSqlBuilder.length() - 1);
@@ -140,8 +141,8 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
   private String queryBuilderSelectRepoInfo(
       String accountId, String orgId, String projectId, long previousStartInterval, long endInterval) {
     String selectStatusQuery =
-        "select moduleinfo_repository, status, startts, endts, moduleinfo_branch_commit_message  from " + tableName
-        + " where ";
+        "select moduleinfo_repository, status, startts, endts, moduleinfo_branch_commit_message, author_name, author_avatar  from "
+        + tableName + " where ";
 
     StringBuilder totalBuildSqlBuilder = new StringBuilder(1024);
     totalBuildSqlBuilder.append(selectStatusQuery);
@@ -196,7 +197,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
   }
 
   public BuildFailureInfo getBuildFailureInfo(
-      String name, String branch_name, String commit, String commit_id, long startTs, long endTs) {
+      String name, String branch_name, String commit, String commit_id, long startTs, long endTs, AuthorInfo author) {
     return BuildFailureInfo.builder()
         .piplineName(name)
         .branch(branch_name)
@@ -204,16 +205,18 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         .commitID(commit_id)
         .startTs(startTs)
         .endTs(endTs)
+        .author(author)
         .build();
   }
 
-  public BuildActiveInfo getBuildActiveInfo(
-      String name, String branch_name, String commit, String commit_id, long startTs, String status, long endTs) {
+  public BuildActiveInfo getBuildActiveInfo(String name, String branch_name, String commit, String commit_id,
+      AuthorInfo author, long startTs, String status, long endTs) {
     return BuildActiveInfo.builder()
         .piplineName(name)
         .branch(branch_name)
         .commit(commit)
         .commitID(commit_id)
+        .author(author)
         .startTs(startTs)
         .status(status)
         .endTs(endTs)
@@ -332,9 +335,13 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
           if (resultSet.getString("endts") != null) {
             endTime = Long.parseLong(resultSet.getString("endts"));
           }
+          AuthorInfo author = AuthorInfo.builder()
+                                  .name(resultSet.getString("author_name"))
+                                  .url(resultSet.getString("author_avatar"))
+                                  .build();
           buildFailureInfos.add(getBuildFailureInfo(resultSet.getString("name"),
               resultSet.getString("moduleinfo_branch_name"), resultSet.getString("moduleinfo_branch_commit_message"),
-              resultSet.getString("moduleinfo_branch_commit_id"), startTime, endTime));
+              resultSet.getString("moduleinfo_branch_commit_id"), startTime, endTime, author));
         }
         successfulOperation = true;
       } catch (SQLException ex) {
@@ -360,9 +367,14 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
           if (resultSet.getString("startts") != null) {
             startTime = Long.parseLong(resultSet.getString("startts"));
           }
+          AuthorInfo author = AuthorInfo.builder()
+                                  .name(resultSet.getString("author_name"))
+                                  .url(resultSet.getString("author_avatar"))
+                                  .build();
           buildActiveInfos.add(getBuildActiveInfo(resultSet.getString("name"),
               resultSet.getString("moduleinfo_branch_name"), resultSet.getString("moduleinfo_branch_commit_message"),
-              resultSet.getString("moduleinfo_branch_commit_id"), startTime, resultSet.getString("status"), -1L));
+              resultSet.getString("moduleinfo_branch_commit_id"), author, startTime, resultSet.getString("status"),
+              -1L));
         }
         successfulOperation = true;
       } catch (SQLException ex) {
@@ -395,6 +407,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     List<Long> startTime = new ArrayList<>();
     List<Long> endTime = new ArrayList<>();
     List<String> commitMessage = new ArrayList<>();
+    List<AuthorInfo> authorInfoList = new ArrayList<>();
 
     int totalTries = 0;
     boolean successfulOperation = false;
@@ -410,8 +423,13 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
           if (resultSet.getString("endts") != null) {
             endTime.add(Long.valueOf(resultSet.getString("endts")));
           } else {
-            endTime.add(null);
+            endTime.add(-1L);
           }
+          AuthorInfo author = AuthorInfo.builder()
+                                  .name(resultSet.getString("author_name"))
+                                  .url(resultSet.getString("author_avatar"))
+                                  .build();
+          authorInfoList.add(author);
           commitMessage.add(resultSet.getString("moduleinfo_branch_commit_message"));
         }
         successfulOperation = true;
@@ -428,6 +446,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         .startTime(startTime)
         .endTime(endTime)
         .commitMessage(commitMessage)
+        .authorInfoList(authorInfoList)
         .build();
   }
 
@@ -455,6 +474,8 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
     endTime = repositoryInformation.getEndTime();
     commitMessage = repositoryInformation.getCommitMessage();
 
+    List<AuthorInfo> authorInfo = repositoryInformation.getAuthorInfoList();
+
     for (String repository_name : repoName) {
       if (repository_name != null && !uniqueRepoName.containsKey(repository_name)) {
         uniqueRepoName.put(repository_name, 1);
@@ -468,6 +489,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
       String lastCommit = null;
       long lastCommitTime = -1L;
       long lastCommitEndTime = -1L;
+      AuthorInfo author = null;
       String lastStatus = null;
 
       HashMap<Long, Integer> buildCountMap = new HashMap<>();
@@ -496,12 +518,15 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
               lastCommitTime = startTime.get(i);
               lastStatus = status.get(i);
               lastCommitEndTime = endTime.get(i);
+              author = authorInfo.get(i);
+
             } else {
               if (lastCommitTime < startTime.get(i)) {
                 lastCommitTime = startTime.get(i);
                 lastCommit = commitMessage.get(i);
                 lastStatus = status.get(i);
                 lastCommitEndTime = endTime.get(i);
+                author = authorInfo.get(i);
               }
             }
           } else if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
@@ -527,6 +552,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
                                                     .StartTime(lastCommitTime)
                                                     .EndTime(lastCommitEndTime)
                                                     .status(lastStatus)
+                                                    .author(author)
                                                     .commit(lastCommit)
                                                     .build();
         repositoryInfoList.add(

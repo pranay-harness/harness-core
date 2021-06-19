@@ -1,6 +1,8 @@
 package io.harness.delegate.beans.executioncapability;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 // ALWAYS_TRUE should not be a capability type. In this case, task validation should not even happen.
@@ -8,6 +10,7 @@ import io.harness.annotations.dev.TargetModule;
 // in order for delegate to acquire a task.
 // May be changed later
 @TargetModule(HarnessModule._955_DELEGATE_BEANS)
+@OwnedBy(HarnessTeam.DEL)
 public enum CapabilityType {
   SOCKET,
   ALWAYS_TRUE,
@@ -24,6 +27,7 @@ public enum CapabilityType {
   SFTP,
   PCF_AUTO_SCALAR,
   PCF_CONNECTIVITY,
+  PCF_INSTALL,
   POWERSHELL,
   HELM_COMMAND,
   CLUSTER_MASTER_URL,

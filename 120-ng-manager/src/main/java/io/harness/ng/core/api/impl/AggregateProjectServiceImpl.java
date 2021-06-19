@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.remote.OrganizationMapper.writeDto;
 import static io.harness.ng.core.remote.ProjectMapper.toResponseWrapper;
-import static io.harness.ng.core.user.remote.mapper.UserMetadataMapper.writeDTO;
 
 import static java.util.stream.Collectors.toList;
 
@@ -24,11 +23,9 @@ import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.remote.ProjectMapper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
-import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.service.NgUserService;
-import io.harness.user.remote.UserFilterNG;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -111,29 +108,25 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
                                            .and(ScopeKeys.projectIdentifier)
                                            .is(identifier));
     List<UserMembership> userMemberships = ngUserService.listUserMemberships(criteria);
-    List<String> userIds = userMemberships.stream().map(UserMembership::getUserId).collect(toList());
-    Map<String, UserMetadataDTO> userMap = getUserMap(userIds, accountIdentifier);
-    List<UserMetadataDTO> admins = getAdmins(accountIdentifier, orgIdentifier, identifier, userMap);
-    return Pair.of(admins, removeAdmins(new ArrayList<>(userMap.values()), admins));
+    List<UserMetadataDTO> collaborators = userMemberships.stream()
+                                              .map(userMembership
+                                                  -> UserMetadataDTO.builder()
+                                                         .uuid(userMembership.getUserId())
+                                                         .name(userMembership.getName())
+                                                         .email(userMembership.getEmailId())
+                                                         .build())
+                                              .collect(Collectors.toList());
+    List<UserMetadataDTO> admins = getAdmins(accountIdentifier, orgIdentifier, identifier);
+    return Pair.of(admins, removeAdmins(collaborators, admins));
   }
 
-  private List<UserMetadataDTO> getAdmins(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, Map<String, UserMetadataDTO> userMap) {
-    List<String> userIds = ngUserService.listUsersHavingRole(Scope.builder()
-                                                                 .accountIdentifier(accountIdentifier)
-                                                                 .orgIdentifier(orgIdentifier)
-                                                                 .projectIdentifier(projectIdentifier)
-                                                                 .build(),
+  private List<UserMetadataDTO> getAdmins(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return ngUserService.listUsersHavingRole(Scope.builder()
+                                                 .accountIdentifier(accountIdentifier)
+                                                 .orgIdentifier(orgIdentifier)
+                                                 .projectIdentifier(projectIdentifier)
+                                                 .build(),
         PROJECT_ADMIN_ROLE);
-    return userIds.stream().filter(userMap::containsKey).map(userMap::get).collect(toList());
-  }
-
-  private Map<String, UserMetadataDTO> getUserMap(List<String> userIds, String accountIdentifier) {
-    List<UserInfo> users =
-        ngUserService.listCurrentGenUsers(accountIdentifier, UserFilterNG.builder().userIds(userIds).build());
-    Map<String, UserMetadataDTO> userMap = new HashMap<>();
-    users.forEach(user -> userMap.put(user.getUuid(), writeDTO(user)));
-    return userMap;
   }
 
   @Override
@@ -170,10 +163,8 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
   private void addAdminsAndCollaborators(
       Page<ProjectAggregateDTO> projectAggregateDTOs, String accountIdentifier, Page<ProjectResponse> projects) {
     List<UserMembership> userMemberships = getOrgUserMemberships(accountIdentifier, projects);
-    List<String> userIds = userMemberships.stream().map(UserMembership::getUserId).collect(toList());
-    Map<String, UserMetadataDTO> userMap = getUserMap(userIds, accountIdentifier);
-    Map<String, List<UserMetadataDTO>> projectUsersMap = getProjectUsersMap(userMemberships, userMap);
-    Map<String, List<UserMetadataDTO>> projectAdminsMap = getProjectAdminsMap(accountIdentifier, projects, userMap);
+    Map<String, List<UserMetadataDTO>> projectUsersMap = getProjectUsersMap(userMemberships);
+    Map<String, List<UserMetadataDTO>> projectAdminsMap = getProjectAdminsMap(accountIdentifier, projects);
     projectAggregateDTOs.forEach(projectAggregateDTO -> {
       String orgProjectId =
           getUniqueOrgProjectId(projectAggregateDTO.getProjectResponse().getProject().getOrgIdentifier(),
@@ -186,7 +177,7 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
   }
 
   private Map<String, List<UserMetadataDTO>> getProjectAdminsMap(
-      String accountIdentifier, Page<ProjectResponse> projects, Map<String, UserMetadataDTO> userMap) {
+      String accountIdentifier, Page<ProjectResponse> projects) {
     Map<String, List<UserMetadataDTO>> projectAdminsMap = new HashMap<>();
     List<Scope> scopes = new ArrayList<>();
     projects.forEach(projectResponse
@@ -200,7 +191,7 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
      */
     scopes.forEach(scope
         -> projectAdminsMap.put(getUniqueOrgProjectId(scope.getOrgIdentifier(), scope.getProjectIdentifier()),
-            getAdmins(accountIdentifier, scope.getOrgIdentifier(), scope.getProjectIdentifier(), userMap)));
+            getAdmins(accountIdentifier, scope.getOrgIdentifier(), scope.getProjectIdentifier())));
     return projectAdminsMap;
   }
 
@@ -242,8 +233,7 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
     return ngUserService.listUserMemberships(new Criteria().orOperator(criteriaList.toArray(new Criteria[0])));
   }
 
-  private Map<String, List<UserMetadataDTO>> getProjectUsersMap(
-      List<UserMembership> userMemberships, Map<String, UserMetadataDTO> userMap) {
+  private Map<String, List<UserMetadataDTO>> getProjectUsersMap(List<UserMembership> userMemberships) {
     Map<String, List<UserMetadataDTO>> orgProjectUserMap = new HashMap<>();
     userMemberships.forEach(userMembership
         -> userMembership.getScopes()
@@ -253,9 +243,12 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
                .distinct()
                .forEach(orgProjectId -> {
                  orgProjectUserMap.computeIfAbsent(orgProjectId, arg -> new ArrayList<>());
-                 if (userMap.containsKey(userMembership.getUserId())) {
-                   orgProjectUserMap.get(orgProjectId).add(userMap.get(userMembership.getUserId()));
-                 }
+                 orgProjectUserMap.get(orgProjectId)
+                     .add(UserMetadataDTO.builder()
+                              .uuid(userMembership.getUserId())
+                              .name(userMembership.getName())
+                              .email(userMembership.getEmailId())
+                              .build());
                }));
     return orgProjectUserMap;
   }

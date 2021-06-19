@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.api.impl.AggregateProjectServiceImpl.removeAdmins;
 import static io.harness.ng.core.remote.OrganizationMapper.toResponseWrapper;
-import static io.harness.ng.core.user.remote.mapper.UserMetadataMapper.writeDTO;
 
 import static java.util.Collections.singletonList;
 
@@ -21,11 +20,9 @@ import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.remote.OrganizationMapper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
-import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.service.NgUserService;
-import io.harness.user.remote.UserFilterNG;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -108,19 +105,16 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
                                                          .and(ScopeKeys.projectIdentifier)
                                                          .is(null));
     List<UserMembership> userMemberships = ngUserService.listUserMemberships(userMembershipCriteria);
-    List<String> userIds = userMemberships.stream().map(UserMembership::getUserId).collect(Collectors.toList());
-    Map<String, UserMetadataDTO> userMap = getUserMap(userIds, accountIdentifier);
-    List<UserMetadataDTO> collaborators = new ArrayList<>(userMap.values());
-    List<UserMetadataDTO> admins = getAdmins(accountIdentifier, identifier, userMap);
+    List<UserMetadataDTO> collaborators = userMemberships.stream()
+                                              .map(userMembership
+                                                  -> UserMetadataDTO.builder()
+                                                         .uuid(userMembership.getUserId())
+                                                         .name(userMembership.getName())
+                                                         .email(userMembership.getEmailId())
+                                                         .build())
+                                              .collect(Collectors.toList());
+    List<UserMetadataDTO> admins = getAdmins(accountIdentifier, identifier);
     return Pair.of(admins, removeAdmins(collaborators, admins));
-  }
-
-  private Map<String, UserMetadataDTO> getUserMap(List<String> userIds, String accountIdentifier) {
-    List<UserInfo> users =
-        ngUserService.listCurrentGenUsers(accountIdentifier, UserFilterNG.builder().userIds(userIds).build());
-    Map<String, UserMetadataDTO> userMap = new HashMap<>();
-    users.forEach(user -> userMap.put(user.getUuid(), writeDTO(user)));
-    return userMap;
   }
 
   @Override
@@ -166,10 +160,8 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   private void addAdminsAndCollaborators(Page<OrganizationAggregateDTO> organizationAggregateDTOs,
       String accountIdentifier, Page<OrganizationResponse> organizations) {
     List<UserMembership> userMemberships = getUserMemberships(accountIdentifier, organizations);
-    List<String> userIds = userMemberships.stream().map(UserMembership::getUserId).collect(Collectors.toList());
-    Map<String, UserMetadataDTO> userMap = getUserMap(userIds, accountIdentifier);
-    Map<String, List<UserMetadataDTO>> orgUsersMap = getOrgUsersMap(userMemberships, userMap);
-    Map<String, List<UserMetadataDTO>> orgAdminsMap = getOrgAdminsMap(accountIdentifier, organizations, userMap);
+    Map<String, List<UserMetadataDTO>> orgUsersMap = getOrgUsersMap(userMemberships);
+    Map<String, List<UserMetadataDTO>> orgAdminsMap = getOrgAdminsMap(accountIdentifier, organizations);
     organizationAggregateDTOs.forEach(organizationAggregateDTO -> {
       String orgId = organizationAggregateDTO.getOrganizationResponse().getOrganization().getIdentifier();
       List<UserMetadataDTO> admins = orgAdminsMap.getOrDefault(orgId, new ArrayList<>());
@@ -180,7 +172,7 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   }
 
   private Map<String, List<UserMetadataDTO>> getOrgAdminsMap(
-      String accountIdentifier, Page<OrganizationResponse> organizations, Map<String, UserMetadataDTO> userMap) {
+      String accountIdentifier, Page<OrganizationResponse> organizations) {
     Map<String, List<UserMetadataDTO>> orgAdminsMap = new HashMap<>();
     List<Scope> scopes = new ArrayList<>();
     organizations.forEach(organizationResponse
@@ -192,16 +184,14 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
     /*
     Performance can be improved by a batch call with multiple scopes as input.
      */
-    scopes.forEach(scope
-        -> orgAdminsMap.put(scope.getOrgIdentifier(), getAdmins(accountIdentifier, scope.getOrgIdentifier(), userMap)));
+    scopes.forEach(
+        scope -> orgAdminsMap.put(scope.getOrgIdentifier(), getAdmins(accountIdentifier, scope.getOrgIdentifier())));
     return orgAdminsMap;
   }
 
-  private List<UserMetadataDTO> getAdmins(
-      String accountIdentifier, String orgId, Map<String, UserMetadataDTO> userMap) {
-    List<String> userIds = ngUserService.listUsersHavingRole(
+  private List<UserMetadataDTO> getAdmins(String accountIdentifier, String orgId) {
+    return ngUserService.listUsersHavingRole(
         Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgId).build(), ORG_ADMIN_ROLE);
-    return userIds.stream().filter(userMap::containsKey).map(userMap::get).collect(Collectors.toList());
   }
 
   private List<UserMembership> getUserMemberships(String accountIdentifier, Page<OrganizationResponse> organizations) {
@@ -222,8 +212,7 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
     return ngUserService.listUserMemberships(new Criteria().orOperator(criteriaList.toArray(new Criteria[0])));
   }
 
-  private Map<String, List<UserMetadataDTO>> getOrgUsersMap(
-      List<UserMembership> userMemberships, Map<String, UserMetadataDTO> userMap) {
+  private Map<String, List<UserMetadataDTO>> getOrgUsersMap(List<UserMembership> userMemberships) {
     Map<String, List<UserMetadataDTO>> orgProjectUserMap = new HashMap<>();
     userMemberships.forEach(userMembership
         -> userMembership.getScopes()
@@ -233,9 +222,12 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
                .distinct()
                .forEach(orgIdentifier -> {
                  orgProjectUserMap.computeIfAbsent(orgIdentifier, arg -> new ArrayList<>());
-                 if (userMap.containsKey(userMembership.getUserId())) {
-                   orgProjectUserMap.get(orgIdentifier).add(userMap.get(userMembership.getUserId()));
-                 }
+                 orgProjectUserMap.get(orgIdentifier)
+                     .add(UserMetadataDTO.builder()
+                              .uuid(userMembership.getUserId())
+                              .name(userMembership.getName())
+                              .email(userMembership.getEmailId())
+                              .build());
                }));
     return orgProjectUserMap;
   }

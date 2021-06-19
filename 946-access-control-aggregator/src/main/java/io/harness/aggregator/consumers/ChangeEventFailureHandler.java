@@ -7,5 +7,5 @@ import io.debezium.engine.ChangeEvent;
 
 @OwnedBy(HarnessTeam.PL)
 public interface ChangeEventFailureHandler {
-  void handle(ChangeEvent<String, String> changeEvent, Exception exception);
+  void handle(ChangeEvent<String, String> changeEvent, Throwable exception);
 }

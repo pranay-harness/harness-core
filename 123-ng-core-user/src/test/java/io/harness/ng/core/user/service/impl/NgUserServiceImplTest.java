@@ -93,7 +93,7 @@ public class NgUserServiceImplTest extends CategoryTest {
     Page<ProjectDTO> projectsResponse =
         ngUserService.listProjects("account", PageRequest.builder().pageSize(2).pageIndex(0).build());
     assertThat(projectsResponse).isNotNull();
-    assertThat(projectsResponse.getTotalPages()).isEqualTo(3);
+    assertThat(projectsResponse.getTotalPages()).isEqualTo(1);
     assertThat(projectsResponse.getContent())
         .isEqualTo(projects.stream().map(ProjectMapper::writeDTO).collect(Collectors.toList()));
   }

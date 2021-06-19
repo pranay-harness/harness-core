@@ -68,6 +68,9 @@ mongo:
   aliasDBName: ng-harness
   traceMode: ENABLED
 
+accountConfig:
+  deploymentClusterName: ""
+
 #[secondary-db] : Uncomment the following if you want to connect to another database
 #secondary - mongo:
 #uri : mongodb:  // localhost:27017/cd-nextgen-secondary
@@ -190,6 +193,10 @@ ceAwsSetupConfig:
   destinationBucket: ce_aws_destinationBucket_placeholder
   templateURL: https://continuous-efficiency-templates.s3.amazonaws.com/templateOptimOnly.yaml
 
+ceAzureSetupConfig:
+  azureAppClientId: azureAppClientIdPlaceholder
+  azureAppClientSecret: azureAppClientSecretplaceholder
+
 ciDefaultEntityConfiguration:
   harnessImageUseName: harnessdev
   harnessImagePassword: harnessPass
@@ -278,6 +285,7 @@ baseUrls:
   currentGenUiUrl: http://localhost:8181/#/
   nextGenUiUrl: http://localhost:8181/ng/#/
   nextGenAuthUiUrl: http://localhost:8181/auth/#/
+  webhookBaseUrl: http://localhost:7457/
 
 ngAuthUIEnabled: false
 
@@ -326,5 +334,3 @@ signupNotificationConfiguration:
       gcsFileName: "signup_confirmation.txt"
       templateId: "signup_confirmation"
   expireDurationInMinutes: 60
-
-useRedisForSdkResponseEvents: false

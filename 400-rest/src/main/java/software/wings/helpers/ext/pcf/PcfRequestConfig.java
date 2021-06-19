@@ -3,6 +3,7 @@ package software.wings.helpers.ext.pcf;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pcf.model.CfCliVersion;
 
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,8 @@ public class PcfRequestConfig {
   Map<String, String> safeDisplayServiceVariables;
   private int timeOutIntervalInMins;
   private boolean useCFCLI;
+  private String cfCliPath;
+  private CfCliVersion cfCliVersion;
   private String cfHomeDirPath;
   private boolean loggedin;
   private boolean limitPcfThreads;

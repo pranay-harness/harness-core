@@ -1,9 +1,11 @@
 package io.harness.delegate.task.artifactory;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifactory.ArtifactoryClientImpl;
 import io.harness.artifactory.ArtifactoryConfigRequest;
-import io.harness.artifactory.ArtifactoryServiceImpl;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
@@ -17,9 +19,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 
+@OwnedBy(CDC)
 @Singleton
 public class ArtifactoryValidationHandler implements ConnectorValidationHandler {
-  @Inject ArtifactoryServiceImpl artifactoryService;
+  @Inject ArtifactoryClientImpl artifactoryService;
   @Inject SecretDecryptionService decryptionService;
   @Inject ArtifactoryRequestMapper artifactoryRequestMapper;
 

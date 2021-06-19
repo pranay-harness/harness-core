@@ -1,5 +1,8 @@
 package io.harness.delegate.beans.connector.appdynamicsconnector;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
@@ -7,6 +10,7 @@ import io.harness.connector.DelegateSelectable;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
+import io.harness.exception.InvalidRequestException;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Preconditions;
@@ -22,6 +26,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @Builder
@@ -34,8 +39,7 @@ import lombok.experimental.FieldDefaults;
 public class AppDynamicsConnectorDTO extends ConnectorConfigDTO implements DecryptableEntity, DelegateSelectable {
   String username;
   @NotNull String accountname;
-  @NotNull String controllerUrl;
-  @NotNull String accountId;
+  @NotNull @NotBlank String controllerUrl;
   Set<String> delegateSelectors;
 
   @ApiModelProperty(dataType = "string") @SecretReference SecretRefData passwordRef;
@@ -60,12 +64,13 @@ public class AppDynamicsConnectorDTO extends ConnectorConfigDTO implements Decry
 
   @Override
   public void validate() {
-    if (getAuthType().equals(AppDynamicsAuthType.USERNAME_PASSWORD)) {
-      Preconditions.checkNotNull(username, "Username cannot be empty");
-      Preconditions.checkNotNull(passwordRef, "Password cannot be empty");
-    } else if (getAuthType().equals(AppDynamicsAuthType.API_CLIENT_TOKEN)) {
-      Preconditions.checkNotNull(clientId, "Client ID cannot be empty");
-      Preconditions.checkNotNull(clientSecretRef, "Client Secret cannot be empty");
+    Preconditions.checkState(isNotEmpty(controllerUrl), "Controller URL cannot be empty");
+    // Until the framework handles NPEs well, we will throw InvalidRequestException
+    if (getAuthType().equals(AppDynamicsAuthType.USERNAME_PASSWORD) && (isEmpty(username) || passwordRef.isNull())) {
+      throw new InvalidRequestException("Username and Password cannot be empty for UsernamePassword Auth type");
+    } else if (getAuthType().equals(AppDynamicsAuthType.API_CLIENT_TOKEN)
+        && (isEmpty(clientId) || clientSecretRef.isNull())) {
+      throw new InvalidRequestException("Client ID or Client Secret cannot be empty for ApiClientToken Auth type");
     }
   }
 

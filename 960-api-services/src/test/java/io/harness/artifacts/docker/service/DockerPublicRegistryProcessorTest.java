@@ -1,5 +1,6 @@
 package io.harness.artifacts.docker.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.docker.DockerRegistryRestClient;
 import io.harness.artifacts.docker.beans.DockerInternalConfig;
@@ -23,6 +25,7 @@ import io.harness.artifacts.docker.beans.DockerPublicImageTagResponse;
 import io.harness.artifacts.docker.client.DockerRestClientFactory;
 import io.harness.artifacts.docker.client.DockerRestClientFactoryImpl;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.HintException;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
@@ -43,6 +46,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(CDC)
 public class DockerPublicRegistryProcessorTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule
@@ -92,8 +96,10 @@ public class DockerPublicRegistryProcessorTest extends CategoryTest {
       doReturn(dockerRegistryRestClient).when(dockerRestClientFactory).getDockerRegistryRestClient(dockerConfig);
       dockerPublicRegistryProcessor.getBuilds(dockerConfig, "image", 10);
       fail("Should not reach here");
-    } catch (InvalidArtifactServerException ex) {
-      assertThat(getMessage(ex)).isEqualTo("Invalid Docker Registry credentials");
+    } catch (HintException ex) {
+      assertThat(getMessage(ex))
+          .isEqualTo(
+              "Update the username & password. Check if the provided credentials are correct. Invalid Docker Registry credentials");
     }
   }
 
@@ -105,8 +111,10 @@ public class DockerPublicRegistryProcessorTest extends CategoryTest {
       doReturn(dockerRegistryRestClient).when(dockerRestClientFactory).getDockerRegistryRestClient(dockerConfig);
       dockerPublicRegistryProcessor.getBuilds(dockerConfig, "image-1", 10);
       fail("Should not reach here");
-    } catch (IOException | InvalidArtifactServerException ex) {
-      assertThat(getMessage(ex)).isEqualTo("Not Found");
+    } catch (IOException | HintException ex) {
+      assertThat(getMessage(ex))
+          .isEqualTo(
+              "Unable to fetch the tags for the image. Check if the image exists and if the permissions are scoped for the authenticated user. Not Found");
     }
   }
 

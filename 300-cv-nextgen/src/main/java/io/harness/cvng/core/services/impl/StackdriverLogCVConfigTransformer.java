@@ -2,9 +2,9 @@ package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.cvng.beans.stackdriver.StackdriverLogDefinition;
 import io.harness.cvng.core.beans.StackdriverLogDSConfig;
 import io.harness.cvng.core.beans.StackdriverLogDSConfig.StackdriverLogConfiguration;
-import io.harness.cvng.core.beans.StackdriverLogDefinition;
 import io.harness.cvng.core.entities.StackdriverLogCVConfig;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
 

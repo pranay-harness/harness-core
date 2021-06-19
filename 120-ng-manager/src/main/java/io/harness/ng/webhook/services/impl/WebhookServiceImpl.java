@@ -3,6 +3,7 @@ package io.harness.ng.webhook.services.impl;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.NextGenModule.CONNECTOR_DECORATOR_SERVICE;
+import static io.harness.utils.DelegateOwner.getNGTaskSetupAbstractionsWithOwner;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
@@ -18,10 +19,13 @@ import io.harness.delegate.task.scm.GitWebhookTaskType;
 import io.harness.delegate.task.scm.ScmGitWebhookTaskParams;
 import io.harness.delegate.task.scm.ScmGitWebhookTaskResponseData;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.BaseUrls;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.webhook.UpsertWebhookRequestDTO;
 import io.harness.ng.webhook.UpsertWebhookResponseDTO;
+import io.harness.ng.webhook.WebhookConstants;
 import io.harness.ng.webhook.entities.WebhookEvent;
+import io.harness.ng.webhook.services.api.WebhookEventService;
 import io.harness.ng.webhook.services.api.WebhookService;
 import io.harness.product.ci.scm.proto.CreateWebhookResponse;
 import io.harness.repositories.ng.webhook.spring.WebhookEventRepository;
@@ -36,30 +40,35 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.InvalidProtocolBufferException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
 @OwnedBy(PIPELINE)
-public class WebhookServiceImpl implements WebhookService {
+public class WebhookServiceImpl implements WebhookService, WebhookEventService {
   private final WebhookEventRepository webhookEventRepository;
   private final DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   private final SecretManagerClientService secretManagerClientService;
   private final ConnectorService connectorService;
   private final ConnectorErrorMessagesHelper connectorErrorMessagesHelper;
+  private final BaseUrls baseUrls;
 
   @Inject
   public WebhookServiceImpl(WebhookEventRepository webhookEventRepository,
       DelegateGrpcClientWrapper delegateGrpcClientWrapper, SecretManagerClientService secretManagerClientService,
       @Named(CONNECTOR_DECORATOR_SERVICE) ConnectorService connectorService,
-      ConnectorErrorMessagesHelper connectorErrorMessagesHelper) {
+      ConnectorErrorMessagesHelper connectorErrorMessagesHelper, BaseUrls baseUrls) {
     this.webhookEventRepository = webhookEventRepository;
     this.delegateGrpcClientWrapper = delegateGrpcClientWrapper;
     this.secretManagerClientService = secretManagerClientService;
     this.connectorService = connectorService;
     this.connectorErrorMessagesHelper = connectorErrorMessagesHelper;
+    this.baseUrls = baseUrls;
   }
 
   @Override
@@ -81,6 +90,7 @@ public class WebhookServiceImpl implements WebhookService {
     final List<EncryptedDataDetail> encryptionDetails =
         getEncryptedDataDetails(upsertWebhookRequestDTO.getAccountIdentifier(),
             upsertWebhookRequestDTO.getOrgIdentifier(), upsertWebhookRequestDTO.getProjectIdentifier(), scmConnector);
+    String target = getTargetUrl();
     final ScmGitWebhookTaskParams gitWebhookTaskParams =
         ScmGitWebhookTaskParams.builder()
             .gitWebhookTaskType(GitWebhookTaskType.UPSERT)
@@ -88,11 +98,15 @@ public class WebhookServiceImpl implements WebhookService {
             .encryptedDataDetails(encryptionDetails)
             .gitWebhookDetails(GitWebhookDetails.builder()
                                    .hookEventType(upsertWebhookRequestDTO.getHookEventType())
-                                   .target(upsertWebhookRequestDTO.getTarget())
+                                   .target(target)
                                    .build())
             .build();
+    final Map<String, String> ngTaskSetupAbstractionsWithOwner =
+        getNGTaskSetupAbstractionsWithOwner(upsertWebhookRequestDTO.getAccountIdentifier(),
+            upsertWebhookRequestDTO.getOrgIdentifier(), upsertWebhookRequestDTO.getProjectIdentifier());
     DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                   .accountId(upsertWebhookRequestDTO.getAccountIdentifier())
+                                                  .taskSetupAbstractions(ngTaskSetupAbstractionsWithOwner)
                                                   .taskType(TaskType.SCM_GIT_WEBHOOK_TASK.name())
                                                   .taskParameters(gitWebhookTaskParams)
                                                   .executionTimeout(Duration.ofMinutes(2))
@@ -108,7 +122,21 @@ public class WebhookServiceImpl implements WebhookService {
           .status(createWebhookResponse.getStatus())
           .build();
     } catch (InvalidProtocolBufferException e) {
-      throw new InvalidRequestException(String.format("Exception in unpacking Create Webhook Response", e));
+      throw new InvalidRequestException("Exception in unpacking Create Webhook Response", e);
+    }
+  }
+
+  public String getTargetUrl() {
+    try {
+      String webhookBaseUrl = baseUrls.getWebhookBaseUrl();
+      if (!webhookBaseUrl.endsWith("/")) {
+        webhookBaseUrl += "/";
+      }
+      URL baseUrl = new URL(webhookBaseUrl);
+      URL targetURL = new URL(baseUrl, WebhookConstants.WEBHOOK_ENDPOINT);
+      return targetURL.toString();
+    } catch (MalformedURLException e) {
+      throw new InvalidRequestException("Failed to generate Target Url", e);
     }
   }
 

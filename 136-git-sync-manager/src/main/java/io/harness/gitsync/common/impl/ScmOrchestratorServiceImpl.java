@@ -40,8 +40,13 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
       String orgIdentifier, String accountId) {
     final Optional<GitSyncSettingsDTO> gitSyncSettingsDTO =
         gitSyncSettingsService.get(accountId, orgIdentifier, projectIdentifier);
-    // todo(abhinav): Throw exception if optional not present.
-    final boolean executeOnDelegate = gitSyncSettingsDTO.isPresent() && gitSyncSettingsDTO.get().isExecuteOnDelegate();
+    GitSyncSettingsDTO gitSyncSettings = gitSyncSettingsDTO.orElse(GitSyncSettingsDTO.builder()
+                                                                       .accountIdentifier(accountId)
+                                                                       .projectIdentifier(projectIdentifier)
+                                                                       .organizationIdentifier(orgIdentifier)
+                                                                       .executeOnDelegate(true)
+                                                                       .build());
+    final boolean executeOnDelegate = gitSyncSettings.isExecuteOnDelegate();
     if (executeOnDelegate) {
       return scmRequest.apply(scmClientDelegateService);
     }

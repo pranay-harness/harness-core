@@ -4,12 +4,14 @@ import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HPersistence.returnNewOptions;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -19,10 +21,17 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
+import io.harness.delegate.utils.DelegateEntityOwnerHelper;
+import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.entity_crud.EntityChangeDTO;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.observer.Subject;
@@ -36,11 +45,15 @@ import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.account.AccountCrudObserver;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.google.protobuf.StringValue;
 import io.fabric8.utils.Strings;
 import java.util.List;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -55,12 +68,13 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class DelegateProfileServiceImpl implements DelegateProfileService, AccountCrudObserver {
   public static final String CG_PRIMARY_PROFILE_NAME = "Primary";
   public static final String NG_PRIMARY_PROFILE_NAME = "Primary Configuration";
-  public static final String PRIMARY_PROFILE_DESCRIPTION = "The primary profile for the account";
+  public static final String PRIMARY_PROFILE_DESCRIPTION = "The primary profile for the";
 
   @Inject private HPersistence persistence;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private DelegateCache delegateCache;
+  @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
 
   @Getter private final Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
 
@@ -84,19 +98,20 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
             .filter(DelegateProfileKeys.primary, Boolean.TRUE)
             .get());
 
-    return primaryProfile.orElseGet(() -> add(buildPrimaryDelegateProfile(accountId, false)));
+    return primaryProfile.orElseGet(() -> add(buildPrimaryDelegateProfile(accountId, null, false)));
   }
 
   @Override
-  public DelegateProfile fetchNgPrimaryProfile(String accountId) {
+  public DelegateProfile fetchNgPrimaryProfile(final String accountId, @Nullable final DelegateEntityOwner owner) {
     Optional<DelegateProfile> primaryProfile =
         Optional.ofNullable(persistence.createQuery(DelegateProfile.class)
                                 .filter(DelegateProfileKeys.accountId, accountId)
                                 .filter(DelegateProfileKeys.ng, Boolean.TRUE)
                                 .filter(DelegateProfileKeys.primary, Boolean.TRUE)
+                                .filter(DelegateProfileKeys.owner, owner)
                                 .get());
 
-    return primaryProfile.orElseGet(() -> add(buildPrimaryDelegateProfile(accountId, true)));
+    return primaryProfile.orElseGet(() -> add(buildPrimaryDelegateProfile(accountId, owner, true)));
   }
 
   @Override
@@ -207,10 +222,50 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
       log.info("Deleting delegate profile: {}", delegateProfileId);
       // Delete and invalidate cache
       persistence.delete(delegateProfile);
-      delegateCache.invalidateDelegateProfileCache(accountId, delegateProfileId);
 
+      delegateCache.invalidateDelegateProfileCache(accountId, delegateProfileId);
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(delegateProfile.getAccountId(), delegateProfile);
       log.info("Auditing deleting of Delegate Profile for accountId={}", delegateProfile.getAccountId());
+
+      publishDelegateProfileChangeEventViaEventFramework(delegateProfile, DELETE_ACTION);
+    }
+  }
+
+  private void publishDelegateProfileChangeEventViaEventFramework(DelegateProfile delegateProfile, String action) {
+    if (delegateProfile == null) {
+      return;
+    }
+
+    try {
+      EntityChangeDTO.Builder entityChangeDTOBuilder =
+          EntityChangeDTO.newBuilder()
+              .setAccountIdentifier(StringValue.of(delegateProfile.getAccountId()))
+              .setIdentifier(StringValue.of(delegateProfile.getUuid()));
+
+      if (delegateProfile.getOwner() != null) {
+        String orgIdentifier =
+            DelegateEntityOwnerHelper.extractOrgIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
+        if (isNotBlank(orgIdentifier)) {
+          entityChangeDTOBuilder.setOrgIdentifier(StringValue.of(orgIdentifier));
+        }
+
+        String projectIdentifier =
+            DelegateEntityOwnerHelper.extractProjectIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
+        if (isNotBlank(projectIdentifier)) {
+          entityChangeDTOBuilder.setProjectIdentifier(StringValue.of(projectIdentifier));
+        }
+      }
+
+      eventProducer.send(Message.newBuilder()
+                             .putAllMetadata(ImmutableMap.of("accountId", delegateProfile.getAccountId(),
+                                 EventsFrameworkMetadataConstants.ENTITY_TYPE,
+                                 EventsFrameworkMetadataConstants.DELEGATE_CONFIGURATION_ENTITY,
+                                 EventsFrameworkMetadataConstants.ACTION, action))
+                             .setData(entityChangeDTOBuilder.build().toByteString())
+                             .build());
+    } catch (Exception ex) {
+      log.error(String.format("Failed to publish delegate profile %s event for accountId %s via event framework.",
+          action, delegateProfile.getAccountId()));
     }
   }
 
@@ -246,10 +301,10 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     log.info("AccountCreated event received.");
 
     if (!account.isForImport()) {
-      DelegateProfile cgDelegateProfile = buildPrimaryDelegateProfile(account.getUuid(), false);
+      DelegateProfile cgDelegateProfile = buildPrimaryDelegateProfile(account.getUuid(), null, false);
       add(cgDelegateProfile);
 
-      DelegateProfile ngDelegateProfile = buildPrimaryDelegateProfile(account.getUuid(), true);
+      DelegateProfile ngDelegateProfile = buildPrimaryDelegateProfile(account.getUuid(), null, true);
       add(ngDelegateProfile);
 
       log.info("Primary Delegate Profiles added.");
@@ -278,15 +333,40 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
         .collect(toList());
   }
 
-  private DelegateProfile buildPrimaryDelegateProfile(String accountId, boolean isNg) {
+  private DelegateProfile buildPrimaryDelegateProfile(
+      final String accountId, @Nullable final DelegateEntityOwner owner, final boolean isNg) {
     return DelegateProfile.builder()
         .uuid(generateUuid())
         .accountId(accountId)
-        .name(isNg ? NG_PRIMARY_PROFILE_NAME : CG_PRIMARY_PROFILE_NAME)
-        .description(PRIMARY_PROFILE_DESCRIPTION)
+        .name(getProfileName(owner, isNg))
+        .description(getProfileDescription(owner, isNg))
         .primary(true)
+        .owner(owner)
         .ng(isNg)
         .build();
+  }
+
+  private String getProfileName(final DelegateEntityOwner owner, final boolean isNg) {
+    if (isNg) {
+      final String nameSuffix = owner != null ? owner.getIdentifier() : "Account";
+      return String.format("%s for %s", NG_PRIMARY_PROFILE_NAME, nameSuffix);
+    } else {
+      return CG_PRIMARY_PROFILE_NAME;
+    }
+  }
+
+  private String getProfileDescription(final DelegateEntityOwner owner, final boolean isNg) {
+    if (isNg) {
+      if (DelegateEntityOwnerHelper.isAccount(owner)) {
+        return String.format("%s %s", PRIMARY_PROFILE_DESCRIPTION, "account");
+      } else if (DelegateEntityOwnerHelper.isOrganisation(owner)) {
+        return String.format("%s %s organization", PRIMARY_PROFILE_DESCRIPTION, owner.getIdentifier());
+      } else {
+        return String.format("%s %s project", PRIMARY_PROFILE_DESCRIPTION, owner.getIdentifier());
+      }
+    } else {
+      return String.format("%s %s", PRIMARY_PROFILE_DESCRIPTION, "account");
+    }
   }
 
   @VisibleForTesting

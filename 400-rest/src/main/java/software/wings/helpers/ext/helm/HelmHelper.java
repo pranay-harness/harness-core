@@ -146,6 +146,9 @@ public class HelmHelper {
 
           helmChartInfo.setRepoUrl(getRepoUrlForHelmRepoConfig(helmChartConfigParams));
           break;
+        case CUSTOM:
+          // nothing to do
+          break;
 
         default:
           unhandled(storeType);

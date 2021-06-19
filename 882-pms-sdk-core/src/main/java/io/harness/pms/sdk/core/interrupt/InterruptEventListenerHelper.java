@@ -48,7 +48,9 @@ public class InterruptEventListenerHelper {
         pmsInterruptService.handleAbort(event.getNotifyId());
       }
     } catch (Exception ex) {
-      // Ignore
+      log.error("Handling abort at sdk failed with interrupt event - {} ", event.getInterruptUuid(), ex);
+      // Even if error send feedback
+      pmsInterruptService.handleAbort(event.getNotifyId());
     }
   }
 

@@ -5,8 +5,6 @@ import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_INTERRUPT_TOPIC;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
@@ -14,7 +12,6 @@ import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCH
 import static com.google.common.collect.ImmutableMap.of;
 
 import io.harness.EntityType;
-import io.harness.EventObserverUtils;
 import io.harness.Microservice;
 import io.harness.ModuleType;
 import io.harness.PipelineServiceUtilityModule;
@@ -67,15 +64,19 @@ import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
-import io.harness.pms.contracts.plan.ConsumerConfig;
-import io.harness.pms.contracts.plan.Redis;
+import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
-import io.harness.pms.listener.interrupts.InterruptRedisConsumerService;
-import io.harness.pms.listener.orchestrationevent.OrchestrationEventEventConsumerService;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
+import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.interrupts.InterruptEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.resume.NodeResumeEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.start.NodeStartEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -122,6 +123,7 @@ import com.google.inject.name.Names;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
+import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
@@ -157,7 +159,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 public class NextGenApplication extends Application<NextGenConfiguration> {
   private static final SecureRandom random = new SecureRandom();
   private static final String APPLICATION_NAME = "CD NextGen Application";
-  public static final String PMS_SERVICE_NAME = "cd";
 
   private final MetricRegistry metricRegistry = new MetricRegistry();
 
@@ -258,8 +259,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     // Pipeline Service Modules
     PmsSdkConfiguration pmsSdkConfiguration = getPmsSdkConfiguration(appConfig);
     modules.add(PmsSdkModule.getInstance(pmsSdkConfiguration));
-    modules.add(PipelineServiceUtilityModule.getInstance(
-        appConfig.getEventsFrameworkConfiguration(), pmsSdkConfiguration.getServiceName()));
+    modules.add(PipelineServiceUtilityModule.getInstance());
 
     Injector injector = Guice.createInjector(modules);
     if (appConfig.getShouldDeployWithGitSync()) {
@@ -285,7 +285,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerJobs(injector);
     registerMigrations(injector);
     registerQueueListeners(injector);
-    EventObserverUtils.registerObservers(injector);
+    registerPmsSdkEvents(injector);
     registerObservers(injector);
 
     intializeGitSync(injector, appConfig);
@@ -357,6 +357,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerRequestContextFilter(Environment environment) {
     environment.jersey().register(new RequestContextFilter());
+    environment.jersey().register(new JsonProcessingExceptionMapper(true));
   }
 
   private void intializeGitSync(Injector injector, NextGenConfiguration nextGenConfiguration) {
@@ -387,9 +388,21 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void createConsumerThreadsToListenToEvents(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(NGEventConsumerService.class));
-    environment.lifecycle().manage(injector.getInstance(InterruptRedisConsumerService.class));
-    environment.lifecycle().manage(injector.getInstance(OrchestrationEventEventConsumerService.class));
     environment.lifecycle().manage(injector.getInstance(GitSyncEventConsumerService.class));
+    environment.lifecycle().manage(injector.getInstance(PipelineEventConsumerController.class));
+  }
+
+  private void registerPmsSdkEvents(Injector injector) {
+    log.info("Initializing sdk redis abstract consumers...");
+    PipelineEventConsumerController pipelineEventConsumerController =
+        injector.getInstance(PipelineEventConsumerController.class);
+    pipelineEventConsumerController.register(injector.getInstance(InterruptEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(FacilitatorEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class), 4);
+    pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 4);
+    pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 4);
   }
 
   private void registerYamlSdk(Injector injector) {
@@ -421,7 +434,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     return PmsSdkConfiguration.builder()
         .deploymentMode(remote ? SdkDeployMode.REMOTE : SdkDeployMode.LOCAL)
         .moduleType(ModuleType.CD)
-        .mongoConfig(appConfig.getPmsMongoConfig())
         .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
         .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
         .pipelineServiceInfoProviderClass(CDNGPlanCreatorProvider.class)
@@ -430,14 +442,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .engineAdvisers(CDServiceAdviserRegistrar.getEngineAdvisers())
         .executionSummaryModuleInfoProviderClass(CDNGModuleInfoProvider.class)
         .eventsFrameworkConfiguration(appConfig.getEventsFrameworkConfiguration())
-        .useRedisForSdkResponseEvents(appConfig.getUseRedisForSdkResponseEvents())
-        .interruptConsumerConfig(ConsumerConfig.newBuilder()
-                                     .setRedis(Redis.newBuilder().setTopicName(PIPELINE_INTERRUPT_TOPIC).build())
-                                     .build())
-        .orchestrationEventConsumerConfig(
-            ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_ORCHESTRATION_EVENT_TOPIC).build())
-                .build())
         .build();
   }
 

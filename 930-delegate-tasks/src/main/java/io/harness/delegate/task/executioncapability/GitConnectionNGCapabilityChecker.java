@@ -1,7 +1,5 @@
 package io.harness.delegate.task.executioncapability;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
@@ -45,7 +43,9 @@ public class GitConnectionNGCapabilityChecker implements CapabilityCheck {
       return CapabilityResponse.builder().delegateCapability(capability).validated(false).build();
     }
     String accountId = delegateConfiguration.getAccountId();
-    if (isNotEmpty(gitService.validate(gitConfig, accountId, sshSessionConfig))) {
+    try {
+      gitService.validate(gitConfig, accountId, sshSessionConfig);
+    } catch (Exception e) {
       return CapabilityResponse.builder().delegateCapability(capability).validated(false).build();
     }
     return CapabilityResponse.builder().delegateCapability(capability).validated(true).build();

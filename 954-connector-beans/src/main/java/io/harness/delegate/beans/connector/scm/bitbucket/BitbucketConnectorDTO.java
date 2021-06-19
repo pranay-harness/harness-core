@@ -35,15 +35,17 @@ import org.hibernate.validator.constraints.NotBlank;
 public class BitbucketConnectorDTO extends ConnectorConfigDTO implements ScmConnector, DelegateSelectable {
   @NotNull @JsonProperty("type") private GitConnectionType connectionType;
   @NotNull @NotBlank private String url;
+  private String validationRepo;
   @Valid @NotNull private BitbucketAuthenticationDTO authentication;
   @Valid private BitbucketApiAccessDTO apiAccess;
   private Set<String> delegateSelectors;
 
   @Builder
-  public BitbucketConnectorDTO(GitConnectionType connectionType, String url, BitbucketAuthenticationDTO authentication,
-      BitbucketApiAccessDTO apiAccess, Set<String> delegateSelectors) {
+  public BitbucketConnectorDTO(GitConnectionType connectionType, String url, String validationRepo,
+      BitbucketAuthenticationDTO authentication, BitbucketApiAccessDTO apiAccess, Set<String> delegateSelectors) {
     this.connectionType = connectionType;
     this.url = url;
+    this.validationRepo = validationRepo;
     this.authentication = authentication;
     this.apiAccess = apiAccess;
     this.delegateSelectors = delegateSelectors;

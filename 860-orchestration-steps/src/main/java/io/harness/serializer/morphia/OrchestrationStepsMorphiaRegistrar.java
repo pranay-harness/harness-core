@@ -11,8 +11,6 @@ import io.harness.steps.barriers.BarrierSpecParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
 import io.harness.steps.cf.FlagConfigurationStepParameters;
-import io.harness.steps.dummy.DummySectionOutcome;
-import io.harness.steps.dummy.DummySectionStepParameters;
 import io.harness.steps.fork.ForkStepParameters;
 import io.harness.steps.resourcerestraint.ResourceRestraintSpecParameters;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
@@ -40,8 +38,6 @@ public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
     h.put("steps.barriers.beans.BarrierOutcome", BarrierOutcome.class);
     h.put("steps.resourcerestraint.ResourceRestraintSpecParameters", ResourceRestraintSpecParameters.class);
     h.put("steps.resourcerestraint.beans.ResourceRestraintOutcome", ResourceRestraintOutcome.class);
-    h.put("steps.dummy.DummySectionOutcome", DummySectionOutcome.class);
-    h.put("steps.dummy.DummySectionStepParameters", DummySectionStepParameters.class);
     h.put("steps.fork.ForkStepParameters", ForkStepParameters.class);
     h.put("steps.section.chain.SectionChainPassThroughData", SectionChainPassThroughData.class);
     h.put("steps.section.chain.SectionStepParameters", SectionChainStepParameters.class);

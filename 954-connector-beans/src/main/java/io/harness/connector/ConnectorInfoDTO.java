@@ -1,9 +1,12 @@
 package io.harness.connector;
 
 import static io.harness.ConnectorConstants.CONNECTOR_TYPES;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.data.validator.NGEntityName;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 
@@ -24,8 +27,9 @@ import org.hibernate.validator.constraints.NotBlank;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(DX)
 public class ConnectorInfoDTO {
-  @NotNull @NotBlank String name;
+  @NotNull @NotBlank @NGEntityName String name;
   @NotNull @NotBlank @EntityIdentifier String identifier;
   String description;
   String orgIdentifier;

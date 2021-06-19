@@ -1,6 +1,7 @@
 package io.harness.managerclient;
 
 import io.harness.beans.DelegateHeartbeatResponse;
+import io.harness.beans.DelegateTaskEventsResponse;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateParams;
@@ -8,7 +9,6 @@ import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
-import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.FileBucket;
@@ -93,7 +93,7 @@ public interface DelegateAgentManagerClient {
   Call<RestResponse<AccessTokenBean>> getLoggingToken(@Query("accountId") String accountId);
 
   @GET("agent/delegates/{delegateId}/task-events")
-  Call<List<DelegateTaskEvent>> pollTaskEvents(
+  Call<DelegateTaskEventsResponse> pollTaskEvents(
       @Path("delegateId") String delegateId, @Query("accountId") String accountId);
 
   @POST("agent/delegates/instance-sync/{perpetualTaskId}")

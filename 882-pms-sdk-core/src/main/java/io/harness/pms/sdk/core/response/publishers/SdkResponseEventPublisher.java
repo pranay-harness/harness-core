@@ -1,7 +1,7 @@
 package io.harness.pms.sdk.core.response.publishers;
 
-import io.harness.pms.execution.SdkResponseEvent;
+import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 
 public interface SdkResponseEventPublisher {
-  void publishEvent(SdkResponseEvent event);
+  void publishEvent(SdkResponseEventProto event);
 }

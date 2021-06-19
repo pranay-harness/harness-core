@@ -4,6 +4,8 @@ import static io.harness.testframework.framework.utils.ExecutorUtils.addConfig;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addGCVMOptions;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJacocoAgentVM;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJar;
+import static io.harness.testframework.framework.utils.ExecutorUtils.getConfig;
+import static io.harness.testframework.framework.utils.ExecutorUtils.getJar;
 
 import static io.restassured.config.HttpClientConfig.httpClientConfig;
 import static java.time.Duration.ofMinutes;
@@ -20,7 +22,6 @@ import io.restassured.config.RestAssuredConfig;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,8 +36,6 @@ import org.zeroturnaround.exec.ProcessExecutor;
 public class CIManagerExecutor {
   public static final String MODULE = "310-ci-manager";
   public static final String CONFIG_YML = "ci-manager-config.yml";
-  public static final String CAPSULE_JAR = "ci-manager-capsule.jar";
-  public static final String TARGET = "target";
   private static boolean failedAlready;
   private static final Duration waiting = ofMinutes(5);
 
@@ -78,9 +77,8 @@ public class CIManagerExecutor {
 
     log.info("Execute the manager from {}", directory);
 
-    final Path jar = Paths.get("/home/jenkins"
-        + "/.bazel-dirs/bin/310-ci-manager/module_deploy.jar");
-    final Path config = Paths.get(directory.getPath(), MODULE, CONFIG_YML);
+    final Path jar = getJar(MODULE);
+    final Path config = getConfig(directory.getAbsolutePath(), MODULE, CONFIG_YML);
     String alpn = Alpn.location();
 
     for (int i = 0; i < 10; i++) {

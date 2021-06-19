@@ -1,6 +1,10 @@
 package io.harness.cdng.creator.variables;
 
-import io.harness.cdng.manifest.ManifestStoreType;
+import static io.harness.cdng.manifest.ManifestStoreType.isInGitSubset;
+import static io.harness.cdng.manifest.ManifestStoreType.isInStorageRepository;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.service.beans.ServiceSpecType;
 import io.harness.cdng.visitor.YamlTypes;
@@ -19,6 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(HarnessTeam.CDP)
 @UtilityClass
 public class ServiceVariableCreator {
   public VariableCreationResponse createVariableResponse(YamlField serviceConfigField) {
@@ -166,10 +171,8 @@ public class ServiceVariableCreator {
         throw new InvalidRequestException("Invalid store config");
       }
 
-      if (ManifestStoreType.isInGitSubset(storeNode.getNode().getType())) {
-        addVariablesForGit(specNode, yamlPropertiesMap);
-      } else if (ManifestStoreType.HTTP.equals(storeNode.getNode().getType())) {
-        addVariablesForHttp(specNode, yamlPropertiesMap);
+      if (isInGitSubset(storeNode.getNode().getType()) || isInStorageRepository(storeNode.getNode().getType())) {
+        addVariablesForGitOrStorage(specNode, yamlPropertiesMap);
       } else {
         throw new InvalidRequestException("Invalid store type");
       }
@@ -208,24 +211,15 @@ public class ServiceVariableCreator {
       if (specNode == null) {
         throw new InvalidRequestException("Invalid store config");
       }
-      if (ManifestStoreType.isInGitSubset(storeNode.getNode().getType())) {
-        addVariablesForGit(specNode, yamlPropertiesMap);
+      if (isInGitSubset(storeNode.getNode().getType())) {
+        addVariablesForGitOrStorage(specNode, yamlPropertiesMap);
       } else {
         throw new InvalidRequestException("Invalid store type");
       }
     }
   }
 
-  private void addVariablesForGit(YamlField gitNode, Map<String, YamlProperties> yamlPropertiesMap) {
-    List<YamlField> fields = gitNode.getNode().fields();
-    fields.forEach(field -> {
-      if (!field.getName().equals(YamlTypes.UUID)) {
-        VariableCreatorHelper.addFieldToPropertiesMap(field, yamlPropertiesMap, YamlTypes.SERVICE_CONFIG);
-      }
-    });
-  }
-
-  private void addVariablesForHttp(YamlField gitNode, Map<String, YamlProperties> yamlPropertiesMap) {
+  private void addVariablesForGitOrStorage(YamlField gitNode, Map<String, YamlProperties> yamlPropertiesMap) {
     List<YamlField> fields = gitNode.getNode().fields();
     fields.forEach(field -> {
       if (!field.getName().equals(YamlTypes.UUID)) {

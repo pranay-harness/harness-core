@@ -404,7 +404,7 @@ public class SignupServiceImpl implements SignupService {
 
     Matcher matcher = NAME_PATTERN.matcher(name);
     if (!matcher.matches()) {
-      throw new InvalidArgumentsException("User name is not valid.", USER);
+      throw new InvalidArgumentsException("Name is not valid.", USER);
     }
   }
 

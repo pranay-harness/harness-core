@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VUK;
 
+import static junit.framework.TestCase.assertNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -25,6 +26,7 @@ import io.harness.cvng.activity.beans.KubernetesActivityDetailsDTO.KubernetesAct
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
+import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceUpdatableEntity;
 import io.harness.cvng.activity.entities.CD10ActivitySource;
 import io.harness.cvng.activity.entities.CDNGActivitySource;
 import io.harness.cvng.activity.entities.KubernetesActivity;
@@ -59,6 +61,9 @@ import io.harness.rule.Owner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -66,6 +71,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -78,6 +84,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.UpdateOperations;
+
 @OwnedBy(HarnessTeam.CV)
 public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
@@ -85,6 +92,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Inject private ActivitySourceService activitySourceService;
   @Inject private CVConfigService cvConfigService;
   @Inject private VerificationJobService verificationJobService;
+  @Inject Injector injector;
   @Mock private VerificationManagerService verificationManagerService;
   @Mock private CVEventServiceImpl cvEventService;
 
@@ -198,6 +206,16 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
         activitySourceService.listActivitySources(accountId, orgIdentifier, projectIdentifier, 0, 10, null)
             .getContent();
     assertThat(activitySourceDTOS.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category({UnitTests.class})
+  public void test_ActivitySourceImplementsActivitySourceUpdatableEntity() {
+    EnumSet.allOf(ActivitySourceType.class).forEach(activitySourceType -> {
+      assertNotNull(
+          injector.getInstance(Key.get(ActivitySourceUpdatableEntity.class, Names.named(activitySourceType.name()))));
+    });
   }
 
   @Test

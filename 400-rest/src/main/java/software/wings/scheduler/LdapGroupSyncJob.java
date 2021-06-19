@@ -339,7 +339,7 @@ public class LdapGroupSyncJob implements Job {
               LdapConstants.USER_GROUP_SYNC_NOT_ELIGIBLE, userGroup.getName(), groupResponse.getMessage());
           throw new UnsupportedOperationException(message);
         }
-        userGroup = syncUserGroupMetadata(userGroup, groupResponse);
+        syncUserGroupMetadata(userGroup, groupResponse);
 
         updateRemovedGroupMembers(userGroup, groupResponse.getUsers(), removedGroupMembers);
         updateAddedGroupMembers(userGroup, groupResponse.getUsers(), addedGroupMembers);

@@ -1,6 +1,6 @@
 package io.harness.advisers.nextstep;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.contracts.execution.Status.ABORTED;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -20,7 +20,7 @@ import io.harness.serializer.KryoSerializer;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 public class NextStepAdviser implements Adviser {
   @Inject KryoSerializer kryoSerializer;
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
@@ -43,7 +43,7 @@ public class NextStepAdviser implements Adviser {
       return false;
     }
     OptionalSweepingOutput optionalSweepingOutput =
-        executionSweepingOutputService.resolveOptional(advisingEvent.getNodeExecution().getAmbiance(),
+        executionSweepingOutputService.resolveOptional(advisingEvent.getAmbiance(),
             RefObjectUtils.getSweepingOutputRefObject(YAMLFieldNameConstants.USE_ROLLBACK_STRATEGY));
     return !optionalSweepingOutput.isFound();
   }

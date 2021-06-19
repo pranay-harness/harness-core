@@ -71,7 +71,9 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
+import io.harness.pcf.CfCliDelegateResolver;
 import io.harness.pcf.PivotalClientApiException;
+import io.harness.pcf.model.CfCliVersion;
 
 import software.wings.api.PcfInstanceElement;
 import software.wings.api.pcf.PcfServiceData;
@@ -163,6 +165,7 @@ public class PcfCommandTaskHelper {
 
   @Inject private DelegateFileManager delegateFileManager;
   @Inject private PcfDeploymentManager pcfDeploymentManager;
+  @Inject private CfCliDelegateResolver cfCliDelegateResolver;
 
   /**
    * Returns Application that will be downsized in deployment process
@@ -1009,5 +1012,20 @@ public class PcfCommandTaskHelper {
   public ExecutionLogCallback getLogCallBack(
       DelegateLogService delegateLogService, String accountId, String appId, String activityId, String commandUnit) {
     return new ExecutionLogCallback(delegateLogService, accountId, appId, activityId, commandUnit);
+  }
+
+  public String getCfCliPathOnDelegate(boolean useCli, CfCliVersion version) {
+    if (!useCli) {
+      return null;
+    }
+
+    if (version == null) {
+      throw new InvalidArgumentsException("Requested CF CLI version on delegate cannot be null");
+    }
+
+    return cfCliDelegateResolver.getAvailableCfCliPathOnDelegate(version).orElseThrow(
+        ()
+            -> new InvalidArgumentsException(
+                format("Unable to find CF CLI version on delegate, requested version: %s", version)));
   }
 }

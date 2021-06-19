@@ -27,9 +27,15 @@ import io.harness.delegateprofile.ProfileId;
 import io.harness.delegateprofile.ProfileScopingRule;
 import io.harness.delegateprofile.ProfileSelector;
 import io.harness.delegateprofile.ScopingValues;
+import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.DelegateProfileServiceGrpcClient;
 import io.harness.ng.core.api.DelegateProfileManagerNgService;
+import io.harness.ng.core.events.DelegateConfigurationCreateEvent;
+import io.harness.ng.core.events.DelegateConfigurationDeleteEvent;
+import io.harness.ng.core.events.DelegateConfigurationUpdateEvent;
+import io.harness.outbox.api.OutboxService;
 import io.harness.owner.OrgIdentifier;
 import io.harness.owner.ProjectIdentifier;
 import io.harness.paging.PageRequestGrpc;
@@ -40,6 +46,7 @@ import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
@@ -66,6 +73,7 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
 
   @Inject private DelegateProfileServiceGrpcClient delegateProfileServiceGrpcClient;
   @Inject private HPersistence hPersistence;
+  @Inject private OutboxService outboxService;
 
   @Override
   public PageResponse<DelegateProfileDetailsNg> list(
@@ -74,8 +82,13 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
     ProjectIdentifier projectIdentifier =
         isNotBlank(projectId) ? ProjectIdentifier.newBuilder().setId(projectId).build() : null;
 
-    DelegateProfilePageResponseGrpc pageResponse = delegateProfileServiceGrpcClient.listProfiles(
-        AccountId.newBuilder().setId(accountId).build(), convert(pageRequest), true, orgIdentifier, projectIdentifier);
+    DelegateProfilePageResponseGrpc pageResponse;
+    try {
+      pageResponse = delegateProfileServiceGrpcClient.listProfiles(AccountId.newBuilder().setId(accountId).build(),
+          convert(pageRequest), true, orgIdentifier, projectIdentifier);
+    } catch (DelegateServiceDriverException ex) {
+      throw new InvalidRequestException(ex.getMessage(), ex);
+    }
 
     if (pageResponse == null) {
       return null;
@@ -86,8 +99,13 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
 
   @Override
   public DelegateProfileDetailsNg get(String accountId, String delegateProfileId) {
-    DelegateProfileGrpc delegateProfileGrpc = delegateProfileServiceGrpcClient.getProfile(
-        AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(delegateProfileId).build());
+    DelegateProfileGrpc delegateProfileGrpc;
+    try {
+      delegateProfileGrpc = delegateProfileServiceGrpcClient.getProfile(
+          AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(delegateProfileId).build());
+    } catch (DelegateServiceDriverException ex) {
+      throw new InvalidRequestException(ex.getMessage(), ex);
+    }
 
     if (delegateProfileGrpc == null) {
       return null;
@@ -99,14 +117,34 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
   @Override
   public DelegateProfileDetailsNg update(DelegateProfileDetailsNg delegateProfile) {
     validateScopingRules(delegateProfile.getScopingRules());
-    DelegateProfileGrpc updateDelegateProfileGrpc =
-        delegateProfileServiceGrpcClient.updateProfile(convert(delegateProfile));
+    DelegateProfileGrpc oldDelegateProfileGrpc = delegateProfileServiceGrpcClient.getProfile(
+        AccountId.newBuilder().setId(delegateProfile.getAccountId()).build(),
+        ProfileId.newBuilder().setId(delegateProfile.getUuid()).build());
+
+    Preconditions.checkNotNull(oldDelegateProfileGrpc, "no configuration found with id " + delegateProfile.getUuid());
+    DelegateProfileGrpc updateDelegateProfileGrpc;
+    try {
+      updateDelegateProfileGrpc = delegateProfileServiceGrpcClient.updateProfile(convert(delegateProfile));
+    } catch (DelegateServiceDriverException ex) {
+      throw new InvalidRequestException(ex.getMessage(), ex);
+    }
 
     if (updateDelegateProfileGrpc == null) {
       return null;
     }
 
-    return convert(updateDelegateProfileGrpc);
+    DelegateProfileDetailsNg updatedDelegateProfileDetailsNg = convert(updateDelegateProfileGrpc);
+    DelegateConfigurationUpdateEvent delegateConfigurationUpdateEvent =
+        DelegateConfigurationUpdateEvent.builder()
+            .accountIdentifier(updatedDelegateProfileDetailsNg.getAccountId())
+            .orgIdentifier(updatedDelegateProfileDetailsNg.getOrgIdentifier())
+            .projectIdentifier(updatedDelegateProfileDetailsNg.getProjectIdentifier())
+            .oldProfile(convert(oldDelegateProfileGrpc))
+            .newProfile(updatedDelegateProfileDetailsNg)
+            .build();
+    outboxService.save(delegateConfigurationUpdateEvent);
+
+    return updatedDelegateProfileDetailsNg;
   }
 
   @Override
@@ -115,9 +153,14 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
     validateScopingRules(scopingRules);
     List<ProfileScopingRule> grpcScopingRules = convert(scopingRules);
 
-    DelegateProfileGrpc delegateProfileGrpc =
-        delegateProfileServiceGrpcClient.updateProfileScopingRules(AccountId.newBuilder().setId(accountId).build(),
-            ProfileId.newBuilder().setId(delegateProfileId).build(), grpcScopingRules);
+    DelegateProfileGrpc delegateProfileGrpc;
+    try {
+      delegateProfileGrpc =
+          delegateProfileServiceGrpcClient.updateProfileScopingRules(AccountId.newBuilder().setId(accountId).build(),
+              ProfileId.newBuilder().setId(delegateProfileId).build(), grpcScopingRules);
+    } catch (DelegateServiceDriverException ex) {
+      throw new InvalidRequestException(ex.getMessage(), ex);
+    }
 
     if (delegateProfileGrpc == null) {
       return null;
@@ -130,9 +173,14 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
   public DelegateProfileDetailsNg updateSelectors(String accountId, String delegateProfileId, List<String> selectors) {
     List<ProfileSelector> grpcSelectors = convertToProfileSelector(selectors);
 
-    DelegateProfileGrpc delegateProfileGrpc =
-        delegateProfileServiceGrpcClient.updateProfileSelectors(AccountId.newBuilder().setId(accountId).build(),
-            ProfileId.newBuilder().setId(delegateProfileId).build(), grpcSelectors);
+    DelegateProfileGrpc delegateProfileGrpc;
+    try {
+      delegateProfileGrpc =
+          delegateProfileServiceGrpcClient.updateProfileSelectors(AccountId.newBuilder().setId(accountId).build(),
+              ProfileId.newBuilder().setId(delegateProfileId).build(), grpcSelectors);
+    } catch (DelegateServiceDriverException ex) {
+      throw new InvalidRequestException(ex.getMessage(), ex);
+    }
 
     if (delegateProfileGrpc == null) {
       return null;
@@ -144,19 +192,55 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
   @Override
   public DelegateProfileDetailsNg add(DelegateProfileDetailsNg delegateProfile) {
     validateScopingRules(delegateProfile.getScopingRules());
-    DelegateProfileGrpc delegateProfileGrpc = delegateProfileServiceGrpcClient.addProfile(convert(delegateProfile));
+
+    DelegateProfileGrpc delegateProfileGrpc;
+    try {
+      delegateProfileGrpc = delegateProfileServiceGrpcClient.addProfile(convert(delegateProfile));
+    } catch (DelegateServiceDriverException ex) {
+      throw new InvalidRequestException(ex.getMessage(), ex);
+    }
 
     if (delegateProfileGrpc == null) {
       return null;
     }
 
-    return convert(delegateProfileGrpc);
+    DelegateProfileDetailsNg delegateProfileDetailsNg = convert(delegateProfileGrpc);
+    DelegateConfigurationCreateEvent delegateConfigurationCreateEvent =
+        DelegateConfigurationCreateEvent.builder()
+            .accountIdentifier(delegateProfileDetailsNg.getAccountId())
+            .orgIdentifier(delegateProfileDetailsNg.getOrgIdentifier())
+            .projectIdentifier(delegateProfileDetailsNg.getProjectIdentifier())
+            .delegateProfile(delegateProfileDetailsNg)
+            .build();
+    outboxService.save(delegateConfigurationCreateEvent);
+
+    return delegateProfileDetailsNg;
   }
 
   @Override
   public void delete(String accountId, String delegateProfileId) {
-    delegateProfileServiceGrpcClient.deleteProfile(
+    DelegateProfileGrpc oldDelegateProfileGrpc = delegateProfileServiceGrpcClient.getProfile(
         AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(delegateProfileId).build());
+    if (oldDelegateProfileGrpc == null) {
+      return;
+    }
+
+    try {
+      delegateProfileServiceGrpcClient.deleteProfile(
+          AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(delegateProfileId).build());
+    } catch (DelegateServiceDriverException ex) {
+      throw new InvalidRequestException(ex.getMessage(), ex);
+    }
+
+    DelegateProfileDetailsNg oldDelegateProfileDetailsNg = convert(oldDelegateProfileGrpc);
+    DelegateConfigurationDeleteEvent delegateConfigurationDeleteEvent =
+        DelegateConfigurationDeleteEvent.builder()
+            .accountIdentifier(oldDelegateProfileDetailsNg.getAccountId())
+            .orgIdentifier(oldDelegateProfileDetailsNg.getOrgIdentifier())
+            .projectIdentifier(oldDelegateProfileDetailsNg.getProjectIdentifier())
+            .delegateProfile(convert(oldDelegateProfileGrpc))
+            .build();
+    outboxService.save(delegateConfigurationDeleteEvent);
   }
 
   @VisibleForTesting

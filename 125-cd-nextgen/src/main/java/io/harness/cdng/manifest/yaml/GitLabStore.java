@@ -6,10 +6,11 @@ import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.manifest.ManifestStoreType;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
+import io.harness.common.ParameterFieldHelper;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.filters.ConnectorRefExtractorHelper;
 import io.harness.filters.WithConnectorRef;
-import io.harness.ngpipeline.common.ParameterFieldHelper;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.validation.OneOfField;
@@ -77,7 +78,7 @@ public class GitLabStore implements GitStoreConfig, Visitable, WithConnectorRef 
   }
 
   @Override
-  public StoreConfig applyOverrides(StoreConfig overrideConfig) {
+  public io.harness.cdng.manifest.yaml.storeConfig.StoreConfig applyOverrides(StoreConfig overrideConfig) {
     GitLabStore gitLabStore = (GitLabStore) overrideConfig;
     GitLabStore resultantGitLabStore = this;
     if (!ParameterField.isNull(gitLabStore.getConnectorRef())) {
