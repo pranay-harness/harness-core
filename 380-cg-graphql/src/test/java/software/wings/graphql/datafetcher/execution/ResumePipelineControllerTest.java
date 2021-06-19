@@ -1,7 +1,10 @@
 package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
+import static io.harness.rule.OwnerRule.PRABU;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -21,6 +24,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.graphql.schema.mutation.pipeline.input.QLRuntimeExecutionInputs;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.utils.JsonUtils;
@@ -39,16 +43,20 @@ import org.mockito.stubbing.Answer;
 
 @OwnedBy(HarnessTeam.CDC)
 public class ResumePipelineControllerTest extends WingsBaseTest {
+  public static final String ENV_ID = "ENV_ID";
   @Mock WorkflowExecutionService workflowExecutionService;
   @Mock PipelineExecutionController pipelineExecutionController;
   @Mock PipelineService pipelineService;
   @Mock ExecutionController executionController;
+  @Mock AuthService authService;
 
   @Inject @InjectMocks ResumePipelineController resumePipelineController;
 
   private static final String PIPELINE_EXEC_ID = "ANWw9-y4QO67own792ab1g";
   private static final String PIPELINE_STAGE_ELEMENT_ID = "KZPqXENuRbKqkuISe07JAQ";
   private static final String APP_ID = "nCLN8c84SqWPr44sqg65JQ";
+  private static final String PIPELINE_ID = "PIPELINE_ID";
+
   @Test
   @Owner(developers = {DEEPAK_PUTHRAYA})
   @Category(UnitTests.class)
@@ -117,5 +125,22 @@ public class ResumePipelineControllerTest extends WingsBaseTest {
     resumePipelineController.resumePipeline(parameter);
     verify(workflowExecutionService)
         .continuePipelineStage(eq(APP_ID), eq(PIPELINE_EXEC_ID), eq(PIPELINE_STAGE_ELEMENT_ID), eq(args));
+  }
+
+  @Test
+  @Owner(developers = {PRABU})
+  @Category(UnitTests.class)
+  public void testPipelineResumeAuthorizesEnv() {
+    QLRuntimeExecutionInputs parameter =
+        JsonUtils.readResourceFile("execution/graphql_continue_exec_params.json", QLRuntimeExecutionInputs.class);
+    WorkflowExecution workflowExecution = WorkflowExecution.builder().workflowId(PIPELINE_ID).build();
+    when(workflowExecutionService.getWorkflowExecution(anyString(), anyString())).thenReturn(workflowExecution);
+    when(pipelineExecutionController.resolveEnvId(any(), anyList())).thenReturn(ENV_ID);
+
+    try {
+      resumePipelineController.resumePipeline(parameter);
+    } catch (Exception ignored) {
+    }
+    verify(authService).checkIfUserAllowedToDeployPipelineToEnv(APP_ID, ENV_ID);
   }
 }

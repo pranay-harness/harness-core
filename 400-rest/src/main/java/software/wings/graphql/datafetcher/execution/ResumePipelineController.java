@@ -10,6 +10,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.WorkflowType;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.ArtifactVariable;
@@ -20,6 +21,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.graphql.schema.mutation.pipeline.input.QLRuntimeExecutionInputs;
 import software.wings.graphql.schema.mutation.pipeline.payload.QLContinueExecutionPayload;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
@@ -37,6 +39,7 @@ public class ResumePipelineController {
   @Inject PipelineExecutionController pipelineExecutionController;
   @Inject PipelineService pipelineService;
   @Inject ExecutionController executionController;
+  @Inject AuthService authService;
 
   public QLContinueExecutionPayload resumePipeline(QLRuntimeExecutionInputs parameter) {
     String appId = parameter.getApplicationId();
@@ -51,6 +54,10 @@ public class ResumePipelineController {
     Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, true);
 
     String envId = pipelineExecutionController.resolveEnvId(execution, pipeline, parameter.getVariableInputs());
+
+    if (envId != null) {
+      authService.checkIfUserAllowedToDeployPipelineToEnv(appId, envId);
+    }
 
     Map<String, String> workflowVariables =
         pipelineExecutionController.validateAndResolveRuntimePipelineStageVars(pipeline, parameter.getVariableInputs(),
