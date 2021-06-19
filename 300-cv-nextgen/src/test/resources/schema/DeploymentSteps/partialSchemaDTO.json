@@ -1923,5 +1923,6 @@
   },
   "nodeType": "Verify",
   "nodeName": "CVNGStepInfo",
-  "namespace": "cvng"
+  "namespace": "cvng",
+  "moduleType": "CV"
 }
