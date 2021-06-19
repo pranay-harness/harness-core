@@ -56,7 +56,7 @@ public class WebhookServiceImpl implements WebhookService, WebhookEventService {
   private final SecretManagerClientService secretManagerClientService;
   private final ConnectorService connectorService;
   private final ConnectorErrorMessagesHelper connectorErrorMessagesHelper;
-  private BaseUrls baseUrls;
+  private final BaseUrls baseUrls;
 
   @Inject
   public WebhookServiceImpl(WebhookEventRepository webhookEventRepository,

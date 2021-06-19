@@ -633,7 +633,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
                                                                                  .setProvider(gitProvider)
                                                                                  .build());
       return latestCommit.getCommitId();
-    } catch (Exception ex) {
+    } catch (ScmException ex) {
       log.error(
           "Error encountered while getting latest commit of branch [{}] in slug [{}]", defaultBranchName, slug, ex);
       throw new ExplanationException(ex.getMessage(), ex);
