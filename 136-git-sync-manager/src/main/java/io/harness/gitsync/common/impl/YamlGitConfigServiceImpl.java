@@ -53,6 +53,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 
 @Singleton
 @Slf4j
@@ -224,9 +225,10 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     YamlGitConfig savedYamlGitConfig = null;
     try {
       savedYamlGitConfig = yamlGitConfigRepository.save(yamlGitConfigToBeSaved);
-    } catch (Exception ex) {
-      throw new InvalidRequestException(String.format("A git sync config with the repo %s and branch %s already exists",
-          gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getBranch()));
+    } catch (DuplicateKeyException ex) {
+      throw new InvalidRequestException(
+          String.format("A git sync config with this identifier or repo %s and branch %s already exists",
+              gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getBranch()));
     }
     sendEventForConfigChange(accountId, yamlGitConfigToBeSaved.getOrgIdentifier(),
         yamlGitConfigToBeSaved.getProjectIdentifier(), yamlGitConfigToBeSaved.getIdentifier(), "Save");
