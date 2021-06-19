@@ -1,4 +1,4 @@
-package io.harness.cdng.manifest.yaml;
+package io.harness.cdng.manifest.yaml.storeConfig;
 
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
@@ -14,6 +14,7 @@ import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.core.intfc.OverridesApplier;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -31,14 +32,14 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = StoreConfigWrapperVisitorHelper.class)
 @TypeAlias("storeConfigWrapper")
 public class StoreConfigWrapper implements OverridesApplier<StoreConfigWrapper>, Visitable {
-  @NotNull String type;
+  @NotNull @JsonProperty("type") StoreConfigType type;
   @NotNull
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   @Wither
   StoreConfig spec;
 
   @Builder
-  public StoreConfigWrapper(String type, StoreConfig spec) {
+  public StoreConfigWrapper(StoreConfigType type, StoreConfig spec) {
     this.type = type;
     this.spec = spec;
   }
@@ -49,7 +50,7 @@ public class StoreConfigWrapper implements OverridesApplier<StoreConfigWrapper>,
     if (overrideConfig != null) {
       if (!overrideConfig.getType().equals(resultantConfig.getType())) {
         throw new UnexpectedTypeException(format("Unable to apply store override of type '%s' to store of type '%s'",
-            overrideConfig.getType(), resultantConfig.getType()));
+            overrideConfig.getType().getDisplayName(), resultantConfig.getType().getDisplayName()));
       }
 
       resultantConfig = resultantConfig.withSpec(spec.applyOverrides(overrideConfig.getSpec()));

@@ -145,7 +145,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
     List<GitToHarnessFileProcessingRequest> fileProcessingRequests =
         prepareFileProcessingRequests(request.getGitFileChangeDTOList(), request.getGitDiffResultFileDTOList());
     gitToHarnessProcessorService.processFiles(request.getYamlChangeSetDTO().getAccountId(), fileProcessingRequests,
-        request.getYamlChangeSetDTO().getBranch(), request.getYamlGitConfigDTO(),
+        request.getYamlChangeSetDTO().getBranch(), request.getYamlGitConfigDTO().getRepo(),
         request.getYamlChangeSetDTO().getGitWebhookRequestAttributes().getHeadCommitId(),
         request.getProgressRecord().getUuid());
   }

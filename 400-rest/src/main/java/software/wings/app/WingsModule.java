@@ -1302,7 +1302,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
 
     // audit service
     install(new AuditClientModule(this.configuration.getAuditClientConfig(),
-        this.configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+        this.configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId(),
+        this.configuration.isEnableAudit()));
     install(new TransactionOutboxModule());
 
     bind(OutboxEventHandler.class).to(DelegateOutboxEventHandler.class);

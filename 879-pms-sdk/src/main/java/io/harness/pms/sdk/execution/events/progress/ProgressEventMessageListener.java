@@ -26,7 +26,7 @@ public class ProgressEventMessageListener extends PmsAbstractMessageListener<Pro
   }
 
   @Override
-  public boolean processMessage(ProgressEvent event, Map<String, String> metadataMap, Long timestamp) {
-    return progressEventHandler.handleEvent(event, metadataMap, timestamp);
+  public void processMessage(ProgressEvent event, Map<String, String> metadataMap, Long timestamp) {
+    progressEventHandler.handleEvent(event, metadataMap, timestamp);
   }
 }

@@ -1,4 +1,4 @@
-package io.harness.cdng.manifest.yaml;
+package io.harness.cdng.manifest.yaml.storeConfig;
 
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;

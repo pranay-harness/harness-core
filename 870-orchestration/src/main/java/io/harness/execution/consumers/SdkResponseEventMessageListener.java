@@ -19,20 +19,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class SdkResponseEventMessageListener extends PmsAbstractMessageListener<SdkResponseEventProto> {
-  private final SdkResponseHandler redisSdkResponseHandler;
+  private final SdkResponseHandler sdkResponseHandler;
 
   @Inject
   public SdkResponseEventMessageListener(
-      @Named(SDK_SERVICE_NAME) String serviceName, SdkResponseHandler redisSdkResponseHandler) {
+      @Named(SDK_SERVICE_NAME) String serviceName, SdkResponseHandler sdkResponseHandler) {
     super(serviceName, SdkResponseEventProto.class);
-    this.redisSdkResponseHandler = redisSdkResponseHandler;
+    this.sdkResponseHandler = sdkResponseHandler;
   }
 
   @Override
-  public boolean processMessage(
+  public void processMessage(
       SdkResponseEventProto sdkResponseEventProto, Map<String, String> metadataMap, Long timestamp) {
-    redisSdkResponseHandler.handleEvent(sdkResponseEventProto, metadataMap, timestamp);
-    return true;
+    sdkResponseHandler.handleEvent(sdkResponseEventProto, metadataMap, timestamp);
   }
 
   @Override

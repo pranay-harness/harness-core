@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>950-ng-audit-commons</artifactId>
+    <artifactId>951-ng-audit-commons</artifactId>
     <dependencies>
         <dependency>
             <groupId>software.wings</groupId>

@@ -1,5 +1,6 @@
 package io.harness.pms.variables;
 
+import io.harness.pms.contracts.plan.YamlOutputProperties;
 import io.harness.pms.contracts.plan.YamlProperties;
 
 import java.util.List;
@@ -19,5 +20,6 @@ public class VariableMergeServiceResponse {
   @Builder
   public static class VariableResponseMapValue {
     YamlProperties yamlProperties;
+    YamlOutputProperties yamlOutputProperties;
   }
 }

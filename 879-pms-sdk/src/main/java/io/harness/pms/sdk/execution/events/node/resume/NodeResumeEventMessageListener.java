@@ -26,7 +26,7 @@ public class NodeResumeEventMessageListener extends PmsAbstractMessageListener<N
   }
 
   @Override
-  public boolean processMessage(NodeResumeEvent event, Map<String, String> metadataMap, Long timestamp) {
-    return nodeResumeEventHandler.handleEvent(event, metadataMap, timestamp);
+  public void processMessage(NodeResumeEvent event, Map<String, String> metadataMap, Long timestamp) {
+    nodeResumeEventHandler.handleEvent(event, metadataMap, timestamp);
   }
 }
