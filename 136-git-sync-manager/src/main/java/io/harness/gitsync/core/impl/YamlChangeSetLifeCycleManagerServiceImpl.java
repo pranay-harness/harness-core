@@ -1,5 +1,6 @@
 package io.harness.gitsync.core.impl;
 
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.gitsync.common.beans.YamlChangeSetStatus.RUNNING;
 import static io.harness.gitsync.common.beans.YamlChangeSetStatus.getTerminalStatusList;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -12,6 +13,8 @@ import io.harness.gitsync.core.service.YamlChangeSetLifeCycleManagerService;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.security.SecurityContextBuilder;
+import io.harness.security.dto.ServicePrincipal;
 
 import com.google.inject.Inject;
 import java.time.Duration;
@@ -38,11 +41,14 @@ public class YamlChangeSetLifeCycleManagerServiceImpl implements YamlChangeSetLi
     executorService.submit(() -> {
       try (AccountLogContext ignore1 = new AccountLogContext(yamlChangeSet.getAccountId(), OVERRIDE_ERROR);
            AutoLogContext ignore2 = createLogContextForChangeSet(yamlChangeSet)) {
+        SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
         final YamlChangeSetStatus status = changeSetHandler.process(yamlChangeSet);
         handleChangeSetStatus(yamlChangeSet, status);
       } catch (Exception e) {
         log.error("Exception occurred while handling changeset: [{}]", yamlChangeSet.getChangesetId(), e);
         handleFailure(yamlChangeSet);
+      } finally {
+        SecurityContextBuilder.unsetCompleteContext();
       }
     });
   }
