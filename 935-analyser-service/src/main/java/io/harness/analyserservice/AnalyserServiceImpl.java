@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -69,8 +70,9 @@ public class AnalyserServiceImpl implements AnalyserService {
   public List<QueryStats> getDisjointQueries(String service, String oldVersion, String newVersion) {
     List<QueryStats> oldQueryStats = queryStatsRepository.findByServiceIdAndVersion(service, oldVersion);
     List<QueryStats> newQueryStats = queryStatsRepository.findByServiceIdAndVersion(service, newVersion);
-    newQueryStats.removeAll(oldQueryStats);
-    return newQueryStats;
+
+    Set<String> oldHashes = oldQueryStats.stream().map(s -> s.getHash()).collect(Collectors.toSet());
+    return newQueryStats.stream().filter(n -> !oldHashes.contains(n.getHash())).collect(Collectors.toList());
   }
 
   @SneakyThrows
