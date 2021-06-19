@@ -178,7 +178,6 @@ import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
-import io.harness.yaml.schema.client.YamlSchemaClientModule;
 
 import software.wings.security.ThreadLocalUserProvider;
 
@@ -430,7 +429,6 @@ public class NextGenModule extends AbstractModule {
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId(),
         this.appConfig.isEnableAudit()));
     install(new NotificationClientModule(appConfig.getNotificationClientConfiguration()));
-    install(YamlSchemaClientModule.getInstance(this.appConfig.getYamlSchemaClientConfig(), NG_MANAGER.getServiceId()));
 
     install(new ProviderModule() {
       @Provides
