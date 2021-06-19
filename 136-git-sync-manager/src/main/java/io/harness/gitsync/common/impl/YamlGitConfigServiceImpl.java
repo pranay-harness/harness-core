@@ -208,7 +208,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
 
   private String getYamlGitConfigNotFoundMessage(
       String accountId, String organizationId, String projectId, String identifier) {
-    return String.format("No yaml git config exists with the id %s, in account %s, org %s, project %s", identifier,
+    return String.format("No git sync config exists with the id %s, in account %s, org %s, project %s", identifier,
         accountId, organizationId, projectId);
   }
 
