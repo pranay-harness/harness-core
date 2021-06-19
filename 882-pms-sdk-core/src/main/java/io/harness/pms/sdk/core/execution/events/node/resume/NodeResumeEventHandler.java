@@ -19,6 +19,7 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.execution.ChainDetails;
+import io.harness.pms.sdk.core.execution.ChainDetails.ChainDetailsBuilder;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.ExecutableProcessor;
 import io.harness.pms.sdk.core.execution.ExecutableProcessorFactory;
@@ -122,12 +123,15 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
             .stepInputPackage(engineObtainmentHelper.obtainInputPackage(event.getAmbiance(), event.getRefObjectsList()))
             .responseDataMap(response);
 
+    // TODO (prashant) : Change ChildChainResponse Pass through data handling
     if (event.hasChainDetails()) {
-      builder.chainDetails(ChainDetails.builder()
-                               .shouldEnd(calculateIsEnd(event, response))
-                               .passThroughData((PassThroughData) kryoSerializer.asObject(
-                                   event.getChainDetails().getPassThroughData().toByteArray()))
-                               .build());
+      io.harness.pms.contracts.resume.ChainDetails chainDetailsProto = event.getChainDetails();
+      ChainDetailsBuilder chainDetailsBuilder = ChainDetails.builder().shouldEnd(calculateIsEnd(event, response));
+      if (EmptyPredicate.isNotEmpty(chainDetailsProto.getPassThroughData())) {
+        chainDetailsBuilder.passThroughData(
+            (PassThroughData) kryoSerializer.asObject(chainDetailsProto.getPassThroughData().toByteArray()));
+      }
+      builder.chainDetails(chainDetailsBuilder.build());
     }
     return builder.build();
   }
