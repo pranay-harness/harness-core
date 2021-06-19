@@ -23,7 +23,9 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.Collections;
 import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
 public class OnFailRollbackAdviser implements Adviser {
   public static final AdviserType ADVISER_TYPE =
@@ -39,8 +41,13 @@ public class OnFailRollbackAdviser implements Adviser {
         executionSweepingOutputService.resolveOptional(advisingEvent.getAmbiance(),
             RefObjectUtils.getSweepingOutputRefObject(YAMLFieldNameConstants.USE_ROLLBACK_STRATEGY));
     if (!optionalSweepingOutput.isFound()) {
-      executionSweepingOutputService.consume(advisingEvent.getAmbiance(), YAMLFieldNameConstants.USE_ROLLBACK_STRATEGY,
-          OnFailRollbackOutput.builder().nextNodeId(nextNodeId).build(), YAMLFieldNameConstants.PIPELINE_GROUP);
+      try {
+        executionSweepingOutputService.consume(advisingEvent.getAmbiance(),
+            YAMLFieldNameConstants.USE_ROLLBACK_STRATEGY, OnFailRollbackOutput.builder().nextNodeId(nextNodeId).build(),
+            YAMLFieldNameConstants.PIPELINE_GROUP);
+      } catch (Exception e) {
+        log.warn("Ignoring duplicate sweeping output of - " + YAMLFieldNameConstants.USE_ROLLBACK_STRATEGY);
+      }
     }
     return AdviserResponse.newBuilder()
         .setNextStepAdvise(NextStepAdvise.newBuilder().build())
