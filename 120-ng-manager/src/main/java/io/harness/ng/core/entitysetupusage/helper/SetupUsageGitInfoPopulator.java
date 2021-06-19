@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SetupUsageGitInfoPopulator {
   GitInfoPopulatorForConnector gitInfoPopulatorForConnector;
   YamlGitConfigService yamlGitConfigService;
+
   /*
    * This function assumes that all the setup usages are for the same referredBy entity.
    */
@@ -73,7 +74,7 @@ public class SetupUsageGitInfoPopulator {
         yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, repoIdentifier);
     if (yamlGitConfigDTO == null) {
       throw new UnexpectedException(
-          String.format("No yaml git config exists with the id %s, in account %s, org %s, project %s", repoIdentifier,
+          String.format("No git sync config exists with the id %s, in account %s, org %s, project %s", repoIdentifier,
               accountIdentifier, orgIdentifier, projectIdentifier));
     }
     return yamlGitConfigDTO.getBranch().equals(branch);
