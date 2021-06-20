@@ -278,7 +278,7 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     modules.add(new CapabilityModule());
     modules.add(new WingsModule(configuration));
     modules.add(new IndexMigratorModule());
-    modules.add(new YamlModule());
+    modules.add(YamlModule.getInstance());
     modules.add(new ManagerQueueModule());
     modules.add(new ManagerExecutorModule());
     modules.add(new TemplateModule());
