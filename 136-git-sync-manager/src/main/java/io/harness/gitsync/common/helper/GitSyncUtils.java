@@ -1,6 +1,7 @@
 package io.harness.gitsync.common.helper;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.remote.NGObjectMapperHelper.configureNGObjectMapper;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
@@ -22,6 +23,7 @@ public class GitSyncUtils {
 
   public EntityType getEntityTypeFromYaml(String yaml) throws InvalidRequestException {
     try {
+      configureNGObjectMapper(objectMapper);
       final JsonNode jsonNode = objectMapper.readTree(yaml);
       String rootNode = jsonNode.fields().next().getKey();
       return EntityType.getEntityTypeFromYamlRootName(rootNode);

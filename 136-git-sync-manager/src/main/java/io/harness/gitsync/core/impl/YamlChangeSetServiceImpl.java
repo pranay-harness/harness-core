@@ -66,6 +66,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
         .eventMetadata(yamlChangeSet.getEventMetadata())
         .eventType(yamlChangeSet.getEventType())
         .queuedOn(System.currentTimeMillis())
+        .retryCount(0)
         .build();
   }
 

@@ -3,6 +3,7 @@ package io.harness.gitsync.common.helper;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.remote.NGObjectMapperHelper.configureNGObjectMapper;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -78,6 +79,7 @@ public class GitChangeSetMapper {
     String orgIdentifier;
     String projectIdentifier;
     try {
+      configureNGObjectMapper(objectMapper);
       final JsonNode jsonNode = convertYamlToJsonNode(fileContent.getContent());
       projectIdentifier = getKeyInNode(jsonNode, NGCommonEntityConstants.PROJECT_KEY);
       orgIdentifier = getKeyInNode(jsonNode, NGCommonEntityConstants.ORG_KEY);

@@ -32,4 +32,13 @@ public class GitSyncUtilsTest extends CategoryTest {
     final EntityType entityTypeFromYaml = GitSyncUtils.getEntityTypeFromYaml(s);
     assertThat(entityTypeFromYaml).isEqualTo(EntityType.CONNECTORS);
   }
+
+  @Test
+  @Owner(developers = ABHINAV)
+  @Category(UnitTests.class)
+  public void getEntityTypeFromYaml_1() throws IOException {
+    final String s = IOUtils.resourceToString("yaml/newfile.yaml", StandardCharsets.UTF_8, getClass().getClassLoader());
+    final EntityType entityTypeFromYaml = GitSyncUtils.getEntityTypeFromYaml(s);
+    assertThat(entityTypeFromYaml).isEqualTo(EntityType.INPUT_SETS);
+  }
 }

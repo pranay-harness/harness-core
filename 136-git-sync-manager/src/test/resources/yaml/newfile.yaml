@@ -1,0 +1,18 @@
+inputSet:
+  identifier: "namespace_1"
+  projectIdentifier: "Naman_GHE_Project"
+  pipeline:
+    identifier: "pipeline_1"
+    stages:
+      - stage:
+          identifier: "s1"
+          type: "Deployment"
+          spec:
+            infrastructure:
+              infrastructureDefinition:
+                type: "KubernetesDirect"
+                spec:
+                  releaseName: "a1 r"
+                  namespace: "a1"
+  orgIdentifier: "default"
+  name: "namespace 1"
