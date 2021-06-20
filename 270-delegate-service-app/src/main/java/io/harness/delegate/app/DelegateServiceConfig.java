@@ -22,6 +22,8 @@ import software.wings.jre.JreConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import ch.qos.logback.classic.Level;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Singleton;
@@ -49,6 +51,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Singleton
+@JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(DEL)
 public class DelegateServiceConfig extends Configuration implements AssetsBundleConfiguration {
   @JsonProperty
