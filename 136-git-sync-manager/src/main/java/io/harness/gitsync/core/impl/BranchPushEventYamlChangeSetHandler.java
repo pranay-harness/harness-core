@@ -106,7 +106,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
       if (gitToHarnessProcessMsvcStepResponse.getGitToHarnessProgressStatus().isFailureStatus()) {
         log.error("G2H process files step failed with status : {}, marking branch push event as FAILED for retry",
             gitToHarnessProcessMsvcStepResponse.getGitToHarnessProgressStatus());
-        return YamlChangeSetStatus.FAILED;
+        return YamlChangeSetStatus.FAILED_WITH_RETRY;
       }
 
       return YamlChangeSetStatus.COMPLETED;
@@ -115,7 +115,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
       // Update the g2h terminal status to ERROR
       gitToHarnessProgressService.updateStepStatus(
           gitToHarnessProgressRecord.getUuid(), GitToHarnessProcessingStepStatus.ERROR);
-      return YamlChangeSetStatus.FAILED;
+      return YamlChangeSetStatus.FAILED_WITH_RETRY;
     }
   }
 
