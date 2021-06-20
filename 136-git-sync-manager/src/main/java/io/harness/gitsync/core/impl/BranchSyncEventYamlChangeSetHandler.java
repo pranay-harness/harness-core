@@ -13,6 +13,7 @@ import io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepType;
 import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.beans.YamlChangeSetStatus;
+import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepResponse;
 import io.harness.gitsync.common.dtos.GitToHarnessProgressDTO;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitBranchSyncService;
@@ -70,12 +71,19 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
     BranchSyncMetadata branchSyncMetadata = (BranchSyncMetadata) yamlChangeSetDTO.getEventMetadata();
     try {
       log.info("Starting branch sync for the branch [{}]", branch);
-      gitBranchSyncService.processBranchSyncEvent(yamlGitConfigDTOList.get(0), yamlChangeSetDTO.getBranch(),
-          yamlChangeSetDTO.getAccountId(), branchSyncMetadata.getFileToBeExcluded(), yamlChangeSetDTO.getChangesetId(),
-          gitToHarnessProgressRecord.getUuid());
-      gitBranchService.updateBranchSyncStatus(yamlChangeSetDTO.getAccountId(), repoURL, branch, SYNCED);
-      log.info("Branch sync status updated completed for branch [{}]", branch);
-      return YamlChangeSetStatus.COMPLETED;
+      GitToHarnessProcessMsvcStepResponse gitToHarnessProcessMsvcStepResponse =
+          gitBranchSyncService.processBranchSyncEvent(yamlGitConfigDTOList.get(0), yamlChangeSetDTO.getBranch(),
+              yamlChangeSetDTO.getAccountId(), branchSyncMetadata.getFileToBeExcluded(),
+              yamlChangeSetDTO.getChangesetId(), gitToHarnessProgressRecord.getUuid());
+      if (gitToHarnessProcessMsvcStepResponse.getGitToHarnessProgressStatus().isSuccessStatus()) {
+        gitBranchService.updateBranchSyncStatus(yamlChangeSetDTO.getAccountId(), repoURL, branch, SYNCED);
+        log.info("Branch sync status updated completed for branch [{}]", branch);
+        return YamlChangeSetStatus.COMPLETED;
+      } else {
+        log.error("G2H process files step failed with status : {}, marking branch sync event as FAILED for retry",
+            gitToHarnessProcessMsvcStepResponse.getGitToHarnessProgressStatus());
+        return YamlChangeSetStatus.FAILED;
+      }
     } catch (Exception ex) {
       log.error("Error encountered while syncing the branch [{}]", branch, ex);
       gitBranchService.updateBranchSyncStatus(yamlChangeSetDTO.getAccountId(), repoURL, branch, SYNCED);

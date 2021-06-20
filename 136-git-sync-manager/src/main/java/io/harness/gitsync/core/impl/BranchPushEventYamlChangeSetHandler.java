@@ -8,6 +8,7 @@ import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest.GitToHarnessFileProcessingRequestBuilder;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepType;
+import io.harness.gitsync.common.beans.GitToHarnessProgressStatus;
 import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.beans.YamlChangeSetStatus;
 import io.harness.gitsync.common.dtos.GitDiffResultFileDTO;
@@ -16,6 +17,7 @@ import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitToHarnessGetFilesStepRequest;
 import io.harness.gitsync.common.dtos.GitToHarnessGetFilesStepResponse;
 import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepRequest;
+import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepResponse;
 import io.harness.gitsync.common.dtos.GitToHarnessProgressDTO;
 import io.harness.gitsync.common.helper.GitToHarnessProgressHelper;
 import io.harness.gitsync.common.helper.YamlGitConfigHelper;
@@ -92,7 +94,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
                                   .gitToHarnessProgress(gitToHarnessProgressRecord)
                                   .build());
 
-      performProcessFilesInMsvcStep(
+      GitToHarnessProcessMsvcStepResponse gitToHarnessProcessMsvcStepResponse = performProcessFilesInMsvcStep(
           GitToHarnessProcessMsvcStepRequest.builder()
               .yamlChangeSetDTO(yamlChangeSetDTO)
               .yamlGitConfigDTO(yamlGitConfigDTOList.get(0))
@@ -101,9 +103,15 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
               .progressRecord(gitToHarnessGetFilesStepResponse.getProgressRecord())
               .build());
 
+      if (gitToHarnessProcessMsvcStepResponse.getGitToHarnessProgressStatus().isFailureStatus()) {
+        log.error("G2H process files step failed with status : {}, marking branch push event as FAILED for retry",
+            gitToHarnessProcessMsvcStepResponse.getGitToHarnessProgressStatus());
+        return YamlChangeSetStatus.FAILED;
+      }
+
       return YamlChangeSetStatus.COMPLETED;
     } catch (Exception ex) {
-      log.error("Error while processing event {}", yamlChangeSetDTO, ex);
+      log.error("Error while processing branch push event {}", yamlChangeSetDTO, ex);
       // Update the g2h terminal status to ERROR
       gitToHarnessProgressService.updateStepStatus(
           gitToHarnessProgressRecord.getUuid(), GitToHarnessProcessingStepStatus.ERROR);
@@ -141,13 +149,16 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
         .build();
   }
 
-  private void performProcessFilesInMsvcStep(GitToHarnessProcessMsvcStepRequest request) {
+  private GitToHarnessProcessMsvcStepResponse performProcessFilesInMsvcStep(
+      GitToHarnessProcessMsvcStepRequest request) {
     List<GitToHarnessFileProcessingRequest> fileProcessingRequests =
         prepareFileProcessingRequests(request.getGitFileChangeDTOList(), request.getGitDiffResultFileDTOList());
-    gitToHarnessProcessorService.processFiles(request.getYamlChangeSetDTO().getAccountId(), fileProcessingRequests,
-        request.getYamlChangeSetDTO().getBranch(), request.getYamlGitConfigDTO().getRepo(),
-        request.getYamlChangeSetDTO().getGitWebhookRequestAttributes().getHeadCommitId(),
-        request.getProgressRecord().getUuid());
+    GitToHarnessProgressStatus gitToHarnessProgressStatus =
+        gitToHarnessProcessorService.processFiles(request.getYamlChangeSetDTO().getAccountId(), fileProcessingRequests,
+            request.getYamlChangeSetDTO().getBranch(), request.getYamlGitConfigDTO().getRepo(),
+            request.getYamlChangeSetDTO().getGitWebhookRequestAttributes().getHeadCommitId(),
+            request.getProgressRecord().getUuid());
+    return GitToHarnessProcessMsvcStepResponse.builder().gitToHarnessProgressStatus(gitToHarnessProgressStatus).build();
   }
 
   // Fetch list of files in the diff b/w last processed commit and new pushed commit, along with their change status
