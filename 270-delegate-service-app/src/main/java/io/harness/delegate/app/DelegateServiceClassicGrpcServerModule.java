@@ -6,8 +6,6 @@ import io.harness.grpc.auth.ServiceInfo;
 import io.harness.grpc.auth.ValidateAuthServerInterceptor;
 import io.harness.grpc.exception.GrpcExceptionMapper;
 import io.harness.grpc.exception.WingsExceptionGrpcMapper;
-import io.harness.grpc.server.Connector;
-import io.harness.grpc.server.GrpcServer;
 import io.harness.grpc.server.GrpcServerExceptionHandler;
 import io.harness.service.DelegateServicePingPongService;
 
@@ -26,7 +24,6 @@ import io.grpc.health.v1.HealthGrpc;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import io.grpc.reflection.v1alpha.ServerReflectionGrpc;
 import io.grpc.services.HealthStatusManager;
-import java.util.List;
 import java.util.Set;
 
 public class DelegateServiceClassicGrpcServerModule extends AbstractModule {
@@ -75,11 +72,11 @@ public class DelegateServiceClassicGrpcServerModule extends AbstractModule {
     serverInterceptorMultibinder.addBinding().to(DelegateAuthServerInterceptor.class);
 
     Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class);
-    List<Connector> connectors = delegateServiceConfig.getGrpcServerClassicConfig().getConnectors();
-    connectors.forEach(connector
-        -> serviceBinder.addBinding().toProvider(
-            ()
-                -> new GrpcServer(connector, bindableServicesProvider.get(), serverInterceptorsProvider.get(),
-                    healthStatusManagerProvider.get())));
+    //    List<Connector> connectors = delegateServiceConfig.getGrpcServerClassicConfig().getConnectors();
+    //    connectors.forEach(connector
+    //        -> serviceBinder.addBinding().toProvider(
+    //            ()
+    //                -> new GrpcServer(connector, bindableServicesProvider.get(), serverInterceptorsProvider.get(),
+    //                    healthStatusManagerProvider.get())));
   }
 }

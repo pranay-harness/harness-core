@@ -297,7 +297,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     modules.add(new CapabilityModule());
     modules.add(new WingsModule((MainConfiguration) configuration));
     modules.add(new IndexMigratorModule());
-    modules.add(new YamlModule());
+    modules.add(YamlModule.getInstance());
     modules.add(new ManagerExecutorModule());
     modules.add(new TemplateModule());
     modules.add(new EventsModule((MainConfiguration) configuration));

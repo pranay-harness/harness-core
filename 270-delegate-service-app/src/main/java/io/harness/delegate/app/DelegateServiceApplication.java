@@ -7,13 +7,13 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import io.harness.annotations.dev.TargetModule;
 import io.harness.cache.CacheModule;
+import io.harness.capability.CapabilityModule;
 import io.harness.govern.ProviderModule;
-import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.DelegateServiceDriverRegistrars;
-import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.service.DelegateServiceModule;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.stream.GuiceObjectFactory;
 import io.harness.stream.StreamModule;
@@ -23,13 +23,10 @@ import io.harness.threading.ThreadPool;
 import software.wings.app.InspectCommand;
 import software.wings.app.MainConfiguration;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
-import software.wings.app.PortalConfig;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
-import software.wings.beans.template.Template;
 import software.wings.jersey.JsonViews;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.Annotated;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
@@ -39,7 +36,12 @@ import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.*;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.spi.TypeConverter;
 import io.dropwizard.Application;
 import io.dropwizard.bundles.assets.AssetsConfiguration;
 import io.dropwizard.bundles.assets.ConfiguredAssetsBundle;
@@ -48,8 +50,6 @@ import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import io.federecio.dropwizard.swagger.SwaggerBundle;
-import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,18 +60,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cpr.AtmosphereServlet;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atmosphere.cpr.MetaBroadcaster;
-import org.mongodb.morphia.converters.TypeConverter;
 
 @Slf4j
 @TargetModule(_420_DELEGATE_SERVICE)
-public class DelegateServiceApplication extends Application<MainConfiguration> {
-  private Bootstrap<MainConfiguration> bootstrap;
+public class DelegateServiceApplication extends Application<DelegateServiceConfig> {
+  private Bootstrap<DelegateServiceConfig> bootstrap;
+
   public static void main(String... args) throws Exception {
     new DelegateServiceApplication().run(args);
   }
 
   @Override
-  public void initialize(Bootstrap<MainConfiguration> bootstrap) {
+  public void initialize(Bootstrap<DelegateServiceConfig> bootstrap) {
     initializeLogging();
     log.info("bootstrapping ...");
     bootstrap.addCommand(new InspectCommand<>(this));
@@ -80,12 +80,6 @@ public class DelegateServiceApplication extends Application<MainConfiguration> {
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
     bootstrap.addBundle(new ConfiguredAssetsBundle("/static", "/", "index.html"));
-    bootstrap.addBundle(new SwaggerBundle<MainConfiguration>() {
-      @Override
-      protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(MainConfiguration mainConfiguration) {
-        return mainConfiguration.getSwaggerBundleConfiguration();
-      }
-    });
     bootstrap.addBundle(new FileAssetsBundle("/.well-known"));
     ObjectMapper mapper = Jackson.newObjectMapper(new YAMLFactory());
     //    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
@@ -119,10 +113,16 @@ public class DelegateServiceApplication extends Application<MainConfiguration> {
   }
 
   @Override
-  public void run(MainConfiguration mainConfiguration, Environment environment) throws Exception {
+  public void run(DelegateServiceConfig delegateServiceConfig, Environment environment) throws Exception {
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
         20, 1000, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
 
+    ObjectMapper mapper = bootstrap.getObjectMapper();
+    configureObjectMapper(mapper);
+    //    mapper.findAndRegisterModules();
+    //    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    MainConfiguration mainConfiguration =
+        mapper.readValue(new File("/Users/abhinav/portal/360-cg-manager/config.yml"), MainConfiguration.class);
     List<Module> modules = new ArrayList<>();
     //    MainConfiguration mainConfiguration = new MainConfiguration();
     //    PortalConfig portalConfig = new PortalConfig();
@@ -133,17 +133,13 @@ public class DelegateServiceApplication extends Application<MainConfiguration> {
 
     CacheModule cacheModule = new CacheModule(mainConfiguration.getCacheConfig());
     modules.add(cacheModule);
-
+    modules.add(YamlModule.getInstance());
     //    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    ObjectMapper mapper = bootstrap.getObjectMapper();
-    //    mapper.findAndRegisterModules();
-    //    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    DelegateServiceConfig delegateServiceConfig =
-        mapper.readValue(new File("/Users/rktummala/IdeaProjects/portal/270-delegate-service-app/config.yml"),
-            DelegateServiceConfig.class);
-    modules.add(new DelegateServiceModule(delegateServiceConfig));
-    modules.add(new io.harness.service.DelegateServiceModule());
-    modules.add(new WingsModule(mainConfiguration));
+    //    modules.add(new DelegateServiceModule(delegateServiceConfig));
+    //    modules.add(new io.harness.service.DelegateServiceModule());
+
+    modules.add(new DelegateServiceModule());
+    modules.add(new CapabilityModule());
 
     modules.add(new ProviderModule() {
       @Provides
@@ -180,13 +176,14 @@ public class DelegateServiceApplication extends Application<MainConfiguration> {
       public io.harness.persistence.UserProvider userProvider() {
         return new io.harness.persistence.NoopUserProvider();
       }
-
-      @Provides
-      @Singleton
-      io.harness.mongo.MongoConfig mongoConfig() {
-        return io.harness.mongo.MongoConfig.builder().build();
-      }
+      //
+      //      @Provides
+      //      @Singleton
+      //      io.harness.mongo.MongoConfig mongoConfig() {
+      //        return io.harness.mongo.MongoConfig.builder().build();
+      //      }
     });
+    modules.add(new WingsModule(mainConfiguration));
 
     Injector injector = Guice.createInjector(modules);
 

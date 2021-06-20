@@ -245,8 +245,17 @@ import com.google.inject.multibindings.MapBinder;
  */
 @OwnedBy(DX)
 public class YamlModule extends CommandLibrarySharedModule {
-  public YamlModule() {
+  private static volatile YamlModule instance;
+
+  private YamlModule() {
     super(true);
+  }
+
+  public static YamlModule getInstance() {
+    if (instance == null) {
+      instance = new YamlModule();
+    }
+    return instance;
   }
 
   /* (non-Javadoc)
