@@ -22,6 +22,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Value;
 import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(HarnessTeam.CDC)
@@ -72,5 +73,20 @@ public class ManifestConfig implements Visitable {
     VisitableChildren children = VisitableChildren.builder().build();
     children.add(YAMLFieldNameConstants.SPEC, spec);
     return children;
+  }
+
+  @Value
+  public static class ManifestConfigStepParameters {
+    String type;
+    ManifestAttributes spec;
+
+    public static ManifestConfigStepParameters fromManifestConfig(ManifestConfig manifestConfig) {
+      if (manifestConfig == null) {
+        return null;
+      }
+      return new ManifestConfigStepParameters(
+          manifestConfig.getType() == null ? null : manifestConfig.getType().getDisplayName(),
+          manifestConfig.getSpec());
+    }
   }
 }
