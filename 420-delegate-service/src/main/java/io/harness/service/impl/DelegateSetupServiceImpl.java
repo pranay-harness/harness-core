@@ -12,6 +12,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateConnectionDetails;
@@ -27,6 +28,7 @@ import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.utils.DelegateEntityOwnerHelper;
+import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateInsightsService;
@@ -58,6 +60,7 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
   @Inject private DelegateCache delegateCache;
   @Inject private DelegateInsightsService delegateInsightsService;
   @Inject private DelegateConnectionDao delegateConnectionDao;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public DelegateGroupListing listDelegateGroupDetails(String accountId, String orgId, String projectId) {
@@ -76,9 +79,11 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
 
   private List<DelegateGroupDetails> getDelegateGroupDetailsUpTheHierarchy(
       String accountId, String orgId, String projectId) {
-    Query<DelegateGroup> delegateGroupQuery = persistence.createQuery(DelegateGroup.class)
-                                                  .filter(DelegateGroupKeys.accountId, accountId)
-                                                  .filter(DelegateGroupKeys.ng, true);
+    Query<DelegateGroup> delegateGroupQuery =
+        persistence.createQuery(DelegateGroup.class).filter(DelegateGroupKeys.accountId, accountId);
+    delegateGroupQuery = featureFlagService.isEnabled(FeatureName.NG_CG_TASK_ASSIGNMENT_ISOLATION, accountId)
+        ? delegateGroupQuery.filter(DelegateGroupKeys.ng, true)
+        : delegateGroupQuery.filter(DelegateGroupKeys.ng, false);
 
     String projectIdentifier = orgId == null || projectId == null ? null : orgId + "/" + projectId;
     delegateGroupQuery.field(DelegateKeys.owner_identifier).in(Arrays.asList(null, orgId, projectIdentifier));
