@@ -7,6 +7,7 @@ import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 
+import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -24,6 +25,8 @@ public class GitSyncUtils {
   public EntityType getEntityTypeFromYaml(String yaml) throws InvalidRequestException {
     try {
       configureNGObjectMapper(objectMapper);
+      objectMapper.configure(Feature.AUTO_CLOSE_SOURCE, true);
+      objectMapper.configure(Feature.ALLOW_YAML_COMMENTS, true);
       final JsonNode jsonNode = objectMapper.readTree(yaml);
       String rootNode = jsonNode.fields().next().getKey();
       return EntityType.getEntityTypeFromYamlRootName(rootNode);
