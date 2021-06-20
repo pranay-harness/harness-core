@@ -27,7 +27,7 @@ public class EcsServiceSpecificationYamlHandler
     Service service = serviceResourceService.getWithDetails(appId, bean.getServiceId());
     return Yaml.builder()
         .harnessApiVersion(getHarnessApiVersion())
-        .type(YamlHandlerFactory.ECS_SERVICE_SPEC)
+        .type("ECS_SERVICE_SPEC")
         .serviceName(service.getName())
         .serviceSpecJson(bean.getServiceSpecJson())
         .build();

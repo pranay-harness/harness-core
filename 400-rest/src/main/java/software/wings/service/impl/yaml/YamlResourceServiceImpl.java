@@ -499,9 +499,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         serviceResourceService.getEcsServiceSpecificationById(appId, ecsServiceSpecificationId);
     String yamlFileName = YamlConstants.ECS_SERVICE_SPEC_YAML_FILE_NAME;
 
-    BaseYaml yaml =
-        yamlHandlerFactory.getYamlHandler(YamlType.DEPLOYMENT_SPECIFICATION, YamlHandlerFactory.ECS_SERVICE_SPEC)
-            .toYaml(ecsServiceSpecification, appId);
+    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.DEPLOYMENT_SPECIFICATION, "ECS_SERVICE_SPEC")
+                        .toYaml(ecsServiceSpecification, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, ecsServiceSpecification.getUuid(), accountId, yaml, yamlFileName + YAML_EXTENSION);
   }

@@ -346,8 +346,7 @@ public class YamlModule extends CommandLibrarySharedModule {
     MapBinder<String, DeploymentSpecificationYamlHandler> deploymentSpecYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, DeploymentSpecificationYamlHandler.class);
     deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.ECS.name()).to(EcsContainerTaskYamlHandler.class);
-    deploymentSpecYamlHelperMapBinder.addBinding(YamlHandlerFactory.ECS_SERVICE_SPEC)
-        .to(EcsServiceSpecificationYamlHandler.class);
+    deploymentSpecYamlHelperMapBinder.addBinding("ECS_SERVICE_SPEC").to(EcsServiceSpecificationYamlHandler.class);
     deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.KUBERNETES.name())
         .to(KubernetesContainerTaskYamlHandler.class);
     deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.HELM.name())

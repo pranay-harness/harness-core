@@ -121,8 +121,8 @@ public class DelegateServiceApplication extends Application<DelegateServiceConfi
     configureObjectMapper(mapper);
     //    mapper.findAndRegisterModules();
     //    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    MainConfiguration mainConfiguration =
-        mapper.readValue(new File("/Users/abhinav/portal/360-cg-manager/config.yml"), MainConfiguration.class);
+    MainConfiguration mainConfiguration = mapper.readValue(
+        new File("/Users/rktummala/IdeaProjects/portal/360-cg-manager/config.yml"), MainConfiguration.class);
     List<Module> modules = new ArrayList<>();
     //    MainConfiguration mainConfiguration = new MainConfiguration();
     //    PortalConfig portalConfig = new PortalConfig();
@@ -135,7 +135,7 @@ public class DelegateServiceApplication extends Application<DelegateServiceConfi
     modules.add(cacheModule);
     modules.add(YamlModule.getInstance());
     //    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    //    modules.add(new DelegateServiceModule(delegateServiceConfig));
+    modules.add(new io.harness.delegate.app.DelegateServiceModule(delegateServiceConfig, mainConfiguration));
     //    modules.add(new io.harness.service.DelegateServiceModule());
 
     modules.add(new DelegateServiceModule());
@@ -183,7 +183,7 @@ public class DelegateServiceApplication extends Application<DelegateServiceConfi
       //        return io.harness.mongo.MongoConfig.builder().build();
       //      }
     });
-    modules.add(new WingsModule(mainConfiguration));
+    //    modules.add(new WingsModule(mainConfiguration));
 
     Injector injector = Guice.createInjector(modules);
 

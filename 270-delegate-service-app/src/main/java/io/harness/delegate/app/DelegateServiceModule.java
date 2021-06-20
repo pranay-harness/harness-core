@@ -8,6 +8,9 @@ import io.harness.redis.RedisConfig;
 import io.harness.waiter.AbstractWaiterModule;
 import io.harness.waiter.WaiterConfiguration;
 
+import software.wings.app.MainConfiguration;
+import software.wings.app.WingsLiteModule;
+import software.wings.app.WingsModule;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.security.NoOpSecretManagerImpl;
@@ -27,12 +30,14 @@ import java.util.Set;
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateServiceModule extends AbstractModule {
   private final DelegateServiceConfig config;
+  private final MainConfiguration mainConfiguration;
 
   /**
    * Delegate Service App Config.
    */
-  public DelegateServiceModule(DelegateServiceConfig config) {
+  public DelegateServiceModule(DelegateServiceConfig config, MainConfiguration mainConfiguration) {
     this.config = config;
+    this.mainConfiguration = mainConfiguration;
   }
 
   @Provides
@@ -64,5 +69,6 @@ public class DelegateServiceModule extends AbstractModule {
 
     install(new DelegateServiceGrpcServerModule(config));
     install(new DelegateServiceClassicGrpcServerModule(config));
+    install(new WingsLiteModule(mainConfiguration));
   }
 }

@@ -112,7 +112,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 public class YamlHandlerFactory {
-  public static final String ECS_SERVICE_SPEC = "ECS_SERVICE_SPEC";
+  //  public static final String ECS_SERVICE_SPEC = "ECS_SERVICE_SPEC";
   private static final Set<String> nonLeafEntities = new HashSet(obtainNonLeafEntities());
   private static final Set<String> nonLeafEntitiesWithFeatureFlag = new HashSet(obtainNonLeafEntitiesWithFeatureFlag());
   private static final Set<String> entitiesWithActualFiles = new HashSet(obtainUseRealFileEntities());
@@ -611,7 +611,7 @@ public class YamlHandlerFactory {
     } else if (entity instanceof EcsContainerTask) {
       return DeploymentType.ECS.name();
     } else if (entity instanceof EcsServiceSpecification) {
-      return ECS_SERVICE_SPEC;
+      return "ECS_SERVICE_SPEC";
     } else if (entity instanceof KubernetesContainerTask) {
       return DeploymentType.KUBERNETES.name();
     } else if (entity instanceof CVConfiguration) {
