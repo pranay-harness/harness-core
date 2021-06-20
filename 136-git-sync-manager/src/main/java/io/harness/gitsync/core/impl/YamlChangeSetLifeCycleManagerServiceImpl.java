@@ -69,9 +69,10 @@ public class YamlChangeSetLifeCycleManagerServiceImpl implements YamlChangeSetLi
   private void handleChangeSetStatus(YamlChangeSetDTO yamlChangeSet, YamlChangeSetStatus status) {
     final List<YamlChangeSetStatus> completedStatusList = getTerminalStatusList();
     if (!completedStatusList.contains(status)) {
-      log.error("Encountered incorrect status: [{}]", status);
-      // In case of status not in completed status marking changeset as failed.
+      log.warn("Encountered non terminal status: [{}] for changeset: [{}]", status, yamlChangeSet.getChangesetId());
+      // In case of status not in completed status marking changeset as queued again.
       handleFailure(yamlChangeSet);
+      return;
     }
     final RetryPolicy<Object> retryPolicy =
         getRetryPolicy("[Retrying] attempt: {} for failure case of changeset update.",
