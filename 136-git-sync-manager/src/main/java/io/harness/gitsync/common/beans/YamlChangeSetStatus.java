@@ -13,7 +13,8 @@ public enum YamlChangeSetStatus {
   RUNNING,
   FAILED,
   COMPLETED,
-  SKIPPED;
+  SKIPPED,
+  FAILED_WITH_RETRY;
 
   public static List<YamlChangeSetStatus> getTerminalStatusList() {
     return Arrays.asList(FAILED, COMPLETED, SKIPPED);
