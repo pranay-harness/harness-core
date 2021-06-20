@@ -82,14 +82,14 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
       } else {
         log.error("G2H process files step failed with status : {}, marking branch sync event as FAILED for retry",
             gitToHarnessProcessMsvcStepResponse.getGitToHarnessProgressStatus());
-        return YamlChangeSetStatus.FAILED;
+        return YamlChangeSetStatus.FAILED_WITH_RETRY;
       }
     } catch (Exception ex) {
       log.error("Error encountered while syncing the branch [{}]", branch, ex);
       gitBranchService.updateBranchSyncStatus(yamlChangeSetDTO.getAccountId(), repoURL, branch, SYNCED);
       gitToHarnessProgressService.updateStepStatus(
           gitToHarnessProgressRecord.getUuid(), GitToHarnessProcessingStepStatus.ERROR);
-      return YamlChangeSetStatus.FAILED;
+      return YamlChangeSetStatus.FAILED_WITH_RETRY;
     }
   }
 }
