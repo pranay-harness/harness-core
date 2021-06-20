@@ -45,6 +45,6 @@ public class PipelineDeleteEvent implements Event {
   @JsonIgnore
   @Override
   public String getEventType() {
-    return PipelineOutboxEvents.INPUT_SET_DELETED;
+    return PipelineOutboxEvents.PIPELINE_DELETED;
   }
 }
