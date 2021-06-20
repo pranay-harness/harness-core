@@ -14,8 +14,10 @@ import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.beans.BranchSyncMetadata;
 import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
+import io.harness.gitsync.common.beans.GitToHarnessProgressStatus;
 import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
+import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepResponse;
 import io.harness.gitsync.common.helper.YamlGitConfigHelper;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitBranchSyncService;
@@ -80,8 +82,8 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
   }
 
   @Override
-  public void processBranchSyncEvent(YamlGitConfigDTO yamlGitConfig, String branchName, String accountIdentifier,
-      String filePathToBeExcluded, String changeSetId, String gitToHarnessProgressRecordId) {
+  public GitToHarnessProcessMsvcStepResponse processBranchSyncEvent(YamlGitConfigDTO yamlGitConfig, String branchName,
+      String accountIdentifier, String filePathToBeExcluded, String changeSetId, String gitToHarnessProgressRecordId) {
     List<YamlGitConfigDTO> yamlGitConfigDTOS = yamlGitConfigService.getByRepo(yamlGitConfig.getRepo());
     Set<String> foldersList = YamlGitConfigHelper.getRootFolderList(yamlGitConfigDTOS);
     List<GitFileChangeDTO> harnessFilesOfBranch =
@@ -100,8 +102,9 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
             .collect(toList());
     gitToHarnessProgressService.updateFilesInProgressRecord(gitToHarnessProgressRecordId, gitToHarnessFilesToProcess);
     String commitId = getCommitId(harnessFilesOfBranch);
-    gitToHarnessProcessorService.processFiles(accountIdentifier, gitToHarnessFilesToProcess, branchName,
-        yamlGitConfig.getRepo(), commitId, gitToHarnessProgressRecordId);
+    GitToHarnessProgressStatus gitToHarnessProgressStatus = gitToHarnessProcessorService.processFiles(accountIdentifier,
+        gitToHarnessFilesToProcess, branchName, yamlGitConfig.getRepo(), commitId, gitToHarnessProgressRecordId);
+    return GitToHarnessProcessMsvcStepResponse.builder().gitToHarnessProgressStatus(gitToHarnessProgressStatus).build();
   }
 
   private String getCommitId(List<GitFileChangeDTO> harnessFilesOfBranch) {

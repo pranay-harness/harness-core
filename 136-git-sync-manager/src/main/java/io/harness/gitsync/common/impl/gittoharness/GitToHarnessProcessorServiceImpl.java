@@ -63,7 +63,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   YamlGitConfigService yamlGitConfigService;
 
   @Override
-  public List<GitToHarnessProcessingResponse> processFiles(String accountId,
+  public GitToHarnessProgressStatus processFiles(String accountId,
       List<GitToHarnessFileProcessingRequest> fileContentsList, String branchName, String repoUrl, String commitId,
       String gitToHarnessProgressRecordId) {
     final List<YamlGitConfigDTO> yamlGitConfigs = yamlGitConfigService.getByRepo(repoUrl);
@@ -99,7 +99,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
             "Got the processing response for the microservice {}, response {}", entry.getKey(), processingResponse);
       } catch (Exception ex) {
         // This exception happens in the case when we are not able to connect to the microservice
-        log.info("Exception in file processing for the microservice {}", entry.getKey(), ex);
+        log.error("Exception in file processing for the microservice {}", entry.getKey(), ex);
         gitToHarnessProcessingResponseDTO = GitToHarnessProcessingResponseDTO.builder()
                                                 .msvcProcessingFailureStage(MsvcProcessingFailureStage.RECEIVE_STAGE)
                                                 .build();
@@ -114,8 +114,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
       log.info("Completed for microservice {}", entry.getKey());
     }
     updateCommit(commitId, accountId, branchName, repoUrl, gitToHarnessProcessingResponses, invalidChangeSets);
-    updateTheGitToHarnessStatus(gitToHarnessProgressRecordId, gitToHarnessProcessingResponses);
-    return gitToHarnessProcessingResponses;
+    return updateTheGitToHarnessStatus(gitToHarnessProgressRecordId, gitToHarnessProcessingResponses);
   }
 
   private List<ChangeSet> markSkippedFiles(List<ChangeSetWithYamlStatusDTO> changeSets) {
@@ -134,15 +133,17 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
         .collect(toList());
   }
 
-  private void updateTheGitToHarnessStatus(
+  private GitToHarnessProgressStatus updateTheGitToHarnessStatus(
       String gitToHarnessProgressRecordId, List<GitToHarnessProcessingResponse> gitToHarnessProcessingResponses) {
     GitToHarnessProcessingStepStatus status = getStatus(gitToHarnessProcessingResponses);
     gitToHarnessProgressService.updateStepStatus(gitToHarnessProgressRecordId, status);
     // mark end of the progress for this record
     if (ERROR == status) {
       gitToHarnessProgressService.updateProgressStatus(gitToHarnessProgressRecordId, GitToHarnessProgressStatus.ERROR);
+      return GitToHarnessProgressStatus.ERROR;
     } else {
       gitToHarnessProgressService.updateProgressStatus(gitToHarnessProgressRecordId, GitToHarnessProgressStatus.DONE);
+      return GitToHarnessProgressStatus.DONE;
     }
   }
 
