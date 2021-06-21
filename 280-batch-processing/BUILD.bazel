@@ -1,6 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/macros.bzl", "run_analysis")
+load("//:tools/bazel/harness.bzl", "harness_java_binary")
 
 HarnessTeam = "CE"
 
@@ -77,7 +78,7 @@ shared_dependencies = ["@batch//:com_squareup_okhttp3_okhttp"] + [
     "//:lombok",
 ]
 
-java_binary(
+harness_java_binary(
     name = "module",
     srcs = glob([
         "src/main/**/*.java",

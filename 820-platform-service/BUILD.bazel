@@ -1,6 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/macros.bzl", "run_analysis")
+load("//:tools/bazel/harness.bzl", "harness_java_binary")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -345,7 +346,7 @@ shared_dependencies = [
     "@maven//:software_amazon_ion_ion_java",
 ]
 
-java_binary(
+harness_java_binary(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     data = ["//:resource"],

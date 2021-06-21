@@ -17,6 +17,8 @@ public class VersionInfoManager {
 
   private final VersionInfo versionInfo;
 
+  private String fullVersion;
+
   private static String initVersionInfo() {
     String versionInfo = VersionInfoManager.INIT_VERSION_INFO;
 
@@ -38,9 +40,13 @@ public class VersionInfoManager {
   public VersionInfoManager(String versionInfoYaml) {
     try {
       this.versionInfo = new YamlUtils().read(versionInfoYaml, VersionInfo.class);
+      fullVersion = versionInfo.getVersion() + "-" + versionInfo.getPatch();
     } catch (IOException e) {
       throw new RuntimeException(String.format("Failed to parse yaml content %s", versionInfoYaml), e);
     }
+  }
+  public String getFullVersion() {
+    return fullVersion;
   }
 
   public VersionInfo getVersionInfo() {

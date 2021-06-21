@@ -1,6 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/macros.bzl", "run_analysis")
+load("//:tools/bazel/harness.bzl", "harness_java_binary")
 
 java_library(
     name = "module",
@@ -73,12 +74,11 @@ java_library(
     ],
 )
 
-java_binary(
+harness_java_binary(
     name = "git_test",
     testonly = True,
     data = ["//:resource"],
     main_class = "io.harness.GitSyncTestApplication",
-    resources = [],
     visibility = ["//visibility:private"],
     runtime_deps = [
         ":tests",

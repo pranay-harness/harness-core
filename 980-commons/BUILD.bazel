@@ -2,6 +2,7 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/macros.bzl", "run_analysis")
 load("//:tools/bazel/protos/harness_grpc_library.bzl", "harness_grpc_library")
+load("//:tools/bazel/harness.bzl", "harness_java_binary", "harness_java_library")
 
 harness_grpc_library(
     name = "980_commons_java_proto",
@@ -20,12 +21,12 @@ java_library(
     ],
     resources = [
         "//980-commons/src/main/resources:resource",
-        "//980-commons/src/main/resources-filtered:resource",
     ],
     visibility = ["//visibility:public"],
     deps = [
         ":980_commons_java_proto",
         "//:lombok",
+        "//990-commons-test:abstract-module",
         "@maven//:ch_qos_logback_contrib_logback_jackson",
         "@maven//:ch_qos_logback_contrib_logback_json_classic",
         "@maven//:ch_qos_logback_contrib_logback_json_core",
@@ -106,7 +107,7 @@ java_library(
     ],
 )
 
-java_library(
+harness_java_library(
     name = "tests",
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),

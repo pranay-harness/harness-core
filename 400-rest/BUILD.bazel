@@ -1,6 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
 load("//:tools/bazel/macros.bzl", "run_analysis")
+load("//:tools/bazel/harness.bzl", "harness_java_binary")
 
 Deprecated = True
 
@@ -694,7 +695,6 @@ java_library(
     resources = [
         "//400-rest/src/main/resources:resource",
         "//980-commons/src/main/resources:resource",
-        "//980-commons/src/main/resources-filtered:resource",
         "//980-commons/src/test/resources:resource",
     ],
     visibility = ["//visibility:public"],

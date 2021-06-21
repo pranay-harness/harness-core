@@ -2,6 +2,7 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/macros.bzl", "run_analysis")
+load("//:tools/bazel/harness.bzl", "harness_java_binary")
 
 java_library(
     name = "module",
@@ -61,16 +62,6 @@ test_dependencies = [
     "@maven//:org_powermock_powermock_module_junit4",
     "@maven//:pl_pragmatists_JUnitParams",
 ]
-
-#run_package_tests(
-#    data = [
-#        "//200-functional-test/src/test/resources:resource",
-#    ],
-#    resources = [
-#        "//200-functional-test/src/test/resources:resource",
-#    ],
-#    deps = test_dependencies,
-#)
 
 run_tests()
 

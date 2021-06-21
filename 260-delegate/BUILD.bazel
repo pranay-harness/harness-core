@@ -5,6 +5,7 @@ load("@io_bazel_rules_docker//container:container.bzl", "container_image", "cont
 load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit")
 load("@rules_java//java:defs.bzl", "java_binary")
 load("@rules_spring//springboot:springboot.bzl", "springboot")
+load("//:tools/bazel/harness.bzl", "harness_java_binary", "harness_java_library")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -653,7 +654,7 @@ shared_dependencies = [
     "//:lombok",
 ]
 
-java_library(
+harness_java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     resources = [
@@ -690,14 +691,12 @@ java_library(
         "//260-delegate/src/test/resources:resource",
         "//400-rest/src/main/resources:resource",
         "//980-commons/src/main/resources:resource",
-        "//980-commons/src/main/resources-filtered:resource",
         "//980-commons/src/test/resources:resource",
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [
         "//400-rest/src/main/resources",
         "//980-commons/src/main/resources",
-        "//980-commons/src/main/resources-filtered:resources",
         "//980-commons/src/test/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],

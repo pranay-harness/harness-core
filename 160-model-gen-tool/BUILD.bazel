@@ -1,7 +1,8 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/macros.bzl", "run_analysis")
+load("//:tools/bazel/harness.bzl", "harness_java_binary")
 
-java_binary(
+harness_java_binary(
     name = "module",
     testonly = True,
     srcs = glob(["src/main/**/*.java"]),

@@ -1,14 +1,13 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/macros.bzl", "run_analysis")
+load("//:tools/bazel/harness.bzl", "harness_java_binary")
 
 # to run:
 # bazel run //160-stress-tester:module -- server `pwd`/160-stress-tester/config.yml
-java_binary(
+harness_java_binary(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     main_class = "io.harness.stresstesting.execution.DelegateTaskStressTestApplication",
-    resources = [
-    ],
     visibility = ["//visibility:public"],
     deps = [
         "@maven//:com_google_guava_guava",
@@ -26,10 +25,9 @@ java_binary(
 
 # to run:
 # bazel run //160-stress-tester:generator > output/file.here
-java_binary(
+harness_java_binary(
     name = "generator",
     main_class = "io.harness.stresstesting.script.StressTestGeneratorApplication",
-    resources = [],
     visibility = ["//visibility:public"],
     runtime_deps = [
         ":module_deploy.jar",

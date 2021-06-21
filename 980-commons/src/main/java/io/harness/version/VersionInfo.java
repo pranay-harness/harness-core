@@ -12,8 +12,8 @@ import lombok.Value;
 public class VersionInfo {
   private String version;
   private String buildNo;
+  private String patch;
   private String gitCommit;
   private String gitBranch;
   private String timestamp;
-  private String patch;
 }

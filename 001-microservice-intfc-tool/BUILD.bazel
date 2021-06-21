@@ -1,6 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/harness.bzl", "harness_java_binary")
 
-java_binary(
+harness_java_binary(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     main_class = "io.harness.MicroserviceInterfaceTool",
