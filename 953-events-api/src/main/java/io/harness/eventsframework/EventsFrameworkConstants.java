@@ -23,7 +23,6 @@ public final class EventsFrameworkConstants {
   public static final String GIT_PR_EVENT_STREAM = "git_pr_event_stream";
   public static final String GIT_CREATE_BRANCH_EVENT_STREAM = "git_create_branch_event_stream";
   public static final String USERMEMBERSHIP = "usermembership";
-  public static final String SERVICEACCOUNTMEMBERSHIP = "serviceaccountmembership";
 
   // created for git sdk, dont use outside sdk.
   public static final String GIT_CONFIG_STREAM = "git_config_stream";

@@ -1,7 +1,5 @@
 package io.harness.accesscontrol.principals.serviceaccounts.events;
 
-import static io.harness.eventsframework.EventsFrameworkConstants.SERVICEACCOUNTMEMBERSHIP;
-import static io.harness.eventsframework.EventsFrameworkConstants.USERMEMBERSHIP;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
@@ -25,6 +23,6 @@ public class ServiceAccountMembershipEventFilter implements EventFilter {
     }
     String entityType = metadataMap.get(ENTITY_TYPE);
     String action = metadataMap.get(ACTION);
-    return SERVICEACCOUNTMEMBERSHIP.equals(entityType) && DELETE_ACTION.equals(action);
+    return DELETE_ACTION.equals(action);
   }
 }

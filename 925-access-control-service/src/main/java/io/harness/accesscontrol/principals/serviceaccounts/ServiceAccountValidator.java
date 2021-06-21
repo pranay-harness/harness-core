@@ -24,11 +24,6 @@ import net.jodah.failsafe.RetryPolicy;
 public class ServiceAccountValidator implements PrincipalValidator {
   private final ServiceAccountService serviceAccountService;
 
-  private static final RetryPolicy<Object> retryPolicy =
-      RetryUtils.getRetryPolicy("Could not find the service account with the given identifier on attempt %s",
-          "Could not find the service account with the given identifier",
-          Lists.newArrayList(InvalidRequestException.class), Duration.ofSeconds(5), 3, log);
-
   @Inject
   public ServiceAccountValidator(ServiceAccountService serviceAccountService) {
     this.serviceAccountService = serviceAccountService;

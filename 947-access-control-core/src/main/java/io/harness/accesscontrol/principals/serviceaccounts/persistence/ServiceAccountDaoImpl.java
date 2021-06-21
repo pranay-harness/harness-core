@@ -31,25 +31,19 @@ public class ServiceAccountDaoImpl implements ServiceAccountDao {
   }
 
   @Override
-  public long saveAll(List<ServiceAccount> serviceAccounts) {
-    List<ServiceAccountDBO> serviceAccountDBOList =
-        serviceAccounts.stream().map(ServiceAccountDBOMapper::toDBO).collect(Collectors.toList());
-    return serviceAccountRepository.insertAllIgnoringDuplicates(serviceAccountDBOList);
-  }
-
-  @Override
   public ServiceAccount createIfNotPresent(ServiceAccount serviceAccount) {
     ServiceAccountDBO serviceAccountDBO = toDBO(serviceAccount);
-    Optional<ServiceAccountDBO> savedUser = serviceAccountRepository.findByIdentifierAndScopeIdentifier(
+    Optional<ServiceAccountDBO> savedServiceAccount = serviceAccountRepository.findByIdentifierAndScopeIdentifier(
         serviceAccountDBO.getIdentifier(), serviceAccountDBO.getScopeIdentifier());
-    return fromDBO(savedUser.orElseGet(() -> serviceAccountRepository.save(serviceAccountDBO)));
+    return fromDBO(savedServiceAccount.orElseGet(() -> serviceAccountRepository.save(serviceAccountDBO)));
   }
 
   @Override
   public PageResponse<ServiceAccount> list(PageRequest pageRequest, String scopeIdentifier) {
     Pageable pageable = PageUtils.getPageRequest(pageRequest);
-    Page<ServiceAccountDBO> userPages = serviceAccountRepository.findByScopeIdentifier(scopeIdentifier, pageable);
-    return PageUtils.getNGPageResponse(userPages.map(ServiceAccountDBOMapper::fromDBO));
+    Page<ServiceAccountDBO> serviceAccountPages =
+        serviceAccountRepository.findByScopeIdentifier(scopeIdentifier, pageable);
+    return PageUtils.getNGPageResponse(serviceAccountPages.map(ServiceAccountDBOMapper::fromDBO));
   }
 
   @Override

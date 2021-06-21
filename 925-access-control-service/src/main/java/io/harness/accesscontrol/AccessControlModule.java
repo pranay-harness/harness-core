@@ -14,7 +14,6 @@ import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
-import static io.harness.eventsframework.EventsFrameworkConstants.SERVICEACCOUNTMEMBERSHIP;
 import static io.harness.eventsframework.EventsFrameworkConstants.USERMEMBERSHIP;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
@@ -34,7 +33,6 @@ import io.harness.accesscontrol.principals.PrincipalValidator;
 import io.harness.accesscontrol.principals.serviceaccounts.HarnessServiceAccountService;
 import io.harness.accesscontrol.principals.serviceaccounts.HarnessServiceAccountServiceImpl;
 import io.harness.accesscontrol.principals.serviceaccounts.ServiceAccountValidator;
-import io.harness.accesscontrol.principals.serviceaccounts.events.ServiceAccountMembershipEventConsumer;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupService;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupServiceImpl;
 import io.harness.accesscontrol.principals.usergroups.UserGroupValidator;
@@ -249,10 +247,6 @@ public class AccessControlModule extends AbstractModule {
     Multibinder<EventConsumer> userMembershipEventConsumers =
         Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(USERMEMBERSHIP));
     userMembershipEventConsumers.addBinding().to(UserMembershipEventConsumer.class);
-
-    Multibinder<EventConsumer> serviceAccountMembershipEventConsumers =
-        Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(SERVICEACCOUNTMEMBERSHIP));
-    serviceAccountMembershipEventConsumers.addBinding().to(ServiceAccountMembershipEventConsumer.class);
 
     binder()
         .bind(HarnessActionValidator.class)
