@@ -177,7 +177,7 @@ func isValid(t types.RunnableTest) bool {
 	return t.Pkg != "" && t.Class != ""
 }
 
-func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq) (types.SelectTestsResp, error) {
+func (cgs *CgServiceImpl) GetTestsToRun(ctx context.Context, req types.SelectTestsReq) (types.SelectTestsResp, error) {
 	cgs.Log.Infow("getTestsToRun call", "req", req)
 	// parse package and class names from the files
 	fileNames := []string{}
