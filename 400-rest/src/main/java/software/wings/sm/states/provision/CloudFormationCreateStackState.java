@@ -2,6 +2,7 @@ package software.wings.sm.states.provision;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
+import static io.harness.beans.FeatureName.SKIP_BASED_ON_STACK_STATUSES;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -164,7 +165,11 @@ public class CloudFormationCreateStackState extends CloudFormationState {
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
 
-    if (skipBasedOnStackStatus == false || isEmpty(stackStatusesToMarkAsSuccess)) {
+    if (featureFlagService.isEnabled(SKIP_BASED_ON_STACK_STATUSES, context.getAccountId())) {
+      if (skipBasedOnStackStatus == false || isEmpty(stackStatusesToMarkAsSuccess)) {
+        stackStatusesToMarkAsSuccess = new ArrayList<>();
+      }
+    } else {
       stackStatusesToMarkAsSuccess = new ArrayList<>();
     }
 
