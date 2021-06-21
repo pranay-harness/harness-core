@@ -8,11 +8,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
-import lombok.experimental.FieldNameConstants;
 
 @Value
 @Builder
-@FieldNameConstants(innerTypeName = "SyncedBranchDTOKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(DX)
 public class GitSyncSettingsDTO {
