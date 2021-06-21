@@ -34,7 +34,7 @@ public class ServiceAccountDaoImpl implements ServiceAccountDao {
   public long saveAll(List<ServiceAccount> serviceAccounts) {
     List<ServiceAccountDBO> serviceAccountDBOList =
         serviceAccounts.stream().map(ServiceAccountDBOMapper::toDBO).collect(Collectors.toList());
-    return serviceAccountRepository.save(serviceAccountDBOList);
+    return serviceAccountRepository.insertAllIgnoringDuplicates(serviceAccountDBOList);
   }
 
   @Override
