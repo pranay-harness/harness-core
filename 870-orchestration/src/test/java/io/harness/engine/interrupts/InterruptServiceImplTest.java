@@ -9,6 +9,8 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.interrupts.Interrupt;
 import io.harness.pms.contracts.interrupts.InterruptType;
@@ -20,6 +22,7 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class InterruptServiceImplTest extends OrchestrationTestBase {
   @Inject private InterruptService interruptService;
 
@@ -49,7 +52,7 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
 
     List<Interrupt> planLevelInterrupts = interruptService.fetchActivePlanLevelInterrupts(planExecutionId);
     assertThat(planLevelInterrupts).isNotEmpty();
-    assertThat(planLevelInterrupts).hasSize(1);
+    assertThat(planLevelInterrupts).hasSize(2);
   }
 
   @Test

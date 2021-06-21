@@ -43,7 +43,8 @@ public class MetricDataStoreServiceImpl implements MetricDataStoreService {
 
       return restResponse.getResource();
     } catch (Exception e) {
-      log.error("error saving new apm metrics", e);
+      log.error(
+          "error saving new apm metrics StateExecutionId: {}, Size: {}, {}", stateExecutionId, metricData.size(), e);
       return false;
     }
   }

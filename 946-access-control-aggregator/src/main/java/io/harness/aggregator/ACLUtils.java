@@ -11,7 +11,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ACLUtils {
-  public static ACL getACL(
+  public static ACL buildACL(
       String permission, Principal principal, RoleAssignmentDBO roleAssignment, String resourceSelector) {
     return ACL.builder()
         .roleAssignmentId(roleAssignment.getId())

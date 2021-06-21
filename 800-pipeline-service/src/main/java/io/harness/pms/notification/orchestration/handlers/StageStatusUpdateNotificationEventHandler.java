@@ -29,8 +29,9 @@ public class StageStatusUpdateNotificationEventHandler implements AsyncInformObs
     NodeExecution nodeExecution = nodeUpdateInfo.getNodeExecution();
     if (Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.STAGE.name())) {
       Optional<PipelineEventType> pipelineEventType = notificationHelper.getEventTypeForStage(nodeExecution);
-      pipelineEventType.ifPresent(
-          eventType -> notificationHelper.sendNotification(nodeExecution.getAmbiance(), eventType, nodeExecution));
+      pipelineEventType.ifPresent(eventType
+          -> notificationHelper.sendNotification(
+              nodeExecution.getAmbiance(), eventType, nodeExecution, nodeUpdateInfo.getUpdatedTs()));
       return;
     }
     if (Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.STAGES.name())
@@ -42,7 +43,8 @@ public class StageStatusUpdateNotificationEventHandler implements AsyncInformObs
     }
     if (!Objects.equals(nodeExecution.getNode().getSkipType(), SkipType.SKIP_NODE)
         && StatusUtils.brokeStatuses().contains(nodeExecution.getStatus())) {
-      notificationHelper.sendNotification(nodeExecution.getAmbiance(), PipelineEventType.STEP_FAILED, nodeExecution);
+      notificationHelper.sendNotification(
+          nodeExecution.getAmbiance(), PipelineEventType.STEP_FAILED, nodeExecution, nodeUpdateInfo.getUpdatedTs());
     }
   }
 

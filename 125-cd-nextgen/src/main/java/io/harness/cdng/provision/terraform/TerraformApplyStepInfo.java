@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -31,7 +32,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.TERRAFORM_APPLY)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TerraformApplyStepInfo extends TerraformApplyBaseStepInfo implements CDStepInfo, Visitable {
-  @JsonProperty("configuration") TerraformStepConfiguration terraformStepConfiguration;
+  @NotNull @JsonProperty("configuration") TerraformStepConfiguration terraformStepConfiguration;
 
   @Builder(builderMethodName = "infoBuilder")
   public TerraformApplyStepInfo(ParameterField<String> provisionerIdentifier,

@@ -14,6 +14,7 @@ import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsCo
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsEntityToDTO;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsAuthType;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
@@ -47,7 +48,6 @@ public class AppDynamicsEntityToDTOTest extends CategoryTest {
                                                     .accountname(accountname)
                                                     .authType(AppDynamicsAuthType.USERNAME_PASSWORD)
                                                     .controllerUrl(controllerUrl)
-                                                    .accountId(accountId)
                                                     .build();
 
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = appDynamicsEntityToDTO.createConnectorDTO(appDynamicsConnector);
@@ -58,7 +58,7 @@ public class AppDynamicsEntityToDTOTest extends CategoryTest {
         .isEqualTo(appDynamicsConnector.getPasswordRef());
     assertThat(appDynamicsConnectorDTO.getAccountname()).isEqualTo(appDynamicsConnector.getAccountname());
     assertThat(appDynamicsConnectorDTO.getControllerUrl()).isEqualTo(appDynamicsConnector.getControllerUrl() + "/");
-    assertThat(appDynamicsConnectorDTO.getAccountId()).isEqualTo(appDynamicsConnector.getAccountId());
+
     assertThat(appDynamicsConnectorDTO.getAuthType().name()).isEqualTo(AppDynamicsAuthType.USERNAME_PASSWORD.name());
     assertThat(appDynamicsConnectorDTO.getClientId()).isNull();
     assertThat(appDynamicsConnectorDTO.getClientSecretRef().getIdentifier()).isNull();
@@ -82,7 +82,6 @@ public class AppDynamicsEntityToDTOTest extends CategoryTest {
                                                     .authType(AppDynamicsAuthType.API_CLIENT_TOKEN)
                                                     .accountname(accountname)
                                                     .controllerUrl(controllerUrl)
-                                                    .accountId(accountId)
                                                     .build();
 
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = appDynamicsEntityToDTO.createConnectorDTO(appDynamicsConnector);
@@ -92,7 +91,6 @@ public class AppDynamicsEntityToDTOTest extends CategoryTest {
     assertThat(appDynamicsConnectorDTO.getPasswordRef().getIdentifier()).isNull();
     assertThat(appDynamicsConnectorDTO.getAccountname()).isEqualTo(appDynamicsConnector.getAccountname());
     assertThat(appDynamicsConnectorDTO.getControllerUrl()).isEqualTo(appDynamicsConnector.getControllerUrl() + "/");
-    assertThat(appDynamicsConnectorDTO.getAccountId()).isEqualTo(appDynamicsConnector.getAccountId());
     assertThat(appDynamicsConnectorDTO.getAuthType().name()).isEqualTo(AppDynamicsAuthType.API_CLIENT_TOKEN.name());
     assertThat(appDynamicsConnectorDTO.getClientId()).isEqualTo(appDynamicsConnector.getClientId());
     assertThat(appDynamicsConnectorDTO.getClientSecretRef().getIdentifier())
@@ -117,13 +115,12 @@ public class AppDynamicsEntityToDTOTest extends CategoryTest {
                                                     .authType(AppDynamicsAuthType.API_CLIENT_TOKEN)
                                                     .accountname(accountname)
                                                     .controllerUrl(controllerUrl)
-                                                    .accountId(accountId)
                                                     .build();
 
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = appDynamicsEntityToDTO.createConnectorDTO(appDynamicsConnector);
     assertThatThrownBy(() -> appDynamicsConnectorDTO.validate())
-        .isInstanceOf(NullPointerException.class)
-        .hasMessage("Client ID cannot be empty");
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Client ID or Client Secret cannot be empty for ApiClientToken Auth type");
   }
 
   @Test
@@ -144,12 +141,11 @@ public class AppDynamicsEntityToDTOTest extends CategoryTest {
                                                     .authType(AppDynamicsAuthType.USERNAME_PASSWORD)
                                                     .accountname(accountname)
                                                     .controllerUrl(controllerUrl)
-                                                    .accountId(accountId)
                                                     .build();
 
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = appDynamicsEntityToDTO.createConnectorDTO(appDynamicsConnector);
     assertThatThrownBy(() -> appDynamicsConnectorDTO.validate())
-        .isInstanceOf(NullPointerException.class)
-        .hasMessage("Username cannot be empty");
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Username and Password cannot be empty for UsernamePassword Auth type");
   }
 }

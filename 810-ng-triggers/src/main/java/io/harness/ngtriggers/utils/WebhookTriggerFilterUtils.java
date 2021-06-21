@@ -1,6 +1,6 @@
 package io.harness.ngtriggers.utils;
 
-import static io.harness.beans.WebhookEvent.Type.BRANCH;
+import static io.harness.beans.WebhookEvent.Type.PUSH;
 import static io.harness.constants.Constants.BITBUCKET_CLOUD_HEADER_KEY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -60,7 +60,7 @@ public class WebhookTriggerFilterUtils {
       return gitEvent.equals(PULL_REQUEST_EVENT_TYPE) || gitEvent.equals(MERGE_REQUEST_EVENT_TYPE);
     }
 
-    if (eventTypeFromPayload.equals(BRANCH)) {
+    if (eventTypeFromPayload.equals(PUSH)) {
       return gitEvent.equals(PUSH_EVENT_TYPE);
     }
 

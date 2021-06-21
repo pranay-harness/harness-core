@@ -1,29 +1,25 @@
 package io.harness.pms.sdk.core.execution.invokers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.pms.contracts.execution.Status.ABORTED;
 import static io.harness.pms.contracts.execution.Status.SUSPENDED;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.events.SpawnChildRequest;
 import io.harness.pms.contracts.execution.events.SuspendChainRequest;
-import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.execution.ChainDetails;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
-import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.execution.ResumePackage;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.ChildChainExecutable;
-import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
-import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
@@ -35,7 +31,6 @@ import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Objects;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(PIPELINE)
@@ -49,93 +44,73 @@ public class ChildChainStrategy implements ExecuteStrategy {
 
   @Override
   public void start(InvokerPackage invokerPackage) {
-    NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
-    ChildChainExecutable childChainExecutable = extractStep(nodeExecution);
+    Ambiance ambiance = invokerPackage.getAmbiance();
+    ChildChainExecutable childChainExecutable = extractStep(ambiance);
     ChildChainExecutableResponse childChainResponse;
-    childChainResponse = childChainExecutable.executeFirstChild(nodeExecution.getAmbiance(),
-        sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
-    handleResponse(nodeExecution, childChainResponse);
+    childChainResponse = childChainExecutable.executeFirstChild(
+        ambiance, invokerPackage.getStepParameters(), invokerPackage.getInputPackage());
+    handleResponse(ambiance, childChainResponse);
   }
 
   @Override
   public void resume(ResumePackage resumePackage) {
-    NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
-    Ambiance ambiance = nodeExecution.getAmbiance();
-    ChildChainExecutable childChainExecutable = extractStep(nodeExecution);
-    ChildChainExecutableResponse lastChildChainExecutableResponse = Preconditions.checkNotNull(
-        Objects.requireNonNull(NodeExecutionUtils.obtainLatestExecutableResponse(nodeExecution)).getChildChain());
+    Ambiance ambiance = resumePackage.getAmbiance();
+    ChildChainExecutable childChainExecutable = extractStep(ambiance);
+    ChainDetails chainDetails = resumePackage.getChainDetails();
     Map<String, ResponseData> accumulatedResponse = resumePackage.getResponseDataMap();
-    byte[] passThrowDataBytes = lastChildChainExecutableResponse.getPassThroughData().toByteArray();
-    PassThroughData passThroughData = passThrowDataBytes.length == 0 ? new PassThroughData() {
-    } : (PassThroughData) kryoSerializer.asObject(passThrowDataBytes);
-    if (lastChildChainExecutableResponse.getLastLink() || lastChildChainExecutableResponse.getSuspend()
-        || isBroken(accumulatedResponse) || isAborted(accumulatedResponse)) {
-      StepResponse stepResponse = childChainExecutable.finalizeExecution(ambiance,
-          sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), passThroughData, accumulatedResponse);
+    if (chainDetails.isShouldEnd()) {
+      StepResponse stepResponse = childChainExecutable.finalizeExecution(
+          ambiance, resumePackage.getStepParameters(), chainDetails.getPassThroughData(), accumulatedResponse);
       sdkNodeExecutionService.handleStepResponse(
-          nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
+          AmbianceUtils.obtainCurrentRuntimeId(ambiance), StepResponseMapper.toStepResponseProto(stepResponse));
     } else {
-      StepInputPackage inputPackage =
-          engineObtainmentHelper.obtainInputPackage(ambiance, nodeExecution.getNode().getRebObjectsList());
-      ChildChainExecutableResponse chainResponse = childChainExecutable.executeNextChild(ambiance,
-          sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage, passThroughData,
-          accumulatedResponse);
-      handleResponse(nodeExecution, chainResponse);
+      ChildChainExecutableResponse chainResponse =
+          childChainExecutable.executeNextChild(ambiance, resumePackage.getStepParameters(),
+              resumePackage.getStepInputPackage(), chainDetails.getPassThroughData(), accumulatedResponse);
+      handleResponse(ambiance, chainResponse);
     }
   }
 
   @Override
-  public ChildChainExecutable extractStep(NodeExecutionProto nodeExecution) {
-    PlanNodeProto node = nodeExecution.getNode();
-    return (ChildChainExecutable) stepRegistry.obtain(node.getStepType());
+  public ChildChainExecutable extractStep(Ambiance ambiance) {
+    return (ChildChainExecutable) stepRegistry.obtain(AmbianceUtils.getCurrentStepType(ambiance));
   }
 
-  private void handleResponse(NodeExecutionProto nodeExecution, ChildChainExecutableResponse childChainResponse) {
-    Ambiance ambiance = nodeExecution.getAmbiance();
+  private void handleResponse(Ambiance ambiance, ChildChainExecutableResponse childChainResponse) {
     if (childChainResponse.getSuspend()) {
-      suspendChain(childChainResponse, nodeExecution);
+      suspendChain(ambiance, childChainResponse);
     } else {
-      executeChild(ambiance, childChainResponse, nodeExecution);
+      executeChild(ambiance, childChainResponse);
     }
   }
 
-  private void executeChild(
-      Ambiance ambiance, ChildChainExecutableResponse childChainResponse, NodeExecutionProto nodeExecution) {
+  private void executeChild(Ambiance ambiance, ChildChainExecutableResponse childChainResponse) {
+    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     SpawnChildRequest spawnChildRequest = SpawnChildRequest.newBuilder()
                                               .setPlanExecutionId(ambiance.getPlanExecutionId())
-                                              .setNodeExecutionId(nodeExecution.getUuid())
+                                              .setNodeExecutionId(nodeExecutionId)
                                               .setChildChain(childChainResponse)
                                               .build();
     sdkNodeExecutionService.spawnChild(spawnChildRequest);
   }
 
-  private void suspendChain(ChildChainExecutableResponse childChainResponse, NodeExecutionProto nodeExecution) {
-    PlanNodeProto planNode = nodeExecution.getNode();
+  private void suspendChain(Ambiance ambiance, ChildChainExecutableResponse childChainResponse) {
+    Level currentLevel = Preconditions.checkNotNull(AmbianceUtils.obtainCurrentLevel(ambiance));
     Map<String, ByteString> responseBytes =
-        responseDataMapper.toResponseDataProto(Collections.singletonMap("ignore-" + nodeExecution.getUuid(),
+        responseDataMapper.toResponseDataProto(Collections.singletonMap("ignore-" + currentLevel.getRuntimeId(),
             StepResponseNotifyData.builder()
-                .nodeUuid(planNode.getUuid())
-                .identifier(planNode.getIdentifier())
-                .group(planNode.getGroup())
+                .nodeUuid(currentLevel.getSetupId())
+                .identifier(currentLevel.getIdentifier())
+                .group(currentLevel.getGroup())
                 .status(SUSPENDED)
                 .description("Ignoring Execution as next child found to be null")
                 .build()));
-    sdkNodeExecutionService.suspendChainExecution(nodeExecution.getUuid(),
+    sdkNodeExecutionService.suspendChainExecution(currentLevel.getRuntimeId(),
         SuspendChainRequest.newBuilder()
-            .setNodeExecutionId(nodeExecution.getUuid())
+            .setNodeExecutionId(currentLevel.getRuntimeId())
             .setExecutableResponse(ExecutableResponse.newBuilder().setChildChain(childChainResponse).build())
             .setIsError(false)
             .putAllResponse(responseBytes)
             .build());
-  }
-
-  private boolean isBroken(Map<String, ResponseData> accumulatedResponse) {
-    return accumulatedResponse.values().stream().anyMatch(stepNotifyResponse
-        -> StatusUtils.brokeStatuses().contains(((StepResponseNotifyData) stepNotifyResponse).getStatus()));
-  }
-
-  private boolean isAborted(Map<String, ResponseData> accumulatedResponse) {
-    return accumulatedResponse.values().stream().anyMatch(
-        stepNotifyResponse -> ABORTED == (((StepResponseNotifyData) stepNotifyResponse).getStatus()));
   }
 }

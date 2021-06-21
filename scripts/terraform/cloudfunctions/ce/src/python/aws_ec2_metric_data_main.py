@@ -50,7 +50,7 @@ def main(event, context):
 
     if not if_tbl_exists(client, awsEc2InventoryMetricTableRef):
         print_("%s table does not exists, creating table..." % awsEc2InventoryMetricTableRef)
-        if not createTable(client, awsEc2InventoryMetricTableName):
+        if not createTable(client, awsEc2InventoryMetricTableRef):
             # No need to fetch CPU data at this point
             return
 

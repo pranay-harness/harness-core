@@ -1,16 +1,32 @@
 package io.harness.ccm.commons.utils;
 
+import static io.harness.ccm.commons.utils.TimeUtils.toOffsetDateTime;
+
+import static org.jooq.impl.DSL.val;
+
+import io.harness.timescaledb.Routines;
+
 import com.google.common.collect.ImmutableSet;
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+import org.jooq.Condition;
+import org.jooq.Field;
+import org.jooq.RowCountQuery;
 
 @UtilityClass
 @Slf4j
 public class TimescaleUtils {
+  public int execute(@NonNull RowCountQuery finalStep) {
+    return retryRun(finalStep::execute);
+  }
+
+  // TODO(UTSAV): Restrict the default exceptions to java.net.SocketException in future after proper testing.
   @SneakyThrows
   public <E> E retryRun(@NonNull Callable<E> callable) {
     return retryRun(callable, 3, ImmutableSet.of(Exception.class));
@@ -43,5 +59,17 @@ public class TimescaleUtils {
 
   private static boolean shouldRetryOn(Exception ex, @NonNull final Set<Class<? extends Exception>> exceptions) {
     return exceptions.stream().anyMatch(c -> c.isAssignableFrom(ex.getClass()));
+  }
+
+  public static Condition isAlive(
+      Field<OffsetDateTime> STARTTIME, Field<OffsetDateTime> STOPTIME, long jobStartTime, long jobEndTime) {
+    return Routines.isAlive(STARTTIME, STOPTIME, val(toOffsetDateTime(jobStartTime)), val(toOffsetDateTime(jobEndTime)))
+        .eq(true);
+  }
+
+  public static Condition isAliveAtInstant(@NonNull Field<OffsetDateTime> startTimeField,
+      @NonNull Field<OffsetDateTime> stopTimeField, @NonNull Instant atInstant) {
+    return startTimeField.le(toOffsetDateTime(atInstant))
+        .and(stopTimeField.isNull().or(stopTimeField.ge(toOffsetDateTime(atInstant))));
   }
 }

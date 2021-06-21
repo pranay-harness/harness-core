@@ -16,12 +16,16 @@ import io.harness.gitsync.GitToHarnessInfo;
 import io.harness.gitsync.GitToHarnessProcessRequest;
 import io.harness.gitsync.ProcessingFailureStage;
 import io.harness.gitsync.ProcessingResponse;
+import io.harness.gitsync.beans.GitProcessRequest;
+import io.harness.gitsync.common.YamlProcessingLogContext;
 import io.harness.gitsync.dao.GitProcessingRequestService;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.gitsync.interceptor.GitSyncConstants;
 import io.harness.gitsync.interceptor.GitSyncThreadDecorator;
 import io.harness.gitsync.logger.GitProcessingLogContext;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import io.harness.logging.AutoLogContext;
 import io.harness.manage.GlobalContextManager;
 import io.harness.manage.GlobalContextManager.GlobalContextGuard;
@@ -30,6 +34,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -46,16 +51,19 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
   Supplier<List<EntityType>> sortOrder;
   GitSyncThreadDecorator gitSyncThreadDecorator;
   GitProcessingRequestService gitProcessingRequestDao;
+  PersistentLocker persistentLocker;
 
   @Inject
   public GitToHarnessSdkProcessorImpl(ChangeSetInterceptorService changeSetInterceptorService,
       GitSdkInterface changeSetHelperService, @Named("GitSyncSortOrder") Supplier<List<EntityType>> sortOrder,
-      GitSyncThreadDecorator gitSyncThreadDecorator, GitProcessingRequestService gitProcessingRequestDao) {
+      GitSyncThreadDecorator gitSyncThreadDecorator, GitProcessingRequestService gitProcessingRequestDao,
+      PersistentLocker persistentLocker) {
     this.changeSetInterceptorService = changeSetInterceptorService;
     this.changeSetHelperService = changeSetHelperService;
     this.sortOrder = sortOrder;
     this.gitSyncThreadDecorator = gitSyncThreadDecorator;
     this.gitProcessingRequestDao = gitProcessingRequestDao;
+    this.persistentLocker = persistentLocker;
   }
 
   /**
@@ -70,7 +78,9 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
     ChangeSets changeSets = gitToHarnessRequest.getChangeSets();
     String accountId = gitToHarnessRequest.getAccountId();
     String commitId = gitToHarnessRequest.getCommitId().getValue();
-    try (AutoLogContext ignore1 = new GitProcessingLogContext(accountId, commitId, OVERRIDE_ERROR)) {
+    try (AutoLogContext ignore1 = new GitProcessingLogContext(accountId, commitId, OVERRIDE_ERROR);
+         AcquiredLock lock = persistentLocker.waitToAcquireLock(
+             GitProcessRequest.class, commitId, Duration.ofMinutes(2), Duration.ofSeconds(10))) {
       final Map<String, FileProcessingResponse> fileProcessingStatusMap =
           initializeProcessingResponse(gitToHarnessRequest);
 
@@ -117,7 +127,9 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
         if (!status.equals(FileProcessingStatus.UNPROCESSED)) {
           continue;
         }
-        try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+        try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard();
+             AutoLogContext ignore1 =
+                 YamlProcessingLogContext.builder().changeSetId(changeSet.getChangeSetId()).build(OVERRIDE_ERROR);) {
           GlobalContextManager.upsertGlobalContextRecord(
               createGitEntityInfo(gitToHarnessRequest.getGitToHarnessBranchInfo(), changeSet,
                   gitToHarnessRequest.getCommitId().getValue()));
@@ -151,7 +163,7 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
                            .branch(gitToHarnessBranchInfo.getBranch())
                            .folderPath(folderPath)
                            .filePath(filePath)
-                           .yamlGitConfigId(gitToHarnessBranchInfo.getYamlGitConfigId())
+                           .yamlGitConfigId(changeSet.getYamlGitConfigInfo().getYamlGitConfigId())
                            .lastObjectId(changeSet.getObjectId() == null ? null : changeSet.getObjectId().getValue())
                            .isSyncFromGit(true)
                            .commitId(commitId)
@@ -187,10 +199,13 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
   private ProcessingResponse flattenProcessingResponse(Map<String, FileProcessingResponse> processingResponseMap,
       String accountId, ProcessingFailureStage processingFailureStage) {
     final List<FileProcessingResponse> fileProcessingResponses = new ArrayList<>(processingResponseMap.values());
-    final ProcessingResponse.Builder processingResponseBuilder =
-        ProcessingResponse.newBuilder().addAllResponse(fileProcessingResponses).setAccountId(accountId);
+    final ProcessingResponse.Builder processingResponseBuilder = ProcessingResponse.newBuilder()
+                                                                     .addAllResponse(fileProcessingResponses)
+                                                                     .setAccountId(accountId)
+                                                                     .setIsError(false);
     if (processingFailureStage != null) {
       processingResponseBuilder.setProcessingFailureStage(processingFailureStage);
+      processingResponseBuilder.setIsError(true);
     }
     return processingResponseBuilder.build();
   }

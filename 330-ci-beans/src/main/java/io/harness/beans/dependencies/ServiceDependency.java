@@ -12,14 +12,22 @@ import org.springframework.data.annotation.TypeAlias;
 public class ServiceDependency {
   @TypeAlias("serviceDependency_status")
   public enum Status {
-    SUCCESS,
-    ERROR;
+    SUCCESS("Success"),
+    ERROR("Failed");
+    String displayName;
+    Status(String displayName) {
+      this.displayName = displayName;
+    }
+
+    public String getDisplayName() {
+      return displayName;
+    }
   }
 
   @NotNull String identifier;
   String name;
   @NotNull String image;
-  Status status;
+  String status;
   String startTime;
   String endTime;
   String errorMessage;

@@ -134,6 +134,11 @@ public class CIK8CtlHandler {
     return secretSpecBuilder.fetchGithubAppToken(connectorDetailsMap);
   }
 
+  public Map<String, SecretParams> fetchEnvVarsWithSecretRefSecretParams(
+      Map<String, String> envVarsWithSecretRef, String containerName) {
+    return secretSpecBuilder.createSecretParamsForPlainTextSecret(envVarsWithSecretRef, containerName);
+  }
+
   public Secret createSecret(
       KubernetesClient kubernetesClient, String secretName, String namespace, Map<String, String> data) {
     Secret secret = secretSpecBuilder.createSecret(secretName, namespace, data);

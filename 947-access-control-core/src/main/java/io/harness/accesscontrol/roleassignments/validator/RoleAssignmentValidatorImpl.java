@@ -1,6 +1,7 @@
 package io.harness.accesscontrol.roleassignments.validator;
 
 import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
+import static io.harness.accesscontrol.common.validation.ValidationResult.VALID;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.common.validation.ValidationResult;
@@ -40,7 +41,10 @@ public class RoleAssignmentValidatorImpl implements RoleAssignmentValidator {
   @Override
   public RoleAssignmentValidationResult validate(RoleAssignmentValidationRequest request) {
     RoleAssignment assignment = request.getRoleAssignment();
-    RoleAssignmentValidationResultBuilder builder = RoleAssignmentValidationResult.builder();
+    RoleAssignmentValidationResultBuilder builder = RoleAssignmentValidationResult.builder()
+                                                        .principalValidationResult(VALID)
+                                                        .resourceGroupValidationResult(VALID)
+                                                        .roleValidationResult(VALID);
     if (request.isValidatePrincipal()) {
       builder.principalValidationResult(validatePrincipal(Principal.builder()
                                                               .principalIdentifier(assignment.getPrincipalIdentifier())

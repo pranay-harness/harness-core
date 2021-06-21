@@ -1,5 +1,6 @@
 package io.harness.encryptors.managerproxy;
 
+import static io.harness.beans.shared.tasks.NgSetupFields.NG;
 import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -7,6 +8,8 @@ import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.TaskType.FETCH_SECRET;
 import static software.wings.beans.TaskType.VALIDATE_SECRET_MANAGER_CONFIGURATION;
 import static software.wings.beans.TaskType.VALIDATE_SECRET_REFERENCE;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -27,6 +30,8 @@ import io.harness.security.encryption.EncryptionConfig;
 import software.wings.service.intfc.DelegateService;
 
 import com.google.inject.Inject;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ManagerEncryptorHelper {
   private final DelegateService delegateService;
@@ -39,14 +44,20 @@ public class ManagerEncryptorHelper {
     this.taskSetupAbstractionHelper = taskSetupAbstractionHelper;
   }
 
-  public String getOwner(EncryptionConfig encryptionConfig) {
+  public Map<String, String> buildAbstractions(EncryptionConfig encryptionConfig) {
+    Map<String, String> abstractions = new HashMap<>(2);
     String owner = null;
     if (encryptionConfig instanceof NGAccess) {
       NGAccess ngAccess = (NGAccess) encryptionConfig;
+      // Verify if its a Task from NG
       owner = taskSetupAbstractionHelper.getOwner(
           encryptionConfig.getAccountId(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
+      abstractions.put(OWNER, owner);
+      if (isNotBlank(ngAccess.getOrgIdentifier()) || isNotBlank(ngAccess.getProjectIdentifier())) {
+        abstractions.put(NG, "true");
+      }
     }
-    return owner;
+    return abstractions;
   }
 
   public char[] fetchSecretValue(String accountId, EncryptedRecord encryptedRecord, EncryptionConfig encryptionConfig) {
@@ -61,7 +72,7 @@ public class ManagerEncryptorHelper {
                                               .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                                               .build())
                                     .accountId(accountId)
-                                    .setupAbstraction(OWNER, getOwner(encryptionConfig))
+                                    .setupAbstractions(buildAbstractions(parameters.getEncryptionConfig()))
                                     .build();
     try {
       DelegateResponseData delegateResponseData = delegateService.executeTask(delegateTask);
@@ -88,7 +99,7 @@ public class ManagerEncryptorHelper {
                                               .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                                               .build())
                                     .accountId(accountId)
-                                    .setupAbstraction(OWNER, getOwner(parameters.getEncryptionConfig()))
+                                    .setupAbstractions(buildAbstractions(parameters.getEncryptionConfig()))
                                     .build();
     try {
       DelegateResponseData delegateResponseData = delegateService.executeTask(delegateTask);
@@ -115,7 +126,7 @@ public class ManagerEncryptorHelper {
                                               .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                                               .build())
                                     .accountId(accountId)
-                                    .setupAbstraction(OWNER, getOwner(parameters.getEncryptionConfig()))
+                                    .setupAbstractions(buildAbstractions(parameters.getEncryptionConfig()))
                                     .build();
 
     try {

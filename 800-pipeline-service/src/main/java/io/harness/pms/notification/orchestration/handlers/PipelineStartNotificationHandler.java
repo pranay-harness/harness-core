@@ -20,7 +20,8 @@ public class PipelineStartNotificationHandler implements AsyncInformObserver, Or
 
   @Override
   public void onStart(OrchestrationStartInfo orchestrationStartInfo) {
-    notificationHelper.sendNotification(orchestrationStartInfo.getAmbiance(), PipelineEventType.PIPELINE_START, null);
+    notificationHelper.sendNotification(
+        orchestrationStartInfo.getAmbiance(), PipelineEventType.PIPELINE_START, null, null);
   }
 
   @Override

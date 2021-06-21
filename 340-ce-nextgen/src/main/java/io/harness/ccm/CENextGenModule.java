@@ -1,5 +1,6 @@
 package io.harness.ccm;
 
+import static io.harness.AuthorizationServiceHeader.CE_NEXT_GEN;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
@@ -15,6 +16,7 @@ import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.bigQuery.BigQueryServiceImpl;
 import io.harness.ccm.commons.beans.config.GcpConfig;
 import io.harness.ccm.eventframework.ConnectorEntityCRUDStreamListener;
+import io.harness.ccm.perpetualtask.K8sWatchTaskResourceClientModule;
 import io.harness.ccm.persistence.JooqExecuteListener;
 import io.harness.ccm.service.impl.CEYamlServiceImpl;
 import io.harness.ccm.service.intf.CEYamlService;
@@ -140,6 +142,8 @@ public class CENextGenModule extends AbstractModule {
     });
     install(new ConnectorResourceClientModule(
         configuration.getNgManagerClientConfig(), configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
+    install(new K8sWatchTaskResourceClientModule(
+        configuration.getManagerClientConfig(), configuration.getNgManagerServiceSecret(), CE_NEXT_GEN.getServiceId()));
     install(VersionModule.getInstance());
     install(PrimaryVersionManagerModule.getInstance());
     install(new ValidationModule(getValidatorFactory()));

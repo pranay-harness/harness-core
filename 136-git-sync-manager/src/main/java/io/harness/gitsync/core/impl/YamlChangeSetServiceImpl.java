@@ -13,6 +13,7 @@ import io.harness.gitsync.common.beans.YamlChangeSet.YamlChangeSetKeys;
 import io.harness.gitsync.common.beans.YamlChangeSetStatus;
 import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
 import io.harness.gitsync.core.dtos.YamlChangeSetSaveDTO;
+import io.harness.gitsync.core.helper.YamlChangeSetBackOffHelper;
 import io.harness.gitsync.core.runnable.ChangeSetGroupingKey;
 import io.harness.gitsync.core.runnable.ChangeSetGroupingKey.ChangeSetGroupingKeyKeys;
 import io.harness.gitsync.core.service.YamlChangeSetService;
@@ -29,7 +30,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.constraints.Size;
 import javax.validation.executable.ValidateOnExecution;
@@ -110,6 +110,21 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
     if (yamlChangeSet.isPresent()) {
       UpdateResult updateResult =
           yamlChangeSetRepository.updateYamlChangeSetStatus(newStatus, yamlChangeSet.get().getChangesetId());
+      return updateResult.getModifiedCount() != 0;
+    } else {
+      log.warn("No YamlChangeSet found");
+    }
+    return false;
+  }
+
+  @Override
+  public boolean updateStatusAndCutoffTime(String accountId, String changeSetId, YamlChangeSetStatus newStatus) {
+    Optional<YamlChangeSetDTO> yamlChangeSet = get(accountId, changeSetId);
+    if (yamlChangeSet.isPresent()) {
+      final long cutOffTime =
+          YamlChangeSetBackOffHelper.getCutOffTime(yamlChangeSet.get().getRetryCount(), System.currentTimeMillis());
+      UpdateResult updateResult = yamlChangeSetRepository.updateYamlChangeSetStatusAndCutoffTime(
+          newStatus, yamlChangeSet.get().getChangesetId(), cutOffTime);
       return updateResult.getModifiedCount() != 0;
     } else {
       log.warn("No YamlChangeSet found");
@@ -213,11 +228,11 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   @Override
-  public List<YamlChangeSetDTO> findByAccountIdsStatusLastUpdatedAtLessThan(
-      List<String> runningAccountIdList, @Size(min = 1) List<YamlChangeSetStatus> yamlChangeSetStatuses, long timeout) {
+  public List<YamlChangeSetDTO> findByAccountIdsStatusCutoffLessThan(List<String> runningAccountIdList,
+      @Size(min = 1) List<YamlChangeSetStatus> yamlChangeSetStatuses, long cutOffTime) {
     final List<String> statuses = getStatus(yamlChangeSetStatuses);
-    final List<YamlChangeSet> changeSets = yamlChangeSetRepository.findByAccountIdAndStatusInAndLastUpdatedAtLessThan(
-        runningAccountIdList, statuses, System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(timeout));
+    final List<YamlChangeSet> changeSets = yamlChangeSetRepository.findByAccountIdInAndStatusInAndCutOffTimeLessThan(
+        runningAccountIdList, statuses, cutOffTime);
     return changeSets.stream().map(YamlChangeSetMapper::getYamlChangeSetDto).collect(Collectors.toList());
   }
 

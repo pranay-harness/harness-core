@@ -67,6 +67,9 @@ mongo:
   transactionsEnabled: false
   aliasDBName: ng-harness
 
+accountConfig:
+  deploymentClusterName: ""
+
 #[secondary-db] : Uncomment the following if you want to connect to another database
 #secondary - mongo:
 #uri : mongodb:  // localhost:27017/cd-nextgen-secondary
@@ -181,13 +184,17 @@ pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
 
-shouldConfigureWithPMS: true
+shouldConfigureWithPMS: false
 
 ceAwsSetupConfig:
   accessKey: ce_aws_accessKey_placeholder
   secretKey: ce_aws_secretKey_placeholder
   destinationBucket: ce_aws_destinationBucket_placeholder
   templateURL: https://continuous-efficiency-templates.s3.amazonaws.com/templateOptimOnly.yaml
+
+ceAzureSetupConfig:
+  azureAppClientId: azureAppClientIdPlaceholder
+  azureAppClientSecret: azureAppClientSecretplaceholder
 
 ciDefaultEntityConfiguration:
   harnessImageUseName: harnessdev
@@ -277,6 +284,7 @@ baseUrls:
   currentGenUiUrl: http://localhost:8181/#/
   nextGenUiUrl: http://localhost:8181/ng/#/
   nextGenAuthUiUrl: http://localhost:8181/auth/#/
+  webhookBaseUrl: http://localhost:7457/
 
 ngAuthUIEnabled: false
 
@@ -305,15 +313,6 @@ timescaledb:
   logUnclosedConnections: false
   loggerLevel: OFF
 
-yamlSchemaClientConfig:
-  yamlSchemaHttpClientMap:
-    cvng:
-      serviceHttpClientConfig:
-        baseUrl: http://localhost:6457/cv/api/
-        connectTimeOutSeconds: 15
-        readTimeOutSeconds: 15
-      secret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
-
 signupNotificationConfiguration:
   projectId: "projectId_place_holder"
   bucketName: "bucketName_place_holder"
@@ -325,5 +324,3 @@ signupNotificationConfiguration:
       gcsFileName: "signup_confirmation.txt"
       templateId: "signup_confirmation"
   expireDurationInMinutes: 60
-
-useRedisForSdkResponseEvents: false

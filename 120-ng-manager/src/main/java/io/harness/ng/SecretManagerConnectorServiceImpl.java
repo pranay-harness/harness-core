@@ -218,8 +218,13 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   @Override
   public boolean delete(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    boolean success = ngSecretManagerService.deleteSecretManager(
-        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    SecretManagerConfigDTO secretManagerConfigDTO = ngSecretManagerService.getSecretManager(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, true);
+    boolean success = true;
+    if (secretManagerConfigDTO != null) {
+      success = ngSecretManagerService.deleteSecretManager(
+          accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    }
     if (success) {
       return defaultConnectorService.delete(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     }

@@ -27,6 +27,7 @@ import io.harness.migrations.all.AddAccountIdToArtifactsMigration;
 import io.harness.migrations.all.AddCEPermissionToAllUserGroups;
 import io.harness.migrations.all.AddDisabledFieldMigration;
 import io.harness.migrations.all.AddDuplicateFieldToCVFeedbacks;
+import io.harness.migrations.all.AddEnableIteratorsToTriggers;
 import io.harness.migrations.all.AddHarnessCommandLibraryToAccount;
 import io.harness.migrations.all.AddHarnessGroupAccessFlagToAccount;
 import io.harness.migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
@@ -422,6 +423,7 @@ public class MigrationList {
         .add(Pair.of(356, CECloudAccountMigration.class))
         .add(Pair.of(357, SshAndWinRmAccountPermissionMigration.class))
         .add(Pair.of(358, BaseMigration.class))
+        .add(Pair.of(359, AddEnableIteratorsToTriggers.class))
         .build();
   }
 }

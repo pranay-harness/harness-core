@@ -15,9 +15,6 @@ import io.harness.steps.barriers.beans.BarrierOutcome;
 import io.harness.steps.barriers.beans.BarrierResponseData;
 import io.harness.steps.barriers.beans.BarrierResponseData.BarrierError;
 import io.harness.steps.cf.FlagConfigurationStepParameters;
-import io.harness.steps.dummy.DummySectionOutcome;
-import io.harness.steps.dummy.DummySectionStepParameters;
-import io.harness.steps.dummy.DummySectionStepTransput;
 import io.harness.steps.fork.ForkStepParameters;
 import io.harness.steps.http.HttpOutcome;
 import io.harness.steps.jira.JiraIssueOutcome;
@@ -50,11 +47,7 @@ public class OrchestrationStepsKryoRegistrar implements KryoRegistrar {
 
     kryo.register(ForkStepParameters.class, 3211);
     kryo.register(SectionStepParameters.class, 3212);
-    kryo.register(DummySectionStepParameters.class, 3213);
     kryo.register(SectionChainStepParameters.class, 3214);
-
-    kryo.register(DummySectionStepTransput.class, 3215);
-    kryo.register(DummySectionOutcome.class, 3216);
 
     kryo.register(SectionChainPassThroughData.class, 3217);
 

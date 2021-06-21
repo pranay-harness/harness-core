@@ -45,8 +45,7 @@ message RunTestsStep {
   string preTestCommand = 10;          // Pre-commands to setup environment before running tests
   string postTestCommand = 11;         // Post commands after running tests
   repeated string envVarOutputs = 12;  // produced output variables
-  // This is added on by the lite engine specifically. Ideally we should just forward
-  // to addon and have it calculate this, this proxy can be added later.
+  // TODO (Vistaar): Proxy this call from addon to LE.
   string diff_files = 13;
 }
 

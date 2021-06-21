@@ -21,7 +21,8 @@
         "storageAccountName": "storageAccountName",
         "containerName": "containerName",
         "directoryName": "directoryName",
-        "reportName": "reportName"
+        "reportName": "reportName",
+        "subscriptionId": "subscriptionId"
       }
     }
   }

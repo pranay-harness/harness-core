@@ -22,11 +22,11 @@ public class ConnectorAllowedFieldValues {
       put(ConnectorType.SUMOLOGIC,
           FieldValues.builder()
               .fieldValue("url",
-                  Arrays.asList("https://api.us2.sumologic.com/api/", "https://api.sumologic.com/api/",
-                      "https://api.in.sumologic.com/api/", "https://api.jp.sumologic.com/api/",
-                      "https://api.fed.sumologic.com/api/", "https://api.eu.sumologic.com/api/",
-                      "https://api.de.sumologic.com/api/", "https://api.ca.sumologic.com/api/",
-                      "https://api.au.sumologic.com/api/"))
+                  Arrays.asList("https://api.us2.sumologic.com/", "https://api.sumologic.com/",
+                      "https://api.in.sumologic.com/", "https://api.jp.sumologic.com/",
+                      "https://api.fed.sumologic.com/", "https://api.eu.sumologic.com/",
+                      "https://api.de.sumologic.com/", "https://api.ca.sumologic.com/",
+                      "https://api.au.sumologic.com/"))
               .build());
     }
   };

@@ -151,7 +151,8 @@ public class HelmRollbackState extends HelmDeployState {
   }
 
   @Override
-  protected List<CommandUnit> getCommandUnits(boolean valuesInGit, boolean valuesInHelmChartRepo) {
+  protected List<CommandUnit> getCommandUnits(
+      boolean valuesInGit, boolean valuesInHelmChartRepo, boolean isCustomManifest) {
     List<CommandUnit> commandUnits = new ArrayList<>();
 
     commandUnits.add(new HelmDummyCommandUnit(HelmDummyCommandUnit.Init));

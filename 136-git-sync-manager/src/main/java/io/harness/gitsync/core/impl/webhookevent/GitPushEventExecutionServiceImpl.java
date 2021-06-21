@@ -10,7 +10,9 @@ import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.beans.GitWebhookRequestAttributes;
+import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
 import io.harness.gitsync.core.dtos.YamlChangeSetSaveDTO;
+import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.gitsync.core.service.webhookevent.GitPushEventExecutionService;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
@@ -27,6 +29,7 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
   @Inject YamlGitConfigService yamlGitConfigService;
   @Inject YamlChangeSetService yamlChangeSetService;
   @Inject GitBranchService gitBranchService;
+  @Inject GitCommitService gitCommitService;
 
   @Override
   public void processEvent(WebhookDTO webhookDTO) {
@@ -41,14 +44,27 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
 
       if (Boolean.TRUE.equals(yamlGitConfigService.isRepoExists(repository.getLink()))) {
         // if unsynced branch exists in this repo, then ignore the event
-        if (gitBranchService.isBranchExists(
-                webhookDTO.getAccountId(), repository.getLink(), repository.getBranch(), BranchSyncStatus.UNSYNCED)) {
+        if (gitBranchService.isBranchExists(webhookDTO.getAccountId(), repository.getLink(),
+                getBranchName(scmParsedWebhookResponse), BranchSyncStatus.UNSYNCED)) {
           log.info("{} : Branch {} exists in UNSYNCED state, ignoring the event : {}", GIT_PUSH_EVENT,
               repository.getBranch(), webhookDTO);
-        } else {
-          // create queue event and pass it to the git queue
-          yamlChangeSetService.save(prepareQueueEvent(webhookDTO));
+          return;
         }
+
+        // check if the commit id is already processed, if yes then ignore it
+        boolean isCommitAlreadyProcessed = gitCommitService.isCommitAlreadyProcessed(webhookDTO.getAccountId(),
+            scmParsedWebhookResponse.getPush().getCommit().getSha(),
+            scmParsedWebhookResponse.getPush().getRepo().getLink(), getBranchName(webhookDTO.getParsedResponse()));
+        if (isCommitAlreadyProcessed) {
+          log.info("{} : CommitId {} is already processed, ignoring the event : {}", GIT_PUSH_EVENT,
+              scmParsedWebhookResponse.getPush().getCommit(), webhookDTO);
+          return;
+        }
+
+        // create queue event and pass it to the git queue
+        YamlChangeSetDTO yamlChangeSetDTO = yamlChangeSetService.save(prepareQueueEvent(webhookDTO));
+        log.info("{} : Yaml change set queue event id {} created for webhook event id : {}", GIT_PUSH_EVENT,
+            yamlChangeSetDTO.getChangesetId(), webhookDTO.getEventId());
       } else {
         log.info("{} : Repository doesn't exist, ignoring the event : {}", GIT_PUSH_EVENT, repository);
       }
@@ -62,9 +78,7 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
   private YamlChangeSetSaveDTO prepareQueueEvent(WebhookDTO webhookDTO) {
     Repository repository = webhookDTO.getParsedResponse().getPush().getRepo();
     String commitId = webhookDTO.getParsedResponse().getPush().getCommit().getSha();
-    String branchRef = webhookDTO.getParsedResponse().getPush().getRef();
-    final int lastIndexOfSlash = branchRef.lastIndexOf('/');
-    final String branchName = branchRef.substring(lastIndexOfSlash + 1);
+    final String branchName = getBranchName(webhookDTO.getParsedResponse());
     return YamlChangeSetSaveDTO.builder()
         .accountId(webhookDTO.getAccountId())
         .branch(branchName)
@@ -78,5 +92,11 @@ public class GitPushEventExecutionServiceImpl implements GitPushEventExecutionSe
                                          .headCommitId(commitId)
                                          .build())
         .build();
+  }
+
+  private String getBranchName(ParseWebhookResponse parseWebhookResponse) {
+    String branchRef = parseWebhookResponse.getPush().getRef();
+    final int lastIndexOfSlash = branchRef.lastIndexOf('/');
+    return branchRef.substring(lastIndexOfSlash + 1);
   }
 }

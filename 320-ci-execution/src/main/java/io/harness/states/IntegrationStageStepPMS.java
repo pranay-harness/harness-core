@@ -6,7 +6,6 @@ import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.common.VariablesSweepingOutput;
 import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.beans.steps.outcome.CIStepArtifactOutcome;
 import io.harness.beans.steps.outcome.IntegrationStageOutcome;
@@ -15,11 +14,11 @@ import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.exception.ngexception.CIStageExecutionException;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.common.StageElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
@@ -30,16 +29,13 @@ import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
-import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.tasks.ResponseData;
-import io.harness.yaml.utils.NGVariablesUtils;
 
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
@@ -69,14 +65,11 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
     }
     K8PodDetails k8PodDetails = K8PodDetails.builder()
                                     .stageID(stepParameters.getIdentifier())
-                                    .accountId(AmbianceHelper.getAccountId(ambiance))
+                                    .accountId(AmbianceUtils.getAccountId(ambiance))
                                     .build();
 
     executionSweepingOutputResolver.consume(
         ambiance, ContextElement.podDetails, k8PodDetails, StepOutcomeGroup.STAGE.name());
-    VariablesSweepingOutput variablesSweepingOutput = getVariablesSweepingOutput(ambiance, stepParameters);
-    executionSweepingOutputResolver.consume(
-        ambiance, YAMLFieldNameConstants.VARIABLES, variablesSweepingOutput, StepOutcomeGroup.STAGE.name());
 
     final String executionNodeId = integrationStageStepParametersPMS.getChildNodeID();
     return ChildExecutableResponse.newBuilder().setChildNodeId(executionNodeId).build();
@@ -125,13 +118,5 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
     }
 
     return stepResponseBuilder.build();
-  }
-
-  @NotNull
-  private VariablesSweepingOutput getVariablesSweepingOutput(Ambiance ambiance, StageElementParameters stepParameters) {
-    VariablesSweepingOutput variablesSweepingOutput = new VariablesSweepingOutput();
-    variablesSweepingOutput.putAll(NGVariablesUtils.getMapOfVariables(
-        stepParameters.getOriginalVariables(), ambiance.getExpressionFunctorToken()));
-    return variablesSweepingOutput;
   }
 }

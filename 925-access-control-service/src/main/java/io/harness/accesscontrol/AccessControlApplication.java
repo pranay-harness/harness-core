@@ -23,6 +23,8 @@ import io.harness.accesscontrol.commons.events.EntityCrudEventListenerService;
 import io.harness.accesscontrol.commons.events.FeatureFlagEventListenerService;
 import io.harness.accesscontrol.commons.events.UserMembershipEventListenerService;
 import io.harness.accesscontrol.principals.usergroups.iterators.UserGroupReconciliationIterator;
+import io.harness.accesscontrol.principals.users.iterators.UserReconciliationIterator;
+import io.harness.accesscontrol.principals.users.migration.UserBootstrapMigrationService;
 import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroupReconciliationIterator;
 import io.harness.aggregator.AggregatorService;
 import io.harness.aggregator.MongoOffsetCleanupJob;
@@ -159,6 +161,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
   public void registerIterators(Injector injector) {
     injector.getInstance(ResourceGroupReconciliationIterator.class).registerIterators();
     injector.getInstance(UserGroupReconciliationIterator.class).registerIterators();
+    injector.getInstance(UserReconciliationIterator.class).registerIterators();
   }
 
   public void registerScheduledJobs(Injector injector) {
@@ -195,6 +198,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
       environment.lifecycle().manage(injector.getInstance(UserMembershipEventListenerService.class));
     }
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
+    environment.lifecycle().manage(injector.getInstance(UserBootstrapMigrationService.class));
   }
 
   private void registerJerseyProviders(Environment environment) {

@@ -53,18 +53,21 @@ public class InternalContainerParamsProvider {
   @Inject CIExecutionServiceConfig ciExecutionServiceConfig;
 
   public CIK8ContainerParams getSetupAddonContainerParams(
-      ConnectorDetails containerImageConnectorDetails, Map<String, String> volumeToMountPath, String workDir) {
+      ConnectorDetails harnessInternalImageConnector, Map<String, String> volumeToMountPath, String workDir) {
     List<String> args = new ArrayList<>(Collections.singletonList(SETUP_ADDON_ARGS));
     Map<String, String> envVars = new HashMap<>();
     envVars.put(HARNESS_WORKSPACE, workDir);
+
+    String imageName = ciExecutionServiceConfig.getAddonImage();
+    String fullyQualifiedImage =
+        IntegrationStageUtils.getFullyQualifiedImageName(imageName, harnessInternalImageConnector);
     return CIK8ContainerParams.builder()
         .name(SETUP_ADDON_CONTAINER_NAME)
         .envVars(envVars)
         .containerType(CIContainerType.ADD_ON)
-        .imageDetailsWithConnector(
-            ImageDetailsWithConnector.builder()
-                .imageDetails(IntegrationStageUtils.getImageInfo(ciExecutionServiceConfig.getAddonImage()))
-                .build())
+        .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
+                                       .imageDetails(IntegrationStageUtils.getImageInfo(fullyQualifiedImage))
+                                       .build())
         .containerSecrets(ContainerSecrets.builder().build())
         .volumeToMountPath(volumeToMountPath)
         .commands(SH_COMMAND)
@@ -72,10 +75,13 @@ public class InternalContainerParamsProvider {
         .build();
   }
 
-  public CIK8ContainerParams getLiteEngineContainerParams(ConnectorDetails containerImageConnectorDetails,
+  public CIK8ContainerParams getLiteEngineContainerParams(ConnectorDetails harnessInternalImageConnector,
       Map<String, ConnectorDetails> publishArtifactConnectors, K8PodDetails k8PodDetails, Integer stageCpuRequest,
       Integer stageMemoryRequest, Map<String, String> logEnvVars, Map<String, String> tiEnvVars,
       Map<String, String> volumeToMountPath, String workDirPath, String logPrefix, Ambiance ambiance) {
+    String imageName = ciExecutionServiceConfig.getLiteEngineImage();
+    String fullyQualifiedImage =
+        IntegrationStageUtils.getFullyQualifiedImageName(imageName, harnessInternalImageConnector);
     return CIK8ContainerParams.builder()
         .name(LITE_ENGINE_CONTAINER_NAME)
         .containerResourceParams(getLiteEngineResourceParams(stageCpuRequest, stageMemoryRequest))
@@ -85,11 +91,10 @@ public class InternalContainerParamsProvider {
                               .connectorDetailsMap(publishArtifactConnectors)
                               .plainTextSecretsByName(getLiteEngineSecretVars(logEnvVars, tiEnvVars))
                               .build())
-        .imageDetailsWithConnector(
-            ImageDetailsWithConnector.builder()
-                .imageDetails(IntegrationStageUtils.getImageInfo(ciExecutionServiceConfig.getLiteEngineImage()))
-                .imageConnectorDetails(containerImageConnectorDetails)
-                .build())
+        .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
+                                       .imageDetails(IntegrationStageUtils.getImageInfo(fullyQualifiedImage))
+                                       .imageConnectorDetails(harnessInternalImageConnector)
+                                       .build())
         .volumeToMountPath(volumeToMountPath)
         .workingDir(workDirPath)
         .build();

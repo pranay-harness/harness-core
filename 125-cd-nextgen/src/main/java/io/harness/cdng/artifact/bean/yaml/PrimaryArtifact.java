@@ -40,6 +40,8 @@ public class PrimaryArtifact implements Visitable {
   private String uuid;
 
   @NotNull @JsonProperty("type") ArtifactSourceType sourceType;
+
+  @NotNull
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   ArtifactConfig spec;

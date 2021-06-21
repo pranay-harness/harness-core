@@ -36,6 +36,15 @@ public class YamlChangeSetRepositoryCustomImpl implements YamlChangeSetRepositor
   }
 
   @Override
+  public UpdateResult updateYamlChangeSetStatusAndCutoffTime(
+      YamlChangeSetStatus status, String yamlChangeSetId, long cutOffTime) {
+    Query query = new Query().addCriteria(Criteria.where(YamlChangeSetKeys.uuid).is(yamlChangeSetId));
+    Update update = new Update().set(YamlChangeSetKeys.status, status);
+    update.set(YamlChangeSetKeys.cutOffTime, cutOffTime);
+    return mongoTemplate.updateFirst(query, update, YamlChangeSet.class);
+  }
+
+  @Override
   public UpdateResult updateYamlChangeSetsStatus(
       YamlChangeSetStatus oldStatus, YamlChangeSetStatus newStatus, String accountId) {
     Query query = new Query().addCriteria(

@@ -12,7 +12,6 @@ import static io.harness.ngtriggers.Constants.TRIGGER_REF;
 import static io.harness.ngtriggers.Constants.TRIGGER_REF_DELIMITER;
 import static io.harness.pms.contracts.plan.TriggerType.WEBHOOK;
 import static io.harness.pms.contracts.plan.TriggerType.WEBHOOK_CUSTOM;
-import static io.harness.pms.contracts.triggers.Type.CUSTOM;
 import static io.harness.pms.plan.execution.PlanExecutionInterruptType.ABORT;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -36,6 +35,7 @@ import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.contracts.triggers.ParsedPayload;
+import io.harness.pms.contracts.triggers.SourceType;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.contracts.triggers.Type;
 import io.harness.pms.merger.helpers.MergeHelper;
@@ -98,7 +98,6 @@ public class TriggerExecutionHelper {
               .setExecutionUuid(executionId)
               .setTriggerInfo(triggerInfo)
               .setRunSequence(pipelineEntityToExecute.get().getRunSequence())
-              .setTriggerPayload(triggerPayload)
               .setPipelineIdentifier(pipelineEntityToExecute.get().getIdentifier());
 
       PlanExecutionMetadata.Builder planExecutionMetadataBuilder =
@@ -128,7 +127,7 @@ public class TriggerExecutionHelper {
 
       PlanExecution planExecution = pipelineExecuteHelper.startExecution(ngTriggerEntity.getAccountId(),
           ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), pipelineYaml,
-          executionMetaDataBuilder.build(), planExecutionMetadataBuilder);
+          executionMetaDataBuilder.build(), planExecutionMetadataBuilder, triggerPayload);
       // check if abort prev execution needed.
       requestPipelineExecutionAbortForSameExecTagIfNeeded(triggerDetails, planExecution, executionTagForGitEvent);
       return planExecution;
@@ -180,7 +179,7 @@ public class TriggerExecutionHelper {
   @VisibleForTesting
   TriggerType findTriggerType(TriggerPayload triggerPayload) {
     TriggerType triggerType = WEBHOOK;
-    if (triggerPayload.getType() == CUSTOM) {
+    if (triggerPayload.getSourceType() == SourceType.CUSTOM_REPO) {
       triggerType = WEBHOOK_CUSTOM;
     } else if (triggerPayload.getType() == Type.SCHEDULED) {
       triggerType = TriggerType.SCHEDULER_CRON;

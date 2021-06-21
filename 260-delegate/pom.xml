@@ -99,17 +99,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>870-cg-yaml</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>870-yaml-beans</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>871-cg-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -144,7 +134,17 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>955-cg-yaml</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>956-feature-flag-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>959-cg-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

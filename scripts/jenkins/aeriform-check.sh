@@ -6,6 +6,11 @@ then
   then
     PROJECT=`echo "${ghprbPullTitle}" | sed -e 's/[[]\([A-Z]*\)-[0-9]*]:.*/\1/g'`
   else
+    COMMIT_MSG=`git log -1 --pretty=format:%s`
+    if [[ $input = "Merge commit*" ]]
+    then
+      COMMIT_MSG=`git log -2 --pretty=format:%s | tail -1`
+    fi
     PROJECT=`git log -1 --pretty=format:%s | sed -e 's/[[]\([A-Z]*\)-[0-9]*]:.*/\1/g'`
   fi
 

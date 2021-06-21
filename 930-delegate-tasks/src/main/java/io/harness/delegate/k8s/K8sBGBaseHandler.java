@@ -3,6 +3,7 @@ package io.harness.delegate.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -224,7 +225,7 @@ public class K8sBGBaseHandler {
       return resourcesPruned;
     } catch (Exception ex) {
       executionLogCallback.saveExecutionLog("Failed to delete resources while pruning", WARN, RUNNING);
-      executionLogCallback.saveExecutionLog(ex.getMessage(), WARN, SUCCESS);
+      executionLogCallback.saveExecutionLog(getMessage(ex), WARN, SUCCESS);
       return emptyList();
     }
   }
@@ -233,6 +234,11 @@ public class K8sBGBaseHandler {
       LogCallback executionLogCallback, Kubectl client, Set<KubernetesResourceId> resourcesUsedInPrimaryReleases,
       Set<KubernetesResourceId> resourcesInCurrentRelease, Set<KubernetesResourceId> alreadyDeletedResources,
       Release release) throws Exception {
+    if (isEmpty(release.getResourcesWithSpec())) {
+      executionLogCallback.saveExecutionLog(
+          "Previous successful deployment executed with pruning disabled, Pruning can't be done", INFO, RUNNING);
+      return emptyList();
+    }
     List<KubernetesResourceId> resourcesToBePrunedInOrder = getResourcesToBePrunedInOrder(
         resourcesUsedInPrimaryReleases, resourcesInCurrentRelease, alreadyDeletedResources, release);
 

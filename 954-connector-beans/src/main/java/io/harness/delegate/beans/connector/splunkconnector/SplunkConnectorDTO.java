@@ -19,6 +19,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @Builder
@@ -28,7 +29,7 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SplunkConnectorDTO extends ConnectorConfigDTO implements DecryptableEntity, DelegateSelectable {
-  String splunkUrl;
+  @NotNull @NotBlank String splunkUrl;
   String username;
   @NotNull String accountId;
   Set<String> delegateSelectors;

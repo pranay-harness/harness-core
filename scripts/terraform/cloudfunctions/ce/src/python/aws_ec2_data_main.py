@@ -46,19 +46,18 @@ def main(event, context):
     jsonData["linkedAccountId"] = jsonData["roleArn"].split(":")[4]
     awsEc2InventoryTableRef = dataset.table("awsEc2Inventory")
     awsEc2InventoryTableRefTemp = dataset.table("awsEc2Inventory_%s" % jsonData.get("linkedAccountId"))
-    awsEc2InventoryTableName = TABLE_NAME_FORMAT % (jsonData["projectName"], jsonData["accountIdBQ"], "awsEc2Inventory")
     awsEc2InventoryTableNameTemp = TABLE_NAME_FORMAT % (
         jsonData["projectName"], jsonData["accountIdBQ"], "awsEc2Inventory_%s" % jsonData.get("linkedAccountId"))
 
     if not if_tbl_exists(client, awsEc2InventoryTableRef):
         print_("%s table does not exists, creating table..." % awsEc2InventoryTableRef)
-        createTable(client, awsEc2InventoryTableName)
+        createTable(client, awsEc2InventoryTableRef)
     else:
         pass
         #alterTable(client, jsonData)
     if not if_tbl_exists(client, awsEc2InventoryTableRefTemp):
         print_("%s table does not exists, creating table..." % awsEc2InventoryTableRefTemp)
-        createTable(client, awsEc2InventoryTableNameTemp)
+        createTable(client, awsEc2InventoryTableRef)
         # Add alter table in else clause if needed
 
     ec2_data_map, uniqueinstanceids = get_ec2_data(jsonData)
@@ -67,7 +66,6 @@ def main(event, context):
     print_("Total instances for which describe-instance data was fetched: %s" % len(ec2_data_map))
     if len(ec2_data_map) == 0:
         print_("No EC2s found")
-        update_ec2_state(client, jsonData)
         return
 
     job_config = bigquery.LoadJobConfig(
@@ -80,15 +78,6 @@ def main(event, context):
     job = client.load_table_from_file(data_as_file, awsEc2InventoryTableNameTemp, job_config=job_config)
     print_(job.job_id)
     job.result()
-
-    query = """ DELETE FROM `%s` WHERE InstanceId IN (%s) AND linkedAccountIdPartition = MOD(%s,10000);
-                INSERT INTO `%s` SELECT * FROM `%s` WHERE linkedAccountIdPartition = MOD(%s,10000);
-                """ % (awsEc2InventoryTableName, uniqueinstanceids, jsonData["linkedAccountId"],
-                       awsEc2InventoryTableName, awsEc2InventoryTableNameTemp, jsonData["linkedAccountId"])
-    print_(query)
-    query_job = client.query(query)
-    query_job.result()  # wait for job to complete
-    update_ec2_state(client, jsonData)
     print_("Completed")
 
 
@@ -106,7 +95,7 @@ def get_ec2_data(jsonData):
         print_("Assuming role")
         key, secret, token = assumed_role_session(jsonData)
     except Exception as e:
-        print_(e, "ERROR")
+        print_(e, "WARN")
         raise e
 
     ec2 = boto3.client('ec2', config=my_config, aws_access_key_id=key,
@@ -117,7 +106,7 @@ def get_ec2_data(jsonData):
         REGIONS = [item["RegionName"] for item in response['Regions']]
     except Exception as e:
         # We probably do not have describe region permission in CF template for this customer.
-        print_(e, "ERROR")
+        print_(e, "WARN")
         print_("Using static region list")
         REGIONS = STATIC_REGION
 
@@ -137,7 +126,7 @@ def get_ec2_data(jsonData):
                 uniqueinstanceids = uniqueinstanceids.union(uniqueinstanceids_region)
         except Exception as e:
             print_(e)
-            print_("Error calling describe instances for %s" % region, "ERROR")
+            print_("Error calling describe instances for %s" % region, "WARN")
             continue
 
         print_("Found %s instances in region %s" % (instance_count, region))
@@ -174,7 +163,7 @@ def prepare_ec2_data_map(allinstances, EC2_DATA_MAP, region):
                 })
                 uniqueinstanceids_region.add(instance["InstanceId"])
             except Exception as e:
-                print_("Error in instance data :\n %s" % instance, 'ERROR')
+                print_("Error in instance data :\n %s" % instance, 'WARN')
                 print_(e)
     return uniqueinstanceids_region
 
@@ -210,25 +199,7 @@ def alterTable(client, jsonData):
             query_job = client.query(query)
             query_job.result()
         except Exception as e:
+            print_(query)
             print_(e)
         else:
             print_("Finished Altering %s Table" % table)
-
-
-def update_ec2_state(client, jsonData):
-    """
-    Updates the state to terminated for those EC2s which were not updated in past 1 day.
-    :return: None
-    """
-    lastUpdatedAt = datetime.date.today()  # - timedelta(days = 1)
-    ds = "%s.%s" % (jsonData["projectName"], jsonData["datasetName"])
-    query = "UPDATE `%s.awsEc2Inventory` set state='terminated' WHERE state='running' and lastUpdatedAt < '%s' and linkedAccountIdPartition=MOD(%s,10000);" % (
-        ds, lastUpdatedAt, jsonData["linkedAccountId"])
-
-    try:
-        query_job = client.query(query)
-        query_job.result()
-    except Exception as e:
-        print_(e)
-    else:
-        print_("Finished updating awsEc2Inventory table for any terminated instances")

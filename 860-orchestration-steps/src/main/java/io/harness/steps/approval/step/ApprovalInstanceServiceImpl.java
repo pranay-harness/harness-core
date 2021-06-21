@@ -4,7 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.repositories.ApprovalInstanceRepository;
 import io.harness.steps.approval.step.beans.ApprovalStatus;
 import io.harness.steps.approval.step.beans.ApprovalType;
@@ -42,16 +47,19 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
   private final ApprovalInstanceRepository approvalInstanceRepository;
   private final TransactionTemplate transactionTemplate;
   private final WaitNotifyEngine waitNotifyEngine;
+  private final PlanExecutionService planExecutionService;
 
   private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
       "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @Inject
   public ApprovalInstanceServiceImpl(ApprovalInstanceRepository approvalInstanceRepository,
-      TransactionTemplate transactionTemplate, WaitNotifyEngine waitNotifyEngine) {
+      TransactionTemplate transactionTemplate, WaitNotifyEngine waitNotifyEngine,
+      PlanExecutionService planExecutionService) {
     this.approvalInstanceRepository = approvalInstanceRepository;
     this.transactionTemplate = transactionTemplate;
     this.waitNotifyEngine = waitNotifyEngine;
+    this.planExecutionService = planExecutionService;
   }
 
   @Override
@@ -114,14 +122,16 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
     if (errorMessage != null) {
       update.set(ApprovalInstanceKeys.errorMessage, errorMessage);
     }
-    approvalInstanceRepository.updateFirst(
+    ApprovalInstance instance = approvalInstanceRepository.updateFirst(
         new Query(Criteria.where(Mapper.ID_KEY).is(approvalInstanceId))
             .addCriteria(Criteria.where(ApprovalInstanceKeys.status).is(ApprovalStatus.WAITING)),
         update);
+
     if (status.isFinalStatus()) {
       waitNotifyEngine.doneWith(
           approvalInstanceId, JiraApprovalResponseData.builder().instanceId(approvalInstanceId).build());
     }
+    updatePlanStatus(instance);
   }
 
   @Override
@@ -133,6 +143,7 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
       waitNotifyEngine.doneWith(
           instance.getId(), HarnessApprovalResponseData.builder().approvalInstanceId(instance.getId()).build());
     }
+    updatePlanStatus(instance);
     return instance;
   }
 
@@ -164,6 +175,20 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
           String.format("Harness approval instance has already completed. Status: %s", instance.getStatus()));
     }
     return instance;
+  }
+
+  private void updatePlanStatus(ApprovalInstance instance) {
+    if (instance == null || instance.getStatus() == ApprovalStatus.WAITING) {
+      return;
+    }
+
+    // Update plan status after the completion of the approval step.
+    Ambiance ambiance = instance.getAmbiance();
+    Status planStatus = planExecutionService.calculateStatusExcluding(
+        ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+    if (!StatusUtils.isFinalStatus(planStatus)) {
+      planExecutionService.updateStatus(ambiance.getPlanExecutionId(), planStatus);
+    }
   }
 
   private <T> T doTransaction(TransactionCallback<T> callback) {

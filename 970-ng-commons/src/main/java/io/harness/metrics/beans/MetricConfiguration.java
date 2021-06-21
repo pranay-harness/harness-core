@@ -58,6 +58,11 @@ public class MetricConfiguration {
         case "Duration":
           return View.create(View.Name.create(this.getMetricName()), this.getMetricDefinition(), measure,
               Aggregation.Distribution.create(BucketBoundaries.create(getDistributionMs())), tagKeys);
+        case "Distribution":
+          return View.create(View.Name.create(this.getMetricName()), this.getMetricDefinition(), measure,
+              Aggregation.Distribution.create(BucketBoundaries.create(
+                  distribution.stream().map(op -> Double.valueOf(op)).collect(Collectors.toList()))),
+              tagKeys);
         default:
           throw new IllegalStateException("Unsupported metric type");
       }

@@ -65,16 +65,20 @@ public class PluginStepInfo implements CIStepInfo, WithConnectorRef {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
   @ApiModelProperty(hidden = true)
   private Map<String, String> envVariables;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
+  @ApiModelProperty(hidden = true)
+  private boolean harnessManagedImage;
+
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> privileged;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "settings", "image", "connectorRef", "resources", "entrypoint",
-      "envVariables", "privileged", "runAsUser"})
+      "envVariables", "harnessInternalImage", "privileged", "runAsUser"})
   public PluginStepInfo(String identifier, String name, Integer retry, ParameterField<Map<String, String>> settings,
       ParameterField<String> image, ParameterField<String> connectorRef, ContainerResource resources,
-      List<String> entrypoint, Map<String, String> envVariables, ParameterField<Boolean> privileged,
-      ParameterField<Integer> runAsUser) {
+      List<String> entrypoint, Map<String, String> envVariables, boolean harnessManagedImage,
+      ParameterField<Boolean> privileged, ParameterField<Integer> runAsUser) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -87,6 +91,7 @@ public class PluginStepInfo implements CIStepInfo, WithConnectorRef {
     this.resources = resources;
     this.privileged = privileged;
     this.runAsUser = runAsUser;
+    this.harnessManagedImage = harnessManagedImage;
   }
 
   @Override

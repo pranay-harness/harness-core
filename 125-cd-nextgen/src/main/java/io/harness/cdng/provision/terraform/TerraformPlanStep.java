@@ -2,7 +2,6 @@ package io.harness.cdng.provision.terraform;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.common.ParameterFieldHelper;
 import io.harness.delegate.beans.TaskData;
@@ -75,7 +74,7 @@ public class TerraformPlanStep extends TaskExecutableWithRollback<TerraformTaskN
         .varFileInfos(helper.toTerraformVarFileInfo(configuration.getVarFiles(), ambiance))
         .backendConfig(helper.getBackendConfig(configuration.getBackendConfig()))
         .targets(ParameterFieldHelper.getParameterFieldValue(configuration.getTargets()))
-        .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
+        .saveTerraformStateJson(false)
         .environmentVariables(helper.getEnvironmentVariablesMap(configuration.getEnvironmentVariables()))
         .encryptionConfig(helper.getEncryptionConfig(ambiance, planStepParameters))
         .terraformCommand(TerraformPlanCommand.APPLY == planStepParameters.getConfiguration().getCommand()

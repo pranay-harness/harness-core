@@ -14,4 +14,9 @@ public class InvalidYamlException extends WingsException {
     super(message, null, INVALID_YAML_ERROR, Level.ERROR, null, null);
     super.param(MESSAGE_ARG, message);
   }
+
+  public InvalidYamlException(String message, Throwable cause) {
+    super(message, cause, INVALID_YAML_ERROR, Level.ERROR, null, null);
+    super.param(MESSAGE_ARG, message);
+  }
 }

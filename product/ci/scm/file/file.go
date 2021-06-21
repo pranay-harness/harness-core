@@ -43,6 +43,7 @@ func FindFile(ctx context.Context, fileRequest *pb.GetFileRequest, log *zap.Suga
 		out = &pb.FileContent{
 			Status: int32(response.Status),
 			Error:  err.Error(),
+			Path:   fileRequest.GetPath(),
 		}
 		return out, nil
 	}
@@ -302,17 +303,18 @@ func FindFilesInBranch(ctx context.Context, fileRequest *pb.FindFilesInBranchReq
 		return nil, err
 	}
 
-	ref, err := gitclient.GetValidRef(*fileRequest.GetProvider(), "", fileRequest.GetBranch())
+	ref, err := gitclient.GetValidRef(*fileRequest.GetProvider(), fileRequest.GetRef(), fileRequest.GetBranch())
 	if err != nil {
-		log.Errorw("FindFilesInBranch failure, bad ref/branch", "provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("FindFilesInBranch failure, bad ref/branch", "provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "ref", ref, "filepath", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
+
 	files, response, err := client.Contents.List(ctx, fileRequest.GetSlug(), fileRequest.GetPath(), ref, scm.ListOptions{Page: int(fileRequest.GetPagination().GetPage())})
 	if err != nil {
-		log.Errorw("FindFilesInBranch failure", "provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("FindFilesInBranch failure", "provider", fileRequest.GetProvider(), "slug", fileRequest.GetSlug(), "ref", ref, "filepath", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
-	log.Infow("FindFilesInBranch success", "slug", fileRequest.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start))
+	log.Infow("FindFilesInBranch success", "slug", fileRequest.GetSlug(), "ref", ref, "filepath", fileRequest.GetPath(), "elapsed_time_ms", utils.TimeSince(start))
 	out = &pb.FindFilesInBranchResponse{
 		File: convertContentList(files),
 		Pagination: &pb.PageResponse{

@@ -20,8 +20,8 @@ public interface YamlChangeSetRepository
   Optional<YamlChangeSet> findFirstByAccountIdAndQueueKeyAndStatusOrderByQueuedOn(
       String accountId, String queueKey, String status);
 
-  List<YamlChangeSet> findByAccountIdAndStatusInAndLastUpdatedAtLessThan(
-      List<String> accountIds, List<String> status, Long lastUpdatedCutOff);
+  List<YamlChangeSet> findByAccountIdInAndStatusInAndCutOffTimeLessThan(
+      List<String> accountIds, List<String> status, Long cutOffTime);
 
   List<YamlChangeSet> findByAccountIdAndQueueKeyAndStatus(String accountId, String queueKey, String status);
 }

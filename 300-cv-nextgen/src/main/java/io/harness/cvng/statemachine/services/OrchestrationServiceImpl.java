@@ -20,8 +20,10 @@ import io.harness.persistence.HPersistence;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -60,6 +62,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
             .setOnInsert(AnalysisOrchestratorKeys.verificationTaskId, verificationTaskId)
             .setOnInsert(AnalysisOrchestratorKeys.accountId, accountId)
             .setOnInsert(AnalysisOrchestratorKeys.status, AnalysisStatus.CREATED)
+            .set(AnalysisOrchestratorKeys.validUntil, Date.from(OffsetDateTime.now().plusDays(30).toInstant()))
             .addToSet(AnalysisOrchestratorKeys.analysisStateMachineQueue, Arrays.asList(stateMachine));
 
     hPersistence.upsert(orchestratorQuery, updateOperations);

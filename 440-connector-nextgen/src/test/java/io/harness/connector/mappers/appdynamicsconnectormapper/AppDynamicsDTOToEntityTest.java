@@ -43,7 +43,6 @@ public class AppDynamicsDTOToEntityTest extends CategoryTest {
                                                           .passwordRef(secretRefData)
                                                           .accountname(accountname)
                                                           .controllerUrl(controllerUrl)
-                                                          .accountId(accountId)
                                                           .build();
 
     AppDynamicsConnector appDynamicsConnector = appDynamicsDTOToEntity.toConnectorEntity(appDynamicsConnectorDTO);
@@ -54,6 +53,5 @@ public class AppDynamicsDTOToEntityTest extends CategoryTest {
         .isEqualTo(ACCOUNT.getYamlRepresentation() + "." + appDynamicsConnectorDTO.getPasswordRef().getIdentifier());
     assertThat(appDynamicsConnector.getAccountname()).isEqualTo(appDynamicsConnectorDTO.getAccountname());
     assertThat(appDynamicsConnector.getControllerUrl()).isEqualTo(appDynamicsConnectorDTO.getControllerUrl());
-    assertThat(appDynamicsConnector.getAccountId()).isEqualTo(appDynamicsConnectorDTO.getAccountId());
   }
 }

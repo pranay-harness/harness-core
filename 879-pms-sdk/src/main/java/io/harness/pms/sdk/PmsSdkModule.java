@@ -7,6 +7,7 @@ import io.harness.exception.exceptionmanager.ExceptionManager;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
 import io.harness.pms.sdk.core.PmsSdkCoreConfig;
 import io.harness.pms.sdk.core.PmsSdkCoreModule;
+import io.harness.pms.sdk.execution.PmsSdkEventsFrameworkModule;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 
 import com.google.inject.AbstractModule;
@@ -56,8 +57,9 @@ public class PmsSdkModule extends AbstractModule {
                                                  .grpcServerConfig(config.getGrpcServerConfig())
                                                  .sdkDeployMode(config.getDeploymentMode())
                                                  .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
-                                                 .useRedisForSdkResponseEvents(config.isUseRedisForSdkResponseEvents())
                                                  .build()));
+    modules.add(
+        PmsSdkEventsFrameworkModule.getInstance(config.getEventsFrameworkConfiguration(), config.getServiceName()));
     modules.add(PmsSdkRegistryModule.getInstance(config));
     modules.add(PmsSdkProviderModule.getInstance(config));
     modules.add(SdkMonitoringModule.getInstance());

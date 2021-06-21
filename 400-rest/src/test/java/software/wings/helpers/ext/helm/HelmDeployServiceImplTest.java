@@ -11,6 +11,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -61,6 +62,7 @@ import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.filesystem.FileIo;
 import io.harness.git.model.GitFile;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
@@ -73,6 +75,7 @@ import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.manifest.CustomManifestSource;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -112,7 +115,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -1627,5 +1633,73 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
         (HelmInstallCommandResponse) helmDeployService.deploy(helmInstallCommandRequest);
     assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
     assertThat(response.getOutput()).contains("Unable to do something");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testFetchCustomSourceHandleException() throws Exception {
+    HelmInstallCommandRequest request =
+        HelmInstallCommandRequest.builder()
+            .executionLogCallback(executionLogCallback)
+            .sourceRepoConfig(K8sDelegateManifestConfig.builder()
+                                  .customManifestEnabled(false)
+                                  .customManifestSource(CustomManifestSource.builder()
+                                                            .script("script")
+                                                            .filePaths(singletonList("file1"))
+                                                            .zippedManifestFileId("fileId")
+                                                            .build())
+                                  .build())
+            .build();
+
+    assertThatThrownBy(() -> helmDeployService.fetchCustomSourceManifest(request))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Can not use store type: CUSTOM, with feature flag off");
+
+    request.setRepoConfig(null);
+    assertThatThrownBy(() -> helmDeployService.fetchCustomSourceManifest(request))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Source Config can not be null");
+
+    request.setRepoConfig(K8sDelegateManifestConfig.builder().customManifestEnabled(true).build());
+    assertThatThrownBy(() -> helmDeployService.fetchCustomSourceManifest(request))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Custom Manifest Source can not be null");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testFetchCustomSource() throws Exception {
+    final String workingDirPath = "./repository/helm/source/ACTIVITY_ID";
+    final String manifestDirPath = format("%s/manifestDir", workingDirPath);
+    HelmInstallCommandRequest request =
+        HelmInstallCommandRequest.builder()
+            .executionLogCallback(executionLogCallback)
+            .activityId("ACTIVITY_ID")
+            .accountId("ACCOUNT_ID")
+            .sourceRepoConfig(K8sDelegateManifestConfig.builder()
+                                  .customManifestEnabled(true)
+                                  .customManifestSource(CustomManifestSource.builder()
+                                                            .script("script")
+                                                            .filePaths(singletonList("file1"))
+                                                            .zippedManifestFileId("fileId")
+                                                            .build())
+                                  .build())
+            .build();
+
+    FileIo.createDirectoryIfDoesNotExist(workingDirPath);
+    FileIo.createDirectoryIfDoesNotExist(manifestDirPath);
+    Files.createFile(Paths.get(manifestDirPath, "test.yaml"));
+    doNothing().when(helmTaskHelper).downloadAndUnzipCustomSourceManifestFiles(anyString(), anyString(), anyString());
+
+    helmDeployService.fetchCustomSourceManifest(request);
+
+    verify(helmTaskHelper, times(1)).downloadAndUnzipCustomSourceManifestFiles(anyString(), anyString(), anyString());
+    File workingDir = new File(workingDirPath);
+    assertThat(workingDir.exists());
+    assertThat(workingDir.list()).hasSize(1);
+    assertThat(workingDir.list()).contains("test.yaml");
+    FileIo.deleteDirectoryAndItsContentIfExists(workingDirPath);
   }
 }

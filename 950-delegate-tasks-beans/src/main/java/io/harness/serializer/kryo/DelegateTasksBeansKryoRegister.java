@@ -51,6 +51,7 @@ import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceConnect
 import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceSettingConstants;
 import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceSettingDTO;
 import io.harness.delegate.beans.azure.registry.AzureRegistryType;
+import io.harness.delegate.beans.ccm.K8sClusterInfo;
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.CIClusterType;
 import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
@@ -92,6 +93,7 @@ import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryValid
 import io.harness.delegate.beans.connector.awscodecommitconnector.AwsCodeCommitTaskParams;
 import io.harness.delegate.beans.connector.awscodecommitconnector.AwsCodeCommitValidationParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsDelegateTaskResponse;
+import io.harness.delegate.beans.connector.awsconnector.AwsS3BucketResponse;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskType;
 import io.harness.delegate.beans.connector.awsconnector.AwsValidateTaskResponse;
@@ -253,10 +255,13 @@ import io.harness.delegate.task.ci.CIBuildPushParameters.CIBuildPushTaskType;
 import io.harness.delegate.task.ci.CIBuildStatusPushParameters;
 import io.harness.delegate.task.ci.GitSCMType;
 import io.harness.delegate.task.gcp.GcpTaskType;
+import io.harness.delegate.task.gcp.request.GcpListBucketsRequest;
 import io.harness.delegate.task.gcp.request.GcpListClustersRequest;
 import io.harness.delegate.task.gcp.request.GcpTaskParameters;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
+import io.harness.delegate.task.gcp.response.GcpBucketDetails;
 import io.harness.delegate.task.gcp.response.GcpClusterListTaskResponse;
+import io.harness.delegate.task.gcp.response.GcpListBucketsResponse;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
@@ -371,6 +376,20 @@ import io.harness.secretmanagerclient.ValueType;
 import io.harness.serializer.KryoRegistrar;
 
 import software.wings.beans.TaskType;
+import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
+import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
+import software.wings.service.impl.appdynamics.AppdynamicsMetric;
+import software.wings.service.impl.appdynamics.AppdynamicsMetric.AppdynamicsMetricType;
+import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
+import software.wings.service.impl.appdynamics.AppdynamicsMetricDataValue;
+import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.impl.newrelic.NewRelicApplication;
+import software.wings.service.impl.newrelic.NewRelicApplication.NewRelicApplications;
+import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
+import software.wings.service.impl.newrelic.NewRelicMetric;
+import software.wings.service.impl.newrelic.NewRelicMetricData;
+import software.wings.service.impl.newrelic.NewRelicMetricData.NewRelicMetricSlice;
+import software.wings.service.impl.newrelic.NewRelicMetricData.NewRelicMetricTimeSlice;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.google.protobuf.UnknownFieldSet;
@@ -776,5 +795,28 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(SecretParams.class, 543325);
     kryo.register(SecretParams.Type.class, 543326);
+
+    kryo.register(AppdynamicsBusinessTransaction.class, 543327);
+    kryo.register(AppdynamicsMetricType.class, 543328);
+    kryo.register(AppdynamicsMetric.class, 543329);
+    kryo.register(AppdynamicsMetricData.class, 543330);
+    kryo.register(AppdynamicsMetricDataValue.class, 543331);
+    kryo.register(AppdynamicsTier.class, 543332);
+    kryo.register(VerificationNodeDataSetupResponse.VerificationLoadResponse.class, 543333);
+    kryo.register(VerificationNodeDataSetupResponse.class, 543334);
+
+    kryo.register(NewRelicApplication.class, 543350);
+    kryo.register(NewRelicApplications.class, 543351);
+    kryo.register(NewRelicApplicationInstance.class, 543352);
+    kryo.register(NewRelicMetric.class, 543353);
+    kryo.register(NewRelicMetricSlice.class, 543354);
+    kryo.register(NewRelicMetricTimeSlice.class, 543355);
+    kryo.register(NewRelicMetricData.class, 543356);
+    kryo.register(AwsS3BucketResponse.class, 543357);
+    kryo.register(GcpListBucketsRequest.class, 543358);
+    kryo.register(GcpListBucketsResponse.class, 543359);
+    kryo.register(GcpBucketDetails.class, 543360);
+
+    kryo.register(K8sClusterInfo.class, 543361);
   }
 }

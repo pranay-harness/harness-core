@@ -1,8 +1,10 @@
 package io.harness.steps.cf;
 
+import io.harness.beans.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +19,11 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("SetFeatureFlagState")
 @TypeAlias("SetFeatureFlagStateYaml")
 public class SetFeatureFlagStateYaml implements PatchInstruction {
-  @Builder.Default @NotNull private PatchInstruction.Type type = Type.SET_FEATURE_FLAG_STATE;
+  @Builder.Default
+  @NotNull
+  @ApiModelProperty(allowableValues = "SetFeatureFlagState")
+  private PatchInstruction.Type type = Type.SET_FEATURE_FLAG_STATE;
+  @NotNull private String identifier;
   @NotNull private SetFeatureFlagStateYamlSpec spec;
 
   @Data
@@ -25,8 +31,6 @@ public class SetFeatureFlagStateYaml implements PatchInstruction {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class SetFeatureFlagStateYamlSpec {
-    private ParameterField<String> state;
-    private ParameterField<String> identifier;
-    private ParameterField<String> name;
+    @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) private ParameterField<String> state;
   }
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
+	"github.com/wings-software/portal/product/ci/common/external"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
@@ -36,6 +37,7 @@ var (
 	collectCgFn          = collectCg
 	collectTestReportsFn = collectTestReports
 	runCmdFn             = runCmd
+	isManualFn           = external.IsManualExecution
 )
 
 // RunTestsTask represents an interface to run tests intelligently
@@ -239,9 +241,7 @@ func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTe
 		return "", err
 	}
 	bazelInstrArg := fmt.Sprintf("--define=HARNESS_ARGS=%s", instrArg)
-	// Don't run all the tests for now. TODO: Needs to be fixed
-	// defaultCmd := fmt.Sprintf("%s %s %s //...", bazelCmd, r.args, bazelInstrArg) // run all the tests
-	defaultCmd := fmt.Sprintf("echo \"There was some issue with getting tests. Skipping run\"")
+	defaultCmd := fmt.Sprintf("%s %s %s //...", bazelCmd, r.args, bazelInstrArg) // run all the tests
 	if !r.runOnlySelectedTests {
 		// Run all the tests
 		return defaultCmd, nil
@@ -319,28 +319,33 @@ func valid(tests []types.RunnableTest) bool {
 
 func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
 	// Get the tests that need to be run if we are running selected tests
-	var err error
 	var selection types.SelectTestsResp
-	if r.runOnlySelectedTests {
-		var files []types.File
-		err := json.Unmarshal([]byte(r.diffFiles), &files)
-		if err != nil {
-			return "", err
-		}
-		selection, err = selectTestsFn(ctx, files, r.id, r.log, r.fs)
-		if err != nil {
-			r.log.Errorw("there was some issue in trying to figure out tests to run. Running all the tests", zap.Error(err))
-			// Set run only selected tests to false if there was some issue in the response
-			r.runOnlySelectedTests = false
-		} else if selection.SelectAll == true {
-			r.log.Infow("TI service wants to run all the tests to be sure")
-			r.runOnlySelectedTests = false
-		} else if !valid(selection.Tests) { // This shouldn't happen
-			r.log.Warnw("did not receive accurate test list from TI service.")
-			r.runOnlySelectedTests = false
-		} else {
-			r.log.Infow(fmt.Sprintf("got tests list: %s from TI service", selection.Tests))
-		}
+	var files []types.File
+	err := json.Unmarshal([]byte(r.diffFiles), &files)
+	if err != nil {
+		return "", err
+	}
+	isManual := isManualFn()
+	if len(files) == 0 {
+		r.log.Errorw("unable to get changed files list")
+		r.runOnlySelectedTests = false // run all the tests if we could not find changed files list correctly
+	}
+	if isManual {
+		r.log.Infow("detected manual execution - for intelligence to be configured, a PR must be raised. Running all the tests.")
+		r.runOnlySelectedTests = false // run all the tests if it is a manual execution
+	}
+	selection, err = selectTestsFn(ctx, files, r.runOnlySelectedTests, r.id, r.log, r.fs)
+	if err != nil {
+		r.log.Errorw("there was some issue in trying to intelligently figure out tests to run. Running all the tests.", zap.Error(err))
+		r.runOnlySelectedTests = false // run all the tests if an error was encountered
+	} else if !valid(selection.Tests) { // This shouldn't happen
+		r.log.Warnw("test intelligence did not return suitable tests")
+		r.runOnlySelectedTests = false // TI did not return suitable tests
+	} else if selection.SelectAll == true {
+		r.log.Infow("intelligently determined to run all the tests")
+		r.runOnlySelectedTests = false // TI selected all the tests to be run
+	} else {
+		r.log.Infow(fmt.Sprintf("intelligently running tests: %s", selection.Tests))
 	}
 
 	var testCmd string

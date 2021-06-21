@@ -20,6 +20,9 @@ import org.springframework.data.mongodb.core.query.Update;
 public interface YamlChangeSetRepositoryCustom {
   UpdateResult updateYamlChangeSetStatus(YamlChangeSetStatus status, String yamlChangeSetId);
 
+  UpdateResult updateYamlChangeSetStatusAndCutoffTime(
+      YamlChangeSetStatus status, String yamlChangeSetId, long cutOffTime);
+
   UpdateResult updateYamlChangeSetsStatus(
       YamlChangeSetStatus oldStatus, YamlChangeSetStatus newStatus, String accountId);
 

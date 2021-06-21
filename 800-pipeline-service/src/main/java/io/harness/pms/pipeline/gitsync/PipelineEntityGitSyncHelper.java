@@ -72,7 +72,9 @@ public class PipelineEntityGitSyncHelper implements GitSdkEntityHandlerInterface
 
   @Override
   public PipelineConfig update(String accountIdentifier, String yaml) {
-    return save(accountIdentifier, yaml);
+    PipelineEntity pipelineEntity =
+        pmsPipelineService.updatePipelineYaml(PMSPipelineDtoMapper.toPipelineEntity(accountIdentifier, yaml));
+    return PipelineYamlDtoMapper.toDto(pipelineEntity);
   }
 
   @Override

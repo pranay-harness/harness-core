@@ -7,6 +7,7 @@ import io.harness.pms.yaml.ParameterField;
 
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,7 +19,9 @@ import org.springframework.data.annotation.TypeAlias;
 @AllArgsConstructor
 @TypeAlias("terraformApplyBaseStepInfo")
 public class TerraformApplyBaseStepInfo {
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) private ParameterField<String> provisionerIdentifier;
+  @NotNull
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  private ParameterField<String> provisionerIdentifier;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   private ParameterField<List<String>> delegateSelectors;
 }

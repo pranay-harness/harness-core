@@ -3,6 +3,7 @@ package io.harness.impl.jgit;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FileContentBatchResponse;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
@@ -14,7 +15,6 @@ import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.CreateWebhookResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.DeleteWebhookResponse;
-import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
 import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
@@ -30,6 +30,7 @@ import io.harness.service.ScmClient;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -106,13 +107,19 @@ public class JgitGitServiceImpl implements ScmClient {
   }
 
   @Override
-  public FileBatchContentResponse listFiles(ScmConnector connector, List<String> foldersList, String branchName) {
+  public FileContentBatchResponse listFiles(ScmConnector connector, Set<String> foldersList, String branchName) {
     return null;
   }
 
   @Override
-  public FileBatchContentResponse listFilesByFilePaths(
+  public FileContentBatchResponse listFilesByFilePaths(
       ScmConnector connector, List<String> filePathsList, String branchName) {
+    return null;
+  }
+
+  @Override
+  public FileContentBatchResponse listFilesByCommitId(
+      ScmConnector connector, List<String> filePathsList, String commitId) {
     return null;
   }
 

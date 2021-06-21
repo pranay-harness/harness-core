@@ -117,13 +117,13 @@ def main(event, context):
     create_dataset(client, jsonData["datasetName"])
     if not if_tbl_exists(client, preAggragatedTableRef):
         print_("%s table does not exists, creating table..." % preAggragatedTableRef)
-        createTable(client, preAggragatedTableTableName)
+        createTable(client, preAggragatedTableRef)
     else:
         print_("%s table exists" % preAggragatedTableTableName)
 
     if not if_tbl_exists(client, unifiedTableRef):
         print_("%s table does not exists, creating table..." % unifiedTableRef)
-        createTable(client, unifiedTableTableName)
+        createTable(client, unifiedTableRef)
     else:
         print_("%s table exists" % unifiedTableTableName)
 
