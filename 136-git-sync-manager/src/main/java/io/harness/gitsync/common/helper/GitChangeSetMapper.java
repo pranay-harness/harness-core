@@ -38,22 +38,23 @@ public class GitChangeSetMapper {
   private ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
 
   public List<ChangeSetWithYamlStatusDTO> toChangeSetList(List<GitToHarnessFileProcessingRequest> fileContentsList,
-      String accountId, List<YamlGitConfigDTO> yamlGitConfigDTOs) {
+      String accountId, List<YamlGitConfigDTO> yamlGitConfigDTOs, String changesetId) {
     return emptyIfNull(fileContentsList)
         .stream()
         .map(fileProcessingRequest
             -> mapToChangeSet(fileProcessingRequest.getFileDetails(), accountId, fileProcessingRequest.getChangeType(),
-                yamlGitConfigDTOs))
+                yamlGitConfigDTOs, changesetId))
         .filter(Objects::nonNull)
         .collect(toList());
   }
 
-  private ChangeSetWithYamlStatusDTO mapToChangeSet(
-      GitFileChangeDTO fileContent, String accountId, ChangeType changeType, List<YamlGitConfigDTO> yamlGitConfigDTOs) {
+  private ChangeSetWithYamlStatusDTO mapToChangeSet(GitFileChangeDTO fileContent, String accountId,
+      ChangeType changeType, List<YamlGitConfigDTO> yamlGitConfigDTOs, String changesetId) {
     ChangeSet.Builder builder = ChangeSet.newBuilder()
                                     .setAccountId(accountId)
                                     .setChangeType(ChangeTypeMapper.toProto(changeType))
                                     .setYaml(fileContent.getContent())
+                                    .setChangeSetId(changesetId)
                                     .setFilePath(fileContent.getPath());
     if (isNotBlank(fileContent.getObjectId())) {
       builder.setObjectId(StringValue.of(fileContent.getObjectId()));

@@ -17,6 +17,7 @@ import io.harness.gitsync.GitToHarnessProcessRequest;
 import io.harness.gitsync.ProcessingFailureStage;
 import io.harness.gitsync.ProcessingResponse;
 import io.harness.gitsync.beans.GitProcessRequest;
+import io.harness.gitsync.common.YamlProcessingLogContext;
 import io.harness.gitsync.dao.GitProcessingRequestService;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchContext;
@@ -126,7 +127,9 @@ public class GitToHarnessSdkProcessorImpl implements GitToHarnessSdkProcessor {
         if (!status.equals(FileProcessingStatus.UNPROCESSED)) {
           continue;
         }
-        try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+        try (GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard();
+             AutoLogContext ignore1 =
+                 YamlProcessingLogContext.builder().changeSetId(changeSet.getChangeSetId()).build(OVERRIDE_ERROR);) {
           GlobalContextManager.upsertGlobalContextRecord(
               createGitEntityInfo(gitToHarnessRequest.getGitToHarnessBranchInfo(), changeSet,
                   gitToHarnessRequest.getCommitId().getValue()));
