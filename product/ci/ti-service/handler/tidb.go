@@ -59,22 +59,13 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handler
 			"repo", repo, "source", source, "target", target, "sha", sha)
 
 		// Make call to Mongo DB to get the tests to run
-		selected, err := tidb.GetTestsToRun(ctx, req)
+		selected, err := tidb.GetTestsToRun(ctx, req, accountId)
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: could not select tests", "account_id", accountId,
 				"repo", repo, "source", source, "target", target, "sha", sha, zap.Error(err))
 			return
 		}
-
-		//// Write changed file information to timescaleDB
-		//err = db.WriteDiffFiles(ctx, accountId, orgId, projectId, pipelineId, buildId,
-		//	stageId, stepId, types.DiffInfo{Sha: sha, Files: req.Files})
-		//if err != nil {
-		//	WriteInternalError(w, err)
-		//	log.Errorw("api: could not write changed file information", "account_id", accountId,
-		//		"repo", repo, "source", source, "target", target, "sha", sha, zap.Error(err))
-		//}
 
 		// Classify and write the test selection stats to timescaleDB
 		err = db.WriteSelectedTests(ctx, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, selected, false)
