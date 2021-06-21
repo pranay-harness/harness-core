@@ -29,6 +29,7 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.timeout.TimeoutDetails;
 
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.ByteString;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -196,5 +197,10 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
                  .build())
         .add(CompoundMongoIndex.builder().name("previous_id_idx").field(NodeExecutionKeys.previousId).build())
         .build();
+  }
+
+  public ByteString getResolvedStepParametersBytes() {
+    String resolvedStepParams = this.getResolvedStepParameters().toJson();
+    return ByteString.copyFromUtf8(resolvedStepParams);
   }
 }

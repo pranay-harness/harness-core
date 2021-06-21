@@ -2079,6 +2079,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       throw new InvalidRequestException("No matching Workflow Phase", USER);
     }
 
+    if (isEmpty(workflowPhase.getServiceId())) {
+      workflowPhase.setServiceId(oldServiceId);
+    }
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, infraChanged, false, false)
             .getOrchestrationWorkflow();
