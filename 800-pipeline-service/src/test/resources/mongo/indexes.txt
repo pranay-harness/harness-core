@@ -92,7 +92,9 @@ outcomeInstances {"name": "unique_levelRuntimeIdUniqueIdx", "unique": true} {"pl
 outcomeInstances {"name": "unique_producedBySetupIdRuntimeIdIdx", "unique": true} {"planExecutionId": 1, "producedBy.setupId": 1, "producedBy.runtimeId": 1, "name": 1}
 outcomeInstances {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 pipelineExecutionSummary {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+pipelinesPMS {"name": "accountId_organizationId_projectId_lastUpdatedAt", "background": true} {"accountId": 1, "orgIdentifier": 1, "lastUpdatedAt": 1, "projectIdentifier": 1}
 pipelinesPMS {"name": "createdAt_1", "background": true} {"createdAt": 1}
+pipelinesPMS {"name": "lastUpdatedAt_idx", "background": true} {"lastUpdatedAt": 1}
 pipelinesPMS {"name": "unique_accountId_organizationId_projectId_pipelineId_repo_branch", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1, "yamlGitConfigRef": 1, "branch": 1}
 planExecutions {"name": "exec_tag_status_idx", "background": true} {"metadata.triggerInfo.triggeredBy.extraInfo.execution_trigger_tag_needed_for_abort": 1, "status": 1, "createdAt": -1}
 planExecutions {"name": "id_status_idx", "background": true} {"_id": 1, "status": 1}

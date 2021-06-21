@@ -207,6 +207,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
 
     DataCollectionTask dataCollectionTask =
         hPersistence.createQuery(DataCollectionTask.class)
+            .filter(DataCollectionTaskKeys.accountId, cvConfig.getAccountId())
             .filter(DataCollectionTaskKeys.verificationTaskId, serviceGuardVerificationTaskId)
             .order(Sort.descending(DataCollectionTaskKeys.startTime))
             .get();

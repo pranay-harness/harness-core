@@ -56,7 +56,7 @@ public class DeploymentStageFilterJsonCreator extends GenericStageFilterJsonCrea
 
     ServiceDefinition serviceDefinition = deploymentStageConfig.getServiceConfig().getServiceDefinition();
     if (serviceDefinition != null && serviceDefinition.getType() != null) {
-      cdFilter.deploymentType(serviceDefinition.getType());
+      cdFilter.deploymentType(serviceDefinition.getType().getYamlName());
     }
 
     PipelineInfrastructure infrastructure = deploymentStageConfig.getInfrastructure();
@@ -77,8 +77,8 @@ public class DeploymentStageFilterJsonCreator extends GenericStageFilterJsonCrea
     }
 
     if (infrastructure.getInfrastructureDefinition() != null
-        && isNotEmpty(infrastructure.getInfrastructureDefinition().getType())) {
-      cdFilter.infrastructureType(infrastructure.getInfrastructureDefinition().getType());
+        && isNotEmpty(infrastructure.getInfrastructureDefinition().getType().getDisplayName())) {
+      cdFilter.infrastructureType(infrastructure.getInfrastructureDefinition().getType().getDisplayName());
     }
     return cdFilter.build();
   }

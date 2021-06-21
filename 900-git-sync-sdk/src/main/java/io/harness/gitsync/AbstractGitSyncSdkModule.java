@@ -100,6 +100,13 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named("GitSdkAuthorizationServiceHeader")
+  public AuthorizationServiceHeader getGitSdkAuthorizationServiceHeader() {
+    return getGitSyncSdkConfiguration().getServiceHeader();
+  }
+
+  @Provides
+  @Singleton
   public GitSyncSdkConfiguration gitSyncSdkConfiguration() {
     return getGitSyncSdkConfiguration();
   }

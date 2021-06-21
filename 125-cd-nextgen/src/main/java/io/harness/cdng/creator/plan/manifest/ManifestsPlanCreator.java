@@ -124,7 +124,7 @@ public class ManifestsPlanCreator {
           this.manifests.put(mc.getIdentifier(),
               new ManifestInfoBuilder(ManifestStepParameters.builder()
                                           .identifier(mc.getIdentifier())
-                                          .type(mc.getType())
+                                          .type(mc.getType().getDisplayName())
                                           .spec(mc.getSpec())));
         });
       }

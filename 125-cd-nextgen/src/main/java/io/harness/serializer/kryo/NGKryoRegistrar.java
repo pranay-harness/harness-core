@@ -68,6 +68,8 @@ import io.harness.cdng.manifest.yaml.kinds.KustomizeManifest;
 import io.harness.cdng.manifest.yaml.kinds.OpenshiftManifest;
 import io.harness.cdng.manifest.yaml.kinds.OpenshiftParamManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
@@ -201,6 +203,10 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(TerraformPlanStepInfo.class, 12543);
     kryo.register(HelmValuesFetchResponsePassThroughData.class, 12544);
     kryo.register(StepExceptionPassThroughData.class, 12545);
+
+    kryo.register(StoreConfig.class, 8022);
+    kryo.register(StoreConfigWrapper.class, 8045);
+
     kryo.register(K8sExecutionPassThroughData.class, 12546);
   }
 }

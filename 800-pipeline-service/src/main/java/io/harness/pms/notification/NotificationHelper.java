@@ -65,7 +65,7 @@ public class NotificationHelper {
   }
 
   public void sendNotification(
-      Ambiance ambiance, io.harness.notification.PipelineEventType pipelineEventType, NodeExecution nodeExecution) {
+      Ambiance ambiance, PipelineEventType pipelineEventType, NodeExecution nodeExecution, Long updatedAt) {
     String identifier = nodeExecution != null ? nodeExecution.getNode().getIdentifier() : "";
     String accountId = AmbianceUtils.getAccountId(ambiance);
     String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
@@ -88,7 +88,7 @@ public class NotificationHelper {
     }
 
     sendNotificationInternal(notificationRules, pipelineEventType, identifier, accountId,
-        constructDummyTemplateData(ambiance, pipelineEventType, nodeExecution, identifier), orgIdentifier,
+        constructDummyTemplateData(ambiance, pipelineEventType, nodeExecution, identifier, updatedAt), orgIdentifier,
         projectIdentifier);
   }
 
@@ -140,8 +140,8 @@ public class NotificationHelper {
     return basicPipeline.getNotificationRules();
   }
 
-  private String constructDummyTemplateData(
-      Ambiance ambiance, PipelineEventType pipelineEventType, NodeExecution nodeExecution, String identifier) {
+  private String constructDummyTemplateData(Ambiance ambiance, PipelineEventType pipelineEventType,
+      NodeExecution nodeExecution, String identifier, Long updatedAt) {
     PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
     String projectId = AmbianceUtils.getProjectIdentifier(ambiance);
     String pipelineId = ambiance.getMetadata().getPipelineIdentifier();
@@ -166,9 +166,8 @@ public class NotificationHelper {
       sb.append("\nStatus: ").append(ExecutionStatus.getExecutionStatus(planExecution.getStatus()));
     }
 
-    if (StatusUtils.isFinalStatus(planExecution.getStatus())) {
-      sb.append("\nEnded At: ")
-          .append(new SimpleDateFormat(DEFAULT_TIME_FORMAT).format(new Date(planExecution.getEndTs())));
+    if (StatusUtils.isFinalStatus(planExecution.getStatus()) && updatedAt != null) {
+      sb.append("\nEnded At: ").append(new SimpleDateFormat(DEFAULT_TIME_FORMAT).format(new Date(updatedAt)));
     }
     sb.append("\n Link to Execution: ").append(generateUrl(ambiance));
     return sb.toString();

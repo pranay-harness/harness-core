@@ -3,6 +3,8 @@ package io.harness.ng.core.environment.services.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
+import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -25,6 +27,11 @@ import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.Environment.EnvironmentKeys;
 import io.harness.ng.core.environment.services.EnvironmentService;
+import io.harness.ng.core.events.EnvironmentCreateEvent;
+import io.harness.ng.core.events.EnvironmentDeleteEvent;
+import io.harness.ng.core.events.EnvironmentUpdatedEvent;
+import io.harness.ng.core.events.EnvironmentUpsertEvent;
+import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.environment.spring.EnvironmentRepository;
 
 import com.google.common.collect.ImmutableMap;
@@ -43,9 +50,12 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
@@ -54,15 +64,21 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   private final EnvironmentRepository environmentRepository;
   private final EntitySetupUsageService entitySetupUsageService;
   private final Producer eventProducer;
+  private final OutboxService outboxService;
+  private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
+  @Inject @Named(OUTBOX_TRANSACTION_TEMPLATE) private final TransactionTemplate transactionTemplate;
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Environment [%s] under Project[%s], Organization [%s] already exists";
 
   @Inject
   public EnvironmentServiceImpl(EnvironmentRepository environmentRepository,
-      EntitySetupUsageService entitySetupUsageService, @Named(ENTITY_CRUD) Producer eventProducer) {
+      EntitySetupUsageService entitySetupUsageService, @Named(ENTITY_CRUD) Producer eventProducer,
+      OutboxService outboxService, TransactionTemplate transactionTemplate) {
     this.environmentRepository = environmentRepository;
     this.entitySetupUsageService = entitySetupUsageService;
     this.eventProducer = eventProducer;
+    this.outboxService = outboxService;
+    this.transactionTemplate = transactionTemplate;
   }
 
   @Override
@@ -71,7 +87,18 @@ public class EnvironmentServiceImpl implements EnvironmentService {
       validatePresenceOfRequiredFields(environment.getAccountId(), environment.getOrgIdentifier(),
           environment.getProjectIdentifier(), environment.getIdentifier());
       setName(environment);
-      Environment createdEnvironment = environmentRepository.save(environment);
+
+      Environment createdEnvironment =
+          Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+            Environment tempEnvironment = environmentRepository.save(environment);
+            outboxService.save(EnvironmentCreateEvent.builder()
+                                   .accountIdentifier(environment.getAccountId())
+                                   .orgIdentifier(environment.getOrgIdentifier())
+                                   .projectIdentifier(environment.getProjectIdentifier())
+                                   .environment(environment)
+                                   .build());
+            return tempEnvironment;
+          }));
       publishEvent(environment.getAccountId(), environment.getOrgIdentifier(), environment.getProjectIdentifier(),
           environment.getIdentifier(), EventsFrameworkMetadataConstants.CREATE_ACTION);
       return createdEnvironment;
@@ -95,17 +122,38 @@ public class EnvironmentServiceImpl implements EnvironmentService {
         requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier());
     setName(requestEnvironment);
     Criteria criteria = getEnvironmentEqualityCriteria(requestEnvironment, requestEnvironment.getDeleted());
-    Environment updatedResult = environmentRepository.update(criteria, requestEnvironment);
-    if (updatedResult == null) {
-      throw new InvalidRequestException(
-          String.format("Environment [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
-              requestEnvironment.getIdentifier(), requestEnvironment.getProjectIdentifier(),
-              requestEnvironment.getOrgIdentifier()));
+
+    Optional<Environment> environmentOptional =
+        get(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
+            requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier(), false);
+    if (environmentOptional.isPresent()) {
+      Environment updatedResult =
+          Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+            Environment tempResult = environmentRepository.update(criteria, requestEnvironment);
+            if (tempResult == null) {
+              throw new InvalidRequestException(String.format(
+                  "Environment [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
+                  requestEnvironment.getIdentifier(), requestEnvironment.getProjectIdentifier(),
+                  requestEnvironment.getOrgIdentifier()));
+            }
+            outboxService.save(EnvironmentUpdatedEvent.builder()
+                                   .accountIdentifier(requestEnvironment.getAccountId())
+                                   .orgIdentifier(requestEnvironment.getOrgIdentifier())
+                                   .projectIdentifier(requestEnvironment.getProjectIdentifier())
+                                   .newEnvironment(requestEnvironment)
+                                   .oldEnvironment(environmentOptional.get())
+                                   .build());
+            return tempResult;
+          }));
+      publishEvent(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
+          requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier(),
+          EventsFrameworkMetadataConstants.UPDATE_ACTION);
+      return updatedResult;
+    } else {
+      throw new InvalidRequestException(String.format(
+          "Environment [%s] under Project[%s], Organization [%s] doesn't exist.", requestEnvironment.getIdentifier(),
+          requestEnvironment.getProjectIdentifier(), requestEnvironment.getOrgIdentifier()));
     }
-    publishEvent(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
-        requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier(),
-        EventsFrameworkMetadataConstants.UPDATE_ACTION);
-    return updatedResult;
   }
 
   @Override
@@ -114,13 +162,22 @@ public class EnvironmentServiceImpl implements EnvironmentService {
         requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier());
     setName(requestEnvironment);
     Criteria criteria = getEnvironmentEqualityCriteria(requestEnvironment, requestEnvironment.getDeleted());
-    Environment updatedResult = environmentRepository.upsert(criteria, requestEnvironment);
-    if (updatedResult == null) {
-      throw new InvalidRequestException(
-          String.format("Environment [%s] under Project[%s], Organization [%s] couldn't be upserted or doesn't exist.",
-              requestEnvironment.getIdentifier(), requestEnvironment.getProjectIdentifier(),
-              requestEnvironment.getOrgIdentifier()));
-    }
+    Environment updatedResult = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      Environment tempResult = environmentRepository.upsert(criteria, requestEnvironment);
+      if (tempResult == null) {
+        throw new InvalidRequestException(String.format(
+            "Environment [%s] under Project[%s], Organization [%s] couldn't be upserted or doesn't exist.",
+            requestEnvironment.getIdentifier(), requestEnvironment.getProjectIdentifier(),
+            requestEnvironment.getOrgIdentifier()));
+      }
+      outboxService.save(EnvironmentUpsertEvent.builder()
+                             .accountIdentifier(requestEnvironment.getAccountId())
+                             .orgIdentifier(requestEnvironment.getOrgIdentifier())
+                             .projectIdentifier(requestEnvironment.getProjectIdentifier())
+                             .environment(requestEnvironment)
+                             .build());
+      return tempResult;
+    }));
     publishEvent(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
         requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier(),
         EventsFrameworkMetadataConstants.UPSERT_ACTION);
@@ -144,15 +201,33 @@ public class EnvironmentServiceImpl implements EnvironmentService {
                                   .build();
     checkThatEnvironmentIsNotReferredByOthers(environment);
     Criteria criteria = getEnvironmentEqualityCriteria(environment, false);
-    UpdateResult updateResult = environmentRepository.delete(criteria);
-    if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
+    Optional<Environment> environmentOptional =
+        get(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, false);
+    if (environmentOptional.isPresent()) {
+      Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+        UpdateResult updateResult = environmentRepository.delete(criteria);
+        if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
+          throw new InvalidRequestException(
+              String.format("Environment [%s] under Project[%s], Organization [%s] couldn't be deleted.",
+                  environmentIdentifier, projectIdentifier, orgIdentifier));
+        }
+        outboxService.save(EnvironmentDeleteEvent.builder()
+                               .accountIdentifier(accountId)
+                               .orgIdentifier(orgIdentifier)
+                               .projectIdentifier(projectIdentifier)
+                               .environment(environmentOptional.get())
+                               .build());
+        return true;
+      }));
+      publishEvent(accountId, orgIdentifier, projectIdentifier, environmentIdentifier,
+          EventsFrameworkMetadataConstants.DELETE_ACTION);
+      return true;
+
+    } else {
       throw new InvalidRequestException(
-          String.format("Environment [%s] under Project[%s], Organization [%s] couldn't be deleted.",
-              environmentIdentifier, projectIdentifier, orgIdentifier));
+          String.format("Environment [%s] under Project[%s], Organization [%s] doesn't exist.", environmentIdentifier,
+              projectIdentifier, orgIdentifier));
     }
-    publishEvent(accountId, orgIdentifier, projectIdentifier, environmentIdentifier,
-        EventsFrameworkMetadataConstants.DELETE_ACTION);
-    return true;
   }
 
   private void checkThatEnvironmentIsNotReferredByOthers(Environment environment) {

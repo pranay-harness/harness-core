@@ -60,7 +60,7 @@ public class FacilitatorEventHandler extends PmsBaseEventHandler<FacilitatorEven
   }
 
   @Override
-  protected boolean handleEventWithContext(FacilitatorEvent event) {
+  protected void handleEventWithContext(FacilitatorEvent event) {
     try {
       log.info("Starting to handle FACILITATION event");
       Ambiance ambiance = event.getAmbiance();
@@ -80,15 +80,13 @@ public class FacilitatorEventHandler extends PmsBaseEventHandler<FacilitatorEven
         log.info("Calculated Facilitator response is null. Returning response Successful false");
         sdkNodeExecutionService.handleFacilitationResponse(event.getNodeExecutionId(), event.getNotifyId(),
             FacilitatorResponseProto.newBuilder().setIsSuccessful(false).build());
-        return true;
+        return;
       }
       sdkNodeExecutionService.handleFacilitationResponse(event.getNodeExecutionId(), event.getNotifyId(),
           FacilitatorResponseMapper.toFacilitatorResponseProto(currFacilitatorResponse));
       log.info("Facilitation Event Handled Successfully");
-      return true;
     } catch (Exception ex) {
       log.error("Error while facilitating execution", ex);
-      return false;
     }
   }
 

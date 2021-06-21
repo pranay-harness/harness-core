@@ -291,7 +291,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
       List<String> harnessRelatedFilePaths, String slug, String ref, Provider gitProvider) {
     List<GetFileRequest> getBatchFileRequests = new ArrayList<>();
     // todo @deepak: Add the pagination logic to get the list of file content, once scm provides support
-    for (String path : harnessRelatedFilePaths) {
+    for (String path : emptyIfNull(harnessRelatedFilePaths)) {
       GetFileRequest getFileRequest =
           GetFileRequest.newBuilder().setSlug(slug).setProvider(gitProvider).setRef(ref).setPath(path).build();
       getBatchFileRequests.add(getFileRequest);
@@ -626,12 +626,19 @@ public class ScmServiceClientImpl implements ScmServiceClient {
 
   private String getLatestShaOfBranch(
       String slug, Provider gitProvider, String defaultBranchName, SCMGrpc.SCMBlockingStub scmBlockingStub) {
-    GetLatestCommitResponse latestCommit = scmBlockingStub.getLatestCommit(GetLatestCommitRequest.newBuilder()
-                                                                               .setBranch(defaultBranchName)
-                                                                               .setSlug(slug)
-                                                                               .setProvider(gitProvider)
-                                                                               .build());
-    return latestCommit.getCommitId();
+    try {
+      GetLatestCommitResponse latestCommit = scmBlockingStub.getLatestCommit(GetLatestCommitRequest.newBuilder()
+                                                                                 .setBranch(defaultBranchName)
+                                                                                 .setSlug(slug)
+                                                                                 .setProvider(gitProvider)
+                                                                                 .build());
+      ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(latestCommit.getStatus(), latestCommit.getError());
+      return latestCommit.getCommitId();
+    } catch (Exception ex) {
+      log.error(
+          "Error encountered while getting latest commit of branch [{}] in slug [{}]", defaultBranchName, slug, ex);
+      throw ex;
+    }
   }
 
   private String getGithubToken(Provider gitProvider) {

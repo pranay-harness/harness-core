@@ -8,6 +8,7 @@ import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.event.GraphNodeUpdateInfo;
 import io.harness.event.GraphNodeUpdateObserver;
 import io.harness.execution.NodeExecution;
+import io.harness.logging.AutoLogContext;
 import io.harness.observer.AsyncInformObserver;
 import io.harness.pms.plan.execution.ExecutionSummaryUpdateUtils;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
@@ -33,8 +34,12 @@ public class ExecutionSummaryStatusUpdateEventHandler
 
   @Override
   public void onNodeStatusUpdate(NodeUpdateInfo nodeUpdateInfo) {
-    updatePipelineLevelInfo(nodeUpdateInfo.getPlanExecutionId(), nodeUpdateInfo.getNodeExecution());
-    updateStageLevelInfo(nodeUpdateInfo.getPlanExecutionId(), nodeUpdateInfo.getNodeExecution());
+    try (AutoLogContext ignore = nodeUpdateInfo.autoLogContext()) {
+      log.info("ExecutionSummaryStatusUpdateEventHandler Starting to update PipelineExecutionSummaryEntity");
+      updatePipelineLevelInfo(nodeUpdateInfo.getPlanExecutionId(), nodeUpdateInfo.getNodeExecution());
+      updateStageLevelInfo(nodeUpdateInfo.getPlanExecutionId(), nodeUpdateInfo.getNodeExecution());
+      log.info("ExecutionSummaryStatusUpdateEventHandler finished updating PipelineExecutionSummaryEntity");
+    }
   }
 
   @Override

@@ -10,7 +10,5 @@ public class NoopSdkSdkBaseEventMessageListener extends PmsAbstractMessageListen
   }
 
   @Override
-  public boolean processMessage(InterruptEvent event, Map<String, String> metadataMap, Long timestamp) {
-    return false;
-  }
+  public void processMessage(InterruptEvent event, Map<String, String> metadataMap, Long timestamp) {}
 }

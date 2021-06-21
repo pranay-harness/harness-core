@@ -1,6 +1,7 @@
 package io.harness.connector;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 
 import static org.mockito.Mockito.mock;
 
@@ -28,6 +29,7 @@ import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.outbox.api.OutboxService;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.CEAzureSetupConfig;
@@ -38,6 +40,7 @@ import io.harness.serializer.ConnectorNextGenRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PersistenceRegistrars;
+import io.harness.springdata.HTransactionTemplate;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.yaml.YamlSdkModule;
@@ -68,6 +71,8 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.mongodb.MongoTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
 @OwnedBy(DX)
@@ -115,6 +120,25 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
     modules.add(new EntitySetupUsageClientModule(
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "Service"));
     modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      OutboxService registerOutboxService() {
+        return mock(OutboxService.class);
+      }
+
+      @Provides
+      @Singleton
+      @Named(OUTBOX_TRANSACTION_TEMPLATE)
+      TransactionTemplate registerTransactionTemplate() {
+        return mock(TransactionTemplate.class);
+      }
+
+      @Provides
+      @Singleton
+      TransactionTemplate getTransactionTemplate(MongoTransactionManager mongoTransactionManager) {
+        return new HTransactionTemplate(mongoTransactionManager, false);
+      }
+
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {

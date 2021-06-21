@@ -29,7 +29,6 @@ import io.harness.resourcegroupclient.remote.ResourceGroupClientConfig;
 import io.harness.signup.SignupNotificationConfiguration;
 import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.timescaledb.TimeScaleDBConfig;
-import io.harness.yaml.schema.client.config.YamlSchemaClientConfig;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
@@ -105,7 +104,6 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
   @JsonProperty("enableDashboardTimescale") private Boolean enableDashboardTimescale;
-  @JsonProperty("yamlSchemaClientConfig") private YamlSchemaClientConfig yamlSchemaClientConfig;
   @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
   @JsonProperty("signupNotificationConfiguration")
   private SignupNotificationConfiguration signupNotificationConfiguration;

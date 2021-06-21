@@ -26,6 +26,7 @@ public class YamlChangeSetDTO {
   @NotNull YamlChangeSetEventType eventType;
   @NotNull String repoUrl;
   @NotNull String branch;
+  long retryCount;
 
   // Any special event metadata which has to go back from queue as is can be pushed in this interface.
   @Valid EventMetadata eventMetadata;

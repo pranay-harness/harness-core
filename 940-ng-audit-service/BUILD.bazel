@@ -8,7 +8,7 @@ java_library(
     exports = [
         "//:lombok",
         "//948-access-control-sdk:module",
-        "//950-ng-audit-commons:module",
+        "//951-ng-audit-commons:module",
         "//955-filters-sdk:module",
         "//960-persistence:module",
         "//970-ng-commons:module",

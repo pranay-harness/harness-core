@@ -9,6 +9,7 @@ import io.harness.git.model.ChangeType;
 
 import com.mongodb.client.result.UpdateResult;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -44,6 +45,8 @@ public interface ConnectorCustomRepository {
   Connector save(Connector objectToSave, ChangeType changeType);
 
   Connector save(Connector objectToSave, ConnectorDTO connectorDTO, ChangeType changeType);
+
+  Connector save(Connector objectToSave, ConnectorDTO connectorDTO, ChangeType changeType, Supplier functor);
 
   Optional<Connector> findOne(Criteria criteria, String repo, String branch);
 }

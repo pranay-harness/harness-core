@@ -34,6 +34,11 @@ public class FilePathUtils {
     return validFilePaths;
   }
 
+  public static String removeTrailingChars(String path, String chars) {
+    path = path.replaceAll(chars + "+$", "");
+    return path;
+  }
+
   // ---------------------------------- PRIVATE METHODS ----------------------------
 
   // Remove starting and ending backslashes
