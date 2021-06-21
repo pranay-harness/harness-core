@@ -7,6 +7,11 @@ import io.harness.accesscontrol.principals.usergroups.UserGroupServiceImpl;
 import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupDao;
 import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupDaoImpl;
 import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupMorphiaRegistrar;
+import io.harness.accesscontrol.principals.users.UserService;
+import io.harness.accesscontrol.principals.users.UserServiceImpl;
+import io.harness.accesscontrol.principals.users.persistence.UserDao;
+import io.harness.accesscontrol.principals.users.persistence.UserDaoImpl;
+import io.harness.accesscontrol.principals.users.persistence.UserMorphiaRegistrar;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
@@ -35,6 +40,10 @@ public class PrincipalModule extends AbstractModule {
     morphiaRegistrars.addBinding().toInstance(UserGroupMorphiaRegistrar.class);
     bind(UserGroupDao.class).to(UserGroupDaoImpl.class);
     bind(UserGroupService.class).to(UserGroupServiceImpl.class);
+
+    morphiaRegistrars.addBinding().toInstance(UserMorphiaRegistrar.class);
+    bind(UserDao.class).to(UserDaoImpl.class);
+    bind(UserService.class).to(UserServiceImpl.class);
 
     registerRequiredBindings();
   }

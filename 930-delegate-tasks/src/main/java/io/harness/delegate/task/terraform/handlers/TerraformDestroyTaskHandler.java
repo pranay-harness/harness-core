@@ -44,8 +44,6 @@ public class TerraformDestroyTaskHandler extends TerraformAbstractTaskHandler {
   public TerraformTaskNGResponse executeTaskInternal(TerraformTaskNGParameters taskParameters, String delegateId,
       String taskId, LogCallback logCallback) throws IOException {
     GitStoreDelegateConfig confileFileGitStore = taskParameters.getConfigFile().getGitStoreDelegateConfig();
-    GitConfigDTO configFileGitConfigDTO =
-        (GitConfigDTO) taskParameters.getConfigFile().getGitStoreDelegateConfig().getGitConfigDTO();
     String scriptPath = confileFileGitStore.getPaths().get(0);
 
     if (isNotEmpty(confileFileGitStore.getBranch())) {
@@ -110,6 +108,8 @@ public class TerraformDestroyTaskHandler extends TerraformAbstractTaskHandler {
 
       String stateFileId = terraformBaseHelper.uploadTfStateFile(
           taskParameters.getAccountId(), delegateId, taskId, taskParameters.getEntityId(), tfStateFile);
+
+      logCallback.saveExecutionLog("\nDone \n", INFO, CommandExecutionStatus.SUCCESS);
 
       return TerraformTaskNGResponse.builder()
           .commitIdForConfigFilesMap(commitIdToFetchedFilesMap)

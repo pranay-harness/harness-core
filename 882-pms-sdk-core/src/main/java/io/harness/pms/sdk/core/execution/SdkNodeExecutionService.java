@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.advisers.AdviserResponse;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
@@ -50,5 +51,5 @@ public interface SdkNodeExecutionService {
 
   void spawnChildren(SpawnChildrenRequest spawnChildrenRequest);
 
-  void handleProgressResponse(NodeExecutionProto nodeExecutionProto, ProgressData progressData);
+  void handleProgressResponse(Ambiance ambiance, ProgressData progressData);
 }

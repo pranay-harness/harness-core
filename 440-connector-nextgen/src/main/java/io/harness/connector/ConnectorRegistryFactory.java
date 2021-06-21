@@ -41,6 +41,8 @@ import io.harness.connector.mappers.datadogmapper.DatadogDTOToEntity;
 import io.harness.connector.mappers.datadogmapper.DatadogEntityToDTO;
 import io.harness.connector.mappers.docker.DockerDTOToEntity;
 import io.harness.connector.mappers.docker.DockerEntityToDTO;
+import io.harness.connector.mappers.dynatracemapper.DynatraceDTOToEntity;
+import io.harness.connector.mappers.dynatracemapper.DynatraceEntityToDTO;
 import io.harness.connector.mappers.gcpcloudcost.GcpCloudCostDTOToEntity;
 import io.harness.connector.mappers.gcpcloudcost.GcpCloudCostEntityToDTO;
 import io.harness.connector.mappers.gcpmappers.GcpDTOToEntity;
@@ -135,6 +137,9 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.SUMOLOGIC,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
             CVConnectorParamsProvider.class, SumoLogicDTOToEntity.class, SumoLogicEntityToDTO.class));
+    registrar.put(ConnectorType.DYNATRACE,
+        new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
+            CVConnectorParamsProvider.class, DynatraceDTOToEntity.class, DynatraceEntityToDTO.class));
     registrar.put(ConnectorType.VAULT,
         new ConnectorRegistrar(ConnectorCategory.SECRET_MANAGER, SecretManagerConnectorValidator.class,
             VaultConnectorValidationParamsProvider.class, VaultDTOToEntity.class, VaultEntityToDTO.class));

@@ -3,6 +3,7 @@ package io.harness.cvng.core.services.impl;
 import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
 
 import io.harness.EntityType;
+import io.harness.ModuleType;
 import io.harness.cvng.cdng.beans.CVNGStepInfo;
 import io.harness.cvng.core.services.api.CVNGYamlSchemaService;
 import io.harness.encryption.Scope;
@@ -23,14 +24,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
 
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class CVNGYamlSchemaServiceImpl implements CVNGYamlSchemaService {
   private static final String CVNG_NAMESPACE = "cvng";
   private static final String STEP_ELEMENT_CONFIG = YamlSchemaUtils.getSwaggerName(StepElementConfig.class);
@@ -38,6 +38,15 @@ public class CVNGYamlSchemaServiceImpl implements CVNGYamlSchemaService {
 
   private final YamlSchemaProvider yamlSchemaProvider;
   private final YamlSchemaGenerator yamlSchemaGenerator;
+  private final Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes;
+
+  @Inject
+  public CVNGYamlSchemaServiceImpl(YamlSchemaProvider yamlSchemaProvider, YamlSchemaGenerator yamlSchemaGenerator,
+      @Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes) {
+    this.yamlSchemaProvider = yamlSchemaProvider;
+    this.yamlSchemaGenerator = yamlSchemaGenerator;
+    this.yamlSchemaSubtypes = yamlSchemaSubtypes;
+  }
 
   @Override
   public PartialSchemaDTO getDeploymentStageYamlSchema(String orgIdentifier, String projectIdentifier, Scope scope) {
@@ -59,6 +68,7 @@ public class CVNGYamlSchemaServiceImpl implements CVNGYamlSchemaService {
         .nodeName(YamlSchemaUtils.getSwaggerName(CVNGStepInfo.class))
         .schema(partialCVNGSchema)
         .nodeType(getVerifyStepTypeName())
+        .moduleType(ModuleType.CV)
         .build();
   }
 
@@ -78,7 +88,8 @@ public class CVNGYamlSchemaServiceImpl implements CVNGYamlSchemaService {
   private Set<FieldEnumData> getFieldEnumData(Class<?> clazz) {
     Field typedField = YamlSchemaUtils.getTypedField(clazz);
     String fieldName = YamlSchemaUtils.getJsonTypeInfo(typedField).property();
-    Set<SubtypeClassMap> mapOfSubtypes = YamlSchemaUtils.getMapOfSubtypesUsingReflection(typedField);
+    Set<Class<?>> cachedSubtypes = yamlSchemaSubtypes.get(typedField.getType());
+    Set<SubtypeClassMap> mapOfSubtypes = YamlSchemaUtils.toSetOfSubtypeClassMap(cachedSubtypes);
 
     return ImmutableSet.of(
         FieldEnumData.builder()

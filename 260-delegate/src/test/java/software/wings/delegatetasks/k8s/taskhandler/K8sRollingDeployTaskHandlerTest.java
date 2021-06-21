@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.LogLevel.ERROR;
+import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -381,7 +382,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
                             K8sDelegateTaskParams.builder().build()))
         .withMessageContaining("reason");
 
-    verify(executionLogCallback, times(1)).saveExecutionLog("reason", ERROR, FAILURE);
+    verify(executionLogCallback, times(1)).saveExecutionLog("Invalid argument(s): reason", ERROR, FAILURE);
   }
 
   @Test
@@ -693,11 +694,32 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
-  public void testPruneWhenNoResourceToBePruned() throws Exception {
+  public void testPruneWithLastDeploymentAtFfOff() throws Exception {
     K8sRollingDeployTaskHandler handler = spy(k8sRollingDeployTaskHandler);
     K8sRollingDeployTaskParameters taskParameters = K8sRollingDeployTaskParameters.builder().build();
     K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
     Release previousSuccessfulRelease = Release.builder().build();
+
+    List<KubernetesResourceId> prunedResource =
+        handler.prune(taskParameters, delegateTaskParams, previousSuccessfulRelease);
+
+    assertThat(prunedResource).isEmpty();
+    // do nothing if no spec found in previousSuccessfulRelease
+    verifyNoMoreInteractions(k8sTaskHelperBase);
+    verify(executionLogCallback, times(1))
+        .saveExecutionLog("Previous successful deployment executed with pruning disabled, Pruning can't be done", INFO,
+            CommandExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testPruneWhenNoResourceToBePruned() throws Exception {
+    K8sRollingDeployTaskHandler handler = spy(k8sRollingDeployTaskHandler);
+    K8sRollingDeployTaskParameters taskParameters = K8sRollingDeployTaskParameters.builder().build();
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
+    Release previousSuccessfulRelease = Release.builder().resourcesWithSpec(getResources()).build();
+
     doReturn(emptyList()).when(k8sTaskHelperBase).getResourcesToBePrunedInOrder(any(), any());
 
     List<KubernetesResourceId> prunedResource =
@@ -717,7 +739,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     K8sRollingDeployTaskHandler handler = spy(k8sRollingDeployTaskHandler);
     K8sRollingDeployTaskParameters taskParameters = K8sRollingDeployTaskParameters.builder().build();
     K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
-    Release previousSuccessfulRelease = Release.builder().build();
+    Release previousSuccessfulRelease = Release.builder().resourcesWithSpec(getResources()).build();
 
     doReturn(singletonList(KubernetesResourceId.builder().build()))
         .when(k8sTaskHelperBase)
@@ -743,7 +765,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
     K8sRollingDeployTaskHandler handler = spy(k8sRollingDeployTaskHandler);
     K8sRollingDeployTaskParameters taskParameters = K8sRollingDeployTaskParameters.builder().build();
     K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
-    Release previousSuccessfulRelease = Release.builder().build();
+    Release previousSuccessfulRelease = Release.builder().resourcesWithSpec(getResources()).build();
 
     KubernetesResourceId resources = KubernetesResourceId.builder().name("config-map").build();
     doReturn(singletonList(resources)).when(k8sTaskHelperBase).getResourcesToBePrunedInOrder(any(), any());

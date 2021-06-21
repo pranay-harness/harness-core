@@ -86,6 +86,7 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.limits.counter.service.CounterSyncer;
+import io.harness.pcf.model.CfCliVersion;
 import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
 import io.harness.stream.BoundedInputStream;
@@ -501,6 +502,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return LimitEnforcementUtils.withLimitCheck(checker, () -> {
       setKeyWords(service);
       checkAndSetHelmVersion(service);
+      checkAndSetCfCliVersion(service);
       Service savedService =
           duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, service), "name", service.getName());
 
@@ -912,6 +914,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             .set(ServiceKeys.keywords, keywords);
 
     updateOperationsForHelmVersion(savedService, service, updateOperations);
+    updateOperationsForCfCliVersion(savedService, service, updateOperations);
 
     if (fromYaml) {
       if (isNotBlank(service.getConfigMapYaml())) {
@@ -972,6 +975,22 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   private boolean isHelmSupportedDeploymentType(DeploymentType deploymentType) {
     return deploymentType == HELM || deploymentType == KUBERNETES;
+  }
+
+  void updateOperationsForCfCliVersion(
+      Service savedService, Service newService, UpdateOperations<Service> updateOperations) {
+    if (newService.getCfCliVersion() != null) {
+      validateCfCliVersion(savedService);
+      updateOperations.set(ServiceKeys.cfCliVersion, newService.getCfCliVersion());
+    }
+  }
+
+  private void validateCfCliVersion(Service service) {
+    if (service.getDeploymentType() != null && service.getDeploymentType() != PCF) {
+      throw new InvalidRequestException(
+          format("CfCliVersion is only supported with PCF type of services, found deployment type: [%s]",
+              service.getDeploymentType()));
+    }
   }
 
   private Service updateArtifactStreamIds(
@@ -2627,6 +2646,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       service.setHelmVersion(getDefaultHelmVersion(service.getDeploymentType()));
     } else {
       validateHelmVersion(service);
+    }
+  }
+
+  void checkAndSetCfCliVersion(Service service) {
+    if (service.getCfCliVersion() == null) {
+      DeploymentType deploymentType = service.getDeploymentType();
+      if (deploymentType == PCF) {
+        service.setCfCliVersion(CfCliVersion.V6);
+      }
+    } else {
+      validateCfCliVersion(service);
     }
   }
 

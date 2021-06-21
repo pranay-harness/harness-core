@@ -29,6 +29,9 @@ import io.harness.accesscontrol.common.validation.ValidationResult;
 import io.harness.accesscontrol.principals.Principal;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupService;
+import io.harness.accesscontrol.principals.usergroups.UserGroupService;
+import io.harness.accesscontrol.principals.users.HarnessUserService;
+import io.harness.accesscontrol.principals.users.UserService;
 import io.harness.accesscontrol.resourcegroups.api.ResourceGroupDTO;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
@@ -114,9 +117,12 @@ public class RoleAssignmentResource {
   RoleAssignmentService roleAssignmentService;
   HarnessResourceGroupService harnessResourceGroupService;
   HarnessUserGroupService harnessUserGroupService;
+  HarnessUserService harnessUserService;
   ScopeService scopeService;
   RoleService roleService;
   ResourceGroupService resourceGroupService;
+  UserGroupService userGroupService;
+  UserService userService;
   RoleAssignmentDTOMapper roleAssignmentDTOMapper;
   RoleDTOMapper roleDTOMapper;
   @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate;
@@ -216,11 +222,8 @@ public class RoleAssignmentResource {
   public ResponseDTO<RoleAssignmentResponseDTO> create(
       @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentDTO roleAssignmentDTO) {
     Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
-    harnessResourceGroupService.sync(roleAssignmentDTO.getResourceGroupIdentifier(), scope);
-    if (roleAssignmentDTO.getPrincipal().getType().equals(USER_GROUP)) {
-      harnessUserGroupService.sync(roleAssignmentDTO.getPrincipal().getIdentifier(), scope);
-    }
     RoleAssignment roleAssignment = fromDTO(scope.toString(), roleAssignmentDTO);
+    syncDependencies(roleAssignment, scope);
     checkUpdatePermission(harnessScopeParams, roleAssignment);
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
       RoleAssignment createdRoleAssignment = roleAssignmentService.create(roleAssignment);
@@ -255,8 +258,8 @@ public class RoleAssignmentResource {
     }));
   }
 
-  private List<RoleAssignmentResponseDTO> createRoleAssignments(HarnessScopeParams harnessScopeParams,
-      RoleAssignmentCreateRequestDTO requestDTO, boolean managed, boolean applyAccessChecks) {
+  private List<RoleAssignmentResponseDTO> createRoleAssignments(
+      HarnessScopeParams harnessScopeParams, RoleAssignmentCreateRequestDTO requestDTO, boolean managed) {
     Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
     List<RoleAssignment> roleAssignmentsPayload =
         requestDTO.getRoleAssignments()
@@ -266,13 +269,8 @@ public class RoleAssignmentResource {
     List<RoleAssignmentResponseDTO> createdRoleAssignments = new ArrayList<>();
     for (RoleAssignment roleAssignment : roleAssignmentsPayload) {
       try {
-        harnessResourceGroupService.sync(roleAssignment.getResourceGroupIdentifier(), scope);
-        if (roleAssignment.getPrincipalType().equals(USER_GROUP)) {
-          harnessUserGroupService.sync(roleAssignment.getPrincipalIdentifier(), scope);
-        }
-        if (applyAccessChecks) {
-          checkUpdatePermission(harnessScopeParams, roleAssignment);
-        }
+        syncDependencies(roleAssignment, scope);
+        checkUpdatePermission(harnessScopeParams, roleAssignment);
         RoleAssignmentResponseDTO roleAssignmentResponseDTO =
             Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
               RoleAssignmentResponseDTO response =
@@ -297,8 +295,7 @@ public class RoleAssignmentResource {
   @ApiOperation(value = "Create Multiple Role Assignments", nickname = "createRoleAssignments")
   public ResponseDTO<List<RoleAssignmentResponseDTO>> create(@BeanParam HarnessScopeParams harnessScopeParams,
       @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO) {
-    return ResponseDTO.newResponse(
-        createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, false, true));
+    return ResponseDTO.newResponse(createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, false));
   }
 
   @POST
@@ -308,8 +305,7 @@ public class RoleAssignmentResource {
   public ResponseDTO<List<RoleAssignmentResponseDTO>> create(@BeanParam HarnessScopeParams harnessScopeParams,
       @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO,
       @QueryParam("managed") @DefaultValue("false") Boolean managed) {
-    return ResponseDTO.newResponse(
-        createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, managed, false));
+    return ResponseDTO.newResponse(createRoleAssignments(harnessScopeParams, roleAssignmentCreateRequestDTO, managed));
   }
 
   @POST
@@ -427,5 +423,19 @@ public class RoleAssignmentResource {
       }
     }
     return Optional.of(roleAssignmentFilter);
+  }
+
+  private void syncDependencies(RoleAssignment roleAssignment, Scope scope) {
+    if (!resourceGroupService.get(roleAssignment.getResourceGroupIdentifier(), scope.toString()).isPresent()) {
+      harnessResourceGroupService.sync(roleAssignment.getResourceGroupIdentifier(), scope);
+    }
+    if (roleAssignment.getPrincipalType().equals(USER_GROUP)
+        && !userGroupService.get(roleAssignment.getPrincipalIdentifier(), scope.toString()).isPresent()) {
+      harnessUserGroupService.sync(roleAssignment.getPrincipalIdentifier(), scope);
+    }
+    if (roleAssignment.getPrincipalType().equals(USER)
+        && !userService.get(roleAssignment.getPrincipalIdentifier(), scope.toString()).isPresent()) {
+      harnessUserService.sync(roleAssignment.getPrincipalIdentifier(), scope);
+    }
   }
 }

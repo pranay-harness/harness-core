@@ -16,10 +16,10 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.budget.AlertThreshold;
 import io.harness.ccm.budget.ApplicationBudgetScope;
-import io.harness.ccm.budget.Budget;
 import io.harness.ccm.budget.BudgetServiceImpl;
 import io.harness.ccm.budget.BudgetType;
 import io.harness.ccm.budget.EnvironmentType;
+import io.harness.ccm.commons.entities.billing.Budget;
 import io.harness.rule.Owner;
 
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;

@@ -20,7 +20,6 @@ import io.harness.serializer.morphia.EventMorphiaRegistrar;
 import io.harness.serializer.morphia.LimitsMorphiaRegistrar;
 import io.harness.serializer.morphia.ManagerMorphiaRegistrar;
 import io.harness.serializer.morphia.ProjectAndOrgMorphiaRegistrar;
-import io.harness.serializer.morphia.ViewsMorphiaRegistrar;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -52,6 +51,8 @@ public class ManagerRegistrars {
           .add(DelegateAgentKryoRegister.class)
           .add(DelegateAgentBeansKryoRegister.class)
           .add(DelegateServiceKryoRegister.class)
+          .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
+          .addAll(OutboxEventRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -73,10 +74,12 @@ public class ManagerRegistrars {
           .add(LimitsMorphiaRegistrar.class)
           .add(ManagerMorphiaRegistrar.class)
           .add(ProjectAndOrgMorphiaRegistrar.class)
-          .add(ViewsMorphiaRegistrar.class)
+          .addAll(ViewsModuleRegistrars.morphiaRegistrars)
           .add(CgOrchestrationBeansMorphiaRegistrar.class)
           .addAll(NotificationSenderRegistrars.morphiaRegistrars)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
+          .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
+          .addAll(OutboxEventRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

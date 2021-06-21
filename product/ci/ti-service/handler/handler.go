@@ -38,6 +38,7 @@ func Handler(db db.Db, config config.Config, service cg.CgService, log *zap.Suga
 			sr.Use(AuthMiddleware(config))
 		}
 
+		sr.Get("/info", HandleReportsInfo(db, log))
 		sr.Post("/write", HandleWrite(db, log))
 		sr.Get("/summary", HandleSummary(db, log))
 		sr.Get("/test_cases", HandleTestCases(db, log))
@@ -52,8 +53,9 @@ func Handler(db db.Db, config config.Config, service cg.CgService, log *zap.Suga
 			sr.Use(AuthMiddleware(config))
 		}
 
-		sr.Post("/select", HandleSelect(service, db, log))
+		sr.Get("/info", HandleIntelligenceInfo(db, log))
 		sr.Get("/overview", HandleOverview(db, log))
+		sr.Post("/select", HandleSelect(service, db, log))
 		sr.Post("/uploadcg", HandleUploadCg(service, db, log))
 		return sr
 	}())

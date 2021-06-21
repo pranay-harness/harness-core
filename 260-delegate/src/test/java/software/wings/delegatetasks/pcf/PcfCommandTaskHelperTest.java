@@ -6,6 +6,7 @@ import static io.harness.pcf.model.PcfConstants.RANDOM_ROUTE_MANIFEST_YML_ELEMEN
 import static io.harness.pcf.model.PcfConstants.ROUTES_MANIFEST_YML_ELEMENT;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANIL;
+import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.RIHAZ;
 import static io.harness.rule.OwnerRule.TMACARI;
 
@@ -24,10 +25,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filesystem.FileIo;
+import io.harness.pcf.CfCliDelegateResolver;
+import io.harness.pcf.model.CfCliVersion;
 import io.harness.rule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -71,6 +77,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import org.apache.commons.io.FilenameUtils;
@@ -86,6 +93,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(HarnessTeam.CDP)
 public class PcfCommandTaskHelperTest extends WingsBaseTest {
   public static final String MANIFEST_YAML = "  applications:\n"
       + "  - name: ${APPLICATION_NAME}\n"
@@ -267,6 +275,7 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
   @Mock EncryptedDataDetail encryptedDataDetail;
   @Mock ExecutionLogCallback executionLogCallback;
   @Mock DelegateFileManager delegateFileManager;
+  @Mock CfCliDelegateResolver cfCliDelegateResolver;
   @InjectMocks @Spy PcfCommandTaskHelper pcfCommandTaskHelper;
 
   @Test
@@ -1017,5 +1026,37 @@ public class PcfCommandTaskHelperTest extends WingsBaseTest {
 
     assertThat(artifactFile.exists()).isTrue();
     assertThat(artifactFile.getName().contains(processedArtifactFilename)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGetCfCliPathOnDelegate() {
+    String defaultCfPath = "cf";
+    doReturn(Optional.of(defaultCfPath)).when(cfCliDelegateResolver).getAvailableCfCliPathOnDelegate(CfCliVersion.V6);
+    String cfCliPathOnDelegate = pcfCommandTaskHelper.getCfCliPathOnDelegate(true, CfCliVersion.V6);
+
+    assertThat(cfCliPathOnDelegate).isNotEmpty();
+    assertThat(cfCliPathOnDelegate).isEqualTo(defaultCfPath);
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGetCfCliPathOnDelegateWithNullVersion() {
+    assertThatThrownBy(() -> pcfCommandTaskHelper.getCfCliPathOnDelegate(true, null))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessage("Requested CF CLI version on delegate cannot be null");
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGetCfCliPathOnDelegateWithNotInstalledCliOnDelegate() {
+    doReturn(Optional.empty()).when(cfCliDelegateResolver).getAvailableCfCliPathOnDelegate(CfCliVersion.V7);
+
+    assertThatThrownBy(() -> pcfCommandTaskHelper.getCfCliPathOnDelegate(true, CfCliVersion.V7))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessage("Unable to find CF CLI version on delegate, requested version: V7");
   }
 }

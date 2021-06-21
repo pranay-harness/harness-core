@@ -18,7 +18,6 @@ public class AppDynamicsEntityToDTO
         .controllerUrl(connector.getControllerUrl())
         .username(connector.getUsername())
         .passwordRef(SecretRefHelper.createSecretRef(connector.getPasswordRef()))
-        .accountId(connector.getAccountId())
         .authType(connector.getAuthType() == null ? AppDynamicsAuthType.USERNAME_PASSWORD : connector.getAuthType())
         .clientId(connector.getClientId())
         .clientSecretRef(SecretRefHelper.createSecretRef(connector.getClientSecret()))

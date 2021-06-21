@@ -177,7 +177,7 @@ func isValid(t types.RunnableTest) bool {
 	return t.Pkg != "" && t.Class != ""
 }
 
-func (cgs *CgServiceImpl) GetTestsToRun(ctx context.Context, req types.SelectTestsReq) (types.SelectTestsResp, error) {
+func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq) (types.SelectTestsResp, error) {
 	cgs.Log.Infow("getTestsToRun call", "req", req)
 	// parse package and class names from the files
 	fileNames := []string{}
@@ -231,6 +231,15 @@ func (cgs *CgServiceImpl) GetTestsToRun(ctx context.Context, req types.SelectTes
 		u := types.RunnableTest{Pkg: t.Package, Class: t.Class}
 		methodMap[u] = append(methodMap[u], types.RunnableTest{Pkg: t.Package, Class: t.Class, Method: t.Method})
 		totalTests += 1
+	}
+
+	// If no tests were found in the target branch, we want to run all the tests to generate the callgraph for that branch
+	if req.SelectAll == true || totalTests == 0 {
+		return types.SelectTestsResp{
+			SelectAll:    true,
+			TotalTests:   totalTests,
+			SrcCodeTests: totalTests,
+		}, nil
 	}
 
 	m := make(map[types.RunnableTest]struct{}) // Get unique tests to run

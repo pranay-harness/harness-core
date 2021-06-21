@@ -4,15 +4,21 @@ import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Group.id;
 
+import io.harness.cvng.analysis.entities.LearningEngineTask;
+import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskKeys;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskKeys;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
-import io.harness.cvng.metrics.beans.CVNGMetricContext;
+import io.harness.cvng.metrics.beans.AccountMetricContext;
+import io.harness.cvng.statemachine.beans.AnalysisStatus;
+import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
+import io.harness.cvng.statemachine.entities.AnalysisStateMachine.AnalysisStateMachineKeys;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceKeys;
+import io.harness.metrics.AutoMetricContext;
 import io.harness.metrics.beans.MetricConfiguration;
 import io.harness.metrics.service.api.MetricDefinitionInitializer;
 import io.harness.metrics.service.api.MetricService;
@@ -59,18 +65,18 @@ public class CVNGMetricsPublisher implements MetricsPublisher, MetricDefinitionI
             .statusField(VerificationJobInstanceKeys.executionStatus)
             .name("verification_job_instance")
             .build());
-    /*TASKS_INFO.put(LearningEngineTask.class, // TODO: add accountId to collection to make this work.
+    TASKS_INFO.put(LearningEngineTask.class,
         QueryParams.builder()
             .nonFinalStatuses(LearningEngineTask.ExecutionStatus.getNonFinalStatues())
             .statusField(LearningEngineTaskKeys.taskStatus)
             .name("learning_engine_task")
-            .build());*/
-    /*TASKS_INFO.put(AnalysisStateMachine.class,
+            .build());
+    TASKS_INFO.put(AnalysisStateMachine.class,
         QueryParams.builder()
             .nonFinalStatuses(AnalysisStatus.getNonFinalStatuses())
             .statusField(AnalysisStateMachineKeys.status)
             .name("analysis_state_machine")
-            .build());*/
+            .build());
   }
   @Inject private OrchestrationService orchestrationService;
   @Inject private MetricService metricService;
@@ -94,7 +100,7 @@ public class CVNGMetricsPublisher implements MetricsPublisher, MetricDefinitionI
           .group(id(grouping("accountId", "accountId")), grouping("count", accumulator("$sum", 1)))
           .aggregate(InstanceCount.class)
           .forEachRemaining(instanceCount -> {
-            try (CVNGMetricContext cvngMetricContext = new CVNGMetricContext(instanceCount.id.accountId)) {
+            try (AccountMetricContext accountMetricContext = new AccountMetricContext(instanceCount.id.accountId)) {
               metricService.recordMetric(getNonFinalStatusMetricName(queryParams.getName()), instanceCount.count);
             }
           });
@@ -105,7 +111,7 @@ public class CVNGMetricsPublisher implements MetricsPublisher, MetricDefinitionI
             .group(id(grouping("accountId", "accountId")), grouping("count", accumulator("$sum", 1)))
             .aggregate(InstanceCount.class)
             .forEachRemaining(instanceCount -> {
-              try (CVNGMetricContext cvngMetricContext = new CVNGMetricContext(instanceCount.id.accountId)) {
+              try (AutoMetricContext accountMetricContext = new AccountMetricContext(instanceCount.id.accountId)) {
                 metricService.recordMetric(getStatusMetricName(queryParams, status.toString()), instanceCount.count);
               }
             });
@@ -140,6 +146,14 @@ public class CVNGMetricsPublisher implements MetricsPublisher, MetricDefinitionI
                                                   .name("CVNG tasks status count")
                                                   .metrics(metrics)
                                                   .build();
+    /*
+    TODO: Uncomment this to write file to generate dashboard. This is kind of manual now. We need to automate dashboard
+    creation. ObjectMapper mapper = new ObjectMapper(new
+    YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)); try { mapper.writeValue(new
+    File("~/workspace/portal/300-cv-nextgen/src/scripts/runtime.yaml"), metricConfiguration); } catch (IOException e) {
+      e.printStackTrace();
+    }
+    */
     return Collections.singletonList(metricConfiguration);
   }
 

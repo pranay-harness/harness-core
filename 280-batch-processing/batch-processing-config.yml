@@ -91,6 +91,9 @@ cfMigrationConfig:
   connectionTimeout: 10000
   readTimeout: 30000
 
+featureFlagConfig:
+  featureFlagSystem: LOCAL
+  syncFeaturesToCF: false
 
 reportScheduleConfig:
   enabled: true

@@ -5,8 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.ccm.cluster.entities.BatchJobInterval;
-import io.harness.ccm.cluster.entities.BatchJobInterval.BatchJobIntervalKeys;
+import io.harness.ccm.commons.entities.batch.BatchJobInterval;
+import io.harness.ccm.commons.entities.batch.BatchJobInterval.BatchJobIntervalKeys;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;

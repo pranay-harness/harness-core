@@ -133,7 +133,7 @@ func runCmd(cmd exec.Command, svcID string, commands []string, startTime time.Ti
 	err := cmd.Start()
 	if err != nil {
 		log.Errorw(
-			"error encountered while executing service",
+			fmt.Sprintf("failed to start service with err: %s", err),
 			"commands", commands,
 			"service_id", svcID,
 			"elapsed_time_ms", utils.TimeSince(startTime),
@@ -156,7 +156,7 @@ func runCmd(cmd exec.Command, svcID string, commands []string, startTime time.Ti
 
 	if err != nil {
 		log.Errorw(
-			"error encountered while executing service",
+			fmt.Sprintf("service execution failed with error: %s", err),
 			"commands", commands,
 			"service_id", svcID,
 			"elapsed_time_ms", utils.TimeSince(startTime),

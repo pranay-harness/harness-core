@@ -1,5 +1,6 @@
 package io.harness.cvng.verificationjob.services.impl;
 
+import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
 import static io.harness.cvng.beans.job.VerificationJobType.CANARY;
 import static io.harness.cvng.beans.job.VerificationJobType.TEST;
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
@@ -377,7 +378,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     cvConfigService.save(cvConfig1);
     String verificationJobInstanceId =
         createVerificationJobInstance("identifier", "env", ExecutionStatus.RUNNING, CANARY).getUuid();
-    verificationTaskService.create(accountId, cvConfig1.getUuid(), verificationJobInstanceId);
+    verificationTaskService.create(accountId, cvConfig1.getUuid(), verificationJobInstanceId, cvConfig1.getType());
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     AnalysisProgressLog progressLog =
@@ -829,7 +830,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
       assertThat(verificationJobInstance.getExecutionStatus()).isEqualTo(ExecutionStatus.QUEUED);
       assertThat(verificationJobInstance.getStartTime()).isEqualTo(Instant.parse("2021-02-26T09:00:00.000Z"));
       assertThat(((HealthVerificationJob) verificationJobInstance.getResolvedJob())
-                     .getPreActivityVerificationStartTime(verificationJobInstance.getStartTime(), null))
+                     .getPreActivityVerificationStartTime(verificationJobInstance.getStartTime()))
           .isEqualTo(Instant.parse("2021-02-26T08:55:00.000Z"));
       assertThat(verificationJobInstance.getStartTime()).isEqualTo(Instant.parse("2021-02-26T09:00:00.000Z"));
 
@@ -928,8 +929,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
         VerificationJobInstanceKeys.dataCollectionTaskIteration, VerificationJobInstanceKeys.timeoutTaskIteration,
         VerificationJobInstanceKeys.dataCollectionDelay, VerificationJobInstanceKeys.oldVersionHosts,
         VerificationJobInstanceKeys.newVersionHosts, VerificationJobInstanceKeys.newHostsTrafficSplitPercentage,
-        VerificationJobInstanceKeys.progressLogs, VerificationJobInstanceKeys.preActivityVerificationStartTime,
-        VerificationJobInstanceKeys.postActivityVerificationStartTime, VerificationJobInstanceKeys.cvConfigMap,
+        VerificationJobInstanceKeys.progressLogs, VerificationJobInstanceKeys.cvConfigMap,
         VerificationJobInstanceKeys.verificationStatus);
     verificationJobInstances.forEach(verificationJobInstance -> {
       List<Field> fields = ReflectionUtils.getAllDeclaredAndInheritedFields(VerificationJobInstance.class);
@@ -1109,7 +1109,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
             .startTime(Instant.ofEpochMilli(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis()))
             .build();
     verificationJobInstanceService.create(verificationJobInstance);
-    verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid());
+    verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
     return verificationJobInstance;
   }
 
@@ -1139,7 +1139,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
             .cvConfigMap(Collections.singletonMap(cvConfigId, cvConfig))
             .build();
     verificationJobInstanceService.create(verificationJobInstance);
-    verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid());
+    verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
     return verificationJobInstance;
   }
 
@@ -1159,7 +1159,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
             .cvConfigMap(Collections.singletonMap(cvConfigId, cvConfig))
             .build();
     verificationJobInstanceService.create(verificationJobInstance);
-    verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid());
+    verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
     return verificationJobInstance;
   }
 
@@ -1181,7 +1181,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
             .verificationStatus(verificationStatus)
             .build();
     verificationJobInstanceService.create(verificationJobInstance);
-    verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid());
+    verificationTaskService.create(accountId, cvConfigId, verificationJobInstance.getUuid(), APP_DYNAMICS);
     return verificationJobInstance;
   }
 

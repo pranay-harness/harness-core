@@ -24,6 +24,7 @@ import io.harness.pms.utils.InjectorUtils;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -31,6 +32,7 @@ import java.util.List;
 @Singleton
 public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
   private static final String TERRAFORM_STEP_METADATA = "Terraform";
+  private static final List<String> TERRAFORM_CATEGORY = Arrays.asList("Kubernetes", "Provisioner");
 
   @Inject InjectorUtils injectorUtils;
   @Override
@@ -124,34 +126,42 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
             .setStepMetaData(StepMetaData.newBuilder().addCategory("Kubernetes").setFolderPath("Kubernetes").build())
             .build();
 
-    StepInfo terraformApply =
-        StepInfo.newBuilder()
-            .setName("Terraform Apply")
-            .setType(StepSpecTypeConstants.TERRAFORM_APPLY)
-            .setStepMetaData(StepMetaData.newBuilder().setFolderPath(TERRAFORM_STEP_METADATA).build())
-            .setFeatureFlag(FeatureName.NG_PROVISIONERS.name())
-            .build();
-    StepInfo terraformPlan =
-        StepInfo.newBuilder()
-            .setName("Terraform Plan")
-            .setType(StepSpecTypeConstants.TERRAFORM_PLAN)
-            .setStepMetaData(StepMetaData.newBuilder().setFolderPath(TERRAFORM_STEP_METADATA).build())
-            .setFeatureFlag(FeatureName.NG_PROVISIONERS.name())
-            .build();
-    StepInfo terraformDestroy =
-        StepInfo.newBuilder()
-            .setName("Terraform Destroy")
-            .setType(StepSpecTypeConstants.TERRAFORM_DESTROY)
-            .setStepMetaData(StepMetaData.newBuilder().setFolderPath(TERRAFORM_STEP_METADATA).build())
-            .setFeatureFlag(FeatureName.NG_PROVISIONERS.name())
-            .build();
-    StepInfo terraformRollback =
-        StepInfo.newBuilder()
-            .setName("Terraform Rollback")
-            .setType(StepSpecTypeConstants.TERRAFORM_ROLLBACK)
-            .setStepMetaData(StepMetaData.newBuilder().setFolderPath(TERRAFORM_STEP_METADATA).build())
-            .setFeatureFlag(FeatureName.NG_PROVISIONERS.name())
-            .build();
+    StepInfo terraformApply = StepInfo.newBuilder()
+                                  .setName("Terraform Apply")
+                                  .setType(StepSpecTypeConstants.TERRAFORM_APPLY)
+                                  .setStepMetaData(StepMetaData.newBuilder()
+                                                       .addAllCategory(TERRAFORM_CATEGORY)
+                                                       .setFolderPath(TERRAFORM_STEP_METADATA)
+                                                       .build())
+                                  .setFeatureFlag(FeatureName.NG_PROVISIONERS.name())
+                                  .build();
+    StepInfo terraformPlan = StepInfo.newBuilder()
+                                 .setName("Terraform Plan")
+                                 .setType(StepSpecTypeConstants.TERRAFORM_PLAN)
+                                 .setStepMetaData(StepMetaData.newBuilder()
+                                                      .addAllCategory(TERRAFORM_CATEGORY)
+                                                      .setFolderPath(TERRAFORM_STEP_METADATA)
+                                                      .build())
+                                 .setFeatureFlag(FeatureName.NG_PROVISIONERS.name())
+                                 .build();
+    StepInfo terraformDestroy = StepInfo.newBuilder()
+                                    .setName("Terraform Destroy")
+                                    .setType(StepSpecTypeConstants.TERRAFORM_DESTROY)
+                                    .setStepMetaData(StepMetaData.newBuilder()
+                                                         .addAllCategory(TERRAFORM_CATEGORY)
+                                                         .setFolderPath(TERRAFORM_STEP_METADATA)
+                                                         .build())
+                                    .setFeatureFlag(FeatureName.NG_PROVISIONERS.name())
+                                    .build();
+    StepInfo terraformRollback = StepInfo.newBuilder()
+                                     .setName("Terraform Rollback")
+                                     .setType(StepSpecTypeConstants.TERRAFORM_ROLLBACK)
+                                     .setStepMetaData(StepMetaData.newBuilder()
+                                                          .addAllCategory(TERRAFORM_CATEGORY)
+                                                          .setFolderPath(TERRAFORM_STEP_METADATA)
+                                                          .build())
+                                     .setFeatureFlag(FeatureName.NG_PROVISIONERS.name())
+                                     .build();
 
     List<StepInfo> stepInfos = new ArrayList<>();
 

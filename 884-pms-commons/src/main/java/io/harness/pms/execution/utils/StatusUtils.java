@@ -20,6 +20,7 @@ import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
 import static io.harness.pms.contracts.execution.Status.SUSPENDED;
 import static io.harness.pms.contracts.execution.Status.TASK_WAITING;
 import static io.harness.pms.contracts.execution.Status.TIMED_WAITING;
+import static io.harness.pms.contracts.execution.Status.UNRECOGNIZED;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -36,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class StatusUtils {
   // Status Groups
-  private final EnumSet<Status> FINALIZABLE_STATUSES = EnumSet.of(QUEUED, RUNNING, PAUSED, ASYNC_WAITING,
+  private final EnumSet<Status> FINALIZABLE_STATUSES = EnumSet.of(QUEUED, RUNNING, PAUSING, PAUSED, ASYNC_WAITING,
       APPROVAL_WAITING, RESOURCE_WAITING, INTERVENTION_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING, PAUSING);
 
   private final EnumSet<Status> POSITIVE_STATUSES = EnumSet.of(SUCCEEDED, SKIPPED, SUSPENDED, IGNORE_FAILED);
@@ -122,8 +123,8 @@ public class StatusUtils {
       case PAUSED:
         return EnumSet.of(QUEUED, RUNNING, PAUSING);
       case DISCONTINUING:
-        return EnumSet.of(QUEUED, RUNNING, ASYNC_WAITING, APPROVAL_WAITING, RESOURCE_WAITING, TASK_WAITING,
-            TIMED_WAITING, INTERVENTION_WAITING, PAUSED, PAUSING);
+        return EnumSet.of(RUNNING, INTERVENTION_WAITING, TIMED_WAITING, ASYNC_WAITING, TASK_WAITING, PAUSING,
+            RESOURCE_WAITING, APPROVAL_WAITING, QUEUED, PAUSED, FAILED, SUSPENDED);
       case QUEUED:
         return EnumSet.of(PAUSED, PAUSING);
       case ABORTED:
@@ -136,7 +137,7 @@ public class StatusUtils {
       case SUCCEEDED:
         return EnumSet.of(INTERVENTION_WAITING, RUNNING);
       case IGNORE_FAILED:
-        return EnumSet.of(EXPIRED, FAILED, INTERVENTION_WAITING);
+        return EnumSet.of(EXPIRED, FAILED, INTERVENTION_WAITING, RUNNING);
       default:
         throw new IllegalStateException("Unexpected value: " + status);
     }
@@ -148,6 +149,8 @@ public class StatusUtils {
         return EnumSet.of(RUNNING, PAUSING, PAUSED);
       case PAUSED:
         return EnumSet.of(QUEUED, RUNNING, PAUSING, INTERVENTION_WAITING);
+      case SUCCEEDED:
+        return EnumSet.of(PAUSING, INTERVENTION_WAITING, RUNNING);
       default:
         return nodeAllowedStartSet(status);
     }
@@ -157,9 +160,30 @@ public class StatusUtils {
     return FINAL_STATUSES.contains(status);
   }
 
-  // DO NOT Change order of the switch cases
   public Status calculateStatus(List<Status> statuses, String planExecutionId) {
-    if (StatusUtils.positiveStatuses().containsAll(statuses)) {
+    Status status = calculateStatus(statuses);
+    if (status == UNRECOGNIZED) {
+      log.error("Cannot calculate the end status for PlanExecutionId : {}", planExecutionId);
+      return ERRORED;
+    }
+    return status;
+  }
+
+  public Status calculateStatusForNode(List<Status> statuses, String nodeExecutionId) {
+    Status status = calculateStatus(statuses);
+    if (status == UNRECOGNIZED) {
+      log.error("Cannot calculate the end status for NodeExecutionId : {}", nodeExecutionId);
+      return ERRORED;
+    }
+    return status;
+  }
+
+  // DO NOT Change order of the switch cases
+  private Status calculateStatus(List<Status> statuses) {
+    if (StatusUtils.positiveStatuses().containsAll(statuses)
+        && statuses.stream().anyMatch(status -> status == IGNORE_FAILED)) {
+      return IGNORE_FAILED;
+    } else if (StatusUtils.positiveStatuses().containsAll(statuses)) {
       return SUCCEEDED;
     } else if (statuses.stream().anyMatch(status -> status == ABORTED)) {
       return ABORTED;
@@ -184,8 +208,7 @@ public class StatusUtils {
     } else if (statuses.stream().anyMatch(status -> status == PAUSED)) {
       return PAUSED;
     } else {
-      log.error("Cannot calculate the end status for PlanExecutionId : {}", planExecutionId);
-      return ERRORED;
+      return UNRECOGNIZED;
     }
   }
 }

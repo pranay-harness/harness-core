@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 package io.harness.eventsframework.schemas.user;
-import "google/protobuf/wrappers.proto";
 
 option java_multiple_files = true;
 option go_package = "953_events_api";

@@ -9,10 +9,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @OwnedBy(PIPELINE)
 public enum BitbucketPRAction implements GitAction {
-  @JsonProperty("Create") PULL_REQUEST_CREATED("open", "Create"),
-  @JsonProperty("Update") PULL_REQUEST_UPDATED("sync", "Update"),
-  @JsonProperty("Merge") PULL_REQUEST_MERGED("merge", "Merge"),
-  @JsonProperty("Decline") PULL_REQUEST_DECLINED("close", "Decline");
+  @JsonProperty("Create") CREATE("open", "Create"),
+  @JsonProperty("Update") UPDATE("sync", "Update"),
+  @JsonProperty("Merge") MERGE("merge", "Merge"),
+  @JsonProperty("Decline") DECLINE("close", "Decline");
 
   private String value;
   private String parsedValue;

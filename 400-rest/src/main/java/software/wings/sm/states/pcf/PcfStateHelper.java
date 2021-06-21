@@ -54,6 +54,7 @@ import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.pcf.PcfFileTypeChecker;
+import io.harness.pcf.model.CfCliVersion;
 import io.harness.pcf.model.ManifestType;
 import io.harness.pcf.model.PcfConstants;
 
@@ -139,6 +140,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -188,6 +190,15 @@ public class PcfStateHelper {
         .build();
   }
 
+  public List<String> getRenderedTags(ExecutionContext context, List<String> tagList) {
+    final List<String> renderedTags = CollectionUtils.emptyIfNull(tagList)
+                                          .stream()
+                                          .map(context::renderExpression)
+                                          .distinct()
+                                          .collect(Collectors.toList());
+    return io.harness.data.structure.ListUtils.trimStrings(renderedTags);
+  }
+
   public Integer getStateTimeoutMillis(ExecutionContext context, Integer defaultValue, boolean isRollback) {
     SetupSweepingOutputPcf setupSweepingOutputPcf = null;
     try {
@@ -204,7 +215,7 @@ public class PcfStateHelper {
 
   public PcfRouteUpdateStateExecutionData getRouteUpdateStateExecutionData(String activityId, String appId,
       String accountId, PcfCommandRequest pcfCommandRequest, String commandName,
-      PcfRouteUpdateRequestConfigData requestConfigData) {
+      PcfRouteUpdateRequestConfigData requestConfigData, List<String> tags) {
     return PcfRouteUpdateStateExecutionData.builder()
         .activityId(activityId)
         .accountId(accountId)
@@ -212,6 +223,7 @@ public class PcfStateHelper {
         .pcfCommandRequest(pcfCommandRequest)
         .commandName(commandName)
         .pcfRouteUpdateRequestConfigData(requestConfigData)
+        .tags(tags)
         .build();
   }
 
@@ -247,7 +259,8 @@ public class PcfStateHelper {
   }
 
   public ExecutionResponse queueDelegateTaskForRouteUpdate(PcfRouteUpdateQueueRequestData queueRequestData,
-      SetupSweepingOutputPcf setupSweepingOutputPcf, String stateExecutionInstanceId, boolean selectionLogsEnabled) {
+      SetupSweepingOutputPcf setupSweepingOutputPcf, String stateExecutionInstanceId, boolean selectionLogsEnabled,
+      List<String> renderedTags) {
     Integer timeoutIntervalInMinutes = queueRequestData.getTimeoutIntervalInMinutes() == null
         ? Integer.valueOf(DEFAULT_PCF_TASK_TIMEOUT_MIN)
         : queueRequestData.getTimeoutIntervalInMinutes();
@@ -274,11 +287,12 @@ public class PcfStateHelper {
                 featureFlagService.isEnabled(LIMIT_PCF_THREADS, queueRequestData.getPcfConfig().getAccountId()))
             .ignorePcfConnectionContextCache(featureFlagService.isEnabled(
                 IGNORE_PCF_CONNECTION_CONTEXT_CACHE, queueRequestData.getPcfConfig().getAccountId()))
+            .cfCliVersion(getCfCliVersionOrDefault(app.getAppId(), setupSweepingOutputPcf.getServiceId()))
             .build();
 
     PcfRouteUpdateStateExecutionData stateExecutionData =
         getRouteUpdateStateExecutionData(activityId, app.getUuid(), app.getAccountId(), pcfCommandRequest,
-            queueRequestData.getCommandName(), queueRequestData.getRequestConfigData());
+            queueRequestData.getCommandName(), queueRequestData.getRequestConfigData(), renderedTags);
 
     DelegateTask delegateTask =
         getDelegateTask(PcfDelegateTaskCreationData.builder()
@@ -294,6 +308,7 @@ public class PcfStateHelper {
                             .selectionLogsTrackingEnabled(selectionLogsEnabled)
                             .taskDescription("PCF Route update task execution")
                             .timeout(timeoutIntervalInMinutes)
+                            .tagList(renderedTags)
                             .build());
 
     delegateService.queueTask(delegateTask);
@@ -927,5 +942,10 @@ public class PcfStateHelper {
                                 .updateDetails(new StringBuilder().append(logMessage).toString())
                                 .build())
         .build();
+  }
+
+  public CfCliVersion getCfCliVersionOrDefault(final String appId, final String serviceId) {
+    Service service = serviceResourceService.get(appId, serviceId);
+    return service != null && service.getCfCliVersion() != null ? service.getCfCliVersion() : CfCliVersion.V6;
   }
 }

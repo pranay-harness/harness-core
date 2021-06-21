@@ -20,7 +20,9 @@
       "billingExportSpec": {
         "storageAccountName": "storageAccountName",
         "containerName": "containerName",
-        "directoryName": "directoryName"
+        "directoryName": "directoryName",
+        "reportName": "reportName",
+        "subscriptionId": "subscriptionId"
       }
     }
   }

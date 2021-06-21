@@ -116,6 +116,22 @@ if [[ "" != "$NG_MANAGER_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cd.secret $NG_MANAGER_SERVICE_SECRET
 fi
 
+if [[ "" != "$CV_MANAGER_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cv.serviceHttpClientConfig.baseUrl $CV_MANAGER_BASE_URL
+fi
+
+if [[ "" != "$CV_MANAGER_SERVICE_CONNECT_TIMEOUT_IN_SECONDS" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cv.serviceHttpClientConfig.connectTimeOutSeconds $CV_MANAGER_SERVICE_CONNECT_TIMEOUT_IN_SECONDS
+fi
+
+if [[ "" != "$CV_MANAGER_SERVICE_READ_TIMEOUT_IN_SECONDS" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cv.serviceHttpClientConfig.readTimeOutSeconds $CV_MANAGER_SERVICE_READ_TIMEOUT_IN_SECONDS
+fi
+
+if [[ "" != "$CV_MANAGER_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cv.secret $CV_MANAGER_SERVICE_SECRET
+fi
+
 if [[ "" != "$NG_MANAGER_TARGET" ]]; then
   yq write -i $CONFIG_FILE grpcClientConfigs.cd.target $NG_MANAGER_TARGET
 fi
@@ -125,11 +141,11 @@ if [[ "" != "$NG_MANAGER_AUTHORITY" ]]; then
 fi
 
 if [[ "" != "$CVNG_MANAGER_TARGET" ]]; then
-  yq write -i $CONFIG_FILE grpcClientConfigs.cvng.target $CVNG_MANAGER_TARGET
+  yq write -i $CONFIG_FILE grpcClientConfigs.cv.target $CVNG_MANAGER_TARGET
 fi
 
 if [[ "" != "$CVNG_MANAGER_AUTHORITY" ]]; then
-  yq write -i $CONFIG_FILE grpcClientConfigs.cvng.authority $CVNG_MANAGER_AUTHORITY
+  yq write -i $CONFIG_FILE grpcClientConfigs.cv.authority $CVNG_MANAGER_AUTHORITY
 fi
 
 if [[ "" != "$CI_MANAGER_TARGET" ]]; then
@@ -239,10 +255,9 @@ replace_key_value logStreamingServiceConfig.serviceToken "$LOG_STREAMING_SERVICE
 replace_key_value iteratorsConfig.approvalInstanceIteratorConfig.enabled "$APPROVAL_INSTANCE_ITERATOR_ENABLED"
 replace_key_value iteratorsConfig.approvalInstanceIteratorConfig.targetIntervalInSeconds "$APPROVAL_INSTANCE_ITERATOR_INTERVAL_SEC"
 replace_key_value orchestrationStepConfig.ffServerBaseUrl "$FF_SERVER_BASE_URL"
+replace_key_value orchestrationStepConfig.ffServerApiKey "$FF_SERVER_API_KEY"
 
 replace_key_value shouldDeployWithGitSync "$ENABLE_GIT_SYNC"
 
-replace_key_value useRedisForInterrupts "$USE_REDIS_FOR_INTERRUPTS"
-replace_key_value useRedisForOrchestrationEvents "$USE_REDIS_FOR_ORCHESTRATION_EVENTS"
-replace_key_value useRedisForSdkResponseEvents "$USE_REDIS_FOR_SDK_RESPONSE_EVENTS"
-
+replace_key_value enableAudit "$ENABLE_AUDIT"
+replace_key_value auditClientConfig.baseUrl "$AUDIT_SERVICE_BASE_URL"

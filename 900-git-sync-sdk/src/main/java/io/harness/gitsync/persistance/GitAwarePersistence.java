@@ -16,11 +16,11 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @OwnedBy(DX)
 public interface GitAwarePersistence {
   <B extends GitSyncableEntity, Y extends YamlDTO> B save(
-      B objectToSave, Y yaml, ChangeType changeType, Class<B> entityClass, Supplier functor);
+      B objectToSave, String yaml, ChangeType changeType, Class<B> entityClass, Supplier functor);
 
   @Deprecated
   <B extends GitSyncableEntity, Y extends YamlDTO> B save(
-      B objectToSave, Y yaml, ChangeType changeType, Class<B> entityClass);
+      B objectToSave, String yaml, ChangeType changeType, Class<B> entityClass);
 
   /**
    * Count returns count with limit -1 and skip -1

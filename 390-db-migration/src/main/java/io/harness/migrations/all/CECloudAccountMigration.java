@@ -2,10 +2,9 @@ package io.harness.migrations.all;
 
 import static io.harness.persistence.HQuery.excludeValidate;
 
-import io.harness.annotations.dev.HarnessModule;
+import io.harness.ccm.commons.entities.billing.CECloudAccount;
 import io.harness.migrations.Migration;
 
-import software.wings.beans.ce.CECloudAccount;
 import software.wings.beans.ce.depricated.CECloudAccountOld;
 import software.wings.dl.WingsPersistence;
 

@@ -5,6 +5,7 @@ import static java.time.Duration.ofDays;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.DelegateEntityOwner.DelegateEntityOwnerKeys;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -27,6 +28,7 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
@@ -128,5 +130,10 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
       return this.capabilitiesCheckNextIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  @UtilityClass
+  public static final class DelegateKeys {
+    public static final String owner_identifier = owner + "." + DelegateEntityOwnerKeys.identifier;
   }
 }

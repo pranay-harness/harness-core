@@ -9,12 +9,14 @@ import static io.harness.git.model.GitRepositoryType.HELM;
 import static io.harness.git.model.GitRepositoryType.TERRAFORM;
 import static io.harness.git.model.GitRepositoryType.TRIGGER;
 import static io.harness.git.model.GitRepositoryType.YAML;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.eclipse.jgit.diff.DiffEntry.ChangeType.ADD;
 import static org.eclipse.jgit.diff.DiffEntry.ChangeType.COPY;
@@ -45,7 +47,10 @@ import java.util.List;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.TransportException;
+import org.eclipse.jgit.lib.ObjectId;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -71,6 +76,33 @@ public class GitClientHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void test_checkIfGitConnectivityIssueIsNotTrownInCaseOfOtherExceptions() {
     gitClientHelper.checkIfGitConnectivityIssue(new GitAPIException("newTransportException") {});
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void test_checkIfMissingCommitIdIssue() {
+    assertThatThrownBy(
+        ()
+            -> gitClientHelper.checkIfMissingCommitIdIssue(
+                new JGitInternalException("Error", new MissingObjectException(ObjectId.zeroId(), "commitId")),
+                "commitId"))
+        .isInstanceOf(GitClientException.class)
+        .hasMessageContaining(
+            "Unable to find any references with commit id: commitId. Check provided value for commit id");
+
+    assertThatThrownBy(()
+                           -> gitClientHelper.checkIfMissingCommitIdIssue(
+                               new MissingObjectException(ObjectId.zeroId(), "commitId"), "commitId"))
+        .isInstanceOf(GitClientException.class)
+        .hasMessageContaining(
+            "Unable to find any references with commit id: commitId. Check provided value for commit id");
+
+    assertThatCode(
+        ()
+            -> gitClientHelper.checkIfMissingCommitIdIssue(
+                new GitAPIException("Git Exception", new TransportException("Transport Exception")) {}, "commitId"))
+        .doesNotThrowAnyException();
   }
 
   @Test

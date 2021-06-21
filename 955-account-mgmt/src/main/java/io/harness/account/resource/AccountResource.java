@@ -3,6 +3,7 @@ package io.harness.account.resource;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import io.harness.account.AccountClient;
+import io.harness.account.AccountConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.AccountDTO;
@@ -21,6 +22,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -40,17 +42,42 @@ import javax.ws.rs.core.MediaType;
 @AuthRule(permissionType = LOGGED_IN)
 public class AccountResource {
   private final AccountClient accountClient;
+  private final AccountConfig accountConfig;
 
   @Inject
-  public AccountResource(AccountClient accountClient) {
+  public AccountResource(AccountClient accountClient, AccountConfig accountConfig) {
     this.accountClient = accountClient;
+    this.accountConfig = accountConfig;
   }
 
   @GET
   @Path("{accountIdentifier}")
-  @ApiOperation(value = "Get Account", nickname = "getAccount")
+  @ApiOperation(value = "Get Account", nickname = "getAccountNG")
   public ResponseDTO<AccountDTO> get(@PathParam("accountIdentifier") String accountIdentifier) {
     AccountDTO accountDTO = RestClientUtils.getResponse(accountClient.getAccountDTO(accountIdentifier));
+
+    accountDTO.setCluster(accountConfig.getDeploymentClusterName());
+
+    return ResponseDTO.newResponse(accountDTO);
+  }
+
+  @PUT
+  @Path("{accountIdentifier}/name")
+  @ApiOperation(value = "Update Account Name", nickname = "updateAccountNameNG")
+  public ResponseDTO<AccountDTO> updateAccountName(
+      @PathParam("accountIdentifier") String accountIdentifier, AccountDTO dto) {
+    AccountDTO accountDTO = RestClientUtils.getResponse(accountClient.updateAccountName(accountIdentifier, dto));
+
+    return ResponseDTO.newResponse(accountDTO);
+  }
+
+  @PUT
+  @Path("{accountIdentifier}/default-experience")
+  @ApiOperation(value = "Update Default Experience", nickname = "updateAccountDefaultExperienceNG")
+  public ResponseDTO<AccountDTO> updateDefaultExperience(
+      @PathParam("accountIdentifier") String accountIdentifier, AccountDTO dto) {
+    AccountDTO accountDTO = RestClientUtils.getResponse(accountClient.updateDefaultExperience(accountIdentifier, dto));
+
     return ResponseDTO.newResponse(accountDTO);
   }
 }

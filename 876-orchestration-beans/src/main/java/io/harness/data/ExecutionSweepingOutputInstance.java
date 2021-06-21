@@ -2,6 +2,8 @@ package io.harness.data;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import static java.time.Duration.ofDays;
+
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
@@ -14,6 +16,7 @@ import io.harness.persistence.UuidAccess;
 import io.harness.pms.contracts.ambiance.Level;
 
 import com.google.common.collect.ImmutableList;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
@@ -40,6 +43,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("executionSweepingOutput")
 @StoreIn(DbAliases.PMS)
 public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAccess {
+  public static final Duration TTL = ofDays(30);
+
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -60,7 +65,7 @@ public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAc
   @Getter org.bson.Document value;
   @Wither @CreatedDate Long createdAt;
 
-  @FdIndex @Builder.Default Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
+  @FdIndex @Builder.Default Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
 
   @Wither @Version Long version;
 }

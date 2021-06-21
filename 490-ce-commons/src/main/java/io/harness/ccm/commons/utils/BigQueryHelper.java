@@ -2,7 +2,7 @@ package io.harness.ccm.commons.utils;
 
 import static java.lang.String.format;
 
-import io.harness.ccm.commons.entities.GcpConfig;
+import io.harness.ccm.commons.beans.config.GcpConfig;
 import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Inject;

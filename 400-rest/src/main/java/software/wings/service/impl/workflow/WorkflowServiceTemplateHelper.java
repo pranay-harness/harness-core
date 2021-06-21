@@ -167,6 +167,7 @@ public class WorkflowServiceTemplateHelper {
   private void compareOldNewPropertiesAndUpdateStepIds(
       PhaseStep oldPhaseStep, PhaseStep newPhaseStep, boolean fromYaml) {
     if (oldPhaseStep != null && oldPhaseStep.getSteps() != null) {
+      newPhaseStep.setUuid(oldPhaseStep.getUuid());
       final Function<GraphNode, String> keyDecider = gn -> fromYaml ? gn.getName() : gn.getId();
       final Map<String, GraphNode> oldGraphNodeMap = oldPhaseStep.getSteps().stream().collect(
           Collectors.toMap(keyDecider, Function.identity(), (key1, key2) -> null));

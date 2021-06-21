@@ -39,7 +39,7 @@ public interface NgUserService {
 
   List<UserInfo> listCurrentGenUsers(String accountId, UserFilterNG userFilter);
 
-  List<String> listUsersHavingRole(Scope scope, String roleIdentifier);
+  List<UserMetadataDTO> listUsersHavingRole(Scope scope, String roleIdentifier);
 
   Optional<UserMembership> getUserMembership(String userId);
 
@@ -55,7 +55,7 @@ public interface NgUserService {
    */
   List<UserMembership> listUserMemberships(Criteria criteria);
 
-  void addUserToScope(UserInfo user, Scope scope, UserMembershipUpdateSource source);
+  List<UserMetadataDTO> getUserMetadata(List<String> userIds);
 
   void addUserToScope(String user, Scope scope, String roleIdentifier, UserMembershipUpdateSource source);
 

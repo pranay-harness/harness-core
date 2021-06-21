@@ -8,9 +8,9 @@ import io.harness.beans.shared.ResourceConstraint;
 import io.harness.beans.shared.RestraintService;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.engine.observers.OrchestrationStartObserver;
+import io.harness.engine.observers.beans.OrchestrationStartInfo;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.plan.execution.SetupAbstractionKeys;
+import io.harness.pms.execution.utils.AmbianceUtils;
 
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +21,8 @@ public class ResourceRestraintInitializer implements OrchestrationStartObserver 
   @Inject private RestraintService restraintService;
 
   @Override
-  public void onStart(Ambiance ambiance) {
-    final String accountId = ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.accountId);
+  public void onStart(OrchestrationStartInfo orchestrationStartInfo) {
+    final String accountId = AmbianceUtils.getAccountId(orchestrationStartInfo.getAmbiance());
     try {
       ResourceConstraint resourceConstraint = ResourceConstraint.builder()
                                                   .name(QUEUING_RC_NAME)

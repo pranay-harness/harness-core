@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.api;
 
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 
@@ -8,8 +9,8 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface VerificationTaskService {
-  String create(String accountId, String cvConfigId);
-  String create(String accountId, String cvConfigId, String verificationJobInstanceId);
+  String create(String accountId, String cvConfigId, DataSourceType provider);
+  String create(String accountId, String cvConfigId, String verificationJobInstanceId, DataSourceType provider);
   String getCVConfigId(String verificationTaskId);
   String getVerificationJobInstanceId(String verificationTaskId);
   VerificationTask get(String verificationTaskId);

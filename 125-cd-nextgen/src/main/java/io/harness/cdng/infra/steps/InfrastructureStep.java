@@ -1,15 +1,13 @@
 package io.harness.cdng.infra.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 
 import static java.lang.String.format;
 
-import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.clients.AccessControlClient;
-import io.harness.accesscontrol.clients.Resource;
-import io.harness.accesscontrol.clients.ResourceScope;
-import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.InfrastructureMapper;
 import io.harness.cdng.infra.beans.InfraMapping;
@@ -18,8 +16,9 @@ import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.infra.yaml.InfrastructureKind;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.infra.yaml.K8sGcpInfrastructure;
-import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.services.ConnectorService;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.InvalidArgumentsException;
@@ -31,14 +30,14 @@ import io.harness.logging.UnitProgress;
 import io.harness.logging.UnitStatus;
 import io.harness.logstreaming.LogStreamingStepClientFactory;
 import io.harness.logstreaming.NGLogCallback;
+import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.environment.services.EnvironmentService;
+import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.rbac.PipelineRbacHelper;
-import io.harness.pms.rbac.PrincipalTypeProtoToPrincipalTypeMapper;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -46,19 +45,20 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.rbac.CDNGRbacPermissions;
 import io.harness.steps.EntityReferenceExtractorUtils;
 import io.harness.steps.executable.SyncExecutableWithRbac;
+import io.harness.utils.IdentifierRefHelper;
 import io.harness.walktree.visitor.SimpleVisitorFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 
 @OwnedBy(CDC)
-public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParameters> {
+public class InfrastructureStep implements SyncExecutableWithRbac<Infrastructure> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.INFRASTRUCTURE.getName()).build();
   private static String INFRASTRUCTURE_COMMAND_UNIT = "Execute";
@@ -70,10 +70,11 @@ public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParam
   @Inject @Named("PRIVILEGED") private AccessControlClient accessControlClient;
   @Inject private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
   @Inject private PipelineRbacHelper pipelineRbacHelper;
+  @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
 
   @Override
-  public Class<InfraStepParameters> getStepParametersClass() {
-    return InfraStepParameters.class;
+  public Class<Infrastructure> getStepParametersClass() {
+    return Infrastructure.class;
   }
 
   InfraMapping createInfraMappingObject(Infrastructure infrastructureSpec) {
@@ -81,29 +82,18 @@ public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParam
   }
 
   @Override
-  public StepResponse executeSyncAfterRbac(Ambiance ambiance, InfraStepParameters infraStepParameters,
+  public StepResponse executeSyncAfterRbac(Ambiance ambiance, Infrastructure infrastructure,
       StepInputPackage inputPackage, PassThroughData passThroughData) {
     long startTime = System.currentTimeMillis();
     NGLogCallback ngManagerLogCallback =
         new NGLogCallback(logStreamingStepClientFactory, ambiance, INFRASTRUCTURE_COMMAND_UNIT, true);
     ngManagerLogCallback.saveExecutionLog("Starting Infrastructure logs");
-    PipelineInfrastructure pipelineInfrastructure = infraStepParameters.getPipelineInfrastructure();
 
-    Infrastructure infraOverrides = null;
-    if (pipelineInfrastructure.getUseFromStage() != null
-        && pipelineInfrastructure.getUseFromStage().getOverrides() != null
-        && pipelineInfrastructure.getUseFromStage().getOverrides().getInfrastructureDefinition() != null) {
-      infraOverrides = pipelineInfrastructure.getUseFromStage().getOverrides().getInfrastructureDefinition().getSpec();
-    }
-
-    Infrastructure infrastructure = pipelineInfrastructure.getInfrastructureDefinition().getSpec();
-    Infrastructure finalInfrastructure =
-        infraOverrides != null ? infrastructure.applyOverrides(infraOverrides) : infrastructure;
-    validateInfrastructure(finalInfrastructure);
+    validateConnectorRef(infrastructure.getConnectorRef(), ambiance);
+    validateInfrastructure(infrastructure);
     EnvironmentOutcome environmentOutcome = (EnvironmentOutcome) executionSweepingOutputResolver.resolve(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.ENVIRONMENT));
-    InfrastructureOutcome infrastructureOutcome =
-        InfrastructureMapper.toOutcome(finalInfrastructure, environmentOutcome);
+    InfrastructureOutcome infrastructureOutcome = InfrastructureMapper.toOutcome(infrastructure, environmentOutcome);
     ngManagerLogCallback.saveExecutionLog(
         "Infrastructure Step completed", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
     return StepResponse.builder()
@@ -120,6 +110,22 @@ public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParam
                                                         .setEndTime(System.currentTimeMillis())
                                                         .build()))
         .build();
+  }
+
+  private void validateConnectorRef(ParameterField<String> connectorRef, Ambiance ambiance) {
+    NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
+    if (ParameterField.isNull(connectorRef)) {
+      throw new InvalidRequestException("Connector ref field not present in infrastructure");
+    }
+    String connectorRefValue = connectorRef.getValue();
+    IdentifierRef connectorIdentifierRef = IdentifierRefHelper.getIdentifierRef(connectorRefValue,
+        ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
+    Optional<ConnectorResponseDTO> connectorDTO =
+        connectorService.get(connectorIdentifierRef.getAccountIdentifier(), connectorIdentifierRef.getOrgIdentifier(),
+            connectorIdentifierRef.getProjectIdentifier(), connectorIdentifierRef.getIdentifier());
+    if (!connectorDTO.isPresent()) {
+      throw new InvalidRequestException(String.format("Connector not found for identifier : [%s]", connectorRefValue));
+    }
   }
 
   @VisibleForTesting
@@ -154,25 +160,14 @@ public class InfrastructureStep implements SyncExecutableWithRbac<InfraStepParam
   }
 
   @Override
-  public void validateResources(Ambiance ambiance, InfraStepParameters stepParameters) {
-    String accountIdentifier = AmbianceUtils.getAccountId(ambiance);
-    String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
-    String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
+  public void validateResources(Ambiance ambiance, Infrastructure infrastructure) {
     ExecutionPrincipalInfo executionPrincipalInfo = ambiance.getMetadata().getPrincipalInfo();
     String principal = executionPrincipalInfo.getPrincipal();
     if (EmptyPredicate.isEmpty(principal)) {
       return;
     }
-    PrincipalType principalType = PrincipalTypeProtoToPrincipalTypeMapper.convertToAccessControlPrincipalType(
-        executionPrincipalInfo.getPrincipalType());
     Set<EntityDetailProtoDTO> entityDetails =
-        entityReferenceExtractorUtils.extractReferredEntities(ambiance, stepParameters.getPipelineInfrastructure());
+        entityReferenceExtractorUtils.extractReferredEntities(ambiance, infrastructure);
     pipelineRbacHelper.checkRuntimePermissions(ambiance, entityDetails);
-    if (stepParameters.getPipelineInfrastructure().getEnvironmentRef() == null
-        || EmptyPredicate.isEmpty(stepParameters.getPipelineInfrastructure().getEnvironmentRef().getValue())) {
-      accessControlClient.checkForAccessOrThrow(Principal.of(principalType, principal),
-          ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier), Resource.of("ENVIRONMENT", null),
-          CDNGRbacPermissions.ENVIRONMENT_CREATE_PERMISSION, "Validation for Infrastructure Step failed");
-    }
   }
 }

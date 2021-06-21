@@ -41,6 +41,11 @@ public class CVNGConnectorValidationDelegateTask extends AbstractDelegateRunnabl
   }
 
   @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
+  }
+
+  @Override
   public DelegateResponseData run(TaskParameters parameters) {
     CVConnectorTaskParams taskParameters = (CVConnectorTaskParams) parameters;
     if (taskParameters.getConnectorConfigDTO() instanceof DecryptableEntity) {
@@ -48,30 +53,24 @@ public class CVNGConnectorValidationDelegateTask extends AbstractDelegateRunnabl
           (DecryptableEntity) taskParameters.getConnectorConfigDTO(), taskParameters.getEncryptionDetails());
     }
     boolean validCredentials = false;
-    Exception exceptionInProcessing = null;
-    try {
-      ConnectorValidationInfo connectorValidationInfo =
-          ConnectorValidationInfo.getConnectorValidationInfo(taskParameters.getConnectorConfigDTO());
-      String dsl = connectorValidationInfo.getConnectionValidationDSL();
-      Instant now = clock.instant();
-      final RuntimeParameters runtimeParameters = RuntimeParameters.builder()
-                                                      .baseUrl(connectorValidationInfo.getBaseUrl())
-                                                      .commonHeaders(connectorValidationInfo.collectionHeaders())
-                                                      .commonOptions(connectorValidationInfo.collectionParams())
-                                                      .otherEnvVariables(connectorValidationInfo.getDslEnvVariables())
-                                                      .endTime(connectorValidationInfo.getEndTime(now))
-                                                      .startTime(connectorValidationInfo.getStartTime(now))
-                                                      .build();
-      validCredentials = ((String) dataCollectionDSLService.execute(dsl, runtimeParameters)).equalsIgnoreCase("true");
-      log.info("connectorValidationInfo {}", connectorValidationInfo);
-    } catch (Exception ex) {
-      log.info("Exception while validating connector credentials", ex);
-      exceptionInProcessing = ex;
-    }
+
+    ConnectorValidationInfo connectorValidationInfo =
+        ConnectorValidationInfo.getConnectorValidationInfo(taskParameters.getConnectorConfigDTO());
+    String dsl = connectorValidationInfo.getConnectionValidationDSL();
+    Instant now = clock.instant();
+    final RuntimeParameters runtimeParameters = RuntimeParameters.builder()
+                                                    .baseUrl(connectorValidationInfo.getBaseUrl())
+                                                    .commonHeaders(connectorValidationInfo.collectionHeaders())
+                                                    .commonOptions(connectorValidationInfo.collectionParams())
+                                                    .otherEnvVariables(connectorValidationInfo.getDslEnvVariables())
+                                                    .endTime(connectorValidationInfo.getEndTime(now))
+                                                    .startTime(connectorValidationInfo.getStartTime(now))
+                                                    .build();
+    validCredentials = ((String) dataCollectionDSLService.execute(dsl, runtimeParameters)).equalsIgnoreCase("true");
+    log.info("connectorValidationInfo {}", connectorValidationInfo);
 
     return CVConnectorTaskResponse.builder()
         .valid(validCredentials)
-        .errorMessage(exceptionInProcessing != null ? exceptionInProcessing.getMessage() : null)
         .delegateMetaInfo(DelegateMetaInfo.builder().id(getDelegateId()).build())
         .build();
   }

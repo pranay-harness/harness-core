@@ -6,6 +6,8 @@ import static io.harness.pms.contracts.execution.events.OrchestrationEventType.N
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -19,20 +21,17 @@ import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
 import io.harness.data.OutcomeInstance;
+import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.NodeExecutionMapper;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.ExecutionMode;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.LevelUtils;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
@@ -43,16 +42,18 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.assertj.core.util.Maps;
 import org.awaitility.Awaitility;
 import org.bson.Document;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Spy;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
@@ -61,10 +62,17 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
   @Inject private PlanExecutionService planExecutionService;
   @Inject private SpringMongoStore mongoStore;
 
-  @Inject private NodeExecutionService nodeExecutionService;
+  @Inject @InjectMocks private NodeExecutionService nodeExecutionService;
   @Inject @Spy private GraphGenerationService graphGenerationService;
   @Inject private MongoTemplate mongoTemplate;
   @Inject private GraphStatusUpdateHelper eventHandlerV2;
+
+  @Mock private OrchestrationEventEmitter eventEmitter;
+
+  @Before
+  public void setup() {
+    doNothing().when(eventEmitter).emitEvent(any());
+  }
 
   @Test
   @Owner(developers = ALEXEI)
@@ -72,16 +80,8 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
   @RealMongo
   public void shouldDoNothingIfRuntimeIdIsNull() {
     String planExecutionId = generateUuid();
-    OrchestrationEvent event = OrchestrationEvent.builder()
-                                   .ambiance(Ambiance.newBuilder()
-                                                 .setPlanExecutionId(planExecutionId)
-                                                 .addAllLevels(Collections.singletonList(Level.newBuilder().build()))
-                                                 .build())
-                                   .nodeExecutionProto(NodeExecutionProto.newBuilder().build())
-                                   .eventType(NODE_EXECUTION_STATUS_UPDATE)
-                                   .build();
-    eventHandlerV2.handleEvent(event.getAmbiance().getPlanExecutionId(), event.getNodeExecutionProto().getUuid(),
-        event.getEventType(), OrchestrationGraph.builder().build());
+    eventHandlerV2.handleEvent(
+        planExecutionId, null, NODE_EXECUTION_STATUS_UPDATE, OrchestrationGraph.builder().build());
 
     verify(graphGenerationService, never()).getCachedOrchestrationGraph(planExecutionId);
   }
@@ -129,18 +129,8 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
                                          .build();
     mongoStore.upsert(cachedGraph, Duration.ofDays(10));
 
-    // creating event
-    OrchestrationEvent event = OrchestrationEvent.builder()
-                                   .ambiance(Ambiance.newBuilder()
-                                                 .setPlanExecutionId(planExecution.getUuid())
-                                                 .addAllLevels(Collections.singletonList(
-                                                     Level.newBuilder().setRuntimeId(dummyStart.getUuid()).build()))
-                                                 .build())
-                                   .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(dummyStart))
-                                   .eventType(NODE_EXECUTION_STATUS_UPDATE)
-                                   .build();
-    OrchestrationGraph updatedGraph = eventHandlerV2.handleEvent(event.getAmbiance().getPlanExecutionId(),
-        event.getNodeExecutionProto().getUuid(), event.getEventType(), cachedGraph);
+    OrchestrationGraph updatedGraph = eventHandlerV2.handleEvent(
+        planExecution.getUuid(), dummyStart.getUuid(), NODE_EXECUTION_STATUS_UPDATE, cachedGraph);
 
     Awaitility.await().atMost(2, TimeUnit.SECONDS).pollInterval(500, TimeUnit.MILLISECONDS).until(() -> {
       OrchestrationGraph graphInternal = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
@@ -215,18 +205,8 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
             .build();
     mongoTemplate.insert(outcome);
 
-    // creating event
-    OrchestrationEvent event = OrchestrationEvent.builder()
-                                   .ambiance(Ambiance.newBuilder()
-                                                 .setPlanExecutionId(planExecution.getUuid())
-                                                 .addAllLevels(Collections.singletonList(
-                                                     Level.newBuilder().setRuntimeId(dummyStart.getUuid()).build()))
-                                                 .build())
-                                   .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(dummyStart))
-                                   .eventType(NODE_EXECUTION_STATUS_UPDATE)
-                                   .build();
-    OrchestrationGraph updatedGraph = eventHandlerV2.handleEvent(event.getAmbiance().getPlanExecutionId(),
-        event.getNodeExecutionProto().getUuid(), event.getEventType(), cachedGraph);
+    OrchestrationGraph updatedGraph = eventHandlerV2.handleEvent(
+        planExecution.getUuid(), dummyStart.getUuid(), NODE_EXECUTION_STATUS_UPDATE, cachedGraph);
 
     assertThat(updatedGraph).isNotNull();
     assertThat(updatedGraph.getPlanExecutionId()).isEqualTo(planExecution.getUuid());

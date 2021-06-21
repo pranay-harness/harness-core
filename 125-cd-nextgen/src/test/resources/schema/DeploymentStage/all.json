@@ -48,21 +48,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/AddSegmentToVariationTargetMapYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "AddSegmentToVariationTargetMap"
               ]
             }
           }
@@ -72,6 +72,10 @@
     },
     "AddSegmentToVariationTargetMapYamlSpec": {
       "type": "object",
+      "required": [
+        "segments",
+        "variation"
+      ],
       "properties": {
         "segments": {
           "type": "array",
@@ -93,21 +97,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/AddTargetsToVariationTargetMapYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "AddTargetsToVariationTargetMap"
               ]
             }
           }
@@ -117,6 +121,10 @@
     },
     "AddTargetsToVariationTargetMapYamlSpec": {
       "type": "object",
+      "required": [
+        "targets",
+        "variation"
+      ],
       "properties": {
         "targets": {
           "type": "array",
@@ -285,10 +293,17 @@
               "type": "string"
             },
             "paths": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "repoName": {
               "type": "string"
@@ -790,8 +805,7 @@
           "required": [
             "environment",
             "feature",
-            "instructions",
-            "state"
+            "instructions"
           ],
           "properties": {
             "environment": {
@@ -821,9 +835,6 @@
                   }
                 ]
               }
-            },
-            "state": {
-              "type": "string"
             }
           }
         }
@@ -921,10 +932,17 @@
               "type": "string"
             },
             "paths": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "repoName": {
               "type": "string"
@@ -1080,10 +1098,17 @@
               "type": "string"
             },
             "paths": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "repoName": {
               "type": "string"
@@ -1389,16 +1414,29 @@
     "Infrastructure": {
       "type": "object",
       "discriminator": "type",
+      "properties": {
+        "connectorRef": {
+          "$ref": "#/definitions/ParameterFieldString"
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "InfrastructureDef": {
       "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
       "properties": {
         "provisioner": {
           "$ref": "#/definitions/ExecutionElementConfig"
         },
         "type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "KubernetesDirect",
+            "KubernetesGcp"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -2165,12 +2203,25 @@
     },
     "ManifestConfig": {
       "type": "object",
+      "required": [
+        "identifier",
+        "spec",
+        "type"
+      ],
       "properties": {
         "identifier": {
           "type": "string"
         },
         "type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "HelmChart",
+            "K8sManifest",
+            "Kustomize",
+            "OpenshiftParam",
+            "OpenshiftTemplate",
+            "Values"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -2474,8 +2525,15 @@
               ]
             },
             "value": {
-              "type": "number",
-              "format": "double"
+              "oneOf": [
+                {
+                  "type": "number",
+                  "format": "double"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           }
         }
@@ -2820,6 +2878,20 @@
           "oneOf": [
             {
               "required": [
+                "useFromStage"
+              ]
+            },
+            {
+              "required": [
+                "infrastructureDefinition"
+              ]
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
                 "environment"
               ]
             },
@@ -2835,6 +2907,7 @@
     "PrimaryArtifact": {
       "type": "object",
       "required": [
+        "spec",
         "type"
       ],
       "properties": {
@@ -2906,6 +2979,9 @@
         },
         {
           "type": "object",
+          "required": [
+            "store"
+          ],
           "properties": {
             "store": {
               "$ref": "#/definitions/StoreConfigWrapper"
@@ -2923,21 +2999,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/RemoveSegmentToVariationTargetMapYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "RemoveSegmentToVariationTargetMap"
               ]
             }
           }
@@ -2947,6 +3023,10 @@
     },
     "RemoveSegmentToVariationTargetMapYamlSpec": {
       "type": "object",
+      "required": [
+        "segments",
+        "variation"
+      ],
       "properties": {
         "segments": {
           "type": "array",
@@ -2968,21 +3048,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/RemoveTargetsToVariationTargetMapYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "RemoveTargetsToVariationTargetMap"
               ]
             }
           }
@@ -2992,6 +3072,10 @@
     },
     "RemoveTargetsToVariationTargetMapYamlSpec": {
       "type": "object",
+      "required": [
+        "targets",
+        "variation"
+      ],
       "properties": {
         "targets": {
           "type": "array",
@@ -3200,9 +3284,17 @@
     },
     "ServiceDefinition": {
       "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
       "properties": {
         "type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "Kubernetes",
+            "NativeHelm"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -3344,21 +3436,21 @@
         {
           "type": "object",
           "required": [
+            "identifier",
             "spec",
             "type"
           ],
           "properties": {
+            "identifier": {
+              "type": "string"
+            },
             "spec": {
               "$ref": "#/definitions/SetFeatureFlagStateYamlSpec"
             },
             "type": {
               "type": "string",
               "enum": [
-                "SetFeatureFlagState",
-                "AddTargetsToVariationTargetMap",
-                "RemoveTargetsToVariationTargetMap",
-                "AddSegmentsToVariationTargetMap",
-                "RemoveSegmentsToVariationTargetMap"
+                "SetFeatureFlagState"
               ]
             }
           }
@@ -3368,6 +3460,9 @@
     },
     "SetFeatureFlagStateYamlSpec": {
       "type": "object",
+      "required": [
+        "state"
+      ],
       "properties": {
         "state": {
           "type": "string"
@@ -3665,6 +3760,11 @@
     },
     "StepElementConfig": {
       "type": "object",
+      "required": [
+        "identifier",
+        "name",
+        "type"
+      ],
       "properties": {
         "description": {
           "type": "string"
@@ -3684,7 +3784,8 @@
           "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "timeout": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(\\d+[smhwd][\\s]?)+$"
         },
         "type": {
           "type": "string"
@@ -4124,16 +4225,34 @@
     "StoreConfig": {
       "type": "object",
       "discriminator": "type",
+      "properties": {
+        "connectorRef": {
+          "$ref": "#/definitions/ParameterFieldString"
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "StoreConfigWrapper": {
       "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
       "properties": {
         "metadata": {
           "type": "string"
         },
         "type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "Git",
+            "Github",
+            "Bitbucket",
+            "GitLab",
+            "Http",
+            "S3",
+            "Gcs"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -4291,9 +4410,13 @@
         },
         {
           "type": "object",
+          "required": [
+            "configuration",
+            "provisionerIdentifier"
+          ],
           "properties": {
             "configuration": {
-              "$ref": "#/definitions/TerrformStepConfiguration"
+              "$ref": "#/definitions/TerraformStepConfiguration"
             },
             "delegateSelectors": {
               "type": "array",
@@ -4360,9 +4483,13 @@
         },
         {
           "type": "object",
+          "required": [
+            "configuration",
+            "provisionerIdentifier"
+          ],
           "properties": {
             "configuration": {
-              "$ref": "#/definitions/TerrformStepConfiguration"
+              "$ref": "#/definitions/TerraformStepConfiguration"
             },
             "delegateSelectors": {
               "type": "array",
@@ -4383,6 +4510,9 @@
     },
     "TerraformExecutionData": {
       "type": "object",
+      "required": [
+        "configFiles"
+      ],
       "properties": {
         "backendConfig": {
           "$ref": "#/definitions/TerraformBackendConfig"
@@ -4407,10 +4537,17 @@
           }
         },
         "targets": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "varFiles": {
           "type": "array",
@@ -4426,6 +4563,11 @@
     },
     "TerraformPlanExecutionData": {
       "type": "object",
+      "required": [
+        "command",
+        "configFiles",
+        "secretManagerRef"
+      ],
       "properties": {
         "backendConfig": {
           "$ref": "#/definitions/TerraformBackendConfig"
@@ -4460,10 +4602,17 @@
           "type": "string"
         },
         "targets": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "varFiles": {
           "type": "array",
@@ -4484,6 +4633,10 @@
         },
         {
           "type": "object",
+          "required": [
+            "configuration",
+            "provisionerIdentifier"
+          ],
           "properties": {
             "configuration": {
               "$ref": "#/definitions/TerraformPlanExecutionData"
@@ -4527,8 +4680,33 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "TerraformStepConfiguration": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "spec": {
+          "$ref": "#/definitions/TerraformExecutionData"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "Inline",
+            "InheritFromPlan",
+            "InheritFromApply"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "TerraformVarFile": {
       "type": "object",
+      "required": [
+        "identifier",
+        "spec",
+        "type"
+      ],
       "properties": {
         "identifier": {
           "type": "string"
@@ -4588,23 +4766,6 @@
       "properties": {
         "varFile": {
           "$ref": "#/definitions/TerraformVarFile"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "TerrformStepConfiguration": {
-      "type": "object",
-      "properties": {
-        "spec": {
-          "$ref": "#/definitions/TerraformExecutionData"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "Inline",
-            "InheritFromPlan",
-            "InheritFromApply"
-          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"

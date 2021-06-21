@@ -260,6 +260,14 @@ public class GcpHelperService {
     }
   }
 
+  public String getProjectId(char[] serviceAccountKeyFileContent, boolean isUseDelegate) {
+    if (isUseDelegate) {
+      return getClusterProjectId(TaskType.GCP_TASK.name());
+    } else {
+      return (String) (JsonUtils.asObject(new String(serviceAccountKeyFileContent), HashMap.class)).get("project_id");
+    }
+  }
+
   /**
    * Gets sleep interval secs.
    *

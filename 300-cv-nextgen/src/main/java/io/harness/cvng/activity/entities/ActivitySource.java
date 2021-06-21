@@ -8,6 +8,7 @@ import io.harness.cvng.beans.activity.ActivitySourceDTO;
 import io.harness.cvng.beans.activity.ActivitySourceDTO.ActivitySourceDTOBuilder;
 import io.harness.cvng.beans.activity.ActivitySourceType;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
+import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -33,6 +34,7 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @NoArgsConstructor
@@ -115,5 +117,12 @@ public abstract class ActivitySource
     activitySourceDTOBuilder.lastUpdatedAt(lastUpdatedAt);
     activitySourceDTOBuilder.createdAt(createdAt);
     return activitySourceDTOBuilder;
+  }
+
+  public abstract static class ActivitySourceUpdatableEntity<T extends ActivitySource, D extends ActivitySourceDTO>
+      implements UpdatableEntity<T, D> {
+    public void setCommonOperations(UpdateOperations<T> updateOperations, D dto) {
+      updateOperations.set(ActivitySourceKeys.name, dto.getName()).unset(ActivitySourceKeys.dataCollectionTaskId);
+    }
   }
 }

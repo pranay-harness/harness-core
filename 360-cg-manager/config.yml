@@ -255,6 +255,10 @@ grpcClientConfig:
   target: localhost:9980
   authority: localhost
 
+#This will be used only by OnPrem delegates for grpc communication
+grpcOnpremDelegateClientConfig:
+  target: localhost:9880
+  authority: localhost
 
 mongo:
   uri: mongodb://localhost:27017/harness
@@ -295,7 +299,7 @@ deployMode: KUBERNETES
 envPath: ""
 
 kubectlVersion: v1.13.2
-scmVersion: 444bed53
+scmVersion: 90882846
 
 portal:
   url: https://localhost:8000
@@ -335,6 +339,10 @@ cfClientConfig:
   analyticsEnabled: true
   connectionTimeout: 10000
   readTimeout: 30000
+
+featureFlagConfig:
+  featureFlagSystem: LOCAL
+  syncFeaturesToCF: false
 
 cfMigrationConfig:
   enabled: false
@@ -592,4 +600,19 @@ logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
 
+accessControlClient:
+  enableAccessControl: false
+  accessControlServiceConfig:
+    baseUrl: http://localhost:9006/api/
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
 exportAccountDataBatchSize: 1000
+
+auditClientConfig:
+  baseUrl: http://localhost:9005/api/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+enableAudit: false

@@ -12,7 +12,6 @@ import static io.harness.ngtriggers.Constants.TRIGGER_REF;
 import static io.harness.ngtriggers.Constants.TRIGGER_REF_DELIMITER;
 import static io.harness.pms.contracts.plan.TriggerType.WEBHOOK;
 import static io.harness.pms.contracts.plan.TriggerType.WEBHOOK_CUSTOM;
-import static io.harness.pms.contracts.triggers.Type.CUSTOM;
 import static io.harness.pms.plan.execution.PlanExecutionInterruptType.ABORT;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -23,18 +22,20 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.TriggerException;
 import io.harness.execution.PlanExecution;
-import io.harness.ngtriggers.beans.config.NGTriggerConfig;
+import io.harness.execution.PlanExecutionMetadata;
+import io.harness.ngtriggers.beans.config.NGTriggerConfigV2;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
-import io.harness.ngtriggers.beans.target.TargetSpec;
-import io.harness.ngtriggers.beans.target.pipeline.PipelineTargetSpec;
+import io.harness.ngtriggers.beans.source.webhook.v2.WebhookTriggerConfigV2;
+import io.harness.ngtriggers.beans.source.webhook.v2.git.GitAware;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.contracts.triggers.ParsedPayload;
+import io.harness.pms.contracts.triggers.SourceType;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.contracts.triggers.Type;
 import io.harness.pms.merger.helpers.MergeHelper;
@@ -65,8 +66,8 @@ public class TriggerExecutionHelper {
   private final PMSExecutionService pmsExecutionService;
   private final PMSYamlSchemaService pmsYamlSchemaService;
 
-  public PlanExecution resolveRuntimeInputAndSubmitExecutionRequest(
-      TriggerDetails triggerDetails, TriggerPayload triggerPayload, TriggerWebhookEvent triggerWebhookEvent) {
+  public PlanExecution resolveRuntimeInputAndSubmitExecutionRequest(TriggerDetails triggerDetails,
+      TriggerPayload triggerPayload, TriggerWebhookEvent triggerWebhookEvent, String payload) {
     String executionTagForGitEvent = generateExecutionTagForEvent(triggerDetails, triggerPayload);
     TriggeredBy embeddedUser = generateTriggerdBy(
         executionTagForGitEvent, triggerDetails.getNgTriggerEntity(), triggerPayload, triggerWebhookEvent.getUuid());
@@ -89,15 +90,18 @@ public class TriggerExecutionHelper {
             USER);
       }
 
-      String runtimeInputYaml = readRuntimeInputFromConfig(triggerDetails.getNgTriggerConfig());
+      String runtimeInputYaml = triggerDetails.getNgTriggerConfigV2().getInputYaml();
 
+      final String executionId = generateUuid();
       ExecutionMetadata.Builder executionMetaDataBuilder =
           ExecutionMetadata.newBuilder()
-              .setExecutionUuid(generateUuid())
+              .setExecutionUuid(executionId)
               .setTriggerInfo(triggerInfo)
               .setRunSequence(pipelineEntityToExecute.get().getRunSequence())
-              .setTriggerPayload(triggerPayload)
               .setPipelineIdentifier(pipelineEntityToExecute.get().getIdentifier());
+
+      PlanExecutionMetadata.Builder planExecutionMetadataBuilder =
+          PlanExecutionMetadata.builder().planExecutionId(executionId).triggerJsonPayload(payload);
 
       String pipelineYaml;
       if (isBlank(runtimeInputYaml)) {
@@ -108,23 +112,28 @@ public class TriggerExecutionHelper {
         if (isBlank(sanitizedRuntimeInputYaml)) {
           pipelineYaml = pipelineYamlBeforeMerge;
         } else {
-          executionMetaDataBuilder.setInputSetYaml(sanitizedRuntimeInputYaml);
+          planExecutionMetadataBuilder.inputSetYaml(sanitizedRuntimeInputYaml);
           pipelineYaml =
               MergeHelper.mergeInputSetIntoPipeline(pipelineYamlBeforeMerge, sanitizedRuntimeInputYaml, true);
         }
       }
+      planExecutionMetadataBuilder.yaml(pipelineYaml);
 
       pmsYamlSchemaService.validateYamlSchema(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
           ngTriggerEntity.getProjectIdentifier(), pipelineYaml);
 
-      executionMetaDataBuilder.setYaml(pipelineYaml);
       executionMetaDataBuilder.setPrincipalInfo(
           ExecutionPrincipalInfo.newBuilder().setShouldValidateRbac(false).build());
 
-      return pipelineExecuteHelper.startExecution(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
-          ngTriggerEntity.getProjectIdentifier(), pipelineYaml, executionMetaDataBuilder.build());
+      PlanExecution planExecution = pipelineExecuteHelper.startExecution(ngTriggerEntity.getAccountId(),
+          ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), pipelineYaml,
+          executionMetaDataBuilder.build(), planExecutionMetadataBuilder, triggerPayload);
+      // check if abort prev execution needed.
+      requestPipelineExecutionAbortForSameExecTagIfNeeded(triggerDetails, planExecution, executionTagForGitEvent);
+      return planExecution;
     } catch (Exception e) {
-      throw new TriggerException("Failed while requesting Pipeline Execution" + e.getMessage(), USER);
+      throw new TriggerException(
+          "Failed while requesting Pipeline Execution through Trigger: " + e.getMessage(), e, USER);
     }
   }
 
@@ -167,15 +176,10 @@ public class TriggerExecutionHelper {
         .toString();
   }
 
-  private String readRuntimeInputFromConfig(NGTriggerConfig ngTriggerConfig) {
-    TargetSpec targetSpec = ngTriggerConfig.getTarget().getSpec();
-    PipelineTargetSpec pipelineTargetSpec = (PipelineTargetSpec) targetSpec;
-    return pipelineTargetSpec.getRuntimeInputYaml();
-  }
-
-  private TriggerType findTriggerType(TriggerPayload triggerPayload) {
+  @VisibleForTesting
+  TriggerType findTriggerType(TriggerPayload triggerPayload) {
     TriggerType triggerType = WEBHOOK;
-    if (triggerPayload.getType() == CUSTOM) {
+    if (triggerPayload.getSourceType() == SourceType.CUSTOM_REPO) {
       triggerType = WEBHOOK_CUSTOM;
     } else if (triggerPayload.getType() == Type.SCHEDULED) {
       triggerType = TriggerType.SCHEDULER_CRON;
@@ -241,8 +245,13 @@ public class TriggerExecutionHelper {
   }
 
   @VisibleForTesting
-  void requestPipelineExecutionAbortForSameExecTagIfNeeded(PlanExecution planExecution, String executionTag) {
+  void requestPipelineExecutionAbortForSameExecTagIfNeeded(
+      TriggerDetails triggerDetails, PlanExecution planExecution, String executionTag) {
     try {
+      if (!isAutoAbortSelected(triggerDetails.getNgTriggerConfigV2())) {
+        return;
+      }
+
       List<PlanExecution> executionsToAbort =
           planExecutionService.findPrevUnTerminatedPlanExecutionsByExecutionTag(planExecution, executionTag);
       if (isEmpty(executionsToAbort)) {
@@ -253,8 +262,22 @@ public class TriggerExecutionHelper {
         registerPipelineExecutionAbortInterrupt(execution, executionTag);
       }
     } catch (Exception e) {
-      log.error("Failed while requesting abort for pipeline executions using executionTag: " + executionTag);
+      log.error("Failed while requesting abort for pipeline executions using executionTag: " + executionTag, e);
     }
+  }
+
+  @VisibleForTesting
+  boolean isAutoAbortSelected(NGTriggerConfigV2 ngTriggerConfigV2) {
+    boolean autoAbortPreviousExecutions = false;
+    if (WebhookTriggerConfigV2.class.isAssignableFrom(ngTriggerConfigV2.getSource().getSpec().getClass())) {
+      WebhookTriggerConfigV2 webhookTriggerConfigV2 = (WebhookTriggerConfigV2) ngTriggerConfigV2.getSource().getSpec();
+      GitAware gitAware = webhookTriggerConfigV2.getSpec().fetchGitAware();
+      if (gitAware != null && gitAware.fetchAutoAbortPreviousExecutions()) {
+        autoAbortPreviousExecutions = gitAware.fetchAutoAbortPreviousExecutions();
+      }
+    }
+
+    return autoAbortPreviousExecutions;
   }
 
   private void registerPipelineExecutionAbortInterrupt(PlanExecution execution, String executionTag) {

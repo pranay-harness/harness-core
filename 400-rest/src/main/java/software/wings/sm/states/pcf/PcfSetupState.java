@@ -172,6 +172,7 @@ public class PcfSetupState extends State {
   @Getter @Setter private boolean enforceSslValidation;
   @Getter @Setter private boolean useArtifactProcessingScript;
   @Getter @Setter private String artifactProcessingScript;
+  @Getter @Setter private List<String> tags;
 
   public PcfSetupState(String name) {
     super(name, StateType.PCF_SETUP.name());
@@ -251,8 +252,6 @@ public class PcfSetupState extends State {
     PcfInfrastructureMapping pcfInfrastructureMapping =
         (PcfInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
-    Activity activity = updateActivity(activityId, app.getUuid(), artifact, artifactStream);
-
     SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
     PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
@@ -293,7 +292,7 @@ public class PcfSetupState extends State {
 
     PcfCommandSetupRequest pcfCommandSetupRequest =
         PcfCommandSetupRequest.builder()
-            .activityId(activity.getUuid())
+            .activityId(activityId)
             .appId(app.getUuid())
             .accountId(app.getAccountId())
             .commandName(PCF_SETUP_COMMAND)
@@ -322,6 +321,7 @@ public class PcfSetupState extends State {
             .limitPcfThreads(featureFlagService.isEnabled(LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
             .ignorePcfConnectionContextCache(
                 featureFlagService.isEnabled(IGNORE_PCF_CONNECTION_CONTEXT_CACHE, pcfConfig.getAccountId()))
+            .cfCliVersion(pcfStateHelper.getCfCliVersionOrDefault(app.getAppId(), serviceElement.getUuid()))
             .build();
 
     if (featureFlagService.isEnabled(CF_CUSTOM_EXTRACTION, pcfConfig.getAccountId()) && useArtifactProcessingScript
@@ -335,7 +335,7 @@ public class PcfSetupState extends State {
 
     PcfSetupStateExecutionData stateExecutionData =
         PcfSetupStateExecutionData.builder()
-            .activityId(activity.getUuid())
+            .activityId(activityId)
             .accountId(app.getAccountId())
             .appId(app.getUuid())
             .envId(env.getUuid())
@@ -360,9 +360,12 @@ public class PcfSetupState extends State {
             .pcfManifestsPackage(pcfManifestsPackage)
             .useArtifactProcessingScript(useArtifactProcessingScript)
             .artifactProcessingScript(artifactProcessingScript)
+            .tags(tags)
             .build();
 
     String waitId = generateUuid();
+
+    List<String> renderedTags = pcfStateHelper.getRenderedTags(context, tags);
 
     DelegateTask delegateTask = pcfStateHelper.getDelegateTask(
         PcfDelegateTaskCreationData.builder()
@@ -378,6 +381,7 @@ public class PcfSetupState extends State {
             .taskDescription("PCF setup task execution")
             .serviceId(pcfInfrastructureMapping.getServiceId())
             .timeout(timeoutIntervalInMinutes == null ? DEFAULT_PCF_TASK_TIMEOUT_MIN : timeoutIntervalInMinutes)
+            .tagList(renderedTags)
             .build());
 
     delegateService.queueTask(delegateTask);
@@ -409,6 +413,7 @@ public class PcfSetupState extends State {
     finalRouteMap = pcfSetupStateExecutionData.getFinalRoutesOnSetupState();
     useArtifactProcessingScript = pcfSetupStateExecutionData.isUseArtifactProcessingScript();
     artifactProcessingScript = pcfSetupStateExecutionData.getArtifactProcessingScript();
+    tags = pcfSetupStateExecutionData.getTags();
   }
 
   @VisibleForTesting
@@ -631,6 +636,7 @@ public class PcfSetupState extends State {
             .useAppAutoscalar(stateExecutionData.isUseAppAutoscalar())
             .enforceSslValidation(stateExecutionData.isEnforceSslValidation())
             .pcfManifestsPackage(stateExecutionData.getPcfManifestsPackage())
+            .tags(stateExecutionData.getTags())
             .isUseCfCli(true);
 
     if (!isPcfSetupCommandResponseNull) {
@@ -736,6 +742,12 @@ public class PcfSetupState extends State {
 
     List<CommandUnit> commandUnitList = getCommandUnitList(remoteManifestType);
 
+    PhaseElement phaseElement = executionContext.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+    ServiceElement serviceElement = phaseElement.getServiceElement();
+    Artifact artifact =
+        ((DeploymentExecutionContext) executionContext).getDefaultArtifactForService(serviceElement.getUuid());
+    notNullCheck("Artifact Can not be null", artifact);
+
     ActivityBuilder activityBuilder = pcfStateHelper.getActivityBuilder(PcfActivityBuilderCreationData.builder()
                                                                             .appName(app.getName())
                                                                             .appId(app.getUuid())
@@ -748,23 +760,20 @@ public class PcfSetupState extends State {
                                                                             .environment(env)
                                                                             .build());
 
+    activityBuilder.artifactId(artifact.getUuid());
+    activityBuilder.artifactName(artifact.getDisplayName());
+    ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
+    activityBuilder.artifactStreamId(artifactStream.getUuid());
+    activityBuilder.artifactStreamName(artifactStream.getSourceName());
     return activityService.save(activityBuilder.build());
-  }
-
-  private Activity updateActivity(String activityId, String appId, Artifact artifact, ArtifactStream artifactStream) {
-    Activity activity = activityService.get(activityId, appId);
-    activity.setArtifactStreamId(artifactStream.getUuid());
-    activity.setArtifactStreamName(artifactStream.getSourceName());
-    activity.setArtifactName(artifact.getDisplayName());
-    activity.setArtifactId(artifact.getUuid());
-
-    return activityService.save(activity);
   }
 
   private ExecutionResponse executeGitTask(
       ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId) {
     final DelegateTask gitFetchFileTask = pcfStateHelper.createGitFetchFileAsyncTask(
         context, appManifestMap, activityId, isSelectionLogsTrackingForTasksEnabled());
+    gitFetchFileTask.setTags(pcfStateHelper.getRenderedTags(context, tags));
+
     final String delegateTaskId = delegateService.queueTask(gitFetchFileTask);
     appendDelegateTaskDetails(context, gitFetchFileTask);
     return ExecutionResponse.builder()
@@ -787,6 +796,7 @@ public class PcfSetupState extends State {
                                 .finalRoutesOnSetupState(finalRouteMap)
                                 .useArtifactProcessingScript(useArtifactProcessingScript)
                                 .artifactProcessingScript(artifactProcessingScript)
+                                .tags(tags)
                                 .build())
         .delegateTaskId(delegateTaskId)
         .build();

@@ -25,6 +25,8 @@ public final class EventsFrameworkMetadataConstants {
   public static final String SECRET_ENTITY = "secret";
   public static final String USER_ENTITY = "user";
   public static final String PIPELINE_ENTITY = "pipeline";
+  public static final String DELEGATE_ENTITY = "delegate";
+  public static final String DELEGATE_CONFIGURATION_ENTITY = "delegateconfiguration";
 
   public static final String SERVICE_ENTITY = "service";
   public static final String ENVIRONMENT_ENTITY = "environment";
@@ -37,4 +39,5 @@ public final class EventsFrameworkMetadataConstants {
 
   public static final String REFERRED_ENTITY_TYPE = "referredEntityType";
   public static final String CONNECTOR_ENTITY_TYPE = "connectorType";
+  public static final String SERVICE_ACCOUNT_ENTITY = "serviceaccount";
 }

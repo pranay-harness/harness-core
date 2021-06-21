@@ -127,8 +127,8 @@ public class JiraClient {
         issue.updateJiraBaseUrl(config.getJiraUrl());
       }
       return issue;
-    } catch (HttpResponseException ex) {
-      if (!throwOnInvalidKey && ex.getStatusCode() == 404) {
+    } catch (Exception ex) {
+      if (!throwOnInvalidKey && is404StatusCode(ex)) {
         return null;
       }
       throw ex;
@@ -151,20 +151,23 @@ public class JiraClient {
    *   - version
    * - comment: added as a string field
    *
-   * @param projectKey  the project key - can be null if not known
-   * @param issueType   the issue type - can be null if not known
-   * @param expand      the expand query parameter - if null a default value of `projects.issuetypes.fields` is used
-   * @param fetchStatus should also fetch status
+   * @param projectKey    the project key - can be null if not known
+   * @param issueType     the issue type - can be null if not known
+   * @param expand        the expand query parameter - if null a default value of `projects.issuetypes.fields` is used
+   * @param fetchStatus   should also fetch status
+   * @param ignoreComment should not fetch comment
    * @return the issue create metadata
    */
   public JiraIssueCreateMetadataNG getIssueCreateMetadata(
-      String projectKey, String issueType, String expand, boolean fetchStatus) {
+      String projectKey, String issueType, String expand, boolean fetchStatus, boolean ignoreComment) {
     JiraIssueCreateMetadataNG createMetadata =
         executeCall(restClient.getIssueCreateMetadata(EmptyPredicate.isEmpty(projectKey) ? null : projectKey,
                         EmptyPredicate.isEmpty(issueType) ? null : issueType,
                         EmptyPredicate.isEmpty(expand) ? "projects.issuetypes.fields" : expand),
             "fetching create metadata");
-    createMetadata.addField(COMMENT_FIELD);
+    if (!ignoreComment) {
+      createMetadata.addField(COMMENT_FIELD);
+    }
 
     if (fetchStatus) {
       if (EmptyPredicate.isEmpty(projectKey)) {
@@ -242,7 +245,7 @@ public class JiraClient {
    */
   public JiraIssueNG createIssue(
       @NotBlank String projectKey, @NotBlank String issueTypeName, Map<String, String> fields) {
-    JiraIssueCreateMetadataNG createMetadata = getIssueCreateMetadata(projectKey, issueTypeName, null, false);
+    JiraIssueCreateMetadataNG createMetadata = getIssueCreateMetadata(projectKey, issueTypeName, null, false, false);
     JiraProjectNG project = createMetadata.getProjects().get(projectKey);
     if (project == null) {
       throw new InvalidRequestException(String.format("Invalid project: %s", projectKey));
@@ -293,7 +296,16 @@ public class JiraClient {
    */
   public JiraIssueNG updateIssue(
       @NotBlank String issueKey, String transitionToStatus, String transitionName, Map<String, String> fields) {
-    JiraIssueUpdateMetadataNG updateMetadata = getIssueUpdateMetadata(issueKey);
+    JiraIssueUpdateMetadataNG updateMetadata;
+    try {
+      updateMetadata = getIssueUpdateMetadata(issueKey);
+    } catch (Exception ex) {
+      if (is404StatusCode(ex)) {
+        throw new JiraClientException(String.format("Invalid jira issue key: %s", issueKey));
+      }
+      throw ex;
+    }
+
     String transitionId = findIssueTransition(issueKey, transitionToStatus, transitionName);
     ImmutablePair<Map<String, String>, String> pair = extractCommentField(fields);
     fields = pair.getLeft();
@@ -372,6 +384,16 @@ public class JiraClient {
     } catch (IOException | HttpResponseException ex) {
       throw new JiraClientException(String.format("Error %s at url [%s]", action, config.getJiraUrl()), ex);
     }
+  }
+
+  private boolean is404StatusCode(Exception ex) {
+    HttpResponseException httpResponseException = null;
+    if (ex instanceof HttpResponseException) {
+      httpResponseException = (HttpResponseException) ex;
+    } else if (ex.getCause() instanceof HttpResponseException) {
+      httpResponseException = (HttpResponseException) ex.getCause();
+    }
+    return httpResponseException != null && httpResponseException.getStatusCode() == 404;
   }
 
   private JiraRestClient createRestClient() {

@@ -38,7 +38,7 @@ import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.collect.ImmutableList;
@@ -306,6 +306,8 @@ public class InstanceBillingDataTasklet implements Tasklet {
     if (instanceType == InstanceType.EC2_INSTANCE) {
       settingId = null;
       clusterId = null;
+    } else if (settingId == null) {
+      settingId = clusterId;
     }
     String instanceName =
         (instanceData.getInstanceName() == null) ? instanceData.getInstanceId() : instanceData.getInstanceName();

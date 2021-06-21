@@ -2,10 +2,15 @@ package io.harness.cache;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import static java.time.Duration.ofDays;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.PersistentEntity;
 
+import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.Date;
 import lombok.Builder;
 import lombok.Value;
@@ -25,14 +30,17 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "cacheEntities")
 @Document("cacheEntities")
 public class SpringCacheEntity implements PersistentEntity {
+  public static final Duration TTL = ofDays(183);
+  public static final long TTL_MONTHS = 6;
+
   @Id @org.mongodb.morphia.annotations.Id String canonicalKey;
   long contextValue;
 
   byte[] entity;
-  Date validUntil;
 
   // audit fields
   @Wither @FdIndex @CreatedDate Long createdAt;
   @Wither @LastModifiedDate Long lastUpdatedAt;
   @Version Long version;
+  @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
 }

@@ -26,35 +26,51 @@ import io.harness.product.ci.scm.proto.Provider;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Singleton
+@Slf4j
 @OwnedBy(DX)
 public class ScmGitProviderMapper {
   @Inject(optional = true) GithubService githubService;
 
   public Provider mapToSCMGitProvider(ScmConnector scmConnector) {
+    return mapToSCMGitProvider(scmConnector, false);
+  }
+
+  public Provider mapToSCMGitProvider(ScmConnector scmConnector, boolean debug) {
     if (scmConnector instanceof GithubConnectorDTO) {
-      return mapToGithubProvider((GithubConnectorDTO) scmConnector);
+      return mapToGithubProvider((GithubConnectorDTO) scmConnector, debug);
     } else if (scmConnector instanceof GitlabConnectorDTO) {
-      return mapToGitLabProvider((GitlabConnectorDTO) scmConnector);
+      return mapToGitLabProvider((GitlabConnectorDTO) scmConnector, debug);
     } else if (scmConnector instanceof BitbucketConnectorDTO) {
-      return mapToBitbucketProvider((BitbucketConnectorDTO) scmConnector);
+      return mapToBitbucketProvider((BitbucketConnectorDTO) scmConnector, debug);
     } else {
       throw new NotImplementedException(
           String.format("The scm apis for the provider type %s is not supported", scmConnector.getClass()));
     }
   }
 
-  private Provider mapToBitbucketProvider(BitbucketConnectorDTO bitbucketConnector) {
+  private Provider mapToBitbucketProvider(BitbucketConnectorDTO bitbucketConnector, boolean debug) {
+    boolean skipVerify = checkScmSkipVerify();
     String bitBucketApiURL = GitClientHelper.getBitBucketApiURL(bitbucketConnector.getUrl());
-    Provider.Builder builder = Provider.newBuilder().setEndpoint(bitBucketApiURL);
+    Provider.Builder builder = Provider.newBuilder().setEndpoint(bitBucketApiURL).setDebug(debug);
     if (GitClientHelper.isBitBucketSAAS(bitbucketConnector.getUrl())) {
       builder.setBitbucketCloud(createBitbucketCloudProvider(bitbucketConnector));
     } else {
       builder.setBitbucketServer(createBitbucketServerProvider(bitbucketConnector));
     }
-    return builder.build();
+    return builder.setSkipVerify(skipVerify).build();
+  }
+
+  private boolean checkScmSkipVerify() {
+    final String scm_skip_ssl = System.getenv("SCM_SKIP_SSL");
+    boolean skipVerify = "true".equals(scm_skip_ssl);
+    if (skipVerify) {
+      log.info("Skipping verification");
+    }
+    return skipVerify;
   }
 
   private BitbucketCloudProvider createBitbucketCloudProvider(BitbucketConnectorDTO bitbucketConnector) {
@@ -82,10 +98,13 @@ public class ScmGitProviderMapper {
         .build();
   }
 
-  private Provider mapToGitLabProvider(GitlabConnectorDTO gitlabConnector) {
+  private Provider mapToGitLabProvider(GitlabConnectorDTO gitlabConnector, boolean debug) {
+    boolean skipVerify = checkScmSkipVerify();
     return Provider.newBuilder()
         .setGitlab(createGitLabProvider(gitlabConnector))
+        .setDebug(debug)
         .setEndpoint(GitClientHelper.getGitlabApiURL(gitlabConnector.getUrl()))
+        .setSkipVerify(skipVerify)
         .build();
   }
 
@@ -100,10 +119,13 @@ public class ScmGitProviderMapper {
     return String.valueOf(apiAccessDTO.getTokenRef().getDecryptedValue());
   }
 
-  private Provider mapToGithubProvider(GithubConnectorDTO githubConnector) {
+  private Provider mapToGithubProvider(GithubConnectorDTO githubConnector, boolean debug) {
+    boolean skipVerify = checkScmSkipVerify();
     return Provider.newBuilder()
         .setGithub(createGithubProvider(githubConnector))
+        .setDebug(debug)
         .setEndpoint(GitClientHelper.getGithubApiURL(githubConnector.getUrl()))
+        .setSkipVerify(skipVerify)
         .build();
   }
 

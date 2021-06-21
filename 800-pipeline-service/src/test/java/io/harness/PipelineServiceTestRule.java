@@ -12,6 +12,8 @@ import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.factory.ClosingFactory;
 import io.harness.gitsync.persistance.GitAwarePersistence;
+import io.harness.gitsync.persistance.GitSyncSdkService;
+import io.harness.gitsync.persistance.NoOpGitSyncSdkServiceImpl;
 import io.harness.gitsync.persistance.testing.GitSyncablePersistenceTestModule;
 import io.harness.gitsync.persistance.testing.NoOpGitAwarePersistenceImpl;
 import io.harness.govern.ProviderModule;
@@ -19,9 +21,15 @@ import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
+import io.harness.outbox.api.OutboxService;
+import io.harness.outbox.api.impl.OutboxDaoImpl;
+import io.harness.outbox.api.impl.OutboxServiceImpl;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
+import io.harness.repositories.outbox.OutboxEventRepository;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
@@ -29,6 +37,7 @@ import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.service.intfc.DelegateSyncService;
+import io.harness.springdata.HTransactionTemplate;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
@@ -45,6 +54,7 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Named;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
@@ -58,6 +68,8 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.mongodb.MongoTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @OwnedBy(PIPELINE)
 @Slf4j
@@ -94,6 +106,19 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
 
       @Provides
       @Singleton
+      TransactionTemplate getTransactionTemplate(MongoTransactionManager mongoTransactionManager) {
+        return new HTransactionTemplate(mongoTransactionManager, false);
+      }
+
+      @Provides
+      @Singleton
+      OutboxService getOutboxService(OutboxEventRepository outboxEventRepository) {
+        return new OutboxServiceImpl(
+            new OutboxDaoImpl(outboxEventRepository), NGPipelineObjectMapperHelper.NG_PIPELINE_OBJECT_MAPPER);
+      }
+
+      @Provides
+      @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
             .addAll(PipelineServiceModuleRegistrars.morphiaConverters)
@@ -106,6 +131,13 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
         return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
             .addAll(PipelineServiceModuleRegistrars.springConverters)
             .build();
+      }
+
+      @Provides
+      @Named("disableDeserialization")
+      @Singleton
+      public boolean getSerializationForDelegate() {
+        return false;
       }
     });
 
@@ -121,6 +153,7 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
         bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
         }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
         bind(GitAwarePersistence.class).to(NoOpGitAwarePersistenceImpl.class);
+        bind(GitSyncSdkService.class).to(NoOpGitSyncSdkServiceImpl.class);
       }
     });
 
@@ -137,7 +170,11 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
 
     modules.add(mongoTypeModule(annotations));
 
-    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder().engineEventHandlersMap(ImmutableMap.of()).build();
+    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder()
+                                        .moduleType(ModuleType.PMS)
+                                        .deploymentMode(SdkDeployMode.LOCAL)
+                                        .engineEventHandlersMap(ImmutableMap.of())
+                                        .build();
     modules.add(PmsSdkModule.getInstance(sdkConfig));
     return modules;
   }

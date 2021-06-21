@@ -11,14 +11,17 @@ import io.harness.pms.sdk.core.resolver.outcome.OutcomeGrpcServiceImpl;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingGrpcOutputService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
-import io.harness.pms.sdk.core.response.publishers.MongoSdkResponseEventPublisher;
 import io.harness.pms.sdk.core.response.publishers.RedisSdkResponseEventPublisher;
 import io.harness.pms.sdk.core.response.publishers.SdkResponseEventPublisher;
+import io.harness.threading.ThreadPool;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class PmsSdkCoreModule extends AbstractModule {
   private static PmsSdkCoreModule instance;
@@ -43,7 +46,6 @@ public class PmsSdkCoreModule extends AbstractModule {
       install(PmsSdkDummyGrpcModule.getInstance());
     }
 
-    install(PmsSdkQueueModule.getInstance(config));
     bind(PMSInterruptService.class).to(PMSInterruptServiceGrpcImpl.class).in(Singleton.class);
     bind(OutcomeService.class).to(OutcomeGrpcServiceImpl.class).in(Singleton.class);
     bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingGrpcOutputService.class).in(Singleton.class);
@@ -51,12 +53,7 @@ public class PmsSdkCoreModule extends AbstractModule {
     bind(InterruptEventHandler.class).to(InterruptEventHandlerImpl.class).in(Singleton.class);
     install(
         PmsSdkCoreEventsFrameworkModule.getInstance(config.getEventsFrameworkConfiguration(), config.getServiceName()));
-
-    if (config.isUseRedisForSdkResponseEvents()) {
-      bind(SdkResponseEventPublisher.class).to(RedisSdkResponseEventPublisher.class);
-    } else {
-      bind(SdkResponseEventPublisher.class).to(MongoSdkResponseEventPublisher.class);
-    }
+    bind(SdkResponseEventPublisher.class).to(RedisSdkResponseEventPublisher.class);
   }
 
   @Provides
@@ -64,5 +61,13 @@ public class PmsSdkCoreModule extends AbstractModule {
   @Named(PmsSdkModuleUtils.SDK_SERVICE_NAME)
   public String serviceName() {
     return config.getServiceName();
+  }
+
+  @Provides
+  @Singleton
+  @Named(PmsSdkModuleUtils.SDK_EXECUTOR_NAME)
+  public ExecutorService sdkExecutorService() {
+    return ThreadPool.create(5, 20, 30L, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("PmsSdkOrchestrationEventListener-%d").build());
   }
 }

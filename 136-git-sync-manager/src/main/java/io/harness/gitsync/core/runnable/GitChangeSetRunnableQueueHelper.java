@@ -78,8 +78,8 @@ public class GitChangeSetRunnableQueueHelper {
       //      }
 
       if (selectedYamlChangeSet != null) {
-        final boolean updateStatus =
-            ycsService.updateStatus(accountId, selectedYamlChangeSet.getChangesetId(), YamlChangeSetStatus.RUNNING);
+        final boolean updateStatus = ycsService.updateStatusAndCutoffTime(
+            accountId, selectedYamlChangeSet.getChangesetId(), YamlChangeSetStatus.RUNNING);
         if (updateStatus) {
           return ycsService.get(accountId, selectedYamlChangeSet.getChangesetId()).orElse(null);
         } else {

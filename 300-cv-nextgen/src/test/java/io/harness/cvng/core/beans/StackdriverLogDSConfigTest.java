@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.stackdriver.StackdriverLogDefinition;
 import io.harness.cvng.core.beans.DSConfig.CVConfigUpdateResult;
 import io.harness.cvng.core.beans.StackdriverLogDSConfig.StackdriverLogConfiguration;
 import io.harness.cvng.core.entities.StackdriverLogCVConfig;
@@ -60,8 +61,6 @@ public class StackdriverLogDSConfigTest extends DSConfigTestBase {
     cvConfig.setQuery(query);
     cvConfig.setMessageIdentifier("message");
     cvConfig.setServiceInstanceIdentifier("pod_name");
-    cvConfig.setTimestampIdentifier("timestamp");
-    cvConfig.setTimestampFormat("HH:MM:SS");
     return cvConfig;
   }
 
@@ -135,8 +134,8 @@ public class StackdriverLogDSConfigTest extends DSConfigTestBase {
       assertThat(cvConfig.getEnvIdentifier()).isEqualTo(envIdentifier);
       assertThat(cvConfig.getCategory().name()).isEqualTo(CVMonitoringCategory.ERRORS.name());
     });
-    assertThat(cvConfigs.get(0).getMessageIdentifier()).isEqualTo("new_message");
-    assertThat(cvConfigs.get(1).getMessageIdentifier()).isEqualTo("message");
+    assertThat(cvConfigs.stream().map(cvConfig -> cvConfig.getMessageIdentifier()))
+        .containsExactlyInAnyOrder("new_message", "message");
   }
 
   @Test

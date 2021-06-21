@@ -23,6 +23,9 @@ public class OnboardingServiceImpl implements OnboardingService {
 
   @Override
   public OnboardingResponseDTO getOnboardingResponse(String accountId, OnboardingRequestDTO onboardingRequestDTO) {
+    Preconditions.checkNotNull(onboardingRequestDTO, "OnboardingRequestDTO cannot be null");
+    Preconditions.checkNotNull(onboardingRequestDTO.getTracingId(), "Missing tracingId/requestGuid in request");
+
     ConnectorInfoDTO connectorInfoDTO = getConnectorConfigDTO(accountId, onboardingRequestDTO.getConnectorIdentifier(),
         onboardingRequestDTO.getOrgIdentifier(), onboardingRequestDTO.getProjectIdentifier());
     onboardingRequestDTO.getDataCollectionRequest().setConnectorInfoDTO(connectorInfoDTO);

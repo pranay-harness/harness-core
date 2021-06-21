@@ -17,6 +17,8 @@ trigger:
           actions:
             - Update
             - Decline
+            - Create
+            - Merge
           payloadConditions:
             - key: k1
               operator: Equals

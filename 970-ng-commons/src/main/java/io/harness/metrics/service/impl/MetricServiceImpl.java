@@ -169,7 +169,7 @@ public class MetricServiceImpl implements MetricService {
   public void recordMetric(String metricName, double value) {
     try {
       if (!WILL_PUBLISH_METRICS) {
-        log.error("Credentials to APM not set. We will not be able to publish metrics");
+        log.info("Credentials to APM not set. We will not be able to publish metrics");
         return;
       }
 
@@ -196,12 +196,13 @@ public class MetricServiceImpl implements MetricService {
       MetricGroup group = METRIC_GROUP_MAP.get(metricConfiguration.getMetricGroup());
       List<String> labelNames =
           group == null || group.getLabels() == null ? Arrays.asList(ENV_LABEL) : group.getLabels();
-      List<String> labelVals = group == null ? new ArrayList<>() : getLabelValues(labelNames);
+      Map<String, String> labelVals = group == null ? new HashMap<>() : getLabelValues(labelNames);
       Map<TagKey, String> tagsMap = new HashMap<>();
-      for (int index = 0; index < labelVals.size(); index++) {
-        tagsMap.put(TagKey.create(labelNames.get(index)), labelVals.get(index));
+      for (String labelName : labelNames) {
+        if (labelVals.containsKey(labelName)) {
+          tagsMap.put(TagKey.create(labelName), labelVals.get(labelName));
+        }
       }
-
       recordTaggedStat(tagsMap, cvngMetric.getMeasure(), value);
     } catch (Exception ex) {
       log.error("Exception occurred while registering a metric", ex);
@@ -213,7 +214,12 @@ public class MetricServiceImpl implements MetricService {
     recordMetric(metricName, 1);
   }
 
-  private List<String> getLabelValues(List<String> labelNames) {
+  @Override
+  public void recordDuration(String metricName, java.time.Duration duration) {
+    recordMetric(metricName, duration.toMillis());
+  }
+
+  private Map<String, String> getLabelValues(List<String> labelNames) {
     Map<String, String> context = ThreadContext.getContext();
 
     String env = System.getenv("ENV");
@@ -221,21 +227,21 @@ public class MetricServiceImpl implements MetricService {
       env = "localhost";
     }
 
-    List<String> labelValues = new ArrayList<>();
+    Map<String, String> labelValues = new HashMap<>();
     labelNames.forEach(label -> {
       String tagKey = METRIC_LABEL_PREFIX + label;
       String tagVal = context.containsKey(tagKey) ? context.get(tagKey) : null;
       if (tagVal != null) {
-        labelValues.add(tagVal);
+        labelValues.put(label, tagVal);
       }
     });
 
-    labelValues.add(env);
+    labelValues.put(ENV_LABEL, env);
 
     if (labelNames.size() != labelValues.size()) {
-      throw new IllegalStateException(
-          "Some labels were not found from the object while trying to record metric. Label Names: " + labelNames
+      log.error("Some labels were not found from the object while trying to record metric. Label Names: " + labelNames
           + " and labels: " + labelValues);
+      // TODO: send a metric for this and add alert on it.
     }
     return labelValues;
   }

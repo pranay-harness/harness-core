@@ -9,9 +9,9 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdateFactory;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
+import io.harness.engine.interrupts.statusupdate.NodeStatusUpdateHandlerFactory;
+import io.harness.engine.observers.NodeStatusUpdateHandler;
+import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.engine.observers.PlanStatusUpdateObserver;
 import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.exception.InvalidRequestException;
@@ -20,15 +20,14 @@ import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.ExecutionMetadataKeys;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.observer.Subject;
-import io.harness.plan.Plan;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
-import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.utils.StatusUtils;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.repositories.PlanExecutionRepository;
+import io.harness.serializer.ProtoUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -53,7 +52,7 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
   @Inject private PlanExecutionRepository planExecutionRepository;
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
-  @Inject private StepStatusUpdateFactory stepStatusUpdateFactory;
+  @Inject private NodeStatusUpdateHandlerFactory nodeStatusUpdateHandlerFactory;
   @Inject private NodeExecutionService nodeExecutionService;
 
   @Getter private final Subject<PlanStatusUpdateObserver> planStatusUpdateSubject = new Subject<>();
@@ -116,20 +115,11 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
   }
 
   @Override
-  public PlanNodeProto fetchExecutionNode(String planExecutionId, String nodeId) {
-    PlanExecution instance = get(planExecutionId);
-    if (instance == null) {
-      throw new InvalidRequestException("Execution Instance is null for id : " + planExecutionId);
-    }
-    Plan plan = instance.getPlan();
-    return plan.fetchNode(nodeId);
-  }
-
-  @Override
-  public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
-    StepStatusUpdate stepStatusUpdate = stepStatusUpdateFactory.obtainStepStatusUpdate(stepStatusUpdateInfo);
-    if (stepStatusUpdate != null) {
-      stepStatusUpdate.onStepStatusUpdate(stepStatusUpdateInfo);
+  public void onNodeStatusUpdate(NodeUpdateInfo nodeUpdateInfo) {
+    NodeStatusUpdateHandler nodeStatusUpdateObserver =
+        nodeStatusUpdateHandlerFactory.obtainStepStatusUpdate(nodeUpdateInfo);
+    if (nodeStatusUpdateObserver != null) {
+      nodeStatusUpdateObserver.handleNodeStatusUpdate(nodeUpdateInfo);
     }
   }
 
@@ -160,15 +150,27 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
     return OrchestrationUtils.calculateStatus(nodeExecutions, planExecutionId);
   }
 
+  @Override
+  public Status calculateStatusExcluding(String planExecutionId, String excludedNodeExecutionId) {
+    List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetriesAndStatusIn(
+        planExecutionId, EnumSet.noneOf(Status.class));
+    List<NodeExecution> filtered = nodeExecutions.stream()
+                                       .filter(ne -> !ne.getUuid().equals(excludedNodeExecutionId))
+                                       .collect(Collectors.toList());
+    return OrchestrationUtils.calculateStatus(filtered, planExecutionId);
+  }
+
   public PlanExecution updateCalculatedStatus(String planExecutionId) {
     return updateStatus(planExecutionId, calculateStatus(planExecutionId));
   }
 
   private void emitEvent(PlanExecution planExecution) {
     Ambiance ambiance = buildFromPlanExecution(planExecution);
-    eventEmitter.emitEvent(OrchestrationEvent.builder()
-                               .ambiance(ambiance)
-                               .eventType(OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE)
+    eventEmitter.emitEvent(OrchestrationEvent.newBuilder()
+                               .setAmbiance(ambiance)
+                               .setEventType(OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE)
+                               .setStatus(planExecution.getStatus())
+                               .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
                                .build());
     planStatusUpdateSubject.fireInform(PlanStatusUpdateObxxxxxxxx:onPlanStatusUpdate, ambiance);
   }

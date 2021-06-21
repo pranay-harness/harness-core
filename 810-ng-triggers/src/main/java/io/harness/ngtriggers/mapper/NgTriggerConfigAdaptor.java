@@ -25,9 +25,11 @@ import io.harness.ngtriggers.beans.source.webhook.CustomWebhookTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.GithubTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.GitlabTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
+import io.harness.ngtriggers.beans.source.webhook.WebhookCondition;
 import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerSpec;
+import io.harness.ngtriggers.beans.source.webhook.v2.TriggerEventDataCondition;
 import io.harness.ngtriggers.beans.source.webhook.v2.WebhookTriggerConfigV2;
 import io.harness.ngtriggers.beans.source.webhook.v2.WebhookTriggerConfigV2.WebhookTriggerConfigV2Builder;
 import io.harness.ngtriggers.beans.source.webhook.v2.awscodecommit.AwsCodeCommitSpec;
@@ -58,7 +60,9 @@ import io.harness.ngtriggers.beans.source.webhook.v2.gitlab.event.GitlabPRSpec;
 import io.harness.ngtriggers.beans.source.webhook.v2.gitlab.event.GitlabPushSpec;
 import io.harness.ngtriggers.beans.source.webhook.v2.gitlab.event.GitlabTriggerEvent;
 import io.harness.ngtriggers.beans.target.pipeline.PipelineTargetSpec;
+import io.harness.ngtriggers.conditionchecker.ConditionOperator;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -161,37 +165,40 @@ public class NgTriggerConfigAdaptor {
   private static void initGithubSpec(GithubTriggerSpec githubTriggerSpec, GithubSpecBuilder githubSpecBuilder) {
     if (githubTriggerSpec.getEvent() == WebhookEvent.PULL_REQUEST) {
       githubSpecBuilder.type(GithubTriggerEvent.PULL_REQUEST);
-      githubSpecBuilder.spec(GithubPRSpec.builder()
-                                 .connectorRef(githubTriggerSpec.getGitRepoSpec().getIdentifier())
-                                 .repoName(githubTriggerSpec.getGitRepoSpec().getRepoName())
-                                 .headerConditions(githubTriggerSpec.getHeaderConditions())
-                                 .payloadConditions(githubTriggerSpec.getPayloadConditions())
-                                 .jexlCondition(githubTriggerSpec.getJexlCondition())
-                                 .autoAbortPreviousExecutions(false)
-                                 .actions(getGithubPrActions(githubTriggerSpec))
-                                 .build());
+      githubSpecBuilder.spec(
+          GithubPRSpec.builder()
+              .connectorRef(githubTriggerSpec.getGitRepoSpec().getIdentifier())
+              .repoName(githubTriggerSpec.getGitRepoSpec().getRepoName())
+              .headerConditions(mapToTriggerEventDataCondition(githubTriggerSpec.getHeaderConditions()))
+              .payloadConditions(mapToTriggerEventDataCondition(githubTriggerSpec.getPayloadConditions()))
+              .jexlCondition(githubTriggerSpec.getJexlCondition())
+              .autoAbortPreviousExecutions(false)
+              .actions(getGithubPrActions(githubTriggerSpec))
+              .build());
     } else if (githubTriggerSpec.getEvent() == WebhookEvent.PUSH) {
       githubSpecBuilder.type(GithubTriggerEvent.PUSH);
-      githubSpecBuilder.spec(GithubPushSpec.builder()
-                                 .connectorRef(githubTriggerSpec.getGitRepoSpec().getIdentifier())
-                                 .repoName(githubTriggerSpec.getGitRepoSpec().getRepoName())
-                                 .headerConditions(githubTriggerSpec.getHeaderConditions())
-                                 .payloadConditions(githubTriggerSpec.getPayloadConditions())
-                                 .jexlCondition(githubTriggerSpec.getJexlCondition())
-                                 .autoAbortPreviousExecutions(false)
-                                 .build());
+      githubSpecBuilder.spec(
+          GithubPushSpec.builder()
+              .connectorRef(githubTriggerSpec.getGitRepoSpec().getIdentifier())
+              .repoName(githubTriggerSpec.getGitRepoSpec().getRepoName())
+              .headerConditions(mapToTriggerEventDataCondition(githubTriggerSpec.getHeaderConditions()))
+              .payloadConditions(mapToTriggerEventDataCondition(githubTriggerSpec.getPayloadConditions()))
+              .jexlCondition(githubTriggerSpec.getJexlCondition())
+              .autoAbortPreviousExecutions(false)
+              .build());
 
     } else if (githubTriggerSpec.getEvent() == WebhookEvent.ISSUE_COMMENT) {
       githubSpecBuilder.type(GithubTriggerEvent.ISSUE_COMMENT);
-      githubSpecBuilder.spec(GithubIssueCommentSpec.builder()
-                                 .connectorRef(githubTriggerSpec.getGitRepoSpec().getIdentifier())
-                                 .repoName(githubTriggerSpec.getGitRepoSpec().getRepoName())
-                                 .headerConditions(githubTriggerSpec.getHeaderConditions())
-                                 .payloadConditions(githubTriggerSpec.getPayloadConditions())
-                                 .jexlCondition(githubTriggerSpec.getJexlCondition())
-                                 .autoAbortPreviousExecutions(false)
-                                 .actions(getGithubIssueCommentActions(githubTriggerSpec))
-                                 .build());
+      githubSpecBuilder.spec(
+          GithubIssueCommentSpec.builder()
+              .connectorRef(githubTriggerSpec.getGitRepoSpec().getIdentifier())
+              .repoName(githubTriggerSpec.getGitRepoSpec().getRepoName())
+              .headerConditions(mapToTriggerEventDataCondition(githubTriggerSpec.getHeaderConditions()))
+              .payloadConditions(mapToTriggerEventDataCondition(githubTriggerSpec.getPayloadConditions()))
+              .jexlCondition(githubTriggerSpec.getJexlCondition())
+              .autoAbortPreviousExecutions(false)
+              .actions(getGithubIssueCommentActions(githubTriggerSpec))
+              .build());
     } else {
       throw new TriggerException(
           "Invalid Event Type encountered in Trigger with Version 0 while converting to Version 2"
@@ -200,28 +207,52 @@ public class NgTriggerConfigAdaptor {
     }
   }
 
+  private static List<TriggerEventDataCondition> mapToTriggerEventDataCondition(List<WebhookCondition> conditions) {
+    if (isEmpty(conditions)) {
+      return emptyList();
+    }
+
+    List<TriggerEventDataCondition> triggerEventDataConditions = new ArrayList<>();
+
+    conditions.forEach(condition -> {
+      ConditionOperator conditionOperator =
+          WebhookConditionMapperEnum.getCondtionOperationMappingForString(condition.getOperator());
+      if (conditionOperator != null) {
+        triggerEventDataConditions.add(TriggerEventDataCondition.builder()
+                                           .key(condition.getKey())
+                                           .operator(conditionOperator)
+                                           .value(condition.getValue())
+                                           .build());
+      }
+    });
+
+    return triggerEventDataConditions;
+  }
+
   private static void initGitlabSpec(GitlabTriggerSpec gitlabTriggerSpec, GitlabSpecBuilder gitlabSpecBuilder) {
     if (gitlabTriggerSpec.getEvent() == WebhookEvent.MERGE_REQUEST) {
       gitlabSpecBuilder.type(GitlabTriggerEvent.MERGE_REQUEST);
-      gitlabSpecBuilder.spec(GitlabPRSpec.builder()
-                                 .connectorRef(gitlabTriggerSpec.getGitRepoSpec().getIdentifier())
-                                 .repoName(gitlabTriggerSpec.getGitRepoSpec().getRepoName())
-                                 .headerConditions(gitlabTriggerSpec.getHeaderConditions())
-                                 .payloadConditions(gitlabTriggerSpec.getPayloadConditions())
-                                 .jexlCondition(gitlabTriggerSpec.getJexlCondition())
-                                 .autoAbortPreviousExecutions(false)
-                                 .actions(getGitlabPrActions(gitlabTriggerSpec))
-                                 .build());
+      gitlabSpecBuilder.spec(
+          GitlabPRSpec.builder()
+              .connectorRef(gitlabTriggerSpec.getGitRepoSpec().getIdentifier())
+              .repoName(gitlabTriggerSpec.getGitRepoSpec().getRepoName())
+              .headerConditions(mapToTriggerEventDataCondition(gitlabTriggerSpec.getHeaderConditions()))
+              .payloadConditions(mapToTriggerEventDataCondition(gitlabTriggerSpec.getPayloadConditions()))
+              .jexlCondition(gitlabTriggerSpec.getJexlCondition())
+              .autoAbortPreviousExecutions(false)
+              .actions(getGitlabPrActions(gitlabTriggerSpec))
+              .build());
     } else if (gitlabTriggerSpec.getEvent() == WebhookEvent.PUSH) {
       gitlabSpecBuilder.type(GitlabTriggerEvent.PUSH);
-      gitlabSpecBuilder.spec(GitlabPushSpec.builder()
-                                 .connectorRef(gitlabTriggerSpec.getGitRepoSpec().getIdentifier())
-                                 .repoName(gitlabTriggerSpec.getGitRepoSpec().getRepoName())
-                                 .headerConditions(gitlabTriggerSpec.getHeaderConditions())
-                                 .payloadConditions(gitlabTriggerSpec.getPayloadConditions())
-                                 .jexlCondition(gitlabTriggerSpec.getJexlCondition())
-                                 .autoAbortPreviousExecutions(false)
-                                 .build());
+      gitlabSpecBuilder.spec(
+          GitlabPushSpec.builder()
+              .connectorRef(gitlabTriggerSpec.getGitRepoSpec().getIdentifier())
+              .repoName(gitlabTriggerSpec.getGitRepoSpec().getRepoName())
+              .headerConditions(mapToTriggerEventDataCondition(gitlabTriggerSpec.getHeaderConditions()))
+              .payloadConditions(mapToTriggerEventDataCondition(gitlabTriggerSpec.getPayloadConditions()))
+              .jexlCondition(gitlabTriggerSpec.getJexlCondition())
+              .autoAbortPreviousExecutions(false)
+              .build());
     } else {
       throw new TriggerException(
           "Invalid Event Type encountered in Trigger with Version 0 while converting to Version 2"
@@ -234,25 +265,27 @@ public class NgTriggerConfigAdaptor {
       BitbucketTriggerSpec bitbucketTriggerSpec, BitbucketSpecBuilder bitbucketSpecBuilder) {
     if (bitbucketTriggerSpec.getEvent() == WebhookEvent.PULL_REQUEST) {
       bitbucketSpecBuilder.type(BitbucketTriggerEvent.PULL_REQUEST);
-      bitbucketSpecBuilder.spec(BitbucketPRSpec.builder()
-                                    .connectorRef(bitbucketTriggerSpec.getGitRepoSpec().getIdentifier())
-                                    .repoName(bitbucketTriggerSpec.getGitRepoSpec().getRepoName())
-                                    .headerConditions(bitbucketTriggerSpec.getHeaderConditions())
-                                    .payloadConditions(bitbucketTriggerSpec.getPayloadConditions())
-                                    .jexlCondition(bitbucketTriggerSpec.getJexlCondition())
-                                    .autoAbortPreviousExecutions(false)
-                                    .actions(getBitbucketPrActions(bitbucketTriggerSpec))
-                                    .build());
+      bitbucketSpecBuilder.spec(
+          BitbucketPRSpec.builder()
+              .connectorRef(bitbucketTriggerSpec.getGitRepoSpec().getIdentifier())
+              .repoName(bitbucketTriggerSpec.getGitRepoSpec().getRepoName())
+              .headerConditions(mapToTriggerEventDataCondition(bitbucketTriggerSpec.getHeaderConditions()))
+              .payloadConditions(mapToTriggerEventDataCondition(bitbucketTriggerSpec.getPayloadConditions()))
+              .jexlCondition(bitbucketTriggerSpec.getJexlCondition())
+              .autoAbortPreviousExecutions(false)
+              .actions(getBitbucketPrActions(bitbucketTriggerSpec))
+              .build());
     } else if (bitbucketTriggerSpec.getEvent() == WebhookEvent.PUSH) {
       bitbucketSpecBuilder.type(BitbucketTriggerEvent.PUSH);
-      bitbucketSpecBuilder.spec(BitbucketPushSpec.builder()
-                                    .connectorRef(bitbucketTriggerSpec.getGitRepoSpec().getIdentifier())
-                                    .repoName(bitbucketTriggerSpec.getGitRepoSpec().getRepoName())
-                                    .headerConditions(bitbucketTriggerSpec.getHeaderConditions())
-                                    .payloadConditions(bitbucketTriggerSpec.getPayloadConditions())
-                                    .jexlCondition(bitbucketTriggerSpec.getJexlCondition())
-                                    .autoAbortPreviousExecutions(false)
-                                    .build());
+      bitbucketSpecBuilder.spec(
+          BitbucketPushSpec.builder()
+              .connectorRef(bitbucketTriggerSpec.getGitRepoSpec().getIdentifier())
+              .repoName(bitbucketTriggerSpec.getGitRepoSpec().getRepoName())
+              .headerConditions(mapToTriggerEventDataCondition(bitbucketTriggerSpec.getHeaderConditions()))
+              .payloadConditions(mapToTriggerEventDataCondition(bitbucketTriggerSpec.getPayloadConditions()))
+              .jexlCondition(bitbucketTriggerSpec.getJexlCondition())
+              .autoAbortPreviousExecutions(false)
+              .build());
     } else {
       throw new TriggerException(
           "Invalid Event Type encountered in Trigger with Version 0 while converting to Version 2"
@@ -265,12 +298,13 @@ public class NgTriggerConfigAdaptor {
       AwsCodeCommitTriggerSpec awsCodeCommitTriggerSpec, AwsCodeCommitSpecBuilder awsCodeCommitSpecBuilder) {
     if (awsCodeCommitTriggerSpec.getEvent() == WebhookEvent.PUSH) {
       awsCodeCommitSpecBuilder.type(AwsCodeCommitTriggerEvent.PUSH);
-      awsCodeCommitSpecBuilder.spec(AwsCodeCommitPushSpec.builder()
-                                        .connectorRef(awsCodeCommitTriggerSpec.getGitRepoSpec().getIdentifier())
-                                        .repoName(awsCodeCommitTriggerSpec.getGitRepoSpec().getRepoName())
-                                        .payloadConditions(awsCodeCommitTriggerSpec.getPayloadConditions())
-                                        .jexlCondition(awsCodeCommitTriggerSpec.getJexlCondition())
-                                        .build());
+      awsCodeCommitSpecBuilder.spec(
+          AwsCodeCommitPushSpec.builder()
+              .connectorRef(awsCodeCommitTriggerSpec.getGitRepoSpec().getIdentifier())
+              .repoName(awsCodeCommitTriggerSpec.getGitRepoSpec().getRepoName())
+              .payloadConditions(mapToTriggerEventDataCondition(awsCodeCommitTriggerSpec.getPayloadConditions()))
+              .jexlCondition(awsCodeCommitTriggerSpec.getJexlCondition())
+              .build());
     } else {
       throw new TriggerException(
           "Invalid Event Type encountered in Trigger with Version 0 while converting to Version 2"
@@ -281,8 +315,9 @@ public class NgTriggerConfigAdaptor {
 
   private static void initCustomSpec(
       CustomWebhookTriggerSpec customWebhookTriggerSpec, CustomTriggerSpecBuilder customTriggerSpecBuilder) {
-    customTriggerSpecBuilder.headerConditions(customWebhookTriggerSpec.getHeaderConditions())
-        .payloadConditions(customWebhookTriggerSpec.getPayloadConditions())
+    customTriggerSpecBuilder
+        .headerConditions(mapToTriggerEventDataCondition(customWebhookTriggerSpec.getHeaderConditions()))
+        .payloadConditions(mapToTriggerEventDataCondition(customWebhookTriggerSpec.getPayloadConditions()))
         .jexlCondition(customWebhookTriggerSpec.getJexlCondition());
   }
 
@@ -332,8 +367,36 @@ public class NgTriggerConfigAdaptor {
 
     Set<String> parsedValues =
         webhookActions.stream().map(webhookAction -> webhookAction.getParsedValue()).collect(toSet());
+
+    // Need special handlnig due to issue in current impl
+    handleGithubDataBugIfNeeded(parsedValues, gitActions);
+
     return gitActions.stream()
         .filter(githubPRAction -> parsedValues.contains(githubPRAction.getParsedValue()))
         .collect(toList());
+  }
+
+  /**
+   * In WebhookAction enum, Following types has dame jsonProperties, so while de-serialisation,
+   * it can get mapped to any action.
+   */
+  private static void handleGithubDataBugIfNeeded(Set<String> parsedValues, List<? extends GitAction> gitActions) {
+    if (GithubPRAction.class.isAssignableFrom(gitActions.get(0).getClass())
+        || GithubIssueCommentAction.class.isAssignableFrom(gitActions.get(0).getClass())) {
+      if (parsedValues.contains("created")) {
+        parsedValues.remove("created");
+        parsedValues.add("create");
+      }
+
+      if (parsedValues.contains("deleted")) {
+        parsedValues.remove("deleted");
+        parsedValues.add("delete");
+      }
+
+      if (parsedValues.contains("update")) {
+        parsedValues.remove("update");
+        parsedValues.add("edit");
+      }
+    }
   }
 }

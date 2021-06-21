@@ -33,7 +33,6 @@ import software.wings.service.intfc.UserService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -45,6 +44,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -98,16 +98,18 @@ public class UserResourceNG {
   @GET
   @Path("/search")
   public RestResponse<PageResponse<UserInfo>> list(@BeanParam PageRequest<User> pageRequest,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("searchTerm") String searchTerm) {
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("searchTerm") String searchTerm,
+      @QueryParam("requireAdminStatus") @DefaultValue("false") boolean requireAdminStatus) {
     Integer offset = Integer.valueOf(pageRequest.getOffset());
     Integer pageSize = pageRequest.getPageSize();
 
-    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, true, false);
+    List<User> userList =
+        userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, requireAdminStatus, false);
 
     PageResponse<UserInfo> pageResponse = aPageResponse()
                                               .withOffset(offset.toString())
                                               .withLimit(pageSize.toString())
-                                              .withResponse(convertUserToNgUser(userList))
+                                              .withResponse(convertUserToNgUser(userList, requireAdminStatus))
                                               .withTotal(userService.getTotalUserCount(accountId, true))
                                               .build();
 
@@ -152,7 +154,7 @@ public class UserResourceNG {
     if (!isEmpty(userFilterNG.getEmailIds())) {
       userSet.addAll(userService.getUsersByEmail(userFilterNG.getEmailIds(), accountId));
     }
-    return new RestResponse<>(convertUserToNgUser(new ArrayList<>(userSet)));
+    return new RestResponse<>(convertUserToNgUser(new ArrayList<>(userSet), false));
   }
 
   @PUT
@@ -226,31 +228,22 @@ public class UserResourceNG {
         twoFactorAuthenticationManager.disableTwoFactorAuthentication(userService.getUserByEmail(emailId)))));
   }
 
-  @POST
-  @Path("/{urlType}/url")
-  public RestResponse<Optional<String>> generateSignupNotificationUrl(
-      @PathParam("urlType") String urlType, @Body UserInfo userInfo) {
-    String url = null;
-    try {
-      if (VERIFY_URL.equals(urlType)) {
-        url = userService.generateVerificationUrl(userInfo.getUuid(), userInfo.getDefaultAccountId());
-      } else if (CONFIRM_URL.equals(urlType)) {
-        url = userService.generateLoginUrl(userInfo.getDefaultAccountId());
-      }
-    } catch (URISyntaxException e) {
-      throw new InvalidRequestException(String.format("URL type [%s] failed to be generated", urlType), e);
-    }
-    return new RestResponse<>(Optional.ofNullable(url));
+  @PUT
+  @Path("/{userId}/verified")
+  public RestResponse<Boolean> verifyToken(@PathParam("userId") String userId) {
+    userService.setUserEmailVerified(userId);
+    return new RestResponse<>(true);
   }
 
-  private List<UserInfo> convertUserToNgUser(List<User> userList) {
+  private List<UserInfo> convertUserToNgUser(List<User> userList, boolean requireAdminStatus) {
     return userList.stream()
         .map(user
             -> UserInfo.builder()
                    .email(user.getEmail())
                    .name(user.getName())
                    .uuid(user.getUuid())
-                   .admin(Optional.ofNullable(user.getUserGroups())
+                   .admin(requireAdminStatus
+                       && Optional.ofNullable(user.getUserGroups())
                               .map(x
                                   -> x.stream().anyMatch(
                                       y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))

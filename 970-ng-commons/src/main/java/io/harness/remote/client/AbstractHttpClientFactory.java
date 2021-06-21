@@ -169,6 +169,8 @@ public abstract class AbstractHttpClientFactory {
                           .newBuilder()
                           .addQueryParameter("repoIdentifier", gitBranchInfo.getYamlGitConfigId())
                           .addQueryParameter("branch", gitBranchInfo.getBranch())
+                          .addQueryParameter(
+                              "getDefaultFromOtherRepo", String.valueOf(gitBranchInfo.isFindDefaultFromOtherRepos()))
                           .build();
         return chain.proceed(request.newBuilder().url(url).build());
       } else {

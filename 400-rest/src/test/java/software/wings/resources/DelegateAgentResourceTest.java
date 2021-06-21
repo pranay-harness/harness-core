@@ -1,9 +1,11 @@
 package software.wings.resources;
 
+import static io.harness.beans.FeatureName.PROCESS_DELEGATE_TASK_EVENTS_ASYNC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateConfiguration.Action.SELF_DESTRUCT;
-import static io.harness.delegate.beans.DelegateTaskEvent.DelegateTaskEventBuilder;
+import static io.harness.delegate.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.MARKO;
@@ -32,6 +34,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
+import io.harness.beans.DelegateTaskEventsResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
@@ -48,6 +51,7 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.managerclient.AccountPreference;
 import io.harness.managerclient.AccountPreferenceQuery;
 import io.harness.managerclient.GetDelegatePropertiesRequest;
@@ -126,6 +130,7 @@ public class DelegateAgentResourceTest {
       mock(ManifestCollectionResponseHandler.class);
   private static final ConnectorHearbeatPublisher connectorHearbeatPublisher = mock(ConnectorHearbeatPublisher.class);
   private static final KryoSerializer kryoSerializer = mock(KryoSerializer.class);
+  private static final FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
 
   @Parameter public String apiUrl;
 
@@ -140,7 +145,7 @@ public class DelegateAgentResourceTest {
           .instance(new DelegateAgentResource(delegateService, accountService, wingsPersistence,
               delegateRequestRateLimiter, subdomainUrlHelper, artifactCollectionResponseHandler,
               instanceSyncResponseHandler, manifestCollectionResponseHandler, connectorHearbeatPublisher,
-              kryoSerializer, configurationController, delegateTaskServiceClassic))
+              kryoSerializer, configurationController, featureFlagService, delegateTaskServiceClassic))
           .instance(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -306,18 +311,17 @@ public class DelegateAgentResourceTest {
   @Owner(developers = NIKOLA)
   @Category(UnitTests.class)
   public void shouldGetDelegateTaskEvents() {
-    List<DelegateTaskEvent> delegateTaskEventList =
-        singletonList(DelegateTaskEventBuilder.aDelegateTaskEvent().build());
+    List<DelegateTaskEvent> delegateTaskEventList = singletonList(aDelegateTaskEvent().build());
     when(delegateTaskServiceClassic.getDelegateTaskEvents(ACCOUNT_ID, DELEGATE_ID, false))
         .thenReturn(delegateTaskEventList);
-    List<DelegateTaskEvent> restResponse = RESOURCES.client()
-                                               .target("/agent/delegates/" + DELEGATE_ID + "/task-events?delegateId="
-                                                   + DELEGATE_ID + "&accountId=" + ACCOUNT_ID + "&syncOnly=" + false)
-                                               .request()
-                                               .get(new GenericType<List<DelegateTaskEvent>>() {});
+    DelegateTaskEventsResponse restResponse = RESOURCES.client()
+                                                  .target("/agent/delegates/" + DELEGATE_ID + "/task-events?delegateId="
+                                                      + DELEGATE_ID + "&accountId=" + ACCOUNT_ID + "&syncOnly=" + false)
+                                                  .request()
+                                                  .get(new GenericType<DelegateTaskEventsResponse>() {});
 
     verify(delegateTaskServiceClassic, atLeastOnce()).getDelegateTaskEvents(ACCOUNT_ID, DELEGATE_ID, false);
-    assertThat(restResponse).isInstanceOf(List.class).isNotNull();
+    assertThat(restResponse).isInstanceOf(DelegateTaskEventsResponse.class).isNotNull();
   }
 
   @Test
@@ -590,5 +594,22 @@ public class DelegateAgentResourceTest {
         TextFormat.parse(restResponse.getResource(), GetDelegatePropertiesResponse.class);
     assertThat(responseProto).isNotNull();
     assertThat(responseProto.getResponseEntryList().get(0).is(AccountPreference.class)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateTaskEventsContainerWithFF() {
+    when(featureFlagService.isEnabled(PROCESS_DELEGATE_TASK_EVENTS_ASYNC, ACCOUNT_ID)).thenReturn(true);
+    when(delegateTaskServiceClassic.getDelegateTaskEvents(ACCOUNT_ID, DELEGATE_ID, true))
+        .thenReturn(singletonList(aDelegateTaskEvent().withDelegateTaskId("123").build()));
+    DelegateTaskEventsResponse delegateTaskEventsResponse =
+        RESOURCES.client()
+            .target(
+                String.format("/agent/delegates/%s/task-events?accountId=%s&syncOnly=true", DELEGATE_ID, ACCOUNT_ID))
+            .request()
+            .get(new GenericType<DelegateTaskEventsResponse>() {});
+    assertThat(delegateTaskEventsResponse.isProcessTaskEventsAsync()).isTrue();
+    assertThat(delegateTaskEventsResponse.getDelegateTaskEvents().get(0).getDelegateTaskId()).isEqualTo("123");
   }
 }

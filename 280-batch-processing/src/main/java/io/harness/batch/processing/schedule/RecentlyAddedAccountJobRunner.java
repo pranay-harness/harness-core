@@ -8,7 +8,7 @@ import io.harness.batch.processing.service.impl.BatchJobBucketLogContext;
 import io.harness.batch.processing.service.intfc.BatchJobIntervalService;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
-import io.harness.ccm.commons.entities.LatestClusterInfo;
+import io.harness.ccm.commons.entities.batch.LatestClusterInfo;
 import io.harness.ccm.health.LastReceivedPublishedMessageDao;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;

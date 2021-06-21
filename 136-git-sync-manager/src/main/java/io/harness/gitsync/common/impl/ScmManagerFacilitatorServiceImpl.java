@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.eraro.ErrorCode.PR_CREATION_ERROR;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FileContentBatchResponse;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
@@ -11,15 +12,20 @@ import io.harness.connector.impl.ConnectorErrorMessagesHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.exception.ExplanationException;
 import io.harness.exception.ScmException;
+import io.harness.exception.WingsException;
+import io.harness.gitsync.common.dtos.CreatePRDTO;
+import io.harness.gitsync.common.dtos.GitDiffResultFileListDTO;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.helper.FileBatchResponseMapper;
 import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
+import io.harness.gitsync.common.helper.PRFileListMapper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.impl.ScmResponseStatusUtils;
+import io.harness.product.ci.scm.proto.CompareCommitsResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
-import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.service.ScmClient;
 import io.harness.tasks.DecryptGitApiAccessHelper;
@@ -27,6 +33,7 @@ import io.harness.tasks.DecryptGitApiAccessHelper;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 // Don't inject this directly go through ScmClientOrchestrator.
@@ -73,7 +80,7 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
   }
 
   @Override
-  public boolean createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+  public CreatePRDTO createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String yamlGitConfigRef, GitPRCreateRequest gitCreatePRRequest) {
     // since project level ref = ref
     ScmConnector decryptScmConnector = gitSyncConnectorHelper.getDecryptedConnector(
@@ -81,22 +88,29 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
     CreatePRResponse createPRResponse;
     try {
       createPRResponse = scmClient.createPullRequest(decryptScmConnector, gitCreatePRRequest);
-      ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(createPRResponse.getStatus(),
-          String.format("Could not create the pull request from %s to %s", gitCreatePRRequest.getSourceBranch(),
-              gitCreatePRRequest.getTargetBranch()));
+      try {
+        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
+            createPRResponse.getStatus(), createPRResponse.getError());
+      } catch (WingsException e) {
+        throw new ExplanationException(String.format("Could not create the pull request from %s to %s",
+                                           gitCreatePRRequest.getSourceBranch(), gitCreatePRRequest.getTargetBranch()),
+            e);
+      }
     } catch (Exception ex) {
       throw new ScmException(PR_CREATION_ERROR);
     }
-    return true;
+    return CreatePRDTO.builder().prNumber(createPRResponse.getNumber()).build();
   }
 
   @Override
   public List<GitFileChangeDTO> listFilesOfBranches(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String yamlGitConfigIdentifier, List<String> foldersList, String branchName) {
+      String projectIdentifier, String yamlGitConfigIdentifier, Set<String> foldersList, String branchName) {
     final ScmConnector decryptedConnector = gitSyncConnectorHelper.getDecryptedConnector(
         yamlGitConfigIdentifier, projectIdentifier, orgIdentifier, accountIdentifier);
-    FileBatchContentResponse filesList = scmClient.listFiles(decryptedConnector, foldersList, branchName);
-    return FileBatchResponseMapper.createGitFileChangeList(filesList);
+    final FileContentBatchResponse fileContentBatchResponse =
+        scmClient.listFiles(decryptedConnector, foldersList, branchName);
+    return FileBatchResponseMapper.createGitFileChangeList(
+        fileContentBatchResponse.getFileBatchContentResponse(), fileContentBatchResponse.getCommitId());
   }
 
   @Override
@@ -104,7 +118,32 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
       YamlGitConfigDTO yamlGitConfigDTO, List<String> filePaths, String branchName) {
     final ScmConnector decryptedConnector =
         gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfigDTO, yamlGitConfigDTO.getAccountIdentifier());
-    FileBatchContentResponse filesList = scmClient.listFiles(decryptedConnector, filePaths, branchName);
-    return FileBatchResponseMapper.createGitFileChangeList(filesList);
+    // todo @mohit: pick commit id from here.
+    final FileContentBatchResponse fileContentBatchResponse =
+        scmClient.listFilesByFilePaths(decryptedConnector, filePaths, branchName);
+    return FileBatchResponseMapper.createGitFileChangeList(
+        fileContentBatchResponse.getFileBatchContentResponse(), fileContentBatchResponse.getCommitId());
+  }
+
+  @Override
+  public List<GitFileChangeDTO> listFilesByCommitId(
+      YamlGitConfigDTO yamlGitConfigDTO, List<String> filePaths, String commitId) {
+    final ScmConnector decryptedConnector =
+        gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfigDTO, yamlGitConfigDTO.getAccountIdentifier());
+    // todo @mohit: pick commit id from here.
+    final FileContentBatchResponse fileContentBatchResponse =
+        scmClient.listFilesByCommitId(decryptedConnector, filePaths, commitId);
+    return FileBatchResponseMapper.createGitFileChangeList(
+        fileContentBatchResponse.getFileBatchContentResponse(), fileContentBatchResponse.getCommitId());
+  }
+
+  @Override
+  public GitDiffResultFileListDTO listCommitsDiffFiles(
+      YamlGitConfigDTO yamlGitConfigDTO, String initialCommitId, String finalCommitId) {
+    final ScmConnector decryptedConnector =
+        gitSyncConnectorHelper.getDecryptedConnector(yamlGitConfigDTO, yamlGitConfigDTO.getAccountIdentifier());
+    CompareCommitsResponse compareCommitsResponse =
+        scmClient.compareCommits(decryptedConnector, initialCommitId, finalCommitId);
+    return PRFileListMapper.toGitDiffResultFileListDTO(compareCommitsResponse.getFilesList());
   }
 }

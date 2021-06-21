@@ -7,9 +7,9 @@ import io.harness.connector.entities.embedded.gcpccm.GcpBillingExportDetails;
 import io.harness.connector.entities.embedded.gcpccm.GcpCloudCostConfig;
 import io.harness.connector.entities.embedded.gcpccm.GcpCloudCostConfig.GcpCloudCostConfigBuilder;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.gcpccm.GcpBillingExportSpecDTO;
 import io.harness.delegate.beans.connector.gcpccm.GcpCloudCostConnectorDTO;
-import io.harness.delegate.beans.connector.gcpccm.GcpCloudCostFeatures;
 import io.harness.exception.InvalidRequestException;
 
 import java.util.List;
@@ -19,11 +19,12 @@ public class GcpCloudCostDTOToEntity
     implements ConnectorDTOToEntityMapper<GcpCloudCostConnectorDTO, GcpCloudCostConfig> {
   @Override
   public GcpCloudCostConfig toConnectorEntity(GcpCloudCostConnectorDTO connectorDTO) {
-    final List<GcpCloudCostFeatures> featuresEnabled = connectorDTO.getFeaturesEnabled();
+    final List<CEFeatures> featuresEnabled = connectorDTO.getFeaturesEnabled();
 
-    final GcpCloudCostConfigBuilder configBuilder = GcpCloudCostConfig.builder().featuresEnabled(featuresEnabled);
+    final GcpCloudCostConfigBuilder configBuilder =
+        GcpCloudCostConfig.builder().featuresEnabled(featuresEnabled).projectId(connectorDTO.getProjectId());
 
-    if (featuresEnabled.contains(GcpCloudCostFeatures.BILLING)) {
+    if (featuresEnabled.contains(CEFeatures.BILLING)) {
       populateBillingAttributes(configBuilder, connectorDTO.getBillingExportSpec());
     }
 
@@ -35,12 +36,10 @@ public class GcpCloudCostDTOToEntity
     if (billingExportSpecDTO == null) {
       throw new InvalidRequestException(
           String.format("billingAttributes should be provided when the features %s is enabled.",
-              GcpCloudCostFeatures.BILLING.getDescription()));
+              CEFeatures.BILLING.getDescription()));
     }
 
-    configBuilder.billingExportDetails(GcpBillingExportDetails.builder()
-                                           .projectId(billingExportSpecDTO.getProjectId())
-                                           .datasetId(billingExportSpecDTO.getDatasetId())
-                                           .build());
+    configBuilder.billingExportDetails(
+        GcpBillingExportDetails.builder().datasetId(billingExportSpecDTO.getDatasetId()).build());
   }
 }

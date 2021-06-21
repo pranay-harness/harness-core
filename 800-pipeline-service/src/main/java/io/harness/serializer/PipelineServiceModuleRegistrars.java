@@ -8,7 +8,6 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
 import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
 import io.harness.serializer.kryo.NGPipelineKryoRegistrar;
-import io.harness.serializer.kryo.OrchestrationVisualizationKryoRegistrar;
 import io.harness.serializer.kryo.PipelineServiceKryoRegistrar;
 import io.harness.serializer.morphia.NotificationClientRegistrars;
 import io.harness.serializer.morphia.PMSPipelineMorphiaRegistrar;
@@ -26,17 +25,19 @@ public class PipelineServiceModuleRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .add(PipelineServiceKryoRegistrar.class)
           .addAll(OrchestrationStepsModuleRegistrars.kryoRegistrars)
-          .add(OrchestrationVisualizationKryoRegistrar.class)
+          .addAll(OrchestrationVisualizationModuleRegistrars.kryoRegistrars)
           .addAll(NGTriggerRegistrars.kryoRegistrars)
           .addAll(NotificationClientRegistrars.kryoRegistrars)
           .add(DelegateServiceBeansKryoRegistrar.class)
           .add(DelegateAgentBeansKryoRegister.class)
           .add(NGPipelineKryoRegistrar.class)
+          .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
           .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(OrchestrationStepsModuleRegistrars.morphiaRegistrars)
+          .addAll(OrchestrationVisualizationModuleRegistrars.morphiaRegistrars)
           .add(PMSPipelineMorphiaRegistrar.class)
           .addAll(NGTriggerRegistrars.morphiaRegistrars)
           .add(FiltersMorphiaRegistrar.class)
@@ -46,6 +47,8 @@ public class PipelineServiceModuleRegistrars {
           .addAll(NGPipelineRegistrars.morphiaRegistrars)
           .addAll(GitSyncSdkRegistrar.morphiaRegistrars)
           .addAll(PersistenceRegistrars.morphiaRegistrars)
+          .addAll(OutboxEventRegistrars.morphiaRegistrars)
+          .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
           .build();
 
   public final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

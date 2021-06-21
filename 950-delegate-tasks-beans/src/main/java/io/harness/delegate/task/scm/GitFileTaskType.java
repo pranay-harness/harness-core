@@ -7,5 +7,6 @@ import io.harness.annotations.dev.OwnedBy;
 public enum GitFileTaskType {
   GET_FILE_CONTENT_BATCH,
   GET_FILE_CONTENT,
-  GET_FILE_CONTENT_BATCH_BY_FILE_PATHS
+  GET_FILE_CONTENT_BATCH_BY_FILE_PATHS,
+  GET_FILE_CONTENT_BATCH_BY_REF
 }

@@ -738,6 +738,9 @@
                   "type": "string"
                 }
               ]
+            },
+            "shell": {
+              "type": "string"
             }
           }
         }

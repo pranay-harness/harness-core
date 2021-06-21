@@ -12,7 +12,7 @@ import io.harness.CategoryTest;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.category.element.UnitTests;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.event.payloads.PodMetric;
 import io.harness.rule.Owner;
 

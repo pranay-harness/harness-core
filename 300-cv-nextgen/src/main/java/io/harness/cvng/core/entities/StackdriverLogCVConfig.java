@@ -8,6 +8,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import io.harness.cvng.beans.DataSourceType;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.io.Resources;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,14 +27,14 @@ import org.mongodb.morphia.query.UpdateOperations;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class StackdriverLogCVConfig extends LogCVConfig {
+  static final String DSL = readDSL("stackdriver-log-fetch-data.datacollection");
+
   String messageIdentifier;
   String serviceInstanceIdentifier;
-  String timestampIdentifier;
-  String timestampFormat;
 
   @Override
   public String getHostCollectionDSL() {
-    // TODO: To be done with CVNG-2626
+    // TODO: To be done with CVNG-2630
     throw new RuntimeException("Not implemented");
   }
 
@@ -40,8 +43,6 @@ public class StackdriverLogCVConfig extends LogCVConfig {
     checkNotNull(messageIdentifier, generateErrorMessageFromParam(StackdriverLogCVConfigKeys.messageIdentifier));
     checkNotNull(
         serviceInstanceIdentifier, generateErrorMessageFromParam(StackdriverLogCVConfigKeys.serviceInstanceIdentifier));
-    checkNotNull(timestampIdentifier, generateErrorMessageFromParam(StackdriverLogCVConfigKeys.timestampIdentifier));
-    checkNotNull(timestampFormat, generateErrorMessageFromParam(StackdriverLogCVConfigKeys.timestampFormat));
   }
 
   @Override
@@ -51,7 +52,15 @@ public class StackdriverLogCVConfig extends LogCVConfig {
 
   @Override
   public String getDataCollectionDsl() {
-    return null;
+    return DSL;
+  }
+
+  private static String readDSL(String fileName) {
+    try {
+      return Resources.toString(StackdriverLogCVConfig.class.getResource(fileName), StandardCharsets.UTF_8);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   public static class StackdriverLogCVConfigUpdatableEntity
@@ -63,9 +72,6 @@ public class StackdriverLogCVConfig extends LogCVConfig {
       updateOperations.set(StackdriverLogCVConfigKeys.messageIdentifier, stackdriverLogCVConfig.getMessageIdentifier());
       updateOperations.set(
           StackdriverLogCVConfigKeys.serviceInstanceIdentifier, stackdriverLogCVConfig.getServiceInstanceIdentifier());
-      updateOperations.set(
-          StackdriverLogCVConfigKeys.timestampIdentifier, stackdriverLogCVConfig.getTimestampIdentifier());
-      updateOperations.set(StackdriverLogCVConfigKeys.timestampFormat, stackdriverLogCVConfig.getTimestampFormat());
     }
   }
 }

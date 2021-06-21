@@ -61,6 +61,7 @@ public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfi
         .stepType(PipelineSetupStep.STEP_TYPE)
         .group(StepOutcomeGroup.PIPELINE.name())
         .name(name)
+        .skipUnresolvedExpressionsCheck(true)
         .stepParameters(stepParameters)
         .facilitatorObtainment(
             FacilitatorObtainment.newBuilder()

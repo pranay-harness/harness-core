@@ -18,13 +18,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(DX)
 public class GitChangeSetRunnableHelper {
-  private static final long TIMEOUT_FOR_RUNNING_CHANGESET = 30;
   private static final long TIMEOUT_FOR_MARKING_SKIPPED = 3 /*days*/;
 
   public List<YamlChangeSetDTO> getStuckYamlChangeSets(YamlChangeSetService yamlChangeSetService,
       List<String> runningAccountIdList, List<YamlChangeSetStatus> runningStatusList) {
-    return yamlChangeSetService.findByAccountIdsStatusLastUpdatedAtLessThan(
-        runningAccountIdList, runningStatusList, TIMEOUT_FOR_RUNNING_CHANGESET);
+    return yamlChangeSetService.findByAccountIdsStatusCutoffLessThan(
+        runningAccountIdList, runningStatusList, System.currentTimeMillis());
   }
 
   public List<String> getRunningAccountIdList(

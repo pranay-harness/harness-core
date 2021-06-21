@@ -21,7 +21,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @Builder
-@Document("gitToHarnessProcessingStatus")
+@Document("gitToHarnessProgress")
 @TypeAlias("io.harness.gitsync.common.beans.GitToHarnessProcessingProgress")
 @EqualsAndHashCode(callSuper = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -34,10 +34,12 @@ public class GitToHarnessProgress {
   @FdIndex @NotNull private String yamlChangeSetId;
   @NotNull private String repoUrl;
   @NotNull private String branch;
+  @NotNull private String commitId;
   @NotNull private YamlChangeSetEventType eventType;
   @NotNull private GitToHarnessProcessingStepType stepType;
   @NotNull private GitToHarnessProcessingStepStatus stepStatus;
   @NotNull private Long stepStartingTime;
+  @NotNull private GitToHarnessProgressStatus gitToHarnessProgressStatus;
   List<GitToHarnessFileProcessingRequest> gitFileChanges;
   List<GitToHarnessProcessingResponseDTO> processingResponse;
   @Version Long version;

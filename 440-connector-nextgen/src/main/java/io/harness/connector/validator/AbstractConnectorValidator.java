@@ -1,5 +1,9 @@
 package io.harness.connector.validator;
 
+import static io.harness.utils.DelegateOwner.getNGTaskSetupAbstractionsWithOwner;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.connector.DelegateSelectable;
@@ -18,8 +22,10 @@ import io.harness.service.DelegateGrpcClientWrapper;
 import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.DX)
 @Slf4j
 public abstract class AbstractConnectorValidator implements ConnectionValidator {
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
@@ -33,10 +39,15 @@ public abstract class AbstractConnectorValidator implements ConnectionValidator 
       ((ConnectorTaskParams) taskParameters)
           .setDelegateSelectors(((DelegateSelectable) connectorConfig).getDelegateSelectors());
     }
+
+    final Map<String, String> ngTaskSetupAbstractionsWithOwner =
+        getNGTaskSetupAbstractionsWithOwner(accountIdentifier, orgIdentifier, projectIdentifier);
+
     DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                   .accountId(accountIdentifier)
                                                   .taskType(getTaskType())
                                                   .taskParameters(taskParameters)
+                                                  .taskSetupAbstractions(ngTaskSetupAbstractionsWithOwner)
                                                   .executionTimeout(Duration.ofMinutes(2))
                                                   .forceExecute(true)
                                                   .build();

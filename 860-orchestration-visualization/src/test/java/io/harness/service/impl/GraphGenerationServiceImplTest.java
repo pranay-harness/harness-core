@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 
 import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.beans.EdgeList;
@@ -17,6 +18,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.dto.GraphVertexDTO;
 import io.harness.dto.OrchestrationAdjacencyListDTO;
 import io.harness.dto.OrchestrationGraphDTO;
+import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
@@ -46,15 +48,22 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 
 /**
  * Test class for {@link GraphGenerationServiceImpl}
  */
 public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTestBase {
-  @Inject private PlanExecutionService planExecutionService;
-  @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private SpringMongoStore mongoStore;
+  @Inject @InjectMocks private PlanExecutionService planExecutionService;
+  @Inject @InjectMocks private NodeExecutionService nodeExecutionService;
+  @Inject @InjectMocks private SpringMongoStore mongoStore;
   @InjectMocks @Inject private GraphGenerationService graphGenerationService;
+  @Mock private OrchestrationEventEmitter eventEmitter;
+
+  public void setup() {
+    Mockito.doNothing().when(eventEmitter).emitEvent(any());
+  }
 
   @Test
   @RealMongo

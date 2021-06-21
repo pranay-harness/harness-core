@@ -24,6 +24,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.pipeline.steps.RollbackOptionalChildChainStep;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
@@ -89,7 +90,8 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
   private void setupPreConditions(Ambiance ambiance) {
     doReturn(TaskChainResponse.builder().taskRequest(createdTaskRequest).build())
         .when(k8sStepHelper)
-        .queueK8sTask(eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance), eq(infrastructureOutcome));
+        .queueK8sTask(eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance),
+            eq(K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build()));
     doReturn(OptionalSweepingOutput.builder().found(true).output(blueGreenOutcome).build())
         .when(executionSweepingOutputService)
         .resolveOptional(
@@ -114,8 +116,8 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
         ArgumentCaptor.forClass(K8sSwapServiceSelectorsRequest.class);
 
     verify(k8sStepHelper, times(1))
-        .queueK8sTask(
-            eq(stepElementParameters), requestArgumentCaptor.capture(), eq(ambiance), eq(infrastructureOutcome));
+        .queueK8sTask(eq(stepElementParameters), requestArgumentCaptor.capture(), eq(ambiance),
+            eq(K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build()));
     K8sSwapServiceSelectorsRequest request = requestArgumentCaptor.getValue();
     assertThat(request).isNotNull();
     assertThat(request.getService1()).isEqualTo(primaryService);
@@ -152,8 +154,8 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
         ArgumentCaptor.forClass(K8sSwapServiceSelectorsRequest.class);
 
     verify(k8sStepHelper, times(1))
-        .queueK8sTask(
-            eq(stepElementParameters), requestArgumentCaptor.capture(), eq(ambiance), eq(infrastructureOutcome));
+        .queueK8sTask(eq(stepElementParameters), requestArgumentCaptor.capture(), eq(ambiance),
+            eq(K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build()));
     K8sSwapServiceSelectorsRequest request = requestArgumentCaptor.getValue();
     assertThat(request).isNotNull();
     assertThat(request.getService1()).isEqualTo(primaryService);

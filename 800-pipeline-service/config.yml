@@ -48,7 +48,7 @@ grpcClientConfigs:
   cd:
     target: localhost:12101
     authority: localhost
-  cvng:
+  cv:
     target: localhost:12401
     authority: localhost
   ci:
@@ -66,6 +66,12 @@ yamlSchemaClientConfig:
     cd:
       serviceHttpClientConfig:
         baseUrl: http://localhost:7457/
+        connectTimeOutSeconds: 15
+        readTimeOutSeconds: 15
+      secret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
+    cv:
+      serviceHttpClientConfig:
+        baseUrl: http://localhost:6457/cv/api/
         connectTimeOutSeconds: 15
         readTimeOutSeconds: 15
       secret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
@@ -146,12 +152,13 @@ iteratorsConfig:
     enabled: true
     targetIntervalInSeconds: 60
 
-enableAuth: false
+enableAuth: true
 
 orchestrationStepConfig:
   ffServerBaseUrl: http://127.0.0.1:3000/api/1.0
+  ffServerApiKey: secret
 
-shouldDeployWithGitSync: false
+shouldDeployWithGitSync: true
 
 gitSdkConfiguration:
   gitSdkGrpcServerConfig:
@@ -178,6 +185,9 @@ timescaledb:
   logUnclosedConnections: false
   loggerLevel: OFF
 
-useRedisForInterrupts: false
-useRedisForOrchestrationEvents: false
-useRedisForSdkResponseEvents: false
+auditClientConfig:
+  baseUrl: http://localhost:9005/api/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+enableAudit: false

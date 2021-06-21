@@ -6,6 +6,7 @@ import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.jira.resources.service.JiraResourceService;
+import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.jira.JiraIssueCreateMetadataNG;
 import io.harness.jira.JiraIssueUpdateMetadataNG;
 import io.harness.jira.JiraProjectBasicNG;
@@ -22,6 +23,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -50,7 +52,8 @@ public class JiraResource {
   public ResponseDTO<Boolean> validateCredentials(@NotNull @QueryParam("connectorRef") String jiraConnectorRef,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId) {
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(jiraConnectorRef, accountId, orgId, projectId);
     boolean isValid = jiraResourceService.validateCredentials(connectorRef, orgId, projectId);
     return ResponseDTO.newResponse(isValid);
@@ -62,7 +65,8 @@ public class JiraResource {
   public ResponseDTO<List<JiraProjectBasicNG>> getProjects(@NotNull @QueryParam("connectorRef") String jiraConnectorRef,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId) {
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(jiraConnectorRef, accountId, orgId, projectId);
     List<JiraProjectBasicNG> projects = jiraResourceService.getProjects(connectorRef, orgId, projectId);
     return ResponseDTO.newResponse(projects);
@@ -75,7 +79,7 @@ public class JiraResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId, @QueryParam("projectKey") String projectKey,
-      @QueryParam("issueType") String issueType) {
+      @QueryParam("issueType") String issueType, @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(jiraConnectorRef, accountId, orgId, projectId);
     List<JiraStatusNG> statuses =
         jiraResourceService.getStatuses(connectorRef, orgId, projectId, projectKey, issueType);
@@ -91,10 +95,11 @@ public class JiraResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId, @QueryParam("projectKey") String projectKey,
       @QueryParam("issueType") String issueType, @QueryParam("expand") String expand,
-      @QueryParam("fetchStatus") boolean fetchStatus) {
+      @QueryParam("fetchStatus") boolean fetchStatus, @QueryParam("ignoreComment") boolean ignoreComment,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(jiraConnectorRef, accountId, orgId, projectId);
     JiraIssueCreateMetadataNG createMetadata = jiraResourceService.getIssueCreateMetadata(
-        connectorRef, orgId, projectId, projectKey, issueType, expand, fetchStatus);
+        connectorRef, orgId, projectId, projectKey, issueType, expand, fetchStatus, ignoreComment);
     return ResponseDTO.newResponse(createMetadata);
   }
 
@@ -105,7 +110,8 @@ public class JiraResource {
       @NotNull @QueryParam("connectorRef") String jiraConnectorRef,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId, @QueryParam("issueKey") String issueKey) {
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId, @QueryParam("issueKey") String issueKey,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(jiraConnectorRef, accountId, orgId, projectId);
     JiraIssueUpdateMetadataNG updateMetadata =
         jiraResourceService.getIssueUpdateMetadata(connectorRef, orgId, projectId, issueKey);

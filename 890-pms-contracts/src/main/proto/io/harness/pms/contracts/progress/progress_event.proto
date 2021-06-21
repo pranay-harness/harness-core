@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.progress;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/ambiance/ambiance.proto";
+import "io/harness/pms/contracts/execution/execution_mode.proto";
+
+message ProgressEvent {
+  io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;
+  io.harness.pms.contracts.execution.ExecutionMode executionMode = 2;
+  bytes stepParameters = 3;
+  bytes progressBytes = 4;
+}

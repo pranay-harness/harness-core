@@ -17,4 +17,5 @@ public class BaseUrls {
   @JsonProperty("currentGenUiUrl") String currentGenUiUrl;
   @JsonProperty("nextGenUiUrl") String nextGenUiUrl;
   @JsonProperty("nextGenAuthUiUrl") String nextGenAuthUiUrl;
+  @JsonProperty("webhookBaseUrl") String webhookBaseUrl;
 }

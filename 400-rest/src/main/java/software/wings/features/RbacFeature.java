@@ -102,12 +102,13 @@ public class RbacFeature extends AbstractUsageLimitedFeature implements Complian
         AccountPermissions.builder().permissions(authHandler.getAllAccountPermissions()).build();
 
     Set<AppPermission> appPermissions = Sets.newHashSet();
-    AppPermission appPermission = AppPermission.builder()
-                                      .actions(Sets.newHashSet(Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE,
-                                          Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW))
-                                      .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-                                      .permissionType(PermissionType.ALL_APP_ENTITIES)
-                                      .build();
+    AppPermission appPermission =
+        AppPermission.builder()
+            .actions(Sets.newHashSet(Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE_PIPELINE,
+                Action.EXECUTE_WORKFLOW, Action.EXECUTE_WORKFLOW_ROLLBACK))
+            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+            .permissionType(PermissionType.ALL_APP_ENTITIES)
+            .build();
     appPermissions.add(appPermission);
 
     userGroup.setAccountPermissions(accountPermissions);
