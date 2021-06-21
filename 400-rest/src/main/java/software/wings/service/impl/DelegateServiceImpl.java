@@ -2222,6 +2222,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public DelegateRegisterResponse register(DelegateParams delegateParams) {
+    log.info("registering delegate with params: {}", delegateParams);
     if (licenseService.isAccountDeleted(delegateParams.getAccountId())) {
       broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(SELF_DESTRUCT);
       log.warn("Sending self destruct command from register delegate parameters because the account is deleted.");
@@ -2234,7 +2235,8 @@ public class DelegateServiceImpl implements DelegateService {
       if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
         broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(SELF_DESTRUCT);
         log.warn(
-            "Sending self destruct command from register delegate parameters because the delegate group is deleted.");
+            "Sending self destruct command from register delegate parameters because the delegate group {} is missing.",
+            delegateParams.getDelegateGroupId());
         return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
       }
     }
