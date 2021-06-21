@@ -468,6 +468,7 @@ public class DelegateServiceImpl implements DelegateService {
   public Set<String> getAllDelegateSelectors(String accountId) {
     Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
                                         .filter(DelegateKeys.accountId, accountId)
+                                        .filter(DelegateKeys.ng, false)
                                         .field(DelegateKeys.status)
                                         .notEqual(DelegateInstanceStatus.DELETED)
                                         .project(DelegateKeys.accountId, true)
