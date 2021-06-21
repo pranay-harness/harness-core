@@ -452,6 +452,8 @@ message GetLatestCommitRequest {
 
 message GetLatestCommitResponse {
   string commit_id = 1;
+  int32 status = 2;
+  string error = 3;
 }
 
 message ListBranchesRequest {

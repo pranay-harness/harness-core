@@ -15,6 +15,7 @@ import lombok.Value;
 @Builder
 public class NodeUpdateInfo {
   @NonNull NodeExecution nodeExecution;
+  @Builder.Default long updatedTs = System.currentTimeMillis();
 
   public String getNodeExecutionId() {
     return nodeExecution.getUuid();
