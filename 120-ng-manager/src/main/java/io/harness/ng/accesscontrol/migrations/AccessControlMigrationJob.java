@@ -7,62 +7,75 @@ import io.harness.ng.accesscontrol.migrations.services.AccessControlMigrationSer
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.services.OrganizationService;
 
+import com.google.common.base.Stopwatch;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import io.dropwizard.lifecycle.Managed;
 import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @Slf4j
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class AccessControlMigrationJob implements Managed {
+  private static final String ACCESS_CONTROL_MIGRATION_LOCK_PREFIX = "ACCESS_CONTROL_MIGRATION_LOCK";
+
   private final PersistentLocker persistentLocker;
   private final OrganizationService organizationService;
   private final AccessControlMigrationService migrationService;
-  private static final String ACCESS_CONTROL_MIGRATION_LOCK = "ACCESS_CONTROL_MIGRATION_LOCK";
+
+  private ScheduledExecutorService executorService;
 
   @Override
-  public void start() throws Exception {
-    AcquiredLock<?> migrationLock = null;
+  public void start() {
+    executorService = Executors.newSingleThreadScheduledExecutor(
+        new ThreadFactoryBuilder().setNameFormat("access-control-migration-job").build());
 
-    while (migrationLock == null) {
+    executorService.scheduleWithFixedDelay(this::run, 10, 5, TimeUnit.MINUTES);
+  }
+
+  private void run() {
+    List<String> accountsToMigrate = getAccountsToMigrate();
+    for (String accountId : accountsToMigrate) {
       try {
-        log.info("Trying to acquire ACCESS_CONTROL_MIGRATION_LOCK lock with 5 seconds timeout...");
-        migrationLock = persistentLocker.tryToAcquireInfiniteLockWithPeriodicRefresh(
-            ACCESS_CONTROL_MIGRATION_LOCK, Duration.ofSeconds(5));
+        log.info("Access control migration job started for account : {}", accountId);
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        migrateAccount(accountId);
+        log.info("Access control migration job finished for account : {} in {} minutes", accountId,
+            stopwatch.elapsed(TimeUnit.MINUTES));
       } catch (Exception ex) {
-        log.info("Unable to get ACCESS_CONTROL_MIGRATION_LOCK lock, going to sleep for 30 seconds...");
-      }
-      try {
-        Thread.sleep(30000);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        return;
+        log.error("Access control migration job failed", ex);
       }
     }
+  }
 
-    log.info("Acquired ACCESS_CONTROL_MIGRATION_LOCK lock, starting migration now...");
+  private List<String> getAccountsToMigrate() {
+    return organizationService
+        .list(Criteria.where(Organization.OrganizationKeys.identifier).is(NGConstants.DEFAULT_ORG_IDENTIFIER),
+            Pageable.unpaged())
+        .map(Organization::getAccountIdentifier)
+        .getContent();
+  }
 
-    try {
-      Page<String> accountsWithDefaultOrganization =
-          organizationService
-              .list(Criteria.where(Organization.OrganizationKeys.identifier).is(NGConstants.DEFAULT_ORG_IDENTIFIER),
-                  Pageable.unpaged())
-              .map(Organization::getAccountIdentifier);
-
-      for (String accountIdentifier : accountsWithDefaultOrganization) {
-        migrationService.migrate(accountIdentifier);
+  private void migrateAccount(String accountId) {
+    try (AcquiredLock<?> lock = persistentLocker.tryToAcquireLock(
+             ACCESS_CONTROL_MIGRATION_LOCK_PREFIX + "_" + accountId, Duration.ofHours(12))) {
+      if (lock == null) {
+        log.info("Couldn't acquire access control migration lock for account : {}", accountId);
       }
-
-    } finally {
-      log.info("Migration finished, releasing lock now...");
-      migrationLock.release();
+      migrationService.migrate(accountId);
     }
   }
 
   @Override
-  public void stop() throws Exception {}
+  public void stop() throws InterruptedException {
+    executorService.shutdownNow();
+    executorService.awaitTermination(30, TimeUnit.SECONDS);
+  }
 }
