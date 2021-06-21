@@ -1,5 +1,8 @@
 package io.harness.cvng.cdng.beans;
 
+import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.HashMap;
 import lombok.Data;
@@ -14,6 +17,11 @@ public class HealthVerificationJobSpec extends VerificationJobSpec {
   @Override
   public String getType() {
     return "Health";
+  }
+
+  @Override
+  public VerificationJob.VerificationJobBuilder verificationJobBuilder() {
+    return HealthVerificationJob.builder();
   }
 
   @Override
