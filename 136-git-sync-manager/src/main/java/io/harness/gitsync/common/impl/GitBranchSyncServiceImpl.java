@@ -102,8 +102,9 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
             .collect(toList());
     gitToHarnessProgressService.updateFilesInProgressRecord(gitToHarnessProgressRecordId, gitToHarnessFilesToProcess);
     String commitId = getCommitId(harnessFilesOfBranch);
-    GitToHarnessProgressStatus gitToHarnessProgressStatus = gitToHarnessProcessorService.processFiles(accountIdentifier,
-        gitToHarnessFilesToProcess, branchName, yamlGitConfig.getRepo(), commitId, gitToHarnessProgressRecordId);
+    GitToHarnessProgressStatus gitToHarnessProgressStatus =
+        gitToHarnessProcessorService.processFiles(accountIdentifier, gitToHarnessFilesToProcess, branchName,
+            yamlGitConfig.getRepo(), commitId, gitToHarnessProgressRecordId, changeSetId);
     return GitToHarnessProcessMsvcStepResponse.builder().gitToHarnessProgressStatus(gitToHarnessProgressStatus).build();
   }
 

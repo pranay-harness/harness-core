@@ -25,6 +25,7 @@ message ChangeSet {
   io.harness.gitsync.ChangeType change_type = 5;
   string file_path = 6;
   YamlGitConfigInfo yaml_git_config_info = 7;
+  string change_set_id = 8;
 }
 
 message ProcessingResponse {
