@@ -55,6 +55,7 @@ public class ResumePipelineControllerTest extends WingsBaseTest {
   private static final String PIPELINE_EXEC_ID = "ANWw9-y4QO67own792ab1g";
   private static final String PIPELINE_STAGE_ELEMENT_ID = "KZPqXENuRbKqkuISe07JAQ";
   private static final String APP_ID = "nCLN8c84SqWPr44sqg65JQ";
+  private static final String ACCOUNT_ID = "ACCOUNT_ID";
   private static final String PIPELINE_ID = "PIPELINE_ID";
 
   @Test
@@ -133,7 +134,8 @@ public class ResumePipelineControllerTest extends WingsBaseTest {
   public void testPipelineResumeAuthorizesEnv() {
     QLRuntimeExecutionInputs parameter =
         JsonUtils.readResourceFile("execution/graphql_continue_exec_params.json", QLRuntimeExecutionInputs.class);
-    WorkflowExecution workflowExecution = WorkflowExecution.builder().workflowId(PIPELINE_ID).build();
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder().workflowId(PIPELINE_ID).accountId(ACCOUNT_ID).build();
     when(workflowExecutionService.getWorkflowExecution(anyString(), anyString())).thenReturn(workflowExecution);
     when(pipelineExecutionController.resolveEnvId(any(), anyList())).thenReturn(ENV_ID);
 
@@ -141,6 +143,6 @@ public class ResumePipelineControllerTest extends WingsBaseTest {
       resumePipelineController.resumePipeline(parameter);
     } catch (Exception ignored) {
     }
-    verify(authService).checkIfUserAllowedToDeployPipelineToEnv(APP_ID, ENV_ID);
+    verify(authService).authorizeEnvReadAccess(eq(ACCOUNT_ID), eq(APP_ID), any(), eq(ENV_ID));
   }
 }

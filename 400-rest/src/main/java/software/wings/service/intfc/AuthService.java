@@ -145,4 +145,6 @@ public interface AuthService {
   void auditLogin2FA(List<String> accountIds, User loggedInUser);
 
   void auditUnsuccessfulLogin(String accountIds, User user);
+
+  void authorizeEnvReadAccess(String accountId, String appId, User user, String envId);
 }

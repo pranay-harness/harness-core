@@ -16,11 +16,13 @@ import io.harness.exception.InvalidRequestException;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
+import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.graphql.schema.mutation.pipeline.input.QLRuntimeExecutionInputs;
 import software.wings.graphql.schema.mutation.pipeline.payload.QLContinueExecutionPayload;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -55,8 +57,9 @@ public class ResumePipelineController {
 
     String envId = pipelineExecutionController.resolveEnvId(execution, pipeline, parameter.getVariableInputs());
 
-    if (envId != null) {
-      authService.checkIfUserAllowedToDeployPipelineToEnv(appId, envId);
+    final User user = UserThreadLocal.get();
+    if (envId != null && user != null) {
+      authService.authorizeEnvReadAccess(execution.getAccountId(), appId, user, envId);
     }
 
     Map<String, String> workflowVariables =

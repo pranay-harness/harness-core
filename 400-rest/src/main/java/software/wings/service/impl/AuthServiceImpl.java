@@ -1207,4 +1207,18 @@ public class AuthServiceImpl implements AuthService {
       }
     }
   }
+
+  @Override
+  public void authorizeEnvReadAccess(String accountId, String appId, User user, String envId) {
+    UserPermissionInfo userPermissionInfo = authorizeAndGetUserPermissionInfo(accountId, appId, user, false);
+
+    Map<String, AppPermissionSummaryForUI> appPermissionMap = userPermissionInfo.getAppPermissionMap();
+    if (appPermissionMap != null && appPermissionMap.containsKey(appId)) {
+      Map<String, Set<Action>> envPermissions = appPermissionMap.get(appId).getEnvPermissions();
+      if (isEmpty(envPermissions) || !envPermissions.containsKey(envId) || !envPermissions.get(envId).contains(READ)) {
+        log.error("Auth Failure: User does not have access to env {}", envId);
+        throw new AccessDeniedException("Not authorized to access the app", USER);
+      }
+    }
+  }
 }
