@@ -6,7 +6,8 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
-import io.harness.cvng.verificationjob.entities.VerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter;
+import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobBuilder;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -46,12 +47,11 @@ public abstract class VerificationJobSpec {
     return runtimeParams;
   }
   @ApiModelProperty(hidden = true)
-  public VerificationJob.VerificationJobBuilder getVerificationJobBuilder() {
-    VerificationJob.VerificationJobBuilder verificationJobBuilder = verificationJobBuilder();
-    return verificationJobBuilder.duration(
-        VerificationJob.RuntimeParameter.builder().value(duration.getValue()).build());
+  public VerificationJobBuilder getVerificationJobBuilder() {
+    VerificationJobBuilder verificationJobBuilder = verificationJobBuilder();
+    return verificationJobBuilder.duration(RuntimeParameter.builder().value(duration.getValue()).build());
   }
-  @ApiModelProperty(hidden = true) protected abstract VerificationJob.VerificationJobBuilder verificationJobBuilder();
+  @ApiModelProperty(hidden = true) protected abstract VerificationJobBuilder verificationJobBuilder();
 
   protected abstract void addToRuntimeParams(HashMap<String, String> runtimeParams);
 }

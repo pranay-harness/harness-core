@@ -5,7 +5,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.cvng.cdng.beans.BlueGreenCanaryVerificationJobSpec.BlueGreenCanaryVerificationJobSpecKeys;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
-import io.harness.cvng.verificationjob.entities.VerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter;
+import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobBuilder;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -31,9 +32,9 @@ public class TestVerificationJobSpec extends VerificationJobSpec {
   }
 
   @Override
-  public VerificationJob.VerificationJobBuilder verificationJobBuilder() {
+  public VerificationJobBuilder verificationJobBuilder() {
     return TestVerificationJob.builder().sensitivity(
-        VerificationJob.RuntimeParameter.builder().isRuntimeParam(false).value(sensitivity.getValue()).build());
+        RuntimeParameter.builder().isRuntimeParam(false).value(sensitivity.getValue()).build());
   }
 
   @Override

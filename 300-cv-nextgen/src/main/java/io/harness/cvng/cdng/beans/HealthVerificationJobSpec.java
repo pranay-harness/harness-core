@@ -2,6 +2,7 @@ package io.harness.cvng.cdng.beans;
 
 import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobBuilder;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.HashMap;
@@ -20,7 +21,7 @@ public class HealthVerificationJobSpec extends VerificationJobSpec {
   }
 
   @Override
-  public VerificationJob.VerificationJobBuilder verificationJobBuilder() {
+  public VerificationJobBuilder verificationJobBuilder() {
     return HealthVerificationJob.builder();
   }
 
