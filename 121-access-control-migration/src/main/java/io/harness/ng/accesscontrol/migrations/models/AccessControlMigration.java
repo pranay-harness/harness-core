@@ -5,9 +5,11 @@ import static io.harness.ng.DbAliases.NG_MANAGER;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.MongoIndex;
 
-import java.util.Date;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -30,8 +32,20 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @OwnedBy(HarnessTeam.PL)
 public class AccessControlMigration {
   @Id @org.springframework.data.annotation.Id String id;
-  Date startedAt;
-  Date endedAt;
-  @FdIndex String accountId;
-  List<RoleAssignmentMetadata> metadata;
+  @FdIndex String accountIdentifier;
+  String orgIdentifier;
+  String projectIdentifier;
+  private long createdRoleAssignments;
+
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("accountIdentifierOrgIdentifierProjectIdentifierIdx")
+                 .field(AccessControlMigrationKeys.accountIdentifier)
+                 .field(AccessControlMigrationKeys.orgIdentifier)
+                 .field(AccessControlMigrationKeys.projectIdentifier)
+                 .unique(true)
+                 .build())
+        .build();
+  }
 }
