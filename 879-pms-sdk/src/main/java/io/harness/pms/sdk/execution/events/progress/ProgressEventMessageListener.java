@@ -1,6 +1,7 @@
 package io.harness.pms.sdk.execution.events.progress;
 
 import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.SDK_PROCESSOR_SERVICE;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -11,22 +12,14 @@ import io.harness.pms.sdk.core.execution.events.node.progress.ProgressEventHandl
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
-public class ProgressEventMessageListener extends PmsAbstractMessageListener<ProgressEvent> {
-  private final ProgressEventHandler progressEventHandler;
-
+public class ProgressEventMessageListener extends PmsAbstractMessageListener<ProgressEvent, ProgressEventHandler> {
   @Inject
-  public ProgressEventMessageListener(
-      @Named(SDK_SERVICE_NAME) String serviceName, ProgressEventHandler progressEventHandler) {
-    super(serviceName, ProgressEvent.class);
-    this.progressEventHandler = progressEventHandler;
-  }
-
-  @Override
-  public void processMessage(ProgressEvent event, Map<String, String> metadataMap, Long timestamp) {
-    progressEventHandler.handleEvent(event, metadataMap, timestamp);
+  public ProgressEventMessageListener(@Named(SDK_SERVICE_NAME) String serviceName,
+      ProgressEventHandler progressEventHandler, @Named(SDK_PROCESSOR_SERVICE) ExecutorService executorService) {
+    super(serviceName, ProgressEvent.class, progressEventHandler, executorService);
   }
 }
