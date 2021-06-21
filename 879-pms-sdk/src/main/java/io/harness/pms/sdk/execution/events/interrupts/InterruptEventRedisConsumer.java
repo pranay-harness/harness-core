@@ -1,8 +1,8 @@
 package io.harness.pms.sdk.execution.events.interrupts;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_INTERRUPT_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_INTERRUPT_LISTENER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_INTERRUPT_CONSUMER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_INTERRUPT_LISTENER;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;

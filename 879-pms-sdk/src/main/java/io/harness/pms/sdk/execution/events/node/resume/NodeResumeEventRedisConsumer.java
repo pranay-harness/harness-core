@@ -1,8 +1,8 @@
 package io.harness.pms.sdk.execution.events.node.resume;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_NODE_RESUME_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_NODE_RESUME_LISTENER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_RESUME_CONSUMER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_RESUME_LISTENER;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;

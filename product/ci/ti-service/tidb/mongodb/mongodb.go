@@ -139,7 +139,7 @@ func New(username, password, host, port, dbName string, connStr string, log *zap
 }
 
 // queryHelper gets the tests that need to be run corresponding to the packages and classes
-func (mdb *MongoDb) queryHelper(targetBranch, repo string, pkgs, classes []string) ([]types.RunnableTest, error) {
+func (mdb *MongoDb) queryHelper(targetBranch, repo string, pkgs, classes []string, account string) ([]types.RunnableTest, error) {
 	if len(pkgs) != len(classes) {
 		return nil, fmt.Errorf("Length of pkgs: %d and length of classes: %d don't match", len(pkgs), len(classes))
 	}
@@ -157,7 +157,8 @@ func (mdb *MongoDb) queryHelper(targetBranch, repo string, pkgs, classes []strin
 		allowedPairs = append(allowedPairs,
 			bson.M{"package": pkg, "class": cls,
 				"vcs_info.repo":   repo,
-				"vcs_info.branch": targetBranch})
+				"vcs_info.branch": targetBranch,
+				"account":         account})
 	}
 	err := mgm.Coll(&Node{}).SimpleFind(&nodes, bson.M{"$or": allowedPairs})
 	if err != nil {
@@ -180,7 +181,8 @@ func (mdb *MongoDb) queryHelper(targetBranch, repo string, pkgs, classes []strin
 	err = mgm.Coll(&Relation{}).SimpleFind(&relations,
 		bson.M{"source": bson.M{"$in": nids},
 			"vcs_info.branch": targetBranch,
-			"vcs_info.repo":   repo})
+			"vcs_info.repo":   repo,
+			"account":         account})
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +204,8 @@ func (mdb *MongoDb) queryHelper(targetBranch, repo string, pkgs, classes []strin
 		bson.M{"id": bson.M{"$in": tids},
 			"type":            "test",
 			"vcs_info.branch": targetBranch,
-			"vcs_info.repo":   repo})
+			"vcs_info.repo":   repo,
+			"account":         account})
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +226,7 @@ func isValid(t types.RunnableTest) bool {
 	return t.Pkg != "" && t.Class != ""
 }
 
-func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq) (types.SelectTestsResp, error) {
+func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq, account string) (types.SelectTestsResp, error) {
 	// parse package and class names from the files
 	fileNames := []string{}
 	for _, f := range req.Files {
@@ -264,7 +267,7 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 
 	// Get list of all tests with unique pkg/class information
 	all := []Node{}
-	err = mgm.Coll(&Node{}).SimpleFind(&all, bson.M{"type": "test", "vcs_info.branch": req.TargetBranch, "vcs_info.repo": req.Repo})
+	err = mgm.Coll(&Node{}).SimpleFind(&all, bson.M{"type": "test", "vcs_info.branch": req.TargetBranch, "vcs_info.repo": req.Repo, "account": account})
 	if err != nil {
 		return res, err
 	}
@@ -343,7 +346,7 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 		}, nil
 	}
 
-	tests, err := mdb.queryHelper(req.TargetBranch, req.Repo, pkgs, cls)
+	tests, err := mdb.queryHelper(req.TargetBranch, req.Repo, pkgs, cls, account)
 	if err != nil {
 		return res, err
 	}
@@ -376,7 +379,7 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq)
 }
 
 // UploadPartialCg uploads callgraph corresponding to a branch in PR run in mongo.
-func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info VCSInfo, acc, org, proj, target string) (types.SelectTestsResp, error) {
+func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info VCSInfo, account, org, proj, target string) (types.SelectTestsResp, error) {
 	nodes := make([]Node, len(cg.Nodes))
 	rels := make([]Relation, len(cg.Relations))
 
@@ -384,7 +387,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 
 	// Create method map to calculate how many tests have been added
 	all := []Node{}
-	err := mgm.Coll(&Node{}).SimpleFind(&all, bson.M{"type": "test", "vcs_info.branch": target, "vcs_info.repo": info.Repo})
+	err := mgm.Coll(&Node{}).SimpleFind(&all, bson.M{"type": "test", "vcs_info.branch": target, "vcs_info.repo": info.Repo, "account": account})
 	if err != nil {
 		return resp, err
 	}
@@ -395,7 +398,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	}
 
 	for i, node := range cg.Nodes {
-		nodes[i] = *NewNode(node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, info, acc, org, proj)
+		nodes[i] = *NewNode(node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, info, account, org, proj)
 		if node.Type != "test" {
 			continue
 		}
@@ -406,36 +409,36 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 		}
 	}
 	for i, rel := range cg.Relations {
-		rels[i] = *NewRelation(rel.Source, rel.Tests, info, acc, org, proj)
+		rels[i] = *NewRelation(rel.Source, rel.Tests, info, account, org, proj)
 	}
 	// query for partial callgraph for the filter -(repo + branch + (commitId != currentCommit)) and delete old entries.
 	// this will delete all the nodes create by older commits for current pull request
-	f := bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch, "vcs_info.commit_id": bson.M{"$ne": info.CommitId}}
+	f := bson.M{"vcs_info.repo": info.Repo, "account": account, "vcs_info.branch": info.Branch, "vcs_info.commit_id": bson.M{"$ne": info.CommitId}}
 	r1, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, f, &options.DeleteOptions{})
 	if err != nil {
 		return resp, errors.Wrap(
 			err,
 			fmt.Sprintf("failed to delete old records from nodes collection while uploading partial callgraph for"+
-				" repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, acc))
+				" repo: %s, branch: %s, acc: %s", info.Repo, info.Branch, account))
 	}
 	// this will delete all the relations create by older commits for current pull request
-	f = bson.M{"vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch, "vcs_info.commit_id": bson.M{"$ne": info.CommitId}}
+	f = bson.M{"vcs_info.repo": info.Repo, "account": account, "vcs_info.branch": info.Branch, "vcs_info.commit_id": bson.M{"$ne": info.CommitId}}
 	r2, err := mdb.Database.Collection(relnsColl).DeleteMany(ctx, f, &options.DeleteOptions{})
 	if err != nil {
 		return resp, errors.Wrap(
 			err,
 			fmt.Sprintf("failed to delete records from relations collection while uploading partial callgraph "+
-				"for repo: %s, branch: %s acc: %s", info.Repo, info.Branch, acc))
+				"for repo: %s, branch: %s acc: %s", info.Repo, info.Branch, account))
 	}
 	mdb.Log.Infow(
 		fmt.Sprintf("deleted %d records from nodes and %d records from relns collection",
-			r1.DeletedCount, r2.DeletedCount), "accountId", acc, "repo", info.Repo, "branch", info.Branch)
+			r1.DeletedCount, r2.DeletedCount), "account", account, "repo", info.Repo, "branch", info.Branch)
 
-	err = mdb.upsertNodes(ctx, nodes, info)
+	err = mdb.upsertNodes(ctx, nodes, info, account)
 	if err != nil {
 		return resp, err
 	}
-	err = mdb.upsertRelations(ctx, rels, info)
+	err = mdb.upsertRelations(ctx, rels, info, account)
 	if err != nil {
 		return resp, err
 	}
@@ -443,8 +446,6 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 }
 
 // todo(Aman): Figure out a way to automatically update updatedBy and updatedAt fields. Manually updating it is not scalable.
-// todo aman -- ["vcs_info.repo" : repo] this filter needs to be added to all the queries. Currently it will not work as we
-// don't have repo and branch populated in master callgraph uploaded in db
 // MergePartialCg merges partial callgraph of from source branch to dest branch in case corresponding pr is merged
 // It also cleans up the nodes which have been deleted in the PR from nodes and relations collections.
 func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCgRequest) error {
@@ -455,13 +456,13 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 
 	// merging nodes
 	// get all the nids which are from the dest branch
-	f := bson.M{"vcs_info.branch": branch, "vcs_info.repo": repo}
+	f := bson.M{"vcs_info.branch": branch, "vcs_info.repo": repo, "account": req.AccountId}
 	dNids, err := mdb.getNodeIds(ctx, commit, branch, repo, f)
 	if err != nil {
 		return err
 	}
 	// get all the nids from the source branch which need to be merged
-	f = bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo}
+	f = bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "account": req.AccountId}
 	srcNids, err := mdb.getNodeIds(ctx, commit, branch, repo, f)
 	if err != nil {
 		return err
@@ -469,25 +470,25 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 
 	// list of new nodes in src branch
 	nodesToMove := utils.GetSliceDiff(srcNids, dNids)
-	err = mdb.mergeNodes(ctx, commit, branch, repo, nodesToMove)
+	err = mdb.mergeNodes(ctx, commit, branch, repo, req.AccountId, nodesToMove)
 	if err != nil {
 		return err
 	}
 
 	// merge relations
 	// get all the nids which are from the dest branch
-	f = bson.M{"vcs_info.branch": branch, "vcs_info.repo": repo}
+	f = bson.M{"vcs_info.branch": branch, "vcs_info.repo": repo, "account": req.AccountId}
 	dRelIDs, err := mdb.getRelIds(ctx, commit, branch, repo, f)
 	if err != nil {
 		return err
 	}
 	// get all the nids from the source branch which need to be merged
-	f = bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo}
+	f = bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "account": req.AccountId}
 	sRelIDs, err := mdb.getRelIds(ctx, commit, branch, repo, f)
 	if err != nil {
 		return err
 	}
-	err = mdb.mergeRelations(ctx, commit, branch, repo, sRelIDs, dRelIDs)
+	err = mdb.mergeRelations(ctx, commit, branch, repo, req.AccountId, sRelIDs, dRelIDs)
 	if err != nil {
 		return err
 	}
@@ -515,7 +516,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 	// condition for fetching ids of nodes which are deleted
 	cond := []interface{}{}
 	for _, v := range n {
-		cond = append(cond, bson.M{"package": v.Pkg, "class": v.Class, "vcs_info.branch": branch, "vcs_info.repo": repo})
+		cond = append(cond, bson.M{"package": v.Pkg, "class": v.Class, "vcs_info.branch": branch, "vcs_info.repo": repo, "account": req.AccountId})
 	}
 	f = bson.M{"$or": cond}
 	cur, err := mdb.Database.Collection(nodeColl).Find(ctx, f, &options.FindOptions{})
@@ -534,14 +535,14 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 	mdb.Log.Infow(fmt.Sprintf("node ids to be deleted: [%v]", delIDs), "branch", branch, "repo", repo)
 	if len(delIDs) > 0 {
 		// delete nodes with id in delIDs
-		f = bson.M{"id": bson.M{"$in": delIDs}, "vcs_info.repo": repo, "vcs_info.branch": branch}
+		f = bson.M{"id": bson.M{"$in": delIDs}, "vcs_info.repo": repo, "vcs_info.branch": branch, "account": req.AccountId}
 		r, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, f, &options.DeleteOptions{})
 		if err != nil {
 			return formatError(err, fmt.Sprintf("failed to delete records from nodes coll delIDs: %v", delIDs), repo, branch, commit)
 		}
 
 		// delete relations with source in delIDs
-		f = bson.M{"source": bson.M{"$in": delIDs}, "vcs_info.repo": repo, "vcs_info.branch": branch}
+		f = bson.M{"source": bson.M{"$in": delIDs}, "vcs_info.repo": repo, "vcs_info.branch": branch, "account": req.AccountId}
 		r1, err := mdb.Database.Collection(relnsColl).DeleteMany(ctx, f, &options.DeleteOptions{})
 		if err != nil {
 			return formatError(err, fmt.Sprintf("failed to delete records from relns coll delIDs: %v", delIDs), repo, branch, commit)
@@ -550,7 +551,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 			r.DeletedCount, r1.DeletedCount), "branch", branch, "repo", repo)
 
 		// update tests fields which contains delIDs in relations
-		f = bson.M{"tests": bson.M{"$in": delIDs}, "vcs_info.repo": repo, "vcs_info.branch": branch}
+		f = bson.M{"tests": bson.M{"$in": delIDs}, "vcs_info.repo": repo, "vcs_info.branch": branch, "account": req.AccountId}
 		update := bson.M{"$pull": bson.M{"tests": bson.M{"$in": delIDs}}}
 		res, err := mdb.Database.Collection(relnsColl).UpdateMany(ctx, f, update)
 		if err != nil {
@@ -624,10 +625,10 @@ func (mdb *MongoDb) getRelIds(ctx context.Context, commit, branch, repo string, 
 // mergeNodes merges records in nodes collection in case of a pr merge from source branch to destination branch
 // #1: Move unique nodes records in src branch to destination branch
 // #2; delete all entries in src branch as the merging is complete.
-func (mdb *MongoDb) mergeNodes(ctx context.Context, commit, branch, repo string, nodesToMove []int) error {
+func (mdb *MongoDb) mergeNodes(ctx context.Context, commit, branch, repo, account string, nodesToMove []int) error {
 	// update `branch` field of the nodes from source to dest
 	if len(nodesToMove) > 0 {
-		f := bson.M{"vcs_info.commit_id": commit, "id": bson.M{"$in": nodesToMove}, "vcs_info.repo": repo}
+		f := bson.M{"vcs_info.commit_id": commit, "id": bson.M{"$in": nodesToMove}, "vcs_info.repo": repo, "account": account}
 		update := bson.M{"$set": bson.M{"vcs_info.branch": branch}}
 		res, err := mdb.Database.Collection(nodeColl).UpdateMany(ctx, f, update)
 		if err != nil {
@@ -635,6 +636,7 @@ func (mdb *MongoDb) mergeNodes(ctx context.Context, commit, branch, repo string,
 		}
 		mdb.Log.Infow(
 			fmt.Sprintf("matched %d, updated %d records", res.MatchedCount, res.ModifiedCount),
+			"account", account,
 			"repo", repo,
 			"branch", branch,
 			"commit", commit,
@@ -643,12 +645,13 @@ func (mdb *MongoDb) mergeNodes(ctx context.Context, commit, branch, repo string,
 
 	// delete remaining records of src branch from nodes collection
 	// todo(AMAN):  find a better filter than $ne
-	f := bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "vcs_info.branch": bson.M{"$ne": branch}}
+	f := bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "account": account, "vcs_info.branch": bson.M{"$ne": branch}}
 	res, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, f, &options.DeleteOptions{})
 	if err != nil {
 		return formatError(err, "failed to delete records in nodes collection", repo, branch, commit)
 	}
 	mdb.Log.Infow(fmt.Sprintf("deleted %d records from nodes collection", res.DeletedCount),
+		"account", account,
 		"repo", repo,
 		"branch", branch,
 		"commit", commit,
@@ -660,13 +663,13 @@ func (mdb *MongoDb) mergeNodes(ctx context.Context, commit, branch, repo string,
 // #1: Move unique relation records in src branch to destination branch
 // #2: for source which exists in both  src and destination branch, merge tests form both and update tests of dest branch
 // #3; delete all entries in src branch as the merging is complete.
-func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo string, sIDs []int, dIDs []int) error {
+func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo, account string, sIDs []int, dIDs []int) error {
 	// list of new relToMove in src branch
 	relToMove := utils.GetSliceDiff(sIDs, dIDs)
 	// moving relations records
 	// update `branch` field of the relToMove from source to dest
 	if len(relToMove) > 0 {
-		f := bson.M{"vcs_info.commit_id": commit, "source": bson.M{"$in": relToMove}, "vcs_info.repo": repo}
+		f := bson.M{"vcs_info.commit_id": commit, "source": bson.M{"$in": relToMove}, "vcs_info.repo": repo, "account": account}
 		u := bson.M{"$set": bson.M{"vcs_info.branch": branch}}
 		res, err := mdb.Database.Collection(relnsColl).UpdateMany(ctx, f, u)
 		if err != nil {
@@ -674,6 +677,7 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo str
 		}
 		mdb.Log.Infow(
 			fmt.Sprintf("moving records: matched %d, updated %d records", res.MatchedCount, res.ModifiedCount),
+			"account", account,
 			"repo", repo,
 			"branch", branch,
 			"commit", commit,
@@ -691,7 +695,7 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo str
 		"branch", branch,
 		"commit", commit)
 	if len(relIDToUpdate) > 0 {
-		f := bson.M{"vcs_info.branch": branch, "source": bson.M{"$in": relIDToUpdate}, "vcs_info.repo": repo}
+		f := bson.M{"vcs_info.branch": branch, "source": bson.M{"$in": relIDToUpdate}, "vcs_info.repo": repo, "account": account}
 		// filter for getting relations from destination branch
 		cur, err := mdb.Database.Collection(relnsColl).Find(ctx, f)
 		if err != nil {
@@ -701,7 +705,7 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo str
 			return formatError(err, "failed to iterate on records using cursor in relations collection", repo, branch, commit)
 		}
 		// filter for getting relations from source branch
-		f = bson.M{"vcs_info.commit_id": commit, "source": bson.M{"$in": relIDToUpdate}, "vcs_info.repo": repo}
+		f = bson.M{"vcs_info.commit_id": commit, "source": bson.M{"$in": relIDToUpdate}, "vcs_info.repo": repo, "account": account}
 		cur, err = mdb.Database.Collection(relnsColl).Find(ctx, f)
 		if err != nil {
 			return formatError(err, "failed in find query in rel collection", repo, branch, commit)
@@ -713,7 +717,7 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo str
 		var operations []mongo.WriteModel
 		for src, tests := range destMap {
 			operation := mongo.NewUpdateOneModel()
-			operation.SetFilter(bson.M{"source": src, "vcs_info.repo": repo, "vcs_info.branch": branch})
+			operation.SetFilter(bson.M{"source": src, "vcs_info.repo": repo, "vcs_info.branch": branch, "account": account})
 			operation.SetUpdate(bson.M{"$set": bson.M{"tests": tests}})
 			operations = append(operations, operation)
 		}
@@ -723,6 +727,7 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo str
 		}
 		mdb.Log.Infow(
 			fmt.Sprintf("relations merge: matched %d, updated %d records", res.MatchedCount, res.ModifiedCount),
+			"account", account,
 			"repo", repo,
 			"branch", branch,
 			"commit", commit,
@@ -731,12 +736,13 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo str
 
 	// delete remaining records of src branch from relations collection
 	// todo(AMAN):  find a better filter than $ne
-	f := bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "vcs_info.branch": bson.M{"$ne": branch}}
+	f := bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "account": account, "vcs_info.branch": bson.M{"$ne": branch}}
 	res, err := mdb.Database.Collection(relnsColl).DeleteMany(ctx, f, &options.DeleteOptions{})
 	if err != nil {
 		return formatError(err, "failed to delete records in relations collection", repo, branch, commit)
 	}
 	mdb.Log.Infow(fmt.Sprintf("deleted %d records from relation collection", res.DeletedCount),
+		"account", account,
 		"repo", repo,
 		"branch", branch,
 		"commit", commit,
@@ -751,11 +757,11 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo str
 // for the same PR.
 // 2. In new nodes received as part of current pr callgraph, only the nodes which are not already present in db will be created.
 // it is checked using Id key. If the Id already exists, skip the node.
-func (mdb *MongoDb) upsertNodes(ctx context.Context, nodes []Node, info VCSInfo) error {
+func (mdb *MongoDb) upsertNodes(ctx context.Context, nodes []Node, info VCSInfo, account string) error {
 	mdb.Log.Infow("uploading partialcg in nodes collection",
-		"#nodes", len(nodes), "repo", info.Repo, "branch", info.Branch)
+		"#nodes", len(nodes), "repo", info.Repo, "branch", info.Branch, "account", account)
 	// fetch existing records for branch
-	f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.commit_id": info.CommitId, "vcs_info.repo": info.Repo}
+	f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.commit_id": info.CommitId, "vcs_info.repo": info.Repo, "account": account}
 	NIds, err := mdb.getNodeIds(ctx, info.CommitId, info.Branch, info.Repo, f)
 	if err != nil {
 		return err
@@ -775,6 +781,7 @@ func (mdb *MongoDb) upsertNodes(ctx context.Context, nodes []Node, info VCSInfo)
 				fmt.Sprintf("failed to add nodes while uploading partial cg, repo: %s, branch: %s", info.Repo, info.Branch))
 		}
 		mdb.Log.Infow(fmt.Sprintf("inserted %d records in nodes collection", len(res.InsertedIDs)),
+			"account", account,
 			"repo", info.Repo,
 			"branch", info.Branch,
 		)
@@ -787,11 +794,11 @@ func (mdb *MongoDb) upsertNodes(ctx context.Context, nodes []Node, info VCSInfo)
 // 1. get all the existing relations for `repo` + `branch` + `commit_id`.
 // 2. Relations received in cg which are new will be inserted in relations collection.
 // relations which are already present in the db needs to be merged.
-func (mdb *MongoDb) upsertRelations(ctx context.Context, relns []Relation, info VCSInfo) error {
+func (mdb *MongoDb) upsertRelations(ctx context.Context, relns []Relation, info VCSInfo, account string) error {
 	mdb.Log.Infow("uploading partialcg in relations collection",
 		"#relns", len(relns), "repo", info.Repo, "branch", info.Branch)
 	// fetch existing records for branch
-	f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.commit_id": info.CommitId, "vcs_info.repo": info.Repo}
+	f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.commit_id": info.CommitId, "vcs_info.repo": info.Repo, "account": account}
 	Ids, err := mdb.getRelIds(ctx, info.CommitId, info.Branch, info.Repo, f)
 	if err != nil {
 		return err
@@ -814,6 +821,7 @@ func (mdb *MongoDb) upsertRelations(ctx context.Context, relns []Relation, info 
 				fmt.Sprintf("failed to add relns while uploading partial cg, repo: %s, branch: %s", info.Repo, info.Branch))
 		}
 		mdb.Log.Infow(fmt.Sprintf("inserted %d records in relns collection", len(res.InsertedIDs)),
+			"account", account,
 			"repo", info.Repo,
 			"branch", info.Branch,
 		)
@@ -824,19 +832,19 @@ func (mdb *MongoDb) upsertRelations(ctx context.Context, relns []Relation, info 
 		for _, rel := range relToUpdate {
 			idToUpdate = append(idToUpdate, rel.Source)
 		}
-		f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.repo": info.Repo, "source": bson.M{"$in": idToUpdate}}
+		f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.repo": info.Repo, "account": account, "source": bson.M{"$in": idToUpdate}}
 		cur, err := mdb.Database.Collection(relnsColl).Find(ctx, f)
 		if err != nil {
 			return formatError(err, "failed in find query in rel collection", info.Repo, info.Repo, info.CommitId)
 		}
 		if err = cur.All(ctx, &existingRelns); err != nil {
-			return formatError(err, "failed to iterate on records using cursor in existingRelns collection", info.Repo, info.Branch, info.CommitId)
+			return formatError(err, "failed to iterate on records using cursor in existing relations collection", info.Repo, info.Branch, info.CommitId)
 		}
 		finalRelations := getRelMap(relToUpdate, existingRelns)
 		var operations []mongo.WriteModel
 		for src, tests := range finalRelations {
 			operation := mongo.NewUpdateOneModel()
-			operation.SetFilter(bson.M{"source": src, "vcs_info.repo": info.Repo, "vcs_info.branch": info.Branch})
+			operation.SetFilter(bson.M{"source": src, "vcs_info.repo": info.Repo, "account": account, "vcs_info.branch": info.Branch})
 			operation.SetUpdate(bson.M{"$set": bson.M{"tests": tests}})
 			operations = append(operations, operation)
 		}
@@ -846,6 +854,7 @@ func (mdb *MongoDb) upsertRelations(ctx context.Context, relns []Relation, info 
 		}
 		mdb.Log.Infow(
 			fmt.Sprintf("relations updated: matched %d, updated %d records", res.MatchedCount, res.ModifiedCount),
+			"account", account,
 			"repo", info.Repo,
 			"branch", info.Branch,
 			"commit", info.CommitId,

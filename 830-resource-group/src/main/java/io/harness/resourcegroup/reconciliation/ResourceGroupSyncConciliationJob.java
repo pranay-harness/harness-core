@@ -75,15 +75,19 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
   @Override
   public void run() {
     log.info("Started the consumer for resource group concliation");
-    SecurityContextBuilder.setContext(new ServicePrincipal(serviceId));
     try {
+      SecurityContextBuilder.setContext(new ServicePrincipal(serviceId));
       while (!Thread.currentThread().isInterrupted()) {
         readEventsFrameworkMessages();
       }
+    } catch (InterruptedException ex) {
+      SecurityContextBuilder.unsetCompleteContext();
+      Thread.currentThread().interrupt();
     } catch (Exception ex) {
       log.error("resource group concliation consumer unexpectedly stopped", ex);
+    } finally {
+      SecurityContextBuilder.unsetCompleteContext();
     }
-    SecurityContextBuilder.unsetCompleteContext();
   }
 
   private void readEventsFrameworkMessages() throws InterruptedException {

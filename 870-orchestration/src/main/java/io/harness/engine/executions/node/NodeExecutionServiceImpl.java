@@ -15,6 +15,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.observers.NodeExecutionStartObserver;
+import io.harness.engine.observers.NodeStartInfo;
 import io.harness.engine.observers.NodeStatusUpdateObserver;
 import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.engine.observers.NodeUpdateObserver;
@@ -172,7 +173,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       }
       eventEmitter.emitEvent(builder.build());
       nodeExecutionStartSubject.fireInform(
-          NodeExecutionStartObxxxxxxxx:onNodeStart, OrchestrationEventType.NODE_EXECUTION_START, nodeExecution);
+          NodeExecutionStartObxxxxxxxx:onNodeStart, NodeStartInfo.builder().nodeExecution(nodeExecution).build());
       return mongoTemplate.insert(nodeExecution);
     } else {
       return mongoTemplate.save(nodeExecution);

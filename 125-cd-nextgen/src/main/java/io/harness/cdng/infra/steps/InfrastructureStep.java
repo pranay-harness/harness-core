@@ -1,11 +1,13 @@
 package io.harness.cdng.infra.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 
 import static java.lang.String.format;
 
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.InfrastructureMapper;
 import io.harness.cdng.infra.beans.InfraMapping;
@@ -15,6 +17,8 @@ import io.harness.cdng.infra.yaml.InfrastructureKind;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.infra.yaml.K8sGcpInfrastructure;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.services.ConnectorService;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.InvalidArgumentsException;
@@ -26,7 +30,9 @@ import io.harness.logging.UnitProgress;
 import io.harness.logging.UnitStatus;
 import io.harness.logstreaming.LogStreamingStepClientFactory;
 import io.harness.logstreaming.NGLogCallback;
+import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.environment.services.EnvironmentService;
+import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
@@ -41,12 +47,14 @@ import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.EntityReferenceExtractorUtils;
 import io.harness.steps.executable.SyncExecutableWithRbac;
+import io.harness.utils.IdentifierRefHelper;
 import io.harness.walktree.visitor.SimpleVisitorFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 
 @OwnedBy(CDC)
@@ -62,6 +70,7 @@ public class InfrastructureStep implements SyncExecutableWithRbac<Infrastructure
   @Inject @Named("PRIVILEGED") private AccessControlClient accessControlClient;
   @Inject private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
   @Inject private PipelineRbacHelper pipelineRbacHelper;
+  @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
 
   @Override
   public Class<Infrastructure> getStepParametersClass() {
@@ -80,6 +89,7 @@ public class InfrastructureStep implements SyncExecutableWithRbac<Infrastructure
         new NGLogCallback(logStreamingStepClientFactory, ambiance, INFRASTRUCTURE_COMMAND_UNIT, true);
     ngManagerLogCallback.saveExecutionLog("Starting Infrastructure logs");
 
+    validateConnectorRef(infrastructure.getConnectorRef(), ambiance);
     validateInfrastructure(infrastructure);
     EnvironmentOutcome environmentOutcome = (EnvironmentOutcome) executionSweepingOutputResolver.resolve(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.ENVIRONMENT));
@@ -100,6 +110,22 @@ public class InfrastructureStep implements SyncExecutableWithRbac<Infrastructure
                                                         .setEndTime(System.currentTimeMillis())
                                                         .build()))
         .build();
+  }
+
+  private void validateConnectorRef(ParameterField<String> connectorRef, Ambiance ambiance) {
+    NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
+    if (ParameterField.isNull(connectorRef)) {
+      throw new InvalidRequestException("Connector ref field not present in infrastructure");
+    }
+    String connectorRefValue = connectorRef.getValue();
+    IdentifierRef connectorIdentifierRef = IdentifierRefHelper.getIdentifierRef(connectorRefValue,
+        ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
+    Optional<ConnectorResponseDTO> connectorDTO =
+        connectorService.get(connectorIdentifierRef.getAccountIdentifier(), connectorIdentifierRef.getOrgIdentifier(),
+            connectorIdentifierRef.getProjectIdentifier(), connectorIdentifierRef.getIdentifier());
+    if (!connectorDTO.isPresent()) {
+      throw new InvalidRequestException(String.format("Connector not found for identifier : [%s]", connectorRefValue));
+    }
   }
 
   @VisibleForTesting

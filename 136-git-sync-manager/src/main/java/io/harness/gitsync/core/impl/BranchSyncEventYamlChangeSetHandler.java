@@ -15,6 +15,7 @@ import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.beans.YamlChangeSetStatus;
 import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepResponse;
 import io.harness.gitsync.common.dtos.GitToHarnessProgressDTO;
+import io.harness.gitsync.common.helper.GitToHarnessProgressHelper;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitBranchSyncService;
 import io.harness.gitsync.common.service.GitToHarnessProgressService;
@@ -37,6 +38,7 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
   private GitBranchSyncService gitBranchSyncService;
   private GitBranchService gitBranchService;
   private GitToHarnessProgressService gitToHarnessProgressService;
+  private GitToHarnessProgressHelper gitToHarnessProgressHelper;
 
   @Override
   public YamlChangeSetStatus process(YamlChangeSetDTO yamlChangeSetDTO) {
@@ -50,12 +52,19 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
       return YamlChangeSetStatus.SKIPPED;
     }
 
-    if (gitToHarnessProgressService.isBranchSyncAlreadyInProgressOrSynced(repoURL, yamlChangeSetDTO.getBranch())) {
-      log.info("ChangeSet {} already in progress or completed", yamlChangeSetDTO.getChangesetId());
-      return YamlChangeSetStatus.SKIPPED;
+    YamlChangeSetStatus queueStatus =
+        gitToHarnessProgressHelper.getQueueStatusIfEventInProgressOrAlreadyProcessed(yamlChangeSetDTO);
+    if (queueStatus != null) {
+      log.info("Ignoring event {} with queue status {} as event might be already completed or in process",
+          yamlChangeSetDTO, queueStatus);
+      return queueStatus;
     }
 
     GitBranch gitBranch = gitBranchService.get(accountIdentifier, repoURL, branch);
+    if (gitBranch == null) {
+      log.info("Branch sync not possible for branch {} in repo {} as no branch exists in the system", branch, repoURL);
+      return YamlChangeSetStatus.SKIPPED;
+    }
     if (gitBranch.getBranchSyncStatus() == UNSYNCED) {
       gitBranchService.updateBranchSyncStatus(accountIdentifier, repoURL, branch, SYNCING);
     } else if (gitBranch.getBranchSyncStatus() == SYNCED) {
@@ -80,6 +89,7 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
         log.info("Branch sync status updated completed for branch [{}]", branch);
         return YamlChangeSetStatus.COMPLETED;
       } else {
+        gitBranchService.updateBranchSyncStatus(yamlChangeSetDTO.getAccountId(), repoURL, branch, SYNCED);
         log.error("G2H process files step failed with status : {}, marking branch sync event as FAILED for retry",
             gitToHarnessProcessMsvcStepResponse.getGitToHarnessProgressStatus());
         return YamlChangeSetStatus.FAILED_WITH_RETRY;
