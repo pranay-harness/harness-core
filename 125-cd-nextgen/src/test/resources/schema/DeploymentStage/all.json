@@ -3780,7 +3780,7 @@
         },
         "timeout": {
           "type": "string",
-          "pattern": "^(\\d+[smhwd][\\s]?)+$"
+          "pattern": "^(((\\d+[smhwd][\\s]?)+)|(<\\+input>.*))$"
         },
         "type": {
           "type": "string"
