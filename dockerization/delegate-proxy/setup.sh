@@ -197,8 +197,8 @@ for scmVersion in 77c318c1; do
   SCM_LINUX_DIR="${IMAGES_DIR}/scm/linux/$scmVersion/"
   SCM_MAC_DIR="${IMAGES_DIR}/scm/darwin/$scmVersion/"
 
-  SCM_LINUX_URL=https://app.harness.io/storage/harness-download/scm/"$scmVersion"/linux/amd64/scm
-  SCM_MAC_URL=https://app.harness.io/storage/harness-download/scm/"$scmVersion"/darwin/amd64/scm
+  SCM_LINUX_URL=https://app.harness.io/storage/harness-download/harness-scm/release/"$scmVersion"/bin/linux/amd64/scm
+  SCM_MAC_URL=https://app.harness.io/storage/harness-download/harness-scm/release/"$scmVersion"/bin/darwin/amd64/scm
 
   echo "$SCM_LINUX_DIR"
   echo "$SCM_MAC_DIR"
