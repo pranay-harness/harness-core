@@ -1,5 +1,6 @@
 package io.harness.accesscontrol.principals.serviceaccounts.iterators;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
 import static java.time.Duration.ofSeconds;
@@ -10,6 +11,7 @@ import io.harness.accesscontrol.principals.serviceaccounts.HarnessServiceAccount
 import io.harness.accesscontrol.principals.serviceaccounts.persistence.ServiceAccountDBO;
 import io.harness.accesscontrol.principals.serviceaccounts.persistence.ServiceAccountDBO.ServiceAccountDBOKeys;
 import io.harness.accesscontrol.scopes.core.ScopeService;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
@@ -17,10 +19,15 @@ import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+@OwnedBy(PL)
+@Singleton
+@Slf4j
 public class ServiceAccountReconciliationIterator implements Handler<ServiceAccountDBO> {
   private final PersistenceIteratorFactory persistenceIteratorFactory;
   private final MongoTemplate mongoTemplate;
