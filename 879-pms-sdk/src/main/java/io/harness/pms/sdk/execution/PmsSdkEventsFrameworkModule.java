@@ -14,20 +14,20 @@ import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHE
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_BATCH_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_EVENT_TOPIC;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_FACILITATOR_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_FACILITATOR_LISTENER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_INTERRUPT_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_INTERRUPT_LISTENER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_NODE_ADVISE_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_NODE_ADVISE_LISTENER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_NODE_RESUME_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_NODE_RESUME_LISTENER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_NODE_START_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_NODE_START_LISTENER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_ORCHESTRATION_EVENT_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_ORCHESTRATION_EVENT_LISTENER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_PROGRESS_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsUtilityConsumerConstants.PT_PROGRESS_LISTENER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_FACILITATOR_CONSUMER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_FACILITATOR_LISTENER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_INTERRUPT_CONSUMER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_INTERRUPT_LISTENER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_ADVISE_CONSUMER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_ADVISE_LISTENER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_RESUME_CONSUMER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_RESUME_LISTENER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_START_CONSUMER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_START_LISTENER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_ORCHESTRATION_EVENT_CONSUMER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_ORCHESTRATION_EVENT_LISTENER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_PROGRESS_CONSUMER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_PROGRESS_LISTENER;
 
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.eventsframework.EventsFrameworkConstants;
@@ -35,6 +35,7 @@ import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.ng.core.event.MessageListener;
+import io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants;
 import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventMessageListener;
 import io.harness.pms.sdk.execution.events.interrupts.InterruptEventMessageListener;
 import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventMessageListener;
@@ -43,10 +44,17 @@ import io.harness.pms.sdk.execution.events.node.start.NodeStartEventMessageListe
 import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventMessageListener;
 import io.harness.pms.sdk.execution.events.progress.ProgressEventMessageListener;
 import io.harness.redis.RedisConfig;
+import io.harness.threading.ThreadPool;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.time.Duration;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class PmsSdkEventsFrameworkModule extends AbstractModule {
   private static PmsSdkEventsFrameworkModule instance;
@@ -167,5 +175,13 @@ public class PmsSdkEventsFrameworkModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(PT_NODE_RESUME_LISTENER))
         .to(NodeResumeEventMessageListener.class);
+  }
+
+  @Provides
+  @Singleton
+  @Named(PmsSdkEventFrameworkConstants.SDK_PROCESSOR_SERVICE)
+  public ExecutorService sdkExecutorService() {
+    return ThreadPool.create(
+        20, 60, 30L, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("PmsSdkEventProcessor-%d").build());
   }
 }

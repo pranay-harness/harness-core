@@ -171,7 +171,7 @@ public class PipelineServiceModule extends AbstractModule {
             .expressionEvaluatorProvider(new PMSExpressionEvaluatorProvider())
             .withPMS(false)
             .isPipelineService(true)
-            .corePoolSize(10)
+            .corePoolSize(20)
             .maxPoolSize(100)
             .idleTimeInSecs(500L)
             .eventsFrameworkConfiguration(configuration.getEventsFrameworkConfiguration())
