@@ -1,7 +1,6 @@
 package io.harness.failureStrategy;
 
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
-import static io.harness.yaml.core.failurestrategy.NGFailureType.ANY_OTHER_ERRORS;
 import static io.harness.yaml.core.failurestrategy.NGFailureType.AUTHORIZATION_ERROR;
 import static io.harness.yaml.core.failurestrategy.NGFailureType.CONNECTIVITY_ERROR;
 import static io.harness.yaml.core.failurestrategy.NGFailureType.TIMEOUT_ERROR;
@@ -56,7 +55,7 @@ public class StepFailureStrategyTest extends CategoryTest {
 
     List<NGFailureType> test = new ArrayList<>();
     test.add(AUTHORIZATION_ERROR);
-    test.add(ANY_OTHER_ERRORS);
+    test.add(CONNECTIVITY_ERROR);
     List<FailureStrategyConfig> stepFailureStrategies2 = new ArrayList<>();
     stepFailureStrategies2.add(
         FailureStrategyConfig.builder()

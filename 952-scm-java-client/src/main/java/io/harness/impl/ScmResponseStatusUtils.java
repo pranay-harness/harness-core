@@ -20,6 +20,8 @@ public class ScmResponseStatusUtils {
   public void checkScmResponseStatusAndThrowException(int statusCode, String errorMsg) {
     try {
       switch (statusCode) {
+        case 304:
+          throw new ScmException(ErrorCode.SCM_NOT_MODIFIED);
         case 404:
           throw new ScmException(ErrorCode.SCM_NOT_FOUND_ERROR);
         case 409:

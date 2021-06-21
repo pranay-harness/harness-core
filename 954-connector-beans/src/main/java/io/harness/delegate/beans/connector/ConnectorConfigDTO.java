@@ -30,6 +30,7 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
+import io.harness.delegate.beans.connector.sumologic.SumoLogicConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -46,6 +47,7 @@ import java.util.List;
       @JsonSubTypes.Type(value = NewRelicConnectorDTO.class, name = "NewRelic"),
       @JsonSubTypes.Type(value = PrometheusConnectorDTO.class, name = "Prometheus"),
       @JsonSubTypes.Type(value = DatadogConnectorDTO.class, name = "Datadog"),
+      @JsonSubTypes.Type(value = SumoLogicConnectorDTO.class, name = "SumoLogic"),
       @JsonSubTypes.Type(value = VaultConnectorDTO.class, name = "Vault"),
       @JsonSubTypes.Type(value = DockerConnectorDTO.class, name = "DockerRegistry"),
       @JsonSubTypes.Type(value = LocalConnectorDTO.class, name = "Local"),

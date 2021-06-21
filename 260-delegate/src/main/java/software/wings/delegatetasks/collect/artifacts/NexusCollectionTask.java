@@ -18,6 +18,8 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.nexus.NexusService;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.mappers.artifact.NexusConfigToNexusRequestMapper;
 
 import com.google.inject.Inject;
 import java.util.List;
@@ -39,6 +41,8 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateFileManager delegateFileManager;
 
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
+
+  @Inject private EncryptionService encryptionService;
 
   public NexusCollectionTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> postExecute, BooleanSupplier preExecute) {
@@ -64,10 +68,12 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask {
   public ListNotifyResponseData run(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes, Map<String, String> artifactMetadata) {
     ListNotifyResponseData res = new ListNotifyResponseData();
+
     try {
       log.info("Collecting artifact {}  from Nexus server {}", nexusConfig.getNexusUrl());
-      nexusService.downloadArtifacts(nexusConfig, encryptionDetails, artifactStreamAttributes, artifactMetadata,
-          getDelegateId(), getTaskId(), getAccountId(), res);
+      nexusService.downloadArtifacts(
+          NexusConfigToNexusRequestMapper.toNexusRequest(nexusConfig, encryptionService, encryptionDetails),
+          artifactStreamAttributes, artifactMetadata, getDelegateId(), getTaskId(), getAccountId(), res);
 
     } catch (Exception e) {
       log.warn("Exception: " + ExceptionUtils.getMessage(e), e);

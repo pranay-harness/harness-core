@@ -11,8 +11,8 @@ import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.PR
 
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
-import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.resourcegroup.framework.remote.mapper.ResourceGroupMapper;
 import io.harness.resourcegroup.framework.service.Resource;
@@ -35,12 +35,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -48,6 +48,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class ResourceGroupSyncConciliationJob implements Runnable {
+  private static final int WAIT_TIME_IN_SECONDS = 10;
   static String DEFAULT_RESOURCE_GROUP_NAME = "All Resources";
   static String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
   static String DESCRIPTION_FORMAT = "All the resources in this %s are included in this resource group.";
@@ -55,7 +56,6 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
   Consumer redisConsumer;
   Map<String, Resource> resourceMap;
   ResourceGroupService resourceGroupService;
-  PersistentLocker persistentLocker;
   String serviceId;
 
   @Inject
@@ -65,7 +65,6 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
     this.redisConsumer = redisConsumer;
     this.resourceGroupService = resourceGroupService;
     this.serviceId = serviceId;
-    this.persistentLocker = persistentLocker;
     this.resourceMap =
         resourceMap.values()
             .stream()
@@ -75,27 +74,32 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
 
   @Override
   public void run() {
-    log.info("Started the consumer for entity crud stream");
+    log.info("Started the consumer for resource group concliation");
     SecurityContextBuilder.setContext(new ServicePrincipal(serviceId));
-    while (!Thread.currentThread().isInterrupted()) {
-      try (AcquiredLock acquiredLock = persistentLocker.tryToAcquireLock(LOCK_NAME, Duration.ofMinutes(2))) {
-        if (acquiredLock == null) {
-          Thread.sleep(RandomUtils.nextInt(10, 100));
-          continue;
-        }
-        pollAndProcessMessages();
-      } catch (Exception ex) {
-        log.error("{} unexpectedly stopped", this.getClass().getName(), ex);
+    try {
+      while (!Thread.currentThread().isInterrupted()) {
+        readEventsFrameworkMessages();
       }
+    } catch (Exception ex) {
+      log.error("resource group concliation consumer unexpectedly stopped", ex);
     }
     SecurityContextBuilder.unsetCompleteContext();
+  }
+
+  private void readEventsFrameworkMessages() throws InterruptedException {
+    try {
+      pollAndProcessMessages();
+    } catch (EventsFrameworkDownException e) {
+      log.error("Events framework is down for resource group concliation consumer. Retrying again...", e);
+      TimeUnit.SECONDS.sleep(WAIT_TIME_IN_SECONDS);
+    }
   }
 
   private void pollAndProcessMessages() {
     List<Message> messages;
     String messageId;
     boolean messageProcessed;
-    messages = redisConsumer.read(Duration.ofSeconds(10));
+    messages = redisConsumer.read(Duration.ofSeconds(WAIT_TIME_IN_SECONDS));
     for (Message message : messages) {
       messageId = message.getId();
       messageProcessed = handleMessage(message);

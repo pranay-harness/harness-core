@@ -39,6 +39,7 @@ import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.nexus.NexusRequest;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.AccessType;
@@ -558,8 +559,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
     downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
     when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false)))
         .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
-    when(nexusTwoService.getVersion(
-             any(NexusConfig.class), anyListOf(EncryptedDataDetail.class), any(), any(), any(), any(), any(), any()))
+    when(nexusTwoService.getVersion(any(NexusRequest.class), any(), any(), any(), any(), any(), any()))
         .thenReturn(buildDetailsList);
     downloadArtifactCommandUnit.executeInternal(nexusContextMavenWithoutArtifactFileMetadata);
   }

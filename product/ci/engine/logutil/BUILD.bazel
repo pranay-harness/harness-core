@@ -11,6 +11,7 @@ go_library(
     deps = [
         "//commons/go/lib/logs:go_default_library",
         "//product/ci/common/external:go_default_library",
+        "//product/ci/common/logs:go_default_library",
         "//product/ci/engine/consts:go_default_library",
         "//product/ci/engine/grpc/client:go_default_library",
         "//product/ci/engine/proto:go_default_library",

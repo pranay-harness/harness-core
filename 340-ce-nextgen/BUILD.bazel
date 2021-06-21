@@ -20,6 +20,7 @@ shared_dependencies = [
     "@maven//:io_swagger_swagger_annotations",
     "@maven//:javax_ws_rs_javax_ws_rs_api",
     "@maven//:io_dropwizard_dropwizard_core",
+    "@maven//:org_freemarker_freemarker",
     "@maven//:ru_vyarus_guice_validator",
     "//:lombok",
 ]
@@ -31,6 +32,9 @@ java_binary(
     ]),
     data = ["//:resource"],
     main_class = "io.harness.ccm.CENextGenApplication",
+    resources = [
+        "//340-ce-nextgen/src/main/resources:resource",
+    ],
     visibility = ["//visibility:public"],
     runtime_deps = [
         "@maven//:javax_ws_rs_javax_ws_rs_api",

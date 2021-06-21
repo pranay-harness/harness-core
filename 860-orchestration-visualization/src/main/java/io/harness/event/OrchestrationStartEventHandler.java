@@ -6,10 +6,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.observers.OrchestrationStartObserver;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
-import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
 import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
@@ -21,19 +20,19 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 @Singleton
-public class OrchestrationStartEventHandler implements SyncOrchestrationEventHandler {
+public class OrchestrationStartEventHandler implements OrchestrationStartObserver {
   @Inject PlanExecutionService planExecutionService;
   @Inject GraphGenerationService graphGenerationService;
 
-  public void handleEvent(OrchestrationEvent event) {
-    OrchestrationGraph orchestrationGraph = handleEventFromLog(event);
+  @Override
+  public void onStart(Ambiance ambiance) {
+    OrchestrationGraph orchestrationGraph = handleEventFromLog(ambiance);
     if (orchestrationGraph != null) {
       graphGenerationService.cacheOrchestrationGraph(orchestrationGraph);
     }
   }
 
-  public OrchestrationGraph handleEventFromLog(OrchestrationEvent event) {
-    Ambiance ambiance = event.getAmbiance();
+  public OrchestrationGraph handleEventFromLog(Ambiance ambiance) {
     try {
       PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
 
@@ -56,7 +55,7 @@ public class OrchestrationStartEventHandler implements SyncOrchestrationEventHan
           .build();
 
     } catch (Exception e) {
-      log.error("[{}] event failed for plan [{}]", event.getEventType(), ambiance.getPlanExecutionId(), e);
+      log.error("Failed to handle event from log for [{}] planExecutionId", ambiance.getPlanExecutionId(), e);
       throw e;
     }
   }

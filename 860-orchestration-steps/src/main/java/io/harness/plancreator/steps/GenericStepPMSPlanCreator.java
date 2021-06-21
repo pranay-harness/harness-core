@@ -148,16 +148,16 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     return PlanCreationResponse.builder().node(stepPlanNode.getUuid(), stepPlanNode).build();
   }
 
-  public static boolean containsOnlyAnyOtherErrorInSomeConfig(List<FailureStrategyConfig> stageFailureStrategies) {
-    boolean containsOnlyAnyOther = false;
+  public static boolean containsOnlyAllErrorsInSomeConfig(List<FailureStrategyConfig> stageFailureStrategies) {
+    boolean containsOnlyAllErrors = false;
     for (FailureStrategyConfig failureStrategyConfig : stageFailureStrategies) {
       if (failureStrategyConfig.getOnFailure().getErrors().size() == 1
           && failureStrategyConfig.getOnFailure().getErrors().get(0).getYamlName().contentEquals(
-              NGFailureTypeConstants.ANY_OTHER_ERRORS)) {
-        containsOnlyAnyOther = true;
+              NGFailureTypeConstants.ALL_ERRORS)) {
+        containsOnlyAllErrors = true;
       }
     }
-    return containsOnlyAnyOther;
+    return containsOnlyAllErrors;
   }
 
   protected String getName(StepElementConfig stepElement) {

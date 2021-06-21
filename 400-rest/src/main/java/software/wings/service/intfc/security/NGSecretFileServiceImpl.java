@@ -203,14 +203,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
         if (!dto.getName().equals(encryptedData.getName())) {
           ngSecretService.deleteSecretInSecretManager(account, encryptedData, secretManagerConfigOptional.get());
         }
-        switch (secretManagerConfigOptional.get().getEncryptionType()) {
-          case LOCAL:
-          case GCP_KMS:
-          case KMS:
-            fileService.deleteFile(String.valueOf(encryptedData.getEncryptedValue()), CONFIGS);
-            break;
-          default:
-        }
+        char[] existingFileId = encryptedData.getEncryptedValue();
 
         // decrypt secrets of secret manager before sending secret manager config to delegate
         secretManagerConfigService.decryptEncryptionConfigSecrets(
@@ -230,6 +223,15 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
 
         // save to DB and return
         wingsPersistence.save(savedEncryptedData);
+
+        switch (secretManagerConfigOptional.get().getEncryptionType()) {
+          case LOCAL:
+          case GCP_KMS:
+          case KMS:
+            fileService.deleteFile(String.valueOf(existingFileId), CONFIGS);
+            break;
+          default:
+        }
         return true;
       } else {
         throw new SecretManagementException(

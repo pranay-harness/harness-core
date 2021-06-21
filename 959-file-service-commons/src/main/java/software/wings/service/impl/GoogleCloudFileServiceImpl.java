@@ -172,8 +172,8 @@ public class GoogleCloudFileServiceImpl implements FileService {
     BlobId blobId = getBlobIdFromFileId(fileId, fileBucket);
     Blob blob = getStorage().get(blobId);
     if (blob == null) {
-      throw new WingsException(
-          " File with id " + fileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
+      log.error(" File with id " + fileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
+      throw new WingsException(ErrorCode.FILE_NOT_FOUND_ERROR);
     }
 
     try (ReadChannel reader = blob.reader()) {
@@ -189,8 +189,8 @@ public class GoogleCloudFileServiceImpl implements FileService {
     BlobId blobId = getBlobIdFromFileId(fileId, fileBucket);
     Blob blob = getStorage().get(blobId);
     if (blob == null) {
-      throw new WingsException(
-          " File with id " + fileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
+      log.error(" File with id " + fileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
+      throw new WingsException(ErrorCode.FILE_NOT_FOUND_ERROR);
     }
 
     byte[] content = blob.getContent();
@@ -204,16 +204,16 @@ public class GoogleCloudFileServiceImpl implements FileService {
 
     GcsHarnessFileMetadata gcsFileMetadata = gcsHarnessFileMetadataDao.getFileMetadataByGcsFileId(fileId);
     if (gcsFileMetadata == null) {
-      throw new WingsException(
-          " File with id " + fileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
+      log.error(" File with id " + fileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
+      throw new WingsException(ErrorCode.FILE_NOT_FOUND_ERROR);
     } else {
       // Old 'gcsFileMetadata' doesn't have the file length field set. It has to be read from GCS bucket entries'
       // metadata.
       if (gcsFileMetadata.getFileLength() == 0) {
         Blob blob = getStorage().get(blobId);
         if (blob == null) {
-          throw new WingsException(
-              " File with id " + fileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
+          log.error(" File with id " + fileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
+          throw new WingsException(ErrorCode.FILE_NOT_FOUND_ERROR);
         } else {
           gcsFileMetadata.setFileLength(blob.getSize());
           gcsFileMetadata.setChecksum(blob.getMd5());
@@ -340,8 +340,8 @@ public class GoogleCloudFileServiceImpl implements FileService {
     BlobId blobId = BlobId.of(getBucketName(fileBucket), component.filePath);
     Blob blob = getStorage().get(blobId);
     if (blob == null) {
-      throw new WingsException(
-          " File with id " + gcsFileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
+      log.error(" File with id " + gcsFileId + " or blob id " + blobId + " can't be found in Google Cloud Storage.");
+      throw new WingsException(ErrorCode.FILE_NOT_FOUND_ERROR);
     }
 
     CommonGcsHarnessFileMetadata gcsFileMetadata = CommonGcsHarnessFileMetadata.builder()

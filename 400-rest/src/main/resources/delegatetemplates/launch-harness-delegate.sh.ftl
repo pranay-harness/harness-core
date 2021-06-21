@@ -2,7 +2,7 @@
 
 sudo docker pull ${delegateDockerImage}
 
-sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
+sudo docker run -d --restart unless-stopped --hostname=$(hostname -f | head -c 63) \
 -e ACCOUNT_ID=${accountId} \
 -e ACCOUNT_SECRET=${accountSecret} \
 -e MANAGER_HOST_AND_PORT=${managerHostAndPort} \

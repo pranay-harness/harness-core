@@ -67,6 +67,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.domain.Page;
 
 @Slf4j
@@ -497,6 +498,18 @@ public class ConnectorServiceImpl implements ConnectorService {
   public ConnectorStatistics getConnectorStatistics(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     return defaultConnectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier);
+  }
+
+  @Override
+  public String getHeartbeatPerpetualTaskId(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    return defaultConnectorService.getHeartbeatPerpetualTaskId(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+  }
+
+  @Override
+  public void resetHeartbeatForReferringConnectors(List<Pair<String, String>> connectorPerpetualTaskInfoList) {
+    defaultConnectorService.resetHeartbeatForReferringConnectors(connectorPerpetualTaskInfoList);
   }
 
   @Override

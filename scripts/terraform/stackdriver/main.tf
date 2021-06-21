@@ -53,3 +53,8 @@ module "ce-graphql" {
   deployment = var.deployment
   projectId = var.projectId
 }
+module "cvng" {
+  source = "./cvng"
+  deployment = var.deployment
+  projectId = var.projectId
+}

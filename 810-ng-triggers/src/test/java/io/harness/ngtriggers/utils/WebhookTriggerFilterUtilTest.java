@@ -143,11 +143,15 @@ public class WebhookTriggerFilterUtilTest extends CategoryTest {
   private CustomWebhookTriggerSpec getCustomWebhookTriggerSpec() {
     return CustomWebhookTriggerSpec.builder()
         .headerConditions(Arrays.asList(WebhookCondition.builder()
-                                            .key("X-HARNESS-TRIGGER-IDENTIFIER")
+                                            .key("<+trigger.header.X_HARNESS_TRIGGER_IDENTIFIER>")
                                             .operator("equals")
                                             .value("customertriggerspec")
                                             .build(),
-            WebhookCondition.builder().key("X-GITHUB-EVENT").operator("in").value("push, pull_request").build()))
+            WebhookCondition.builder()
+                .key("trigger.header.X_GITHUB_EVENT")
+                .operator("in")
+                .value("push, pull_request")
+                .build()))
         .build();
   }
 

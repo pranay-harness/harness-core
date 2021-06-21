@@ -18,4 +18,7 @@ public interface GitCommitRepository extends CrudRepository<GitCommit, String> {
 
   Optional<GitCommit> findByAccountIdentifierAndCommitIdAndRepoURLAndBranchNameAndStatusIn(String accountIdentifier,
       String commitId, String repoURL, String branchName, List<GitCommitProcessingStatus> status);
+
+  Optional<GitCommit> findFirstByAccountIdentifierAndRepoURLAndBranchNameOrderByCreatedAtDesc(
+      String accountIdentifier, String repoURL, String branchName);
 }

@@ -16,6 +16,8 @@ import io.harness.ccm.bigQuery.BigQueryServiceImpl;
 import io.harness.ccm.commons.entities.GcpConfig;
 import io.harness.ccm.eventframework.ConnectorEntityCRUDStreamListener;
 import io.harness.ccm.persistence.JooqExecuteListener;
+import io.harness.ccm.service.impl.CEYamlServiceImpl;
+import io.harness.ccm.service.intf.CEYamlService;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.ccm.views.service.ViewsBillingService;
@@ -125,6 +127,9 @@ public class CENextGenModule extends AbstractModule {
         return configuration.getGcpConfig();
       }
     });
+
+    // Bind Services
+    bind(CEYamlService.class).to(CEYamlServiceImpl.class);
 
     install(ExecutorModule.getInstance());
     install(new AbstractMongoModule() {

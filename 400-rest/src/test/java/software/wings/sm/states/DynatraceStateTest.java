@@ -6,7 +6,6 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 
-import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,7 +22,6 @@ import io.harness.beans.DelegateTask.Status;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
-import io.harness.cv.WorkflowVerificationResult;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
@@ -31,6 +29,7 @@ import io.harness.tasks.ResponseData;
 import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.DynaTraceConfig;
+import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -43,7 +42,6 @@ import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.dynatrace.DynaTraceService;
 import software.wings.service.intfc.verification.CVActivityLogService.Logger;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.StateType;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
@@ -95,7 +93,6 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     FieldUtils.writeField(dynatraceState, "appService", appService, true);
     FieldUtils.writeField(dynatraceState, "configuration", configuration, true);
     FieldUtils.writeField(dynatraceState, "metricAnalysisService", metricDataAnalysisService, true);
-    FieldUtils.writeField(dynatraceState, "workflowVerificationResultService", workflowVerificationResultService, true);
     FieldUtils.writeField(dynatraceState, "settingsService", settingsService, true);
     FieldUtils.writeField(dynatraceState, "waitNotifyEngine", waitNotifyEngine, true);
     FieldUtils.writeField(dynatraceState, "delegateService", delegateService, true);
@@ -163,7 +160,8 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
         .getCVInstanceAPIResponse(any());
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
-    when(workflowStandardParams.getEnv()).thenReturn(anEnvironment().uuid(UUID.randomUUID().toString()).build());
+    when(workflowStandardParams.getEnv())
+        .thenReturn(Environment.Builder.anEnvironment().uuid(UUID.randomUUID().toString()).build());
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
     ExecutionResponse response = spyState.execute(executionContext);
@@ -242,54 +240,6 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
                                                    .get("BASIC")
                                                    .get(0);
     assertThat(continuousVerificationExecutionMetaData1.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
-  }
-
-  @Test
-  @Owner(developers = RAGHU)
-  @Category(UnitTests.class)
-  public void testExecuteCreatesWorkflowVerificationResult() {
-    assertThat(wingsPersistence.createQuery(DelegateTask.class).count()).isEqualTo(0);
-    DynaTraceConfig dynaTraceConfig = DynaTraceConfig.builder()
-                                          .accountId(accountId)
-                                          .dynaTraceUrl("dynatrace-url")
-                                          .apiToken(UUID.randomUUID().toString().toCharArray())
-                                          .build();
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(accountId)
-                                            .withName("prometheus-config")
-                                            .withValue(dynaTraceConfig)
-                                            .build();
-    wingsPersistence.save(settingAttribute);
-    dynatraceState.setAnalysisServerConfigId(settingAttribute.getUuid());
-    DynatraceState spyState = spy(dynatraceState);
-    doReturn(AbstractAnalysisState.CVInstanceApiResponse.builder()
-                 .controlNodes(Collections.singleton("control"))
-                 .testNodes(Collections.singleton("test"))
-                 .newNodesTrafficShiftPercent(Optional.empty())
-                 .build())
-        .when(spyState)
-        .getCVInstanceAPIResponse(any());
-    doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
-    doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
-    String envId = generateUuid();
-    when(executionContext.getEnv()).thenReturn(anEnvironment().uuid(envId).build());
-    when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
-
-    spyState.execute(executionContext);
-    List<WorkflowVerificationResult> workflowVerificationResults =
-        wingsPersistence.createQuery(WorkflowVerificationResult.class, excludeAuthority).asList();
-    assertThat(workflowVerificationResults.size()).isEqualTo(1);
-    WorkflowVerificationResult workflowVerificationResult = workflowVerificationResults.get(0);
-    assertThat(workflowVerificationResult.getAccountId()).isEqualTo(accountId);
-    assertThat(workflowVerificationResult.getAppId()).isEqualTo(appId);
-    assertThat(workflowVerificationResult.getStateExecutionId()).isEqualTo(stateExecutionId);
-    assertThat(workflowVerificationResult.getServiceId()).isEqualTo(serviceId);
-    assertThat(workflowVerificationResult.getEnvId()).isEqualTo(envId);
-    assertThat(workflowVerificationResult.getWorkflowId()).isEqualTo(workflowId);
-    assertThat(workflowVerificationResult.getStateType()).isEqualTo(StateType.DYNA_TRACE.name());
-    assertThat(workflowVerificationResult.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
-    assertThat(workflowVerificationResult.isAnalyzed()).isFalse();
-    assertThat(workflowVerificationResult.isRollback()).isFalse();
   }
 
   @Test
@@ -391,7 +341,8 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
         .getCVInstanceAPIResponse(any());
     doReturn(workflowId).when(spyState).getWorkflowId(executionContext);
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
-    when(workflowStandardParams.getEnv()).thenReturn(anEnvironment().uuid(UUID.randomUUID().toString()).build());
+    when(workflowStandardParams.getEnv())
+        .thenReturn(Environment.Builder.anEnvironment().uuid(UUID.randomUUID().toString()).build());
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
     return spyState.execute(executionContext);

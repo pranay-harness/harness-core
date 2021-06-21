@@ -36,6 +36,7 @@ import io.harness.gitsync.common.beans.BranchSyncStatus;
 import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.beans.InfoForGitPush.InfoForGitPushBuilder;
+import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
 import io.harness.gitsync.common.dtos.GitSyncSettingsDTO;
 import io.harness.gitsync.common.service.GitBranchService;
@@ -44,7 +45,6 @@ import io.harness.gitsync.common.service.GitEntityService;
 import io.harness.gitsync.common.service.GitSyncSettingsService;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
-import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorService;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.gitsync.scm.ScmGitUtils;
@@ -78,7 +78,6 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   private final GitEntityService gitEntityService;
   private final YamlGitConfigService yamlGitConfigService;
   private final EntityDetailProtoToRestMapper entityDetailRestToProtoMapper;
-  private final GitToHarnessProcessorService gitToHarnessProcessorService;
   private final ExecutorService executorService;
   private final GitBranchService gitBranchService;
   private final EncryptionHelper encryptionHelper;
@@ -90,8 +89,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   public HarnessToGitHelperServiceImpl(@Named("connectorDecoratorService") ConnectorService connectorService,
       DecryptGitApiAccessHelper decryptScmApiAccess, GitEntityService gitEntityService,
       YamlGitConfigService yamlGitConfigService, EntityDetailProtoToRestMapper entityDetailRestToProtoMapper,
-      GitToHarnessProcessorService gitToHarnessProcessorService, ExecutorService executorService,
-      GitBranchService gitBranchService, EncryptionHelper encryptionHelper,
+      ExecutorService executorService, GitBranchService gitBranchService, EncryptionHelper encryptionHelper,
       SourceCodeManagerService sourceCodeManagerService, GitSyncSettingsService gitSyncSettingsService,
       GitBranchSyncService gitBranchSyncService) {
     this.connectorService = connectorService;
@@ -99,7 +97,6 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     this.gitEntityService = gitEntityService;
     this.yamlGitConfigService = yamlGitConfigService;
     this.entityDetailRestToProtoMapper = entityDetailRestToProtoMapper;
-    this.gitToHarnessProcessorService = gitToHarnessProcessorService;
     this.executorService = executorService;
     this.gitBranchService = gitBranchService;
     this.encryptionHelper = encryptionHelper;
@@ -299,7 +296,9 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
           GitSyncBranchContext.builder().gitBranchInfo(emptyRepoBranch).build());
       final YamlGitConfigDTO yamlGitConfigDTO =
           yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountId, gitSyncConfigId);
-      gitBranchSyncService.syncBranch(yamlGitConfigDTO, branch, accountId, filePathToBeExcluded);
+      // todo @deepak, remove this dummy yamlchangeset
+      gitBranchSyncService.syncBranch(yamlGitConfigDTO, branch, accountId, filePathToBeExcluded,
+          YamlChangeSet.builder().uuid(String.valueOf(System.currentTimeMillis())).build());
       log.info("Branch sync completed {}", branch);
       gitBranchService.updateBranchSyncStatus(accountId, repoURL, branch, SYNCED);
       log.info("Branch sync status updated completed {}", branch);
