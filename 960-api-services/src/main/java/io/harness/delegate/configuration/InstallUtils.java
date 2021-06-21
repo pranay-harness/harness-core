@@ -41,7 +41,7 @@ public class InstallUtils {
   private static final String goTemplateClientVersion = "v0.4";
   private static final String goTemplateClientBaseDir = "./client-tools/go-template/";
 
-  private static final String harnessPywinrmVersion = "v0.3-dev";
+  private static final String harnessPywinrmVersion = "v0.4-dev";
   private static final String harnessPywinrmBaseDir = "./client-tools/harness-pywinrm/";
 
   static final String helm3Version = "v3.1.2";
