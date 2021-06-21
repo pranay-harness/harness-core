@@ -712,4 +712,17 @@ public class SecretSpecBuilder {
     });
     return secretParamsMap;
   }
+
+  public Map<String, SecretParams> createSecretParamsForPlainTextSecret(
+      Map<String, String> envVarsWithSecretRef, String containerName) {
+    Map<String, SecretParams> secretParamsMap = new HashMap<>();
+    envVarsWithSecretRef.forEach((varName, varValue)
+                                     -> secretParamsMap.put(varName,
+                                         SecretParams.builder()
+                                             .secretKey(SECRET_KEY + "_" + varName + "_" + containerName)
+                                             .type(TEXT)
+                                             .value(encodeBase64(varValue))
+                                             .build()));
+    return secretParamsMap;
+  }
 }

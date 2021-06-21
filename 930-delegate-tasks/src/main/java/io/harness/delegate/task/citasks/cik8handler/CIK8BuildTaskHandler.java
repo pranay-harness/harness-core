@@ -235,6 +235,15 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       Map<String, ConnectorDetails> functorConnectors = containerParams.getContainerSecrets().getFunctorConnectors();
       Map<String, SecretParams> plainTextSecretsByName =
           containerParams.getContainerSecrets().getPlainTextSecretsByName();
+      Map<String, String> envVarsWithSecretRef = containerParams.getEnvVarsWithSecretRef();
+
+      if (isNotEmpty(envVarsWithSecretRef)) {
+        log.info("Creating environment variables with secret functor value for container {} present on pod: {}",
+            containerParams.getName(), podParams.getName());
+        Map<String, String> envVarsWithSecretRefSecretData =
+            getAndUpdateEnvVarsWithSecretRefSecretData(envVarsWithSecretRef, containerParams, k8SecretName);
+        secretData.putAll(envVarsWithSecretRefSecretData);
+      }
 
       if (isNotEmpty(functorConnectors)) {
         log.info("Creating git hub app token env variables for container {} present on pod: {}",
@@ -293,6 +302,18 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       log.info("Environment k8 secret creation is complete for pod name: {}", podParams.getName());
     }
     log.info("Environment variable creation took: {} for pod: {} ", timer.stop(), podParams.getName());
+  }
+
+  private Map<String, String> getAndUpdateEnvVarsWithSecretRefSecretData(
+      Map<String, String> envVarsWithSecretRef, CIK8ContainerParams containerParams, String k8SecretName) {
+    Map<String, SecretParams> secretData =
+        kubeCtlHandler.fetchEnvVarsWithSecretRefSecretParams(envVarsWithSecretRef, containerParams.getName());
+    if (isNotEmpty(secretData)) {
+      updateContainer(containerParams, k8SecretName, secretData);
+      return secretData.values().stream().collect(Collectors.toMap(SecretParams::getSecretKey, SecretParams::getValue));
+    } else {
+      return Collections.emptyMap();
+    }
   }
 
   private Map<String, String> getAndUpdateGithubAppTokenSecretData(
