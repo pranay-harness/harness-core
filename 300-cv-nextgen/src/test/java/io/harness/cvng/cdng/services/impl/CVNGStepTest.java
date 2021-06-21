@@ -262,16 +262,14 @@ public class CVNGStepTest extends CvNextGenTestBase {
   private CVNGStepParameter getCvngStepParameter() {
     TestVerificationJobSpec spec = TestVerificationJobSpec.builder()
                                        .deploymentTag(randomParameter())
-                                       .serviceRef(ParameterField.<String>builder().value(serviceIdentifier).build())
-                                       .envRef(ParameterField.<String>builder().value(envIdentifier).build())
                                        .duration(ParameterField.<String>builder().value("5m").build())
                                        .sensitivity(ParameterField.<String>builder().value("High").build())
                                        .build();
     String verificationJobIdentifier = "testJob";
     return CVNGStepParameter.builder()
         .verificationJobIdentifier(verificationJobIdentifier)
-        .serviceIdentifier(spec.getServiceRef())
-        .envIdentifier(spec.getEnvRef())
+        .serviceIdentifier(createExpressionField("<+service.identifier>"))
+        .envIdentifier(createExpressionField("<+env.identifier>"))
         .deploymentTag(spec.getDeploymentTag())
         .runtimeValues(spec.getRuntimeValues())
         .build();
@@ -328,5 +326,8 @@ public class CVNGStepTest extends CvNextGenTestBase {
 
   private ParameterField<String> randomParameter() {
     return ParameterField.<String>builder().value(generateUuid()).build();
+  }
+  private ParameterField<String> createExpressionField(String exp) {
+    return ParameterField.createExpressionField(true, exp, null, true);
   }
 }

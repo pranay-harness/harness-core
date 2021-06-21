@@ -28,14 +28,6 @@ public abstract class VerificationJobSpec {
   @ApiModelProperty(hidden = true) public abstract String getType();
   @NotNull
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH,
-      value = "You can put expression <+env.identifier> to resolve env of current stage.")
-  ParameterField<String> envRef;
-  @NotNull
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH,
-      value = "You can put expression <+service.identifier> to resolve env of current stage.")
-  ParameterField<String> serviceRef;
-  @NotNull
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH,
       value = "You can put expression <+serviceConfig.artifacts.primary.tag> to resolve primary tag")
   ParameterField<String> deploymentTag;
   @NotNull
