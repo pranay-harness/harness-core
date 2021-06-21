@@ -34,10 +34,6 @@ import org.springframework.data.annotation.TypeAlias;
 public class CVNGStepInfo implements CVStepInfoBase {
   private static final String SERVICE_IDENTIFIER_EXPRESSION = "<+service.identifier>";
   private static final String ENV_IDENTIFIER_EXPRESSION = "<+env.identifier>";
-  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String name;
-  // TODO: check  if removing name, identifier and desc still works.
-  @NotNull String identifier;
-  ParameterField<String> description;
   @NotNull
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH, value = "It supports runtime input and expression")
   ParameterField<String> monitoredServiceRef;

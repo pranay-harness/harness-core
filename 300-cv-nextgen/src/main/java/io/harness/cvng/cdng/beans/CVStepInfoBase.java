@@ -11,6 +11,4 @@ import io.swagger.annotations.ApiModel;
 
 @ApiModel(subTypes = {CVNGStepInfo.class})
 @OwnedBy(HarnessTeam.CV)
-public interface CVStepInfoBase extends StepParameters, WithIdentifier, StepSpecType {
-  @JsonIgnore String getIdentifier();
-}
+public interface CVStepInfoBase extends StepParameters, StepSpecType {}
