@@ -2331,7 +2331,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void initiateSelfDestruct() {
-    log.info("Self destruct sequence initiated...");
+    log.info("Self destruct sequence initiated...", new Exception("print stacktrace for code path"));
     acquireTasks.set(false);
     upgradePending.set(false);
     upgradeNeeded.set(false);

@@ -1531,7 +1531,7 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void selfDestruct() {
-    log.info("Self destructing now...");
+    log.info("Self destructing now...", new Exception("print stacktrace for code path"));
 
     working.set(true);
     messageService.shutdown();
