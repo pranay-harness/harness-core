@@ -17,4 +17,12 @@ public class AccessControlMigrationDAOImpl implements AccessControlMigrationDAO 
   public AccessControlMigration save(AccessControlMigration accessControlMigration) {
     return migrationRepository.save(accessControlMigration);
   }
+
+  @Override
+  public boolean alreadyMigrated(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return migrationRepository
+        .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
+            accountIdentifier, orgIdentifier, projectIdentifier)
+        .isPresent();
+  }
 }

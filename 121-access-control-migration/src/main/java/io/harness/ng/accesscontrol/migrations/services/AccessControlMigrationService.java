@@ -7,4 +7,8 @@ import io.harness.ng.accesscontrol.migrations.models.AccessControlMigration;
 @OwnedBy(HarnessTeam.PL)
 public interface AccessControlMigrationService {
   AccessControlMigration save(AccessControlMigration accessControlMigration);
+
+  boolean isAlreadyMigrated(String accountIdentifier, String orgIdentifier, String projectIdentifier);
+
+  void migrate(String accountId);
 }
