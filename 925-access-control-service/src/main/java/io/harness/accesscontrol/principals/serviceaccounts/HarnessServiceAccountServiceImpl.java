@@ -4,9 +4,6 @@ import static io.harness.accesscontrol.scopes.harness.HarnessScopeParams.ACCOUNT
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeParams.ORG_LEVEL_PARAM_NAME;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeParams.PROJECT_LEVEL_PARAM_NAME;
 
-import io.harness.accesscontrol.principals.users.HarnessUserService;
-import io.harness.accesscontrol.principals.users.User;
-import io.harness.accesscontrol.principals.users.UserService;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeParams;
 import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
@@ -14,7 +11,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.remote.client.NGRestUtils;
-import io.harness.usermembership.remote.UserMembershipClient;
 import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.Lists;
@@ -52,10 +48,11 @@ public class HarnessServiceAccountServiceImpl implements HarnessServiceAccountSe
                                              scopeParams.getParams().get(ORG_LEVEL_PARAM_NAME),
                                              scopeParams.getParams().get(PROJECT_LEVEL_PARAM_NAME))));
     if (Boolean.TRUE.equals(isUserInScope)) {
-      User user = User.builder().identifier(identifier).scopeIdentifier(scope.toString()).build();
-      userService.createIfNotPresent(user);
+      ServiceAccount serviceAccount =
+          ServiceAccount.builder().identifier(identifier).scopeIdentifier(scope.toString()).build();
+      serviceAccountService.createIfNotPresent(serviceAccount);
     } else {
-      userService.deleteIfPresent(identifier, scope.toString());
+      serviceAccountService.deleteIfPresent(identifier, scope.toString());
     }
   }
 }
