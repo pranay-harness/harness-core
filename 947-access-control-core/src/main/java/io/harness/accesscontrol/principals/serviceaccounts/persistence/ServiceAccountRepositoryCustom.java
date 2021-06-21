@@ -1,6 +1,5 @@
 package io.harness.accesscontrol.principals.serviceaccounts.persistence;
 
-import io.harness.accesscontrol.principals.users.persistence.UserDBO;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 

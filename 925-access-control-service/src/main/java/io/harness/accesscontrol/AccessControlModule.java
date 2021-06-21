@@ -1,6 +1,7 @@
 package io.harness.accesscontrol;
 
 import static io.harness.AuthorizationServiceHeader.ACCESS_CONTROL_SERVICE;
+import static io.harness.accesscontrol.principals.PrincipalType.SERVICE_ACCOUNT;
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ACCOUNT;
@@ -29,6 +30,7 @@ import io.harness.accesscontrol.preference.AccessControlPreferenceModule;
 import io.harness.accesscontrol.preference.events.NGRBACEnabledFeatureFlagEventConsumer;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.principals.PrincipalValidator;
+import io.harness.accesscontrol.principals.serviceaccounts.ServiceAccountValidator;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupService;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupServiceImpl;
 import io.harness.accesscontrol.principals.usergroups.UserGroupValidator;
@@ -228,6 +230,7 @@ public class AccessControlModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), PrincipalType.class, PrincipalValidator.class);
     validatorByPrincipalType.addBinding(USER).to(UserValidator.class);
     validatorByPrincipalType.addBinding(USER_GROUP).to(UserGroupValidator.class);
+    validatorByPrincipalType.addBinding(SERVICE_ACCOUNT).to(ServiceAccountValidator.class);
 
     Multibinder<EventConsumer> entityCrudEventConsumers =
         Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(ENTITY_CRUD));
