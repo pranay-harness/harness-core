@@ -51,8 +51,9 @@ public class PmsSecurityContextEventGuard implements AutoCloseable {
         return new ServicePrincipal(principal);
       case API_KEY:
         return new ApiKeyPrincipal(principal);
+      default:
+        throw new AccessDeniedException("Unknown Principal Type", WingsException.USER);
     }
-    throw new AccessDeniedException("Unknown Principal Type", WingsException.USER);
   }
 
   @Override
