@@ -53,6 +53,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 
 @Singleton
 @Slf4j
@@ -207,7 +208,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
 
   private String getYamlGitConfigNotFoundMessage(
       String accountId, String organizationId, String projectId, String identifier) {
-    return String.format("No yaml git config exists with the id %s, in account %s, org %s, project %s", identifier,
+    return String.format("No git sync config exists with the id %s, in account %s, org %s, project %s", identifier,
         accountId, organizationId, projectId);
   }
 
@@ -220,17 +221,14 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     validateTheGitConfigInput(gitSyncConfigDTO);
     YamlGitConfig yamlGitConfigToBeSaved = toYamlGitConfig(gitSyncConfigDTO, accountId);
     yamlGitConfigToBeSaved.setWebhookToken(CryptoUtils.secureRandAlphaNumString(40));
-    UpsertWebhookResponseDTO upsertWebhookResponseDTO = null;
-    if (isNewRepo(gitSyncConfigDTO.getRepo())) {
-      upsertWebhookResponseDTO = registerWebhook(gitSyncConfigDTO);
-      log.info("Response of Upsert Webhook {}", upsertWebhookResponseDTO);
-    }
+    registerWebhookAsync(gitSyncConfigDTO);
     YamlGitConfig savedYamlGitConfig = null;
     try {
       savedYamlGitConfig = yamlGitConfigRepository.save(yamlGitConfigToBeSaved);
-    } catch (Exception ex) {
-      throw new InvalidRequestException(String.format("A git sync config with the repo %s and branch %s already exists",
-          gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getBranch()));
+    } catch (DuplicateKeyException ex) {
+      throw new InvalidRequestException(
+          String.format("A git sync config with this identifier or repo %s and branch %s already exists",
+              gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getBranch()));
     }
     sendEventForConfigChange(accountId, yamlGitConfigToBeSaved.getOrgIdentifier(),
         yamlGitConfigToBeSaved.getProjectIdentifier(), yamlGitConfigToBeSaved.getIdentifier(), "Save");
@@ -243,6 +241,17 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     });
 
     return YamlGitConfigMapper.toYamlGitConfigDTO(savedYamlGitConfig);
+  }
+
+  private void registerWebhookAsync(YamlGitConfigDTO gitSyncConfigDTO) {
+    executorService.submit(() -> saveWebhook(gitSyncConfigDTO));
+  }
+
+  private void saveWebhook(YamlGitConfigDTO gitSyncConfigDTO) {
+    if (isNewRepo(gitSyncConfigDTO.getRepo())) {
+      UpsertWebhookResponseDTO upsertWebhookResponseDTO = registerWebhook(gitSyncConfigDTO);
+      log.info("Response of Upsert Webhook {}", upsertWebhookResponseDTO);
+    }
   }
 
   private UpsertWebhookResponseDTO registerWebhook(YamlGitConfigDTO gitSyncConfigDTO) {

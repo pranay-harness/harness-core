@@ -121,6 +121,7 @@ import io.harness.exception.WingsException;
 import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.network.LocalhostUtils;
 import io.harness.observer.Subject;
+import io.harness.outbox.api.OutboxService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -265,6 +266,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private DelegateInsightsService delegateInsightsService;
   @Mock private DelegateTokenService delegateTokenService;
   @Mock private Producer eventProducer;
+  @Mock private OutboxService outboxService;
 
   @Inject private FeatureTestHelper featureTestHelper;
   @Inject private DelegateConnectionDao delegateConnectionDao;
@@ -818,19 +820,29 @@ public class DelegateServiceTest extends WingsBaseTest {
     featureTestHelper.enableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
     String accountId = generateUuid();
 
-    DelegateGroup delegateGroup = DelegateGroup.builder().accountId(accountId).name("groupname").build();
+    DelegateGroup delegateGroup =
+        DelegateGroup.builder()
+            .accountId(accountId)
+            .name("groupname")
+            .owner(DelegateEntityOwner.builder().identifier(generateUuid() + "/" + generateUuid()).build())
+            .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+            .build();
     persistence.save(delegateGroup);
 
     Delegate d1 = createDelegateBuilder()
                       .accountId(accountId)
                       .delegateName("groupname")
                       .delegateGroupId(delegateGroup.getUuid())
+                      .owner(DelegateEntityOwner.builder().identifier(generateUuid() + "/" + generateUuid()).build())
+                      .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
                       .build();
     persistence.save(d1);
     Delegate d2 = createDelegateBuilder()
                       .accountId(accountId)
                       .delegateName("groupname")
                       .delegateGroupId(delegateGroup.getUuid())
+                      .owner(DelegateEntityOwner.builder().identifier(generateUuid() + "/" + generateUuid()).build())
+                      .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
                       .build();
     persistence.save(d2);
 
@@ -849,7 +861,13 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldForceDeleteDelegateGroup() {
     String accountId = generateUuid();
 
-    DelegateGroup delegateGroup = DelegateGroup.builder().accountId(accountId).name("groupname").build();
+    DelegateGroup delegateGroup =
+        DelegateGroup.builder()
+            .accountId(accountId)
+            .name("groupname")
+            .owner(DelegateEntityOwner.builder().identifier(generateUuid() + "/" + generateUuid()).build())
+            .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+            .build();
     persistence.save(delegateGroup);
 
     Delegate d1 = createDelegateBuilder()
@@ -878,19 +896,28 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldMarkDelegateGroupAsDeleted() {
     String accountId = generateUuid();
 
-    DelegateGroup delegateGroup = DelegateGroup.builder().accountId(accountId).name("groupname2").build();
+    DelegateGroup delegateGroup =
+        DelegateGroup.builder()
+            .accountId(accountId)
+            .name("groupname2")
+            .owner(DelegateEntityOwner.builder().identifier(generateUuid() + "/" + generateUuid()).build())
+            .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+            .build();
     persistence.save(delegateGroup);
 
     Delegate d1 = createDelegateBuilder()
                       .accountId(accountId)
                       .delegateName("groupname2")
                       .delegateGroupId(delegateGroup.getUuid())
+                      .owner(DelegateEntityOwner.builder().identifier(generateUuid() + "/" + generateUuid()).build())
+                      .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
                       .build();
     persistence.save(d1);
     Delegate d2 = createDelegateBuilder()
                       .accountId(accountId)
                       .delegateName("groupname2")
                       .delegateGroupId(delegateGroup.getUuid())
+                      .owner(DelegateEntityOwner.builder().identifier(generateUuid() + "/" + generateUuid()).build())
                       .build();
     persistence.save(d2);
 

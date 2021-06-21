@@ -39,12 +39,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>960-api-services</artifactId>
+            <artifactId>950-delegate-tasks-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-delegate-tasks-beans</artifactId>
+            <artifactId>960-api-services</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

@@ -516,8 +516,6 @@ ngGcsFileMetadata {"name": "accountId_1", "background": true} {"accountId": 1}
 ngGcsFileMetadata {"name": "entityId_1", "background": true} {"entityId": 1}
 ngGcsFileMetadata {"name": "fileId_1", "background": true} {"fileId": 1}
 ngGcsFileMetadata {"name": "gcsFileId_1", "background": true} {"gcsFileId": 1}
-nodeExecutionEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
-nodeExecutionEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 notificationBatch {"name": "appId_1", "background": true} {"appId": 1}
 notificationBatch {"name": "createdAt_1", "background": true} {"createdAt": 1}
 notificationGroups {"name": "appId_1", "background": true} {"appId": 1}
@@ -913,6 +911,7 @@ yamlGitConfig {"name": "appId_1", "background": true} {"appId": 1}
 yamlGitConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}
 yamlGitConfig {"name": "unique_locate", "unique": true} {"accountId": 1, "entityId": 1, "entityType": 1}
 yamlGitConfigs {"name": "accountId_orgId_projectId_gitConnectorId_repo_branch_unique_Index", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "gitConnectorRef": 1, "repo": 1, "branch": 1}
+yamlGitConfigs {"name": "accountId_orgId_projectId_identifier_unique_Index", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
 yamlGitConfigs {"name": "repo_1", "background": true} {"repo": 1}
 yamlGitConfigs {"name": "repo_branch_index", "background": true} {"repo": 1, "branch": 1}
 yamlSuccessfulChange {"name": "unique_yaml_file_path", "unique": true} {"accountId": 1, "yamlFilePath": 1}

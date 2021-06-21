@@ -55,7 +55,7 @@ public class ProgressEventHandler extends PmsBaseEventHandler<ProgressEvent> {
   }
 
   @Override
-  protected boolean handleEventWithContext(ProgressEvent event) {
+  protected void handleEventWithContext(ProgressEvent event) {
     try {
       log.info("Starting to handle PROGRESS event");
       StepParameters stepParameters =
@@ -71,10 +71,8 @@ public class ProgressEventHandler extends PmsBaseEventHandler<ProgressEvent> {
                                             .build();
       processor.handleProgress(progressPackage);
       log.info("PROGRESS Event Handled Successfully");
-      return true;
     } catch (Exception ex) {
       log.error("Error while Handling progress", ex);
-      return false;
     }
   }
 }

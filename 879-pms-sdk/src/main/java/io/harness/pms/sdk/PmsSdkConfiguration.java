@@ -6,11 +6,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
-import io.harness.mongo.MongoConfig;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
-import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.adviser.Adviser;
@@ -35,7 +33,6 @@ import lombok.Value;
 public class PmsSdkConfiguration {
   @Builder.Default SdkDeployMode deploymentMode = SdkDeployMode.LOCAL;
   @NonNull ModuleType moduleType;
-  MongoConfig mongoConfig;
   GrpcServerConfig grpcServerConfig;
   GrpcClientConfig pmsGrpcClientConfig;
   Class<? extends PipelineServiceInfoProvider> pipelineServiceInfoProviderClass;
@@ -46,20 +43,13 @@ public class PmsSdkConfiguration {
   Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap;
   Class<? extends ExecutionSummaryModuleInfoProvider> executionSummaryModuleInfoProviderClass;
 
-  public String getServiceName() {
-    return moduleType.name().toLowerCase();
-  }
-
   @Default
   EventsFrameworkConfiguration eventsFrameworkConfiguration =
       EventsFrameworkConfiguration.builder()
           .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
           .build();
-  ConsumerConfig interruptConsumerConfig;
-  ConsumerConfig orchestrationEventConsumerConfig;
-  ConsumerConfig facilitationEventConsumerConfig;
-  ConsumerConfig nodeStartEventConsumerConfig;
-  ConsumerConfig progressEventConsumerConfig;
-  ConsumerConfig nodeAdviseEventConsumerConfig;
-  ConsumerConfig nodeResumeEventConsumerConfig;
+
+  public String getServiceName() {
+    return moduleType.name().toLowerCase();
+  }
 }

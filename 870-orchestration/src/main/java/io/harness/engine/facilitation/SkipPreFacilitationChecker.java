@@ -49,7 +49,7 @@ public class SkipPreFacilitationChecker extends ExpressionEvalPreFacilitationChe
         }
         return ExecutionCheck.builder().proceed(true).reason("Skip Condition Evaluated to false").build();
       } catch (Exception ex) {
-        return handleExpressionEvaluationError(nodeExecution.getUuid(), ex);
+        return handleExpressionEvaluationError(ex, skipCondition, ambiance);
       }
     }
     return ExecutionCheck.builder().proceed(true).reason("No Skip Condition Configured").build();

@@ -13,6 +13,7 @@ import static software.wings.utils.ArtifactType.DOCKER;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.artifactory.ArtifactoryClientImpl;
 import io.harness.artifactory.ArtifactoryConfigRequest;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
@@ -50,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   public static final int MANUAL_PULL_ARTIFACTORY_LIMIT = 1000;
   @Inject private ArtifactoryService artifactoryService;
+  @Inject private ArtifactoryClientImpl artifactoryClient;
   @Inject private EncryptionService encryptionService;
 
   @Override
@@ -133,7 +135,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
     ArtifactoryConfigRequest artifactoryRequest =
         ArtifactoryConfigToArtifactoryRequestMapper.toArtifactoryRequest(config, encryptionService, encryptionDetails);
     if (RepositoryType.docker.name().equalsIgnoreCase(repositoryType) || artifactType == DOCKER) {
-      return artifactoryService.getRepositories(artifactoryRequest, DOCKER);
+      return artifactoryService.getRepositories(artifactoryRequest, RepositoryType.docker);
     }
     return artifactoryService.getRepositories(artifactoryRequest, repositoryType);
   }
@@ -176,7 +178,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
     }
     ArtifactoryConfigRequest artifactoryRequest = ArtifactoryConfigToArtifactoryRequestMapper.toArtifactoryRequest(
         config, encryptionService, encryptedDataDetails);
-    return artifactoryService.isRunning(artifactoryRequest);
+    return artifactoryClient.isRunning(artifactoryRequest);
   }
 
   @Override

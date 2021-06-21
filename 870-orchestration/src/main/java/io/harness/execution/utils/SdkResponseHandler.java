@@ -39,10 +39,9 @@ public class SdkResponseHandler extends PmsBaseEventHandler<SdkResponseEventProt
   }
 
   @Override
-  protected boolean handleEventWithContext(SdkResponseEventProto event) {
+  protected void handleEventWithContext(SdkResponseEventProto event) {
     log.info("Event for SdkResponseEvent received");
     SdkResponseProcessor handler = handlerRegistry.getHandler(event.getSdkResponseEventType());
     handler.handleEvent(event);
-    return true;
   }
 }

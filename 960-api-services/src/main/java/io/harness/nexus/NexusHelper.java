@@ -1,21 +1,36 @@
 package io.harness.nexus;
 
-import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 
-import io.harness.exception.WingsException;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.ArtifactServerException;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArtifactServerException;
+import io.harness.exception.NestedExceptionUtils;
 import io.harness.network.Http;
 
+import java.io.IOException;
+import javax.net.ssl.SSLHandshakeException;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Converter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
+@OwnedBy(CDC)
 @UtilityClass
 @Slf4j
 public class NexusHelper {
-  static String getBaseUrl(NexusRequest nexusRequest) {
+  public static void handleException(IOException e) {
+    throw NestedExceptionUtils.hintWithExplanationException(
+        "Ensure that the Nexus server is up and running. Retry the action in sometime or Report the issue with delegate logs",
+        "Failed to perform the operation", new InvalidArtifactServerException(ExceptionUtils.getMessage(e), USER));
+  }
+
+  public static String getBaseUrl(NexusRequest nexusRequest) {
     return nexusRequest.getNexusUrl().endsWith("/") ? nexusRequest.getNexusUrl() : nexusRequest.getNexusUrl() + "/";
   }
 
@@ -26,6 +41,15 @@ public class NexusHelper {
         .addConverterFactory(converterFactory)
         .client(Http.getOkHttpClient(baseUrl, nexusRequest.isCertValidationRequired()))
         .build();
+  }
+
+  public static void checkSSLHandshakeException(Exception e) {
+    if (e.getCause() instanceof SSLHandshakeException
+        || ExceptionUtils.getMessage(e).contains("unable to find valid certification path")) {
+      throw NestedExceptionUtils.hintWithExplanationException("Ensure that the SSL certificate has not expired",
+          "SSL certificate is invalid",
+          new ArtifactServerException("Certificate validation failed:" + getRootCauseMessage(e), e));
+    }
   }
 
   public static boolean isSuccessful(Response<?> response) {
@@ -39,12 +63,18 @@ public class NexusHelper {
         case 404:
           return false;
         case 401:
-          throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Invalid Nexus credentials");
+          throw NestedExceptionUtils.hintWithExplanationException(
+              "Update the connector credentials with correct values", "The connector credentials are incorrect",
+              new InvalidArtifactServerException("Invalid Nexus credentials", USER));
         case 405:
-          throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-              .addParam("message", "Method not allowed" + response.message());
+          throw NestedExceptionUtils.hintWithExplanationException(
+              "Ensure that the connector URL is correct & the provided credentials have all the required permissions",
+              "Failed to perform action",
+              new InvalidArtifactServerException("Method not allowed " + response.message(), USER));
         default:
-          throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", response.message());
+          throw NestedExceptionUtils.hintWithExplanationException(
+              "Please retry the operation or check the Delegate logs for more information", "Failed to perform action.",
+              new InvalidArtifactServerException(response.message(), USER));
       }
     }
     return true;

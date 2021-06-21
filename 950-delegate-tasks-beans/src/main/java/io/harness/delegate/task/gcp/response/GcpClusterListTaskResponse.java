@@ -14,7 +14,7 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(CDP)
-public class GcpClusterListTaskResponse implements GcpResponse {
+public class GcpClusterListTaskResponse implements GcpTaskResponse {
   private DelegateMetaInfo delegateMetaInfo;
   private String errorMessage;
   private ErrorDetail errorDetail;

@@ -7,6 +7,7 @@ import io.harness.cdng.manifest.yaml.ManifestOverrideSets.ManifestOverrideSetsSt
 import io.harness.cdng.variables.beans.NGVariableOverrideSetWrapper;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.SkipAutoEvaluation;
 import io.harness.yaml.core.variables.NGVariable;
 
 import java.util.List;
@@ -20,9 +21,9 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("serviceSpecStepParameters")
 public class ServiceSpecStepParameters implements StepParameters {
-  List<NGVariable> originalVariables;
-  List<NGVariableOverrideSetWrapper> originalVariableOverrideSets;
-  List<NGVariable> stageOverrideVariables;
+  @SkipAutoEvaluation ParameterField<List<NGVariable>> originalVariables;
+  @SkipAutoEvaluation ParameterField<List<NGVariableOverrideSetWrapper>> originalVariableOverrideSets;
+  @SkipAutoEvaluation ParameterField<List<NGVariable>> stageOverrideVariables;
   ParameterField<List<String>> stageOverridesUseVariableOverrideSets;
 
   Map<String, ArtifactOverrideSetsStepParametersWrapper> artifactOverrideSets;

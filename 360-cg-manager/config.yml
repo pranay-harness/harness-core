@@ -259,7 +259,7 @@ grpcClientConfig:
 grpcOnpremDelegateClientConfig:
   target: localhost:9880
   authority: localhost
-  
+
 mongo:
   uri: mongodb://localhost:27017/harness
   #uri: mongodb://mongo1:30001,mongo2:30002,mongo3:30003/harness
@@ -609,3 +609,10 @@ accessControlClient:
   accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 exportAccountDataBatchSize: 1000
+
+auditClientConfig:
+  baseUrl: http://localhost:9005/api/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+enableAudit: false

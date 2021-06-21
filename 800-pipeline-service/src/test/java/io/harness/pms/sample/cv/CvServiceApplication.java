@@ -12,8 +12,6 @@ import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
-import io.harness.pms.sdk.core.execution.events.node.NodeExecutionEventListener;
-import io.harness.queue.QueueListenerController;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -66,7 +64,6 @@ public class CvServiceApplication extends Application<CvServiceConfiguration> {
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(config)));
     Injector injector = Guice.createInjector(modules);
 
-    registerQueueListeners(injector);
     registerJerseyProviders(environment, injector);
 
     PmsSdkConfiguration sdkConfig = getPmsSdkConfiguration(config);
@@ -84,19 +81,12 @@ public class CvServiceApplication extends Application<CvServiceConfiguration> {
     return PmsSdkConfiguration.builder()
         .deploymentMode(SdkDeployMode.REMOTE)
         .moduleType(ModuleType.CV)
-        .mongoConfig(config.getMongoConfig())
         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
         .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
         .pipelineServiceInfoProviderClass(CvPipelineServiceInfoProvider.class)
         .filterCreationResponseMerger(new CVFilterCreationResponseMerger())
         .engineSteps(CvServiceStepRegistrar.getEngineSteps())
         .build();
-  }
-
-  private void registerQueueListeners(Injector injector) {
-    log.info("Initializing queue listeners...");
-    QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {

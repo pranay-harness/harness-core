@@ -18,6 +18,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretManagerConfig;
+import io.harness.encryptors.managerproxy.ManagerEncryptorHelper;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
@@ -47,6 +48,7 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
   private static final String SECRET_ID_SECRET_NAME_SUFFIX = "_secret_id";
 
   @Inject private AccountService accountService;
+  @Inject private ManagerEncryptorHelper managerEncryptorHelper;
 
   protected boolean deleteVaultConfigInternal(String accountId, String vaultConfigId, long count) {
     if (count > 0) {
@@ -112,12 +114,17 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
     baseVaultConfig.setCertValidationRequired(isCertValidationRequired);
     while (true) {
       try {
-        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                              .accountId(baseVaultConfig.getAccountId())
-                                              .timeout(Duration.ofSeconds(5).toMillis())
-                                              .appId(baseVaultConfig.getAccountId())
-                                              .correlationId(baseVaultConfig.getUuid())
-                                              .build();
+        SyncTaskContext syncTaskContext =
+            SyncTaskContext.builder()
+                .accountId(baseVaultConfig.getAccountId())
+                .timeout(Duration.ofSeconds(5).toMillis())
+                .appId(baseVaultConfig.getAccountId())
+                .correlationId(baseVaultConfig.getUuid())
+                .orgIdentifier(baseVaultConfig.getOrgIdentifier())
+                .ngTask(isNgTask(baseVaultConfig.getOrgIdentifier(), baseVaultConfig.getProjectIdentifier()))
+                .projectIdentifier(baseVaultConfig.getProjectIdentifier())
+                .build();
+
         return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
             .appRoleLogin(baseVaultConfig);
       } catch (WingsException e) {
@@ -135,13 +142,15 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
   public void renewToken(BaseVaultConfig baseVaultConfig) {
     String accountId = baseVaultConfig.getAccountId();
     BaseVaultConfig decryptedVaultConfig = getBaseVaultConfig(accountId, baseVaultConfig.getUuid());
-    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                          .accountId(accountId)
-                                          .appId(GLOBAL_APP_ID)
-                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                          .orgIdentifier(baseVaultConfig.getOrgIdentifier())
-                                          .projectIdentifier(baseVaultConfig.getProjectIdentifier())
-                                          .build();
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder()
+            .accountId(accountId)
+            .appId(GLOBAL_APP_ID)
+            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+            .orgIdentifier(baseVaultConfig.getOrgIdentifier())
+            .projectIdentifier(baseVaultConfig.getProjectIdentifier())
+            .ngTask(isNgTask(baseVaultConfig.getOrgIdentifier(), baseVaultConfig.getProjectIdentifier()))
+            .build();
     boolean isCertValidationRequired = accountService.isCertValidationRequired(accountId);
     baseVaultConfig.setCertValidationRequired(isCertValidationRequired);
     delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
@@ -321,14 +330,17 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
     vaultConfig.setCertValidationRequired(isCertValidationRequired);
     while (true) {
       try {
-        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                              .accountId(vaultConfig.getAccountId())
-                                              .timeout(Duration.ofSeconds(10).toMillis())
-                                              .appId(GLOBAL_APP_ID)
-                                              .correlationId(vaultConfig.getUuid())
-                                              .orgIdentifier(vaultConfig.getOrgIdentifier())
-                                              .projectIdentifier(vaultConfig.getProjectIdentifier())
-                                              .build();
+        SyncTaskContext syncTaskContext =
+            SyncTaskContext.builder()
+                .accountId(vaultConfig.getAccountId())
+                .timeout(Duration.ofSeconds(10).toMillis())
+                .appId(GLOBAL_APP_ID)
+                .correlationId(vaultConfig.getUuid())
+                .orgIdentifier(vaultConfig.getOrgIdentifier())
+                .projectIdentifier(vaultConfig.getProjectIdentifier())
+                .ngTask(isNgTask(vaultConfig.getOrgIdentifier(), vaultConfig.getProjectIdentifier()))
+                .build();
+
         return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
             .listSecretEngines(vaultConfig);
       } catch (WingsException e) {
@@ -341,5 +353,9 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
         sleep(ofMillis(1000));
       }
     }
+  }
+
+  protected boolean isNgTask(String orgIdentifier, String projectIdentifier) {
+    return isNotBlank(orgIdentifier) || isNotBlank(projectIdentifier);
   }
 }

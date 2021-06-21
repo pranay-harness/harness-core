@@ -153,6 +153,8 @@ public class K8BuildSetupUtils {
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
   private final int MAX_ATTEMPTS = 3;
 
+  private final String regexPattern = "^\\$\\{ngSecretManager.obtain\\(.*)\\}";
+
   public CIK8BuildTaskParams getCIk8BuildTaskParams(LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance,
       Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys) {
     K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
@@ -391,7 +393,9 @@ public class K8BuildSetupUtils {
     List<SecretVariableDetails> containerSecretVariableDetails =
         getSecretVariableDetails(ngAccess, containerDefinitionInfo, secretVariableDetails);
 
-    envVars.putAll(createEnvVariableForSecret(containerSecretVariableDetails));
+    Map<String, String> envVarsWithSecretRef = removeEnvVarsWithSecretRef(envVars);
+
+    envVars.putAll(createEnvVariableForSecret(containerSecretVariableDetails, envVarsWithSecretRef));
     if (containerDefinitionInfo.getContainerType() == CIContainerType.SERVICE) {
       envVars.put(HARNESS_SERVICE_LOG_KEY_VARIABLE,
           format("%s/serviceId:%s", logPrefix, containerDefinitionInfo.getStepIdentifier()));
@@ -403,6 +407,7 @@ public class K8BuildSetupUtils {
             .containerResourceParams(containerDefinitionInfo.getContainerResourceParams())
             .containerType(containerDefinitionInfo.getContainerType())
             .envVars(envVars)
+            .envVarsWithSecretRef(envVarsWithSecretRef)
             .containerSecrets(ContainerSecrets.builder()
                                   .secretVariableDetails(containerSecretVariableDetails)
                                   .connectorDetailsMap(stepConnectorDetails)
@@ -422,6 +427,18 @@ public class K8BuildSetupUtils {
     return cik8ContainerParams;
   }
 
+  private Map<String, String> removeEnvVarsWithSecretRef(Map<String, String> envVars) {
+    HashMap<String, String> hashMap = new HashMap<>();
+    final Map<String, String> secretEnvVariables =
+        envVars.entrySet()
+            .stream()
+            .filter(entry -> entry.getValue().contains("ngSecretManager"))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    envVars.entrySet().removeAll(secretEnvVariables.entrySet());
+
+    return secretEnvVariables;
+  }
+
   private String getFullyQualifiedImageName(ConnectorDetails connectorDetails,
       ConnectorDetails harnessInternalImageConnector, boolean isHarnessManagedImage, String imageName) {
     ConnectorDetails imgConnector = connectorDetails;
@@ -432,16 +449,23 @@ public class K8BuildSetupUtils {
     return IntegrationStageUtils.getFullyQualifiedImageName(imageName, imgConnector);
   }
 
-  private Map<String, String> createEnvVariableForSecret(List<SecretVariableDetails> secretVariableDetails) {
+  private Map<String, String> createEnvVariableForSecret(
+      List<SecretVariableDetails> secretVariableDetails, Map<String, String> envVariablesWithSecretRef) {
     Map<String, String> envVars = new HashMap<>();
 
+    List<String> secretEnvNames = new ArrayList<>();
+
     if (isNotEmpty(secretVariableDetails)) {
-      List<String> secretEnvNames =
-          secretVariableDetails.stream()
-              .map(secretVariableDetail -> { return secretVariableDetail.getSecretVariableDTO().getName(); })
-              .collect(Collectors.toList());
-      envVars.put(HARNESS_SECRETS_LIST, String.join(",", secretEnvNames));
+      secretEnvNames.addAll(secretVariableDetails.stream()
+                                .map(secretVariableDetail -> secretVariableDetail.getSecretVariableDTO().getName())
+                                .collect(Collectors.toList()));
     }
+    if (isNotEmpty(envVariablesWithSecretRef)) {
+      secretEnvNames.addAll(envVariablesWithSecretRef.keySet());
+    }
+
+    envVars.put(HARNESS_SECRETS_LIST, String.join(",", secretEnvNames));
+
     return envVars;
   }
 

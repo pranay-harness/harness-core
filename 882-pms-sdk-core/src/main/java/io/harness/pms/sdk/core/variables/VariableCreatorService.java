@@ -104,6 +104,7 @@ public class VariableCreatorService {
         continue;
       }
       finalResponse.addYamlProperties(response.getYamlProperties());
+      finalResponse.addYamlOutputProperties(response.getYamlOutputProperties());
       finalResponse.addResolvedDependency(yamlField);
       if (isNotEmpty(response.getDependencies())) {
         response.getDependencies().values().forEach(field -> dependencies.put(field.getNode().getUuid(), field));

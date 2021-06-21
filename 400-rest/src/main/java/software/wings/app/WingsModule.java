@@ -19,6 +19,7 @@ import io.harness.annotations.retry.RetryOnException;
 import io.harness.annotations.retry.RetryOnExceptionInterceptor;
 import io.harness.artifacts.gcr.service.GcrApiService;
 import io.harness.artifacts.gcr.service.GcrApiServiceImpl;
+import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
 import io.harness.ccm.anomaly.service.itfc.AnomalyService;
 import io.harness.ccm.billing.GcpBillingService;
@@ -41,6 +42,8 @@ import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.config.CCMSettingServiceImpl;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.ccm.health.HealthStatusServiceImpl;
+import io.harness.ccm.ngperpetualtask.service.K8sWatchTaskService;
+import io.harness.ccm.ngperpetualtask.service.K8sWatchTaskServiceImpl;
 import io.harness.ccm.setup.CESetupServiceModule;
 import io.harness.ccm.views.service.CEReportScheduleService;
 import io.harness.ccm.views.service.CEReportTemplateBuilderService;
@@ -80,6 +83,7 @@ import io.harness.delegate.event.listener.OrganizationEntityCRUDEventListener;
 import io.harness.delegate.event.listener.ProjectEntityCRUDEventListener;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
+import io.harness.delegate.outbox.DelegateOutboxEventHandler;
 import io.harness.encryptors.CustomEncryptor;
 import io.harness.encryptors.Encryptors;
 import io.harness.encryptors.KmsEncryptor;
@@ -136,6 +140,10 @@ import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
 import io.harness.notifications.AlertVisibilityChecker;
 import io.harness.notifications.AlertVisibilityCheckerImpl;
+import io.harness.outbox.OutboxPollConfiguration;
+import io.harness.outbox.OutboxSDKConstants;
+import io.harness.outbox.TransactionOutboxModule;
+import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
@@ -716,6 +724,7 @@ import software.wings.utils.CdnStorageUrlGenerator;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -727,6 +736,7 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import io.dropwizard.jackson.Jackson;
 import io.dropwizard.lifecycle.Managed;
 import java.io.Closeable;
 import java.io.IOException;
@@ -1287,9 +1297,18 @@ public class WingsModule extends AbstractModule implements ServersModule {
     // Orchestration Dependencies
 
     bind(CVDataCollectionTaskService.class).to(CVDataCollectionTaskServiceImpl.class);
+    bind(K8sWatchTaskService.class).to(K8sWatchTaskServiceImpl.class);
     bind(HelmChartService.class).to(HelmChartServiceImpl.class);
     bind(LogStreamingServiceRestClient.class).toProvider(LogStreamingServiceClientFactory.class);
     bind(IInstanceReconService.class).to(InstanceReconServiceImpl.class);
+
+    // audit service
+    install(new AuditClientModule(this.configuration.getAuditClientConfig(),
+        this.configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId(),
+        this.configuration.isEnableAudit()));
+    install(new TransactionOutboxModule());
+
+    bind(OutboxEventHandler.class).to(DelegateOutboxEventHandler.class);
   }
 
   private void bindFeatures() {
@@ -1572,5 +1591,19 @@ public class WingsModule extends AbstractModule implements ServersModule {
         }
       }
     };
+  }
+
+  @Provides
+  @Singleton
+  public ObjectMapper getYamlSchemaObjectMapperWithoutNamed() {
+    return Jackson.newObjectMapper();
+  }
+
+  @Provides
+  @Singleton
+  public OutboxPollConfiguration getOutboxPollConfiguration() {
+    OutboxPollConfiguration outboxPollConfiguration = OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
+    outboxPollConfiguration.setLockId(MANAGER.getServiceId());
+    return outboxPollConfiguration;
   }
 }

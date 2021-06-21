@@ -17,6 +17,7 @@ import static org.mockito.Mockito.when;
 import io.harness.DelegateTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.apiclient.ApiClientFactory;
+import io.harness.k8s.model.KubernetesConfig;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.informer.SharedInformerFactoryFactory;
 import io.harness.perpetualtask.k8s.utils.K8sClusterHelper;
@@ -49,6 +50,7 @@ public class K8sWatchServiceDelegateTest extends DelegateTestBase {
   private static final String KUBE_UID = "ed044e6a-8b7f-456c-b035-f05e9ce56a60";
   private K8sWatchServiceDelegate k8sWatchServiceDelegate;
   private WatcherFactory watcherFactory;
+  private static final KubernetesConfig KUBERNETES_CONFIG = KubernetesConfig.builder().build();
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(65221);
   @Inject KryoSerializer kryoSerializer;
@@ -105,7 +107,7 @@ public class K8sWatchServiceDelegateTest extends DelegateTestBase {
                                                 .setCloudProviderId(cloudProviderId)
                                                 .setClusterId(CLUSTER_ID)
                                                 .build();
-    String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
+    String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams, KUBERNETES_CONFIG);
 
     assertThat(watchId).isNotNull();
     assertThat(k8sWatchServiceDelegate.watchIds()).contains(watchId);
@@ -131,7 +133,7 @@ public class K8sWatchServiceDelegateTest extends DelegateTestBase {
                                                 .setCloudProviderId(cloudProviderId)
                                                 .setClusterId(CLUSTER_ID)
                                                 .build();
-    String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
+    String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams, KUBERNETES_CONFIG);
     assertThat(watchId).isNotNull();
     assertThat(k8sWatchServiceDelegate.watchIds()).contains(watchId);
     assertThat(K8sClusterHelper.isSeen(CLUSTER_ID, KUBE_UID)).isTrue();
@@ -149,8 +151,8 @@ public class K8sWatchServiceDelegateTest extends DelegateTestBase {
                                                 .setCloudProviderId(cloudProviderId)
                                                 .setClusterId(CLUSTER_ID)
                                                 .build();
-    String watch1 = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
-    String watch2 = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
+    String watch1 = k8sWatchServiceDelegate.create(k8sWatchTaskParams, KUBERNETES_CONFIG);
+    String watch2 = k8sWatchServiceDelegate.create(k8sWatchTaskParams, KUBERNETES_CONFIG);
     assertThat(watch2).isEqualTo(watch1);
     verify(watcherFactory, times(1)).createPodWatcher(any(ApiClient.class), any(), any(), any(), any(), any());
   }
@@ -176,8 +178,8 @@ public class K8sWatchServiceDelegateTest extends DelegateTestBase {
                                                  .setK8SClusterConfig(k8sClusterConfig2)
                                                  .setCloudProviderId(cloudProviderId2)
                                                  .build();
-    String watch1 = k8sWatchServiceDelegate.create(k8sWatchTaskParams1);
-    String watch2 = k8sWatchServiceDelegate.create(k8sWatchTaskParams2);
+    String watch1 = k8sWatchServiceDelegate.create(k8sWatchTaskParams1, KUBERNETES_CONFIG);
+    String watch2 = k8sWatchServiceDelegate.create(k8sWatchTaskParams2, KUBERNETES_CONFIG);
     assertThat(watch2).isNotEqualTo(watch1);
     verify(watcherFactory, times(2)).createPodWatcher(any(ApiClient.class), any(), any(), any(), any(), any());
     assertThat(k8sWatchServiceDelegate.watchIds()).containsExactlyInAnyOrder(watch1, watch2);
@@ -195,7 +197,7 @@ public class K8sWatchServiceDelegateTest extends DelegateTestBase {
                                                 .setCloudProviderId(cloudProviderId)
                                                 .setClusterId(CLUSTER_ID)
                                                 .build();
-    String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
+    String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams, KUBERNETES_CONFIG);
     assertThat(k8sWatchServiceDelegate.watchIds()).contains(watchId);
     k8sWatchServiceDelegate.delete(watchId);
     assertThat(k8sWatchServiceDelegate.watchIds()).doesNotContain(watchId);
@@ -213,7 +215,7 @@ public class K8sWatchServiceDelegateTest extends DelegateTestBase {
                                                 .setCloudProviderId(cloudProviderId)
                                                 .setClusterId(CLUSTER_ID)
                                                 .build();
-    String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams);
+    String watchId = k8sWatchServiceDelegate.create(k8sWatchTaskParams, KUBERNETES_CONFIG);
     assertThat(k8sWatchServiceDelegate.watchIds()).contains(watchId);
     k8sWatchServiceDelegate.delete(watchId);
     assertThat(k8sWatchServiceDelegate.watchIds()).doesNotContain(watchId);

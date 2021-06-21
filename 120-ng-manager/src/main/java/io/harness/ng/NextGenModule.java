@@ -1,6 +1,16 @@
 package io.harness.ng;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.audit.ResourceTypeConstants.CONNECTOR;
+import static io.harness.audit.ResourceTypeConstants.DELEGATE_CONFIGURATION;
+import static io.harness.audit.ResourceTypeConstants.ENVIRONMENT;
+import static io.harness.audit.ResourceTypeConstants.ORGANIZATION;
+import static io.harness.audit.ResourceTypeConstants.PROJECT;
+import static io.harness.audit.ResourceTypeConstants.SECRET;
+import static io.harness.audit.ResourceTypeConstants.SERVICE;
+import static io.harness.audit.ResourceTypeConstants.SERVICE_ACCOUNT;
+import static io.harness.audit.ResourceTypeConstants.USER;
+import static io.harness.audit.ResourceTypeConstants.USER_GROUP;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
@@ -36,6 +46,7 @@ import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
 import io.harness.cdng.fileservice.FileServiceClient;
 import io.harness.cdng.fileservice.FileServiceClientFactory;
 import io.harness.connector.ConnectorModule;
+import io.harness.connector.events.ConnectorEventHandler;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
@@ -99,7 +110,16 @@ import io.harness.ng.core.event.SecretEntityCRUDStreamListener;
 import io.harness.ng.core.event.UserMembershipStreamListener;
 import io.harness.ng.core.impl.OrganizationServiceImpl;
 import io.harness.ng.core.impl.ProjectServiceImpl;
+import io.harness.ng.core.outbox.DelegateProfileEventHandler;
+import io.harness.ng.core.outbox.EnvironmentEventHandler;
 import io.harness.ng.core.outbox.NextGenOutboxEventHandler;
+import io.harness.ng.core.outbox.OrganizationEventHandler;
+import io.harness.ng.core.outbox.ProjectEventHandler;
+import io.harness.ng.core.outbox.SecretEventHandler;
+import io.harness.ng.core.outbox.ServiceAccountEventHandler;
+import io.harness.ng.core.outbox.ServiceOutBoxEventHandler;
+import io.harness.ng.core.outbox.UserEventHandler;
+import io.harness.ng.core.outbox.UserGroupEventHandler;
 import io.harness.ng.core.schema.YamlBaseUrlService;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
@@ -158,7 +178,6 @@ import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
-import io.harness.yaml.schema.client.YamlSchemaClientModule;
 
 import software.wings.security.ThreadLocalUserProvider;
 
@@ -372,7 +391,7 @@ public class NextGenModule extends AbstractModule {
         return new ThreadLocalUserProvider();
       }
     });
-    install(new NextGenPersistenceModule(appConfig.getShouldConfigureWithPMS()));
+    install(new NextGenPersistenceModule());
     install(new CoreModule());
     install(AccessControlMigrationModule.getInstance());
     install(UserClientModule.getInstance(this.appConfig.getManagerClientConfig(),
@@ -410,7 +429,6 @@ public class NextGenModule extends AbstractModule {
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId(),
         this.appConfig.isEnableAudit()));
     install(new NotificationClientModule(appConfig.getNotificationClientConfiguration()));
-    install(YamlSchemaClientModule.getInstance(this.appConfig.getYamlSchemaClientConfig(), NG_MANAGER.getServiceId()));
 
     install(new ProviderModule() {
       @Provides
@@ -490,6 +508,7 @@ public class NextGenModule extends AbstractModule {
     });
     install(LicenseModule.getInstance());
     bind(AggregateUserService.class).to(AggregateUserServiceImpl.class);
+    registerOutboxEventHandlers();
     bind(OutboxEventHandler.class).to(NextGenOutboxEventHandler.class);
     bind(ProjectService.class).to(ProjectServiceImpl.class);
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);
@@ -529,6 +548,21 @@ public class NextGenModule extends AbstractModule {
     sourceCodeManagerMapBinder.addBinding(SCMType.AZURE_DEV_OPS).to(AzureDevOpsSCMMapper.class);
 
     registerEventsFrameworkMessageListeners();
+  }
+
+  private void registerOutboxEventHandlers() {
+    MapBinder<String, OutboxEventHandler> outboxEventHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, OutboxEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(ORGANIZATION).to(OrganizationEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(PROJECT).to(ProjectEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(USER_GROUP).to(UserGroupEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(SECRET).to(SecretEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(USER).to(UserEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(DELEGATE_CONFIGURATION).to(DelegateProfileEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(SERVICE_ACCOUNT).to(ServiceAccountEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(CONNECTOR).to(ConnectorEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(SERVICE).to(ServiceOutBoxEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(ENVIRONMENT).to(EnvironmentEventHandler.class);
   }
 
   private void registerEventsFrameworkMessageListeners() {

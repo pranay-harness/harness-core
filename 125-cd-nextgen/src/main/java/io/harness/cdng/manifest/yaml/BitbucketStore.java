@@ -6,6 +6,7 @@ import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.manifest.ManifestStoreType;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 import io.harness.common.ParameterFieldHelper;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.filters.ConnectorRefExtractorHelper;
@@ -77,7 +78,7 @@ public class BitbucketStore implements GitStoreConfig, Visitable, WithConnectorR
   }
 
   @Override
-  public StoreConfig applyOverrides(StoreConfig overrideConfig) {
+  public io.harness.cdng.manifest.yaml.storeConfig.StoreConfig applyOverrides(StoreConfig overrideConfig) {
     BitbucketStore bitbucketStore = (BitbucketStore) overrideConfig;
     BitbucketStore resultantBitbucketStore = this;
     if (!ParameterField.isNull(bitbucketStore.getConnectorRef())) {

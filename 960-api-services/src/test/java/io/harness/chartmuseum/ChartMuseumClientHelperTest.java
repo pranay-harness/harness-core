@@ -4,6 +4,7 @@ import static io.harness.chartmuseum.ChartMuseumConstants.AWS_ACCESS_KEY_ID;
 import static io.harness.chartmuseum.ChartMuseumConstants.AWS_SECRET_ACCESS_KEY;
 import static io.harness.chartmuseum.ChartMuseumConstants.GOOGLE_APPLICATION_CREDENTIALS;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -66,13 +67,38 @@ public class ChartMuseumClientHelperTest extends CategoryTest {
     final String region = "us-west1";
 
     ChartMuseumServer startedServer =
-        clientHelper.startS3ChartMuseumServer(bucketName, basePath, region, true, null, null);
+        clientHelper.startS3ChartMuseumServer(bucketName, basePath, region, true, null, null, false);
     assertThat(startedServer.getStartedProcess()).isEqualTo(startedProcess);
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
 
     verify(clientHelper, times(1))
         .startProcess(commandCaptor.capture(), eq(Collections.emptyMap()), any(StringBuffer.class));
 
+    String command = commandCaptor.getValue();
+    assertThat(command).contains(
+        format("--storage=amazon --storage-amazon-bucket=%s --storage-amazon-prefix=%s --storage-amazon-region=%s",
+            bucketName, basePath, region));
+    assertThat(command).doesNotContain("--port=${PORT}");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testStartS3ChartMuseumServerWithIamCreds() throws Exception {
+    final String bucketName = "s3-bucket";
+    final String basePath = "charts";
+    final String region = "us-west1";
+
+    ChartMuseumServer startedServer =
+        clientHelper.startS3ChartMuseumServer(bucketName, basePath, region, false, null, null, true);
+    assertThat(startedServer.getStartedProcess()).isEqualTo(startedProcess);
+    ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<Map> envCaptor = ArgumentCaptor.forClass(Map.class);
+    verify(clientHelper, times(1))
+        .startProcess(commandCaptor.capture(), eq(Collections.emptyMap()), any(StringBuffer.class));
+
+    verify(clientHelper, times(1)).startServer(anyString(), envCaptor.capture());
+    assertThat(envCaptor.getValue()).isEmpty();
     String command = commandCaptor.getValue();
     assertThat(command).contains(
         format("--storage=amazon --storage-amazon-bucket=%s --storage-amazon-prefix=%s --storage-amazon-region=%s",

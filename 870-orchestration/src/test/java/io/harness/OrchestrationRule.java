@@ -23,7 +23,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
-import io.harness.pms.sdk.core.execution.events.node.NodeExecutionEventListener;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.rule.InjectorRuleMixin;
@@ -71,7 +70,6 @@ import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.MongoTransactionManager;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
@@ -128,13 +126,6 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     modules.add(mongoTypeModule(annotations));
 
     modules.add(new ProviderModule() {
-      @Provides
-      @Singleton
-      @Named("pmsSdkMongoTemplate")
-      MongoTemplate sdkTemplate(Injector injector) {
-        return injector.getInstance(MongoTemplate.class);
-      }
-
       @Provides
       @Singleton
       TransactionTemplate getTransactionTemplate(MongoTransactionManager mongoTransactionManager) {
@@ -207,7 +198,6 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     }
     forceMaintenance(false);
     final QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
 
     closingFactory.addServer(new Closeable() {

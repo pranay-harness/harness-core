@@ -8,3 +8,8 @@ message YamlProperties {
   string fqn = 1;
   string localName = 2;
 }
+
+message YamlOutputProperties {
+  string fqn = 1;
+  string localName = 2;
+}
