@@ -7,6 +7,7 @@ HarnessTeam = "DEL"
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
 ] + [
+    "//420-delegate-service/src/main/qbg:queries",
     "//460-capability:module",
     "//470-alert:module",
     "//870-cg-orchestration:module",
@@ -68,6 +69,7 @@ java_library(
     deps = [
         "module",
         "//:lombok",
+        "//420-delegate-service/src/test/java/resources",
         "//460-capability:module",
         "//910-delegate-service-driver:module",
         "//920-delegate-agent-beans:module",

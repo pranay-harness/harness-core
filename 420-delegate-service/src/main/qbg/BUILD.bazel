@@ -1,0 +1,8 @@
+load("//:tools/bazel/qbg.bzl", "qbg_java")
+
+qbg_java(
+    name = "queries",
+    deps = [
+        "//870-cg-orchestration:module",
+    ],
+)
