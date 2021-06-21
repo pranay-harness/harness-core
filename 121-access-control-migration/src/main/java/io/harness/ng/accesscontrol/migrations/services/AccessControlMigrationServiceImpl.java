@@ -1,5 +1,7 @@
 package io.harness.ng.accesscontrol.migrations.services;
 
+import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_NAME;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
@@ -11,11 +13,10 @@ import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
-import io.harness.beans.Scope;
 import io.harness.ng.accesscontrol.migrations.dao.AccessControlMigrationDAO;
 import io.harness.ng.accesscontrol.migrations.models.AccessControlMigration;
-import io.harness.ng.accesscontrol.mockserver.MockRoleAssignment.MockRoleAssignmentKeys;
-import io.harness.ng.accesscontrol.mockserver.MockRoleAssignmentService;
+import io.harness.ng.accesscontrol.mockserver.models.MockRoleAssignment.MockRoleAssignmentKeys;
+import io.harness.ng.accesscontrol.mockserver.services.MockRoleAssignmentService;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
@@ -27,13 +28,16 @@ import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
-import io.harness.resourcegroup.framework.service.ResourceGroupService;
+import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
+import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.user.remote.UserClient;
 import io.harness.utils.CryptoUtils;
+import io.harness.utils.ScopeUtils;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -55,17 +59,17 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class AccessControlMigrationServiceImpl implements AccessControlMigrationService {
   public static final int BATCH_SIZE = 50;
   public static final String ALL_RESOURCES = "_all_resources";
-  public static final String ALL_REOURCES = "_all_reources";
   private final AccessControlMigrationDAO accessControlMigrationDAO;
   private final ProjectService projectService;
   private final OrganizationService organizationService;
   private final MockRoleAssignmentService mockRoleAssignmentService;
   private final AccessControlAdminClient accessControlAdminClient;
   private final UserClient userClient;
-  private final ResourceGroupService resourceGroupService;
-  private final NgUserService userService;
+  private final ResourceGroupClient resourceGroupClient;
+  private final NgUserService ngUserService;
   private final ExecutorService executorService =
       Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
+  private static final String DESCRIPTION_FORMAT = "All the resources in this %s are included in this resource group.";
 
   @Override
   public AccessControlMigration save(AccessControlMigration accessControlMigration) {
@@ -127,12 +131,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
         projectIdentifier);
 
     // create managed resource group if it does not exist already
-    boolean resourceGroupCreated =
-        resourceGroupService.createManagedResourceGroup(Scope.builder()
-                                                            .accountIdentifier(accountIdentifier)
-                                                            .orgIdentifier(orgIdentifier)
-                                                            .projectIdentifier(projectIdentifier)
-                                                            .build());
+    boolean resourceGroupCreated = createManagedResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier);
     if (resourceGroupCreated) {
       log.info("Default resource group created.");
     }
@@ -164,7 +163,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
     } else {
       log.info("No mock role assignments in this scope found, trying to create role assignments from user memberships");
 
-      List<String> userIds = userService
+      List<String> userIds = ngUserService
                                  .listUserMemberships(Criteria.where(UserMembershipKeys.scopes + ".accountIdentifier")
                                                           .is(accountIdentifier)
                                                           .and(UserMembershipKeys.scopes + ".orgIdentifier")
@@ -184,7 +183,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
         log.info("Created non-managed role assignments for user memberships: {}",
             createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, false,
                 buildRoleAssignments(
-                    userIds, getAdminRole(accountIdentifier, orgIdentifier, projectIdentifier), ALL_REOURCES)));
+                    userIds, getAdminRole(accountIdentifier, orgIdentifier, projectIdentifier), ALL_RESOURCES)));
       } else {
         log.info("No user memberships in this scope found, trying to create role assignments for current gen users");
 
@@ -198,8 +197,8 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
 
         log.info("Created non-managed role assignments for current gen users: {}",
             createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, false,
-                buildRoleAssignments(
-                    currentGenUsers, getAdminRole(accountIdentifier, orgIdentifier, projectIdentifier), ALL_REOURCES)));
+                buildRoleAssignments(currentGenUsers, getAdminRole(accountIdentifier, orgIdentifier, projectIdentifier),
+                    ALL_RESOURCES)));
       }
     }
     accessControlMigrationDAO.save(AccessControlMigration.builder()
@@ -207,6 +206,26 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
                                        .orgIdentifier(orgIdentifier)
                                        .projectIdentifier(projectIdentifier)
                                        .build());
+  }
+
+  private boolean createManagedResourceGroup(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    ResourceGroupDTO resourceGroupDTO =
+        ResourceGroupDTO.builder()
+            .accountIdentifier(accountIdentifier)
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
+            .name(DEFAULT_RESOURCE_GROUP_NAME)
+            .identifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
+            .description(String.format(DESCRIPTION_FORMAT,
+                ScopeUtils.getMostSignificantScope(accountIdentifier, orgIdentifier, projectIdentifier)
+                    .toString()
+                    .toLowerCase()))
+            .resourceSelectors(Collections.emptyList())
+            .fullScopeSelected(true)
+            .build();
+    return resourceGroupClient.createManagedResourceGroup(
+               accountIdentifier, orgIdentifier, projectIdentifier, resourceGroupDTO)
+        != null;
   }
 
   private String getViewerRole(String accountIdentifier, String orgIdentifier, String projectIdentifier) {

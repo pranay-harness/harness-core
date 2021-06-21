@@ -1,4 +1,4 @@
-package io.harness.ng.accesscontrol.mockserver;
+package io.harness.ng.accesscontrol.mockserver.services;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -9,10 +9,11 @@ import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ng.accesscontrol.mockserver.MockRoleAssignment.MockRoleAssignmentKeys;
+import io.harness.ng.accesscontrol.mockserver.models.MockRoleAssignment;
+import io.harness.ng.accesscontrol.mockserver.models.MockRoleAssignment.MockRoleAssignmentKeys;
+import io.harness.ng.accesscontrol.mockserver.repositories.MockRoleAssignmentRepository;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
-import io.harness.repositories.mockroleassignmentserver.spring.MockRoleAssignmentRepository;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;

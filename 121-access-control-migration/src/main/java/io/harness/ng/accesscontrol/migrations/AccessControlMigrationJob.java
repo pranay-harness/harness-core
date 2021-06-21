@@ -8,8 +8,8 @@ import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.services.OrganizationService;
 
 import com.google.inject.Inject;
-import io.dropwizard.lifecycle.Managed;
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -18,14 +18,14 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 @Slf4j
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
-public class AccessControlMigrationJob implements Managed {
+public class AccessControlMigrationJob implements Runnable {
   private final PersistentLocker persistentLocker;
   private final OrganizationService organizationService;
   private final AccessControlMigrationService migrationService;
   private static final String ACCESS_CONTROL_MIGRATION_LOCK = "ACCESS_CONTROL_MIGRATION_LOCK";
 
   @Override
-  public void start() throws Exception {
+  public void run() {
     AcquiredLock<?> migrationLock = null;
 
     while (migrationLock == null) {
@@ -47,22 +47,24 @@ public class AccessControlMigrationJob implements Managed {
     log.info("Acquired ACCESS_CONTROL_MIGRATION_LOCK lock, starting migration now...");
 
     try {
-      Page<String> accountsWithDefaultOrganization =
-          organizationService
-              .list(Criteria.where(Organization.OrganizationKeys.identifier).is(NGConstants.DEFAULT_ORG_IDENTIFIER),
-                  Pageable.unpaged())
-              .map(Organization::getAccountIdentifier);
+      while (true) {
+        Page<String> accountsWithDefaultOrganization =
+            organizationService
+                .list(Criteria.where(Organization.OrganizationKeys.identifier).is(NGConstants.DEFAULT_ORG_IDENTIFIER),
+                    Pageable.unpaged())
+                .map(Organization::getAccountIdentifier);
 
-      for (String accountIdentifier : accountsWithDefaultOrganization) {
-        migrationService.migrate(accountIdentifier);
+        for (String accountIdentifier : accountsWithDefaultOrganization) {
+          migrationService.migrate(accountIdentifier);
+        }
+
+        TimeUnit.HOURS.sleep(3);
       }
-
+    } catch (InterruptedException interruptedException) {
+      Thread.currentThread().interrupt();
     } finally {
-      log.info("Migration finished, releasing lock now...");
+      log.info("Releasing lock now...");
       migrationLock.release();
     }
   }
-
-  @Override
-  public void stop() throws Exception {}
 }

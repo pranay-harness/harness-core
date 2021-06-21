@@ -1,9 +1,9 @@
-package io.harness.repositories.mockroleassignmentserver.custom;
+package io.harness.ng.accesscontrol.mockserver.repositories;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ng.accesscontrol.mockserver.MockRoleAssignment;
+import io.harness.ng.accesscontrol.mockserver.models.MockRoleAssignment;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

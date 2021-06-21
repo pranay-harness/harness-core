@@ -14,6 +14,7 @@ import io.harness.eventsframework.entity_crud.account.AccountEntityChangeDTO;
 import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.accesscontrol.mockserver.services.MockRoleAssignmentService;
 import io.harness.ng.core.event.MessageListener;
 
 import com.google.inject.Inject;

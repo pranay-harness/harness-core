@@ -8,6 +8,8 @@ import io.harness.ng.accesscontrol.migrations.dao.AccessControlMigrationDAOImpl;
 import io.harness.ng.accesscontrol.migrations.repositories.AccessControlMigrationRepository;
 import io.harness.ng.accesscontrol.migrations.services.AccessControlMigrationService;
 import io.harness.ng.accesscontrol.migrations.services.AccessControlMigrationServiceImpl;
+import io.harness.ng.accesscontrol.mockserver.repositories.MockRoleAssignmentRepository;
+import io.harness.ng.accesscontrol.mockserver.services.MockRoleAssignmentService;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.service.NgUserService;
@@ -39,6 +41,8 @@ public class AccessControlMigrationModule extends AbstractModule {
 
   public void registerRequiredBindings() {
     requireBinding(AccessControlMigrationRepository.class);
+    requireBinding(MockRoleAssignmentService.class);
+    requireBinding(MockRoleAssignmentRepository.class);
     requireBinding(UserClient.class);
     requireBinding(NgUserService.class);
     requireBinding(ProjectService.class);

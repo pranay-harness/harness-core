@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-import io.harness.ng.accesscontrol.mockserver.MockRoleAssignment;
+import io.harness.ng.accesscontrol.mockserver.models.MockRoleAssignment;
 
 import java.util.Set;
 

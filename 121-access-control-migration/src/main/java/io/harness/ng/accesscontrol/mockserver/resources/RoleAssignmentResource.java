@@ -1,4 +1,4 @@
-package io.harness.ng.accesscontrol.mockserver;
+package io.harness.ng.accesscontrol.mockserver.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
@@ -11,6 +11,7 @@ import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.accesscontrol.mockserver.services.MockRoleAssignmentService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
