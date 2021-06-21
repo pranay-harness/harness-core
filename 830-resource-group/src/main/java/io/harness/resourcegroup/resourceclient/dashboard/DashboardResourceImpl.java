@@ -2,6 +2,7 @@ package io.harness.resourcegroup.resourceclient.dashboard;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
+import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
@@ -36,7 +37,7 @@ public class DashboardResourceImpl implements Resource {
 
   @Override
   public EnumSet<ValidatorType> getSelectorKind() {
-    return EnumSet.of(DYNAMIC);
+    return EnumSet.of(STATIC, DYNAMIC);
   }
 
   @Override
