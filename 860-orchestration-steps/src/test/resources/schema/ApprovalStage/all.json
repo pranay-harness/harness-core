@@ -434,7 +434,7 @@
         },
         "timeout": {
           "type": "string",
-          "pattern": "^(((\\d+[smhwd][\\s]?)+)|(<\\+input>.*))$"
+          "pattern": "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*))$"
         },
         "type": {
           "type": "string"
