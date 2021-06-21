@@ -11,7 +11,6 @@ import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
-import io.harness.beans.Scope;
 import io.harness.ng.accesscontrol.migrations.dao.AccessControlMigrationDAO;
 import io.harness.ng.accesscontrol.migrations.models.AccessControlMigration;
 import io.harness.ng.accesscontrol.mockserver.MockRoleAssignment.MockRoleAssignmentKeys;
@@ -27,7 +26,7 @@ import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
-import io.harness.resourcegroup.framework.service.ResourceGroupService;
+import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.user.remote.UserClient;
 import io.harness.utils.CryptoUtils;
 
@@ -62,7 +61,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   private final MockRoleAssignmentService mockRoleAssignmentService;
   private final AccessControlAdminClient accessControlAdminClient;
   private final UserClient userClient;
-  private final ResourceGroupService resourceGroupService;
+  private final ResourceGroupClient resourceGroupClient;
   private final NgUserService userService;
   private final ExecutorService executorService =
       Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
@@ -126,16 +125,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
     log.info("Running migration for account: {}, org: {} and project: {}", accountIdentifier, orgIdentifier,
         projectIdentifier);
 
-    // create managed resource group if it does not exist already
-    boolean resourceGroupCreated =
-        resourceGroupService.createManagedResourceGroup(Scope.builder()
-                                                            .accountIdentifier(accountIdentifier)
-                                                            .orgIdentifier(orgIdentifier)
-                                                            .projectIdentifier(projectIdentifier)
-                                                            .build());
-    if (resourceGroupCreated) {
-      log.info("Default resource group created.");
-    }
+    resourceGroupClient.createManagedResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier);
 
     Page<RoleAssignmentResponseDTO> mockRoleAssignments =
         mockRoleAssignmentService.list(Criteria.where(MockRoleAssignmentKeys.accountIdentifier)
