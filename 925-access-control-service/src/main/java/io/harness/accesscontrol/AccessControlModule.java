@@ -30,6 +30,7 @@ import io.harness.accesscontrol.preference.AccessControlPreferenceModule;
 import io.harness.accesscontrol.preference.events.NGRBACEnabledFeatureFlagEventConsumer;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.principals.PrincipalValidator;
+import io.harness.accesscontrol.principals.serviceaccounts.HarnessServiceAccountService;
 import io.harness.accesscontrol.principals.serviceaccounts.ServiceAccountValidator;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupService;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupServiceImpl;
@@ -225,6 +226,7 @@ public class AccessControlModule extends AbstractModule {
     bind(HarnessResourceGroupService.class).to(HarnessResourceGroupServiceImpl.class);
     bind(HarnessUserGroupService.class).to(HarnessUserGroupServiceImpl.class);
     bind(HarnessUserService.class).to(HarnessUserServiceImpl.class);
+    bind(HarnessServiceAccountService.class).to(HarnessAccessControlServiceImpl.class);
 
     MapBinder<PrincipalType, PrincipalValidator> validatorByPrincipalType =
         MapBinder.newMapBinder(binder(), PrincipalType.class, PrincipalValidator.class);

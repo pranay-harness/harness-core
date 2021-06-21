@@ -1,6 +1,5 @@
 package io.harness.accesscontrol.principals.serviceaccounts;
 
-import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.common.validation.ValidationResult;
@@ -37,7 +36,7 @@ public class ServiceAccountValidator implements PrincipalValidator {
 
   @Override
   public PrincipalType getPrincipalType() {
-    return USER;
+    return PrincipalType.SERVICE_ACCOUNT;
   }
 
   @Override
