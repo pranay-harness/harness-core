@@ -70,8 +70,8 @@ public class ServiceAccountServiceImpl implements ServiceAccountService {
                  -> transactionTemplate.execute(status
                      -> serviceAccountDao.delete(identifier, scopeIdentifier)
                             .orElseThrow(()
-                                             -> new UnexpectedException(
-                                                 String.format("Failed to delete the user %s in the scope %s",
-                                                     identifier, scopeIdentifier)))));
+                                             -> new UnexpectedException(String.format(
+                                                 "Failed to delete the service account %s in the scope %s", identifier,
+                                                 scopeIdentifier)))));
   }
 }
