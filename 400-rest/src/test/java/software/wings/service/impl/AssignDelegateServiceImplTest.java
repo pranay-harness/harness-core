@@ -2012,7 +2012,10 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     Map<String, String> noSetupAbstractions = ImmutableMap.of();
     Map<String, String> orgSetupAbstractions = ImmutableMap.of("owner", "o1");
+    Map<String, String> orgLikeSetupAbstractions = ImmutableMap.of("owner", "o1like");
+
     Map<String, String> projectSetupAbstractions = ImmutableMap.of("owner", "o1/p1");
+    Map<String, String> projectLikeSetupAbstractions = ImmutableMap.of("owner", "o1/p1like");
 
     canAssignOwnerAssert(delegateTask, batch, delegate, null, null, true);
     canAssignOwnerAssert(delegateTask, batch, delegate, null, noSetupAbstractions, true);
@@ -2023,11 +2026,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     canAssignOwnerAssert(delegateTask, batch, delegate, orgOwner, noSetupAbstractions, false);
     canAssignOwnerAssert(delegateTask, batch, delegate, orgOwner, orgSetupAbstractions, true);
     canAssignOwnerAssert(delegateTask, batch, delegate, orgOwner, projectSetupAbstractions, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwner, orgLikeSetupAbstractions, false);
 
     canAssignOwnerAssert(delegateTask, batch, delegate, projectOwner, null, false);
     canAssignOwnerAssert(delegateTask, batch, delegate, projectOwner, noSetupAbstractions, false);
     canAssignOwnerAssert(delegateTask, batch, delegate, projectOwner, orgSetupAbstractions, false);
     canAssignOwnerAssert(delegateTask, batch, delegate, projectOwner, projectSetupAbstractions, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, projectOwner, projectLikeSetupAbstractions, false);
 
     // testing above valid scenarios with wrong values of project / org
     Map<String, String> invalidOrgSetupAbstractions = ImmutableMap.of("owner", "o2");
