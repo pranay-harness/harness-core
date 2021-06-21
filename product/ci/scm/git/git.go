@@ -162,15 +162,28 @@ func GetLatestCommit(ctx context.Context, request *pb.GetLatestCommitRequest, lo
 		return nil, err
 	}
 
-	response, _, err := client.Git.FindCommit(ctx, request.GetSlug(), ref)
+	refResponse, response, err := client.Git.FindCommit(ctx, request.GetSlug(), ref)
 	if err != nil {
 		log.Errorw("GetLatestCommit failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
-		return nil, err
+		// this is a hard error with no response
+		if refResponse == nil {
+			return nil, err
+		}
+
+		// this is an error from the git provider
+		out = &pb.GetLatestCommitResponse{
+			CommitId: refResponse.Sha,
+			Error:    err.Error(),
+			Status:   int32(response.Status),
+		}
+		return out, nil
 	}
+
 	log.Infow("GetLatestCommit success", "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start))
 
 	out = &pb.GetLatestCommitResponse{
-		CommitId: response.Sha,
+		CommitId: refResponse.Sha,
+		Status:   int32(response.Status),
 	}
 	return out, nil
 }
