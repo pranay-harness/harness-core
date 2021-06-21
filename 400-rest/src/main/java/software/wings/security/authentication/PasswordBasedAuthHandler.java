@@ -105,6 +105,7 @@ public class PasswordBasedAuthHandler implements AuthHandler {
         if (validCredentials) {
           return getAuthenticationResponse(user);
         } else {
+          checkUserLockoutStatus(user);
           updateFailedLoginAttemptCount(user);
 
           try {
