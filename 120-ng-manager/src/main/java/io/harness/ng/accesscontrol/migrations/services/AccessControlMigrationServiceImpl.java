@@ -11,6 +11,8 @@ import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
+import io.harness.beans.Scope;
+import io.harness.exception.GeneralException;
 import io.harness.ng.accesscontrol.migrations.dao.AccessControlMigrationDAO;
 import io.harness.ng.accesscontrol.migrations.models.AccessControlMigration;
 import io.harness.ng.accesscontrol.mockserver.MockRoleAssignment.MockRoleAssignmentKeys;
@@ -30,8 +32,10 @@ import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.user.remote.UserClient;
 import io.harness.utils.CryptoUtils;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -40,11 +44,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -54,15 +58,14 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class AccessControlMigrationServiceImpl implements AccessControlMigrationService {
   public static final int BATCH_SIZE = 50;
   public static final String ALL_RESOURCES = "_all_resources";
-  public static final String ALL_REOURCES = "_all_reources";
   private final AccessControlMigrationDAO accessControlMigrationDAO;
   private final ProjectService projectService;
   private final OrganizationService organizationService;
   private final MockRoleAssignmentService mockRoleAssignmentService;
-  private final AccessControlAdminClient accessControlAdminClient;
+  @Named("PRIVILEGED") private final AccessControlAdminClient accessControlAdminClient;
   private final UserClient userClient;
   private final ResourceGroupClient resourceGroupClient;
-  private final NgUserService userService;
+  private final NgUserService ngUserService;
   private final ExecutorService executorService =
       Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
 
@@ -72,8 +75,19 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   }
 
   @Override
-  public boolean isAlreadyMigrated(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return accessControlMigrationDAO.alreadyMigrated(accountIdentifier, orgIdentifier, projectIdentifier);
+  public boolean isMigrated(Scope scope) {
+    return accessControlMigrationDAO.isMigrated(scope);
+  }
+
+  @Override
+  public void migrate(String accountIdentifier) {
+    migrateInternal(Scope.of(accountIdentifier, null, null));
+    for (String orgIdentifier : getOrganizations(accountIdentifier)) {
+      migrateInternal(Scope.of(accountIdentifier, orgIdentifier, null));
+      for (String projectIdentifier : getProjects(accountIdentifier, orgIdentifier)) {
+        migrateInternal(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier));
+      }
+    }
   }
 
   private List<UserInfo> getUsers(String accountId) {
@@ -94,172 +108,196 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
     return new ArrayList<>(users);
   }
 
-  private long createRoleAssignments(
-      String account, String org, String project, boolean managed, List<RoleAssignmentDTO> roleAssignments) {
+  private long createRoleAssignments(Scope scope, boolean managed, List<RoleAssignmentDTO> roleAssignments) {
     List<List<RoleAssignmentDTO>> batchedRoleAssignments = Lists.partition(roleAssignments, BATCH_SIZE);
     List<Future<List<RoleAssignmentResponseDTO>>> futures = new ArrayList<>();
     batchedRoleAssignments.forEach(batch
         -> futures.add(executorService.submit(
             ()
-                -> NGRestUtils.getResponse(accessControlAdminClient.createMultiRoleAssignment(account, org, project,
-                    managed, RoleAssignmentCreateRequestDTO.builder().roleAssignments(batch).build())))));
+                -> NGRestUtils.getResponse(accessControlAdminClient.createMultiRoleAssignment(
+                    scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), managed,
+                    RoleAssignmentCreateRequestDTO.builder().roleAssignments(batch).build())))));
 
     long createdRoleAssignments = 0;
     for (Future<List<RoleAssignmentResponseDTO>> future : futures) {
       try {
         createdRoleAssignments += future.get().size();
-      } catch (InterruptedException interruptedException) {
+      } catch (InterruptedException ex) {
         Thread.currentThread().interrupt();
-        return 0;
-      } catch (ExecutionException e) {
-        log.error("Error while trying to create role assignments", e);
+        throw new GeneralException(
+            String.format("Error occurred while trying to create role assignments for scope : %s", scope), ex);
+      } catch (ExecutionException ex) {
+        throw new GeneralException(
+            String.format("Error occurred while trying to create role assignments for scope : %s", scope),
+            ex.getCause());
       }
     }
     return createdRoleAssignments;
   }
 
-  private void migrateInternal(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    if (isAlreadyMigrated(accountIdentifier, orgIdentifier, projectIdentifier)) {
+  private void migrateInternal(Scope scope) {
+    if (isMigrated(scope)) {
+      log.info("Scope {} already migrated", scope);
       return;
     }
-    log.info("Running migration for account: {}, org: {} and project: {}", accountIdentifier, orgIdentifier,
-        projectIdentifier);
+    log.info("Access control migration started for scope : {}", scope);
+    Stopwatch stopwatch = Stopwatch.createStarted();
 
-    resourceGroupClient.createManagedResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier);
-
-    Page<RoleAssignmentResponseDTO> mockRoleAssignments =
-        mockRoleAssignmentService.list(Criteria.where(MockRoleAssignmentKeys.accountIdentifier)
-                                           .is(accountIdentifier)
-                                           .and(MockRoleAssignmentKeys.orgIdentifier)
-                                           .is(orgIdentifier)
-                                           .and(MockRoleAssignmentKeys.projectIdentifier)
-                                           .is(projectIdentifier),
-            Pageable.unpaged());
-
-    if (!mockRoleAssignments.getContent().isEmpty()) {
-      List<RoleAssignmentDTO> managedRoleAssignments = new ArrayList<>();
-      List<RoleAssignmentDTO> nonManagedRoleAssignments = new ArrayList<>();
-      mockRoleAssignments.getContent().forEach(mockRoleAssignment -> {
-        if (Boolean.TRUE.equals(mockRoleAssignment.getRoleAssignment().isManaged())) {
-          managedRoleAssignments.add(mockRoleAssignment.getRoleAssignment());
-        } else {
-          nonManagedRoleAssignments.add(mockRoleAssignment.getRoleAssignment());
-        }
-      });
-
-      log.info("Created managed role assignments for mock role assignments: {}",
-          createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, true, managedRoleAssignments));
-      log.info("Create non-managed role assignments for mock role assignments: {}",
-          createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, false, nonManagedRoleAssignments));
-    } else {
-      log.info("No mock role assignments in this scope found, trying to create role assignments from user memberships");
-
-      List<String> userIds = userService
-                                 .listUserMemberships(Criteria.where(UserMembershipKeys.scopes + ".accountIdentifier")
-                                                          .is(accountIdentifier)
-                                                          .and(UserMembershipKeys.scopes + ".orgIdentifier")
-                                                          .is(orgIdentifier)
-                                                          .and(UserMembershipKeys.scopes + ".projectIdentifier")
-                                                          .is(projectIdentifier))
-                                 .stream()
-                                 .map(UserMembership::getUserId)
-                                 .collect(Collectors.toList());
-
-      if (!userIds.isEmpty()) {
-        log.info("Created managed role assignments for user memberships: {}",
-            createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, true,
-                buildRoleAssignments(
-                    userIds, getViewerRole(accountIdentifier, orgIdentifier, projectIdentifier), ALL_RESOURCES)));
-
-        log.info("Created non-managed role assignments for user memberships: {}",
-            createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, false,
-                buildRoleAssignments(
-                    userIds, getAdminRole(accountIdentifier, orgIdentifier, projectIdentifier), ALL_REOURCES)));
-      } else {
-        log.info("No user memberships in this scope found, trying to create role assignments for current gen users");
-
-        List<String> currentGenUsers =
-            getUsers(accountIdentifier).stream().map(UserInfo::getUuid).collect(Collectors.toList());
-
-        log.info("Created managed role assignments for current gen users: {}",
-            createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, true,
-                buildRoleAssignments(currentGenUsers,
-                    getViewerRole(accountIdentifier, orgIdentifier, projectIdentifier), ALL_RESOURCES)));
-
-        log.info("Created non-managed role assignments for current gen users: {}",
-            createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, false,
-                buildRoleAssignments(
-                    currentGenUsers, getAdminRole(accountIdentifier, orgIdentifier, projectIdentifier), ALL_REOURCES)));
+    try {
+      ensureManagedResourceGroup(scope);
+      migrateMockRoleAssignments(scope);
+      if (!hasAdmin(scope)) {
+        assignAdminAndViewerRoleToUsers(scope);
       }
+
+      if (!hasAdmin(scope)) {
+        assignAdminAndViewerRoleToCGUsers(scope);
+      }
+    } catch (Exception ex) {
+      log.error(String.format("Access control migration failed for scope : %s", scope.toString()), ex);
+      return;
     }
     accessControlMigrationDAO.save(AccessControlMigration.builder()
-                                       .accountIdentifier(accountIdentifier)
-                                       .orgIdentifier(orgIdentifier)
-                                       .projectIdentifier(projectIdentifier)
+                                       .accountIdentifier(scope.getAccountIdentifier())
+                                       .orgIdentifier(scope.getOrgIdentifier())
+                                       .projectIdentifier(scope.getProjectIdentifier())
                                        .build());
+    log.info(
+        "Access control migration finished for scope : {} in {} seconds", scope, stopwatch.elapsed(TimeUnit.SECONDS));
   }
 
-  private String getViewerRole(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    if (!StringUtils.isEmpty(projectIdentifier)) {
+  private boolean hasAdmin(Scope scope) {
+    return !isEmpty(ngUserService.listUsersHavingRole(scope, getManagedAdminRole(scope)));
+  }
+
+  private void ensureManagedResourceGroup(Scope scope) {
+    NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(
+        scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()));
+  }
+
+  private void migrateMockRoleAssignments(Scope scope) {
+    List<RoleAssignmentResponseDTO> mockRoleAssignments = getMockRoleAssignments(scope);
+    if (mockRoleAssignments.isEmpty()) {
+      return;
+    }
+
+    List<RoleAssignmentDTO> managedRoleAssignments = new ArrayList<>();
+    List<RoleAssignmentDTO> nonManagedRoleAssignments = new ArrayList<>();
+    mockRoleAssignments.forEach(mockRoleAssignment -> {
+      if (Boolean.TRUE.equals(mockRoleAssignment.getRoleAssignment().isManaged())) {
+        managedRoleAssignments.add(mockRoleAssignment.getRoleAssignment());
+      } else {
+        nonManagedRoleAssignments.add(mockRoleAssignment.getRoleAssignment());
+      }
+    });
+
+    log.info("Created {} MANAGED role assignments from MockRoleAssignments for scope: {}",
+        createRoleAssignments(scope, true, managedRoleAssignments), scope);
+    log.info("Created {} NON-MANAGED role assignments from MockRoleAssignments for scope: {}",
+        createRoleAssignments(scope, false, nonManagedRoleAssignments), scope);
+  }
+
+  private void assignAdminAndViewerRoleToUsers(Scope scope) {
+    List<String> users = getUsersInScope(scope);
+    if (users.isEmpty()) {
+      return;
+    }
+
+    log.info("Created {} MANAGED role assignments from UserMembership for scope: {}",
+        createRoleAssignments(scope, true, buildRoleAssignments(users, getManagedViewerRole(scope))), scope);
+
+    log.info("Created {} NON-MANAGED role assignments from UserMembership for scope: {}",
+        createRoleAssignments(scope, false, buildRoleAssignments(users, getManagedAdminRole(scope))), scope);
+  }
+
+  private void assignAdminAndViewerRoleToCGUsers(Scope scope) {
+    List<String> currentGenUsers =
+        getUsers(scope.getAccountIdentifier()).stream().map(UserInfo::getUuid).collect(Collectors.toList());
+    if (currentGenUsers.isEmpty()) {
+      return;
+    }
+
+    log.info("Created {} MANAGED role assignments from CG Users for scope: {}",
+        createRoleAssignments(scope, true, buildRoleAssignments(currentGenUsers, getManagedViewerRole(scope))), scope);
+
+    log.info("Created {} NON-MANAGED role assignments from CG Users for scope: {}",
+        createRoleAssignments(scope, false, buildRoleAssignments(currentGenUsers, getManagedAdminRole(scope))), scope);
+  }
+
+  private static String getManagedViewerRole(Scope scope) {
+    if (!StringUtils.isEmpty(scope.getProjectIdentifier())) {
       return "-project_viewer";
-    } else if (!StringUtils.isEmpty(orgIdentifier)) {
+    } else if (!StringUtils.isEmpty(scope.getOrgIdentifier())) {
       return "_organization_viewer";
     } else {
       return "_account_viewer";
     }
   }
 
-  private String getAdminRole(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    if (!StringUtils.isEmpty(projectIdentifier)) {
+  private static String getManagedAdminRole(Scope scope) {
+    if (!StringUtils.isEmpty(scope.getProjectIdentifier())) {
       return "-project_admin";
-    } else if (!StringUtils.isEmpty(orgIdentifier)) {
+    } else if (!StringUtils.isEmpty(scope.getOrgIdentifier())) {
       return "_organization_admin";
     } else {
       return "_account_admin";
     }
   }
 
-  private List<RoleAssignmentDTO> buildRoleAssignments(
-      List<String> userIds, String roleIdentifier, String resourceGroupIdentifier) {
-    List<RoleAssignmentDTO> roleAssignmentsToCreate = new ArrayList<>();
-    userIds.forEach(userId -> {
-      roleAssignmentsToCreate.add(
-          RoleAssignmentDTO.builder()
-              .disabled(false)
-              .identifier("role_assignment_".concat(CryptoUtils.secureRandAlphaNumString(20)))
-              .roleIdentifier(roleIdentifier)
-              .resourceGroupIdentifier(resourceGroupIdentifier)
-              .principal(PrincipalDTO.builder().identifier(userId).type(PrincipalType.USER).build())
-              .build());
-    });
-    return roleAssignmentsToCreate;
+  private List<RoleAssignmentDTO> buildRoleAssignments(List<String> userIds, String roleIdentifier) {
+    return userIds.stream()
+        .map(userId
+            -> RoleAssignmentDTO.builder()
+                   .disabled(false)
+                   .identifier("role_assignment_".concat(CryptoUtils.secureRandAlphaNumString(20)))
+                   .roleIdentifier(roleIdentifier)
+                   .resourceGroupIdentifier(ALL_RESOURCES)
+                   .principal(PrincipalDTO.builder().identifier(userId).type(PrincipalType.USER).build())
+                   .build())
+        .collect(Collectors.toList());
   }
 
-  @Override
-  public void migrate(String accountIdentifier) {
-    migrateInternal(accountIdentifier, null, null);
+  private List<String> getOrganizations(String accountIdentifier) {
+    return organizationService
+        .list(Criteria.where(Organization.OrganizationKeys.accountIdentifier).is(accountIdentifier))
+        .stream()
+        .map(Organization::getIdentifier)
+        .collect(Collectors.toList());
+  }
 
-    List<String> organizations =
-        organizationService.list(Criteria.where(Organization.OrganizationKeys.accountIdentifier).is(accountIdentifier))
-            .stream()
-            .map(Organization::getIdentifier)
-            .collect(Collectors.toList());
+  private List<String> getProjects(String accountIdentifier, String orgIdentifier) {
+    return projectService
+        .list(Criteria.where(ProjectKeys.accountIdentifier)
+                  .is(accountIdentifier)
+                  .and(ProjectKeys.orgIdentifier)
+                  .is(orgIdentifier))
+        .stream()
+        .map(Project::getIdentifier)
+        .collect(Collectors.toList());
+  }
 
-    for (String organizationIdentifier : organizations) {
-      migrateInternal(accountIdentifier, organizationIdentifier, null);
+  private List<RoleAssignmentResponseDTO> getMockRoleAssignments(Scope scope) {
+    return mockRoleAssignmentService
+        .list(Criteria.where(MockRoleAssignmentKeys.accountIdentifier)
+                  .is(scope.getAccountIdentifier())
+                  .and(MockRoleAssignmentKeys.orgIdentifier)
+                  .is(scope.getOrgIdentifier())
+                  .and(MockRoleAssignmentKeys.projectIdentifier)
+                  .is(scope.getProjectIdentifier()),
+            Pageable.unpaged())
+        .getContent();
+  }
 
-      List<String> projects = projectService
-                                  .list(Criteria.where(ProjectKeys.accountIdentifier)
-                                            .is(accountIdentifier)
-                                            .and(ProjectKeys.orgIdentifier)
-                                            .is(organizationIdentifier))
-                                  .stream()
-                                  .map(Project::getIdentifier)
-                                  .collect(Collectors.toList());
-
-      for (String projectIdentifier : projects) {
-        migrateInternal(accountIdentifier, organizationIdentifier, projectIdentifier);
-      }
-    }
+  private List<String> getUsersInScope(Scope scope) {
+    return ngUserService
+        .listUserMemberships(Criteria.where(UserMembershipKeys.scopes + ".accountIdentifier")
+                                 .is(scope.getAccountIdentifier())
+                                 .and(UserMembershipKeys.scopes + ".orgIdentifier")
+                                 .is(scope.getOrgIdentifier())
+                                 .and(UserMembershipKeys.scopes + ".projectIdentifier")
+                                 .is(scope.getProjectIdentifier()))
+        .stream()
+        .map(UserMembership::getUserId)
+        .collect(Collectors.toList());
   }
 }
