@@ -2,7 +2,7 @@ package handler
 
 import (
 	"io"
-	"net/http"	
+	"net/http"
 
 	"github.com/wings-software/portal/product/log-service/config"
 	"github.com/wings-software/portal/product/log-service/logger"
