@@ -15,8 +15,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(PL)
 public interface ServiceAccountService {
-  long saveAll(@NotNull @Valid List<ServiceAccount> serviceAccounts);
-
   ServiceAccount createIfNotPresent(@NotNull @Valid ServiceAccount serviceAccount);
 
   PageResponse<ServiceAccount> list(@NotNull PageRequest pageRequest, @NotEmpty String scopeIdentifier);
