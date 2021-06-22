@@ -29,5 +29,5 @@ public interface UserMembershipRepositoryCustom {
   Set<String> filterUsersWithMembership(List<String> userIds, String accountIdentifier, @Nullable String orgIdentifier,
       @Nullable String projectIdentifier);
 
-  Long getProjectCount(String userId);
+  Long getProjectCount(String userId, String accountIdentifier);
 }
