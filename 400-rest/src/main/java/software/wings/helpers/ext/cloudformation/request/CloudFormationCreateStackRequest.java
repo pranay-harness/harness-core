@@ -49,8 +49,9 @@ public class CloudFormationCreateStackRequest extends CloudFormationCommandReque
   public CloudFormationCreateStackRequest(CloudFormationCommandType commandType, String accountId, String appId,
       String activityId, String commandName, AwsConfig awsConfig, int timeoutInMs, String createType, String data,
       String stackNameSuffix, String cloudFormationRoleArn, Map<String, String> variables, String region,
-      String customStackName, GitFileConfig gitFileConfig, GitConfig gitConfig, List<StackStatus> stackStatusesToMarkAsSuccess,
-      List<EncryptedDataDetail> encryptedDataDetails, Map<String, EncryptedDataDetail> encryptedVariables, List<String> capabilities, String tags) {
+      String customStackName, GitFileConfig gitFileConfig, GitConfig gitConfig,
+      List<StackStatus> stackStatusesToMarkAsSuccess, List<EncryptedDataDetail> encryptedDataDetails,
+      Map<String, EncryptedDataDetail> encryptedVariables, List<String> capabilities, String tags) {
     super(
         commandType, accountId, appId, activityId, commandName, awsConfig, timeoutInMs, region, cloudFormationRoleArn);
     this.createType = createType;

@@ -244,9 +244,10 @@ public abstract class CloudFormationCommandTaskHandler {
   }
 
   @VisibleForTesting
-  protected void printStackResources(String region, String stackId, AwsConfig awsConfig, ExecutionLogCallback executionLogCallback) {
+  protected void printStackResources(
+      String region, String stackId, AwsConfig awsConfig, ExecutionLogCallback executionLogCallback) {
     if (isEmpty(stackId)) {
-      return ;
+      return;
     }
     List<StackResource> stackResources = getStackResources(region, stackId, awsConfig);
     executionLogCallback.saveExecutionLog("******************** Could Formation Resources ********************");
@@ -262,8 +263,7 @@ public abstract class CloudFormationCommandTaskHandler {
         new DescribeStackResourcesRequest().withStackName(stack.getStackName()), request.getAwsConfig());
   }
 
-  private List<StackResource> getStackResources(
-      String region, String stackId, AwsConfig awsConfig) {
+  private List<StackResource> getStackResources(String region, String stackId, AwsConfig awsConfig) {
     return awsHelperService.getAllStackResources(
         region, new DescribeStackResourcesRequest().withStackName(stackId), awsConfig);
   }
