@@ -2227,8 +2227,8 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public DelegateRegisterResponse register(DelegateParams delegateParams) {
-    try (AutoLogContext ignore1 =
-             new DelegateParamsLogContext(delegateParams.getAccountId(), delegateParams, OVERRIDE_ERROR)) {
+    try (AutoLogContext ignore1 = new DelegateParamsLogContext(
+             delegateParams.getAccountId(), JsonUtils.asJson(delegateParams), OVERRIDE_ERROR)) {
       log.info("registering delegate with params: {}", delegateParams);
       if (licenseService.isAccountDeleted(delegateParams.getAccountId())) {
         broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(SELF_DESTRUCT);
