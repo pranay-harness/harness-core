@@ -3,6 +3,7 @@ package io.harness.engine.pms.resume.publisher;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.pms.commons.events.PmsEventSender;
+import io.harness.engine.pms.data.PmsTransputHelper;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
@@ -25,18 +26,21 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RedisNodeResumeEventPublisher implements NodeResumeEventPublisher {
   @Inject private PmsEventSender eventSender;
+  @Inject private PmsTransputHelper transputHelper;
 
   @Override
   public void publishEvent(NodeExecution nodeExecution, Map<String, ByteString> responseMap, boolean isError) {
     String serviceName = nodeExecution.getNode().getServiceName();
     String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
-    NodeResumeEvent.Builder resumeEventBuilder = NodeResumeEvent.newBuilder()
-                                                     .setAmbiance(nodeExecution.getAmbiance())
-                                                     .setExecutionMode(nodeExecution.getMode())
-                                                     .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
-                                                     .addAllRefObjects(nodeExecution.getNode().getRebObjectsList())
-                                                     .setAsyncError(isError)
-                                                     .putAllResponse(responseMap);
+    NodeResumeEvent.Builder resumeEventBuilder =
+        NodeResumeEvent.newBuilder()
+            .setAmbiance(nodeExecution.getAmbiance())
+            .setExecutionMode(nodeExecution.getMode())
+            .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
+            .addAllResolvedInput(
+                transputHelper.resolveInputs(nodeExecution.getAmbiance(), nodeExecution.getNode().getRebObjectsList()))
+            .setAsyncError(isError)
+            .putAllResponse(responseMap);
 
     ChainDetails chainDetails = buildChainDetails(nodeExecution);
     if (chainDetails != null) {

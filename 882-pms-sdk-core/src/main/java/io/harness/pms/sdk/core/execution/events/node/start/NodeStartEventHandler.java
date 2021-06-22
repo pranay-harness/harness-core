@@ -1,30 +1,26 @@
 package io.harness.pms.sdk.core.execution.events.node.start;
 
+import static io.harness.pms.sdk.core.execution.events.node.NodeEventHelper.buildStepInputPackage;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.start.NodeStartEvent;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
-import io.harness.pms.contracts.refobjects.ResolvedRefInput;
 import io.harness.pms.events.base.PmsBaseEventHandler;
 import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.sdk.core.data.StepTransput;
-import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.ExecutableProcessor;
 import io.harness.pms.sdk.core.execution.ExecutableProcessorFactory;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
-import io.harness.pms.sdk.core.steps.io.StepInputPackage;
-import io.harness.pms.sdk.core.steps.io.StepInputPackage.StepInputPackageBuilder;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class NodeStartEventHandler extends PmsBaseEventHandler<NodeStartEvent> {
   @Inject private ExecutableProcessorFactory executableProcessorFactory;
-  @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
 
   @Override
@@ -83,19 +78,5 @@ public class NodeStartEventHandler extends PmsBaseEventHandler<NodeStartEvent> {
       sdkNodeExecutionService.handleStepResponse(AmbianceUtils.obtainCurrentRuntimeId(nodeStartEvent.getAmbiance()),
           NodeExecutionUtils.constructStepResponse(ex));
     }
-  }
-
-  private StepInputPackage buildStepInputPackage(List<ResolvedRefInput> resolvedInputs) {
-    StepInputPackageBuilder inputPackageBuilder = StepInputPackage.builder();
-
-    resolvedInputs.forEach(in -> {
-      StepTransput transput =
-          RecastOrchestrationUtils.fromDocumentJson(in.getTransput().toStringUtf8(), StepTransput.class);
-      inputPackageBuilder.input(io.harness.pms.sdk.core.steps.io.ResolvedRefInput.builder()
-                                    .refObject(in.getRefObject())
-                                    .transput(transput)
-                                    .build());
-    });
-    return inputPackageBuilder.build();
   }
 }

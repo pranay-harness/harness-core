@@ -1,5 +1,7 @@
 package io.harness.pms.sdk.core.execution.events.node.facilitate;
 
+import static io.harness.pms.sdk.core.execution.events.node.NodeEventHelper.buildStepInputPackage;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -7,20 +9,16 @@ import io.harness.pms.contracts.facilitators.FacilitatorEvent;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
-import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.events.base.PmsBaseEventHandler;
 import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
-import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 public class FacilitatorEventHandler extends PmsBaseEventHandler<FacilitatorEvent> {
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
-  @Inject private EngineObtainmentHelper engineObtainmentHelper;
 
   @Override
   protected Map<String, String> extractMetricContext(FacilitatorEvent message) {
@@ -64,14 +61,13 @@ public class FacilitatorEventHandler extends PmsBaseEventHandler<FacilitatorEven
     try {
       log.info("Starting to handle FACILITATION event");
       Ambiance ambiance = event.getAmbiance();
-      StepInputPackage inputPackage = obtainInputPackage(ambiance, event.getRefObjectsList());
       FacilitatorResponse currFacilitatorResponse = null;
       for (FacilitatorObtainment obtainment : event.getFacilitatorObtainmentsList()) {
         Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
         StepParameters stepParameters =
             RecastOrchestrationUtils.fromDocumentJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
-        currFacilitatorResponse =
-            facilitator.facilitate(ambiance, stepParameters, obtainment.getParameters().toByteArray(), inputPackage);
+        currFacilitatorResponse = facilitator.facilitate(ambiance, stepParameters,
+            obtainment.getParameters().toByteArray(), buildStepInputPackage(event.getResolvedInputList()));
         if (currFacilitatorResponse != null) {
           break;
         }
@@ -88,9 +84,5 @@ public class FacilitatorEventHandler extends PmsBaseEventHandler<FacilitatorEven
     } catch (Exception ex) {
       log.error("Error while facilitating execution", ex);
     }
-  }
-
-  private StepInputPackage obtainInputPackage(Ambiance ambiance, List<RefObject> refObjectList) {
-    return engineObtainmentHelper.obtainInputPackage(ambiance, refObjectList);
   }
 }

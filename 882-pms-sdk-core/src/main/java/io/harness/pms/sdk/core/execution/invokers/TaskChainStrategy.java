@@ -12,7 +12,6 @@ import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.ChainDetails;
-import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.ProgressableStrategy;
 import io.harness.pms.sdk.core.execution.ResumePackage;
@@ -38,7 +37,6 @@ import org.apache.commons.collections4.CollectionUtils;
 public class TaskChainStrategy extends ProgressableStrategy {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
-  @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private StrategyHelper strategyHelper;
 

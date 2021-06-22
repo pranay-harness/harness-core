@@ -1,6 +1,7 @@
 package io.harness.pms.sdk.core.execution.events.node.resume;
 
 import static io.harness.pms.contracts.execution.Status.ABORTED;
+import static io.harness.pms.sdk.core.execution.events.node.NodeEventHelper.buildStepInputPackage;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -20,7 +21,6 @@ import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.execution.ChainDetails;
 import io.harness.pms.sdk.core.execution.ChainDetails.ChainDetailsBuilder;
-import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.ExecutableProcessor;
 import io.harness.pms.sdk.core.execution.ExecutableProcessorFactory;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
@@ -49,7 +49,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent> {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
-  @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private ExecutableProcessorFactory executableProcessorFactory;
   @Inject private KryoSerializer kryoSerializer;
 
@@ -116,12 +115,11 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
     StepParameters stepParameters =
         RecastOrchestrationUtils.fromDocumentJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
 
-    ResumePackageBuilder builder =
-        ResumePackage.builder()
-            .ambiance(event.getAmbiance())
-            .stepParameters(stepParameters)
-            .stepInputPackage(engineObtainmentHelper.obtainInputPackage(event.getAmbiance(), event.getRefObjectsList()))
-            .responseDataMap(response);
+    ResumePackageBuilder builder = ResumePackage.builder()
+                                       .ambiance(event.getAmbiance())
+                                       .stepParameters(stepParameters)
+                                       .stepInputPackage(buildStepInputPackage(event.getResolvedInputList()))
+                                       .responseDataMap(response);
 
     // TODO (prashant) : Change ChildChainResponse Pass through data handling
     if (event.hasChainDetails()) {
