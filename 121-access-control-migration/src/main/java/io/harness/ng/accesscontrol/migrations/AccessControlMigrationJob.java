@@ -58,7 +58,7 @@ public class AccessControlMigrationJob implements Runnable {
           migrationService.migrate(accountIdentifier);
         }
 
-        TimeUnit.HOURS.sleep(3);
+        TimeUnit.MINUTES.sleep(30);
       }
     } catch (InterruptedException interruptedException) {
       Thread.currentThread().interrupt();

@@ -13,16 +13,20 @@ import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
+import io.harness.beans.Scope;
+import io.harness.exception.DuplicateFieldException;
 import io.harness.ng.accesscontrol.migrations.dao.AccessControlMigrationDAO;
 import io.harness.ng.accesscontrol.migrations.models.AccessControlMigration;
 import io.harness.ng.accesscontrol.mockserver.models.MockRoleAssignment.MockRoleAssignmentKeys;
 import io.harness.ng.accesscontrol.mockserver.services.MockRoleAssignmentService;
 import io.harness.ng.core.entities.Organization;
+import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.service.NgUserService;
@@ -40,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -49,6 +54,7 @@ import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -73,7 +79,11 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
 
   @Override
   public AccessControlMigration save(AccessControlMigration accessControlMigration) {
-    return accessControlMigrationDAO.save(accessControlMigration);
+    try {
+      return accessControlMigrationDAO.save(accessControlMigration);
+    } catch (DuplicateFieldException | DuplicateKeyException duplicateException) {
+      return null;
+    }
   }
 
   @Override
@@ -123,17 +133,42 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
     return createdRoleAssignments;
   }
 
-  private void migrateInternal(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    if (isAlreadyMigrated(accountIdentifier, orgIdentifier, projectIdentifier)) {
-      return;
+  private void upsertUserMembership(
+      String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    try {
+      ngUserService.addUserToScope(userId,
+          Scope.builder()
+              .accountIdentifier(accountIdentifier)
+              .orgIdentifier(orgIdentifier)
+              .projectIdentifier(projectIdentifier)
+              .build(),
+          false, UserMembershipUpdateSource.SYSTEM);
+    } catch (DuplicateKeyException | DuplicateFieldException duplicateException) {
+      // ignore
     }
+  }
+
+  private Optional<AccessControlMigration> migrateInternal(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> currentGenUserIds) {
+    if (isAlreadyMigrated(accountIdentifier, orgIdentifier, projectIdentifier)) {
+      return Optional.empty();
+    }
+
+    AccessControlMigration.AccessControlMigrationBuilder accessControlMigrationBuilder =
+        AccessControlMigration.builder()
+            .accountIdentifier(accountIdentifier)
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier);
+    long createdRoleAssignmentsCount = 0;
+
     log.info("Running migration for account: {}, org: {} and project: {}", accountIdentifier, orgIdentifier,
         projectIdentifier);
 
     // create managed resource group if it does not exist already
     boolean resourceGroupCreated = createManagedResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier);
     if (resourceGroupCreated) {
-      log.info("Default resource group created.");
+      log.info("Default resource group created for account: {}, org: {} and project: {}", accountIdentifier,
+          orgIdentifier, projectIdentifier);
     }
 
     Page<RoleAssignmentResponseDTO> mockRoleAssignments =
@@ -146,66 +181,86 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
             Pageable.unpaged());
 
     if (!mockRoleAssignments.getContent().isEmpty()) {
-      List<RoleAssignmentDTO> managedRoleAssignments = new ArrayList<>();
-      List<RoleAssignmentDTO> nonManagedRoleAssignments = new ArrayList<>();
       mockRoleAssignments.getContent().forEach(mockRoleAssignment -> {
-        if (Boolean.TRUE.equals(mockRoleAssignment.getRoleAssignment().isManaged())) {
-          managedRoleAssignments.add(mockRoleAssignment.getRoleAssignment());
-        } else {
-          nonManagedRoleAssignments.add(mockRoleAssignment.getRoleAssignment());
+        if (mockRoleAssignment.getRoleAssignment().getPrincipal().getType() == PrincipalType.USER) {
+          upsertUserMembership(mockRoleAssignment.getRoleAssignment().getPrincipal().getIdentifier(), accountIdentifier,
+              orgIdentifier, projectIdentifier);
         }
       });
-
-      log.info("Created managed role assignments for mock role assignments: {}",
-          createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, true, managedRoleAssignments));
-      log.info("Create non-managed role assignments for mock role assignments: {}",
-          createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, false, nonManagedRoleAssignments));
+      createdRoleAssignmentsCount += createRoleAssignmentsFromMockRoleAssignments(
+          accountIdentifier, orgIdentifier, projectIdentifier, mockRoleAssignments);
     } else {
       log.info("No mock role assignments in this scope found, trying to create role assignments from user memberships");
 
-      List<String> userIds = ngUserService
-                                 .listUserMemberships(Criteria.where(UserMembershipKeys.scopes + ".accountIdentifier")
-                                                          .is(accountIdentifier)
-                                                          .and(UserMembershipKeys.scopes + ".orgIdentifier")
-                                                          .is(orgIdentifier)
-                                                          .and(UserMembershipKeys.scopes + ".projectIdentifier")
-                                                          .is(projectIdentifier))
-                                 .stream()
-                                 .map(UserMembership::getUserId)
-                                 .collect(Collectors.toList());
+      List<String> userMembershipUserIds =
+          ngUserService
+              .listUserMemberships(Criteria.where(UserMembershipKeys.scopes + ".accountIdentifier")
+                                       .is(accountIdentifier)
+                                       .and(UserMembershipKeys.scopes + ".orgIdentifier")
+                                       .is(orgIdentifier)
+                                       .and(UserMembershipKeys.scopes + ".projectIdentifier")
+                                       .is(projectIdentifier))
+              .stream()
+              .map(UserMembership::getUserId)
+              .collect(Collectors.toList());
 
-      if (!userIds.isEmpty()) {
-        log.info("Created managed role assignments for user memberships: {}",
-            createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, true,
-                buildRoleAssignments(
-                    userIds, getViewerRole(accountIdentifier, orgIdentifier, projectIdentifier), ALL_RESOURCES)));
+      if (!userMembershipUserIds.isEmpty()) {
+        long createdCount = createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, true,
+            buildRoleAssignments(
+                userMembershipUserIds, getViewerRole(orgIdentifier, projectIdentifier), ALL_RESOURCES));
+        log.info("Created managed role assignments for user memberships: {}", createdCount);
+        createdRoleAssignmentsCount += createdCount;
 
-        log.info("Created non-managed role assignments for user memberships: {}",
-            createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, false,
-                buildRoleAssignments(
-                    userIds, getAdminRole(accountIdentifier, orgIdentifier, projectIdentifier), ALL_RESOURCES)));
+        createdCount = createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, false,
+            buildRoleAssignments(userMembershipUserIds, getAdminRole(orgIdentifier, projectIdentifier), ALL_RESOURCES));
+        log.info("Created non-managed role assignments for user memberships: {}", createdCount);
+        createdRoleAssignmentsCount += createdCount;
       } else {
         log.info("No user memberships in this scope found, trying to create role assignments for current gen users");
 
-        List<String> currentGenUsers =
-            getUsers(accountIdentifier).stream().map(UserInfo::getUuid).collect(Collectors.toList());
+        currentGenUserIds.forEach(
+            userId -> upsertUserMembership(userId, accountIdentifier, orgIdentifier, projectIdentifier));
+        long createdCount = createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, true,
+            buildRoleAssignments(currentGenUserIds, getViewerRole(orgIdentifier, projectIdentifier), ALL_RESOURCES));
+        log.info("Created managed role assignments for current gen users: {}", createdCount);
+        createdRoleAssignmentsCount += createdCount;
 
-        log.info("Created managed role assignments for current gen users: {}",
-            createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, true,
-                buildRoleAssignments(currentGenUsers,
-                    getViewerRole(accountIdentifier, orgIdentifier, projectIdentifier), ALL_RESOURCES)));
-
-        log.info("Created non-managed role assignments for current gen users: {}",
-            createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, false,
-                buildRoleAssignments(currentGenUsers, getAdminRole(accountIdentifier, orgIdentifier, projectIdentifier),
-                    ALL_RESOURCES)));
+        createdCount = createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, false,
+            buildRoleAssignments(currentGenUserIds, getAdminRole(orgIdentifier, projectIdentifier), ALL_RESOURCES));
+        log.info("Created non-managed role assignments for current gen users: {}", createdCount);
+        createdRoleAssignmentsCount += createdCount;
       }
     }
-    accessControlMigrationDAO.save(AccessControlMigration.builder()
-                                       .accountIdentifier(accountIdentifier)
-                                       .orgIdentifier(orgIdentifier)
-                                       .projectIdentifier(projectIdentifier)
-                                       .build());
+    return Optional.ofNullable(
+        accessControlMigrationBuilder.createdRoleAssignments(createdRoleAssignmentsCount).build());
+  }
+
+  private long createRoleAssignmentsFromMockRoleAssignments(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, Page<RoleAssignmentResponseDTO> mockRoleAssignments) {
+    long createdRoleAssignmentsCount = 0;
+    List<RoleAssignmentDTO> managedRoleAssignments = new ArrayList<>();
+    List<RoleAssignmentDTO> nonManagedRoleAssignments = new ArrayList<>();
+    mockRoleAssignments.getContent().forEach(mockRoleAssignment -> {
+      if (Boolean.TRUE.equals(mockRoleAssignment.getRoleAssignment().isManaged())) {
+        managedRoleAssignments.add(mockRoleAssignment.getRoleAssignment());
+      } else {
+        nonManagedRoleAssignments.add(mockRoleAssignment.getRoleAssignment());
+      }
+    });
+
+    long createdCount;
+
+    createdCount =
+        createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, true, managedRoleAssignments);
+    log.info("Created managed role assignments for mock role assignments: {}", createdCount);
+    createdRoleAssignmentsCount += createdCount;
+
+    createdCount =
+        createRoleAssignments(accountIdentifier, orgIdentifier, projectIdentifier, false, nonManagedRoleAssignments);
+    log.info("Create non-managed role assignments for mock role assignments: {}", createdCount);
+    createdRoleAssignmentsCount += createdCount;
+
+    return createdRoleAssignmentsCount;
   }
 
   private boolean createManagedResourceGroup(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
@@ -228,9 +283,9 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
         != null;
   }
 
-  private String getViewerRole(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  private String getViewerRole(String orgIdentifier, String projectIdentifier) {
     if (!StringUtils.isEmpty(projectIdentifier)) {
-      return "-project_viewer";
+      return "_project_viewer";
     } else if (!StringUtils.isEmpty(orgIdentifier)) {
       return "_organization_viewer";
     } else {
@@ -238,9 +293,9 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
     }
   }
 
-  private String getAdminRole(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  private String getAdminRole(String orgIdentifier, String projectIdentifier) {
     if (!StringUtils.isEmpty(projectIdentifier)) {
-      return "-project_admin";
+      return "_project_admin";
     } else if (!StringUtils.isEmpty(orgIdentifier)) {
       return "_organization_admin";
     } else {
@@ -266,16 +321,32 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
 
   @Override
   public void migrate(String accountIdentifier) {
-    migrateInternal(accountIdentifier, null, null);
+    List<String> currentGenUserIds =
+        getUsers(accountIdentifier).stream().map(UserInfo::getUuid).collect(Collectors.toList());
+
+    Optional<AccessControlMigration> accessControlMigrationOptional;
+
+    accessControlMigrationOptional = migrateInternal(accountIdentifier, null, null, currentGenUserIds);
+    accessControlMigrationOptional.ifPresent(migration -> {
+      if (migration.getCreatedRoleAssignments() > 0) {
+        runPostMigrationSteps(migration);
+      }
+    });
 
     List<String> organizations =
-        organizationService.list(Criteria.where(Organization.OrganizationKeys.accountIdentifier).is(accountIdentifier))
+        organizationService.list(Criteria.where(OrganizationKeys.accountIdentifier).is(accountIdentifier))
             .stream()
             .map(Organization::getIdentifier)
             .collect(Collectors.toList());
 
     for (String organizationIdentifier : organizations) {
-      migrateInternal(accountIdentifier, organizationIdentifier, null);
+      accessControlMigrationOptional =
+          migrateInternal(accountIdentifier, organizationIdentifier, null, currentGenUserIds);
+      accessControlMigrationOptional.ifPresent(migration -> {
+        if (migration.getCreatedRoleAssignments() > 0) {
+          runPostMigrationSteps(migration);
+        }
+      });
 
       List<String> projects = projectService
                                   .list(Criteria.where(ProjectKeys.accountIdentifier)
@@ -287,8 +358,19 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
                                   .collect(Collectors.toList());
 
       for (String projectIdentifier : projects) {
-        migrateInternal(accountIdentifier, organizationIdentifier, projectIdentifier);
+        accessControlMigrationOptional =
+            migrateInternal(accountIdentifier, organizationIdentifier, projectIdentifier, currentGenUserIds);
+        accessControlMigrationOptional.ifPresent(migration -> {
+          if (migration.getCreatedRoleAssignments() > 0) {
+            runPostMigrationSteps(migration);
+          }
+        });
       }
     }
+  }
+
+  private void runPostMigrationSteps(AccessControlMigration migration) {
+    save(migration);
+    accessControlAdminClient.upsertAccessControlPreference(migration.getAccountIdentifier(), true);
   }
 }

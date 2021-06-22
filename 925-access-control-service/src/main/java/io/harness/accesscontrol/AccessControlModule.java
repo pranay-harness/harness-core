@@ -26,7 +26,6 @@ import io.harness.accesscontrol.commons.notifications.NotificationConfig;
 import io.harness.accesscontrol.commons.outbox.AccessControlOutboxEventHandler;
 import io.harness.accesscontrol.commons.validation.HarnessActionValidator;
 import io.harness.accesscontrol.preference.AccessControlPreferenceModule;
-import io.harness.accesscontrol.preference.events.NGRBACEnabledFeatureFlagEventConsumer;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.principals.PrincipalValidator;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupService;
@@ -233,10 +232,6 @@ public class AccessControlModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(ENTITY_CRUD));
     entityCrudEventConsumers.addBinding().to(ResourceGroupEventConsumer.class);
     entityCrudEventConsumers.addBinding().to(UserGroupEventConsumer.class);
-
-    Multibinder<EventConsumer> featureFlagEventConsumers =
-        Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(FEATURE_FLAG_STREAM));
-    featureFlagEventConsumers.addBinding().to(NGRBACEnabledFeatureFlagEventConsumer.class);
 
     Multibinder<EventConsumer> userMembershipEventConsumers =
         Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(USERMEMBERSHIP));

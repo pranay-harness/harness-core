@@ -48,7 +48,7 @@ public class AccessControlConfiguration extends Configuration {
   public static final String ROLES_PACKAGE = "io.harness.accesscontrol.roles";
   public static final String ROLE_ASSIGNMENTS_PACKAGE = "io.harness.accesscontrol.roleassignments.api";
   public static final String ACL_PACKAGE = "io.harness.accesscontrol.acl";
-  public static final String ACL_TEST_PACKAGE = "io.harness.accesscontrol.test";
+  public static final String ACCESSCONTROL_PREFERENCE_PACKAGE = "io.harness.accesscontrol.preference";
   public static final String HEALTH_PACKAGE = "io.harness.accesscontrol.health";
 
   @JsonProperty("mongo") private MongoConfig mongoConfig;
@@ -86,8 +86,8 @@ public class AccessControlConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections(
-        PERMISSION_PACKAGE, ROLES_PACKAGE, ROLE_ASSIGNMENTS_PACKAGE, ACL_PACKAGE, ACL_TEST_PACKAGE, HEALTH_PACKAGE);
+    Reflections reflections = new Reflections(PERMISSION_PACKAGE, ROLES_PACKAGE, ROLE_ASSIGNMENTS_PACKAGE, ACL_PACKAGE,
+        ACCESSCONTROL_PREFERENCE_PACKAGE, HEALTH_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 
