@@ -43,4 +43,6 @@ public interface GitToHarnessProgressService {
 
   GitToHarnessProgressDTO getByRepoUrlAndCommitIdAndEventType(
       String repoURL, String commitId, YamlChangeSetEventType eventType);
+
+  GitToHarnessProgressDTO getByYamlChangeSetId(String yamlChangeSetId);
 }
