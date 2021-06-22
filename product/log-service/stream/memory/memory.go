@@ -32,6 +32,11 @@ func (s *Streamer) Create(ctx context.Context, key string) error {
 	return nil
 }
 
+// Ping to an in memory stream is always successful
+func (s *Streamer) Ping(ctx context.Context) error {
+	return nil
+}
+
 func (s *Streamer) Delete(ctx context.Context, key string) error {
 	s.Lock()
 	c, ok := s.streams[key]
