@@ -1,9 +1,6 @@
 package io.harness.batch.processing.billing.timeseries.service.impl;
 
-import static io.harness.rule.OwnerRule.HITESH;
-import static io.harness.rule.OwnerRule.ROHIT;
-import static io.harness.rule.OwnerRule.SHUBHANSHU;
-import static io.harness.rule.OwnerRule.UTSAV;
+import static io.harness.rule.OwnerRule.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -23,11 +20,7 @@ import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
@@ -159,8 +152,9 @@ public class BillingDataServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void readBillingData() throws SQLException {
     mockResultSet();
-    List<InstanceBillingData> instanceBillingData = billingDataService.read(
-        ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS), Instant.ofEpochMilli(END_TIME_MILLIS), 500, 0);
+    List<InstanceBillingData> instanceBillingData =
+        billingDataService.read(ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS),
+            Instant.ofEpochMilli(END_TIME_MILLIS), 500, 0, BatchJobType.CLUSTER_DATA_TO_BIG_QUERY);
     assertThat(instanceBillingData.size()).isEqualTo(1);
   }
 

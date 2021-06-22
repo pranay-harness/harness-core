@@ -1,23 +1,13 @@
 package io.harness.batch.processing.tasklet;
 
-import static io.harness.rule.OwnerRule.ROHIT;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
-
 import io.harness.batch.processing.billing.timeseries.data.InstanceBillingData;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
+import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.service.impl.GoogleCloudStorageServiceImpl;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.testsupport.BaseTaskletTest;
-
-import software.wings.security.authentication.BatchQueryConfig;
-
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -26,6 +16,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.batch.repeat.RepeatStatus;
+import software.wings.security.authentication.BatchQueryConfig;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.Collections;
+
+import static io.harness.rule.OwnerRule.ROHIT;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ClusterDataToBigQueryTaskletTest extends BaseTaskletTest {
@@ -67,8 +66,8 @@ public class ClusterDataToBigQueryTaskletTest extends BaseTaskletTest {
                                                   .build();
 
     when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().queryBatchSize(BATCH_SIZE).build());
-    when(billingDataService.read(
-             ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS), Instant.ofEpochMilli(END_TIME_MILLIS), BATCH_SIZE, 0))
+    when(billingDataService.read(ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS),
+             Instant.ofEpochMilli(END_TIME_MILLIS), BATCH_SIZE, 0, BatchJobType.CLUSTER_DATA_TO_BIG_QUERY))
         .thenReturn(Collections.singletonList(instanceBillingData));
   }
 

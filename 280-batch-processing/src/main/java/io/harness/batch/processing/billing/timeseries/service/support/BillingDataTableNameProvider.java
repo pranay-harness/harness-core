@@ -1,9 +1,6 @@
 package io.harness.batch.processing.billing.timeseries.service.support;
 
-import static io.harness.batch.processing.ccm.BatchJobType.ACTUAL_IDLE_COST_BILLING_HOURLY;
-import static io.harness.batch.processing.ccm.BatchJobType.INSTANCE_BILLING_AGGREGATION;
-import static io.harness.batch.processing.ccm.BatchJobType.INSTANCE_BILLING_HOURLY;
-import static io.harness.batch.processing.ccm.BatchJobType.INSTANCE_BILLING_HOURLY_AGGREGATION;
+import static io.harness.batch.processing.ccm.BatchJobType.*;
 
 import io.harness.batch.processing.ccm.BatchJobType;
 

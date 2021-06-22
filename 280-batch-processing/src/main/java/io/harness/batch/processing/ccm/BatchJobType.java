@@ -1,10 +1,6 @@
 package io.harness.batch.processing.ccm;
 
-import static io.harness.batch.processing.ccm.BatchJobBucket.IN_CLUSTER;
-import static io.harness.batch.processing.ccm.BatchJobBucket.IN_CLUSTER_BILLING;
-import static io.harness.batch.processing.ccm.BatchJobBucket.IN_CLUSTER_RECOMMENDATION;
-import static io.harness.batch.processing.ccm.BatchJobBucket.OTHERS;
-import static io.harness.batch.processing.ccm.BatchJobBucket.OUT_OF_CLUSTER;
+import static io.harness.batch.processing.ccm.BatchJobBucket.*;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -44,6 +40,8 @@ public enum BatchJobType {
   INSTANCE_BILLING_AGGREGATION(887, 1, ChronoUnit.DAYS, Arrays.asList(ACTUAL_IDLE_COST_BILLING), IN_CLUSTER_BILLING),
   CE_SEGMENT_CALL(900, 1, ChronoUnit.DAYS, Arrays.asList(ACTUAL_IDLE_COST_BILLING), OTHERS),
   CLUSTER_DATA_TO_BIG_QUERY(1000, 1, ChronoUnit.DAYS, Arrays.asList(ACTUAL_IDLE_COST_BILLING), IN_CLUSTER_BILLING),
+  CLUSTER_DATA_HOURLY_TO_BIG_QUERY(
+      1100, 1, ChronoUnit.HOURS, Arrays.asList(ACTUAL_IDLE_COST_BILLING_HOURLY), IN_CLUSTER_BILLING),
   ANOMALY_DETECTION_K8S(1000, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING), IN_CLUSTER_BILLING),
   ANOMALY_DETECTION_CLOUD(1000, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING), IN_CLUSTER_BILLING),
   DATA_CHECK_BIGQUERY_TIMESCALE(1000, 1, ChronoUnit.DAYS, singletonList(CLUSTER_DATA_TO_BIG_QUERY), IN_CLUSTER_BILLING),
