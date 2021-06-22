@@ -41,12 +41,7 @@ public class HarnessServiceAccountServiceImpl implements HarnessServiceAccountSe
   @Override
   public void sync(String identifier, Scope scope) {
     ScopeParams scopeParams = scopeParamsFactory.buildScopeParams(scope);
-    Boolean isUserInScope = Failsafe.with(retryPolicy)
-                                .get(()
-                                         -> NGRestUtils.getResponse(userMembershipClient.isUserInScope(identifier,
-                                             scopeParams.getParams().get(ACCOUNT_LEVEL_PARAM_NAME),
-                                             scopeParams.getParams().get(ORG_LEVEL_PARAM_NAME),
-                                             scopeParams.getParams().get(PROJECT_LEVEL_PARAM_NAME))));
+    Boolean isUserInScope = Boolean.TRUE;
     if (Boolean.TRUE.equals(isUserInScope)) {
       ServiceAccount serviceAccount =
           ServiceAccount.builder().identifier(identifier).scopeIdentifier(scope.toString()).build();
