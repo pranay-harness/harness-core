@@ -1,6 +1,7 @@
 package io.harness.pms.sdk.execution.events.node.advise;
 
 import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.SDK_PROCESSOR_SERVICE;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -11,22 +12,14 @@ import io.harness.pms.sdk.core.execution.events.node.advise.NodeAdviseEventHandl
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
-public class NodeAdviseEventMessageListener extends PmsAbstractMessageListener<AdviseEvent> {
-  private final NodeAdviseEventHandler nodeAdviseEventHandler;
-
+public class NodeAdviseEventMessageListener extends PmsAbstractMessageListener<AdviseEvent, NodeAdviseEventHandler> {
   @Inject
-  public NodeAdviseEventMessageListener(
-      @Named(SDK_SERVICE_NAME) String serviceName, NodeAdviseEventHandler nodeAdviseEventHandler) {
-    super(serviceName, AdviseEvent.class);
-    this.nodeAdviseEventHandler = nodeAdviseEventHandler;
-  }
-
-  @Override
-  public void processMessage(AdviseEvent event, Map<String, String> metadataMap, Long timestamp) {
-    nodeAdviseEventHandler.handleEvent(event, metadataMap, timestamp);
+  public NodeAdviseEventMessageListener(@Named(SDK_SERVICE_NAME) String serviceName,
+      NodeAdviseEventHandler nodeAdviseEventHandler, @Named(SDK_PROCESSOR_SERVICE) ExecutorService executorService) {
+    super(serviceName, AdviseEvent.class, nodeAdviseEventHandler, executorService);
   }
 }
