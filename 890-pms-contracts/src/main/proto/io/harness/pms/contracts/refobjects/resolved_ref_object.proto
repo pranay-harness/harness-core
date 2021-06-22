@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.refobjects;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/refobjects/ref_objects.proto";
+
+message ResolvedRefInput {
+  RefObject refObject = 1;
+  bytes transput = 2;
+}

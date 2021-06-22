@@ -10,6 +10,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionTimeoutCallback;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.pms.commons.events.PmsEventSender;
+import io.harness.engine.pms.data.PmsTransputHelper;
 import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -50,6 +51,7 @@ public class NodeStartHelper {
   @Inject private TimeoutEngine timeoutEngine;
   @Inject private TimeoutRegistry timeoutRegistry;
   @Inject private PmsFeatureFlagService pmsFeatureFlagService;
+  @Inject private PmsTransputHelper transputHelper;
 
   public void startNode(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
     ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
@@ -66,14 +68,16 @@ public class NodeStartHelper {
   private void sendEvent(NodeExecution nodeExecution, ByteString passThroughData) {
     String serviceName = nodeExecution.getNode().getServiceName();
     String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
-    NodeStartEvent nodeStartEvent = NodeStartEvent.newBuilder()
-                                        .setAmbiance(nodeExecution.getAmbiance())
-                                        .addAllRefObjects(nodeExecution.getNode().getRebObjectsList())
-                                        .setFacilitatorPassThoroughData(passThroughData)
-                                        .setStepParameters(ByteString.copyFromUtf8(HarnessStringUtils.emptyIfNull(
-                                            nodeExecution.getResolvedStepParameters().toJson())))
-                                        .setMode(nodeExecution.getMode())
-                                        .build();
+    NodeStartEvent nodeStartEvent =
+        NodeStartEvent.newBuilder()
+            .setAmbiance(nodeExecution.getAmbiance())
+            .addAllResolvedInput(
+                transputHelper.resolveInputs(nodeExecution.getAmbiance(), nodeExecution.getNode().getRebObjectsList()))
+            .setFacilitatorPassThoroughData(passThroughData)
+            .setStepParameters(ByteString.copyFromUtf8(
+                HarnessStringUtils.emptyIfNull(nodeExecution.getResolvedStepParameters().toJson())))
+            .setMode(nodeExecution.getMode())
+            .build();
     eventSender.sendEvent(nodeStartEvent.toByteString(), PmsEventCategory.NODE_START, serviceName, accountId, true);
   }
 

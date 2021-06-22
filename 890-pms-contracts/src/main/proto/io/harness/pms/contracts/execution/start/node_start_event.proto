@@ -6,12 +6,13 @@ option java_multiple_files = true;
 
 import "io/harness/pms/contracts/ambiance/ambiance.proto";
 import "io/harness/pms/contracts/refobjects/ref_objects.proto";
+import "io/harness/pms/contracts/refobjects/resolved_ref_object.proto";
 import "io/harness/pms/contracts/execution/execution_mode.proto";
 
 message NodeStartEvent {
   io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;
-  repeated io.harness.pms.contracts.refobjects.RefObject refObjects = 2;
   bytes facilitatorPassThoroughData = 3;
   bytes stepParameters = 4;
   io.harness.pms.contracts.execution.ExecutionMode mode = 5;
+  repeated io.harness.pms.contracts.refobjects.ResolvedRefInput resolvedInput = 6;
 }
