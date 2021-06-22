@@ -8,26 +8,23 @@ import io.harness.beans.FeatureName;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.featureflag.FeatureFlagChangeDTO;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.accesscontrol.migrations.services.AccessControlMigrationService;
 import io.harness.ng.resourcegroup.migration.DefaultResourceGroupCreationService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
 @Slf4j
 @Singleton
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class OrganizationFeatureFlagStreamListener implements MessageListener {
   private final DefaultOrganizationManager defaultOrganizationManager;
   private final DefaultResourceGroupCreationService defaultResourceGroupCreationService;
-
-  @Inject
-  public OrganizationFeatureFlagStreamListener(DefaultOrganizationManager defaultOrganizationManager,
-      DefaultResourceGroupCreationService defaultResourceGroupCreationService) {
-    this.defaultOrganizationManager = defaultOrganizationManager;
-    this.defaultResourceGroupCreationService = defaultResourceGroupCreationService;
-  }
+  private final AccessControlMigrationService accessControlMigrationService;
 
   @Override
   public boolean handleMessage(Message message) {
@@ -50,7 +47,7 @@ public class OrganizationFeatureFlagStreamListener implements MessageListener {
 
   private boolean processNGEnableAction(String accountId) {
     defaultOrganizationManager.createDefaultOrganization(accountId);
-    defaultResourceGroupCreationService.createDefaultResourceGroup(accountId, null, null);
+    accessControlMigrationService.migrate(accountId);
     return true;
   }
 }
