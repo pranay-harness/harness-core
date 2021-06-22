@@ -7,16 +7,11 @@ import io.harness.accesscontrol.principals.Principal;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.principals.PrincipalValidator;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.InvalidRequestException;
-import io.harness.utils.RetryUtils;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.time.Duration;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
-import net.jodah.failsafe.RetryPolicy;
 
 @OwnedBy(PL)
 @Slf4j

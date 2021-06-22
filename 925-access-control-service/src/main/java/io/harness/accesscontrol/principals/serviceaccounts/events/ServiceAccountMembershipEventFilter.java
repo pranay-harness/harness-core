@@ -1,7 +1,6 @@
 package io.harness.accesscontrol.principals.serviceaccounts.events;
 
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.SERVICE_ACCOUNT_ENTITY;
 
