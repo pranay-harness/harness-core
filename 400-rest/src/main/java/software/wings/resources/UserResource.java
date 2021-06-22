@@ -583,7 +583,7 @@ public class UserResource {
         authenticationManager.switchAccount(authenticationManager.extractToken(authorization, "Bearer"), accountId));
   }
 
-  @GET
+  @POST
   @Path("switch-account/{accountId}")
   @Timed
   @ExceptionMetered
