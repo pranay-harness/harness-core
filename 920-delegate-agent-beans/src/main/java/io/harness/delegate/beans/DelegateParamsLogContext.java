@@ -1,7 +1,7 @@
-package io.harness.logging;
+package io.harness.delegate.beans;
 
 import io.harness.data.structure.NullSafeImmutableMap;
-import io.harness.delegate.beans.DelegateParams;
+import io.harness.logging.AutoLogContext;
 
 public class DelegateParamsLogContext extends AutoLogContext {
   public static final String ACCOUNT_ID = "accountId";
