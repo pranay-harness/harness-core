@@ -2166,7 +2166,6 @@ public class DelegateServiceImpl implements DelegateService {
       DelegateGroup delegateGroup = persistence.get(DelegateGroup.class, delegate.getDelegateGroupId());
 
       if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
-        broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
         log.warn("Sending self destruct command from register delegate because the delegate group is deleted.");
         return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
       }
@@ -2232,7 +2231,6 @@ public class DelegateServiceImpl implements DelegateService {
       DelegateGroup delegateGroup = persistence.get(DelegateGroup.class, delegateParams.getDelegateGroupId());
 
       if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
-        broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(SELF_DESTRUCT);
         log.warn(
             "Sending self destruct command from register delegate parameters because the delegate group is deleted.");
         return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
