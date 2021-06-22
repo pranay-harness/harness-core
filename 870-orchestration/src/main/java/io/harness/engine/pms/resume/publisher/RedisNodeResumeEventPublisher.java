@@ -30,14 +30,13 @@ public class RedisNodeResumeEventPublisher implements NodeResumeEventPublisher {
   public void publishEvent(NodeExecution nodeExecution, Map<String, ByteString> responseMap, boolean isError) {
     String serviceName = nodeExecution.getNode().getServiceName();
     String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
-    NodeResumeEvent.Builder resumeEventBuilder =
-        NodeResumeEvent.newBuilder()
-            .setAmbiance(nodeExecution.getAmbiance())
-            .setExecutionMode(nodeExecution.getMode())
-            .setStepParameters(nodeExecution.getNode().getStepParametersBytes())
-            .addAllRefObjects(nodeExecution.getNode().getRebObjectsList())
-            .setAsyncError(isError)
-            .putAllResponse(responseMap);
+    NodeResumeEvent.Builder resumeEventBuilder = NodeResumeEvent.newBuilder()
+                                                     .setAmbiance(nodeExecution.getAmbiance())
+                                                     .setExecutionMode(nodeExecution.getMode())
+                                                     .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
+                                                     .addAllRefObjects(nodeExecution.getNode().getRebObjectsList())
+                                                     .setAsyncError(isError)
+                                                     .putAllResponse(responseMap);
 
     ChainDetails chainDetails = buildChainDetails(nodeExecution);
     if (chainDetails != null) {

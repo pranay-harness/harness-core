@@ -466,17 +466,19 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public Set<String> getAllDelegateSelectors(String accountId) {
-    Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
-                                        .filter(DelegateKeys.accountId, accountId)
-                                        .filter(DelegateKeys.ng, false)
-                                        .field(DelegateKeys.status)
-                                        .notEqual(DelegateInstanceStatus.DELETED)
-                                        .project(DelegateKeys.accountId, true)
-                                        .project(DelegateKeys.tags, true)
-                                        .project(DelegateKeys.delegateName, true)
-                                        .project(DelegateKeys.hostName, true)
-                                        .project(DelegateKeys.delegateProfileId, true)
-                                        .project(DelegateKeys.delegateGroupId, true);
+    Query<Delegate> delegateQuery =
+        persistence.createQuery(Delegate.class)
+            .filter(DelegateKeys.accountId, accountId)
+            .field(DelegateKeys.ng)
+            .notEqual(true) // notEqual is required to cover all existing delegates that will not have the ng flag set
+            .field(DelegateKeys.status)
+            .notEqual(DelegateInstanceStatus.DELETED)
+            .project(DelegateKeys.accountId, true)
+            .project(DelegateKeys.tags, true)
+            .project(DelegateKeys.delegateName, true)
+            .project(DelegateKeys.hostName, true)
+            .project(DelegateKeys.delegateProfileId, true)
+            .project(DelegateKeys.delegateGroupId, true);
 
     try (HIterator<Delegate> delegates = new HIterator<>(delegateQuery.fetch())) {
       if (delegates.hasNext()) {

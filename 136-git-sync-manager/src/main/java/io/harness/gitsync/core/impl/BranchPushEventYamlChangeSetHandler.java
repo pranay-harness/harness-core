@@ -138,6 +138,12 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
     List<GitFileChangeDTO> gitFileChangeDTOList =
         getAllFileContent(yamlChangeSetDTO, yamlGitConfigDTOList.get(0), prFilesTobeProcessed);
 
+    // TODO adding logs to debug an issue, remove after use
+    StringBuilder gitFileChangeDTOListAsString = new StringBuilder("diff files :: ");
+    gitFileChangeDTOList.forEach(
+        gitFileChangeDTO -> gitFileChangeDTOListAsString.append(gitFileChangeDTO.toString()).append(" :::: "));
+    log.info(gitFileChangeDTOListAsString.toString());
+
     // Mark step status done
     gitToHarnessProgressRecord = gitToHarnessProgressService.updateStepStatus(
         gitToHarnessProgressRecord.getUuid(), GitToHarnessProcessingStepStatus.DONE);
@@ -157,7 +163,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
         gitToHarnessProcessorService.processFiles(request.getYamlChangeSetDTO().getAccountId(), fileProcessingRequests,
             request.getYamlChangeSetDTO().getBranch(), request.getYamlGitConfigDTO().getRepo(),
             request.getYamlChangeSetDTO().getGitWebhookRequestAttributes().getHeadCommitId(),
-            request.getProgressRecord().getUuid());
+            request.getProgressRecord().getUuid(), request.getYamlChangeSetDTO().getChangesetId());
     return GitToHarnessProcessMsvcStepResponse.builder().gitToHarnessProgressStatus(gitToHarnessProgressStatus).build();
   }
 

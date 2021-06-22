@@ -4,7 +4,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class PmsUtilityConsumerConstants {
+public class PmsSdkEventFrameworkConstants {
+  public static final String SDK_PROCESSOR_SERVICE = "SDK_PROCESSOR_SERVICE";
+
   public static final String PT_INTERRUPT_LISTENER = "INTERRUPT_LISTENER";
   public static final String PT_INTERRUPT_CONSUMER = "INTERRUPT_CONSUMER";
 

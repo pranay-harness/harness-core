@@ -41,7 +41,7 @@ public class InstallUtils {
   private static final String goTemplateClientVersion = "v0.4";
   private static final String goTemplateClientBaseDir = "./client-tools/go-template/";
 
-  private static final String harnessPywinrmVersion = "v0.3-dev";
+  private static final String harnessPywinrmVersion = "v0.4-dev";
   private static final String harnessPywinrmBaseDir = "./client-tools/harness-pywinrm/";
 
   static final String helm3Version = "v3.1.2";
@@ -84,7 +84,7 @@ public class InstallUtils {
 
   private static final String scmBaseDir = "./client-tools/scm/";
   private static final String scmBinary = "scm";
-  private static final String defaultScmVersion = "90882846";
+  private static final String defaultScmVersion = "77c318c1";
 
   private static final String KUBECTL_CDN_PATH = "public/shared/tools/kubectl/release/%s/bin/%s/amd64/kubectl";
   private static final String CHART_MUSEUM_CDN_PATH =

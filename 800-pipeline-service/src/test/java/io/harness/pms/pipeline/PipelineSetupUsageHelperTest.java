@@ -28,16 +28,19 @@ import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
+import io.harness.eventsframework.schemas.entitysetupusage.EntityDetailWithSetupUsageDetailProtoDTO;
+import io.harness.eventsframework.schemas.entitysetupusage.EntityDetailWithSetupUsageDetailProtoDTO.EntityReferredByPipelineDetailProtoDTO;
+import io.harness.eventsframework.schemas.entitysetupusage.EntityDetailWithSetupUsageDetailProtoDTO.PipelineDetailType;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateV2DTO;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
+import io.harness.ng.core.entitysetupusage.dto.SetupUsageDetailType;
 import io.harness.pms.rbac.InternalReferredEntityExtractor;
 import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -173,16 +176,42 @@ public class PipelineSetupUsageHelperTest extends PipelineServiceTestBase {
   @Category(UnitTests.class)
   public void testPublishSetupUsageEvent() {
     List<EntityDetailProtoDTO> referredEntities = new ArrayList<>();
-    EntityDetailProtoDTO connectorManagerDetails = EntityDetailProtoDTO.newBuilder()
-                                                       .setIdentifierRef(IdentifierRefProtoDTO.newBuilder().build())
-                                                       .setType(EntityTypeProtoEnum.SECRETS)
-                                                       .build();
-    EntityDetailProtoDTO secretManagerDetails = EntityDetailProtoDTO.newBuilder()
-                                                    .setIdentifierRef(IdentifierRefProtoDTO.newBuilder().build())
-                                                    .setType(EntityTypeProtoEnum.CONNECTORS)
-                                                    .build();
+    EntityDetailProtoDTO secretManagerDetails =
+        EntityDetailProtoDTO.newBuilder()
+            .setIdentifierRef(IdentifierRefProtoDTO.newBuilder()
+                                  .putMetadata(PreFlightCheckMetadata.FQN, "pipeline.variables.var1")
+                                  .build())
+            .setType(EntityTypeProtoEnum.SECRETS)
+            .build();
+    EntityDetailProtoDTO connectorManagerDetails =
+        EntityDetailProtoDTO.newBuilder()
+            .setIdentifierRef(IdentifierRefProtoDTO.newBuilder()
+                                  .putMetadata(PreFlightCheckMetadata.FQN, "pipelines.stages.s1")
+                                  .build())
+            .setType(EntityTypeProtoEnum.CONNECTORS)
+            .build();
     referredEntities.add(secretManagerDetails);
     referredEntities.add(connectorManagerDetails);
+
+    EntityDetailWithSetupUsageDetailProtoDTO connectorWithDetails =
+        EntityDetailWithSetupUsageDetailProtoDTO.newBuilder()
+            .setType(SetupUsageDetailType.CONNECTOR_REFERRED_BY_PIPELINE.name())
+            .setReferredEntity(connectorManagerDetails)
+            .setEntityInPipelineDetail(EntityReferredByPipelineDetailProtoDTO.newBuilder()
+                                           .setIdentifier("s1")
+                                           .setType(PipelineDetailType.STAGE_IDENTIFIER)
+                                           .build())
+            .build();
+
+    EntityDetailWithSetupUsageDetailProtoDTO secretWithDetails =
+        EntityDetailWithSetupUsageDetailProtoDTO.newBuilder()
+            .setType(SetupUsageDetailType.SECRET_REFERRED_BY_PIPELINE.name())
+            .setReferredEntity(secretManagerDetails)
+            .setEntityInPipelineDetail(EntityReferredByPipelineDetailProtoDTO.newBuilder()
+                                           .setIdentifier("var1")
+                                           .setType(PipelineDetailType.VARIABLE_NAME)
+                                           .build())
+            .build();
 
     PipelineEntity pipelineEntity = PipelineEntity.builder().name("test").accountId("accountId").build();
     EntityDetailProtoDTO pipelineDetails =
@@ -197,14 +226,14 @@ public class PipelineSetupUsageHelperTest extends PipelineServiceTestBase {
         EntitySetupUsageCreateV2DTO.newBuilder()
             .setAccountIdentifier(pipelineEntity.getAccountId())
             .setReferredByEntity(pipelineDetails)
-            .addAllReferredEntities(Lists.newArrayList(connectorManagerDetails))
+            .addAllReferredEntityWithSetupUsageDetail(Collections.singletonList(secretWithDetails))
             .setDeleteOldReferredByRecords(true)
             .build();
-    EntitySetupUsageCreateV2DTO connectorEntityReferenceDTO1 =
+    EntitySetupUsageCreateV2DTO connectorEntityReferenceDTO =
         EntitySetupUsageCreateV2DTO.newBuilder()
             .setAccountIdentifier(pipelineEntity.getAccountId())
             .setReferredByEntity(pipelineDetails)
-            .addAllReferredEntities(Lists.newArrayList(secretManagerDetails))
+            .addAllReferredEntityWithSetupUsageDetail(Collections.singletonList(connectorWithDetails))
             .setDeleteOldReferredByRecords(true)
             .build();
 
@@ -222,7 +251,7 @@ public class PipelineSetupUsageHelperTest extends PipelineServiceTestBase {
                   .putAllMetadata(ImmutableMap.of("accountId", pipelineEntity.getAccountId(),
                       EventsFrameworkMetadataConstants.REFERRED_ENTITY_TYPE, EntityTypeProtoEnum.CONNECTORS.name(),
                       EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.FLUSH_CREATE_ACTION))
-                  .setData(connectorEntityReferenceDTO1.toByteString())
+                  .setData(connectorEntityReferenceDTO.toByteString())
                   .build());
   }
 }

@@ -65,10 +65,10 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   @Override
   public GitToHarnessProgressStatus processFiles(String accountId,
       List<GitToHarnessFileProcessingRequest> fileContentsList, String branchName, String repoUrl, String commitId,
-      String gitToHarnessProgressRecordId) {
+      String gitToHarnessProgressRecordId, String changeSetId) {
     final List<YamlGitConfigDTO> yamlGitConfigs = yamlGitConfigService.getByRepo(repoUrl);
     List<ChangeSetWithYamlStatusDTO> changeSetsWithYamlStatus =
-        GitChangeSetMapper.toChangeSetList(fileContentsList, accountId, yamlGitConfigs);
+        GitChangeSetMapper.toChangeSetList(fileContentsList, accountId, yamlGitConfigs, changeSetId);
     final List<ChangeSet> invalidChangeSets = markSkippedFiles(changeSetsWithYamlStatus);
     Map<EntityType, List<ChangeSet>> mapOfEntityTypeAndContent =
         createMapOfEntityTypeAndFileContent(changeSetsWithYamlStatus);
@@ -90,7 +90,8 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
                                                                   .setAccountId(accountId)
                                                                   .setCommitId(StringValue.of(commitId))
                                                                   .build();
-      log.info("Sending to microservice {}", entry.getKey());
+      // TODO log for debug purpose, remove after use
+      log.info("Sending to microservice {}, request : {}", entry.getKey(), gitToHarnessProcessRequest);
       GitToHarnessProcessingResponseDTO gitToHarnessProcessingResponseDTO = null;
       try {
         ProcessingResponse processingResponse = gitToHarnessServiceBlockingStub.process(gitToHarnessProcessRequest);

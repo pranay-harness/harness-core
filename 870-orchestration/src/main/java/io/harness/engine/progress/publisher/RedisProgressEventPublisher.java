@@ -28,7 +28,7 @@ public class RedisProgressEventPublisher implements ProgressEventPublisher {
     ProgressEvent progressEvent = ProgressEvent.newBuilder()
                                       .setAmbiance(nodeExecution.getAmbiance())
                                       .setExecutionMode(nodeExecution.getMode())
-                                      .setStepParameters(nodeExecution.getNode().getStepParametersBytes())
+                                      .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
                                       .setProgressBytes(ByteString.copyFrom(progressData.getData()))
                                       .build();
 

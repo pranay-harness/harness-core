@@ -158,19 +158,27 @@ public class GitClientV2ImplTest extends CategoryTest {
   @Test
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
-  public void testEnsureRepoLocallyClonedAndUpdated() {
-    assertThatThrownBy(() -> gitClient.ensureRepoLocallyClonedAndUpdated(null)).isInstanceOf(GeneralException.class);
+  public void testEnsureRepoLocallyClonedAndUpdated() throws Exception {
+    String repoPathInternal = Files.createTempDirectory(UUID.randomUUID().toString()).toString();
+    createRepo(repoPathInternal, false);
+    Git gitInternal = Git.open(new File(repoPathInternal));
 
+    assertThatThrownBy(() -> gitClient.ensureRepoLocallyClonedAndUpdated(null)).isInstanceOf(GeneralException.class);
     GitBaseRequest request = GitBaseRequest.builder()
-                                 .repoUrl(repoPath)
+                                 .repoUrl(repoPathInternal)
                                  .authRequest(new UsernamePasswordAuthRequest(USERNAME, PASSWORD.toCharArray()))
-                                 .branch("master")
+                                 .branch("main")
                                  .build();
-    doReturn(repoPath).when(gitClientHelper).getRepoDirectory(request);
-    assertThat(git.getRepository().getConfig().getString("remote", "origin", "url")).isNull();
-    gitClient.ensureRepoLocallyClonedAndUpdated(request);
-    assertThat(git.getRepository().getConfig().getString("remote", "origin", "url")).isNotNull();
-    addRemote(repoPath);
+
+    doReturn(repoPathInternal).when(gitClientHelper).getRepoDirectory(request);
+    String remoteUrl = addRemote(repoPathInternal);
+    assertThat(gitInternal.getRepository().getConfig().getString("remote", "origin", "url")).isEqualTo(remoteUrl);
+
+    assertThatThrownBy(() -> gitClient.ensureRepoLocallyClonedAndUpdated(request))
+        .hasMessageContaining("Unable to checkout given reference: main");
+
+    request.setBranch("master");
+    request.setRepoUrl(remoteUrl);
     gitClient.ensureRepoLocallyClonedAndUpdated(request);
   }
 
