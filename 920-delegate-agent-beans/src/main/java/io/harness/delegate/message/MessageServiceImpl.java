@@ -12,6 +12,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.filefilter.FileFileFilter.FILE;
 
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.exception.GeneralException;
 import io.harness.serializer.JsonUtils;
 import io.harness.threading.Schedulable;
@@ -24,6 +25,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import java.io.File;
 import java.io.IOException;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +33,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -131,7 +132,7 @@ public class MessageServiceImpl implements MessageService {
       if (!channel.exists()) {
         FileUtils.touch(channel);
       }
-      return timeLimiter.callWithTimeout(() -> {
+      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeout), () -> {
         while (true) {
           LineIterator reader = FileUtils.lineIterator(channel);
           while (reader.hasNext()) {
@@ -173,7 +174,7 @@ public class MessageServiceImpl implements MessageService {
           reader.close();
           Thread.sleep(200L);
         }
-      }, timeout, TimeUnit.MILLISECONDS, true);
+      });
     } catch (UncheckedTimeoutException e) {
       log.debug("Timed out reading message from channel {} {}", sourceType, sourceProcessId);
     } catch (Exception e) {
@@ -241,7 +242,7 @@ public class MessageServiceImpl implements MessageService {
         log.error(ex.getMessage(), ex);
         throw ex;
       }
-      return timeLimiter.callWithTimeout(() -> {
+      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeout), () -> {
         Message message = null;
         while (message == null || !messageName.equals(message.getMessage())) {
           try {
@@ -252,7 +253,7 @@ public class MessageServiceImpl implements MessageService {
           Thread.sleep(200L);
         }
         return message;
-      }, timeout, TimeUnit.MILLISECONDS, true);
+      });
     } catch (UncheckedTimeoutException e) {
       log.debug("Timed out waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId);
     } catch (Exception e) {
@@ -272,11 +273,11 @@ public class MessageServiceImpl implements MessageService {
         log.error(ex.getMessage(), ex);
         throw ex;
       }
-      return timeLimiter.callWithTimeout(() -> {
+      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeout), () -> {
         List<Message> messages = new ArrayList<>();
         while (messages.isEmpty()) {
           try {
-            timeLimiter.callWithTimeout(() -> {
+            HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(minWaitTime), () -> {
               while (true) {
                 try {
                   Message message = queue.take();
@@ -288,14 +289,14 @@ public class MessageServiceImpl implements MessageService {
                 }
                 Thread.sleep(200L);
               }
-            }, minWaitTime, TimeUnit.MILLISECONDS, true);
+            });
           } catch (UncheckedTimeoutException e) {
             // Do nothing
           }
           Thread.sleep(200L);
         }
         return messages;
-      }, timeout, TimeUnit.MILLISECONDS, true);
+      });
     } catch (UncheckedTimeoutException e) {
       log.debug("Timed out waiting for message {} from channel {} {}", messageName, sourceType, sourceProcessId);
     } catch (Exception e) {
@@ -515,7 +516,7 @@ public class MessageServiceImpl implements MessageService {
   }
 
   private Map<String, Object> getDataMap(File file) throws Exception {
-    return timeLimiter.callWithTimeout(() -> {
+    return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(1), () -> {
       while (true) {
         Map<String, Object> data = null;
         if (file.exists()) {
@@ -536,6 +537,6 @@ public class MessageServiceImpl implements MessageService {
         }
         Thread.sleep(200L);
       }
-    }, 1L, TimeUnit.SECONDS, true);
+    });
   }
 }
