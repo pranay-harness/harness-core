@@ -1,23 +1,17 @@
 package io.harness.accesscontrol.principals.serviceaccounts;
 
-import static io.harness.accesscontrol.scopes.harness.HarnessScopeParams.ACCOUNT_LEVEL_PARAM_NAME;
-import static io.harness.accesscontrol.scopes.harness.HarnessScopeParams.ORG_LEVEL_PARAM_NAME;
-import static io.harness.accesscontrol.scopes.harness.HarnessScopeParams.PROJECT_LEVEL_PARAM_NAME;
-
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeParams;
 import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
-import io.harness.remote.client.NGRestUtils;
 import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
-import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 
 @Slf4j

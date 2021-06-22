@@ -2,12 +2,10 @@ package io.harness.accesscontrol.principals.serviceaccounts;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.accesscontrol.principals.serviceaccounts.ServiceAccount;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
-import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
