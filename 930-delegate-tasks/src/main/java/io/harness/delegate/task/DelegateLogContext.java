@@ -9,6 +9,7 @@ import io.harness.logging.AutoLogContext;
 public class DelegateLogContext extends AutoLogContext {
   public static final String ACCOUNT_ID = "accountId";
   public static final String DELEGATE_ID = "delegateId";
+  public static final String DELEGATE_NAME = "delegateName";
 
   public DelegateLogContext(String delegateId, OverrideBehavior behavior) {
     super(DELEGATE_ID, delegateId, behavior);
@@ -18,6 +19,15 @@ public class DelegateLogContext extends AutoLogContext {
     super(NullSafeImmutableMap.<String, String>builder()
               .putIfNotNull(ACCOUNT_ID, accountId)
               .putIfNotNull(DELEGATE_ID, delegateId)
+              .build(),
+        behavior);
+  }
+
+  public DelegateLogContext(String accountId, String delegateId, String delegateName, OverrideBehavior behavior) {
+    super(NullSafeImmutableMap.<String, String>builder()
+              .putIfNotNull(ACCOUNT_ID, accountId)
+              .putIfNotNull(DELEGATE_ID, delegateId)
+              .putIfNotNull(DELEGATE_NAME, delegateName)
               .build(),
         behavior);
   }

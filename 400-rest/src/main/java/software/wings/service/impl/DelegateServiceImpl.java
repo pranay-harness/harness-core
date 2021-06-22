@@ -25,6 +25,7 @@ import static io.harness.eraro.ErrorCode.USAGE_LIMITS_EXCEEDED;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.KubernetesConvention.getAccountIdentifier;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.obfuscate.Obfuscator.obfuscate;
@@ -130,7 +131,9 @@ import io.harness.globalcontex.DelegateTokenGlobalContextData;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.logging.DelegateParamsLogContext;
 import io.harness.logging.Misc;
 import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
@@ -2156,186 +2159,192 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public DelegateRegisterResponse register(Delegate delegate) {
-    if (licenseService.isAccountDeleted(delegate.getAccountId())) {
-      broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
-      log.warn("Sending self destruct command from register delegate because the account is deleted.");
-      return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
-    }
-
-    if (isNotBlank(delegate.getDelegateGroupId())) {
-      DelegateGroup delegateGroup = persistence.get(DelegateGroup.class, delegate.getDelegateGroupId());
-
-      if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
+    try (AutoLogContext ignore1 = new DelegateLogContext(
+             delegate.getAccountId(), delegate.getUuid(), delegate.getDelegateName(), OVERRIDE_ERROR)) {
+      if (licenseService.isAccountDeleted(delegate.getAccountId())) {
         broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
-        log.warn("Sending self destruct command from register delegate because the delegate group is deleted.");
+        log.warn("Sending self destruct command from register delegate because the account is deleted.");
         return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
       }
-    }
 
-    boolean useCdn = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegate.getAccountId());
-    broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true)
-        .broadcast(useCdn ? USE_CDN : USE_STORAGE_PROXY);
+      if (isNotBlank(delegate.getDelegateGroupId())) {
+        DelegateGroup delegateGroup = persistence.get(DelegateGroup.class, delegate.getDelegateGroupId());
 
-    String delegateTargetJreVersion = getTargetJreVersion(delegate.getAccountId());
-    StringBuilder jreMessage = new StringBuilder().append(JRE_VERSION).append(delegateTargetJreVersion);
-    broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(jreMessage.toString());
-    log.debug("Sending message to delegate: {}", jreMessage);
+        if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
+          broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
+          log.warn("Sending self destruct command from register delegate because the delegate group is deleted.");
+          return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
+        }
+      }
 
-    if (accountService.isAccountMigrated(delegate.getAccountId())) {
-      String migrateMsg = MIGRATE + accountService.get(delegate.getAccountId()).getMigratedToClusterUrl();
-      broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(migrateMsg);
-      return DelegateRegisterResponse.builder()
-          .action(DelegateRegisterResponse.Action.MIGRATE)
-          .migrateUrl(accountService.get(delegate.getAccountId()).getMigratedToClusterUrl())
-          .build();
-    }
-
-    Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
-                                        .filter(DelegateKeys.accountId, delegate.getAccountId())
-                                        .filter(DelegateKeys.hostName, delegate.getHostName());
-    // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
-    // We ignore IP address because that can change with every restart of the pod.
-    if (!delegate.getHostName().contains(getAccountIdentifier(delegate.getAccountId()))) {
-      delegateQuery.filter(DelegateKeys.ip, delegate.getIp());
-    }
-
-    Delegate existingDelegate = delegateQuery.project(DelegateKeys.status, true)
-                                    .project(DelegateKeys.delegateProfileId, true)
-                                    .project(DelegateKeys.description, true)
-                                    .get();
-    if (existingDelegate != null && existingDelegate.getStatus() == DelegateInstanceStatus.DELETED) {
+      boolean useCdn = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegate.getAccountId());
       broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true)
-          .broadcast(SELF_DESTRUCT + existingDelegate.getUuid());
-      log.warn(
-          "Sending self destruct command from register delegate because the existing delegate has status deleted.");
-      return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
-    }
+          .broadcast(useCdn ? USE_CDN : USE_STORAGE_PROXY);
 
-    log.info("Registering delegate for Hostname: {} IP: {}", delegate.getHostName(), delegate.getIp());
+      String delegateTargetJreVersion = getTargetJreVersion(delegate.getAccountId());
+      StringBuilder jreMessage = new StringBuilder().append(JRE_VERSION).append(delegateTargetJreVersion);
+      broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(jreMessage.toString());
+      log.debug("Sending message to delegate: {}", jreMessage);
 
-    if (ECS.equals(delegate.getDelegateType())) {
-      return registerResponseFromDelegate(handleEcsDelegateRequest(delegate));
-    } else {
-      return registerResponseFromDelegate(upsertDelegateOperation(existingDelegate, delegate));
+      if (accountService.isAccountMigrated(delegate.getAccountId())) {
+        String migrateMsg = MIGRATE + accountService.get(delegate.getAccountId()).getMigratedToClusterUrl();
+        broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true).broadcast(migrateMsg);
+        return DelegateRegisterResponse.builder()
+            .action(DelegateRegisterResponse.Action.MIGRATE)
+            .migrateUrl(accountService.get(delegate.getAccountId()).getMigratedToClusterUrl())
+            .build();
+      }
+
+      Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
+                                          .filter(DelegateKeys.accountId, delegate.getAccountId())
+                                          .filter(DelegateKeys.hostName, delegate.getHostName());
+      // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
+      // We ignore IP address because that can change with every restart of the pod.
+      if (!delegate.getHostName().contains(getAccountIdentifier(delegate.getAccountId()))) {
+        delegateQuery.filter(DelegateKeys.ip, delegate.getIp());
+      }
+
+      Delegate existingDelegate = delegateQuery.project(DelegateKeys.status, true)
+                                      .project(DelegateKeys.delegateProfileId, true)
+                                      .project(DelegateKeys.description, true)
+                                      .get();
+      if (existingDelegate != null && existingDelegate.getStatus() == DelegateInstanceStatus.DELETED) {
+        broadcasterFactory.lookup(STREAM_DELEGATE + delegate.getAccountId(), true)
+            .broadcast(SELF_DESTRUCT + existingDelegate.getUuid());
+        log.warn(
+            "Sending self destruct command from register delegate because the existing delegate has status deleted.");
+        return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
+      }
+
+      log.info("Registering delegate for Hostname: {} IP: {}", delegate.getHostName(), delegate.getIp());
+
+      if (ECS.equals(delegate.getDelegateType())) {
+        return registerResponseFromDelegate(handleEcsDelegateRequest(delegate));
+      } else {
+        return registerResponseFromDelegate(upsertDelegateOperation(existingDelegate, delegate));
+      }
     }
   }
 
   @Override
   public DelegateRegisterResponse register(DelegateParams delegateParams) {
-    log.info("registering delegate with params: {}", delegateParams);
-    if (licenseService.isAccountDeleted(delegateParams.getAccountId())) {
-      broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(SELF_DESTRUCT);
-      log.warn("Sending self destruct command from register delegate parameters because the account is deleted.");
-      return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
-    }
-
-    if (isNotBlank(delegateParams.getDelegateGroupId())) {
-      DelegateGroup delegateGroup = persistence.get(DelegateGroup.class, delegateParams.getDelegateGroupId());
-
-      if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
+    try (AutoLogContext ignore1 =
+             new DelegateParamsLogContext(delegateParams.getAccountId(), delegateParams OVERRIDE_ERROR)) {
+      log.info("registering delegate with params: {}", delegateParams);
+      if (licenseService.isAccountDeleted(delegateParams.getAccountId())) {
         broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(SELF_DESTRUCT);
-        log.warn(
-            "Sending self destruct command from register delegate parameters because the delegate group {} is missing.",
-            delegateParams.getDelegateGroupId());
+        log.warn("Sending self destruct command from register delegate parameters because the account is deleted.");
         return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
       }
-    }
 
-    boolean useCdn = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegateParams.getAccountId());
-    broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true)
-        .broadcast(useCdn ? USE_CDN : USE_STORAGE_PROXY);
+      if (isNotBlank(delegateParams.getDelegateGroupId())) {
+        DelegateGroup delegateGroup = persistence.get(DelegateGroup.class, delegateParams.getDelegateGroupId());
 
-    String delegateTargetJreVersion = getTargetJreVersion(delegateParams.getAccountId());
-    StringBuilder jreMessage = new StringBuilder().append(JRE_VERSION).append(delegateTargetJreVersion);
-    broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(jreMessage.toString());
-    log.info("Sending message to delegate: {}", jreMessage);
+        if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
+          broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(SELF_DESTRUCT);
+          log.warn(
+              "Sending self destruct command from register delegate parameters because the delegate group {} is missing.",
+              delegateParams.getDelegateGroupId());
+          return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
+        }
+      }
 
-    if (accountService.isAccountMigrated(delegateParams.getAccountId())) {
-      String migrateMsg = MIGRATE + accountService.get(delegateParams.getAccountId()).getMigratedToClusterUrl();
-      broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(migrateMsg);
-      return DelegateRegisterResponse.builder()
-          .action(DelegateRegisterResponse.Action.MIGRATE)
-          .migrateUrl(accountService.get(delegateParams.getAccountId()).getMigratedToClusterUrl())
-          .build();
-    }
-
-    Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
-                                        .filter(DelegateKeys.accountId, delegateParams.getAccountId())
-                                        .filter(DelegateKeys.hostName, delegateParams.getHostName());
-    // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
-    // We ignore IP address because that can change with every restart of the pod.
-    if (!delegateParams.getHostName().contains(getAccountIdentifier(delegateParams.getAccountId()))) {
-      delegateQuery.filter(DelegateKeys.ip, delegateParams.getIp());
-    }
-
-    Delegate existingDelegate = delegateQuery.project(DelegateKeys.status, true)
-                                    .project(DelegateKeys.delegateProfileId, true)
-                                    .project(DelegateKeys.description, true)
-                                    .get();
-    if (existingDelegate != null && existingDelegate.getStatus() == DelegateInstanceStatus.DELETED) {
+      boolean useCdn = featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, delegateParams.getAccountId());
       broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true)
-          .broadcast(SELF_DESTRUCT + existingDelegate.getUuid());
-      log.warn(
-          "Sending self destruct command from register delegate parameters because the existing delegate has status deleted.");
-      return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
-    }
+          .broadcast(useCdn ? USE_CDN : USE_STORAGE_PROXY);
 
-    log.info("Registering delegate for Hostname: {} IP: {}", delegateParams.getHostName(), delegateParams.getIp());
+      String delegateTargetJreVersion = getTargetJreVersion(delegateParams.getAccountId());
+      StringBuilder jreMessage = new StringBuilder().append(JRE_VERSION).append(delegateTargetJreVersion);
+      broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(jreMessage.toString());
+      log.info("Sending message to delegate: {}", jreMessage);
 
-    DelegateSizeDetails sizeDetails = null;
-    if (isNotBlank(delegateParams.getDelegateSize())) {
-      sizeDetails = fetchAvailableSizes()
-                        .stream()
-                        .filter(size -> size.getSize().name().equals(delegateParams.getDelegateSize()))
-                        .findFirst()
-                        .orElse(null);
-    }
-
-    String delegateGroupId = delegateParams.getDelegateGroupId();
-    if (isBlank(delegateGroupId) && isNotBlank(delegateParams.getDelegateGroupName())) {
-      DelegateGroup delegateGroup =
-          upsertDelegateGroup(delegateParams.getDelegateGroupName(), delegateParams.getAccountId(), null);
-      delegateGroupId = delegateGroup.getUuid();
-    }
-
-    // Check if delegate is NG delegate and set the flag to true, if needed
-    boolean isNgDelegate = isNotBlank(delegateParams.getSessionIdentifier());
-
-    DelegateEntityOwner owner =
-        DelegateEntityOwnerHelper.buildOwner(delegateParams.getOrgIdentifier(), delegateParams.getProjectIdentifier());
-
-    Delegate delegate =
-        Delegate.builder()
-            .uuid(delegateParams.getDelegateId())
-            .accountId(delegateParams.getAccountId())
-            .sessionIdentifier(
-                isNotBlank(delegateParams.getSessionIdentifier()) ? delegateParams.getSessionIdentifier() : null)
-            .owner(owner)
-            .ng(isNgDelegate)
-            .sizeDetails(sizeDetails)
-            .description(delegateParams.getDescription())
-            .ip(delegateParams.getIp())
-            .hostName(delegateParams.getHostName())
-            .delegateGroupName(delegateParams.getDelegateGroupName())
-            .delegateGroupId(isNotBlank(delegateGroupId) ? delegateGroupId : null)
-            .delegateName(delegateParams.getDelegateName())
-            .delegateProfileId(delegateParams.getDelegateProfileId())
-            .lastHeartBeat(delegateParams.getLastHeartBeat())
-            .version(delegateParams.getVersion())
-            .sequenceNum(delegateParams.getSequenceNum())
-            .delegateType(delegateParams.getDelegateType())
-            .delegateRandomToken(delegateParams.getDelegateRandomToken())
-            .keepAlivePacket(delegateParams.isKeepAlivePacket())
-            .polllingModeEnabled(delegateParams.isPollingModeEnabled())
-            .proxy(delegateParams.isProxy())
-            .sampleDelegate(delegateParams.isSampleDelegate())
-            .currentlyExecutingDelegateTasks(delegateParams.getCurrentlyExecutingDelegateTasks())
-            .ceEnabled(delegateParams.isCeEnabled())
+      if (accountService.isAccountMigrated(delegateParams.getAccountId())) {
+        String migrateMsg = MIGRATE + accountService.get(delegateParams.getAccountId()).getMigratedToClusterUrl();
+        broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true).broadcast(migrateMsg);
+        return DelegateRegisterResponse.builder()
+            .action(DelegateRegisterResponse.Action.MIGRATE)
+            .migrateUrl(accountService.get(delegateParams.getAccountId()).getMigratedToClusterUrl())
             .build();
-    if (ECS.equals(delegateParams.getDelegateType())) {
-      return registerResponseFromDelegate(handleEcsDelegateRequest(delegate));
-    } else {
-      return registerResponseFromDelegate(upsertDelegateOperation(existingDelegate, delegate));
+      }
+
+      Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
+                                          .filter(DelegateKeys.accountId, delegateParams.getAccountId())
+                                          .filter(DelegateKeys.hostName, delegateParams.getHostName());
+      // For delegates running in a kubernetes cluster we include lowercase account ID in the hostname to identify it.
+      // We ignore IP address because that can change with every restart of the pod.
+      if (!delegateParams.getHostName().contains(getAccountIdentifier(delegateParams.getAccountId()))) {
+        delegateQuery.filter(DelegateKeys.ip, delegateParams.getIp());
+      }
+
+      Delegate existingDelegate = delegateQuery.project(DelegateKeys.status, true)
+                                      .project(DelegateKeys.delegateProfileId, true)
+                                      .project(DelegateKeys.description, true)
+                                      .get();
+      if (existingDelegate != null && existingDelegate.getStatus() == DelegateInstanceStatus.DELETED) {
+        broadcasterFactory.lookup(STREAM_DELEGATE + delegateParams.getAccountId(), true)
+            .broadcast(SELF_DESTRUCT + existingDelegate.getUuid());
+        log.warn(
+            "Sending self destruct command from register delegate parameters because the existing delegate has status deleted.");
+        return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
+      }
+
+      log.info("Registering delegate for Hostname: {} IP: {}", delegateParams.getHostName(), delegateParams.getIp());
+
+      DelegateSizeDetails sizeDetails = null;
+      if (isNotBlank(delegateParams.getDelegateSize())) {
+        sizeDetails = fetchAvailableSizes()
+                          .stream()
+                          .filter(size -> size.getSize().name().equals(delegateParams.getDelegateSize()))
+                          .findFirst()
+                          .orElse(null);
+      }
+
+      String delegateGroupId = delegateParams.getDelegateGroupId();
+      if (isBlank(delegateGroupId) && isNotBlank(delegateParams.getDelegateGroupName())) {
+        DelegateGroup delegateGroup =
+            upsertDelegateGroup(delegateParams.getDelegateGroupName(), delegateParams.getAccountId(), null);
+        delegateGroupId = delegateGroup.getUuid();
+      }
+
+      // Check if delegate is NG delegate and set the flag to true, if needed
+      boolean isNgDelegate = isNotBlank(delegateParams.getSessionIdentifier());
+
+      DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(
+          delegateParams.getOrgIdentifier(), delegateParams.getProjectIdentifier());
+
+      Delegate delegate =
+          Delegate.builder()
+              .uuid(delegateParams.getDelegateId())
+              .accountId(delegateParams.getAccountId())
+              .sessionIdentifier(
+                  isNotBlank(delegateParams.getSessionIdentifier()) ? delegateParams.getSessionIdentifier() : null)
+              .owner(owner)
+              .ng(isNgDelegate)
+              .sizeDetails(sizeDetails)
+              .description(delegateParams.getDescription())
+              .ip(delegateParams.getIp())
+              .hostName(delegateParams.getHostName())
+              .delegateGroupName(delegateParams.getDelegateGroupName())
+              .delegateGroupId(isNotBlank(delegateGroupId) ? delegateGroupId : null)
+              .delegateName(delegateParams.getDelegateName())
+              .delegateProfileId(delegateParams.getDelegateProfileId())
+              .lastHeartBeat(delegateParams.getLastHeartBeat())
+              .version(delegateParams.getVersion())
+              .sequenceNum(delegateParams.getSequenceNum())
+              .delegateType(delegateParams.getDelegateType())
+              .delegateRandomToken(delegateParams.getDelegateRandomToken())
+              .keepAlivePacket(delegateParams.isKeepAlivePacket())
+              .polllingModeEnabled(delegateParams.isPollingModeEnabled())
+              .proxy(delegateParams.isProxy())
+              .sampleDelegate(delegateParams.isSampleDelegate())
+              .currentlyExecutingDelegateTasks(delegateParams.getCurrentlyExecutingDelegateTasks())
+              .ceEnabled(delegateParams.isCeEnabled())
+              .build();
+      if (ECS.equals(delegateParams.getDelegateType())) {
+        return registerResponseFromDelegate(handleEcsDelegateRequest(delegate));
+      } else {
+        return registerResponseFromDelegate(upsertDelegateOperation(existingDelegate, delegate));
+      }
     }
   }
 
