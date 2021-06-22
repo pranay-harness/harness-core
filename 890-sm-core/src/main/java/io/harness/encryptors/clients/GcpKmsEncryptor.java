@@ -144,7 +144,7 @@ public class GcpKmsEncryptor implements KmsEncryptor {
         if (isNotEmpty(cachedEncryptedKey)) {
           return decryptInternalIfCached(encryptedData, cachedEncryptedKey, System.currentTimeMillis());
         } else {
-          // Use TimeLimiter.callWithTimeout only if the KMS plain text key is not cached.
+          // Use HTimeLimiter.callInterruptible only if the KMS plain text key is not cached.
           return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(DEFAULT_GCP_KMS_TIMEOUT),
               () -> decryptInternal(encryptedData, gcpKmsConfig));
         }

@@ -6,6 +6,7 @@ import static software.wings.common.VerificationConstants.MAX_RETRIES;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.managerclient.VerificationServiceClient;
 
 import software.wings.delegatetasks.DelegateCVTaskService;
@@ -16,7 +17,6 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
@@ -44,10 +44,10 @@ public class DelegateCVTaskServiceImpl implements DelegateCVTaskService {
                                                     event.getAttemptCount(), event.getFailure()));
       Failsafe.with(retryPolicy)
           .run(()
-                   -> timeLimiter.callWithTimeout(()
-                                                      -> execute(verificationClient.updateCVTaskStatus(
-                                                          accountId, cvTaskId, dataCollectionTaskResult)),
-                       TIMEOUT_DURATION_SEC, TimeUnit.SECONDS, true));
+                   -> HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(TIMEOUT_DURATION_SEC),
+                       ()
+                           -> execute(
+                               verificationClient.updateCVTaskStatus(accountId, cvTaskId, dataCollectionTaskResult))));
     } catch (UncheckedTimeoutException e) {
       throw new TimeoutException("Timeout of " + TIMEOUT_DURATION_SEC + " sec and " + MAX_RETRIES
           + " retries exceeded while updating CVTask status");
