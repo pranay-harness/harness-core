@@ -28,6 +28,7 @@ def get_regions_and_volumes(jsonData):
     print_(REGIONS_VOLUME_MAP)
     return REGIONS_VOLUME_MAP
 
+
 def get_ebs_metrics_data(jsonData):
     EBS_DATA_MAP = {}
     REGIONS_VOLUME_MAP = get_regions_and_volumes(jsonData)
@@ -143,6 +144,7 @@ def get_ebs_metrics_data(jsonData):
 
     return EBS_DATA_MAP, added_at
 
+
 def executeQueries(MetricDataQueries, cloudwatch, added_at, EBS_DATA_MAP):
     # We have close to 500 MetricDataQueries. Fire the api call
     startTime = datetime.datetime.combine(datetime.date.today() - datetime.timedelta(days=1), datetime.time())
@@ -174,6 +176,7 @@ def executeQueries(MetricDataQueries, cloudwatch, added_at, EBS_DATA_MAP):
     except Exception as e:
         print_(e)
         raise e
+
 
 def main(event, context):
     print(event)
@@ -216,6 +219,3 @@ def main(event, context):
     job = client.load_table_from_file(data_as_file, awsEbsInventoryMetricsTableName, job_config=job_config)
     print_(job.job_id)
     job.result()
-
-
-

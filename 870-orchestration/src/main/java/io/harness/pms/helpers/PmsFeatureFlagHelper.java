@@ -15,6 +15,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -62,5 +63,16 @@ public class PmsFeatureFlagHelper implements PmsFeatureFlagService {
         .filter(FeatureFlag::isEnabled)
         .map(FeatureFlag::getName)
         .collect(Collectors.toSet());
+  }
+
+  public void updateCache(String accountId, boolean enable, String featureName) throws ExecutionException {
+    if (!featureFlagCache.asMap().containsKey(accountId)) {
+      return;
+    }
+    if (!enable) {
+      featureFlagCache.get(accountId).remove(featureName);
+    } else {
+      featureFlagCache.get(accountId).add(featureName);
+    }
   }
 }

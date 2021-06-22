@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.ModuleType;
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.ChangeDataCapture;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
@@ -44,6 +45,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("projects")
 @TypeAlias("projects")
 @StoreIn(DbAliases.NG_MANAGER)
+@ChangeDataCapture(table = "projects", dataStore = "ng-harness", fields = {}, handler = "Projects")
+@ChangeDataCapture(table = "tags_info", dataStore = "ng-harness", fields = {}, handler = "TagsInfoCD")
 public class Project implements PersistentEntity, NGAccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

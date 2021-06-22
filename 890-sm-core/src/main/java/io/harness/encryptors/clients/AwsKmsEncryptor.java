@@ -14,6 +14,7 @@ import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.encryptors.KmsEncryptor;
@@ -53,6 +54,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -89,8 +91,8 @@ public class AwsKmsEncryptor implements KmsEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> encryptInternal(accountId, value, kmsConfig), DEFAULT_KMS_TIMEOUT, TimeUnit.SECONDS, true);
+        return HTimeLimiter.callInterruptible(
+            timeLimiter, Duration.ofSeconds(DEFAULT_KMS_TIMEOUT), () -> encryptInternal(accountId, value, kmsConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("Encryption failed. trial num: {}", failedAttempts, e);
@@ -122,8 +124,8 @@ public class AwsKmsEncryptor implements KmsEncryptor {
           return decryptInternalIfCached(data, cachedEncryptedKey, System.currentTimeMillis());
         } else {
           // Use TimeLimiter.callWithTimeout only if the KMS plain text key is not cached.
-          return timeLimiter.callWithTimeout(
-              () -> decryptInternal(data, kmsConfig), DEFAULT_KMS_TIMEOUT, TimeUnit.SECONDS, true);
+          return HTimeLimiter.callInterruptible(
+              timeLimiter, Duration.ofSeconds(DEFAULT_KMS_TIMEOUT), () -> decryptInternal(data, kmsConfig));
         }
       } catch (Exception e) {
         failedAttempts++;

@@ -1,6 +1,7 @@
 package io.harness.ng;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.audit.ResourceTypeConstants.API_KEY;
 import static io.harness.audit.ResourceTypeConstants.CONNECTOR;
 import static io.harness.audit.ResourceTypeConstants.DELEGATE_CONFIGURATION;
 import static io.harness.audit.ResourceTypeConstants.ENVIRONMENT;
@@ -93,10 +94,12 @@ import io.harness.ng.core.DefaultOrganizationModule;
 import io.harness.ng.core.InviteModule;
 import io.harness.ng.core.NGAggregateModule;
 import io.harness.ng.core.SecretManagementModule;
+import io.harness.ng.core.api.ApiKeyService;
 import io.harness.ng.core.api.DelegateProfileManagerNgService;
 import io.harness.ng.core.api.NGModulesService;
 import io.harness.ng.core.api.NGSecretServiceV2;
 import io.harness.ng.core.api.UserGroupService;
+import io.harness.ng.core.api.impl.ApiKeyServiceImpl;
 import io.harness.ng.core.api.impl.DelegateProfileManagerNgServiceImpl;
 import io.harness.ng.core.api.impl.NGModulesServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceV2Impl;
@@ -118,6 +121,7 @@ import io.harness.ng.core.event.SecretEntityCRUDStreamListener;
 import io.harness.ng.core.event.UserMembershipStreamListener;
 import io.harness.ng.core.impl.OrganizationServiceImpl;
 import io.harness.ng.core.impl.ProjectServiceImpl;
+import io.harness.ng.core.outbox.ApiKeyEventHandler;
 import io.harness.ng.core.outbox.DelegateProfileEventHandler;
 import io.harness.ng.core.outbox.EnvironmentEventHandler;
 import io.harness.ng.core.outbox.NextGenOutboxEventHandler;
@@ -546,6 +550,7 @@ public class NextGenModule extends AbstractModule {
         appConfig.getAccessControlClientConfiguration(), NG_MANAGER.getServiceId()));
 
     bind(SourceCodeManagerService.class).to(SourceCodeManagerServiceImpl.class);
+    bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);
 
     MapBinder<SCMType, SourceCodeManagerMapper> sourceCodeManagerMapBinder =
         MapBinder.newMapBinder(binder(), SCMType.class, SourceCodeManagerMapper.class);
@@ -609,6 +614,7 @@ public class NextGenModule extends AbstractModule {
     outboxEventHandlerMapBinder.addBinding(CONNECTOR).to(ConnectorEventHandler.class);
     outboxEventHandlerMapBinder.addBinding(SERVICE).to(ServiceOutBoxEventHandler.class);
     outboxEventHandlerMapBinder.addBinding(ENVIRONMENT).to(EnvironmentEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(API_KEY).to(ApiKeyEventHandler.class);
   }
 
   private void registerEventsFrameworkMessageListeners() {

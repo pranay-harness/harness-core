@@ -11,6 +11,7 @@ import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.exception.GeneralException;
 import io.harness.exception.PersistentLockException;
 import io.harness.exception.WingsException;
@@ -30,7 +31,6 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import io.dropwizard.lifecycle.Managed;
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -140,7 +140,7 @@ public class MongoPersistentLocker implements PersistentLocker, HealthMonitor, M
   @Override
   public AcquiredLock waitToAcquireLock(String name, Duration lockTimeout, Duration waitTimeout) {
     try {
-      return timeLimiter.callWithTimeout(() -> {
+      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(waitTimeout.toMillis()), () -> {
         while (true) {
           try {
             return acquireLock(name, lockTimeout);
@@ -148,7 +148,7 @@ public class MongoPersistentLocker implements PersistentLocker, HealthMonitor, M
             sleep(ofMillis(100));
           }
         }
-      }, waitTimeout.toMillis(), TimeUnit.MILLISECONDS, true);
+      });
     } catch (Exception e) {
       throw new PersistentLockException(
           format("Failed to acquire distributed lock for %s", name), e, FAILED_TO_ACQUIRE_PERSISTENT_LOCK, NOBODY);

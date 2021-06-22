@@ -398,7 +398,24 @@ public class YamlUtils {
 
   public String getStageIdentifierFromFqn(String fqn) {
     String[] strings = fqn.split("\\.");
-    return strings[2];
+    if (strings.length < 2) {
+      return null;
+    }
+    if (strings[1].equals("stages")) {
+      return strings[2];
+    }
+    return null;
+  }
+
+  public String getPipelineVariableNameFromFqn(String fqn) {
+    String[] strings = fqn.split("\\.");
+    if (strings.length < 2) {
+      return null;
+    }
+    if (strings[1].equals("variables")) {
+      return strings[2];
+    }
+    return null;
   }
 
   private String getErrorNodePartialFQN(String startingFQN, IOException e) {

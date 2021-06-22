@@ -123,6 +123,11 @@ public class GitClientV2Impl implements GitClientV2 {
     }
   }
 
+  /**
+   * Note: Checkout is added after clone as clone doesn't support throwing errors in case branch is not available
+   *
+   * @param request GitBaseRequest
+   */
   @Override
   public void ensureRepoLocallyClonedAndUpdated(GitBaseRequest request) {
     notNullCheck("Repo update request cannot be null", request);
@@ -179,6 +184,7 @@ public class GitClientV2Impl implements GitClientV2 {
     // opening/updating repo
     log.info(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Do a fresh clone");
     clone(request, gitClientHelper.getRepoDirectory(request), false);
+    checkout(request);
   }
 
   @VisibleForTesting

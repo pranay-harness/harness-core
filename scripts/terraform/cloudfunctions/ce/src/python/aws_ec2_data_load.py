@@ -76,6 +76,6 @@ def load_into_main_table(jsonData):
         query_job.result()
     except Exception as e:
         print_(query)
-        print_(e)
+        print_(e, "WARN")
     else:
         print_("Finished merging into main awsEc2Inventory table")

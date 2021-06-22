@@ -66,5 +66,13 @@ func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLog
 		io.WriteString(w, "OK")
 	})
 
+	// Readiness check
+	r.Mount("/ready/healthz", func() http.Handler {
+		sr := chi.NewRouter()
+		sr.Get("/", HandlePing(db, log))
+
+		return sr
+	}())
+
 	return r
 }

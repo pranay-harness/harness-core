@@ -33,6 +33,7 @@ import io.harness.resourcegroup.framework.service.impl.ResourceTypeServiceImpl;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.service.ServiceResourceClientModule;
+import io.harness.serviceaccount.ServiceAccountClientModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -94,18 +95,17 @@ public class ResourceGroupModule extends AbstractModule {
   private void installResourceValidators() {
     io.harness.resourcegroup.ResourceClientConfigs resourceClients =
         resourceGroupServiceConfig.getResourceClientConfigs();
-    install(new ProjectClientModule(
-        ServiceHttpClientConfig.builder().baseUrl(resourceClients.getNgManager().getBaseUrl()).build(),
-        resourceClients.getNgManager().getSecret(), RESOUCE_GROUP_SERVICE.toString()));
-    install(new OrganizationClientModule(
-        ServiceHttpClientConfig.builder().baseUrl(resourceClients.getNgManager().getBaseUrl()).build(),
-        resourceClients.getNgManager().getSecret(), RESOUCE_GROUP_SERVICE.toString()));
-    install(new SecretNGManagerClientModule(
-        ServiceHttpClientConfig.builder().baseUrl(resourceClients.getNgManager().getBaseUrl()).build(),
-        resourceClients.getNgManager().getSecret(), RESOUCE_GROUP_SERVICE.toString()));
+    ServiceHttpClientConfig ngManagerHttpClientConfig =
+        ServiceHttpClientConfig.builder().baseUrl(resourceClients.getNgManager().getBaseUrl()).build();
+    String ngManagerSecret = resourceClients.getNgManager().getSecret();
+    install(new ProjectClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
+    install(
+        new ServiceAccountClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
+    install(new OrganizationClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
+    install(
+        new SecretNGManagerClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
     install(new ConnectorResourceClientModule(
-        ServiceHttpClientConfig.builder().baseUrl(resourceClients.getNgManager().getBaseUrl()).build(),
-        resourceClients.getNgManager().getSecret(), RESOUCE_GROUP_SERVICE.toString(), ClientMode.PRIVILEGED));
+        ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString(), ClientMode.PRIVILEGED));
     install(new AccountClientModule(
         ServiceHttpClientConfig.builder().baseUrl(resourceClients.getManager().getBaseUrl()).build(),
         resourceClients.getManager().getSecret(), RESOUCE_GROUP_SERVICE.toString()));
@@ -115,11 +115,9 @@ public class ResourceGroupModule extends AbstractModule {
     install(new PipelineRemoteClientModule(
         ServiceHttpClientConfig.builder().baseUrl(resourceClients.getPipelineService().getBaseUrl()).build(),
         resourceClients.getPipelineService().getSecret(), RESOUCE_GROUP_SERVICE.toString()));
-    install(new ServiceResourceClientModule(
-        ServiceHttpClientConfig.builder().baseUrl(resourceClients.getNgManager().getBaseUrl()).build(),
-        resourceClients.getNgManager().getSecret(), RESOUCE_GROUP_SERVICE.toString()));
+    install(
+        new ServiceResourceClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
     install(new EnvironmentResourceClientModule(
-        ServiceHttpClientConfig.builder().baseUrl(resourceClients.getNgManager().getBaseUrl()).build(),
-        resourceClients.getNgManager().getSecret(), RESOUCE_GROUP_SERVICE.toString()));
+        ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
   }
 }
