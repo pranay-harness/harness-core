@@ -3,7 +3,6 @@ package io.harness.security.dto;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.security.SecurityContextBuilder.PRINCIPAL_NAME;
 import static io.harness.security.SecurityContextBuilder.PRINCIPAL_TYPE;
-import static io.harness.security.dto.PrincipalType.API_KEY;
 import static io.harness.security.dto.PrincipalType.SERVICE_ACCOUNT;
 
 import io.harness.annotations.dev.OwnedBy;
