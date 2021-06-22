@@ -18,6 +18,7 @@ replace_key_value logging.level $LOGGING_LEVEL
 replace_key_value server.applicationConnectors[0].port $CE_NEXTGEN_PORT
 
 replace_key_value events-mongo.uri "${EVENTS_MONGO_DB_URL//\\&/&}"
+replace_key_value events-mongo.indexManagerMode $EVENTS_MONGO_INDEX_MANAGER_MODE
 
 replace_key_value ngManagerClientConfig.baseUrl $NG_MANAGER_CLIENT_BASEURL
 replace_key_value managerClientConfig.baseUrl $MANAGER_CLIENT_BASEURL
@@ -43,6 +44,9 @@ replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_F
 replace_key_value gcpConfig.gcpProjectId "$GCP_PROJECT_ID"
 replace_key_value ceAzureSetupConfig.azureAppClientId "$AZURE_APP_CLIENT_ID"
 replace_key_value ceAzureSetupConfig.azureAppClientSecret "$AZURE_APP_CLIENT_SECRET"
+replace_key_value awsConfig.accessKey "$AWS_ACCESS_KEY"
+replace_key_value awsConfig.secretKey "$AWS_SECRET_KEY"
+replace_key_value awsConfig.destinationBucket "$AWS_DESTINATION_BUCKET"
 replace_key_value awsConfig.harnessAwsAccountId "$AWS_ACCOUNT_ID"
 replace_key_value awsConfig.awsConnectorTemplate "$AWS_TEMPLATE_LINK"
 replace_key_value cfClientConfig.apiKey "$CF_CLIENT_API_KEY"
