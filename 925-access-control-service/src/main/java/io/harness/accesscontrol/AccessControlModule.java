@@ -33,6 +33,7 @@ import io.harness.accesscontrol.principals.PrincipalValidator;
 import io.harness.accesscontrol.principals.serviceaccounts.HarnessServiceAccountService;
 import io.harness.accesscontrol.principals.serviceaccounts.HarnessServiceAccountServiceImpl;
 import io.harness.accesscontrol.principals.serviceaccounts.ServiceAccountValidator;
+import io.harness.accesscontrol.principals.serviceaccounts.events.ServiceAccountMembershipEventConsumer;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupService;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupServiceImpl;
 import io.harness.accesscontrol.principals.usergroups.UserGroupValidator;
@@ -239,6 +240,7 @@ public class AccessControlModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(ENTITY_CRUD));
     entityCrudEventConsumers.addBinding().to(ResourceGroupEventConsumer.class);
     entityCrudEventConsumers.addBinding().to(UserGroupEventConsumer.class);
+    entityCrudEventConsumers.addBinding().to(ServiceAccountMembershipEventConsumer.class);
 
     Multibinder<EventConsumer> featureFlagEventConsumers =
         Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(FEATURE_FLAG_STREAM));
