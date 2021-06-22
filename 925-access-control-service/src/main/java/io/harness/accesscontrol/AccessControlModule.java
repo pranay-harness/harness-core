@@ -69,6 +69,7 @@ import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.serializer.morphia.OutboxEventMorphiaRegistrar;
 import io.harness.serializer.morphia.PrimaryVersionManagerMorphiaRegistrar;
+import io.harness.serviceaccount.ServiceAccountClientModule;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.usergroups.UserGroupClientModule;
@@ -195,6 +196,10 @@ public class AccessControlModule extends AbstractModule {
     install(new ValidationModule(validatorFactory));
     install(AccessControlCoreModule.getInstance());
     install(DecisionModule.getInstance(config.getDecisionModuleConfiguration()));
+    install(
+        new ServiceAccountClientModule(config.getServiceAccountClientConfiguration().getServiceAccountServiceConfig(),
+            config.getServiceAccountClientConfiguration().getServiceAccountServiceSecret(),
+            ACCESS_CONTROL_SERVICE.getServiceId()));
 
     if (config.getAggregatorConfiguration().isEnabled()) {
       bind(ChangeEventFailureHandler.class).to(AccessControlChangeEventFailureHandler.class);
