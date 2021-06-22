@@ -324,14 +324,9 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
     List<String> currentGenUserIds =
         getUsers(accountIdentifier).stream().map(UserInfo::getUuid).collect(Collectors.toList());
 
-    Optional<AccessControlMigration> accessControlMigrationOptional;
-
-    accessControlMigrationOptional = migrateInternal(accountIdentifier, null, null, currentGenUserIds);
-    accessControlMigrationOptional.ifPresent(migration -> {
-      if (migration.getCreatedRoleAssignments() > 0) {
-        runPostMigrationSteps(migration);
-      }
-    });
+    Optional<AccessControlMigration> accountAccessControlMigrationOptional =
+        migrateInternal(accountIdentifier, null, null, currentGenUserIds);
+    accountAccessControlMigrationOptional.ifPresent(this::runPostMigrationSteps);
 
     List<String> organizations =
         organizationService.list(Criteria.where(OrganizationKeys.accountIdentifier).is(accountIdentifier))
@@ -340,13 +335,9 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
             .collect(Collectors.toList());
 
     for (String organizationIdentifier : organizations) {
-      accessControlMigrationOptional =
+      Optional<AccessControlMigration> orgAccessControlMigrationOptional =
           migrateInternal(accountIdentifier, organizationIdentifier, null, currentGenUserIds);
-      accessControlMigrationOptional.ifPresent(migration -> {
-        if (migration.getCreatedRoleAssignments() > 0) {
-          runPostMigrationSteps(migration);
-        }
-      });
+      orgAccessControlMigrationOptional.ifPresent(this::runPostMigrationSteps);
 
       List<String> projects = projectService
                                   .list(Criteria.where(ProjectKeys.accountIdentifier)
@@ -358,19 +349,27 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
                                   .collect(Collectors.toList());
 
       for (String projectIdentifier : projects) {
-        accessControlMigrationOptional =
+        Optional<AccessControlMigration> projectAccessControlMigrationOptional =
             migrateInternal(accountIdentifier, organizationIdentifier, projectIdentifier, currentGenUserIds);
-        accessControlMigrationOptional.ifPresent(migration -> {
-          if (migration.getCreatedRoleAssignments() > 0) {
-            runPostMigrationSteps(migration);
-          }
-        });
+        projectAccessControlMigrationOptional.ifPresent(this::runPostMigrationSteps);
       }
+    }
+
+    boolean rbacEnabled =
+        NGRestUtils.getResponse(accessControlAdminClient.upsertAccessControlPreference(accountIdentifier, true));
+
+    if (rbacEnabled) {
+      log.info("Migration ran successfully and rbac enabled for account: {}", accountIdentifier);
     }
   }
 
   private void runPostMigrationSteps(AccessControlMigration migration) {
-    save(migration);
-    accessControlAdminClient.upsertAccessControlPreference(migration.getAccountIdentifier(), true);
+    if (migration.getCreatedRoleAssignments() > 0) {
+      save(migration);
+    } else {
+      log.error(
+          "No role assignments were created for account: {}, org: {} and project: {}, migration will run again for this scope",
+          migration.getAccountIdentifier(), migration.getOrgIdentifier(), migration.getProjectIdentifier());
+    }
   }
 }
