@@ -65,6 +65,11 @@ public class GitStore implements GitStoreConfig, Visitable, WithConnectorRef {
     return ManifestStoreType.GIT;
   }
 
+  @Override
+  public ParameterField<String> getConnectorReference() {
+    return connectorRef;
+  }
+
   public GitStore cloneInternal() {
     return GitStore.builder()
         .connectorRef(connectorRef)

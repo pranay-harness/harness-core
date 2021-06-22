@@ -20,5 +20,5 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public interface Infrastructure extends StepParameters, PassThroughData, OverridesApplier<Infrastructure> {
   @JsonIgnore InfraMapping getInfraMapping();
   @JsonIgnore String getKind();
-  ParameterField<String> getConnectorRef();
+  @JsonIgnore ParameterField<String> getConnectorReference();
 }

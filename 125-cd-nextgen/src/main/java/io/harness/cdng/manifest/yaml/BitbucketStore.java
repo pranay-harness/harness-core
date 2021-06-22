@@ -65,6 +65,11 @@ public class BitbucketStore implements GitStoreConfig, Visitable, WithConnectorR
     return ManifestStoreType.BITBUCKET;
   }
 
+  @Override
+  public ParameterField<String> getConnectorReference() {
+    return connectorRef;
+  }
+
   public BitbucketStore cloneInternal() {
     return BitbucketStore.builder()
         .connectorRef(connectorRef)

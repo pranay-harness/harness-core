@@ -1414,11 +1414,6 @@
     "Infrastructure": {
       "type": "object",
       "discriminator": "type",
-      "properties": {
-        "connectorRef": {
-          "$ref": "#/definitions/ParameterFieldString"
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "InfrastructureDef": {
@@ -4225,11 +4220,6 @@
     "StoreConfig": {
       "type": "object",
       "discriminator": "type",
-      "properties": {
-        "connectorRef": {
-          "$ref": "#/definitions/ParameterFieldString"
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "StoreConfigWrapper": {
