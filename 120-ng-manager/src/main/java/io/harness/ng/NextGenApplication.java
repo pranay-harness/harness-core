@@ -268,7 +268,11 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
       GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
     }
     // Access all caches before coming out of maintenance
-    injector.getInstance(new Key<Map<String, Cache<?, ?>>>() {});
+    Cache<String, String> cache =
+        injector.getInstance(Key.get(new TypeLiteral<Cache<String, String>>() {}, Names.named("TestCache")));
+    cache.put("Test", "Value");
+    log.info("CACHE_TESTING: Get value from cache {}", cache.get("Test"));
+
     // Will create collections and Indexes
     injector.getInstance(HPersistence.class);
     registerCorsFilter(appConfig, environment);

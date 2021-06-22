@@ -39,6 +39,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.audit.client.remote.AuditClientModule;
+import io.harness.cache.HarnessCacheManager;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -178,6 +179,7 @@ import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.user.UserClientModule;
+import io.harness.version.VersionInfoManager;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
@@ -204,6 +206,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
+import javax.cache.Cache;
+import javax.cache.expiry.AccessedExpiryPolicy;
+import javax.cache.expiry.Duration;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -271,6 +276,14 @@ public class NextGenModule extends AbstractModule {
   @Singleton
   RedisConfig redisLockConfig() {
     return appConfig.getRedisLockConfig();
+  }
+
+  @Provides
+  @Named("TestCache")
+  @Singleton
+  Cache<String, String> getTestCache(HarnessCacheManager harnessCacheManager, VersionInfoManager versionInfoManager) {
+    return harnessCacheManager.getCache("TestCache", String.class, String.class,
+        AccessedExpiryPolicy.factoryOf(Duration.TWENTY_MINUTES), versionInfoManager.getVersionInfo().getBuildNo());
   }
 
   private DelegateCallbackToken getDelegateCallbackToken(
