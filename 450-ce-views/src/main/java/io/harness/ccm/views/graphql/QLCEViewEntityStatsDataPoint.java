@@ -1,5 +1,6 @@
 package io.harness.ccm.views.graphql;
 
+import io.leangen.graphql.annotations.GraphQLNonNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
@@ -9,7 +10,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QLCEViewEntityStatsDataPoint {
-  String name;
-  Number cost;
+  @GraphQLNonNull String name;
+  @GraphQLNonNull Number cost;
   Number costTrend;
 }
