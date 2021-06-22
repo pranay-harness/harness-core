@@ -62,7 +62,6 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -114,7 +113,6 @@ public class YamlHelper {
   @Inject PipelineService pipelineService;
   @Inject SettingsService settingsService;
   @Inject ApplicationManifestService applicationManifestService;
-  @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject EntityUpdateService entityUpdateService;
   @Inject ConfigService configService;
   @Inject FeatureFlagService featureFlagService;

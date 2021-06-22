@@ -22,6 +22,7 @@ import software.wings.features.api.FeatureService;
 import software.wings.licensing.LicenseService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.AccountPermissionUtils;
 import software.wings.utils.ResourceTestRule;

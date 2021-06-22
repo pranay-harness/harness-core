@@ -18,9 +18,9 @@ public class EventsModuleHelper {
   @Inject @Named("GenericEventListener") EventListener eventListener;
 
   public void initialize() {
-    HarnessMetricsRegistryHandler eventHandler =
-        (HarnessMetricsRegistryHandler) eventHandlerMap.get(HarnessMetricsRegistryHandler.class.getSimpleName());
-    eventHandler.registerEventsWithHarnessRegistry();
-    eventHandler.registerWithEventListener(eventListener);
+    //    HarnessMetricsRegistryHandler eventHandler =
+    //        (HarnessMetricsRegistryHandler) eventHandlerMap.get(HarnessMetricsRegistryHandler.class.getSimpleName());
+    //    eventHandler.registerEventsWithHarnessRegistry();
+    //    eventHandler.registerWithEventListener(eventListener);
   }
 }

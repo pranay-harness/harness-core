@@ -109,7 +109,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * @author rktummala on 10/19/17
  */
-@Singleton
+//@Singleton
 @Slf4j
 public class YamlHandlerFactory {
   //  public static final String ECS_SERVICE_SPEC = "ECS_SERVICE_SPEC";

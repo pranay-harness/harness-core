@@ -37,9 +37,11 @@ import io.dropwizard.request.logging.LogbackAccessRequestLogFactory;
 import io.dropwizard.request.logging.RequestLogFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -60,6 +62,7 @@ public class DelegateServiceConfig extends Configuration implements AssetsBundle
           .mimeTypes(of("js", "application/json; charset=UTF-8", "zip", "application/zip"))
           .build();
 
+  @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
   @JsonProperty("redisAtmosphereConfig") private RedisConfig redisAtmosphereConfig;
   @JsonProperty("currentJre") private String currentJre;
@@ -85,7 +88,7 @@ public class DelegateServiceConfig extends Configuration implements AssetsBundle
    */
   public DelegateServiceConfig() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
-    defaultServerFactory.setJerseyRootPath("/delegate");
+    defaultServerFactory.setJerseyRootPath("/api");
     defaultServerFactory.setRegisterDefaultExceptionMappers(false);
     defaultServerFactory.setAdminContextPath("/admin");
     defaultServerFactory.setAdminConnectors(singletonList(getDefaultAdminConnectorFactory()));
@@ -145,5 +148,19 @@ public class DelegateServiceConfig extends Configuration implements AssetsBundle
     fileAppenderFactory.setArchivedFileCount(14);
     logbackAccessRequestLogFactory.setAppenders(ImmutableList.of(fileAppenderFactory));
     return logbackAccessRequestLogFactory;
+  }
+
+  /**
+   * Gets swagger bundle configuration.
+   *
+   * @return the swagger bundle configuration
+   */
+  public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
+    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
+    defaultSwaggerBundleConfiguration.setResourcePackage(
+        "software.wings.resources,software.wings.utils,io.harness.cvng.core.resources,io.harness.delegate.resources");
+    defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
+    defaultSwaggerBundleConfiguration.setHost("{{host}}");
+    return Optional.ofNullable(swaggerBundleConfiguration).orElse(defaultSwaggerBundleConfiguration);
   }
 }

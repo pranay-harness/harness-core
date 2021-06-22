@@ -2,6 +2,7 @@ package io.harness.delegate.app;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.event.EventsModule;
 import io.harness.hazelcast.HazelcastModule;
 import io.harness.persistence.HPersistence;
 import io.harness.redis.RedisConfig;
@@ -11,6 +12,8 @@ import io.harness.waiter.WaiterConfiguration;
 import software.wings.app.MainConfiguration;
 import software.wings.app.WingsLiteModule;
 import software.wings.app.WingsModule;
+import software.wings.app.YamlLiteModule;
+import software.wings.app.YamlModule;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.security.NoOpSecretManagerImpl;
@@ -55,20 +58,24 @@ public class DelegateServiceModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    install(HazelcastModule.getInstance());
-    bind(RedisConfig.class).annotatedWith(Names.named("atmosphere")).toInstance(config.getRedisAtmosphereConfig());
-    bind(HPersistence.class).to(WingsMongoPersistence.class);
-    bind(WingsPersistence.class).to(WingsMongoPersistence.class);
-    bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
-    install(new AbstractWaiterModule() {
-      @Override
-      public WaiterConfiguration waiterConfiguration() {
-        return WaiterConfiguration.builder().persistenceLayer(WaiterConfiguration.PersistenceLayer.MORPHIA).build();
-      }
-    });
+    //    install(HazelcastModule.getInstance());
+    //    bind(RedisConfig.class).annotatedWith(Names.named("atmosphere")).toInstance(config.getRedisAtmosphereConfig());
+    //    bind(HPersistence.class).to(WingsMongoPersistence.class);
+    //    bind(WingsPersistence.class).to(WingsMongoPersistence.class);
+    //    install(new AbstractWaiterModule() {
+    //      @Override
+    //      public WaiterConfiguration waiterConfiguration() {
+    //        return
+    //        WaiterConfiguration.builder().persistenceLayer(WaiterConfiguration.PersistenceLayer.MORPHIA).build();
+    //      }
+    //    });
 
     install(new DelegateServiceGrpcServerModule(config));
     install(new DelegateServiceClassicGrpcServerModule(config));
-    install(new WingsLiteModule(mainConfiguration));
+    //    install(new WingsModule(mainConfiguration));
+    //    install(YamlModule.getInstance());
+    //    install(new EventsModule(mainConfiguration));
+    //    install(new WingsLiteModule(mainConfiguration));
+    //    install(YamlLiteModule.getInstance());
   }
 }

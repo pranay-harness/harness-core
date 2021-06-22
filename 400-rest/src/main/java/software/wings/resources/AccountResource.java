@@ -3,9 +3,11 @@ package software.wings.resources;
 import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.TaskType.GCB;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
@@ -17,10 +19,12 @@ import static org.apache.commons.lang3.StringUtils.substringAfter;
 import io.harness.account.ProvisionStep;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.cvng.beans.ServiceGuardLimitDTO;
 import io.harness.datahandler.models.AccountDetails;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
@@ -37,11 +41,13 @@ import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountMigration;
 import software.wings.beans.AccountSalesContactsInfo;
 import software.wings.beans.AccountType;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.LicenseUpdateInfo;
 import software.wings.beans.Service;
 import software.wings.beans.SubdomainUrl;
 import software.wings.beans.TechStack;
+import software.wings.beans.command.GcbTaskParams;
 import software.wings.features.api.FeatureService;
 import software.wings.licensing.LicenseService;
 import software.wings.scheduler.ServiceInstanceUsageCheckerJob;
@@ -107,6 +113,7 @@ public class AccountResource {
   private final GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler;
   private final Provider<SampleDataProviderService> sampleDataProviderServiceProvider;
   private final AuthService authService;
+  //  private final DelegateTaskServiceClassic delegateTaskServiceClassic;
 
   @Inject
   public AccountResource(AccountService accountService, UserService userService,
@@ -114,6 +121,8 @@ public class AccountResource {
       FeatureService featureService, @Named("BackgroundJobScheduler") PersistentScheduler jobScheduler,
       GcpMarketPlaceApiHandler gcpMarketPlaceApiHandler,
       Provider<SampleDataProviderService> sampleDataProviderServiceProvider, AuthService authService) {
+    //      , DelegateTaskServiceClassic delegateTaskServiceClassic) {
+
     this.accountService = accountService;
     this.userService = userService;
     this.licenseServiceProvider = licenseServiceProvider;
@@ -123,6 +132,7 @@ public class AccountResource {
     this.gcpMarketPlaceApiHandler = gcpMarketPlaceApiHandler;
     this.sampleDataProviderServiceProvider = sampleDataProviderServiceProvider;
     this.authService = authService;
+    //    this.delegateTaskServiceClassic = delegateTaskServiceClassic;
   }
 
   @GET
@@ -246,6 +256,33 @@ public class AccountResource {
       licenseServiceProvider.get().startCeLimitedTrial(accountId);
       return new RestResponse<>(Boolean.TRUE);
     }
+  }
+
+  @POST
+  @Path("/test/{accountId}/sendDelegateTask")
+  @Timed
+  @ExceptionMetered
+  @PublicApi
+  public RestResponse<Void> sendDelegateTask(@PathParam("accountId") @NotEmpty String accountId) {
+    //    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+    //      log.info("Creating a sync task");
+    //      delegateTaskServiceClassic.executeTask(          DelegateTask.builder()
+    //          .accountId(accountId)
+    //          .data(TaskData.builder()
+    //              .async(true)
+    //              .taskType(GCB.name())
+    //              .parameters(new Object[] {GcbTaskParams.builder()
+    //                  .gcpConfig(new GcpConfig())
+    //                  .encryptedDataDetails(null)
+    //                  .type(GcbTaskParams.GcbTaskType.FETCH_TRIGGERS)
+    //                  .build()})
+    //              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+    //              .build())
+    //          .build());
+    //    } catch (InterruptedException e) {
+    //      e.printStackTrace();
+    //    }
+    return new RestResponse<>();
   }
 
   @PUT
