@@ -124,6 +124,11 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     }
   }
 
+  @Override
+  public void invalidateAllCache() {
+    schemaFetcher.invalidateAllCache();
+  }
+
   private JsonNode getPipelineYamlSchemaInternal(String projectIdentifier, String orgIdentifier, Scope scope) {
     JsonNode pipelineSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.PIPELINES, orgIdentifier, projectIdentifier, scope);

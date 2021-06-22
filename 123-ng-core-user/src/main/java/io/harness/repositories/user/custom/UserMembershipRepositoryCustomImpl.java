@@ -108,10 +108,11 @@ public class UserMembershipRepositoryCustomImpl implements UserMembershipReposit
   }
 
   @Override
-  public Long getProjectCount(String userId) {
-    TypedAggregation<UserMembership> aggregation = newAggregation(UserMembership.class,
-        match(where(UserMembershipKeys.userId).is(userId)), unwind(UserMembershipKeys.scopes),
-        match(where("scopes.projectIdentifier").exists(true)), group().count().as("count"));
+  public Long getProjectCount(String userId, String accountIdentifier) {
+    TypedAggregation<UserMembership> aggregation =
+        newAggregation(UserMembership.class, match(where(UserMembershipKeys.userId).is(userId)),
+            unwind(UserMembershipKeys.scopes), match(where("scopes.projectIdentifier").exists(true)),
+            match(where("scopes.accountIdentifier").is(accountIdentifier)), group().count().as("count"));
 
     List<BasicDBObject> mappedResults = mongoTemplate.aggregate(aggregation, BasicDBObject.class).getMappedResults();
 

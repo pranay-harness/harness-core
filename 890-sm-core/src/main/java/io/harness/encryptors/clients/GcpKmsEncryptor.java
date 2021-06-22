@@ -12,6 +12,7 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.encryptors.KmsEncryptor;
 import io.harness.encryptors.clients.AwsKmsEncryptor.KmsEncryptionKeyCacheKey;
@@ -80,8 +81,8 @@ public class GcpKmsEncryptor implements KmsEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> encryptInternal(accountId, value, gcpKmsConfig), DEFAULT_GCP_KMS_TIMEOUT, TimeUnit.SECONDS, true);
+        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(DEFAULT_GCP_KMS_TIMEOUT),
+            () -> encryptInternal(accountId, value, gcpKmsConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("Encryption failed. Trial Number {}", failedAttempts, e);
@@ -144,8 +145,8 @@ public class GcpKmsEncryptor implements KmsEncryptor {
           return decryptInternalIfCached(encryptedData, cachedEncryptedKey, System.currentTimeMillis());
         } else {
           // Use TimeLimiter.callWithTimeout only if the KMS plain text key is not cached.
-          return timeLimiter.callWithTimeout(
-              () -> decryptInternal(encryptedData, gcpKmsConfig), DEFAULT_GCP_KMS_TIMEOUT, TimeUnit.SECONDS, true);
+          return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(DEFAULT_GCP_KMS_TIMEOUT),
+              () -> decryptInternal(encryptedData, gcpKmsConfig));
         }
       } catch (Exception e) {
         failedAttempts++;

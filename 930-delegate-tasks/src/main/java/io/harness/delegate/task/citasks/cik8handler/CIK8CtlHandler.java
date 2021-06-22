@@ -193,7 +193,9 @@ public class CIK8CtlHandler {
     String errMsg;
     // If pod's container status list is non-empty, reason for pod not to be in running state is in waiting container's
     // status message. Else reason is present in pod conditions.
-    if (isNotEmpty(pod.getStatus().getContainerStatuses())) {
+    if (Duration.between(startTime, currTime).getSeconds() >= CIConstants.POD_MAX_WAIT_UNTIL_READY_SECS) {
+      errMsg = "Timeout exception: Pod containers failed to reach running state within 8 minutes";
+    } else if (isNotEmpty(pod.getStatus().getContainerStatuses())) {
       List<String> containerErrs =
           pod.getStatus()
               .getContainerStatuses()

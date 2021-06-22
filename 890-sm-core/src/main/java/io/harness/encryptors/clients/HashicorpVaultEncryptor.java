@@ -11,6 +11,7 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.encryptors.VaultEncryptor;
 import io.harness.exception.SecretManagementDelegateException;
 import io.harness.helpers.ext.vault.VaultRestClientFactory;
@@ -27,7 +28,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,8 +52,8 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> upsertSecretInternal(name, plaintext, accountId, null, vaultConfig), 15, TimeUnit.SECONDS, true);
+        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+            () -> upsertSecretInternal(name, plaintext, accountId, null, vaultConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
@@ -72,10 +73,8 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            ()
-                -> upsertSecretInternal(name, plaintext, accountId, existingRecord, vaultConfig),
-            5, TimeUnit.SECONDS, true);
+        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(5),
+            () -> upsertSecretInternal(name, plaintext, accountId, existingRecord, vaultConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
@@ -95,8 +94,8 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> renameSecretInternal(name, accountId, existingRecord, vaultConfig), 15, TimeUnit.SECONDS, true);
+        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+            () -> renameSecretInternal(name, accountId, existingRecord, vaultConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
@@ -172,8 +171,8 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> fetchSecretInternal(encryptedRecord, vaultConfig), 15, TimeUnit.SECONDS, true);
+        return HTimeLimiter.callInterruptible(
+            timeLimiter, Duration.ofSeconds(15), () -> fetchSecretInternal(encryptedRecord, vaultConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("decryption failed. trial num: {}", failedAttempts, e);

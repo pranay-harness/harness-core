@@ -61,7 +61,7 @@ def createTable(client, table_ref):
             type_=bigquery.TimePartitioningType.DAY,
             field="addedAt"
         )
-    elif tableName == "awsEc2Inventory":
+    elif tableName.startswith("awsEc2Inventory"):
         fieldset = awsEc2InventorySchema
         partition = bigquery.RangePartitioning(
             range_=bigquery.PartitionRange(start=0, end=10000, interval=1),
@@ -73,7 +73,7 @@ def createTable(client, table_ref):
             type_=bigquery.TimePartitioningType.DAY,
             field="addedAt"
         )
-    elif tableName == "awsEbsInventory":
+    elif tableName.startswith("awsEbsInventory"):
         fieldset = awsEbsInventorySchema
         partition = bigquery.RangePartitioning(
             range_=bigquery.PartitionRange(start=0, end=10000, interval=1),
@@ -107,13 +107,13 @@ def createTable(client, table_ref):
         tableName == "awsEc2InventoryMetric" or tableName == "awsEbsInventoryMetrics" or \
         tableName.startswith("awscur"):
         table.time_partitioning = partition
-    elif tableName == "awsEc2Inventory" or tableName == "awsEbsInventory" or tableName == "clusterData":
+    elif tableName.startswith("awsEc2Inventory") or tableName.startswith("awsEbsInventory") or tableName == "clusterData":
         table.range_partitioning = partition
 
     try:
         table = client.create_table(table)  # Make an API request.
         print_("Created table {}.{}.{}".format(table.project, table.dataset_id, table.table_id))
     except Exception as e:
-        print_("Error while creating table\n {}".format(e), "ERROR")
+        print_("Error while creating table\n {}".format(e), "WARN")
         return False
     return True

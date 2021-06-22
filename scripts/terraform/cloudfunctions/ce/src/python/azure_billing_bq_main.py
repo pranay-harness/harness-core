@@ -82,6 +82,7 @@ def main(event, context):
         print_("%s table does not exists, creating table..." % unifiedTableRef)
         createTable(client, unifiedTableRef)
     else:
+        # Disable this call when the pipeline has executed once for each customer
         alter_unified_table(jsonData)
         print_("%s table exists" % unifiedTableTableName)
 
@@ -313,7 +314,8 @@ def ingest_data_into_unified(jsonData, azure_column_mapping):
                         azureMeterName,
                         azureInstanceId, region, azureResourceGroup,
                         azureSubscriptionGuid, azureServiceName,
-                        cloudProvider, labels, azureResource, azureVMProviderId, azureTenantId
+                        cloudProvider, labels, azureResource, azureVMProviderId, azureTenantId,
+                        azureResourceRate
                     """
     select_columns = """MeterCategory AS product, TIMESTAMP(%s) as startTime, %s*%s AS cost,
                         MeterCategory as azureMeterCategory,MeterSubcategory as azureMeterSubcategory,MeterId as azureMeterId,
@@ -328,7 +330,8 @@ def ingest_data_into_unified(jsonData, azure_column_mapping):
                             IF(REGEXP_CONTAINS(%s, r'virtualMachines'),
                                 LOWER(CONCAT('azure://', %s)),
                                 null)),
-                        '%s' as azureTenantId
+                        '%s' as azureTenantId,
+                        %s AS azureResourceRate
                      """ % (azure_column_mapping["startTime"],
                             azure_column_mapping["cost"], get_cost_markup_factor(jsonData),
                             azure_column_mapping["azureInstanceId"],
@@ -338,7 +341,7 @@ def ingest_data_into_unified(jsonData, azure_column_mapping):
                             azure_column_mapping["azureInstanceId"], azure_column_mapping["azureInstanceId"],
                             azure_column_mapping["azureInstanceId"],
                             azure_column_mapping["azureInstanceId"], azure_column_mapping["azureInstanceId"],
-                            jsonData["tenant_id"])
+                            jsonData["tenant_id"], azure_column_mapping["azureResourceRate"])
 
     # Amend query as per columns availability
     for additionalColumn in ["AccountName", "Frequency", "PublisherType", "ServiceTier", "ResourceType",
@@ -431,30 +434,11 @@ def alter_preagg_table(jsonData):
 def alter_unified_table(jsonData):
     print_("Altering unifiedTable Table")
     ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
-    query = "ALTER TABLE `%s.unifiedTable` ADD COLUMN IF NOT EXISTS azureMeterCategory STRING, \
-        ADD COLUMN IF NOT EXISTS azureMeterSubcategory STRING, \
-        ADD COLUMN IF NOT EXISTS azureMeterId STRING, \
-        ADD COLUMN IF NOT EXISTS azureMeterName STRING, \
-        ADD COLUMN IF NOT EXISTS azureResourceType STRING, \
-        ADD COLUMN IF NOT EXISTS azureServiceTier STRING, \
-        ADD COLUMN IF NOT EXISTS azureInstanceId STRING, \
-        ADD COLUMN IF NOT EXISTS azureResourceGroup STRING, \
-        ADD COLUMN IF NOT EXISTS azureSubscriptionGuid STRING, \
-        ADD COLUMN IF NOT EXISTS azureAccountName STRING, \
-        ADD COLUMN IF NOT EXISTS azureFrequency STRING, \
-        ADD COLUMN IF NOT EXISTS azurePublisherType STRING, \
-        ADD COLUMN IF NOT EXISTS azureSubscriptionName STRING, \
-        ADD COLUMN IF NOT EXISTS azureReservationId STRING, \
-        ADD COLUMN IF NOT EXISTS azureReservationName STRING, \
-        ADD COLUMN IF NOT EXISTS azurePublisherName STRING, \
-        ADD COLUMN IF NOT EXISTS azureServiceName STRING, \
-        ADD COLUMN IF NOT EXISTS azureVMProviderId STRING, \
-        ADD COLUMN IF NOT EXISTS azureResource STRING, \
-        ADD COLUMN IF NOT EXISTS azureTenantId STRING, \
-        ADD COLUMN IF NOT EXISTS azureCustomerName STRING, \
-        ADD COLUMN IF NOT EXISTS azureBillingCurrency STRING;" % ds
+    query = "ALTER TABLE `%s.unifiedTable` \
+        ADD COLUMN IF NOT EXISTS azureResourceRate FLOAT64;" % ds
 
     try:
+        print_(query)
         query_job = client.query(query)
         query_job.result()
     except Exception as e:

@@ -12,7 +12,8 @@ import java.util.List;
 public interface ServiceAccountService {
   ServiceAccountDTO createServiceAccount(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, ServiceAccountRequestDTO requestDTO);
-  List<ServiceAccountDTO> listServiceAccounts(String accountIdentifier, String orgIdentifier, String projectIdentifier);
+  List<ServiceAccountDTO> listServiceAccounts(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> identifiers);
   ServiceAccountDTO updateServiceAccount(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String identifier, ServiceAccountRequestDTO requestDTO);
   boolean deleteServiceAccount(

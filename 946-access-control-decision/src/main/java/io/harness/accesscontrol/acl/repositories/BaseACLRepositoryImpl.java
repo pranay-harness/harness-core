@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.acl.repository;
+package io.harness.accesscontrol.acl.repositories;
 
 import static io.harness.accesscontrol.acl.models.ACL.RESOURCE_GROUP_IDENTIFIER_KEY;
 import static io.harness.accesscontrol.acl.models.ACL.ROLE_IDENTIFIER_KEY;
@@ -10,17 +10,27 @@ import static org.springframework.data.mongodb.util.MongoDbErrorCodes.isDuplicat
 
 import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.acl.models.ACL.ACLKeys;
+import io.harness.accesscontrol.acl.repository.ACLRepository;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.mongo.index.MongoIndex;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.MongoBulkWriteException;
+import com.mongodb.MongoNamespace;
+import com.mongodb.client.model.IndexModel;
+import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.Indexes;
+import com.mongodb.client.model.RenameCollectionOptions;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.validation.executable.ValidateOnExecution;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.conversions.Bson;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -28,18 +38,24 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
 @OwnedBy(PL)
-@AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@AllArgsConstructor(access = AccessLevel.PROTECTED, onConstructor = @__({ @Inject }))
 @Singleton
 @Slf4j
-public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
-  private final MongoTemplate mongoTemplate;
+@ValidateOnExecution
+public abstract class BaseACLRepositoryImpl implements ACLRepository {
+  protected final MongoTemplate mongoTemplate;
+
+  protected abstract String getCollectionName();
 
   public long insertAllIgnoringDuplicates(List<ACL> acls) {
     try {
       if (isEmpty(acls)) {
         return 0;
       }
-      return mongoTemplate.bulkOps(BulkMode.UNORDERED, ACL.class).insert(acls).execute().getInsertedCount();
+      return mongoTemplate.bulkOps(BulkMode.UNORDERED, ACL.class, getCollectionName())
+          .insert(acls)
+          .execute()
+          .getInsertedCount();
     } catch (BulkOperationException ex) {
       if (ex.getErrors().stream().allMatch(bulkWriteError -> isDuplicateKeyCode(bulkWriteError.getCode()))) {
         return ex.getResult().getInsertedCount();
@@ -61,7 +77,7 @@ public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
   public List<ACL> findByUserGroup(String scopeIdentifier, String userGroupIdentifier) {
     Criteria criteria = Criteria.where(USER_GROUP_IDENTIFIER_KEY).is(userGroupIdentifier);
     criteria.and(ACLKeys.scopeIdentifier).is(scopeIdentifier);
-    return mongoTemplate.find(new Query(criteria), ACL.class);
+    return mongoTemplate.find(new Query(criteria), ACL.class, getCollectionName());
   }
 
   @Override
@@ -70,7 +86,7 @@ public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
     if (!managed) {
       criteria.and(ACLKeys.scopeIdentifier).is(scopeIdentifier);
     }
-    return mongoTemplate.find(new Query(criteria), ACL.class);
+    return mongoTemplate.find(new Query(criteria), ACL.class, getCollectionName());
   }
 
   @Override
@@ -79,17 +95,19 @@ public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
     if (!managed) {
       criteria.and(ACLKeys.scopeIdentifier).is(scopeIdentifier);
     }
-    return mongoTemplate.find(new Query(criteria), ACL.class);
+    return mongoTemplate.find(new Query(criteria), ACL.class, getCollectionName());
   }
 
   @Override
   public List<ACL> getByRoleAssignmentId(String id) {
-    return mongoTemplate.find(new Query(Criteria.where(ACLKeys.roleAssignmentId).is(id)), ACL.class);
+    return mongoTemplate.find(
+        new Query(Criteria.where(ACLKeys.roleAssignmentId).is(id)), ACL.class, getCollectionName());
   }
 
   @Override
   public long deleteByRoleAssignmentId(String id) {
-    return mongoTemplate.remove(new Query(Criteria.where(ACLKeys.roleAssignmentId).is(id)), ACL.class)
+    return mongoTemplate
+        .remove(new Query(Criteria.where(ACLKeys.roleAssignmentId).is(id)), ACL.class, getCollectionName())
         .getDeletedCount();
   }
 
@@ -98,7 +116,7 @@ public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
     Criteria criteria = Criteria.where(ACLKeys.roleAssignmentId).is(roleAssignmentId);
     Query query = new Query();
     query.addCriteria(criteria);
-    return mongoTemplate.findDistinct(query, ACLKeys.resourceSelector, ACL.class, String.class);
+    return mongoTemplate.findDistinct(query, ACLKeys.resourceSelector, getCollectionName(), ACL.class, String.class);
   }
 
   @Override
@@ -109,7 +127,7 @@ public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
                               .is(roleAssignmentId)
                               .and(ACLKeys.resourceSelector)
                               .in(resourceSelectorsToDelete)),
-            ACL.class)
+            ACL.class, getCollectionName())
         .getDeletedCount();
   }
 
@@ -120,7 +138,7 @@ public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
                               .is(roleAssignmentId)
                               .and(ACLKeys.permissionIdentifier)
                               .in(permissions)),
-            ACL.class)
+            ACL.class, getCollectionName())
         .getDeletedCount();
   }
 
@@ -131,7 +149,7 @@ public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
                               .is(roleAssignmentId)
                               .and(ACLKeys.principalIdentifier)
                               .in(principals)),
-            ACL.class)
+            ACL.class, getCollectionName())
         .getDeletedCount();
   }
 
@@ -140,7 +158,8 @@ public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
     Criteria criteria = Criteria.where(ACLKeys.roleAssignmentId).is(roleAssignmentId);
     Query query = new Query();
     query.addCriteria(criteria);
-    return mongoTemplate.findDistinct(query, ACLKeys.permissionIdentifier, ACL.class, String.class);
+    return mongoTemplate.findDistinct(
+        query, ACLKeys.permissionIdentifier, getCollectionName(), ACL.class, String.class);
   }
 
   @Override
@@ -148,7 +167,7 @@ public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
     Criteria criteria = Criteria.where(ACLKeys.roleAssignmentId).is(roleAssignmentId);
     Query query = new Query();
     query.addCriteria(criteria);
-    return mongoTemplate.findDistinct(query, ACLKeys.principalIdentifier, ACL.class, String.class);
+    return mongoTemplate.findDistinct(query, ACLKeys.principalIdentifier, getCollectionName(), ACL.class, String.class);
   }
 
   @Override
@@ -159,5 +178,30 @@ public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
         .stream()
         .map(acl -> acl.getAclQueryString())
         .collect(Collectors.toSet());
+  }
+
+  @Override
+  public void cleanCollection() {
+    mongoTemplate.dropCollection(getCollectionName());
+    mongoTemplate.createCollection(getCollectionName());
+    List<IndexModel> indexModels = ACL.mongoIndexes().stream().map(this::buildIndexModel).collect(Collectors.toList());
+    mongoTemplate.getCollection(getCollectionName()).createIndexes(indexModels);
+  }
+
+  @Override
+  public void renameCollection(@NotEmpty String newCollectionName) {
+    MongoNamespace mongoNamespace = new MongoNamespace(mongoTemplate.getDb().getName(), newCollectionName);
+    mongoTemplate.getCollection(getCollectionName())
+        .renameCollection(mongoNamespace, new RenameCollectionOptions().dropTarget(true));
+  }
+
+  private IndexModel buildIndexModel(MongoIndex mongoIndex) {
+    List<String> fields = mongoIndex.getFields();
+    String name = mongoIndex.getName();
+    boolean isUnique = mongoIndex.isUnique();
+    boolean isSparse = mongoIndex.isSparse();
+    Bson indexKeys = Indexes.ascending(fields);
+    IndexOptions indexOptions = new IndexOptions().unique(isUnique).name(name).sparse(isSparse);
+    return new IndexModel(indexKeys, indexOptions);
   }
 }

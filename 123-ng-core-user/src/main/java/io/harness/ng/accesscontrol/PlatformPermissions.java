@@ -25,4 +25,7 @@ public class PlatformPermissions {
   public static final String VIEW_AUTHSETTING_PERMISSION = "core_authsetting_view";
   public static final String EDIT_AUTHSETTING_PERMISSION = "core_authsetting_edit";
   public static final String DELETE_AUTHSETTING_PERMISSION = "core_authsetting_delete";
+  public static final String VIEW_SERVICEACCOUNT_PERMISSION = "core_serviceaccount_view";
+  public static final String EDIT_SERVICEACCOUNT_PERMISSION = "core_serviceaccount_edit";
+  public static final String DELETE_SERVICEACCOUNT_PERMISSION = "core_serviceaccount_delete";
 }

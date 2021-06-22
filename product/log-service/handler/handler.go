@@ -94,10 +94,18 @@ func Handler(stream stream.Stream, store store.Store, config config.Config) http
 		return sr
 	}())
 
-	// Health check
+	// Liveness check
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, "OK")
 	})
+
+	// Readiness check
+	r.Mount("/ready/healthz", func() http.Handler {
+		sr := chi.NewRouter()
+		sr.Get("/", HandlePing(stream))
+
+		return sr
+	}())
 
 	return r
 }
