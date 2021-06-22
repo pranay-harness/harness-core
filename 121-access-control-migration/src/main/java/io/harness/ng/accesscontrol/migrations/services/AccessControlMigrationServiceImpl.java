@@ -326,7 +326,6 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
 
     Optional<AccessControlMigration> accountAccessControlMigrationOptional =
         migrateInternal(accountIdentifier, null, null, currentGenUserIds);
-    accountAccessControlMigrationOptional.ifPresent(this::runPostMigrationSteps);
 
     List<String> organizations =
         organizationService.list(Criteria.where(OrganizationKeys.accountIdentifier).is(accountIdentifier))
@@ -337,8 +336,6 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
     for (String organizationIdentifier : organizations) {
       Optional<AccessControlMigration> orgAccessControlMigrationOptional =
           migrateInternal(accountIdentifier, organizationIdentifier, null, currentGenUserIds);
-      orgAccessControlMigrationOptional.ifPresent(this::runPostMigrationSteps);
-
       List<String> projects = projectService
                                   .list(Criteria.where(ProjectKeys.accountIdentifier)
                                             .is(accountIdentifier)
@@ -353,10 +350,11 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
             migrateInternal(accountIdentifier, organizationIdentifier, projectIdentifier, currentGenUserIds);
         projectAccessControlMigrationOptional.ifPresent(this::runPostMigrationSteps);
       }
+      orgAccessControlMigrationOptional.ifPresent(this::runPostMigrationSteps);
     }
-
     boolean rbacEnabled =
         NGRestUtils.getResponse(accessControlAdminClient.upsertAccessControlPreference(accountIdentifier, true));
+    accountAccessControlMigrationOptional.ifPresent(this::runPostMigrationSteps);
 
     if (rbacEnabled) {
       log.info("Migration ran successfully and rbac enabled for account: {}", accountIdentifier);
