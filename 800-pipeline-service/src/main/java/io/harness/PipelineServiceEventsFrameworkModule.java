@@ -23,7 +23,7 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 @OwnedBy(PIPELINE)
-public class EventsFrameworkModule extends AbstractModule {
+public class PipelineServiceEventsFrameworkModule extends AbstractModule {
   private final EventsFrameworkConfiguration eventsFrameworkConfiguration;
 
   @Override
@@ -63,6 +63,11 @@ public class EventsFrameworkModule extends AbstractModule {
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM, PIPELINE_SERVICE.getServiceId(),
               redisConfig, EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME,
               EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM_BATCH_SIZE));
+      bind(Consumer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.FEATURE_FLAG_STREAM, PIPELINE_SERVICE.getServiceId(),
+              redisConfig, EventsFrameworkConstants.FEATURE_FLAG_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.FEATURE_FLAG_READ_BATCH_SIZE));
     }
   }
 }
