@@ -3,10 +3,12 @@ package io.harness.accesscontrol.principals.serviceaccounts.events;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.SERVICE_ACCOUNT_ENTITY;
 
 import io.harness.accesscontrol.commons.events.EventFilter;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.audit.Action;
 import io.harness.eventsframework.consumer.Message;
 
 import com.google.inject.Singleton;
@@ -23,6 +25,7 @@ public class ServiceAccountMembershipEventFilter implements EventFilter {
     }
     String entityType = metadataMap.get(ENTITY_TYPE);
     String action = metadataMap.get(ACTION);
-    return DELETE_ACTION.equals(action);
+    return SERVICE_ACCOUNT_ENTITY.equals(entityType)
+        && (Action.CREATE.equals(action) || Action.UPDATE.equals(action) || Action.DELETE.equals(action));
   }
 }
