@@ -42,6 +42,11 @@ public class GcsStoreConfig
   }
 
   @Override
+  public ParameterField<String> getConnectorReference() {
+    return connectorRef;
+  }
+
+  @Override
   public io.harness.cdng.manifest.yaml.storeConfig.StoreConfig cloneInternal() {
     return GcsStoreConfig.builder().connectorRef(connectorRef).bucketName(bucketName).folderPath(folderPath).build();
   }

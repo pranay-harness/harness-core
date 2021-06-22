@@ -65,6 +65,11 @@ public class GitLabStore implements GitStoreConfig, Visitable, WithConnectorRef 
     return ManifestStoreType.GITLAB;
   }
 
+  @Override
+  public ParameterField<String> getConnectorReference() {
+    return connectorRef;
+  }
+
   public GitLabStore cloneInternal() {
     return GitLabStore.builder()
         .connectorRef(connectorRef)
