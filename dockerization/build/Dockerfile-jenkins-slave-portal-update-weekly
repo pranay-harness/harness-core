@@ -16,6 +16,7 @@ RUN cd /root \
     && cd portal \
     && source /etc/profile.d/maven.sh \
     && for i in 1 2 3 4 5; do \
+          BUILD_PURPOSE=CACHE \
           mvn -B -T 2C -Dmaven.repo.local=/root/.m2/repository -s /root/.m2/settings.xml \
               compile test-compile dependency:go-offline \
           && break ; done \
