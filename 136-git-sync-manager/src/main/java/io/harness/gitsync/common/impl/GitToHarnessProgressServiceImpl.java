@@ -155,4 +155,13 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
     }
     return null;
   }
+
+  @Override
+  public GitToHarnessProgressDTO getByYamlChangeSetId(String yamlChangeSetId) {
+    GitToHarnessProgress gitToHarnessProgress = gitToHarnessProgressRepository.findByYamlChangeSetId(yamlChangeSetId);
+    if (gitToHarnessProgress != null) {
+      return GitToHarnessProgressMapper.writeDTO(gitToHarnessProgress);
+    }
+    return null;
+  }
 }
