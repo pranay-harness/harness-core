@@ -43,12 +43,10 @@ public abstract class PmsBaseEventHandler<T extends Message> {
          PmsSecurityContextEventGuard securityContextEventGuard =
              new PmsSecurityContextEventGuard(extractAmbiance(event));
          ThreadAutoLogContext metricContext = new ThreadAutoLogContext(extractMetricContext(event))) {
-      MonitoringInfo monitoringInfo = MonitoringInfo.builder()
-                                          .createdAt(createdAt)
-                                          .metricPrefix(getMetricPrefix(event))
-                                          .build();
+      MonitoringInfo monitoringInfo =
+          MonitoringInfo.builder().createdAt(createdAt).metricPrefix(getMetricPrefix(event)).build();
       eventMonitoringService.sendMetric(LISTENER_START_METRIC, monitoringInfo, metadataMap);
-     handleEventWithContext(event);
+      handleEventWithContext(event);
       eventMonitoringService.sendMetric(LISTENER_END_METRIC, monitoringInfo, metadataMap);
     } catch (Exception e) {
       log.error("Unknown exception occurred while handling event", e);
