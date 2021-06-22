@@ -32,7 +32,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "ACLKeys")
-@Document("acl")
+@Document(ACL.PRIMARY_COLLECTION)
 @Entity(value = "acl", noClassnameStored = true)
 @TypeAlias("acl")
 @StoreIn(ACCESS_CONTROL)
@@ -45,6 +45,8 @@ public class ACL implements PersistentEntity {
   public static final String ROLE_IDENTIFIER_KEY = ACLKeys.sourceMetadata + "." + SourceMetadataKeys.roleIdentifier;
   public static final String RESOURCE_GROUP_IDENTIFIER_KEY =
       ACLKeys.sourceMetadata + "." + SourceMetadataKeys.resourceGroupIdentifier;
+  public static final String PRIMARY_COLLECTION = "acl";
+  public static final String SECONDARY_COLLECTION = "acl_secondary";
 
   @Id @org.mongodb.morphia.annotations.Id private String id;
   @CreatedDate Long createdAt;
