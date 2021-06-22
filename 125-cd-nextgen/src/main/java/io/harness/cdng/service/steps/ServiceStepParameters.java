@@ -34,7 +34,7 @@ public class ServiceStepParameters implements StepParameters {
     }
 
     ServiceYaml service = serviceConfig.getService();
-    String type = serviceConfig.getServiceDefinition().getType();
+    String type = serviceConfig.getServiceDefinition().getType().getYamlName();
     if (service == null) {
       return ServiceStepParameters.builder()
           .type(type)

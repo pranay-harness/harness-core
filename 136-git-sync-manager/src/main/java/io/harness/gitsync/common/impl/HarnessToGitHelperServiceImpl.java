@@ -36,12 +36,11 @@ import io.harness.gitsync.common.beans.GitSyncDirection;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.beans.InfoForGitPush.InfoForGitPushBuilder;
 import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
-import io.harness.gitsync.common.dtos.GitSyncSettingsDTO;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitBranchSyncService;
 import io.harness.gitsync.common.service.GitEntityService;
-import io.harness.gitsync.common.service.GitSyncSettingsService;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
+import io.harness.gitsync.common.service.ScmOrchestratorService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus;
 import io.harness.gitsync.core.dtos.GitCommitDTO;
@@ -81,7 +80,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   private final GitBranchService gitBranchService;
   private final EncryptionHelper encryptionHelper;
   private final SourceCodeManagerService sourceCodeManagerService;
-  private final GitSyncSettingsService gitSyncSettingsService;
+  private final ScmOrchestratorService scmOrchestratorService;
   private final GitBranchSyncService gitBranchSyncService;
   private final GitCommitService gitCommitService;
 
@@ -90,7 +89,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
       DecryptGitApiAccessHelper decryptScmApiAccess, GitEntityService gitEntityService,
       YamlGitConfigService yamlGitConfigService, EntityDetailProtoToRestMapper entityDetailRestToProtoMapper,
       ExecutorService executorService, GitBranchService gitBranchService, EncryptionHelper encryptionHelper,
-      SourceCodeManagerService sourceCodeManagerService, GitSyncSettingsService gitSyncSettingsService,
+      SourceCodeManagerService sourceCodeManagerService, ScmOrchestratorService scmOrchestratorService,
       GitBranchSyncService gitBranchSyncService, GitCommitService gitCommitService) {
     this.connectorService = connectorService;
     this.decryptScmApiAccess = decryptScmApiAccess;
@@ -101,7 +100,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     this.gitBranchService = gitBranchService;
     this.encryptionHelper = encryptionHelper;
     this.sourceCodeManagerService = sourceCodeManagerService;
-    this.gitSyncSettingsService = gitSyncSettingsService;
+    this.scmOrchestratorService = scmOrchestratorService;
     this.gitBranchSyncService = gitBranchSyncService;
     this.gitCommitService = gitCommitService;
   }
@@ -125,10 +124,8 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
         }
       }
     }
-    final Optional<GitSyncSettingsDTO> gitSyncSettingsDTO = gitSyncSettingsService.get(
-        accountId, entityReference.getOrgIdentifier(), entityReference.getProjectIdentifier());
-    final boolean executeOnDelegate = gitSyncSettingsDTO.isPresent() && gitSyncSettingsDTO.get().isExecuteOnDelegate();
-    // todo(abhinav): Throw exception if optional not present.
+    final boolean executeOnDelegate = scmOrchestratorService.isExecuteOnDelegate(
+        entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId);
 
     if (executeOnDelegate) {
       final Pair<ScmConnector, List<EncryptedDataDetail>> connectorWithEncryptionDetails =

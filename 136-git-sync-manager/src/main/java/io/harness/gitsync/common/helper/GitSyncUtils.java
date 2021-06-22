@@ -20,13 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 public class GitSyncUtils {
   static ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
 
-  public EntityType getEntityTypeFromYaml(String yaml) {
+  public EntityType getEntityTypeFromYaml(String yaml) throws InvalidRequestException {
     try {
       final JsonNode jsonNode = objectMapper.readTree(yaml);
       String rootNode = jsonNode.fields().next().getKey();
       return EntityType.getEntityTypeFromYamlRootName(rootNode);
     } catch (IOException | NoSuchElementException e) {
-      log.info("Could not process the yaml {}", yaml);
+      log.error("Could not process the yaml {}", yaml, e);
       throw new InvalidRequestException("Unable to parse yaml", e);
     }
   }

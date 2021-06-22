@@ -2,19 +2,24 @@ package io.harness.gitsync.gittoharness;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import io.harness.AuthorizationServiceHeader;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.ChangeSet;
 import io.harness.gitsync.GitToHarnessProcessRequest;
 import io.harness.gitsync.GitToHarnessServiceGrpc.GitToHarnessServiceImplBase;
 import io.harness.gitsync.ProcessingResponse;
+import io.harness.security.SecurityContextBuilder;
+import io.harness.security.dto.ServicePrincipal;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(DX)
 public class GitToHarnessGrpcService extends GitToHarnessServiceImplBase {
+  @Inject @Named("GitSdkAuthorizationServiceHeader") AuthorizationServiceHeader authorizationServiceHeader;
   @Inject GitToHarnessSdkProcessor gitToHarnessSdkProcessor;
 
   @Override
@@ -29,9 +34,16 @@ public class GitToHarnessGrpcService extends GitToHarnessServiceImplBase {
       GitToHarnessProcessRequest gitToHarnessRequest, StreamObserver<ProcessingResponse> responseObserver) {
     // todo: add proper ids so that we can check the git flows
     log.info("Grpc request recieved");
-    ProcessingResponse processingResponse = gitToHarnessSdkProcessor.gitToHarnessProcessingRequest(gitToHarnessRequest);
-    responseObserver.onNext(processingResponse);
-    responseObserver.onCompleted();
+    try {
+      log.info("AuthorizationServiceHeader value {}", authorizationServiceHeader);
+      SecurityContextBuilder.setContext(new ServicePrincipal(authorizationServiceHeader.getServiceId()));
+      ProcessingResponse processingResponse =
+          gitToHarnessSdkProcessor.gitToHarnessProcessingRequest(gitToHarnessRequest);
+      responseObserver.onNext(processingResponse);
+      responseObserver.onCompleted();
+    } finally {
+      SecurityContextBuilder.unsetCompleteContext();
+    }
     log.info("Grpc request completed");
   }
 }

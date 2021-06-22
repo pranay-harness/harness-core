@@ -47,6 +47,12 @@ import lombok.extern.slf4j.Slf4j;
 public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider {
   @Inject OutcomeService outcomeService;
   @Inject private ConnectorUtils connectorUtils;
+
+  @Override
+  public boolean shouldRun(OrchestrationEvent event) {
+    return isLiteEngineNode(AmbianceUtils.getCurrentStepType(event.getAmbiance()));
+  }
+
   @Override
   public PipelineModuleInfo getPipelineLevelModuleInfo(OrchestrationEvent event) {
     String branch = null;

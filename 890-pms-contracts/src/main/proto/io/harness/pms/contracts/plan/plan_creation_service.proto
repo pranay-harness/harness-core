@@ -94,6 +94,7 @@ message VariablesCreationBlobResponse {
   map<string, YamlFieldBlob> dependencies = 2;
   map<string, YamlFieldBlob> resolvedDependencies = 3;
   repeated ErrorResponse errorResponse = 4;
+  map<string, YamlOutputProperties> yamlOutputProperties = 5;
 }
 
 message ErrorResponse {

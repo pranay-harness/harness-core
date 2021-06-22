@@ -23,7 +23,7 @@ public class RedisFacilitateEventPublisher implements FacilitateEventPublisher {
     FacilitatorEvent event = FacilitatorEvent.newBuilder()
                                  .setNodeExecutionId(nodeExecutionId)
                                  .setAmbiance(nodeExecution.getAmbiance())
-                                 .setStepParameters(nodeExecution.getNode().getStepParametersBytes())
+                                 .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
                                  .setStepType(nodeExecution.getNode().getStepType())
                                  .setNotifyId(generateUuid())
                                  .addAllRefObjects(nodeExecution.getNode().getRebObjectsList())

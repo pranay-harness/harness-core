@@ -153,10 +153,11 @@ public class ServicePMSPlanCreator {
       String serviceNodeId, List<String> serviceSpecChildrenIds) {
     String serviceSpecNodeId =
         addServiceSpecNode(actualServiceConfig, planNodes, serviceNodeId, serviceSpecChildrenIds);
-    ServiceDefinitionStepParameters stepParameters = ServiceDefinitionStepParameters.builder()
-                                                         .type(actualServiceConfig.getServiceDefinition().getType())
-                                                         .childNodeId(serviceSpecNodeId)
-                                                         .build();
+    ServiceDefinitionStepParameters stepParameters =
+        ServiceDefinitionStepParameters.builder()
+            .type(actualServiceConfig.getServiceDefinition().getType().getYamlName())
+            .childNodeId(serviceSpecNodeId)
+            .build();
     PlanNode node =
         PlanNode.builder()
             .uuid("service-definition-" + serviceNodeId)

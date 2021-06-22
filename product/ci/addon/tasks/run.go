@@ -207,13 +207,10 @@ func (r *runTask) getScript(ctx context.Context, outputVarFile string) (string, 
 		return "", err
 	}
 
-	command := fmt.Sprintf("set -e\n %s %s", resolvedCmd, outputVarCmd)
-	logCmd, err := utils.GetLoggableCmd(command)
-	if err != nil {
-		r.addonLogger.Warn("failed to parse command using mvdan/sh. ", "command", command, zap.Error(err))
-		return fmt.Sprintf("echo '---%s'\n%s", command, command), nil
-	}
-	return logCmd, nil
+	// Using set -xe instead of printing command via utils.GetLoggableCmd(command) since if ' is present in a command,
+	// echo on the command fails with an error.
+	command := fmt.Sprintf("set -xe\n%s %s", resolvedCmd, outputVarCmd)
+	return command, nil
 }
 
 func (r *runTask) getShell() string {

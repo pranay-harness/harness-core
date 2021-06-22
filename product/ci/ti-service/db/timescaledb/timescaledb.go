@@ -74,6 +74,14 @@ func constructPsqlInsertStmt(low, high int) string {
 	return s
 }
 
+func (tdb *TimeScaleDb) Ping(ctx context.Context) error {
+	err := tdb.Conn.PingContext(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Write writes test cases to DB
 func (tdb *TimeScaleDb) Write(ctx context.Context, accountId, orgId, projectId, pipelineId,
 	buildId, stageId, stepId, report, repo, sha string, tests ...*types.TestCase) error {

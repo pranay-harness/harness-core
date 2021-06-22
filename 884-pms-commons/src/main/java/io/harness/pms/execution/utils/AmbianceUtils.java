@@ -110,4 +110,9 @@ public class AmbianceUtils {
     Level level = obtainCurrentLevel(ambiance);
     return level == null || level.getStepType() == null ? null : level.getStepType();
   }
+
+  public static String getCurrentGroup(Ambiance ambiance) {
+    Level level = obtainCurrentLevel(ambiance);
+    return level == null || level.getGroup() == null ? null : level.getGroup();
+  }
 }

@@ -38,6 +38,7 @@ import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.TaskFailureReason;
+import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
@@ -255,14 +256,35 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       return false;
     }
 
-    // Delegate and task having owners that have to be matched
-    boolean canAssign = taskSetupAbstractions.get(NgSetupFields.OWNER).startsWith(delegateOwner.getIdentifier());
-    if (!canAssign) {
+    String taskOrgIdentifier =
+        DelegateEntityOwnerHelper.extractOrgIdFromOwnerIdentifier(taskSetupAbstractions.get(NgSetupFields.OWNER));
+    String taskProjectIdentifier =
+        DelegateEntityOwnerHelper.extractProjectIdFromOwnerIdentifier(taskSetupAbstractions.get(NgSetupFields.OWNER));
+
+    String delegateOrgIdentifier =
+        DelegateEntityOwnerHelper.extractOrgIdFromOwnerIdentifier(delegateOwner.getIdentifier());
+    String delegateProjectIdentifier =
+        DelegateEntityOwnerHelper.extractProjectIdFromOwnerIdentifier(delegateOwner.getIdentifier());
+
+    // Match org. When owner is specified, at org must be there.
+    if (!StringUtils.equals(taskOrgIdentifier, delegateOrgIdentifier)) {
       delegateSelectionLogsService.logOwnerRuleNotMatched(
           batch, delegate.getAccountId(), delegate.getUuid(), delegateOwner);
+
+      return false;
     }
 
-    return canAssign;
+    // Match projects: task and delegate are org level ones, project level task and org level delegate, matching task
+    // and project level ones
+    if (isBlank(taskProjectIdentifier) && isBlank(delegateProjectIdentifier)
+        || !isBlank(taskProjectIdentifier) && isBlank(delegateProjectIdentifier)
+        || StringUtils.equals(taskProjectIdentifier, delegateProjectIdentifier)) {
+      return true;
+    }
+
+    delegateSelectionLogsService.logOwnerRuleNotMatched(
+        batch, delegate.getAccountId(), delegate.getUuid(), delegateOwner);
+    return false;
   }
 
   private boolean canAssignDelegateScopes(BatchDelegateSelectionLog batch, Delegate delegate, DelegateTask task) {

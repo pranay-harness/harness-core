@@ -1,6 +1,11 @@
 {
   "schema": {
     "type": "object",
+    "required": [
+      "identifier",
+      "name",
+      "type"
+    ],
     "properties": {
       "description": {
         "type": "string"
@@ -21,7 +26,7 @@
       },
       "timeout": {
         "type": "string",
-        "pattern": "^(\\d+[smhwd][\\s]?)+$"
+        "pattern": "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*))$"
       },
       "type": {
         "type": "string"
@@ -1594,6 +1599,11 @@
         },
         "StepElementConfig": {
           "type": "object",
+          "required": [
+            "identifier",
+            "name",
+            "type"
+          ],
           "properties": {
             "description": {
               "type": "string"
@@ -1614,7 +1624,7 @@
             },
             "timeout": {
               "type": "string",
-              "pattern": "^(\\d+[smhwd][\\s]?)+$"
+              "pattern": "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*))$"
             },
             "type": {
               "type": "string",
@@ -1913,5 +1923,6 @@
   },
   "nodeType": "Verify",
   "nodeName": "CVNGStepInfo",
-  "namespace": "cvng"
+  "namespace": "cvng",
+  "moduleType": "CV"
 }

@@ -15,6 +15,7 @@ import io.harness.git.model.ChangeType;
 import io.harness.gitsync.ChangeSet;
 import io.harness.gitsync.YamlGitConfigInfo;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
+import io.harness.gitsync.common.dtos.ChangeSetWithYamlStatusDTO;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.ng.core.event.EntityToEntityProtoHelper;
 
@@ -36,36 +37,44 @@ import lombok.extern.slf4j.Slf4j;
 public class GitChangeSetMapper {
   private ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
 
-  public List<ChangeSet> toChangeSetList(List<GitToHarnessFileProcessingRequest> fileContentsList, String accountId,
-      List<YamlGitConfigDTO> yamlGitConfigDTOs) {
+  public List<ChangeSetWithYamlStatusDTO> toChangeSetList(List<GitToHarnessFileProcessingRequest> fileContentsList,
+      String accountId, List<YamlGitConfigDTO> yamlGitConfigDTOs, String changesetId) {
     return emptyIfNull(fileContentsList)
         .stream()
         .map(fileProcessingRequest
             -> mapToChangeSet(fileProcessingRequest.getFileDetails(), accountId, fileProcessingRequest.getChangeType(),
-                yamlGitConfigDTOs))
+                yamlGitConfigDTOs, changesetId))
         .filter(Objects::nonNull)
         .collect(toList());
   }
 
-  private ChangeSet mapToChangeSet(
-      GitFileChangeDTO fileContent, String accountId, ChangeType changeType, List<YamlGitConfigDTO> yamlGitConfigDTOs) {
-    EntityType entityType = GitSyncUtils.getEntityTypeFromYaml(fileContent.getContent());
+  private ChangeSetWithYamlStatusDTO mapToChangeSet(GitFileChangeDTO fileContent, String accountId,
+      ChangeType changeType, List<YamlGitConfigDTO> yamlGitConfigDTOs, String changesetId) {
     ChangeSet.Builder builder = ChangeSet.newBuilder()
                                     .setAccountId(accountId)
                                     .setChangeType(ChangeTypeMapper.toProto(changeType))
-                                    .setEntityType(EntityToEntityProtoHelper.getEntityTypeFromProto(entityType))
                                     .setYaml(fileContent.getContent())
+                                    .setChangeSetId(changesetId)
                                     .setFilePath(fileContent.getPath());
     if (isNotBlank(fileContent.getObjectId())) {
       builder.setObjectId(StringValue.of(fileContent.getObjectId()));
     }
-    if (isNotBlank(fileContent.getCommitId())) {
-      builder.setObjectId(StringValue.of(fileContent.getCommitId()));
+    EntityType entityType = null;
+    try {
+      entityType = GitSyncUtils.getEntityTypeFromYaml(fileContent.getContent());
+    } catch (Exception ex) {
+      log.error("Unknown entity type encountered in file {}", fileContent.getPath(), ex);
+      return ChangeSetWithYamlStatusDTO.builder()
+          .changeSet(builder.build())
+          .yamlInputErrorType(ChangeSetWithYamlStatusDTO.YamlInputErrorType.INVALID_ENTITY_TYPE)
+          .build();
     }
+
+    builder.setEntityType(EntityToEntityProtoHelper.getEntityTypeFromProto(entityType));
     return setYamlGitConfigInfoInChangeset(fileContent, accountId, yamlGitConfigDTOs, builder);
   }
 
-  private ChangeSet setYamlGitConfigInfoInChangeset(GitFileChangeDTO fileContent, String accountId,
+  private ChangeSetWithYamlStatusDTO setYamlGitConfigInfoInChangeset(GitFileChangeDTO fileContent, String accountId,
       List<YamlGitConfigDTO> yamlGitConfigDTOs, ChangeSet.Builder builder) {
     String orgIdentifier;
     String projectIdentifier;
@@ -76,14 +85,20 @@ public class GitChangeSetMapper {
     } catch (Exception e) {
       log.error(
           "Ill formed yaml found. Filepath: [{}], Content[{}]", fileContent.getPath(), fileContent.getContent(), e);
-      return null;
+      return ChangeSetWithYamlStatusDTO.builder()
+          .changeSet(builder.build())
+          .yamlInputErrorType(ChangeSetWithYamlStatusDTO.YamlInputErrorType.PROJECT_ORG_IDENTIFIER_MISSING)
+          .build();
     }
 
     final Optional<YamlGitConfigDTO> yamlGitConfigDTO =
         getYamlGitConfigDTO(yamlGitConfigDTOs, orgIdentifier, projectIdentifier);
 
     if (!yamlGitConfigDTO.isPresent()) {
-      return null;
+      return ChangeSetWithYamlStatusDTO.builder()
+          .changeSet(builder.build())
+          .yamlInputErrorType(ChangeSetWithYamlStatusDTO.YamlInputErrorType.YAML_FROM_NOT_GIT_SYNCED_PROJECT)
+          .build();
     } else {
       YamlGitConfigDTO ygc = yamlGitConfigDTO.get();
       final YamlGitConfigInfo.Builder yamlGitConfigBuilder =
@@ -94,7 +109,11 @@ public class GitChangeSetMapper {
       if (isNotEmpty(orgIdentifier)) {
         yamlGitConfigBuilder.setYamlGitConfigOrgIdentifier(StringValue.of(orgIdentifier));
       }
-      return builder.setYamlGitConfigInfo(yamlGitConfigBuilder.build()).build();
+      ChangeSet updatedChangeSet = builder.setYamlGitConfigInfo(yamlGitConfigBuilder.build()).build();
+      return ChangeSetWithYamlStatusDTO.builder()
+          .changeSet(updatedChangeSet)
+          .yamlInputErrorType(ChangeSetWithYamlStatusDTO.YamlInputErrorType.NIL)
+          .build();
     }
   }
 

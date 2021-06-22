@@ -5,8 +5,6 @@ import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.aggregator.ACLUtils.buildACL;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import static java.lang.Runtime.getRuntime;
-
 import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.acl.repository.ACLRepository;
@@ -20,7 +18,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GeneralException;
 
 import com.google.common.collect.Sets;
-import com.google.inject.Inject;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -33,19 +31,30 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PL)
 @Singleton
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceGroupDBO> {
   private final ACLRepository aclRepository;
   private final RoleAssignmentRepository roleAssignmentRepository;
   private final ResourceGroupRepository resourceGroupRepository;
+  private final ExecutorService executorService;
+
+  public ResourceGroupChangeConsumerImpl(ACLRepository aclRepository, RoleAssignmentRepository roleAssignmentRepository,
+      ResourceGroupRepository resourceGroupRepository, String executorServiceSuffix) {
+    this.aclRepository = aclRepository;
+    this.roleAssignmentRepository = roleAssignmentRepository;
+    this.resourceGroupRepository = resourceGroupRepository;
+    String changeConsumerThreadFactory =
+        String.format("%s-resource-group-change-consumer", executorServiceSuffix) + "-%d";
+    // Number of threads = Number of Available Cores * (1 + (Wait time / Service time) )
+    this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2,
+        new ThreadFactoryBuilder().setNameFormat(changeConsumerThreadFactory).build());
+  }
 
   @Override
   public void consumeUpdateEvent(String id, ResourceGroupDBO updatedResourceGroup) {
@@ -68,7 +77,6 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
     long numberOfACLsCreated = 0;
     long numberOfACLsDeleted = 0;
 
-    ExecutorService executorService = Executors.newFixedThreadPool(getRuntime().availableProcessors() * 2);
     try {
       for (Future<Result> future : executorService.invokeAll(tasksToExecute)) {
         Result result = future.get();
@@ -80,8 +88,6 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
     } catch (InterruptedException ex) {
       Thread.currentThread().interrupt();
       throw new GeneralException("", ex);
-    } finally {
-      executorService.shutdown();
     }
 
     log.info("Number of ACLs created: {}", numberOfACLsCreated);

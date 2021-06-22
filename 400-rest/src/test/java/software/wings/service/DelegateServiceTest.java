@@ -11,6 +11,7 @@ import static io.harness.delegate.beans.DelegateType.SHELL_SCRIPT;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
 import static io.harness.obfuscate.Obfuscator.obfuscate;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -22,6 +23,7 @@ import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.PUNEET;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 import static io.harness.rule.OwnerRule.XIN;
@@ -2727,6 +2729,60 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(tags.size()).isEqualTo(7);
     assertThat(tags).containsExactlyInAnyOrder("abc", "def", "testdelegatename1", "testdelegatename2", "a.b.c", "d.e.f",
         delegateProfile.getName().toLowerCase());
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void shouldGetCGDelegate_whenNgFieldNotSetOrFalse() {
+    DelegateProfile delegateProfile =
+        DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name(generateUuid()).build();
+    persistence.save(delegateProfile);
+
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .ip("127.0.0.1")
+                            .hostName("a.b.c")
+                            .delegateName("testDelegateName1")
+                            .version(VERSION)
+                            .status(DelegateInstanceStatus.ENABLED)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .delegateProfileId(delegateProfile.getUuid())
+                            .ng(false)
+                            .build();
+    persistence.save(delegate);
+
+    Set<String> tags = delegateService.getAllDelegateSelectors(ACCOUNT_ID);
+    assertThat(tags).isNotEmpty();
+    persistence.update(persistence.createQuery(Delegate.class, excludeAuthority),
+        persistence.createUpdateOperations(Delegate.class).unset(DelegateKeys.ng));
+    tags = delegateService.getAllDelegateSelectors(ACCOUNT_ID);
+    assertThat(tags).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void shouldGetCGDelegate_whenNgFieldTrue() {
+    DelegateProfile delegateProfile =
+        DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name(generateUuid()).build();
+    persistence.save(delegateProfile);
+
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .ip("127.0.0.1")
+                            .hostName("a.b.c")
+                            .delegateName("testDelegateName1")
+                            .version(VERSION)
+                            .status(DelegateInstanceStatus.ENABLED)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .delegateProfileId(delegateProfile.getUuid())
+                            .ng(true)
+                            .build();
+    persistence.save(delegate);
+
+    Set<String> tags = delegateService.getAllDelegateSelectors(ACCOUNT_ID);
+    assertThat(tags).isEmpty();
   }
 
   @Test

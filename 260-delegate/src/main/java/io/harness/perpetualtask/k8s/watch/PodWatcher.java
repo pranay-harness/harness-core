@@ -5,7 +5,6 @@ import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_T
 import static io.harness.perpetualtask.k8s.watch.Volume.VolumeType.VOLUME_TYPE_PVC;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
-import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -71,7 +70,6 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
   private static final String POD_EVENT_MSG = "Pod: {}, action: {}";
   private static final String FAILED_PUBLISH_MSG = "Error publishing V1Pod.{} event.";
   private static final String MESSAGE_PROCESSOR_TYPE_EXCEPTION = "EXCEPTION";
-  private static final String AZURE_SEARCH_STRING = "azure:";
 
   @Inject
   public PodWatcher(@Assisted ApiClient apiClient, @Assisted ClusterDetails params,
@@ -121,10 +119,8 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
   public void onAdd(V1Pod pod) {
     try {
       log.debug(POD_EVENT_MSG, pod.getMetadata().getUid(), EventType.ADDED);
-      boolean isAzure = podInfoPrototype.getCloudProviderId().startsWith(AZURE_SEARCH_STRING);
       DateTime creationTimestamp = pod.getMetadata().getCreationTimestamp();
-      if (isAzure || !isClusterSeen || creationTimestamp == null
-          || creationTimestamp.isAfter(DateTime.now().minusHours(2))) {
+      if (!isClusterSeen || creationTimestamp == null || creationTimestamp.isAfter(DateTime.now().minusHours(2))) {
         eventReceived(pod);
       } else {
         publishedPods.add(pod.getMetadata().getUid());
@@ -228,8 +224,8 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
             } catch (ApiException ex) {
               publishError(CeExceptionMessage.newBuilder()
                                .setClusterId(clusterId)
-                               .setMessage(format("code=[%s] message=[%s] body=[%s]", ex.getCode(), ex.getMessage(),
-                                   ex.getResponseBody()))
+                               .setMessage(String.format("code=[%s] message=[%s] body=[%s]", ex.getCode(),
+                                   ex.getMessage(), ex.getResponseBody()))
                                .build());
             }
           }

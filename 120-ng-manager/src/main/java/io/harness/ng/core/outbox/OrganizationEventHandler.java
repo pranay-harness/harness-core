@@ -24,7 +24,6 @@ import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.ng.core.AccountScope;
 import io.harness.ng.core.OrgScope;
 import io.harness.ng.core.dto.OrganizationRequest;
 import io.harness.ng.core.events.OrganizationCreateEvent;
@@ -81,13 +80,7 @@ public class OrganizationEventHandler implements OutboxEventHandler {
 
   private boolean handleOrganizationCreateEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-    String accountIdentifier;
-    // TODO {karan} remove this if condition in a few days
-    if ("account".equals(outboxEvent.getResourceScope().getScope())) {
-      accountIdentifier = ((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier();
-    } else {
-      accountIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getAccountIdentifier();
-    }
+    String accountIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getAccountIdentifier();
     boolean publishedToRedis = publishOrganizationChangeEventToRedis(
         accountIdentifier, outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.CREATE_ACTION);
     OrganizationCreateEvent organizationCreateEvent =
@@ -116,12 +109,7 @@ public class OrganizationEventHandler implements OutboxEventHandler {
 
   private boolean handleOrganizationUpdateEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-    String accountIdentifier;
-    if ("account".equals(outboxEvent.getResourceScope().getScope())) {
-      accountIdentifier = ((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier();
-    } else {
-      accountIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getAccountIdentifier();
-    }
+    String accountIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getAccountIdentifier();
     boolean publishedToRedis = publishOrganizationChangeEventToRedis(
         accountIdentifier, outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.UPDATE_ACTION);
     OrganizationUpdateEvent organizationUpdateEvent =
@@ -145,12 +133,7 @@ public class OrganizationEventHandler implements OutboxEventHandler {
 
   private boolean handleOrganizationDeleteEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-    String accountIdentifier;
-    if ("account".equals(outboxEvent.getResourceScope().getScope())) {
-      accountIdentifier = ((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier();
-    } else {
-      accountIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getAccountIdentifier();
-    }
+    String accountIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getAccountIdentifier();
     boolean publishedToRedis = publishOrganizationChangeEventToRedis(
         accountIdentifier, outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.DELETE_ACTION);
     OrganizationDeleteEvent organizationDeleteEvent =
@@ -172,12 +155,7 @@ public class OrganizationEventHandler implements OutboxEventHandler {
 
   private boolean handleOrganizationRestoreEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-    String accountIdentifier;
-    if ("account".equals(outboxEvent.getResourceScope().getScope())) {
-      accountIdentifier = ((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier();
-    } else {
-      accountIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getAccountIdentifier();
-    }
+    String accountIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getAccountIdentifier();
     boolean publishedToRedis = publishOrganizationChangeEventToRedis(
         accountIdentifier, outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.RESTORE_ACTION);
     OrganizationRestoreEvent organizationRestoreEvent =

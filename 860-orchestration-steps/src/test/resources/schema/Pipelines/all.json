@@ -1092,6 +1092,11 @@
     },
     "StepElementConfig": {
       "type": "object",
+      "required": [
+        "identifier",
+        "name",
+        "type"
+      ],
       "properties": {
         "description": {
           "type": "string"
@@ -1115,7 +1120,7 @@
         },
         "timeout": {
           "type": "string",
-          "pattern": "^(\\d+[smhwd][\\s]?)+$"
+          "pattern": "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*))$"
         },
         "type": {
           "type": "string"
