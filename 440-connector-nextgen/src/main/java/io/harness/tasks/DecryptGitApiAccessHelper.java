@@ -14,6 +14,7 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.gitapi.DecryptGitAPIAccessTaskResponse;
 import io.harness.delegate.beans.gitapi.DecryptGitAPiAccessTaskParams;
+import io.harness.exception.HintException;
 import io.harness.exception.UnexpectedException;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -69,7 +70,8 @@ public class DecryptGitApiAccessHelper {
     DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     if (responseData instanceof ErrorNotifyResponseData || responseData instanceof RemoteMethodReturnValueData) {
       log.error("Error decrypting the credentials, the responseData returned from delegate: {}", responseData);
-      throw new UnexpectedException("Error while decrypting api access");
+      throw new HintException(
+          "Check if delegates are available", new UnexpectedException("Error while decrypting secrets"));
     }
     DecryptGitAPIAccessTaskResponse gitConnectorResponse = (DecryptGitAPIAccessTaskResponse) responseData;
     return gitConnectorResponse.getScmConnector();

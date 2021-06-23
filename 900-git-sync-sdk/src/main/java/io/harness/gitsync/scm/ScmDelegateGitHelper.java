@@ -63,10 +63,9 @@ public class ScmDelegateGitHelper implements ScmGitHelper {
                                                   .taskParameters(scmPushTaskParams)
                                                   .executionTimeout(Duration.ofMinutes(2))
                                                   .build();
-    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-    ScmPushTaskResponseData scmPushTaskResponseData = (ScmPushTaskResponseData) responseData;
-    ScmPushResponse scmPushResponse = null;
     try {
+      DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+      ScmPushTaskResponseData scmPushTaskResponseData = (ScmPushTaskResponseData) responseData;
       switch (changeType) {
         case ADD:
           try {
@@ -105,5 +104,8 @@ public class ScmDelegateGitHelper implements ScmGitHelper {
     } catch (InvalidProtocolBufferException e) {
       throw new UnexpectedException("Unexpected error occurred while doing scm operation");
     }
+    //    catch (DelegateServiceDriverException e){
+    //      throw new
+    //    }
   }
 }
