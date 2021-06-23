@@ -29,7 +29,7 @@ func CreateWebhook(ctx context.Context, request *pb.CreateWebhookRequest, log *z
 
 	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
 	if err != nil {
-		log.Errorw("CreateWebhook failure", "bad provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("CreateWebhook failure", "bad provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 	inputParams := scm.HookInput{
@@ -53,12 +53,12 @@ func CreateWebhook(ctx context.Context, request *pb.CreateWebhookRequest, log *z
 		events := convertGitlabEnumToHookEvents(request.GetNativeEvents().GetGitlab())
 		inputParams.Events = events
 	default:
-		return nil, fmt.Errorf("there is no logic to convertEnumsToStrings, for this provider %s", request.GetProvider().GetEndpoint())
+		return nil, fmt.Errorf("there is no logic to convertEnumsToStrings, for this provider %s", gitclient.GetProvider(*request.GetProvider()))
 	}
 
 	hook, response, err := client.Repositories.CreateHook(ctx, request.GetSlug(), &inputParams)
 	if err != nil {
-		log.Errorw("CreateWebhook failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "name", request.GetName(), "target", request.GetTarget(),
+		log.Errorw("CreateWebhook failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "name", request.GetName(), "target", request.GetTarget(),
 			"elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		// this is a hard error with no response
 		if response == nil {
@@ -86,7 +86,7 @@ func CreateWebhook(ctx context.Context, request *pb.CreateWebhookRequest, log *z
 	// convert event strings to enums
 	nativeEvents, mappingErr := nativeEventsFromStrings(hook.Events, *request.GetProvider())
 	if mappingErr != nil {
-		log.Errorw("CreateWebhook mapping failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "name", request.GetName(), "target", request.GetTarget(),
+		log.Errorw("CreateWebhook mapping failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "name", request.GetName(), "target", request.GetTarget(),
 			"elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, mappingErr
 	}
@@ -100,13 +100,13 @@ func DeleteWebhook(ctx context.Context, request *pb.DeleteWebhookRequest, log *z
 
 	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
 	if err != nil {
-		log.Errorw("DeleteWebhook failure", "bad provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("DeleteWebhook failure", "bad provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
 	response, err := client.Repositories.DeleteHook(ctx, request.GetSlug(), request.GetId())
 	if err != nil {
-		log.Errorw("DeleteWebhook failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "id", request.GetId(),
+		log.Errorw("DeleteWebhook failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "id", request.GetId(),
 			"elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		// this is a hard error with no response
 		if response == nil {
@@ -132,13 +132,13 @@ func ListWebhooks(ctx context.Context, request *pb.ListWebhooksRequest, log *zap
 
 	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
 	if err != nil {
-		log.Errorw("ListWebhooks failure", "bad provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("ListWebhooks failure", "bad provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
 	scmHooks, response, err := client.Repositories.ListHooks(ctx, request.GetSlug(), scm.ListOptions{Page: int(request.GetPagination().GetPage())})
 	if err != nil {
-		log.Errorw("ListWebhooks failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("ListWebhooks failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		// this is a hard error with no response
 		if response == nil {
 			return nil, err
@@ -162,7 +162,7 @@ func ListWebhooks(ctx context.Context, request *pb.ListWebhooksRequest, log *zap
 		// convert event strings to enums
 		nativeEvents, mappingErr := nativeEventsFromStrings(h.Events, *request.GetProvider())
 		if mappingErr != nil {
-			log.Errorw("ListWebhooks mapping failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+			log.Errorw("ListWebhooks mapping failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 			return nil, mappingErr
 		}
 		webhookResponse.NativeEvents = nativeEvents
@@ -194,7 +194,7 @@ func nativeEventsFromStrings(sliceOfStrings []string, p pb.Provider) (nativeEven
 		gitlabEvents := convertStringsToGitlabEnum(sliceOfStrings)
 		nativeEvents = &pb.NativeEvents{NativeEvents: &gitlabEvents}
 	default:
-		return nil, fmt.Errorf("there is no logic to convertStringsToEnums, for this provider %s", p.GetEndpoint())
+		return nil, fmt.Errorf("there is no logic to convertStringsToEnums, for this provider %s", gitclient.GetProvider(p))
 	}
 	return nativeEvents, nil
 }

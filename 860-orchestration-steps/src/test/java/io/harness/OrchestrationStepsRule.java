@@ -133,6 +133,13 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
       public ObjectMapper getYamlSchemaObjectMapper() {
         return Jackson.newObjectMapper();
       }
+
+      @Provides
+      @Named("disableDeserialization")
+      @Singleton
+      public boolean getSerializationForDelegate() {
+        return false;
+      }
     });
 
     modules.add(mongoTypeModule(annotations));

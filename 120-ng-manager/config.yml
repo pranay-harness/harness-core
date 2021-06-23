@@ -284,6 +284,7 @@ baseUrls:
   currentGenUiUrl: http://localhost:8181/#/
   nextGenUiUrl: http://localhost:8181/ng/#/
   nextGenAuthUiUrl: http://localhost:8181/auth/#/
+  webhookBaseUrl: http://localhost:7457/
 
 ngAuthUIEnabled: false
 
@@ -311,15 +312,6 @@ timescaledb:
   socketTimeout: 30
   logUnclosedConnections: false
   loggerLevel: OFF
-
-yamlSchemaClientConfig:
-  yamlSchemaHttpClientMap:
-    cvng:
-      serviceHttpClientConfig:
-        baseUrl: http://localhost:6457/cv/api/
-        connectTimeOutSeconds: 15
-        readTimeOutSeconds: 15
-      secret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
 
 signupNotificationConfiguration:
   projectId: "projectId_place_holder"

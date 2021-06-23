@@ -2,27 +2,32 @@ package io.harness.gitsync.common.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus.TO_DO;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.gitsync.common.beans.BranchSyncStatus.SYNCING;
+import static io.harness.gitsync.common.beans.BranchSyncStatus.UNSYNCED;
 
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.common.beans.BranchSyncMetadata;
+import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
-import io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus;
-import io.harness.gitsync.common.beans.GitToHarnessProcessingStepType;
-import io.harness.gitsync.common.beans.YamlChangeSet;
+import io.harness.gitsync.common.beans.GitToHarnessProgressStatus;
 import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
-import io.harness.gitsync.common.dtos.GitToHarnessProgressDTO;
+import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepResponse;
 import io.harness.gitsync.common.helper.YamlGitConfigHelper;
+import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitBranchSyncService;
 import io.harness.gitsync.common.service.GitToHarnessProgressService;
 import io.harness.gitsync.common.service.ScmOrchestratorService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorService;
+import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
+import io.harness.gitsync.core.dtos.YamlChangeSetSaveDTO;
+import io.harness.gitsync.core.service.YamlChangeSetService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -42,54 +47,72 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
   ScmOrchestratorService scmOrchestratorService;
   GitToHarnessProgressService gitToHarnessProgressService;
   YamlGitConfigService yamlGitConfigService;
+  YamlChangeSetService yamlChangeSetService;
+  GitBranchService gitBranchService;
 
   @Override
-  public void syncBranch(YamlGitConfigDTO yamlGitConfig, String branchName, String accountId,
-      String filePathToBeExcluded, YamlChangeSet yamlChangeSet) {
-    final GitToHarnessProgressDTO gitToHarnessProgressRecord =
-        saveGitToHarnessStatusRecord(yamlGitConfig, branchName, accountId, yamlChangeSet);
-    try {
-      List<YamlGitConfigDTO> yamlGitConfigDTOS = yamlGitConfigService.getByRepo(yamlGitConfig.getRepo());
-      Set<String> foldersList = YamlGitConfigHelper.getRootFolderList(yamlGitConfigDTOS);
-      List<GitFileChangeDTO> harnessFilesOfBranch =
-          getFilesBelongingToThisBranch(accountId, yamlGitConfig, foldersList, branchName);
-      log.info("Received file paths: [{}] from git in harness folders.",
-          emptyIfNull(harnessFilesOfBranch).stream().map(GitFileChangeDTO::getPath).collect(Collectors.toList()));
-      List<GitFileChangeDTO> filteredFileList = getFilteredFiles(harnessFilesOfBranch, filePathToBeExcluded);
-      List<GitToHarnessFileProcessingRequest> gitToHarnessFilesToProcess =
-          emptyIfNull(filteredFileList)
-              .stream()
-              .map(fileContent
-                  -> GitToHarnessFileProcessingRequest.builder()
-                         .fileDetails(fileContent)
-                         .changeType(ChangeType.ADD)
-                         .build())
-              .collect(toList());
-      gitToHarnessProgressService.updateFilesInProgressRecord(
-          gitToHarnessProgressRecord.getUuid(), gitToHarnessFilesToProcess);
-      // todo: get commit id.
-      gitToHarnessProcessorService.processFiles(accountId, gitToHarnessFilesToProcess, branchName, yamlGitConfig,
-          generateUuid(), gitToHarnessProgressRecord.getUuid());
-    } catch (Exception ex) {
-      log.error("Error encountered while synching the branch {}", branchName, ex);
-      gitToHarnessProgressService.updateStepStatus(
-          gitToHarnessProgressRecord.getUuid(), GitToHarnessProcessingStepStatus.ERROR);
+  public void createBranchSyncEvent(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String yamlGitConfigIdentifier, String repoURL, String branch, String filePathToBeExcluded) {
+    GitBranch gitBranch = gitBranchService.get(accountIdentifier, repoURL, branch);
+    if (gitBranch == null) {
+      log.info("No record found for the branch [{}] in the repo [{}]", repoURL, branch);
+      return;
+    } else if (gitBranch.getBranchSyncStatus() != UNSYNCED) {
+      log.info("The branch sync for repoUrl [{}], branch [{}] has status [{}], hence skipping", repoURL, branch,
+          gitBranch.getBranchSyncStatus());
+      return;
     }
+    final BranchSyncMetadata branchSyncMetadata = BranchSyncMetadata.builder()
+                                                      .fileToBeExcluded(filePathToBeExcluded)
+                                                      .orgIdentifier(orgIdentifier)
+                                                      .projectIdentifier(projectIdentifier)
+                                                      .yamlGitConfigId(yamlGitConfigIdentifier)
+                                                      .build();
+    final YamlChangeSetSaveDTO yamlChangeSetSaveDTO = YamlChangeSetSaveDTO.builder()
+                                                          .accountId(accountIdentifier)
+                                                          .branch(branch)
+                                                          .repoUrl(repoURL)
+                                                          .eventType(YamlChangeSetEventType.BRANCH_SYNC)
+                                                          .eventMetadata(branchSyncMetadata)
+                                                          .build();
+    final YamlChangeSetDTO savedChangeSet = yamlChangeSetService.save(yamlChangeSetSaveDTO);
+    gitBranchService.updateBranchSyncStatus(accountIdentifier, repoURL, branch, SYNCING);
+    log.info("Created the change set {} to process the branch {} in the repo {}", savedChangeSet.getChangesetId(),
+        branch, repoURL);
   }
 
-  private GitToHarnessProgressDTO saveGitToHarnessStatusRecord(
-      YamlGitConfigDTO yamlGitConfig, String branchName, String accountId, YamlChangeSet yamlChangeSet) {
-    GitToHarnessProgressDTO gitToHarnessProgress = GitToHarnessProgressDTO.builder()
-                                                       .accountIdentifier(accountId)
-                                                       .yamlChangeSetId(yamlChangeSet.getUuid())
-                                                       .repoUrl(yamlGitConfig.getRepo())
-                                                       .branch(branchName)
-                                                       .eventType(YamlChangeSetEventType.BRANCH_SYNC)
-                                                       .stepType(GitToHarnessProcessingStepType.GET_FILES)
-                                                       .stepStatus(TO_DO)
-                                                       .stepStartingTime(System.currentTimeMillis())
-                                                       .build();
-    return gitToHarnessProgressService.save(gitToHarnessProgress);
+  @Override
+  public GitToHarnessProcessMsvcStepResponse processBranchSyncEvent(YamlGitConfigDTO yamlGitConfig, String branchName,
+      String accountIdentifier, String filePathToBeExcluded, String changeSetId, String gitToHarnessProgressRecordId) {
+    List<YamlGitConfigDTO> yamlGitConfigDTOS = yamlGitConfigService.getByRepo(yamlGitConfig.getRepo());
+    Set<String> foldersList = YamlGitConfigHelper.getRootFolderList(yamlGitConfigDTOS);
+    List<GitFileChangeDTO> harnessFilesOfBranch =
+        getFilesBelongingToThisBranch(accountIdentifier, yamlGitConfig, foldersList, branchName);
+    log.info("Received file paths: [{}] from git in harness folders.",
+        emptyIfNull(harnessFilesOfBranch).stream().map(GitFileChangeDTO::getPath).collect(Collectors.toList()));
+    List<GitFileChangeDTO> filteredFileList = getFilteredFiles(harnessFilesOfBranch, filePathToBeExcluded);
+    List<GitToHarnessFileProcessingRequest> gitToHarnessFilesToProcess =
+        emptyIfNull(filteredFileList)
+            .stream()
+            .map(fileContent
+                -> GitToHarnessFileProcessingRequest.builder()
+                       .fileDetails(fileContent)
+                       .changeType(ChangeType.ADD)
+                       .build())
+            .collect(toList());
+    gitToHarnessProgressService.updateFilesInProgressRecord(gitToHarnessProgressRecordId, gitToHarnessFilesToProcess);
+    String commitId = getCommitId(harnessFilesOfBranch);
+    GitToHarnessProgressStatus gitToHarnessProgressStatus =
+        gitToHarnessProcessorService.processFiles(accountIdentifier, gitToHarnessFilesToProcess, branchName,
+            yamlGitConfig.getRepo(), commitId, gitToHarnessProgressRecordId, changeSetId);
+    return GitToHarnessProcessMsvcStepResponse.builder().gitToHarnessProgressStatus(gitToHarnessProgressStatus).build();
+  }
+
+  private String getCommitId(List<GitFileChangeDTO> harnessFilesOfBranch) {
+    if (isEmpty(harnessFilesOfBranch)) {
+      return null;
+    }
+    return harnessFilesOfBranch.get(0).getCommitId();
   }
 
   private List<GitFileChangeDTO> getFilesBelongingToThisBranch(

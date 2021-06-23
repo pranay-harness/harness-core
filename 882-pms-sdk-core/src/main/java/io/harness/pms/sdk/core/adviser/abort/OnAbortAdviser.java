@@ -3,6 +3,8 @@ package io.harness.pms.sdk.core.adviser.abort;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pms.contracts.execution.Status.ABORTED;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
@@ -18,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.Collections;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class OnAbortAdviser implements Adviser {
   public static final AdviserType ADVISER_TYPE =
       AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ABORT.name()).build();
@@ -37,7 +40,7 @@ public class OnAbortAdviser implements Adviser {
     OnAbortAdviserParameters adviserParameters = extractParameters(advisingEvent);
     boolean canAdvise =
         StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus()) || ABORTED == advisingEvent.getToStatus();
-    FailureInfo failureInfo = advisingEvent.getNodeExecution().getFailureInfo();
+    FailureInfo failureInfo = advisingEvent.getFailureInfo();
     if (failureInfo != null && !isEmpty(failureInfo.getFailureTypesValueList())) {
       return canAdvise
           && !Collections.disjoint(adviserParameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());

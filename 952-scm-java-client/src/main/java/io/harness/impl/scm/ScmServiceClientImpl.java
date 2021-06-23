@@ -291,7 +291,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
       List<String> harnessRelatedFilePaths, String slug, String ref, Provider gitProvider) {
     List<GetFileRequest> getBatchFileRequests = new ArrayList<>();
     // todo @deepak: Add the pagination logic to get the list of file content, once scm provides support
-    for (String path : harnessRelatedFilePaths) {
+    for (String path : emptyIfNull(harnessRelatedFilePaths)) {
       GetFileRequest getFileRequest =
           GetFileRequest.newBuilder().setSlug(slug).setProvider(gitProvider).setRef(ref).setPath(path).build();
       getBatchFileRequests.add(getFileRequest);
@@ -403,7 +403,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     try (AutoLogContext ignore1 =
              new RepoBranchLogContext(slug, branchName, latestCommit.getCommitId(), OVERRIDE_ERROR)) {
       List<String> getFilesWhichArePartOfHarness =
-          getFileNames(foldersList, slug, gitProvider, latestCommit.getCommitId(), scmBlockingStub);
+          getFileNames(foldersList, slug, gitProvider, branchName, latestCommit.getCommitId(), scmBlockingStub);
       final FileBatchContentResponse contentOfFiles = getContentOfFiles(
           getFilesWhichArePartOfHarness, slug, gitProvider, latestCommit.getCommitId(), scmBlockingStub);
       return FileContentBatchResponse.builder()
@@ -413,8 +413,8 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     }
   }
 
-  private List<String> getFileNames(
-      Set<String> foldersList, String slug, Provider gitProvider, String ref, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+  private List<String> getFileNames(Set<String> foldersList, String slug, Provider gitProvider, String branch,
+      String ref, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     GetFilesInFolderForkTask getFilesInFolderTask = GetFilesInFolderForkTask.builder()
                                                         .provider(gitProvider)
                                                         .scmBlockingStub(scmBlockingStub)
@@ -626,12 +626,19 @@ public class ScmServiceClientImpl implements ScmServiceClient {
 
   private String getLatestShaOfBranch(
       String slug, Provider gitProvider, String defaultBranchName, SCMGrpc.SCMBlockingStub scmBlockingStub) {
-    GetLatestCommitResponse latestCommit = scmBlockingStub.getLatestCommit(GetLatestCommitRequest.newBuilder()
-                                                                               .setBranch(defaultBranchName)
-                                                                               .setSlug(slug)
-                                                                               .setProvider(gitProvider)
-                                                                               .build());
-    return latestCommit.getCommitId();
+    try {
+      GetLatestCommitResponse latestCommit = scmBlockingStub.getLatestCommit(GetLatestCommitRequest.newBuilder()
+                                                                                 .setBranch(defaultBranchName)
+                                                                                 .setSlug(slug)
+                                                                                 .setProvider(gitProvider)
+                                                                                 .build());
+      ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(latestCommit.getStatus(), latestCommit.getError());
+      return latestCommit.getCommitId();
+    } catch (Exception ex) {
+      log.error(
+          "Error encountered while getting latest commit of branch [{}] in slug [{}]", defaultBranchName, slug, ex);
+      throw ex;
+    }
   }
 
   private String getGithubToken(Provider gitProvider) {

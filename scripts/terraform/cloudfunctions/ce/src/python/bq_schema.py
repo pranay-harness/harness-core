@@ -1057,6 +1057,10 @@ unifiedTableTableSchema = [
         "name": "azureCustomerName",
         "type": "STRING"
     },
+    {
+        "name": "azureResourceRate",
+        "type": "FLOAT"
+    },
 ]
 
 

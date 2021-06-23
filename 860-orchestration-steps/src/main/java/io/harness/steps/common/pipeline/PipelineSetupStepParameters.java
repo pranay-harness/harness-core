@@ -12,8 +12,10 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.tags.TagUtils;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.SkipAutoEvaluation;
 import io.harness.yaml.core.properties.NGProperties;
 import io.harness.yaml.core.variables.NGVariable;
+import io.harness.yaml.utils.NGVariablesUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -35,7 +37,7 @@ public class PipelineSetupStepParameters implements StepParameters {
   ParameterField<String> description;
   Map<String, String> tags;
   NGProperties properties;
-  List<NGVariable> originalVariables;
+  @SkipAutoEvaluation ParameterField<Map<String, Object>> variables;
 
   String executionId;
   int sequenceId;
@@ -51,7 +53,7 @@ public class PipelineSetupStepParameters implements StepParameters {
     this.description = description;
     this.tags = tags;
     this.properties = properties;
-    this.originalVariables = originalVariables;
+    this.variables = ParameterField.createValueField(NGVariablesUtils.getMapOfVariables(originalVariables));
     this.executionId = executionId;
     this.sequenceId = sequenceId;
   }

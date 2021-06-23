@@ -25,6 +25,7 @@ import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.sumologic.SumoLogicConnectorDTO;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.rule.Owner;
 
@@ -60,6 +61,7 @@ public class SumoLogicConnectorTest extends CategoryTest {
   @Mock ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
   @Mock Map<String, ConnectionValidator> connectionValidatorMap;
   @InjectMocks @Spy DefaultConnectorServiceImpl connectorService;
+  @Mock GitSyncSdkService gitSyncSdkService;
 
   SumoLogicConnector sumoLogicConnector;
   SumoLogicConnectorDTO sumoLogicConnectorDTO;
@@ -72,10 +74,12 @@ public class SumoLogicConnectorTest extends CategoryTest {
     connectorMapper = mock(ConnectorMapper.class);
     MockitoAnnotations.initMocks(this);
     create();
-    when(connectorRepository.save(sumoLogicConnector, connectorDTO, ChangeType.ADD)).thenReturn(sumoLogicConnector);
+    when(connectorRepository.save(sumoLogicConnector, connectorDTO, ChangeType.ADD, null))
+        .thenReturn(sumoLogicConnector);
     when(connectorMapper.writeDTO(sumoLogicConnector)).thenReturn(connectorResponseDTO);
     when(connectorMapper.toConnector(connectorDTO, accountIdentifier)).thenReturn(sumoLogicConnector);
     doNothing().when(connectorService).assurePredefined(any(), any());
+    when(gitSyncSdkService.isGitSyncEnabled(accountIdentifier, null, null)).thenReturn(true);
   }
 
   @Test

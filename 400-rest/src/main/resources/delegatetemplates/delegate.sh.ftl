@@ -110,6 +110,10 @@ if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   fi
 fi
 
+if [ -z $CLIENT_TOOLS_DOWNLOAD_DISABLED ]; then
+  export CLIENT_TOOLS_DOWNLOAD_DISABLED=false
+fi
+
 if [ ! -e config-delegate.yml ]; then
   echo "accountId: ${accountId}" > config-delegate.yml
   echo "accountSecret: ${accountSecret}" >> config-delegate.yml
@@ -193,6 +197,10 @@ if ! `grep logStreamingServiceBaseUrl config-delegate.yml > /dev/null`; then
   echo "logStreamingServiceBaseUrl: ${logStreamingServiceBaseUrl}" >> config-delegate.yml
 else
   sed -i.bak "s|^logStreamingServiceBaseUrl:.*$|logStreamingServiceBaseUrl: ${logStreamingServiceBaseUrl}|" config-delegate.yml
+fi
+
+if ! `grep clientToolsDownloadDisabled config-delegate.yml > /dev/null`; then
+  echo "clientToolsDownloadDisabled: $CLIENT_TOOLS_DOWNLOAD_DISABLED" >> config-delegate.yml
 fi
 
 if [ ! -z "$KUSTOMIZE_PATH" ] && ! `grep kustomizePath config-delegate.yml > /dev/null` ; then

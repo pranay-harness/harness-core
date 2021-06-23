@@ -1,7 +1,5 @@
 package io.harness.delegate.task.gcp.taskHandlers;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCause;
 
 import io.harness.connector.ConnectivityStatus;
@@ -61,26 +59,32 @@ public class GcpValidationTaskHandler implements TaskHandler, ConnectorValidatio
   @VisibleForTesting
   GcpValidationTaskResponse validateInternal(GcpRequest gcpRequest, List<EncryptedDataDetail> encryptionDetails) {
     try {
-      if (isNotEmpty(gcpRequest.getDelegateSelectors())) {
+      if (hasManualCredentials(gcpRequest)) {
+        return (GcpValidationTaskResponse) validateGcpServiceAccountKeyCredential(gcpRequest);
+      } else {
         gcpClient.validateDefaultCredentials();
         ConnectorValidationResult connectorValidationResult = ConnectorValidationResult.builder()
                                                                   .status(ConnectivityStatus.SUCCESS)
                                                                   .testedAt(System.currentTimeMillis())
                                                                   .build();
         return GcpValidationTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
-      } else {
-        return (GcpValidationTaskResponse) validateGcpServiceAccountKeyCredential(gcpRequest);
       }
     } catch (Exception ex) {
       log.error("Failed while validating credentials for GCP", ex);
       return getFailedGcpResponse(ex);
     }
   }
+
+  private boolean hasManualCredentials(GcpRequest gcpRequest) {
+    return gcpRequest.getGcpManualDetailsDTO() != null && gcpRequest.getGcpManualDetailsDTO().getSecretKeyRef() != null;
+  }
+
   private GcpResponse validateGcpServiceAccountKeyCredential(GcpRequest gcpRequest) {
-    GcpManualDetailsDTO gcpManualDetailsDTO = gcpRequest.getGcpManualDetailsDTO();
-    if (gcpManualDetailsDTO == null || gcpManualDetailsDTO.getSecretKeyRef() == null) {
+    if (!hasManualCredentials(gcpRequest)) {
       throw new InvalidRequestException("Authentication details not found");
     }
+
+    GcpManualDetailsDTO gcpManualDetailsDTO = gcpRequest.getGcpManualDetailsDTO();
     secretDecryptionService.decrypt(gcpManualDetailsDTO, gcpRequest.getEncryptionDetails());
     gcpClient.getGkeContainerService(gcpManualDetailsDTO.getSecretKeyRef().getDecryptedValue());
     ConnectorValidationResult connectorValidationResult = ConnectorValidationResult.builder()

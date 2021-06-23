@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.lock.DistributedLockImplementation;
@@ -34,7 +35,6 @@ import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
@@ -132,7 +132,7 @@ public class SignupTestRule implements InjectorRuleMixin, MethodRule, MongoRuleM
         bind(HPersistence.class).to(MongoPersistence.class);
         MapBinder.newMapBinder(binder(), String.class, Migrator.class);
         bind(AccountService.class).toInstance(mock(AccountService.class));
-        bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+        bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
       }
     });
     modules.add(new AbstractTelemetryModule() {

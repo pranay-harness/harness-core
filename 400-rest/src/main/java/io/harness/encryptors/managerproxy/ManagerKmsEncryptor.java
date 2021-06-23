@@ -1,7 +1,6 @@
 package io.harness.encryptors.managerproxy;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 
@@ -56,7 +55,7 @@ public class ManagerKmsEncryptor implements KmsEncryptor {
                                               .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
                                               .build())
                                     .accountId(accountId)
-                                    .setupAbstraction(OWNER, managerEncryptorHelper.getOwner(encryptionConfig))
+                                    .setupAbstractions(managerEncryptorHelper.buildAbstractions(encryptionConfig))
                                     .build();
     try {
       DelegateResponseData delegateResponseData = delegateService.executeTask(delegateTask);

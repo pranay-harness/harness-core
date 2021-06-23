@@ -3,11 +3,6 @@ package io.harness;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.PipelineServiceConfiguration.getResourceClasses;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_FACILITATOR_EVENT_TOPIC;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_INTERRUPT_TOPIC;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_START_EVENT_TOPIC;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
-import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_EVENT_TOPIC;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.waiter.PmsNotifyEventListener.PMS_ORCHESTRATION;
 
@@ -30,13 +25,15 @@ import io.harness.event.OrchestrationEndGraphHandler;
 import io.harness.event.OrchestrationLogPublisher;
 import io.harness.event.OrchestrationStartEventHandler;
 import io.harness.exception.GeneralException;
-import io.harness.execution.consumers.SdkResponseEventRedisConsumerService;
+import io.harness.execution.consumers.SdkResponseEventRedisConsumer;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
 import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.gitsync.GitSyncEntitiesConfiguration;
 import io.harness.gitsync.GitSyncSdkConfiguration;
 import io.harness.gitsync.GitSyncSdkInitHelper;
 import io.harness.gitsync.persistance.GitAwarePersistence;
+import io.harness.gitsync.persistance.GitSyncSdkService;
+import io.harness.gitsync.persistance.NoOpGitSyncSdkServiceImpl;
 import io.harness.gitsync.persistance.testing.NoOpGitAwarePersistenceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthMonitor;
@@ -57,16 +54,11 @@ import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.approval.ApprovalInstanceExpirationJob;
 import io.harness.pms.approval.ApprovalInstanceHandler;
-import io.harness.pms.contracts.plan.ConsumerConfig;
-import io.harness.pms.contracts.plan.Redis;
 import io.harness.pms.event.PMSEventConsumerService;
+import io.harness.pms.event.featureflag.PipelineServiceFeatureFlagConsumer;
+import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.inputset.gitsync.InputSetEntityGitSyncHelper;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTO;
-import io.harness.pms.listener.facilitators.FacilitatorRedisConsumerService;
-import io.harness.pms.listener.interrupts.InterruptRedisConsumerService;
-import io.harness.pms.listener.node.start.NodeStartRedisConsumerService;
-import io.harness.pms.listener.orchestrationevent.OrchestrationEventEventConsumerService;
-import io.harness.pms.listener.progress.ProgressRedisConsumerService;
 import io.harness.pms.migration.PipelineCoreMigrationProvider;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.observers.InputSetsDeleteObserver;
@@ -94,6 +86,13 @@ import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
+import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.interrupts.InterruptEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.resume.NodeResumeEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.start.NodeStartEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.pms.triggers.scheduled.ScheduledTriggerHandler;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
@@ -101,6 +100,7 @@ import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.PipelineServiceFacilitatorRegistrar;
 import io.harness.registrars.PipelineServiceStepRegistrar;
+import io.harness.request.RequestContextFilter;
 import io.harness.resource.VersionInfoResource;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -255,6 +255,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         @Override
         protected void configure() {
           bind(GitAwarePersistence.class).to(NoOpGitAwarePersistenceImpl.class);
+          bind(GitSyncSdkService.class).to(NoOpGitSyncSdkServiceImpl.class);
         }
 
         @Override
@@ -267,8 +268,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     // Pipeline Service Modules
     PmsSdkConfiguration pmsSdkConfiguration = getPmsSdkConfiguration(appConfig);
     modules.add(PmsSdkModule.getInstance(pmsSdkConfiguration));
-    modules.add(PipelineServiceUtilityModule.getInstance(
-        appConfig.getEventsFrameworkConfiguration(), pmsSdkConfiguration.getServiceName()));
+    modules.add(PipelineServiceUtilityModule.getInstance());
 
     Injector injector = Guice.createInjector(modules);
     registerEventListeners(injector);
@@ -282,6 +282,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerHealthCheck(environment, injector);
     registerObservers(injector);
     registerMigrations(injector);
+    registerRequestContextFilter(environment);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     injector.getInstance(TriggerWebhookExecutionService.class).registerIterators();
@@ -305,6 +306,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     registerCorrelationFilter(environment, injector);
     registerNotificationTemplates(injector);
+    registerPmsSdkEvents(injector);
     MaintenanceController.forceMaintenance(false);
   }
 
@@ -427,7 +429,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     return PmsSdkConfiguration.builder()
         .deploymentMode(SdkDeployMode.REMOTE_IN_PROCESS)
         .moduleType(ModuleType.PMS)
-        .mongoConfig(config.getMongoConfig())
         .pipelineServiceInfoProviderClass(PipelineServiceInternalInfoProvider.class)
         .filterCreationResponseMerger(new PipelineServiceFilterCreationResponseMerger())
         .engineSteps(PipelineServiceStepRegistrar.getEngineSteps())
@@ -436,25 +437,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .engineEventHandlersMap(ImmutableMap.of())
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
-        .interruptConsumerConfig(ConsumerConfig.newBuilder()
-                                     .setRedis(Redis.newBuilder().setTopicName(PIPELINE_INTERRUPT_TOPIC).build())
-                                     .build())
-        .orchestrationEventConsumerConfig(
-            ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_ORCHESTRATION_EVENT_TOPIC).build())
-                .build())
-        .facilitationEventConsumerConfig(
-            ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_FACILITATOR_EVENT_TOPIC).build())
-                .build())
-        .nodeStartEventConsumerConfig(
-            ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_NODE_START_EVENT_TOPIC).build())
-                .build())
-        .progressEventConsumerConfig(
-            ConsumerConfig.newBuilder()
-                .setRedis(Redis.newBuilder().setTopicName(PIPELINE_PROGRESS_EVENT_TOPIC).build())
-                .build())
         .build();
   }
 
@@ -534,16 +516,22 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(ApprovalInstanceExpirationJob.class));
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
+    environment.lifecycle().manage(injector.getInstance(PipelineEventConsumerController.class));
+  }
 
-    // Pipeline Consumer
-    environment.lifecycle().manage(injector.getInstance(SdkResponseEventRedisConsumerService.class));
-
-    // Pipeline SDK Consumers
-    environment.lifecycle().manage(injector.getInstance(InterruptRedisConsumerService.class));
-    environment.lifecycle().manage(injector.getInstance(OrchestrationEventEventConsumerService.class));
-    environment.lifecycle().manage(injector.getInstance(FacilitatorRedisConsumerService.class));
-    environment.lifecycle().manage(injector.getInstance(NodeStartRedisConsumerService.class));
-    environment.lifecycle().manage(injector.getInstance(ProgressRedisConsumerService.class));
+  private void registerPmsSdkEvents(Injector injector) {
+    log.info("Initializing pms sdk redis abstract consumers...");
+    PipelineEventConsumerController pipelineEventConsumerController =
+        injector.getInstance(PipelineEventConsumerController.class);
+    pipelineEventConsumerController.register(injector.getInstance(InterruptEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(FacilitatorEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class), 4);
+    pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 4);
+    pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 4);
+    pipelineEventConsumerController.register(injector.getInstance(PipelineServiceFeatureFlagConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(SdkResponseEventRedisConsumer.class), 5);
   }
 
   private void registerCorsFilter(PipelineServiceConfiguration appConfig, Environment environment) {
@@ -588,6 +576,10 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     ExecutorService executorService =
         injector.getInstance(Key.get(ExecutorService.class, Names.named("templateRegistrationExecutorService")));
     executorService.submit(injector.getInstance(NotificationTemplateRegistrar.class));
+  }
+
+  private void registerRequestContextFilter(Environment environment) {
+    environment.jersey().register(new RequestContextFilter());
   }
 
   private void registerMigrations(Injector injector) {

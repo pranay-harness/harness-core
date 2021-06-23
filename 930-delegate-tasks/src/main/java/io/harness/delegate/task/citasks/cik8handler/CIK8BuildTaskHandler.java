@@ -235,6 +235,15 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       Map<String, ConnectorDetails> functorConnectors = containerParams.getContainerSecrets().getFunctorConnectors();
       Map<String, SecretParams> plainTextSecretsByName =
           containerParams.getContainerSecrets().getPlainTextSecretsByName();
+      Map<String, String> envVarsWithSecretRef = containerParams.getEnvVarsWithSecretRef();
+
+      if (isNotEmpty(envVarsWithSecretRef)) {
+        log.info("Creating environment variables with secret functor value for container {} present on pod: {}",
+            containerParams.getName(), podParams.getName());
+        Map<String, String> envVarsWithSecretRefSecretData =
+            getAndUpdateEnvVarsWithSecretRefSecretData(envVarsWithSecretRef, containerParams, k8SecretName);
+        secretData.putAll(envVarsWithSecretRefSecretData);
+      }
 
       if (isNotEmpty(functorConnectors)) {
         log.info("Creating git hub app token env variables for container {} present on pod: {}",
@@ -271,10 +280,12 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
         }
       }
 
+      log.info("Creating proxy env variables for container {} present on pod: {}", containerParams.getName(),
+          podParams.getName());
+      secretData.putAll(getAndUpdateProxyConfigurationSecretData(containerParams, k8SecretName));
       if (containerParams.getContainerType() == LITE_ENGINE) {
-        log.info("Creating proxy env variables for container {} present on pod: {}", containerParams.getName(),
+        log.info("Creating delegate service token for container {} present on pod: {}", containerParams.getName(),
             podParams.getName());
-        secretData.putAll(getAndUpdateProxyConfigurationSecretData(containerParams, k8SecretName));
         secretData.putAll(getAndUpdateDelegateServiceToken(containerParams, k8SecretName));
       }
     }
@@ -291,6 +302,18 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       log.info("Environment k8 secret creation is complete for pod name: {}", podParams.getName());
     }
     log.info("Environment variable creation took: {} for pod: {} ", timer.stop(), podParams.getName());
+  }
+
+  private Map<String, String> getAndUpdateEnvVarsWithSecretRefSecretData(
+      Map<String, String> envVarsWithSecretRef, CIK8ContainerParams containerParams, String k8SecretName) {
+    Map<String, SecretParams> secretData =
+        kubeCtlHandler.fetchEnvVarsWithSecretRefSecretParams(envVarsWithSecretRef, containerParams.getName());
+    if (isNotEmpty(secretData)) {
+      updateContainer(containerParams, k8SecretName, secretData);
+      return secretData.values().stream().collect(Collectors.toMap(SecretParams::getSecretKey, SecretParams::getValue));
+    } else {
+      return Collections.emptyMap();
+    }
   }
 
   private Map<String, String> getAndUpdateGithubAppTokenSecretData(
@@ -341,7 +364,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
   private Map<String, String> getAndUpdateProxyConfigurationSecretData(
       CIK8ContainerParams containerParams, String secretName) {
-    if (proxyVariableHelper.checkIfProxyIsConfigured()) {
+    if (proxyVariableHelper != null && proxyVariableHelper.checkIfProxyIsConfigured()) {
       Map<String, SecretParams> proxyConfiguration = proxyVariableHelper.getProxyConfiguration();
       updateContainer(containerParams, secretName, proxyConfiguration);
       return proxyConfiguration.values().stream().collect(

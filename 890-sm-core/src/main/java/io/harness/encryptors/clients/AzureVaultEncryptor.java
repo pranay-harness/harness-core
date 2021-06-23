@@ -30,7 +30,6 @@ import com.microsoft.azure.keyvault.models.SecretBundle;
 import com.microsoft.azure.keyvault.requests.SetSecretRequest;
 import java.time.Duration;
 import java.util.HashMap;
-import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 

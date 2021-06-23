@@ -10,7 +10,6 @@ import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SmtpCapability;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import java.time.Duration;
 import java.util.Properties;
@@ -22,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SmtpCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
-  private static final TimeLimiter timeLimiter = new SimpleTimeLimiter();
+  private static final TimeLimiter timeLimiter = HTimeLimiter.create();
 
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {

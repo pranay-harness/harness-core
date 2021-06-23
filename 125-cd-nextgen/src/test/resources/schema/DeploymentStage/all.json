@@ -1427,7 +1427,11 @@
           "$ref": "#/definitions/ExecutionElementConfig"
         },
         "type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "KubernetesDirect",
+            "KubernetesGcp"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -1622,6 +1626,11 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "issueType",
+            "projectKey"
+          ],
           "properties": {
             "connectorRef": {
               "type": "string"
@@ -2194,12 +2203,25 @@
     },
     "ManifestConfig": {
       "type": "object",
+      "required": [
+        "identifier",
+        "spec",
+        "type"
+      ],
       "properties": {
         "identifier": {
           "type": "string"
         },
         "type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "HelmChart",
+            "K8sManifest",
+            "Kustomize",
+            "OpenshiftParam",
+            "OpenshiftTemplate",
+            "Values"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -2885,6 +2907,7 @@
     "PrimaryArtifact": {
       "type": "object",
       "required": [
+        "spec",
         "type"
       ],
       "properties": {
@@ -3152,7 +3175,9 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -3261,9 +3286,17 @@
     },
     "ServiceDefinition": {
       "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
       "properties": {
         "type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "Kubernetes",
+            "NativeHelm"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -3729,6 +3762,11 @@
     },
     "StepElementConfig": {
       "type": "object",
+      "required": [
+        "identifier",
+        "name",
+        "type"
+      ],
       "properties": {
         "description": {
           "type": "string"
@@ -3748,7 +3786,8 @@
           "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "timeout": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*))$"
         },
         "type": {
           "type": "string"
@@ -4201,7 +4240,16 @@
           "type": "string"
         },
         "type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "Git",
+            "Github",
+            "Bitbucket",
+            "GitLab",
+            "Http",
+            "S3",
+            "Gcs"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",

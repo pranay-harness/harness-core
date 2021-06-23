@@ -12,27 +12,18 @@ import io.harness.pms.events.base.PmsAbstractMessageListener;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 @Singleton
-public class SdkResponseEventMessageListener extends PmsAbstractMessageListener<SdkResponseEventProto> {
-  private final SdkResponseHandler redisSdkResponseHandler;
-
+public class SdkResponseEventMessageListener
+    extends PmsAbstractMessageListener<SdkResponseEventProto, SdkResponseHandler> {
   @Inject
-  public SdkResponseEventMessageListener(
-      @Named(SDK_SERVICE_NAME) String serviceName, SdkResponseHandler redisSdkResponseHandler) {
-    super(serviceName, SdkResponseEventProto.class);
-    this.redisSdkResponseHandler = redisSdkResponseHandler;
-  }
-
-  @Override
-  public boolean processMessage(
-      SdkResponseEventProto sdkResponseEventProto, Map<String, String> metadataMap, Long timestamp) {
-    redisSdkResponseHandler.handleEvent(sdkResponseEventProto, metadataMap, timestamp);
-    return true;
+  public SdkResponseEventMessageListener(@Named(SDK_SERVICE_NAME) String serviceName,
+      SdkResponseHandler sdkResponseHandler, @Named("EngineExecutorService") ExecutorService executorService) {
+    super(serviceName, SdkResponseEventProto.class, sdkResponseHandler, executorService);
   }
 
   @Override

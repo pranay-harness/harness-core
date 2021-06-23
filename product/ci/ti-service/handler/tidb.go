@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -59,22 +61,13 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handler
 			"repo", repo, "source", source, "target", target, "sha", sha)
 
 		// Make call to Mongo DB to get the tests to run
-		selected, err := tidb.GetTestsToRun(ctx, req)
+		selected, err := tidb.GetTestsToRun(ctx, req, accountId)
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: could not select tests", "account_id", accountId,
 				"repo", repo, "source", source, "target", target, "sha", sha, zap.Error(err))
 			return
 		}
-
-		//// Write changed file information to timescaleDB
-		//err = db.WriteDiffFiles(ctx, accountId, orgId, projectId, pipelineId, buildId,
-		//	stageId, stepId, types.DiffInfo{Sha: sha, Files: req.Files})
-		//if err != nil {
-		//	WriteInternalError(w, err)
-		//	log.Errorw("api: could not write changed file information", "account_id", accountId,
-		//		"repo", repo, "source", source, "target", target, "sha", sha, zap.Error(err))
-		//}
 
 		// Classify and write the test selection stats to timescaleDB
 		err = db.WriteSelectedTests(ctx, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, selected, false)
@@ -149,6 +142,24 @@ func HandleIntelligenceInfo(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 		// Write the selected tests back
 		WriteJSON(w, resp, 200)
 		log.Infow("retrieved test intelligence info", "account_id", accountId, "time_taken", time.Since(st))
+	}
+}
+
+// HandlePing returns an http.HandlerFunc that pings
+// the backends to ensure smooth working of TI service.
+func HandlePing(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, _ := context.WithTimeout(r.Context(), 5*time.Second) // 5 second timeout for pings
+
+		if err := db.Ping(ctx); err != nil {
+			if err != nil {
+				log.Errorw("could not ping the data DB", zap.Error(err))
+				WriteInternalError(w, err)
+				return
+			}
+		}
+
+		io.WriteString(w, "OK")
 	}
 }
 

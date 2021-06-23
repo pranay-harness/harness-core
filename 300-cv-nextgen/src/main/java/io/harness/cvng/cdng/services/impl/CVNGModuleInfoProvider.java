@@ -17,4 +17,9 @@ public class CVNGModuleInfoProvider implements ExecutionSummaryModuleInfoProvide
   public StageModuleInfo getStageLevelModuleInfo(OrchestrationEvent event) {
     return null;
   }
+
+  @Override
+  public boolean shouldRun(OrchestrationEvent event) {
+    return false;
+  }
 }

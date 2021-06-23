@@ -1,8 +1,6 @@
 package io.harness.gitsync.common.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.gitsync.common.beans.BranchSyncStatus.SYNCED;
-import static io.harness.gitsync.common.beans.BranchSyncStatus.SYNCING;
 import static io.harness.gitsync.common.beans.BranchSyncStatus.UNSYNCED;
 
 import io.harness.EntityType;
@@ -37,23 +35,18 @@ import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.GitSyncDirection;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.beans.InfoForGitPush.InfoForGitPushBuilder;
-import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
-import io.harness.gitsync.common.dtos.GitSyncSettingsDTO;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitBranchSyncService;
 import io.harness.gitsync.common.service.GitEntityService;
-import io.harness.gitsync.common.service.GitSyncSettingsService;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
+import io.harness.gitsync.common.service.ScmOrchestratorService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus;
 import io.harness.gitsync.core.dtos.GitCommitDTO;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.gitsync.gitfileactivity.beans.GitFileProcessingSummary;
-import io.harness.gitsync.interceptor.GitEntityInfo;
-import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.gitsync.scm.ScmGitUtils;
-import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
@@ -87,7 +80,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   private final GitBranchService gitBranchService;
   private final EncryptionHelper encryptionHelper;
   private final SourceCodeManagerService sourceCodeManagerService;
-  private final GitSyncSettingsService gitSyncSettingsService;
+  private final ScmOrchestratorService scmOrchestratorService;
   private final GitBranchSyncService gitBranchSyncService;
   private final GitCommitService gitCommitService;
 
@@ -96,7 +89,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
       DecryptGitApiAccessHelper decryptScmApiAccess, GitEntityService gitEntityService,
       YamlGitConfigService yamlGitConfigService, EntityDetailProtoToRestMapper entityDetailRestToProtoMapper,
       ExecutorService executorService, GitBranchService gitBranchService, EncryptionHelper encryptionHelper,
-      SourceCodeManagerService sourceCodeManagerService, GitSyncSettingsService gitSyncSettingsService,
+      SourceCodeManagerService sourceCodeManagerService, ScmOrchestratorService scmOrchestratorService,
       GitBranchSyncService gitBranchSyncService, GitCommitService gitCommitService) {
     this.connectorService = connectorService;
     this.decryptScmApiAccess = decryptScmApiAccess;
@@ -107,7 +100,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     this.gitBranchService = gitBranchService;
     this.encryptionHelper = encryptionHelper;
     this.sourceCodeManagerService = sourceCodeManagerService;
-    this.gitSyncSettingsService = gitSyncSettingsService;
+    this.scmOrchestratorService = scmOrchestratorService;
     this.gitBranchSyncService = gitBranchSyncService;
     this.gitCommitService = gitCommitService;
   }
@@ -131,10 +124,8 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
         }
       }
     }
-    final Optional<GitSyncSettingsDTO> gitSyncSettingsDTO = gitSyncSettingsService.get(
-        accountId, entityReference.getOrgIdentifier(), entityReference.getProjectIdentifier());
-    final boolean executeOnDelegate = gitSyncSettingsDTO.isPresent() && gitSyncSettingsDTO.get().isExecuteOnDelegate();
-    // todo(abhinav): Throw exception if optional not present.
+    final boolean executeOnDelegate = scmOrchestratorService.isExecuteOnDelegate(
+        entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId);
 
     if (executeOnDelegate) {
       final Pair<ScmConnector, List<EncryptedDataDetail>> connectorWithEncryptionDetails =
@@ -256,10 +247,10 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     if (pushInfo.getIsNewBranch()) {
       executorService.submit(
           ()
-              -> syncNewlyCreatedBranch(entityRef.getAccountIdentifier(), yamlGitConfigDTO.getIdentifier(),
-                  yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
-                  pushInfo.getBranchName(), createTheFilePath(pushInfo.getFilePath(), pushInfo.getFolderPath()),
-                  yamlGitConfigDTO.getRepo()));
+              -> gitBranchSyncService.createBranchSyncEvent(yamlGitConfigDTO.getAccountIdentifier(),
+                  yamlGitConfigDTO.getOrganizationIdentifier(), yamlGitConfigDTO.getProjectIdentifier(),
+                  yamlGitConfigDTO.getIdentifier(), yamlGitConfigDTO.getRepo(), pushInfo.getBranchName(),
+                  ScmGitUtils.createFilePath(pushInfo.getFolderPath(), pushInfo.getFilePath())));
     }
   }
 
@@ -281,21 +272,11 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
                               .build());
   }
 
-  private String createTheFilePath(String filePath, String folderPath) {
-    return ScmGitUtils.createFilePath(folderPath, filePath);
-  }
-
   private void shortListTheBranch(
       YamlGitConfigDTO yamlGitConfigDTO, String accountIdentifier, String branchName, boolean isNewBranch) {
     GitBranch gitBranch = gitBranchService.get(accountIdentifier, yamlGitConfigDTO.getRepo(), branchName);
-    BranchSyncStatus branchSyncStatus = isNewBranch ? SYNCING : SYNCED;
     if (gitBranch == null) {
-      createGitBranch(yamlGitConfigDTO, accountIdentifier, branchName, branchSyncStatus);
-      return;
-    }
-    if (gitBranch.getBranchSyncStatus() == UNSYNCED) {
-      gitBranchService.updateBranchSyncStatus(
-          accountIdentifier, yamlGitConfigDTO.getRepo(), branchName, branchSyncStatus);
+      createGitBranch(yamlGitConfigDTO, accountIdentifier, branchName, UNSYNCED);
     }
   }
 
@@ -303,31 +284,6 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   public Boolean isGitSyncEnabled(EntityScopeInfo entityScopeInfo) {
     return yamlGitConfigService.isGitSyncEnabled(entityScopeInfo.getAccountId(), entityScopeInfo.getOrgId().getValue(),
         entityScopeInfo.getProjectId().getValue());
-  }
-
-  private void syncNewlyCreatedBranch(String accountId, String gitSyncConfigId, String projectIdentifier,
-      String orgIdentifier, String branch, String filePathToBeExcluded, String repoURL) {
-    processFilesInBranch(
-        accountId, gitSyncConfigId, projectIdentifier, orgIdentifier, branch, filePathToBeExcluded, repoURL);
-  }
-
-  @Override
-  public void processFilesInBranch(String accountId, String gitSyncConfigId, String projectIdentifier,
-      String orgIdentifier, String branch, String filePathToBeExcluded, String repoURL) {
-    final GitEntityInfo emptyRepoBranch =
-        GitEntityInfo.builder().branch(null).yamlGitConfigId(null).findDefaultFromOtherRepos(true).build();
-    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
-      GlobalContextManager.upsertGlobalContextRecord(
-          GitSyncBranchContext.builder().gitBranchInfo(emptyRepoBranch).build());
-      final YamlGitConfigDTO yamlGitConfigDTO =
-          yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountId, gitSyncConfigId);
-      // todo @deepak, remove this dummy yamlchangeset
-      gitBranchSyncService.syncBranch(yamlGitConfigDTO, branch, accountId, filePathToBeExcluded,
-          YamlChangeSet.builder().uuid(String.valueOf(System.currentTimeMillis())).build());
-      log.info("Branch sync completed {}", branch);
-      gitBranchService.updateBranchSyncStatus(accountId, repoURL, branch, SYNCED);
-      log.info("Branch sync status updated completed {}", branch);
-    }
   }
 
   private void createGitBranch(
@@ -345,7 +301,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   public BranchDetails getBranchDetails(RepoDetails repoDetails) {
     final YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.get(repoDetails.getProjectIdentifier().getValue(),
         repoDetails.getOrgIdentifier().getValue(), repoDetails.getAccountId(), repoDetails.getYamlGitConfigId());
-    if (yamlGitConfigDTO != null) {
+    if (yamlGitConfigDTO == null) {
       return BranchDetails.newBuilder().build();
     }
     return BranchDetails.newBuilder().setDefaultBranch(yamlGitConfigDTO.getBranch()).build();

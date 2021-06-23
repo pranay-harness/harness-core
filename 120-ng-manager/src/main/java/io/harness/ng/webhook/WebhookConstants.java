@@ -11,4 +11,5 @@ import lombok.experimental.UtilityClass;
 public class WebhookConstants {
   public static final String TARGET = "target";
   public static final String HOOK_EVENT_TYPE = "hookEventType";
+  public static final String WEBHOOK_ENDPOINT = "webhook";
 }

@@ -8,7 +8,7 @@ import static org.mockito.Mockito.mock;
 import io.harness.CategoryTest;
 import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.acl.models.SourceMetadata;
-import io.harness.accesscontrol.acl.services.ACLService;
+import io.harness.accesscontrol.acl.repository.ACLRepository;
 import io.harness.accesscontrol.principals.usergroups.UserGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.roleassignments.persistence.repositories.RoleAssignmentRepository;
@@ -28,7 +28,7 @@ import org.junit.experimental.categories.Category;
 @OwnedBy(PL)
 public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
   private RoleAssignmentChangeConsumerImpl roleAssignmentChangeConsumer;
-  private ACLService aclService;
+  private ACLRepository aclRepository;
   private ResourceGroupService resourceGroupService;
   private RoleService roleService;
   private UserGroupService userGroupService;
@@ -36,13 +36,13 @@ public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
 
   @Before
   public void setup() {
-    aclService = mock(ACLService.class);
+    aclRepository = mock(ACLRepository.class);
     resourceGroupService = mock(ResourceGroupService.class);
     roleService = mock(RoleService.class);
     userGroupService = mock(UserGroupService.class);
     roleAssignmentRepository = mock(RoleAssignmentRepository.class);
     roleAssignmentChangeConsumer = new RoleAssignmentChangeConsumerImpl(
-        aclService, roleService, userGroupService, resourceGroupService, roleAssignmentRepository);
+        aclRepository, roleService, userGroupService, resourceGroupService, roleAssignmentRepository);
   }
 
   private List<ACL> getAlreadyExistingACLS() {

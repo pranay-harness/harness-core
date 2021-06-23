@@ -1,7 +1,9 @@
 package io.harness.stateutils.buildstate;
 
+import static io.harness.beans.serializer.RunTimeInputHandler.UNRESOLVED_PARAMETER;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveIntegerParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
 import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODE_BASE_CONNECTOR_REF;
 import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS;
 import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
@@ -25,7 +27,6 @@ import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_LOG_KEY_VAR
 import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_WORKSPACE;
 import static io.harness.common.CIExecutionConstants.LABEL_REGEX;
-import static io.harness.common.CIExecutionConstants.LOCALHOST_IP;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.ORG_ID_ATTR;
@@ -74,7 +75,6 @@ import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
 import io.harness.delegate.beans.ci.pod.CIK8PodParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.ContainerSecrets;
-import io.harness.delegate.beans.ci.pod.HostAliasParams;
 import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
 import io.harness.delegate.beans.ci.pod.PVCParams;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
@@ -153,6 +153,8 @@ public class K8BuildSetupUtils {
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
   private final int MAX_ATTEMPTS = 3;
 
+  private final String regexPattern = "^\\$\\{ngSecretManager.obtain\\(.*)\\}";
+
   public CIK8BuildTaskParams getCIk8BuildTaskParams(LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance,
       Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys) {
     K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
@@ -174,14 +176,20 @@ public class K8BuildSetupUtils {
         "annotations", "K8BuildInfra", "stageSetup", k8sDirectInfraYaml.getSpec().getLabels(), false);
 
     Integer stageRunAsUser = resolveIntegerParameter(k8sDirectInfraYaml.getSpec().getRunAsUser(), null);
-
+    String resolveStringParameter = resolveStringParameter(
+        "serviceAccountName", null, "infrastructure", k8sDirectInfraYaml.getSpec().getServiceAccountName(), false);
+    String serviceAccountName = null;
+    if (resolveStringParameter != null && !resolveStringParameter.equals(UNRESOLVED_PARAMETER)) {
+      serviceAccountName = resolveStringParameter;
+    }
     PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
 
     ConnectorDetails k8sConnector = connectorUtils.getConnectorDetails(ngAccess, clusterName);
     String workDir = ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getWorkDir();
-    CIK8PodParams<CIK8ContainerParams> podParams = getPodParams(ngAccess, k8PodDetails, liteEngineTaskStepInfo,
-        liteEngineTaskStepInfo.isUsePVC(), liteEngineTaskStepInfo.getCiCodebase(),
-        liteEngineTaskStepInfo.isSkipGitClone(), logPrefix, ambiance, annotations, labels, stageRunAsUser);
+    CIK8PodParams<CIK8ContainerParams> podParams =
+        getPodParams(ngAccess, k8PodDetails, liteEngineTaskStepInfo, liteEngineTaskStepInfo.isUsePVC(),
+            liteEngineTaskStepInfo.getCiCodebase(), liteEngineTaskStepInfo.isSkipGitClone(), logPrefix, ambiance,
+            annotations, labels, stageRunAsUser, serviceAccountName);
 
     log.info("Created pod params for pod name [{}]", podSetupInfo.getName());
     return CIK8BuildTaskParams.builder().k8sConnector(k8sConnector).cik8PodParams(podParams).build();
@@ -199,7 +207,7 @@ public class K8BuildSetupUtils {
   public CIK8PodParams<CIK8ContainerParams> getPodParams(NGAccess ngAccess, K8PodDetails k8PodDetails,
       LiteEngineTaskStepInfo liteEngineTaskStepInfo, boolean usePVC, CodeBase ciCodebase, boolean skipGitClone,
       String logPrefix, Ambiance ambiance, Map<String, String> annotations, Map<String, String> labels,
-      Integer stageRunAsUser) {
+      Integer stageRunAsUser, String serviceAccountName) {
     PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
     ConnectorDetails harnessInternalImageConnector = null;
     if (isNotEmpty(ciExecutionServiceConfig.getDefaultInternalImageConnector())) {
@@ -216,11 +224,14 @@ public class K8BuildSetupUtils {
     CIK8ContainerParams setupAddOnContainerParams = internalContainerParamsProvider.getSetupAddonContainerParams(
         harnessInternalImageConnector, podSetupInfo.getVolumeToMountPath(), podSetupInfo.getWorkDirPath());
 
-    List<HostAliasParams> hostAliasParamsList = new ArrayList<>();
-    if (podSetupInfo.getServiceIdList() != null) {
-      hostAliasParamsList.add(
-          HostAliasParams.builder().ipAddress(LOCALHOST_IP).hostnameList(podSetupInfo.getServiceIdList()).build());
-    }
+    // Service identifier usage in host alias requires that service identifier does not have capital letter characters
+    // or _. For now, removing host alias usage otherwise pod creation itself fails.
+    //
+    //    List<HostAliasParams> hostAliasParamsList = new ArrayList<>();
+    //    if (podSetupInfo.getServiceIdList() != null) {
+    //      hostAliasParamsList.add(
+    //          HostAliasParams.builder().ipAddress(LOCALHOST_IP).hostnameList(podSetupInfo.getServiceIdList()).build());
+    //    }
 
     List<PVCParams> pvcParamsList = new ArrayList<>();
     if (usePVC) {
@@ -254,12 +265,12 @@ public class K8BuildSetupUtils {
         .name(podSetupInfo.getName())
         .namespace(k8sDirectInfraYaml.getSpec().getNamespace())
         .labels(buildLabels)
+        .serviceAccountName(serviceAccountName)
         .annotations(annotations)
         .gitConnector(gitConnector)
         .containerParamsList(containerParamsList)
         .pvcParamList(pvcParamsList)
         .initContainerParamsList(singletonList(setupAddOnContainerParams))
-        .hostAliasParamsList(hostAliasParamsList)
         .runAsUser(stageRunAsUser)
         .build();
   }
@@ -391,7 +402,9 @@ public class K8BuildSetupUtils {
     List<SecretVariableDetails> containerSecretVariableDetails =
         getSecretVariableDetails(ngAccess, containerDefinitionInfo, secretVariableDetails);
 
-    envVars.putAll(createEnvVariableForSecret(containerSecretVariableDetails));
+    Map<String, String> envVarsWithSecretRef = removeEnvVarsWithSecretRef(envVars);
+
+    envVars.putAll(createEnvVariableForSecret(containerSecretVariableDetails, envVarsWithSecretRef));
     if (containerDefinitionInfo.getContainerType() == CIContainerType.SERVICE) {
       envVars.put(HARNESS_SERVICE_LOG_KEY_VARIABLE,
           format("%s/serviceId:%s", logPrefix, containerDefinitionInfo.getStepIdentifier()));
@@ -403,6 +416,7 @@ public class K8BuildSetupUtils {
             .containerResourceParams(containerDefinitionInfo.getContainerResourceParams())
             .containerType(containerDefinitionInfo.getContainerType())
             .envVars(envVars)
+            .envVarsWithSecretRef(envVarsWithSecretRef)
             .containerSecrets(ContainerSecrets.builder()
                                   .secretVariableDetails(containerSecretVariableDetails)
                                   .connectorDetailsMap(stepConnectorDetails)
@@ -422,6 +436,18 @@ public class K8BuildSetupUtils {
     return cik8ContainerParams;
   }
 
+  private Map<String, String> removeEnvVarsWithSecretRef(Map<String, String> envVars) {
+    HashMap<String, String> hashMap = new HashMap<>();
+    final Map<String, String> secretEnvVariables =
+        envVars.entrySet()
+            .stream()
+            .filter(entry -> entry.getValue().contains("ngSecretManager"))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    envVars.entrySet().removeAll(secretEnvVariables.entrySet());
+
+    return secretEnvVariables;
+  }
+
   private String getFullyQualifiedImageName(ConnectorDetails connectorDetails,
       ConnectorDetails harnessInternalImageConnector, boolean isHarnessManagedImage, String imageName) {
     ConnectorDetails imgConnector = connectorDetails;
@@ -432,16 +458,23 @@ public class K8BuildSetupUtils {
     return IntegrationStageUtils.getFullyQualifiedImageName(imageName, imgConnector);
   }
 
-  private Map<String, String> createEnvVariableForSecret(List<SecretVariableDetails> secretVariableDetails) {
+  private Map<String, String> createEnvVariableForSecret(
+      List<SecretVariableDetails> secretVariableDetails, Map<String, String> envVariablesWithSecretRef) {
     Map<String, String> envVars = new HashMap<>();
 
+    List<String> secretEnvNames = new ArrayList<>();
+
     if (isNotEmpty(secretVariableDetails)) {
-      List<String> secretEnvNames =
-          secretVariableDetails.stream()
-              .map(secretVariableDetail -> { return secretVariableDetail.getSecretVariableDTO().getName(); })
-              .collect(Collectors.toList());
-      envVars.put(HARNESS_SECRETS_LIST, String.join(",", secretEnvNames));
+      secretEnvNames.addAll(secretVariableDetails.stream()
+                                .map(secretVariableDetail -> secretVariableDetail.getSecretVariableDTO().getName())
+                                .collect(Collectors.toList()));
     }
+    if (isNotEmpty(envVariablesWithSecretRef)) {
+      secretEnvNames.addAll(envVariablesWithSecretRef.keySet());
+    }
+
+    envVars.put(HARNESS_SECRETS_LIST, String.join(",", secretEnvNames));
+
     return envVars;
   }
 

@@ -28,11 +28,15 @@ import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptServiceImpl;
 import io.harness.engine.interrupts.handlers.publisher.InterruptEventPublisher;
 import io.harness.engine.interrupts.handlers.publisher.RedisInterruptEventPublisher;
+import io.harness.engine.pms.advise.publisher.NodeAdviseEventPublisher;
+import io.harness.engine.pms.advise.publisher.RedisNodeAdviseEventPublisher;
 import io.harness.engine.pms.data.PmsEngineExpressionServiceImpl;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.data.PmsOutcomeServiceImpl;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.engine.pms.data.PmsSweepingOutputServiceImpl;
+import io.harness.engine.pms.resume.publisher.NodeResumeEventPublisher;
+import io.harness.engine.pms.resume.publisher.RedisNodeResumeEventPublisher;
 import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.engine.progress.publisher.ProgressEventPublisher;
@@ -102,7 +106,6 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
       }
     });
     install(OrchestrationBeansModule.getInstance());
-    install(OrchestrationQueueModule.getInstance());
     if (!config.isUseFeatureFlagService()) {
       bind(PmsFeatureFlagService.class).to(NoopFeatureFlagServiceImpl.class);
     } else {
@@ -141,6 +144,8 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     bind(InterruptEventPublisher.class).to(RedisInterruptEventPublisher.class);
     bind(FacilitateEventPublisher.class).to(RedisFacilitateEventPublisher.class).in(Singleton.class);
     bind(ProgressEventPublisher.class).to(RedisProgressEventPublisher.class).in(Singleton.class);
+    bind(NodeAdviseEventPublisher.class).to(RedisNodeAdviseEventPublisher.class).in(Singleton.class);
+    bind(NodeResumeEventPublisher.class).to(RedisNodeResumeEventPublisher.class).in(Singleton.class);
   }
 
   @Provides

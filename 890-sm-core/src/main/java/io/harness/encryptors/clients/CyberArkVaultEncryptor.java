@@ -26,7 +26,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Response;

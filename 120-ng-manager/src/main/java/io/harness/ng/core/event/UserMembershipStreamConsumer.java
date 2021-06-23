@@ -40,15 +40,19 @@ public class UserMembershipStreamConsumer implements Runnable {
   @Override
   public void run() {
     log.info("Started the consumer for " + USERMEMBERSHIP + " stream");
-    SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
     try {
+      SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
       while (!Thread.currentThread().isInterrupted()) {
         readEventsFrameworkMessages();
       }
+    } catch (InterruptedException ex) {
+      SecurityContextBuilder.unsetCompleteContext();
+      Thread.currentThread().interrupt();
     } catch (Exception ex) {
       log.error(USERMEMBERSHIP + " stream consumer unexpectedly stopped", ex);
+    } finally {
+      SecurityContextBuilder.unsetCompleteContext();
     }
-    SecurityContextBuilder.unsetCompleteContext();
   }
 
   private void readEventsFrameworkMessages() throws InterruptedException {

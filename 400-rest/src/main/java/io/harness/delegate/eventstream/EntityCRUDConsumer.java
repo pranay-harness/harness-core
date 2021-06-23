@@ -43,15 +43,19 @@ public class EntityCRUDConsumer implements Runnable {
   @Override
   public void run() {
     log.info("Started the consumer for entity crud");
-    SecurityContextBuilder.setContext(new ServicePrincipal(MANAGER.getServiceId()));
     try {
+      SecurityContextBuilder.setContext(new ServicePrincipal(MANAGER.getServiceId()));
       while (!Thread.currentThread().isInterrupted()) {
         pollAndProcessMessages();
       }
+    } catch (InterruptedException ex) {
+      SecurityContextBuilder.unsetCompleteContext();
+      Thread.currentThread().interrupt();
     } catch (final Exception ex) {
       log.error("Entity crud consumer unexpectedly stopped", ex);
+    } finally {
+      SecurityContextBuilder.unsetCompleteContext();
     }
-    SecurityContextBuilder.unsetCompleteContext();
   }
 
   private void pollAndProcessMessages() throws InterruptedException {

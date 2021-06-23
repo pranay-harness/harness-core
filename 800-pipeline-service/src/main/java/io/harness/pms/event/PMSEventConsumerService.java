@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PMSEventConsumerService implements Managed {
   @Inject private PMSEntityCRUDStreamConsumer entityCRUDStreamConsumer;
   @Inject private WebhookEventStreamConsumer webhookEventStreamConsumer;
+
   private ExecutorService entityCRUDConsumerService;
   private ExecutorService webhookEventConsumerService;
 

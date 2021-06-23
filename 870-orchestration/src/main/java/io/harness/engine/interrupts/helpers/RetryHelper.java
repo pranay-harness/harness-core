@@ -9,8 +9,10 @@ import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.plan.PlanNodeUtils;
+import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
@@ -27,6 +29,8 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +57,25 @@ public class RetryHelper {
     NodeExecution savedNodeExecution = nodeExecutionService.save(newNodeExecution);
     nodeExecutionService.updateRelationShipsForRetryNode(nodeExecution.getUuid(), savedNodeExecution.getUuid());
     nodeExecutionService.markRetried(nodeExecution.getUuid());
+    updateRetriedNodeStatusIfInterventionWaiting(nodeExecution);
+
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(ambiance).orchestrationEngine(engine).build());
+  }
+
+  // Update the status of older retried node to true status from interventionWaiting if retry is on intervention waiting
+  // node.
+  private void updateRetriedNodeStatusIfInterventionWaiting(NodeExecution nodeExecution) {
+    if (nodeExecution.getStatus() == Status.INTERVENTION_WAITING
+        && nodeExecution.getAdviserResponse().hasInterventionWaitAdvise()) {
+      InterventionWaitAdvise interventionWaitAdvise = nodeExecution.getAdviserResponse().getInterventionWaitAdvise();
+      NodeExecution updatedNodeExecution =
+          nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), interventionWaitAdvise.getFromStatus(),
+              ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()), EnumSet.noneOf(Status.class));
+      if (updatedNodeExecution == null) {
+        log.warn("Cannot conclude node execution. Status update failed From :{}, To:{}", nodeExecution.getStatus(),
+            interventionWaitAdvise.getFromStatus());
+      }
+    }
   }
 
   @VisibleForTesting
@@ -63,8 +85,8 @@ public class RetryHelper {
     if (parameters != null) {
       newPlanNode = PlanNodeUtils.cloneForRetry(nodeExecution.getNode(), parameters);
     }
-    List<String> retryIds = isEmpty(nodeExecution.getRetryIds()) ? new ArrayList<>() : nodeExecution.getRetryIds();
-    retryIds.add(0, nodeExecution.getUuid());
+    List<String> retryIds = isEmpty(nodeExecution.getRetryIds()) ? new LinkedList<>() : nodeExecution.getRetryIds();
+    retryIds.add(nodeExecution.getUuid());
     InterruptConfig newInterruptConfig =
         InterruptConfig.newBuilder()
             .setIssuedBy(interruptConfig.getIssuedBy())
@@ -78,8 +100,8 @@ public class RetryHelper {
                                           .build();
 
     List<InterruptEffect> interruptHistories =
-        isEmpty(nodeExecution.getInterruptHistories()) ? new ArrayList<>() : nodeExecution.getInterruptHistories();
-    interruptHistories.add(0, interruptEffect);
+        isEmpty(nodeExecution.getInterruptHistories()) ? new LinkedList<>() : nodeExecution.getInterruptHistories();
+    interruptHistories.add(interruptEffect);
     return NodeExecution.builder()
         .uuid(newUuid)
         .ambiance(ambiance)

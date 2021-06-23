@@ -86,7 +86,7 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
           persistence.findAndModify(uuidTaskResponseQuery, uuidUpdateOperations, HPersistence.returnNewOptions);
         }
       } catch (Exception ex) {
-        log.info(String.format("Ignoring async task response because of the following error: %s", ex.getMessage()));
+        log.warn(String.format("Ignoring async task response because of the following error: %s", ex.getMessage()), ex);
       }
     }
 
@@ -104,6 +104,7 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
                                        .in(responsesToBeDeleted));
 
     if (deleteSuccessful) {
+      log.info("Deleted process responses for task list {}", responsesToBeDeleted);
       responsesToBeDeleted.clear();
     }
 

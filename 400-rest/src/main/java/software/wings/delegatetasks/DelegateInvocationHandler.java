@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import static io.harness.beans.shared.tasks.NgSetupFields.NG;
 import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -70,6 +71,7 @@ public class DelegateInvocationHandler implements InvocationHandler {
             .setupAbstraction(OWNER,
                 taskSetupAbstractionHelper.getOwner(syncTaskContext.getAccountId(), syncTaskContext.getOrgIdentifier(),
                     syncTaskContext.getProjectIdentifier()))
+            .setupAbstraction(NG, syncTaskContext.isNgTask() ? "true" : "false")
             .tags(syncTaskContext.getTags());
 
     String awsConfigTag = getAwsConfigTags(args);

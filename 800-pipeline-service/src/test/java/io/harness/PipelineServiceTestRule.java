@@ -12,6 +12,8 @@ import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.factory.ClosingFactory;
 import io.harness.gitsync.persistance.GitAwarePersistence;
+import io.harness.gitsync.persistance.GitSyncSdkService;
+import io.harness.gitsync.persistance.NoOpGitSyncSdkServiceImpl;
 import io.harness.gitsync.persistance.testing.GitSyncablePersistenceTestModule;
 import io.harness.gitsync.persistance.testing.NoOpGitAwarePersistenceImpl;
 import io.harness.govern.ProviderModule;
@@ -52,6 +54,7 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Named;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
@@ -129,6 +132,13 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
             .addAll(PipelineServiceModuleRegistrars.springConverters)
             .build();
       }
+
+      @Provides
+      @Named("disableDeserialization")
+      @Singleton
+      public boolean getSerializationForDelegate() {
+        return false;
+      }
     });
 
     modules.add(new AbstractModule() {
@@ -143,6 +153,7 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
         bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
         }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
         bind(GitAwarePersistence.class).to(NoOpGitAwarePersistenceImpl.class);
+        bind(GitSyncSdkService.class).to(NoOpGitSyncSdkServiceImpl.class);
       }
     });
 
