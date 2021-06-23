@@ -1,5 +1,12 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.cvng.CVConstants.TAG_ACCOUNT_ID;
+import static io.harness.cvng.CVConstants.TAG_DATA_SOURCE;
+import static io.harness.cvng.CVConstants.TAG_ONBOARDING;
+import static io.harness.cvng.CVConstants.TAG_UNRECORDED;
+import static io.harness.cvng.CVConstants.TAG_VERIFICATION_TYPE;
+import static io.harness.cvng.beans.cvnglog.TraceableType.ONBOARDING;
+import static io.harness.cvng.beans.cvnglog.TraceableType.VERIFICATION_TASK;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -10,10 +17,13 @@ import io.harness.cvng.beans.cvnglog.CVNGLogType;
 import io.harness.cvng.beans.cvnglog.TraceableType;
 import io.harness.cvng.core.entities.CVNGLog;
 import io.harness.cvng.core.entities.CVNGLog.CVNGLogKeys;
+import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.entities.cvnglogs.CVNGLogRecord;
 import io.harness.cvng.core.entities.cvnglogs.CVNGLogRecord.CVNGLogRecordComparator;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVNGLogService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.utils.PageUtils;
@@ -23,7 +33,9 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.UpdateOptions;
@@ -35,7 +47,8 @@ public class CVNGLogServiceImpl implements CVNGLogService {
   @Inject private HPersistence hPersistence;
   @Inject private Clock clock;
   @Inject private CVConfigService cvConfigService;
-  @Inject private VerificationTaskServiceImpl verificationTaskService;
+  @Inject private VerificationTaskService verificationTaskService;
+  @Inject private MetricService metricService;
 
   @Override
   public void save(List<CVNGLogDTO> callLogs) {
@@ -44,6 +57,7 @@ public class CVNGLogServiceImpl implements CVNGLogService {
 
     callLogs.forEach(logRecord -> {
       CVNGLogRecord cvngLogRecord = CVNGLog.toCVNGLogRecord(logRecord);
+      cvngLogRecord.recordsMetrics(metricService, getTags(logRecord));
       cvngLogRecord.setCreatedAt(clock.instant().toEpochMilli());
       Instant startTime = Instant.ofEpochMilli(logRecord.getStartTime());
       Instant endTime = Instant.ofEpochMilli(logRecord.getEndTime());
@@ -96,7 +110,7 @@ public class CVNGLogServiceImpl implements CVNGLogService {
     List<CVNGLog> cvngLogs = hPersistence.createQuery(CVNGLog.class)
                                  .filter(CVNGLogKeys.accountId, accountId)
                                  .filter(CVNGLogKeys.logType, cvngLogType)
-                                 .filter(CVNGLogKeys.traceableType, TraceableType.VERIFICATION_TASK)
+                                 .filter(CVNGLogKeys.traceableType, VERIFICATION_TASK)
                                  .field(CVNGLogKeys.traceableId)
                                  .in(cvConfigIds(accountId, orgIdentifier, projectIdentifier, serviceIdentifier,
                                      environmentIdentifier, monitoringCategory))
@@ -121,5 +135,26 @@ public class CVNGLogServiceImpl implements CVNGLogService {
                                    .map(cvConfig -> cvConfig.getUuid())
                                    .collect(Collectors.toList());
     return verificationTaskService.getServiceGuardVerificationTaskIds(accountId, cvConfigIds);
+  }
+
+  private Map<String, String> getTags(CVNGLogDTO cvngLogDTO) {
+    Map<String, String> tags = new HashMap<>();
+    tags.put(TAG_ACCOUNT_ID, cvngLogDTO.getAccountId());
+
+    if (cvngLogDTO.getType() == CVNGLogType.API_CALL_LOG) {
+      if (cvngLogDTO.getTraceableType() == VERIFICATION_TASK) {
+        VerificationTask verificationTask = verificationTaskService.get(cvngLogDTO.getTraceableId());
+        if (verificationTask != null && verificationTask.getTags() != null) {
+          tags.putAll(verificationTask.getTags());
+        } else {
+          tags.put(TAG_DATA_SOURCE, TAG_UNRECORDED);
+          tags.put(TAG_VERIFICATION_TYPE, TAG_UNRECORDED);
+        }
+      } else if (cvngLogDTO.getTraceableType() == ONBOARDING) {
+        tags.put(TAG_DATA_SOURCE, TAG_ONBOARDING);
+        tags.put(TAG_VERIFICATION_TYPE, TAG_ONBOARDING);
+      }
+    }
+    return tags;
   }
 }

@@ -43,15 +43,19 @@ public class GitCreateBranchEventStreamConsumer implements Runnable {
   public void run() {
     log.info("{} : Started the consumer", GIT_CREATE_BRANCH_EVENT_CONSUMER);
     // todo(abhinav): change to git sync manager when it seprates out.
-    SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
     try {
+      SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
       while (!Thread.currentThread().isInterrupted()) {
         readEventsFrameworkMessages();
       }
+    } catch (InterruptedException ex) {
+      SecurityContextBuilder.unsetCompleteContext();
+      Thread.currentThread().interrupt();
     } catch (Exception ex) {
       log.error("{} : consumer unexpectedly stopped", GIT_CREATE_BRANCH_EVENT_CONSUMER, ex);
+    } finally {
+      SecurityContextBuilder.unsetCompleteContext();
     }
-    SecurityContextBuilder.unsetCompleteContext();
   }
 
   private void readEventsFrameworkMessages() throws InterruptedException {

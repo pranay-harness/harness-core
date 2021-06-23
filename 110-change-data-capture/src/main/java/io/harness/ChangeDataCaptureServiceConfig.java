@@ -25,6 +25,7 @@ public class ChangeDataCaptureServiceConfig extends Configuration {
   @JsonProperty("events-mongo") private MongoConfig eventsMongo = MongoConfig.builder().build();
   @JsonProperty("cdc-mongo") private MongoConfig cdcMongo = MongoConfig.builder().build();
   @JsonProperty("pms-harness") private MongoConfig pmsMongo = MongoConfig.builder().build();
+  @JsonProperty("ng-harness") private MongoConfig ngMongo = MongoConfig.builder().build();
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
   @JsonProperty("mongotags") private MongoTagsConfig mongoTagsConfig = MongoTagsConfig.builder().build();
   @JsonProperty("gcp-project-id") private String gcpProjectId;

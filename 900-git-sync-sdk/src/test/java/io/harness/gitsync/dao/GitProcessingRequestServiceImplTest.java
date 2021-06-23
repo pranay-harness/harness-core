@@ -33,8 +33,7 @@ public class GitProcessingRequestServiceImplTest extends GitSdkTestBase {
         GitToHarnessProcessRequest.newBuilder()
             .setCommitId(StringValue.of("cid"))
             .setAccountId("accid")
-            .setGitToHarnessBranchInfo(
-                GitToHarnessInfo.newBuilder().setRepoUrl("url").setBranch("branch").setYamlGitConfigId("ygs").build())
+            .setGitToHarnessBranchInfo(GitToHarnessInfo.newBuilder().setRepoUrl("url").setBranch("branch").build())
             .setChangeSets(ChangeSets.newBuilder()
                                .addChangeSet(ChangeSet.newBuilder()
                                                  .setEntityType(EntityTypeProtoEnum.CONNECTORS)
@@ -55,8 +54,7 @@ public class GitProcessingRequestServiceImplTest extends GitSdkTestBase {
         GitToHarnessProcessRequest.newBuilder()
             .setCommitId(StringValue.of("cid"))
             .setAccountId("accid")
-            .setGitToHarnessBranchInfo(
-                GitToHarnessInfo.newBuilder().setRepoUrl("url").setBranch("branch").setYamlGitConfigId("ygs").build())
+            .setGitToHarnessBranchInfo(GitToHarnessInfo.newBuilder().setRepoUrl("url").setBranch("branch").build())
             .setChangeSets(ChangeSets.newBuilder()
                                .addChangeSet(ChangeSet.newBuilder()
                                                  .setEntityType(EntityTypeProtoEnum.CONNECTORS)

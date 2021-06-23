@@ -8,6 +8,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGTestBase;
+import io.harness.cdng.manifest.ManifestConfigType;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.service.beans.KubernetesServiceSpec;
@@ -28,11 +29,11 @@ public class ManifestPlanCreatorTest extends CDNGTestBase {
   public void shouldNotAllowDuplicateManifestIdentifiers() {
     ManifestConfigWrapper k8sManifest =
         ManifestConfigWrapper.builder()
-            .manifest(ManifestConfig.builder().identifier("test").type("K8sManifest").build())
+            .manifest(ManifestConfig.builder().identifier("test").type(ManifestConfigType.K8_MANIFEST).build())
             .build();
     ManifestConfigWrapper valuesManifest =
         ManifestConfigWrapper.builder()
-            .manifest(ManifestConfig.builder().identifier("test").type("Values").build())
+            .manifest(ManifestConfig.builder().identifier("test").type(ManifestConfigType.VALUES).build())
             .build();
 
     ServiceConfig serviceConfig =

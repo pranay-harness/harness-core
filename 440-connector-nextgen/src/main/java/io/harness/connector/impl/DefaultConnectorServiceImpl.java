@@ -32,6 +32,9 @@ import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.Connector.ConnectorKeys;
+import io.harness.connector.events.ConnectorCreateEvent;
+import io.harness.connector.events.ConnectorDeleteEvent;
+import io.harness.connector.events.ConnectorUpdateEvent;
 import io.harness.connector.helper.CatalogueHelper;
 import io.harness.connector.helper.HarnessManagedConnectorHelper;
 import io.harness.connector.mappers.ConnectorMapper;
@@ -72,6 +75,8 @@ import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.outbox.OutboxEvent;
+import io.harness.outbox.api.OutboxService;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
@@ -85,6 +90,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import javax.ws.rs.NotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -116,6 +122,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   private final HarnessManagedConnectorHelper harnessManagedConnectorHelper;
   private final ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
   GitSyncSdkService gitSyncSdkService;
+  OutboxService outboxService;
 
   @Override
   public Optional<ConnectorResponseDTO> get(
@@ -287,13 +294,18 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     connectorEntity.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     Connector savedConnectorEntity = null;
     try {
-      savedConnectorEntity = connectorRepository.save(connectorEntity, connectorRequestDTO, changeType);
+      Supplier<OutboxEvent> supplier = null;
+      if (!gitSyncSdkService.isGitSyncEnabled(
+              accountIdentifier, connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier())) {
+        supplier = ()
+            -> outboxService.save(new ConnectorCreateEvent(accountIdentifier, connectorRequestDTO.getConnectorInfo()));
+      }
+      savedConnectorEntity = connectorRepository.save(connectorEntity, connectorRequestDTO, changeType, supplier);
       connectorEntityReferenceHelper.createSetupUsageForSecret(
           connectorRequestDTO.getConnectorInfo(), accountIdentifier, false);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format("Connector [%s] already exists", connectorEntity.getIdentifier()));
     }
-
     return connectorMapper.writeDTO(savedConnectorEntity);
   }
 
@@ -340,6 +352,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
           format("No connector exists with the  Identifier %s", connector.getIdentifier()));
     }
     Connector existingConnector = existingConnectorOptional.get();
+    final ConnectorResponseDTO oldConnectorDTO = connectorMapper.writeDTO(existingConnector);
     Connector newConnector = connectorMapper.toConnector(connectorRequest, accountIdentifier);
     newConnector.setId(existingConnector.getId());
     newConnector.setVersion(existingConnector.getVersion());
@@ -348,13 +361,6 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     newConnector.setTimeWhenConnectorIsLastUpdated(System.currentTimeMillis());
     newConnector.setActivityDetails(existingConnector.getActivityDetails());
     setGitDetails(existingConnector, newConnector);
-    Connector updatedConnector;
-    try {
-      updatedConnector = connectorRepository.save(newConnector, connectorRequest, ChangeType.MODIFY);
-      connectorEntityReferenceHelper.createSetupUsageForSecret(connector, accountIdentifier, true);
-    } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(format("Connector [%s] already exists", existingConnector.getIdentifier()));
-    }
 
     if (existingConnector.getIsFromDefaultBranch() == null || existingConnector.getIsFromDefaultBranch()) {
       if (existingConnector.getHeartbeatPerpetualTaskId() == null
@@ -370,7 +376,22 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
         newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
       }
     }
-    return connectorMapper.writeDTO(updatedConnector);
+    try {
+      Supplier<OutboxEvent> supplier = null;
+      if (!gitSyncSdkService.isGitSyncEnabled(
+              accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier())) {
+        supplier = ()
+            -> outboxService.save(new ConnectorUpdateEvent(
+                accountIdentifier, oldConnectorDTO.getConnector(), connectorRequest.getConnectorInfo()));
+      }
+      Connector updatedConnector =
+          connectorRepository.save(newConnector, connectorRequest, ChangeType.MODIFY, supplier);
+      connectorEntityReferenceHelper.createSetupUsageForSecret(connector, accountIdentifier, true);
+      return connectorMapper.writeDTO(updatedConnector);
+
+    } catch (DuplicateKeyException ex) {
+      throw new DuplicateFieldException(format("Connector [%s] already exists", existingConnector.getIdentifier()));
+    }
   }
 
   private Criteria createCriteriaToFetchConnector(
@@ -405,7 +426,15 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     connectorEntityReferenceHelper.deleteConnectorEntityReferenceWhenConnectorGetsDeleted(
         connectorDTO.getConnector(), accountIdentifier);
     existingConnector.setDeleted(true);
-    connectorRepository.save(existingConnector, null, ChangeType.DELETE);
+    Supplier<OutboxEvent> supplier = null;
+    if (!gitSyncSdkService.isGitSyncEnabled(accountIdentifier, orgIdentifier, projectIdentifier)) {
+      supplier = ()
+          -> outboxService.save(
+              new ConnectorDeleteEvent(accountIdentifier, connectorMapper.writeDTO(existingConnector).getConnector()));
+    }
+
+    connectorRepository.save(existingConnector, null, ChangeType.DELETE, supplier);
+
     return true;
   }
 

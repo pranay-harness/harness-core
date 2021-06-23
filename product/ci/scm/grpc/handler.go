@@ -179,6 +179,6 @@ func (h *handler) GetAuthenticatedUser(ctx context.Context, in *pb.GetAuthentica
 	return git.GetAuthenticatedUser(ctx, in, h.log)
 }
 
-func (h *handler) GetUserRepos (ctx context.Context, in *pb.GetUserReposRequest) (*pb.GetUserReposResponse, error) {
+func (h *handler) GetUserRepos(ctx context.Context, in *pb.GetUserReposRequest) (*pb.GetUserReposResponse, error) {
 	return git.GetUserRepos(ctx, in, h.log)
 }

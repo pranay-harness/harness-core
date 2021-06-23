@@ -16,6 +16,13 @@ public interface CVNGMetricsUtils {
   String LEARNING_ENGINE_TASK_TOTAL_TIME = "learning_engine_task_total_time";
   String LEARNING_ENGINE_TASK_WAIT_TIME = "learning_engine_task_wait_time";
   String LEARNING_ENGINE_TASK_RUNNING_TIME = "learning_engine_task_running_time";
+  String API_CALL_EXECUTION_TIME = "api_call_execution_time";
+  String API_CALL_RESPONSE_SIZE = "api_call_response_size";
+
+  static String getApiCallLogResponseCodeMetricName(String responseCode) {
+    return String.format("api_call_response_code_%sxx", responseCode.charAt(0));
+  }
+
   static String getLearningEngineTaskStatusMetricName(LearningEngineTask.ExecutionStatus executionStatus) {
     return String.format("learning_engine_task_%s_count", executionStatus.toString().toLowerCase());
   }

@@ -45,7 +45,6 @@ import software.wings.beans.ErrorData;
 import software.wings.beans.LoginRequest;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
-import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.security.authentication.AuthenticationManager;
@@ -94,7 +93,6 @@ public class UserResourceTest extends WingsBaseTest {
   public static final AccountPasswordExpirationJob ACCOUNT_PASSWORD_EXPIRATION_JOB =
       mock(AccountPasswordExpirationJob.class);
   public static final ReCaptchaVerifier RE_CAPTCHA_VERIFIER = mock(ReCaptchaVerifier.class);
-  public static final LoginSettingsService LOGIN_SETTINGS_SERVICE = mock(LoginSettingsService.class);
   public static final TwoFactorAuthenticationManager TWO_FACTOR_AUTHENTICATION_MANAGER =
       mock(TwoFactorAuthenticationManager.class);
   static final AccountPermissionUtils ACCOUNT_PERMISSION_UTILS = mock(AccountPermissionUtils.class);
@@ -111,8 +109,7 @@ public class UserResourceTest extends WingsBaseTest {
       ResourceTestRule.builder()
           .instance(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, ACCOUNT_PERMISSION_UTILS,
               AUTHENTICATION_MANAGER, TWO_FACTOR_AUTHENTICATION_MANAGER, CACHES, HARNESS_USER_GROUP_SERVICE,
-              USER_GROUP_SERVICE, MAIN_CONFIGURATION, ACCOUNT_PASSWORD_EXPIRATION_JOB, RE_CAPTCHA_VERIFIER,
-              LOGIN_SETTINGS_SERVICE))
+              USER_GROUP_SERVICE, MAIN_CONFIGURATION, ACCOUNT_PASSWORD_EXPIRATION_JOB, RE_CAPTCHA_VERIFIER))
           .type(WingsExceptionMapper.class)
           .type(MultiPartFeature.class)
           .build();

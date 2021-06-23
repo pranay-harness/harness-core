@@ -94,6 +94,8 @@ public class SettingGenerator {
   private static final String HARNESS_BAMBOO = "Harness Bamboo";
   private static final String HARNESS_DOCKER_REGISTRY = "Harness Docker Registry";
   private static final String GCP_PLAYGROUND = "playground-gke-gcs-gcr";
+  private static final String GCP_QA_TARGET = "qa-target-gke-gcs-gcr";
+
   private static final String PCF_CONNECTOR = "Harness PCF";
   private static final String HARNESS_AZURE_ARTIFACTS = "Harness Azure Artifacts";
   private static final String ELK_CONNECTOR = "Elk Connector";
@@ -143,6 +145,7 @@ public class SettingGenerator {
     HARNESS_ARTIFACTORY_CONNECTOR,
     HARNESS_DOCKER_REGISTRY,
     GCP_PLAYGROUND,
+    GCP_QA_TARGET,
     HARNESS_JIRA,
     SERVICENOW_CONNECTOR,
     PHYSICAL_DATA_CENTER,
@@ -208,6 +211,8 @@ public class SettingGenerator {
         return ensureHarnessDocker(seed, owners);
       case GCP_PLAYGROUND:
         return ensureGcpPlayground(seed, owners);
+      case GCP_QA_TARGET:
+        return ensureGcpQaTarget(seed, owners);
       case HARNESS_JIRA:
         return ensureHarnessJira(seed, owners);
       case SERVICENOW_CONNECTOR:
@@ -793,6 +798,24 @@ public class SettingGenerator {
     SettingAttribute gcpSettingAttribute =
         aSettingAttribute()
             .withName(GCP_PLAYGROUND)
+            .withCategory(SettingCategory.CLOUD_PROVIDER)
+            .withAccountId(account.getUuid())
+            .withValue(GcpConfig.builder()
+                           .serviceAccountKeyFileContent(gcpPlaygroundKey.toCharArray())
+                           .accountId(account.getUuid())
+                           .build())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+            .build();
+    return ensureSettingAttribute(seed, gcpSettingAttribute, owners);
+  }
+
+  private SettingAttribute ensureGcpQaTarget(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String gcpPlaygroundKey =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("gcp_qa_target_sa_key").build());
+    SettingAttribute gcpSettingAttribute =
+        aSettingAttribute()
+            .withName(GCP_QA_TARGET)
             .withCategory(SettingCategory.CLOUD_PROVIDER)
             .withAccountId(account.getUuid())
             .withValue(GcpConfig.builder()

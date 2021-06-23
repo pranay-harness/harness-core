@@ -5,33 +5,66 @@ import static io.harness.pms.events.PmsEventFrameworkConstants.SERVICE_NAME;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.event.MessageListener;
+import io.harness.serializer.ProtoUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
 import java.lang.reflect.InvocationTargetException;
+import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class PmsAbstractMessageListener<T extends com.google.protobuf.Message> implements MessageListener {
+public abstract class PmsAbstractMessageListener<T extends com.google.protobuf.Message, H
+                                                     extends PmsBaseEventHandler<T>> implements MessageListener {
+  private static final Duration THRESHOLD_PROCESS_DURATION = Duration.ofSeconds(5);
+
   public final String serviceName;
   public final Class<T> entityClass;
+  public final H handler;
+  public final ExecutorService executorService;
 
-  public PmsAbstractMessageListener(String serviceName, Class<T> entityClass) {
+  public PmsAbstractMessageListener(
+      String serviceName, Class<T> entityClass, H handler, ExecutorService executorService) {
     this.serviceName = serviceName;
     this.entityClass = entityClass;
+    this.handler = handler;
+    this.executorService = executorService;
   }
+
+  /**
+   * We are always returning true from this method even if exception occurred. If we return false that means we are do
+   * not ack the message and it would be delivered to the same consumer group again. This can lead to double
+   * notifications
+   */
 
   @Override
   public boolean handleMessage(Message message) {
+    long startTs = System.currentTimeMillis();
     if (isProcessable(message)) {
-      log.info("[PMS_SDK] Starting to process message from {} messageId: {}", this.getClass().getSimpleName(),
-          message.getId());
-      boolean processed = processMessage(extractEntity(message), message.getMessage().getMetadataMap());
-      log.info("[PMS_SDK] Processing Finished from {} for messageId: {} returning {}", this.getClass().getSimpleName(),
-          message.getId(), processed);
-      return processed;
+      try {
+        log.info(
+            "[PMS_SDK] Starting to process {} event with messageId: {}", entityClass.getSimpleName(), message.getId());
+
+        executorService.submit(() -> {
+          T entity = extractEntity(message);
+          Long issueTimestamp = ProtoUtils.timestampToUnixMillis(message.getTimestamp());
+          processMessage(entity, message.getMessage().getMetadataMap(), issueTimestamp);
+        });
+
+        log.info("[PMS_SDK] Processing Finished for {} event with messageId: {}", entityClass.getSimpleName(),
+            message.getId());
+      } catch (Exception ex) {
+        log.info("[PMS_SDK] Exception occurred while processing {} event with messageId: {}",
+            entityClass.getSimpleName(), message.getId());
+      }
+    }
+    Duration processDuration = Duration.ofMillis(System.currentTimeMillis() - startTs);
+    if (THRESHOLD_PROCESS_DURATION.compareTo(processDuration) < 0) {
+      log.warn("[PMS_SDK] Processing for {} event took {}s which is more than threshold of {}s",
+          entityClass.getSimpleName(), processDuration.getSeconds(), THRESHOLD_PROCESS_DURATION.getSeconds());
     }
     return true;
   }
@@ -55,5 +88,10 @@ public abstract class PmsAbstractMessageListener<T extends com.google.protobuf.M
     return false;
   }
 
-  public abstract boolean processMessage(T event, Map<String, String> metadataMap);
+  /**
+   * The boolean that we are returning here is just for logging purposes we should infer nothing from the responses
+   */
+  public void processMessage(T event, Map<String, String> metadataMap, Long timestamp) {
+    handler.handleEvent(event, metadataMap, timestamp);
+  }
 }

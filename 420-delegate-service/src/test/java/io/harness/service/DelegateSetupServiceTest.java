@@ -3,10 +3,12 @@ package io.harness.service;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateType.KUBERNETES;
 import static io.harness.rule.OwnerRule.MARKO;
+import static io.harness.rule.OwnerRule.MARKOM;
 import static io.harness.rule.OwnerRule.NICOLAS;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -37,12 +39,15 @@ import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateInsightsService;
 
 import software.wings.beans.DelegateConnection;
+import software.wings.beans.SelectorType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
+import org.apache.groovy.util.Maps;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -716,5 +721,47 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     assertThat(delegateSetupService.validateDelegateConfigurations(accountId, orgId, projectId,
                    Arrays.asList(primaryProjectDelegateProfile.getUuid(), projectDelegateProfile.getUuid())))
         .containsExactly(true, true);
+  }
+
+  @Test
+  @Owner(developers = MARKOM)
+  @Category(UnitTests.class)
+  public void whenRetrieveDelegateGroupImplicitSelectorsAndNullGroupThenEmptyTags() {
+    final Map<String, SelectorType> actual = delegateSetupService.retrieveDelegateGroupImplicitSelectors(null);
+    assertThat(actual).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = MARKOM)
+  @Category(UnitTests.class)
+  public void whenRetrieveDelegateGroupImplicitSelectorsThenExpectedTags() {
+    final String accountId = "accId";
+    final String configId = "configId";
+    final DelegateGroup delegateGroup =
+        DelegateGroup.builder().name("GroupName").accountId(accountId).delegateConfigurationId(configId).build();
+
+    when(delegateCache.getDelegateProfile(accountId, configId))
+        .thenReturn(DelegateProfile.builder().name("ProfileName").selectors(ImmutableList.of("SEL1", "asel2")).build());
+
+    final Map<String, SelectorType> actual = delegateSetupService.retrieveDelegateGroupImplicitSelectors(delegateGroup);
+    final Map<String, SelectorType> expectedSelectors = Maps.of("asel2", SelectorType.PROFILE_SELECTORS, "groupname",
+        SelectorType.GROUP_NAME, "profilename", SelectorType.PROFILE_NAME, "sel1", SelectorType.PROFILE_SELECTORS);
+    assertThat(actual).containsExactlyEntriesOf(expectedSelectors);
+  }
+
+  @Test
+  @Owner(developers = MARKOM)
+  @Category(UnitTests.class)
+  public void whenRetrieveDelegateGroupImplicitSelectorsAndNoProfileThenExpectedTags() {
+    final String accountId = "accId";
+    final String configId = "configId";
+    final DelegateGroup delegateGroup =
+        DelegateGroup.builder().name("GroupName").accountId(accountId).delegateConfigurationId(configId).build();
+
+    when(delegateCache.getDelegateProfile(any(), any())).thenReturn(null);
+
+    final Map<String, SelectorType> actual = delegateSetupService.retrieveDelegateGroupImplicitSelectors(delegateGroup);
+    final Map<String, SelectorType> expectedSelectors = Maps.of("groupname", SelectorType.GROUP_NAME);
+    assertThat(actual).containsExactlyEntriesOf(expectedSelectors);
   }
 }

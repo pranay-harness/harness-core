@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.advisers;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/ambiance/ambiance.proto";
+import "io/harness/pms/contracts/advisers/advisers.proto";
+import "io/harness/pms/contracts/execution/failure/failure_info.proto";
+import "io/harness/pms/contracts/execution/status.proto";
+
+message AdviseEvent {
+  io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;
+  io.harness.pms.contracts.execution.failure.FailureInfo failureInfo = 2;
+  repeated AdviserObtainment adviserObtainments = 3;
+  bool isPreviousAdviserExpired = 4;
+  repeated string retryIds = 5;
+  string notifyId = 6;
+  io.harness.pms.contracts.execution.Status fromStatus = 7;
+  io.harness.pms.contracts.execution.Status toStatus = 8;
+}

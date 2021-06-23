@@ -32,6 +32,10 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.DelegateProfileServiceGrpcClient;
 import io.harness.ng.core.api.DelegateProfileManagerNgService;
+import io.harness.ng.core.events.DelegateConfigurationCreateEvent;
+import io.harness.ng.core.events.DelegateConfigurationDeleteEvent;
+import io.harness.ng.core.events.DelegateConfigurationUpdateEvent;
+import io.harness.outbox.api.OutboxService;
 import io.harness.owner.OrgIdentifier;
 import io.harness.owner.ProjectIdentifier;
 import io.harness.paging.PageRequestGrpc;
@@ -42,6 +46,7 @@ import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
@@ -68,6 +73,7 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
 
   @Inject private DelegateProfileServiceGrpcClient delegateProfileServiceGrpcClient;
   @Inject private HPersistence hPersistence;
+  @Inject private OutboxService outboxService;
 
   @Override
   public PageResponse<DelegateProfileDetailsNg> list(
@@ -111,6 +117,11 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
   @Override
   public DelegateProfileDetailsNg update(DelegateProfileDetailsNg delegateProfile) {
     validateScopingRules(delegateProfile.getScopingRules());
+    DelegateProfileGrpc oldDelegateProfileGrpc = delegateProfileServiceGrpcClient.getProfile(
+        AccountId.newBuilder().setId(delegateProfile.getAccountId()).build(),
+        ProfileId.newBuilder().setId(delegateProfile.getUuid()).build());
+
+    Preconditions.checkNotNull(oldDelegateProfileGrpc, "no configuration found with id " + delegateProfile.getUuid());
     DelegateProfileGrpc updateDelegateProfileGrpc;
     try {
       updateDelegateProfileGrpc = delegateProfileServiceGrpcClient.updateProfile(convert(delegateProfile));
@@ -122,7 +133,18 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
       return null;
     }
 
-    return convert(updateDelegateProfileGrpc);
+    DelegateProfileDetailsNg updatedDelegateProfileDetailsNg = convert(updateDelegateProfileGrpc);
+    DelegateConfigurationUpdateEvent delegateConfigurationUpdateEvent =
+        DelegateConfigurationUpdateEvent.builder()
+            .accountIdentifier(updatedDelegateProfileDetailsNg.getAccountId())
+            .orgIdentifier(updatedDelegateProfileDetailsNg.getOrgIdentifier())
+            .projectIdentifier(updatedDelegateProfileDetailsNg.getProjectIdentifier())
+            .oldProfile(convert(oldDelegateProfileGrpc))
+            .newProfile(updatedDelegateProfileDetailsNg)
+            .build();
+    outboxService.save(delegateConfigurationUpdateEvent);
+
+    return updatedDelegateProfileDetailsNg;
   }
 
   @Override
@@ -182,17 +204,43 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
       return null;
     }
 
-    return convert(delegateProfileGrpc);
+    DelegateProfileDetailsNg delegateProfileDetailsNg = convert(delegateProfileGrpc);
+    DelegateConfigurationCreateEvent delegateConfigurationCreateEvent =
+        DelegateConfigurationCreateEvent.builder()
+            .accountIdentifier(delegateProfileDetailsNg.getAccountId())
+            .orgIdentifier(delegateProfileDetailsNg.getOrgIdentifier())
+            .projectIdentifier(delegateProfileDetailsNg.getProjectIdentifier())
+            .delegateProfile(delegateProfileDetailsNg)
+            .build();
+    outboxService.save(delegateConfigurationCreateEvent);
+
+    return delegateProfileDetailsNg;
   }
 
   @Override
   public void delete(String accountId, String delegateProfileId) {
+    DelegateProfileGrpc oldDelegateProfileGrpc = delegateProfileServiceGrpcClient.getProfile(
+        AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(delegateProfileId).build());
+    if (oldDelegateProfileGrpc == null) {
+      return;
+    }
+
     try {
       delegateProfileServiceGrpcClient.deleteProfile(
           AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(delegateProfileId).build());
     } catch (DelegateServiceDriverException ex) {
       throw new InvalidRequestException(ex.getMessage(), ex);
     }
+
+    DelegateProfileDetailsNg oldDelegateProfileDetailsNg = convert(oldDelegateProfileGrpc);
+    DelegateConfigurationDeleteEvent delegateConfigurationDeleteEvent =
+        DelegateConfigurationDeleteEvent.builder()
+            .accountIdentifier(oldDelegateProfileDetailsNg.getAccountId())
+            .orgIdentifier(oldDelegateProfileDetailsNg.getOrgIdentifier())
+            .projectIdentifier(oldDelegateProfileDetailsNg.getProjectIdentifier())
+            .delegateProfile(convert(oldDelegateProfileGrpc))
+            .build();
+    outboxService.save(delegateConfigurationDeleteEvent);
   }
 
   @VisibleForTesting

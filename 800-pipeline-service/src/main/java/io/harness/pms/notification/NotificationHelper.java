@@ -21,6 +21,7 @@ import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.pipeline.yaml.BasicPipeline;
+import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.yaml.YamlUtils;
 
@@ -33,12 +34,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class NotificationHelper {
   public static final String DEFAULT_TIME_FORMAT = "MMM dd' 'hh:mm a z";
 
+  @Inject private PMSExecutionService pmsExecutionService;
   @Inject NotificationClient notificationClient;
   @Inject PlanExecutionService planExecutionService;
   @Inject PipelineServiceConfiguration pipelineServiceConfiguration;
@@ -62,7 +65,7 @@ public class NotificationHelper {
   }
 
   public void sendNotification(
-      Ambiance ambiance, io.harness.notification.PipelineEventType pipelineEventType, NodeExecution nodeExecution) {
+      Ambiance ambiance, PipelineEventType pipelineEventType, NodeExecution nodeExecution, Long updatedAt) {
     String identifier = nodeExecution != null ? nodeExecution.getNode().getIdentifier() : "";
     String accountId = AmbianceUtils.getAccountId(ambiance);
     String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
@@ -85,7 +88,7 @@ public class NotificationHelper {
     }
 
     sendNotificationInternal(notificationRules, pipelineEventType, identifier, accountId,
-        constructDummyTemplateData(ambiance, pipelineEventType, nodeExecution, identifier), orgIdentifier,
+        constructDummyTemplateData(ambiance, pipelineEventType, nodeExecution, identifier, updatedAt), orgIdentifier,
         projectIdentifier);
   }
 
@@ -137,8 +140,8 @@ public class NotificationHelper {
     return basicPipeline.getNotificationRules();
   }
 
-  private String constructDummyTemplateData(
-      Ambiance ambiance, PipelineEventType pipelineEventType, NodeExecution nodeExecution, String identifier) {
+  private String constructDummyTemplateData(Ambiance ambiance, PipelineEventType pipelineEventType,
+      NodeExecution nodeExecution, String identifier, Long updatedAt) {
     PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
     String projectId = AmbianceUtils.getProjectIdentifier(ambiance);
     String pipelineId = ambiance.getMetadata().getPipelineIdentifier();
@@ -163,18 +166,18 @@ public class NotificationHelper {
       sb.append("\nStatus: ").append(ExecutionStatus.getExecutionStatus(planExecution.getStatus()));
     }
 
-    if (StatusUtils.isFinalStatus(planExecution.getStatus())) {
-      sb.append("\nEnded At: ")
-          .append(new SimpleDateFormat(DEFAULT_TIME_FORMAT).format(new Date(planExecution.getEndTs())));
+    if (StatusUtils.isFinalStatus(planExecution.getStatus()) && updatedAt != null) {
+      sb.append("\nEnded At: ").append(new SimpleDateFormat(DEFAULT_TIME_FORMAT).format(new Date(updatedAt)));
     }
     sb.append("\n Link to Execution: ").append(generateUrl(ambiance));
     return sb.toString();
   }
 
   public String generateUrl(Ambiance ambiance) {
-    // Todo: Take module name from request
-    return String.format("%s/account/%s/cd/orgs/%s/projects/%s/pipelines/%s/executions/%s/pipeline",
+    String module = "cd";
+    return String.format("%s/account/%s/%s/orgs/%s/projects/%s/pipelines/%s/executions/%s/pipeline",
         pipelineServiceConfiguration.getPipelineServiceBaseUrl(), AmbianceUtils.getAccountId(ambiance),
+        StringUtils.defaultString(ambiance.getMetadata().getModuleType(), module),
         AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance),
         ambiance.getMetadata().getPipelineIdentifier(), ambiance.getPlanExecutionId());
   }

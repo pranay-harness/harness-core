@@ -52,7 +52,7 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
 
     return chartMuseumClientHelper.startS3ChartMuseumServer(amazonS3HelmRepoConfig.getBucketName(), basePath,
         amazonS3HelmRepoConfig.getRegion(), awsConfig.isUseEc2IamCredentials(), awsConfig.getAccessKey(),
-        awsConfig.getSecretKey());
+        awsConfig.getSecretKey(), awsConfig.isUseIRSA());
   }
 
   @Override

@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.ChangeDataCapture;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
@@ -54,6 +55,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("pipelinesPMS")
 @HarnessEntity(exportable = true)
 @StoreIn(DbAliases.PMS)
+@ChangeDataCapture(table = "tags_info", dataStore = "pms-harness", fields = {}, handler = "TagsInfoCD")
 public class PipelineEntity
     implements GitSyncableEntity, PersistentEntity, AccountAccess, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
@@ -68,6 +70,14 @@ public class PipelineEntity
                  .field(PipelineEntityKeys.yamlGitConfigRef)
                  .field(PipelineEntityKeys.branch)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_organizationId_projectId_lastUpdatedAt")
+                 .field(PipelineEntityKeys.accountId)
+                 .field(PipelineEntityKeys.orgIdentifier)
+                 .field(PipelineEntityKeys.lastUpdatedAt)
+                 .field(PipelineEntityKeys.projectIdentifier)
+                 .build())
+        .add(CompoundMongoIndex.builder().name("lastUpdatedAt_idx").field(PipelineEntityKeys.lastUpdatedAt).build())
         .build();
   }
   @Setter @NonFinal @Id @org.mongodb.morphia.annotations.Id String uuid;

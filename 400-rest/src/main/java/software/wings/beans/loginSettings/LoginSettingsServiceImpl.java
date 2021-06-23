@@ -214,7 +214,9 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
           getPasswordStrengthCheckViolationsInternal(passwordStrengthPolicy, password);
       if (!passwordPolicyViolations.isEmpty()) {
         log.info(String.format("Password violates strength policy associated with the account: %s", account.getUuid()));
-        throw new WingsException("Password violates strength policy associated with the account", WingsException.USER);
+        throw new WingsException(
+            "Password violates strength policy associated with the account. Please contact your Account Administrator.",
+            WingsException.USER);
       }
       validatePasswordStrength(passwordStrengthPolicy, password);
     }

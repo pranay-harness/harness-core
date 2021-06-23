@@ -111,7 +111,7 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
             ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, !PIPELINE_DELETED);
 
     String inputSet = pmsExecutionService.getInputSetYaml(
-        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, PIPELINE_DELETED);
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, PIPELINE_DELETED, false);
 
     assertThat(inputSet).isEqualTo(inputSetYaml);
   }
@@ -127,7 +127,7 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
 
     assertThatThrownBy(()
                            -> pmsExecutionService.getInputSetYaml(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER,
-                               INVALID_PLAN_EXECUTION_ID, PIPELINE_DELETED))
+                               INVALID_PLAN_EXECUTION_ID, PIPELINE_DELETED, false))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Invalid request : Input Set did not exist or pipeline execution has been deleted");
   }

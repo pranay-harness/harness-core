@@ -7,9 +7,11 @@ import lombok.Value;
 @Builder
 public class BuildActiveInfo {
   private String piplineName;
+  private String pipelineIdentifier;
   private String branch;
   private String commit;
   private String commitID;
+  private AuthorInfo author;
   private long startTs;
   private String status;
   private long endTs;

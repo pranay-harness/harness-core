@@ -150,7 +150,7 @@ public class SetupUsageChangeEventMessageListener implements MessageListener {
         branch = metaDataMap.get(BRANCH);
       }
       if (isNotBlank(repo) && isNotBlank(branch)) {
-        return GitEntityInfo.builder().branch(branch).yamlGitConfigId(repo).findDefaultFromOtherBranches(true).build();
+        return GitEntityInfo.builder().branch(branch).yamlGitConfigId(repo).findDefaultFromOtherRepos(true).build();
       }
     }
     return null;

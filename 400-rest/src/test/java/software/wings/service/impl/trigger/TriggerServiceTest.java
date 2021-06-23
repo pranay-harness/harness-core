@@ -544,6 +544,8 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(((ScheduledTriggerCondition) trigger.getCondition()).getCronExpression())
         .isNotNull()
         .isEqualTo("* * * * ?");
+    assertThat(savedScheduledTrigger.getNextIterations()).isNotEmpty();
+    assertThat(trigger.getNextIterations()).isNotEmpty();
     verify(jobScheduler).scheduleJob(any(JobDetail.class), any(org.quartz.Trigger.class));
   }
 
@@ -572,6 +574,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         .isNotNull()
         .extracting(ArtifactSelection::getType)
         .contains(LAST_COLLECTED, LAST_DEPLOYED);
+    assertThat(updatedTrigger.getNextIterations()).isNotEmpty();
     verify(jobScheduler).rescheduleJob(any(TriggerKey.class), any(org.quartz.Trigger.class));
   }
 
@@ -822,6 +825,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(((ScheduledTriggerCondition) trigger.getCondition()).getCronExpression())
         .isNotNull()
         .isEqualTo("* * * * ?");
+    assertThat(trigger.getNextIterations()).isNotEmpty();
     verify(jobScheduler).scheduleJob(any(JobDetail.class), any(org.quartz.Trigger.class));
 
     setWebhookArtifactSelections();
@@ -835,6 +839,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         .isNotNull()
         .extracting(ArtifactSelection::getType)
         .contains(LAST_COLLECTED, LAST_DEPLOYED);
+    assertThat(updatedTrigger.getNextIterations()).isEmpty();
     verify(jobScheduler).deleteJob(TRIGGER_ID, ScheduledTriggerJob.GROUP);
   }
 
@@ -851,6 +856,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(((ArtifactTriggerCondition) trigger.getCondition()).getArtifactStreamId())
         .isNotNull()
         .isEqualTo(ARTIFACT_STREAM_ID);
+    assertThat(trigger.getNextIterations()).isEmpty();
 
     Trigger updatedTrigger = triggerService.update(scheduledConditionTrigger, false);
     assertThat(updatedTrigger.getUuid()).isEqualTo(TRIGGER_ID);
@@ -859,6 +865,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(((ScheduledTriggerCondition) updatedTrigger.getCondition()).getCronExpression())
         .isNotNull()
         .isEqualTo("* * * * ?");
+    assertThat(updatedTrigger.getNextIterations()).isNotEmpty();
     verify(jobScheduler).scheduleJob(any(JobDetail.class), any(org.quartz.Trigger.class));
   }
 

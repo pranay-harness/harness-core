@@ -23,6 +23,7 @@ public class EntityYamlRootNames {
   public static String SERVICE = "service";
   public static String ENVIRONMENT = "environment";
   public static String INPUT_SET = "inputSet";
+  public static String OVERLAY_INPUT_SET = "overlayInputSet";
   public static String CV_CONFIG = "cvConfig";
   public static String DELEGATE = "delegate";
   public static String DELEGATE_CONFIGURATION = "delegateConfigurations";

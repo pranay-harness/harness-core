@@ -42,6 +42,8 @@ public class JsonNodeUtils {
       JsonNode jsonNode = mainNode.get(fieldName);
       if (jsonNode != null && jsonNode.isObject()) {
         merge(jsonNode, updateNode.get(fieldName));
+      } else if (jsonNode != null && jsonNode.isArray()) {
+        mergeJsonArray((ArrayNode) jsonNode, (ArrayNode) updateNode.get(fieldName));
       } else {
         if (mainNode instanceof ObjectNode) {
           JsonNode value = updateNode.get(fieldName);

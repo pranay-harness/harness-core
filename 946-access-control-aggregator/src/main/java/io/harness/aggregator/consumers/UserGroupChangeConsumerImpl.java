@@ -5,8 +5,6 @@ import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.aggregator.ACLUtils.buildACL;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import static java.lang.Runtime.getRuntime;
-
 import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.acl.repository.ACLRepository;
@@ -19,9 +17,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GeneralException;
 
 import com.google.common.collect.Sets;
-import com.google.inject.Inject;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -31,22 +30,36 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PL)
 @Singleton
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO> {
   private final ACLRepository aclRepository;
   private final RoleAssignmentRepository roleAssignmentRepository;
   private final UserGroupRepository userGroupRepository;
+  private final ExecutorService executorService;
+
+  public UserGroupChangeConsumerImpl(ACLRepository aclRepository, RoleAssignmentRepository roleAssignmentRepository,
+      UserGroupRepository userGroupRepository, String executorServiceSuffix) {
+    this.aclRepository = aclRepository;
+    this.roleAssignmentRepository = roleAssignmentRepository;
+    this.userGroupRepository = userGroupRepository;
+    String changeConsumerThreadFactory = String.format("%s-user-group-change-consumer", executorServiceSuffix) + "-%d";
+    // Number of threads = Number of Available Cores * (1 + (Wait time / Service time) )
+    this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2,
+        new ThreadFactoryBuilder().setNameFormat(changeConsumerThreadFactory).build());
+  }
 
   @Override
   public void consumeUpdateEvent(String id, UserGroupDBO updatedUserGroup) {
+    if (updatedUserGroup.getUsers() == null) {
+      return;
+    }
+
     Optional<UserGroupDBO> userGroup = userGroupRepository.findById(id);
     if (!userGroup.isPresent()) {
       return;
@@ -69,7 +82,6 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
     long numberOfACLsCreated = 0;
     long numberOfACLsDeleted = 0;
 
-    ExecutorService executorService = Executors.newFixedThreadPool(getRuntime().availableProcessors() * 2);
     try {
       for (Future<Result> future : executorService.invokeAll(tasksToExecute)) {
         Result result = future.get();
@@ -79,8 +91,8 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
     } catch (ExecutionException ex) {
       throw new GeneralException("", ex.getCause());
     } catch (InterruptedException ex) {
-      // Should never happen though
       Thread.currentThread().interrupt();
+      throw new GeneralException("", ex);
     }
 
     log.info("Number of ACLs created: {}", numberOfACLsCreated);
@@ -113,8 +125,11 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
     public Result call() {
       Set<String> existingPrincipals = Sets.newHashSet(
           Sets.newHashSet(aclRepository.getDistinctPrincipalsInACLsForRoleAssignment(roleAssignmentDBO.getId())));
-      Set<String> principalsAddedToUserGroup = Sets.difference(updatedUserGroup.getUsers(), existingPrincipals);
-      Set<String> principalRemovedFromUserGroup = Sets.difference(existingPrincipals, updatedUserGroup.getUsers());
+      Set<String> principalsAddedToUserGroup =
+          Sets.difference(updatedUserGroup.getUsers() == null ? Collections.emptySet() : updatedUserGroup.getUsers(),
+              existingPrincipals);
+      Set<String> principalRemovedFromUserGroup = Sets.difference(existingPrincipals,
+          updatedUserGroup.getUsers() == null ? Collections.emptySet() : updatedUserGroup.getUsers());
 
       long numberOfACLsDeleted =
           aclRepository.deleteByRoleAssignmentIdAndPrincipals(roleAssignmentDBO.getId(), principalRemovedFromUserGroup);

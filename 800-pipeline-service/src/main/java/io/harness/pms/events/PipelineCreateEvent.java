@@ -45,6 +45,6 @@ public class PipelineCreateEvent implements Event {
   @JsonIgnore
   @Override
   public String getEventType() {
-    return "PipelineCreated";
+    return PipelineOutboxEvents.PIPELINE_CREATED;
   }
 }

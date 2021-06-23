@@ -10,6 +10,7 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.encryptors.VaultEncryptor;
 import io.harness.exception.SecretManagementDelegateException;
 import io.harness.helpers.ext.cyberark.CyberArkReadResponse;
@@ -24,7 +25,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Response;
@@ -76,8 +77,8 @@ public class CyberArkVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> fetchValueInternal(encryptedRecord.getPath(), cyberArkConfig), 15, TimeUnit.SECONDS, true);
+        return HTimeLimiter.callInterruptible(
+            timeLimiter, Duration.ofSeconds(15), () -> fetchValueInternal(encryptedRecord.getPath(), cyberArkConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("decryption failed. trial num: {}", failedAttempts, e);

@@ -29,6 +29,7 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.timeout.TimeoutDetails;
 
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.ByteString;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -113,14 +114,6 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   List<String> adviserTimeoutInstanceIds;
   TimeoutDetails adviserTimeoutDetails;
 
-  public boolean isChildSpawningMode() {
-    return mode == ExecutionMode.CHILD || mode == ExecutionMode.CHILDREN || mode == ExecutionMode.CHILD_CHAIN;
-  }
-
-  public boolean isTaskSpawningMode() {
-    return mode == ExecutionMode.TASK || mode == ExecutionMode.TASK_CHAIN;
-  }
-
   public ExecutableResponse obtainLatestExecutableResponse() {
     if (isEmpty(executableResponses)) {
       return null;
@@ -196,7 +189,18 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
                  .field(NodeExecutionKeys.status)
                  .field(NodeExecutionKeys.oldRetry)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("planExecutionId_mode_status_idx")
+                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.mode)
+                 .field(NodeExecutionKeys.status)
+                 .build())
         .add(CompoundMongoIndex.builder().name("previous_id_idx").field(NodeExecutionKeys.previousId).build())
         .build();
+  }
+
+  public ByteString getResolvedStepParametersBytes() {
+    String resolvedStepParams = this.getResolvedStepParameters().toJson();
+    return ByteString.copyFromUtf8(resolvedStepParams);
   }
 }

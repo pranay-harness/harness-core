@@ -14,6 +14,7 @@ import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.expression.functors.DateTimeFunctor;
 import io.harness.text.StringReplacer;
 import io.harness.text.resolver.ExpressionResolver;
+import io.harness.text.resolver.TrackingExpressionResolver;
 
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
@@ -24,7 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -48,9 +48,6 @@ public class EngineExpressionEvaluator {
   public static final String EXPR_END_ESC = ">";
   public static final String HARNESS_INTERNAL_VARIABLE_PREFIX = "__HVAR_";
 
-  private static final Pattern VARIABLE_PATTERN = Pattern.compile(EXPR_START_ESC + "[^<>]*" + EXPR_END_ESC);
-  private static final Pattern SECRET_VARIABLE_PATTERN =
-      Pattern.compile(EXPR_START_ESC + "secret(Manager|Delegate)\\.[^<>]*" + EXPR_END_ESC);
   private static final Pattern VALID_VARIABLE_FIELD_NAME_PATTERN = Pattern.compile("^[a-zA-Z_][a-zA-Z_0-9]*$");
   private static final Pattern ALIAS_NAME_PATTERN = Pattern.compile("^[a-zA-Z_][a-zA-Z_0-9]*$");
 
@@ -176,7 +173,7 @@ public class EngineExpressionEvaluator {
   }
 
   public String renderExpression(String expression, Map<String, Object> ctx, boolean skipUnresolvedExpressionsCheck) {
-    if (!hasVariables(expression)) {
+    if (!hasExpressions(expression)) {
       return expression;
     }
     return renderExpressionInternal(expression, prepareContext(ctx), skipUnresolvedExpressionsCheck, MAX_DEPTH);
@@ -220,7 +217,7 @@ public class EngineExpressionEvaluator {
   }
 
   public PartialEvaluateResult partialRenderExpression(String expression, Map<String, Object> ctx) {
-    if (!hasVariables(expression)) {
+    if (!hasExpressions(expression)) {
       return PartialEvaluateResult.createCompleteResult(expression);
     }
     return partialRenderExpressionInternal(expression, prepareContext(ctx), new HashMap<>(), MAX_DEPTH);
@@ -232,17 +229,15 @@ public class EngineExpressionEvaluator {
     PartialEvaluateExpressionResolver resolver = new PartialEvaluateExpressionResolver(this, ctx, partialCtx, depth);
     String finalExpression = runStringReplacer(expression, resolver);
     ctx.addToContext(partialCtx);
-    List<String> variables = findVariables(finalExpression);
-    if (EmptyPredicate.isEmpty(variables)) {
+    if (!hasExpressions(finalExpression)) {
       return PartialEvaluateResult.createCompleteResult(evaluateInternal(expression, ctx));
     }
 
-    boolean hasNonInternalVariables =
-        variables.stream().anyMatch(v -> !v.startsWith(EXPR_START + HARNESS_INTERNAL_VARIABLE_PREFIX));
+    List<String> variables = findVariables(finalExpression);
+    boolean hasNonInternalVariables = variables != null
+        && variables.stream().anyMatch(v -> !v.startsWith(EXPR_START + HARNESS_INTERNAL_VARIABLE_PREFIX));
     if (hasNonInternalVariables) {
-      finalExpression =
-          new StringReplacer(new HarnessInternalRenderExpressionResolver(partialCtx), EXPR_START, EXPR_END)
-              .replace(finalExpression);
+      finalExpression = runStringReplacer(finalExpression, new HarnessInternalRenderExpressionResolver(partialCtx));
       return PartialEvaluateResult.createPartialResult(finalExpression, partialCtx);
     } else {
       return PartialEvaluateResult.createCompleteResult(renderExpressionInternal(expression, ctx, false, depth));
@@ -267,15 +262,15 @@ public class EngineExpressionEvaluator {
     PartialEvaluateExpressionResolver resolver = new PartialEvaluateExpressionResolver(this, ctx, partialCtx, depth);
     String finalExpression = runStringReplacer(expression, resolver);
     ctx.addToContext(partialCtx);
-    List<String> variables = findVariables(finalExpression);
-    if (EmptyPredicate.isEmpty(variables)) {
+    if (!hasExpressions(finalExpression)) {
       return PartialEvaluateResult.createCompleteResult(evaluateInternal(expression, ctx));
     }
 
-    boolean hasNonInternalVariables =
-        variables.stream().anyMatch(v -> !v.startsWith(EXPR_START + HARNESS_INTERNAL_VARIABLE_PREFIX));
+    List<String> variables = findVariables(finalExpression);
+    boolean hasNonInternalVariables = variables != null
+        && variables.stream().anyMatch(v -> !v.startsWith(EXPR_START + HARNESS_INTERNAL_VARIABLE_PREFIX));
     if (hasNonInternalVariables) {
-      if (isNotSingleExpression(finalExpression)) {
+      if (!isSingleExpression(finalExpression)) {
         finalExpression = createExpression(finalExpression);
       }
       return PartialEvaluateResult.createPartialResult(finalExpression, partialCtx);
@@ -291,13 +286,13 @@ public class EngineExpressionEvaluator {
     }
 
     // Check for cases like <+<+abc>.contains(<+def>)>.
-    if (hasVariables(expressionBlock)) {
+    if (hasExpressions(expressionBlock)) {
       return partialEvaluateExpressionInternal(expressionBlock, ctx, partialCtx, depth - 1);
     }
 
     // If object is another expression, evaluate it recursively.
     Object object = evaluatePrefixCombinations(expressionBlock, ctx, depth);
-    if (object instanceof String && hasVariables((String) object)) {
+    if (object instanceof String && hasExpressions((String) object)) {
       if (createExpression(expressionBlock).equals(object)) {
         // If returned expression is exactly the same, throw exception.
         throw new EngineExpressionEvaluationException(
@@ -333,14 +328,14 @@ public class EngineExpressionEvaluator {
     }
 
     // Check for cases like <+<+abc>.contains(<+def>)>.
-    if (hasVariables(expressionBlock)) {
+    if (hasExpressions(expressionBlock)) {
       return evaluateExpressionInternal(expressionBlock, ctx, depth - 1);
     }
 
     Object object = evaluatePrefixCombinations(expressionBlock, ctx, depth);
 
     // If object is another expression, evaluate it recursively.
-    if (object instanceof String && hasVariables((String) object)) {
+    if (object instanceof String && hasExpressions((String) object)) {
       if (createExpression(expressionBlock).equals(object)) {
         // If returned expression is exactly the same, throw exception.
         throw new EngineExpressionEvaluationException(
@@ -362,7 +357,7 @@ public class EngineExpressionEvaluator {
     Object object = null;
     for (String finalExpression : finalExpressions) {
       try {
-        if (hasVariables(finalExpression)) {
+        if (hasExpressions(finalExpression)) {
           object = evaluateExpressionInternal(finalExpression, ctx, depth - 1);
         } else {
           object = evaluateInternal(finalExpression, ctx);
@@ -405,7 +400,7 @@ public class EngineExpressionEvaluator {
    */
   private List<String> preProcessExpression(@NotNull String expression) {
     String normalizedExpression = applyStaticAliases(expression);
-    if (hasVariables(normalizedExpression)) {
+    if (hasExpressions(normalizedExpression)) {
       return Collections.singletonList(normalizedExpression);
     }
     return fetchPrefixes()
@@ -482,35 +477,20 @@ public class EngineExpressionEvaluator {
     return replacer.replace(expression);
   }
 
-  public static boolean matchesVariablePattern(String str) {
-    if (EmptyPredicate.isEmpty(str)) {
-      return false;
-    }
-    return VARIABLE_PATTERN.matcher(str).matches();
+  public static boolean isSingleExpression(String str) {
+    return TrackingExpressionResolver.isSingleExpression(EXPR_START, EXPR_END, str);
   }
 
-  public static boolean isNotSingleExpression(String str) {
-    if (EmptyPredicate.isEmpty(str)) {
-      return true;
-    }
-    String finalExpression = runStringReplacer(str, new EmptyExpressionResolver());
-    return !EmptyPredicate.isEmpty(finalExpression);
+  public static boolean hasExpressions(String str) {
+    return EmptyPredicate.isNotEmpty(findExpressions(str));
   }
 
-  public static boolean hasVariables(String str) {
-    return hasPattern(str, VARIABLE_PATTERN);
+  public static List<String> findExpressions(String str) {
+    return TrackingExpressionResolver.findExpressions(EXPR_START, EXPR_END, true, false, str);
   }
 
   public static List<String> findVariables(String str) {
-    return findPatterns(str, VARIABLE_PATTERN);
-  }
-
-  public static boolean hasSecretVariables(String str) {
-    return hasPattern(str, SECRET_VARIABLE_PATTERN);
-  }
-
-  public static List<String> findSecretVariables(String str) {
-    return findPatterns(str, SECRET_VARIABLE_PATTERN);
+    return TrackingExpressionResolver.findExpressions(EXPR_START, EXPR_END, true, true, str);
   }
 
   public static boolean validVariableFieldName(String name) {
@@ -528,27 +508,7 @@ public class EngineExpressionEvaluator {
   }
 
   public static String createExpression(String expr) {
-    return expr == null ? null : EXPR_START + expr + EXPR_END;
-  }
-
-  public static boolean hasPattern(String str, Pattern pattern) {
-    if (EmptyPredicate.isEmpty(str)) {
-      return false;
-    }
-    return pattern.matcher(str).find();
-  }
-
-  public static List<String> findPatterns(String str, Pattern pattern) {
-    if (EmptyPredicate.isEmpty(str)) {
-      return Collections.emptyList();
-    }
-
-    List<String> matches = new ArrayList<>();
-    Matcher matcher = pattern.matcher(str);
-    while (matcher.find()) {
-      matches.add(matcher.group(0));
-    }
-    return matches;
+    return TrackingExpressionResolver.createExpression(EXPR_START, EXPR_END, expr);
   }
 
   private static class RenderExpressionResolver implements ExpressionResolver {
@@ -659,13 +619,6 @@ public class EngineExpressionEvaluator {
       } else {
         return createExpression(expression);
       }
-    }
-  }
-
-  private static class EmptyExpressionResolver implements ExpressionResolver {
-    @Override
-    public String resolve(String expression) {
-      return "";
     }
   }
 

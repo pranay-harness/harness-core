@@ -4,7 +4,6 @@ FROM base_jdk
 COPY settings.xml /root/.m2/settings.xml
 ENV OVERRIDE_LOCAL_M2 /root/.m2/repository
 
-ARG BUILD_PURPOSE=?
 ARG GITHUB_USERNAME=?
 ARG GITHUB_PASSWORD=?
 ARG JFROG_USERNAME=?
@@ -12,13 +11,12 @@ ARG JFROG_PASSWORD=?
 ARG PLATFORM=jenkins
 ARG STEP=dockerization
 
-ENV BUILD_PURPOSE ${BUILD_PURPOSE}
-
 RUN cd /root \
     && git clone https://${GITHUB_USERNAME}:${GITHUB_PASSWORD}@github.com/wings-software/portal.git \
     && cd portal \
     && source /etc/profile.d/maven.sh \
     && for i in 1 2 3 4 5; do \
+          BUILD_PURPOSE=CACHE \
           mvn -B -T 2C -Dmaven.repo.local=/root/.m2/repository -s /root/.m2/settings.xml \
               compile test-compile dependency:go-offline \
           && break ; done \

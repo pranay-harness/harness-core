@@ -68,7 +68,7 @@ func (e *runTestsStep) getDiffFiles(ctx context.Context) ([]types.File, error) {
 // Run executes tests with provided args with retries and timeout handling
 func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, error) {
 	if err := e.validate(); err != nil {
-		e.log.Errorw("failed to validate runTestsStep step", "step_id", e.id, zap.Error(err))
+		e.log.Errorw("failed to validate runTests step", "step_id", e.id, zap.Error(err))
 		return nil, int32(1), err
 	}
 	// TODO: Add JEXL resolution to fields that need to be resolved

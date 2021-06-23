@@ -18,8 +18,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PIPELINE)
 public interface PMSExecutionService {
-  String getInputSetYaml(
-      String accountId, String orgId, String projectId, String planExecutionId, boolean pipelineDeleted);
+  String getInputSetYaml(String accountId, String orgId, String projectId, String planExecutionId,
+      boolean pipelineDeleted, boolean resolveExpressions);
 
   Page<PipelineExecutionSummaryEntity> getPipelineExecutionSummaryEntity(Criteria criteria, Pageable pageable);
 

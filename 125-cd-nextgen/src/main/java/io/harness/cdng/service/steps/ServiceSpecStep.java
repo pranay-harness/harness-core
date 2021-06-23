@@ -99,7 +99,7 @@ public class ServiceSpecStep
         (VariablesSweepingOutput) outputObj, StepOutcomeGroup.STAGE.name());
 
     NGVariableOverrideSetsSweepingOutput overrideSetsSweepingOutput =
-        getVariablesOverrideSetsSweepingOutput(ambiance, stepParameters);
+        getVariablesOverrideSetsSweepingOutput(stepParameters);
     executionSweepingOutputResolver.consume(ambiance, "variableOverrideSets", overrideSetsSweepingOutput, null);
     saveExecutionLog(logCallback, "Processed service variables");
   }
@@ -115,12 +115,11 @@ public class ServiceSpecStep
   @VisibleForTesting
   Map<String, Object> getFinalVariablesMap(
       Ambiance ambiance, ServiceSpecStepParameters stepParameters, NGLogCallback logCallback) {
-    List<NGVariable> variableList = stepParameters.getOriginalVariables();
+    ParameterField<List<NGVariable>> variableList = stepParameters.getOriginalVariables();
     Map<String, Object> variables = new HashMap<>();
     Map<String, Object> outputVariables = new VariablesSweepingOutput();
-    if (EmptyPredicate.isNotEmpty(variableList)) {
-      Map<String, Object> originalVariables =
-          NGVariablesUtils.getMapOfVariables(variableList, ambiance.getExpressionFunctorToken());
+    if (!ParameterField.isNull(variableList) && EmptyPredicate.isNotEmpty(variableList.getValue())) {
+      Map<String, Object> originalVariables = NGVariablesUtils.getMapOfVariables(variableList.getValue());
       variables.putAll(originalVariables);
       outputVariables.putAll(originalVariables);
     }
@@ -139,11 +138,12 @@ public class ServiceSpecStep
     for (String useVariableOverrideSet : stepParameters.getStageOverridesUseVariableOverrideSets().getValue()) {
       List<NGVariableOverrideSets> variableOverrideSetsList =
           stepParameters.getOriginalVariableOverrideSets()
+              .getValue()
               .stream()
               .map(NGVariableOverrideSetWrapper::getOverrideSet)
               .filter(overrideSet -> overrideSet.getIdentifier().equals(useVariableOverrideSet))
               .collect(Collectors.toList());
-      if (variableOverrideSetsList.size() == 0) {
+      if (variableOverrideSetsList.isEmpty()) {
         throw new InvalidRequestException(
             String.format("Invalid identifier [%s] in variable override sets", useVariableOverrideSet));
       }
@@ -162,25 +162,26 @@ public class ServiceSpecStep
 
   private Map<String, Object> addStageOverrides(Ambiance ambiance, Map<String, Object> variables,
       ServiceSpecStepParameters stepParameters, NGLogCallback logCallback) {
-    if (EmptyPredicate.isEmpty(stepParameters.getStageOverrideVariables())) {
+    if (ParameterField.isNull(stepParameters.getStageOverrideVariables())
+        || EmptyPredicate.isEmpty(stepParameters.getStageOverrideVariables().getValue())) {
       return variables;
     }
 
     saveExecutionLog(logCallback, "Applying service variable stage overrides");
     return NGVariablesUtils.applyVariableOverrides(
-        variables, stepParameters.getStageOverrideVariables(), ambiance.getExpressionFunctorToken());
+        variables, stepParameters.getStageOverrideVariables().getValue(), ambiance.getExpressionFunctorToken());
   }
 
   private NGVariableOverrideSetsSweepingOutput getVariablesOverrideSetsSweepingOutput(
-      Ambiance ambiance, ServiceSpecStepParameters stepParameters) {
+      ServiceSpecStepParameters stepParameters) {
     NGVariableOverrideSetsSweepingOutput overrideSetsSweepingOutput = new NGVariableOverrideSetsSweepingOutput();
-    if (stepParameters.getOriginalVariableOverrideSets() == null) {
+    if (ParameterField.isNull(stepParameters.getOriginalVariableOverrideSets())) {
       return overrideSetsSweepingOutput;
     }
-    stepParameters.getOriginalVariableOverrideSets().forEach(overrideSets
+    stepParameters.getOriginalVariableOverrideSets().getValue().forEach(overrideSets
         -> overrideSetsSweepingOutput.put(overrideSets.getOverrideSet().getIdentifier(),
-            new NGVariableOverrideSetsSweepingOutputInner(NGVariablesUtils.getMapOfVariables(
-                overrideSets.getOverrideSet().getVariables(), ambiance.getExpressionFunctorToken()))));
+            new NGVariableOverrideSetsSweepingOutputInner(
+                NGVariablesUtils.getMapOfVariables(overrideSets.getOverrideSet().getVariables()))));
     return overrideSetsSweepingOutput;
   }
 

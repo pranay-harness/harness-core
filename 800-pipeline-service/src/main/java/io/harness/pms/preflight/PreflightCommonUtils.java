@@ -27,7 +27,7 @@ public class PreflightCommonUtils {
 
   public PreFlightEntityErrorInfo getInternalIssueErrorInfo() {
     return PreFlightEntityErrorInfo.builder()
-        .summary("Internal Server Error, please contact Harness Support")
+        .summary("Error connecting to systems upstream")
         .causes(Collections.singletonList(PreFlightCause.builder().cause("Internal Server Error").build()))
         .build();
   }

@@ -3,19 +3,20 @@ package io.harness.health;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 
+import io.harness.concurrent.HTimeLimiter;
+
 import com.codahale.metrics.health.HealthCheck;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import lombok.Builder;
 import lombok.Value;
 
@@ -29,7 +30,7 @@ public class HealthService extends HealthCheck {
   @Inject
   public HealthService(ExecutorService executorService) {
     initial = true;
-    timeLimiter = new SimpleTimeLimiter(executorService);
+    timeLimiter = HTimeLimiter.create(executorService);
     this.executorService = executorService;
   }
 
@@ -74,14 +75,15 @@ public class HealthService extends HealthCheck {
   @SuppressWarnings("PMD")
   private Throwable checkMonitor(HealthMonitor monitor) {
     try {
-      Throwable exception = timeLimiter.callWithTimeout(() -> {
-        try {
-          monitor.isHealthy();
-          return null;
-        } catch (Exception ex) {
-          return ex;
-        }
-      }, monitor.healthExpectedResponseTimeout().toMillis(), TimeUnit.MILLISECONDS, true);
+      Throwable exception = HTimeLimiter.callInterruptible(
+          timeLimiter, Duration.ofMillis(monitor.healthExpectedResponseTimeout().toMillis()), () -> {
+            try {
+              monitor.isHealthy();
+              return null;
+            } catch (Exception ex) {
+              return ex;
+            }
+          });
       return exception;
     } catch (UncheckedTimeoutException exception) {
       return new HealthException(

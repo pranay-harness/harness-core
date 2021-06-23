@@ -56,7 +56,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
   public GitAwarePersistenceNewImpl(MongoTemplate mongoTemplate, GitSyncSdkService gitSyncSdkService,
       Map<String, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMap, SCMGitSyncHelper scmGitSyncHelper,
       GitSyncMsvcHelper gitSyncMsvcHelper, @Named("GitSyncObjectMapper") ObjectMapper objectMapper,
-      TransactionTemplate transactionTemplate) {
+      @Named("OUTBOX_TRANSACTION_TEMPLATE") TransactionTemplate transactionTemplate) {
     this.mongoTemplate = mongoTemplate;
     this.gitSyncSdkService = gitSyncSdkService;
     this.gitPersistenceHelperServiceMap = gitPersistenceHelperServiceMap;
@@ -138,7 +138,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
     final GitSyncBranchContext gitSyncBranchContext =
         GlobalContextManager.get(GitSyncBranchContext.NG_GIT_SYNC_CONTEXT);
     if (gitSyncBranchContext == null) {
-      log.error("Git branch context set as null even git sync is enabled");
+      log.warn("Git branch context set as null even git sync is enabled");
       // Setting to default branch in case it is not set.
       return GitEntityInfo.builder().yamlGitConfigId(DEFAULT).branch(DEFAULT).build();
     }
@@ -267,7 +267,7 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
         return createGitSyncCriteriaForRepoAndBranch(null, null, null, entityClass);
       }
       return createGitSyncCriteriaForRepoAndBranch(gitBranchInfo.getYamlGitConfigId(), gitBranchInfo.getBranch(),
-          gitBranchInfo.isFindDefaultFromOtherBranches(), entityClass);
+          gitBranchInfo.isFindDefaultFromOtherRepos(), entityClass);
     }
     return new Criteria();
   }

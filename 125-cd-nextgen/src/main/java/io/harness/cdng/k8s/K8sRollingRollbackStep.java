@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -74,7 +75,9 @@ public class K8sRollingRollbackStep extends TaskExecutableWithRollback<K8sDeploy
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .build();
 
-    return k8sStepHelper.queueK8sTask(stepElementParameters, rollingRollbackDeployRequest, ambiance, infrastructure)
+    return k8sStepHelper
+        .queueK8sTask(stepElementParameters, rollingRollbackDeployRequest, ambiance,
+            K8sExecutionPassThroughData.builder().infrastructure(infrastructure).build())
         .getTaskRequest();
   }
 

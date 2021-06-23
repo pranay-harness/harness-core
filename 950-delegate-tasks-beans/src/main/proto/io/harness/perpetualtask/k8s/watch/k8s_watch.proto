@@ -6,7 +6,9 @@ option java_multiple_files = true;
 
 message K8sWatchTaskParams {
   string cloud_provider_id = 1;
-  bytes k8s_cluster_config = 2;
+  bytes k8s_cluster_config = 2 [deprecated = true];  // this is currentGen, use k8s_cluster_info instead in NG
   string cluster_id = 3;
   string cluster_name = 4;
+
+  bytes k8s_cluster_info = 5;  // NG
 }

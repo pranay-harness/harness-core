@@ -1,6 +1,7 @@
 package io.harness.delegate.task.git;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.connector.scm.github.GithubApiAccessType.GITHUB_APP;
 import static io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatus.SUCCESS;
 import static io.harness.impl.ScmResponseStatusUtils.convertScmStatusCodeToErrorCode;
 
@@ -10,6 +11,8 @@ import static org.apache.commons.lang3.StringUtils.stripStart;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cistatus.service.GithubAppConfig;
+import io.harness.cistatus.service.GithubService;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.helper.GitApiAccessDecryptionHelper;
@@ -17,12 +20,16 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubAppSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.task.scm.ScmDelegateClient;
 import io.harness.eraro.ErrorCode;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.runtime.SCMRuntimeException;
+import io.harness.git.GitClientHelper;
 import io.harness.product.ci.scm.proto.GetUserReposResponse;
 import io.harness.product.ci.scm.proto.SCMGrpc;
 import io.harness.service.ScmServiceClient;
@@ -38,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.DX)
 public class GitCommandTaskHandler {
   @Inject private NGGitService gitService;
+  @Inject private GithubService gitHubService;
   @Inject private NGErrorHelper ngErrorHelper;
   @Inject private ScmDelegateClient scmDelegateClient;
   @Inject private ScmServiceClient scmServiceClient;
@@ -89,18 +97,47 @@ public class GitCommandTaskHandler {
   }
 
   private void handleApiAccessValidation(ScmConnector scmConnector) {
-    if (GitApiAccessDecryptionHelper.hasApiAccess(scmConnector)) {
-      GetUserReposResponse reposResponse;
-      try {
-        reposResponse = scmDelegateClient.processScmRequest(
-            c -> scmServiceClient.getUserRepos(scmConnector, SCMGrpc.newBlockingStub(c)));
-      } catch (Exception e) {
-        throw SCMRuntimeException.builder().errorCode(ErrorCode.UNEXPECTED).cause(e).build();
+    if (!GitApiAccessDecryptionHelper.hasApiAccess(scmConnector)) {
+      return;
+    }
+
+    if (scmConnector instanceof GithubConnectorDTO) {
+      GithubConnectorDTO gitHubConnector = (GithubConnectorDTO) scmConnector;
+      if (gitHubConnector.getApiAccess().getType() == GITHUB_APP) {
+        validateGitHubApp(gitHubConnector);
+        return;
       }
-      if (reposResponse != null && reposResponse.getStatus() > 300) {
-        ErrorCode errorCode = convertScmStatusCodeToErrorCode(reposResponse.getStatus());
-        throw SCMRuntimeException.builder().errorCode(errorCode).message(reposResponse.getError()).build();
-      }
+    }
+
+    GetUserReposResponse reposResponse;
+    try {
+      reposResponse = scmDelegateClient.processScmRequest(
+          c -> scmServiceClient.getUserRepos(scmConnector, SCMGrpc.newBlockingStub(c)));
+    } catch (Exception e) {
+      throw SCMRuntimeException.builder().errorCode(ErrorCode.UNEXPECTED).cause(e).build();
+    }
+    if (reposResponse != null && reposResponse.getStatus() > 300) {
+      ErrorCode errorCode = convertScmStatusCodeToErrorCode(reposResponse.getStatus());
+      throw SCMRuntimeException.builder().errorCode(errorCode).message(reposResponse.getError()).build();
+    }
+  }
+
+  private void validateGitHubApp(GithubConnectorDTO gitHubConnector) {
+    GithubApiAccessDTO apiAccess = gitHubConnector.getApiAccess();
+    GithubAppSpecDTO apiAccessDTO = (GithubAppSpecDTO) apiAccess.getSpec();
+    try {
+      gitHubService.getToken(GithubAppConfig.builder()
+                                 .appId(apiAccessDTO.getApplicationId())
+                                 .installationId(apiAccessDTO.getInstallationId())
+                                 .privateKey(String.valueOf(apiAccessDTO.getPrivateKeyRef().getDecryptedValue()))
+                                 .githubUrl(GitClientHelper.getGithubApiURL(gitHubConnector.getUrl()))
+                                 .build());
+    } catch (Exception e) {
+      throw SCMRuntimeException.builder()
+          .errorCode(ErrorCode.SCM_UNAUTHORIZED)
+          .cause(e.getCause())
+          .message(e.getCause().getLocalizedMessage())
+          .build();
     }
   }
 }

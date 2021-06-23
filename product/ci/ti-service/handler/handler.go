@@ -39,6 +39,7 @@ func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLog
 			sr.Use(AuthMiddleware(config))
 		}
 
+		sr.Get("/info", HandleReportsInfo(db, log))
 		sr.Post("/write", HandleWrite(db, log))
 		sr.Get("/summary", HandleSummary(db, log))
 		sr.Get("/test_cases", HandleTestCases(db, log))
@@ -53,6 +54,7 @@ func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLog
 			sr.Use(AuthMiddleware(config))
 		}
 
+		sr.Get("/info", HandleIntelligenceInfo(db, log))
 		sr.Post("/select", HandleSelect(tidb, db, log))
 		sr.Get("/overview", HandleOverview(db, log))
 		sr.Post("/uploadcg", HandleUploadCg(tidb, db, log))
@@ -63,6 +65,14 @@ func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLog
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, "OK")
 	})
+
+	// Readiness check
+	r.Mount("/ready/healthz", func() http.Handler {
+		sr := chi.NewRouter()
+		sr.Get("/", HandlePing(db, log))
+
+		return sr
+	}())
 
 	return r
 }

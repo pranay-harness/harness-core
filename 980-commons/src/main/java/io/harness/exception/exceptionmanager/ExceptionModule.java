@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
 import io.harness.exception.exceptionmanager.exceptionhandler.GeneralExceptionHandler;
+import io.harness.exception.exceptionmanager.exceptionhandler.JexlRuntimeExceptionHandler;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
@@ -27,5 +28,7 @@ public class ExceptionModule extends AbstractModule {
 
     GeneralExceptionHandler.exceptions().forEach(
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(GeneralExceptionHandler.class));
+    JexlRuntimeExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(JexlRuntimeExceptionHandler.class));
   }
 }

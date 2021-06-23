@@ -10,6 +10,8 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.ExplanationException;
+import io.harness.exception.WingsException;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.SCMGrpc;
@@ -49,9 +51,15 @@ public class ScmGitPRTask extends AbstractDelegateRunnableTask {
         CreatePRResponse createPRResponse = scmDelegateClient.processScmRequest(c
             -> scmServiceClient.createPullRequest(
                 scmPushTaskParams.getScmConnector(), gitPRCreateRequest, SCMGrpc.newBlockingStub(c)));
-        ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(createPRResponse.getStatus(),
-            String.format("Could not create the pull request from %s to %s", gitPRCreateRequest.getSourceBranch(),
-                gitPRCreateRequest.getTargetBranch()));
+        try {
+          ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
+              createPRResponse.getStatus(), createPRResponse.getError());
+        } catch (WingsException e) {
+          throw new ExplanationException(
+              String.format("Could not create the pull request from %s to %s", gitPRCreateRequest.getSourceBranch(),
+                  gitPRCreateRequest.getTargetBranch()),
+              e);
+        }
         return ScmPRTaskResponseData.builder()
             .prTaskType(scmPushTaskParams.getGitPRTaskType())
             .createPRResponse(createPRResponse)
