@@ -8,18 +8,18 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.util.Collections.emptyMap;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.pcf.CfInternalConfig;
+import io.harness.delegate.beans.pcf.CfServiceData;
+import io.harness.delegate.task.pcf.CfCommandRequest;
+import io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType;
+import io.harness.delegate.task.pcf.request.CfCommandRollbackRequest;
 
 import software.wings.api.pcf.DeploySweepingOutputPcf;
 import software.wings.api.pcf.PcfDeployStateExecutionData;
-import software.wings.api.pcf.PcfServiceData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
 import software.wings.beans.Application;
 import software.wings.beans.InstanceUnitType;
-import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
-import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -53,8 +53,8 @@ public class PcfRollbackState extends PcfDeployState {
   }
 
   @Override
-  public PcfCommandRequest getPcfCommandRequest(ExecutionContext context, Application application, String activityId,
-      SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig, Integer updateCount,
+  public CfCommandRequest getPcfCommandRequest(ExecutionContext context, Application application, String activityId,
+      SetupSweepingOutputPcf setupSweepingOutputPcf, CfInternalConfig pcfConfig, Integer updateCount,
       Integer downsizeUpdateCount, PcfDeployStateExecutionData stateExecutionData,
       PcfInfrastructureMapping infrastructureMapping) {
     DeploySweepingOutputPcf deploySweepingOutputPcf =
@@ -66,28 +66,28 @@ public class PcfRollbackState extends PcfDeployState {
     // Deploy sends emptyInstanceData and PcfCommandTask figured out which apps to be resized,
     // in case of rollback, we send InstanceData mentioning apps and their reset counts
     StringBuilder updateDetails = new StringBuilder();
-    List<PcfServiceData> instanceData = new ArrayList<>();
+    List<CfServiceData> instanceData = new ArrayList<>();
     if (deploySweepingOutputPcf != null && deploySweepingOutputPcf.getInstanceData() != null) {
-      deploySweepingOutputPcf.getInstanceData().forEach(pcfServiceData -> {
-        Integer temp = pcfServiceData.getDesiredCount();
-        pcfServiceData.setDesiredCount(pcfServiceData.getPreviousCount());
-        pcfServiceData.setPreviousCount(temp);
+      deploySweepingOutputPcf.getInstanceData().forEach(cfServiceData -> {
+        Integer temp = cfServiceData.getDesiredCount();
+        cfServiceData.setDesiredCount(cfServiceData.getPreviousCount());
+        cfServiceData.setPreviousCount(temp);
         updateDetails.append(new StringBuilder()
                                  .append("App Name: ")
-                                 .append(pcfServiceData.getName())
+                                 .append(cfServiceData.getName())
                                  .append(", DesiredCount: ")
-                                 .append(pcfServiceData.getDesiredCount())
+                                 .append(cfServiceData.getDesiredCount())
                                  .append("}\n")
                                  .toString());
 
-        instanceData.add(pcfServiceData);
+        instanceData.add(cfServiceData);
       });
     }
 
     stateExecutionData.setUpdateDetails(updateDetails.toString());
     stateExecutionData.setActivityId(activityId);
 
-    return PcfCommandRollbackRequest.builder()
+    return CfCommandRollbackRequest.builder()
         .activityId(activityId)
         .commandName(PCF_RESIZE_COMMAND)
         .workflowExecutionId(context.getWorkflowExecutionId())
@@ -153,12 +153,12 @@ public class PcfRollbackState extends PcfDeployState {
   }
 
   @Override
-  public Integer getUpsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig) {
+  public Integer getUpsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf, CfInternalConfig pcfConfig) {
     return -1;
   }
 
   @Override
-  public Integer getDownsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig) {
+  public Integer getDownsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf, CfInternalConfig pcfConfig) {
     return -1;
   }
 

@@ -1,5 +1,6 @@
 package io.harness.ccm.graphql.dto.common;
 
+import io.leangen.graphql.annotations.GraphQLNonNull;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
@@ -7,6 +8,6 @@ import lombok.Value;
 @Value
 @Builder
 public class TimeSeriesDataPoints {
-  List<DataPoint> values;
-  Long time;
+  @GraphQLNonNull List<DataPoint> values;
+  @GraphQLNonNull Long time;
 }

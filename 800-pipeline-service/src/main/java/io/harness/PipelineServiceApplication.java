@@ -55,6 +55,7 @@ import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.approval.ApprovalInstanceExpirationJob;
 import io.harness.pms.approval.ApprovalInstanceHandler;
 import io.harness.pms.event.PMSEventConsumerService;
+import io.harness.pms.event.featureflag.PipelineServiceFeatureFlagConsumer;
 import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.inputset.gitsync.InputSetEntityGitSyncHelper;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTO;
@@ -529,7 +530,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 2);
     pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 4);
     pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 4);
-
+    pipelineEventConsumerController.register(injector.getInstance(PipelineServiceFeatureFlagConsumer.class), 1);
     pipelineEventConsumerController.register(injector.getInstance(SdkResponseEventRedisConsumer.class), 5);
   }
 

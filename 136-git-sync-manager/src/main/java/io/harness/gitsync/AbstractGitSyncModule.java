@@ -23,7 +23,7 @@ public abstract class AbstractGitSyncModule extends AbstractModule {
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
       bind(Consumer.class)
-          .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CREATE_BRANCH_EVENT_STREAM))
+          .annotatedWith(Names.named(EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM))
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
@@ -34,10 +34,10 @@ public abstract class AbstractGitSyncModule extends AbstractModule {
               EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM_MAX_PROCESSING_TIME,
               EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM_BATCH_SIZE));
       bind(Consumer.class)
-          .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CREATE_BRANCH_EVENT_STREAM))
-          .toInstance(RedisConsumer.of(EventsFrameworkConstants.GIT_CREATE_BRANCH_EVENT_STREAM, NG_MANAGER,
-              getRedisConfig(), EventsFrameworkConstants.GIT_CREATE_BRANCH_EVENT_STREAM_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.GIT_CREATE_BRANCH_EVENT_STREAM_BATCH_SIZE));
+          .annotatedWith(Names.named(EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM))
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM, NG_MANAGER,
+              getRedisConfig(), EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM_BATCH_SIZE));
     }
   }
 

@@ -53,12 +53,17 @@ public class CIK8CleanupTaskHandler implements CICleanupTaskHandler {
       try (
           KubernetesClient kubernetesClient = k8sConnectorHelper.createKubernetesClient(taskParams.getK8sConnector())) {
         boolean podsDeleted = deletePods(kubernetesClient, namespace, taskParams.getPodNameList());
-        boolean serviceDeleted = deleteServices(kubernetesClient, namespace, taskParams.getServiceNameList());
-        boolean secretsDeleted = deleteSecrets(
-            kubernetesClient, namespace, taskParams.getPodNameList(), taskParams.getCleanupContainerNames());
-        if (podsDeleted && serviceDeleted && secretsDeleted) {
-          return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+        if (podsDeleted) {
+          boolean serviceDeleted = deleteServices(kubernetesClient, namespace, taskParams.getServiceNameList());
+          boolean secretsDeleted = deleteSecrets(
+              kubernetesClient, namespace, taskParams.getPodNameList(), taskParams.getCleanupContainerNames());
+          if (podsDeleted && serviceDeleted && secretsDeleted) {
+            return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+          } else {
+            return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+          }
         } else {
+          log.error("Failed to delete pod {}", taskParams.getPodNameList());
           return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
         }
       } catch (Exception ex) {

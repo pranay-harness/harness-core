@@ -12,6 +12,7 @@ import io.harness.commandlibrary.server.service.intfc.CommandArchiveHandler;
 import io.harness.commandlibrary.server.service.intfc.CommandService;
 import io.harness.commandlibrary.server.service.intfc.CommandStoreService;
 import io.harness.commandlibrary.server.service.intfc.CommandVersionService;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.persistence.HPersistence;
@@ -25,7 +26,6 @@ import software.wings.service.impl.security.NoOpSecretManagerImpl;
 import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.security.SecretManager;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
@@ -58,7 +58,7 @@ public class CommandLibraryServerModule extends AbstractModule {
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
 
-    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
     bind(CommandStoreService.class).to(CommandStoreServiceImpl.class);
     bind(CommandService.class).to(CommandServiceImpl.class);
     bind(CommandVersionService.class).to(CommandVersionServiceImpl.class);

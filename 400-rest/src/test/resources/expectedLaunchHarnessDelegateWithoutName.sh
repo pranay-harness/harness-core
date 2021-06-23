@@ -28,4 +28,5 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f | head -c 6
 -e USE_CDN=false \
 -e CDN_URL=http://localhost:9500 \
 -e JRE_VERSION=1.8.0_242 \
+-e CLIENT_TOOLS_DOWNLOAD_DISABLED=false \
 harness/delegate:latest

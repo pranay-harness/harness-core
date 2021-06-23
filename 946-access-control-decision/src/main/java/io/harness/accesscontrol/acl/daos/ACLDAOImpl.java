@@ -15,6 +15,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,8 @@ public class ACLDAOImpl implements ACLDAO {
   private final Set<String> resourceTypes;
 
   @Inject
-  public ACLDAOImpl(ACLRepository aclRepository, ScopeService scopeService, Map<String, ScopeLevel> scopeLevels) {
+  public ACLDAOImpl(@Named(ACL.PRIMARY_COLLECTION) ACLRepository aclRepository, ScopeService scopeService,
+      Map<String, ScopeLevel> scopeLevels) {
     this.aclRepository = aclRepository;
     this.scopeService = scopeService;
     this.resourceTypes = scopeLevels.values().stream().map(ScopeLevel::getResourceType).collect(Collectors.toSet());
@@ -118,11 +120,6 @@ public class ACLDAOImpl implements ACLDAO {
   @Override
   public long saveAll(List<ACL> acls) {
     return aclRepository.insertAllIgnoringDuplicates(acls);
-  }
-
-  @Override
-  public void deleteAll(List<ACL> acls) {
-    aclRepository.deleteAll(acls);
   }
 
   @Override

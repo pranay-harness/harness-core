@@ -15,8 +15,6 @@ public interface ACLDAO {
 
   long saveAll(List<ACL> acls);
 
-  void deleteAll(List<ACL> acls);
-
   long deleteByRoleAssignment(String roleAssignmentId);
 
   List<ACL> getByUserGroup(String scope, String userGroupIdentifier);

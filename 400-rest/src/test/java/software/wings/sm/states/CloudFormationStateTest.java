@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STA
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.TATHAGAT;
@@ -13,7 +14,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.CloudFormationSourceType.TEMPLATE_BODY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;

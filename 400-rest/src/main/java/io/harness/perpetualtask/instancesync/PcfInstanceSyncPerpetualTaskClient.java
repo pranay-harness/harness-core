@@ -12,6 +12,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.pcf.CfInternalConfig;
+import io.harness.delegate.task.pcf.CfCommandRequest;
+import io.harness.delegate.task.pcf.request.CfInstanceSyncRequest;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -21,12 +24,11 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
-import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
 import software.wings.service.impl.instance.PcfInstanceSyncPTDelegateParams;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.mappers.artifact.CfConfigToInternalMapper;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -73,25 +75,25 @@ public class PcfInstanceSyncPerpetualTaskClient implements PerpetualTaskServiceC
   @Override
   public DelegateTask getValidationTask(PerpetualTaskClientContext clientContext, String accountId) {
     PcfInstanceSyncPTDelegateParams perpetualTaskParams = getPcfInstanceSyncPTDelegateParams(clientContext);
-    PcfConfig pcfConfig = perpetualTaskParams.getPcfConfig();
-    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
-    return buildDelegateTask(perpetualTaskParams, pcfConfig, encryptionDetails);
+    CfInternalConfig cfInternalConfig = perpetualTaskParams.getPcfConfig();
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(cfInternalConfig, null, null);
+    return buildDelegateTask(perpetualTaskParams, cfInternalConfig, encryptionDetails);
   }
 
-  private DelegateTask buildDelegateTask(PcfInstanceSyncPTDelegateParams perpetualTaskParams, PcfConfig pcfConfig,
-      List<EncryptedDataDetail> encryptionDetails) {
+  private DelegateTask buildDelegateTask(PcfInstanceSyncPTDelegateParams perpetualTaskParams,
+      CfInternalConfig pcfConfig, List<EncryptedDataDetail> encryptionDetails) {
     return DelegateTask.builder()
         .accountId(pcfConfig.getAccountId())
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
         .data(TaskData.builder()
                   .async(false)
                   .taskType(TaskType.PCF_COMMAND_TASK.name())
-                  .parameters(new Object[] {PcfInstanceSyncRequest.builder()
+                  .parameters(new Object[] {CfInstanceSyncRequest.builder()
                                                 .pcfConfig(pcfConfig)
                                                 .pcfApplicationName(perpetualTaskParams.getApplicationName())
                                                 .organization(perpetualTaskParams.getOrgName())
                                                 .space(perpetualTaskParams.getSpace())
-                                                .pcfCommandType(PcfCommandRequest.PcfCommandType.APP_DETAILS)
+                                                .pcfCommandType(CfCommandRequest.PcfCommandType.APP_DETAILS)
                                                 .timeoutIntervalInMin((int) TimeUnit.SECONDS.toMinutes(TIMEOUT_SECONDS))
                                                 .build(),
                       encryptionDetails})
@@ -108,24 +110,25 @@ public class PcfInstanceSyncPerpetualTaskClient implements PerpetualTaskServiceC
         clientParams.get(HARNESS_APPLICATION_ID));
   }
 
-  private PcfInstanceSyncPTDelegateParams getPerpetualTaskParamsInternal(
-      PcfInfrastructureMapping pcfInfrastructureMapping, String applicationName) {
-    SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
-    PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
-    return PcfInstanceSyncPTDelegateParams.builder()
-        .applicationName(applicationName)
-        .orgName(pcfInfrastructureMapping.getOrganization())
-        .space(pcfInfrastructureMapping.getSpace())
-        .pcfConfig(pcfConfig)
-        .infraMappingId(pcfInfrastructureMapping.getUuid())
-        .build();
-  }
-
   private PcfInstanceSyncPTDelegateParams getPerpetualTaskParams(
       String infraMappingId, String applicationName, String appId) {
     PcfInfrastructureMapping pcfInfrastructureMapping =
         (PcfInfrastructureMapping) infraMappingService.get(appId, infraMappingId);
 
     return getPerpetualTaskParamsInternal(pcfInfrastructureMapping, applicationName);
+  }
+
+  private PcfInstanceSyncPTDelegateParams getPerpetualTaskParamsInternal(
+      PcfInfrastructureMapping pcfInfrastructureMapping, String applicationName) {
+    SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
+    CfInternalConfig cfInternalConfig =
+        CfConfigToInternalMapper.toCfInternalConfig((PcfConfig) settingAttribute.getValue());
+    return PcfInstanceSyncPTDelegateParams.builder()
+        .applicationName(applicationName)
+        .orgName(pcfInfrastructureMapping.getOrganization())
+        .space(pcfInfrastructureMapping.getSpace())
+        .pcfConfig(cfInternalConfig)
+        .infraMappingId(pcfInfrastructureMapping.getUuid())
+        .build();
   }
 }

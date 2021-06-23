@@ -65,6 +65,11 @@ public class GithubStore implements GitStoreConfig, Visitable, WithConnectorRef 
     return ManifestStoreType.GITHUB;
   }
 
+  @Override
+  public ParameterField<String> getConnectorReference() {
+    return connectorRef;
+  }
+
   public GithubStore cloneInternal() {
     return GithubStore.builder()
         .connectorRef(connectorRef)

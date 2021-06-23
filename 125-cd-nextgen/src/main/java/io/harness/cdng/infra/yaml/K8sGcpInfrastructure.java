@@ -44,6 +44,11 @@ public class K8sGcpInfrastructure implements Infrastructure, Visitable, WithConn
   }
 
   @Override
+  public ParameterField<String> getConnectorReference() {
+    return connectorRef;
+  }
+
+  @Override
   public String getKind() {
     return InfrastructureKind.KUBERNETES_GCP;
   }

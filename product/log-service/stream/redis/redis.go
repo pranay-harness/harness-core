@@ -223,6 +223,14 @@ func (r *Redis) CopyTo(ctx context.Context, key string, wc io.WriteCloser) error
 	return nil
 }
 
+func (r *Redis) Ping(ctx context.Context) error {
+	_, err := r.Client.Ping().Result()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Info returns back information like TTL, size of a stream
 // NOTE: This is super slow for Redis and hogs up all the resources.
 // TODO: (vistaar) Return only top x entries

@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.delegate.task.pcf.CfCommandRequest;
 
 import software.wings.api.ExecutionDataValue;
 import software.wings.api.pcf.PcfPluginExecutionSummary.PcfPluginExecutionSummaryBuilder;
@@ -12,7 +13,6 @@ import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.sm.StateExecutionData;
 
 import java.util.List;
@@ -41,7 +41,7 @@ public class PcfPluginStateExecutionData extends StateExecutionData implements D
   private TaskType taskType;
   private Map<K8sValuesLocation, ApplicationManifest> appManifestMap;
   private GitFetchFilesFromMultipleRepoResult fetchFilesResult;
-  private PcfCommandRequest pcfCommandRequest;
+  private CfCommandRequest pcfCommandRequest;
   private List<String> filePathsInScript;
   private String renderedScriptString;
   private Integer timeoutIntervalInMinutes;
