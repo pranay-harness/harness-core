@@ -103,6 +103,9 @@ iteratorsConfig:
   userIteratorConfig:
     enabled: ${USER_ITERATOR_ENABLED:-true}
     targetIntervalInSeconds: ${USER_ITERATOR_INTERVAL:-600}
+  serviceAccountIteratorConfig:
+    enabled: ${SERVICEACCOUNT_ITERATOR_ENABLED:-true}
+    targetIntervalInSeconds: ${SERVICEACCOUNT_ITERATOR_INTERVAL:-600}
 
 accessControlClient:
   enableAccessControl: ${ENABLE_ACCESS_CONTROL:-true}
