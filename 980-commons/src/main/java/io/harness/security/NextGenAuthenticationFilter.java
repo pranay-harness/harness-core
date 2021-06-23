@@ -1,10 +1,15 @@
 package io.harness.security;
 
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.security.dto.Principal;
+import io.harness.security.dto.PrincipalType;
+import io.harness.security.dto.ServiceAccountPrincipal;
+import io.harness.security.dto.ServicePrincipal;
 
 import com.google.inject.Singleton;
 import java.util.Map;
@@ -40,9 +45,9 @@ public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
     if (apiKeyOptional.isPresent()) {
       String apiKey = apiKeyOptional.get();
       log.info("Found an API key in request {}", apiKey);
-      // @Todo(Ujjawal): Try to find a principal for apikey
-      // found --> set the principal and return
-      // not found --> throw unauthorized
+      Principal principal = new ServiceAccountPrincipal(apiKey);
+      SecurityContextBuilder.setContext(principal);
+      SourcePrincipalContextBuilder.setSourcePrincipal(principal);
     } else {
       super.filter(containerRequestContext);
     }
