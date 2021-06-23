@@ -135,14 +135,13 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
   }
 
   @Override
-  public boolean isBranchSyncAlreadyInProgressOrSynced(String repoURL, String branch) {
+  public GitToHarnessProgressDTO getBranchSyncStatus(String repoURL, String branch) {
     GitToHarnessProgress gitToHarnessProgress =
         gitToHarnessProgressRepository.findByRepoUrlAndBranchAndEventType(repoURL, branch, BRANCH_SYNC);
-    if (gitToHarnessProgress == null) {
-      return false;
+    if (gitToHarnessProgress != null) {
+      return GitToHarnessProgressMapper.writeDTO(gitToHarnessProgress);
     }
-    GitToHarnessProgressStatus gitToHarnessProgressStatus = gitToHarnessProgress.getGitToHarnessProgressStatus();
-    return !gitToHarnessProgressStatus.isFailureStatus();
+    return null;
   }
 
   @Override
