@@ -64,6 +64,8 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
       return YamlChangeSetStatus.SKIPPED;
     }
 
+    gitToHarnessProgressHelper.doPreRunChecks(yamlChangeSetDTO);
+
     YamlChangeSetStatus queueStatus =
         gitToHarnessProgressHelper.getQueueStatusIfEventInProgressOrAlreadyProcessed(yamlChangeSetDTO);
     if (queueStatus != null) {

@@ -168,7 +168,7 @@ public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskR
     if (shellScriptInlineSource.getScript().isExpression()) {
       final long maxLimit = 10;
       List<String> variables =
-          EngineExpressionEvaluator.findVariables(shellScriptInlineSource.getScript().getExpressionValue())
+          EngineExpressionEvaluator.findExpressions(shellScriptInlineSource.getScript().getExpressionValue())
               .stream()
               .limit(maxLimit)
               .collect(Collectors.toList());

@@ -8,6 +8,7 @@ import static org.apache.commons.lang3.StringUtils.substringBetween;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.logging.AccessTokenBean;
 import io.harness.logging.RemoteStackdriverLogAppender;
 import io.harness.managerclient.DelegateAgentManagerClient;
@@ -15,7 +16,7 @@ import io.harness.rest.RestResponse;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -63,8 +64,8 @@ public class DelegateStackdriverLogAppender extends RemoteStackdriverLogAppender
     }
 
     try {
-      RestResponse<AccessTokenBean> response = timeLimiter.callWithTimeout(
-          () -> execute(delegateAgentManagerClient.getLoggingToken(getAccountId())), 15L, TimeUnit.SECONDS, true);
+      RestResponse<AccessTokenBean> response = HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+          () -> execute(delegateAgentManagerClient.getLoggingToken(getAccountId())));
       if (response != null) {
         return response.getResource();
       }
