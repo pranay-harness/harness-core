@@ -1,6 +1,7 @@
 package io.harness.beans.yaml.extended.infrastrucutre;
 
 import static io.harness.beans.common.SwaggerConstants.INTEGER_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.STRING_CLASSPATH;
 import static io.harness.beans.common.SwaggerConstants.STRING_MAP_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
@@ -43,5 +44,6 @@ public class K8sDirectInfraYaml implements Infrastructure {
     @YamlSchemaTypes({string})
     @ApiModelProperty(dataType = INTEGER_CLASSPATH)
     private ParameterField<Integer> runAsUser;
+    @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> serviceAccountName;
   }
 }
