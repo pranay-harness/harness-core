@@ -144,6 +144,7 @@ import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.OutboxSDKConstants;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
+import io.harness.pcf.CfDeploymentManager;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
@@ -278,8 +279,7 @@ import software.wings.helpers.ext.helm.HelmDeployServiceUnsupported;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
-import software.wings.helpers.ext.pcf.PcfDeploymentManager;
-import software.wings.helpers.ext.pcf.PcfDeploymentManagerUnsupported;
+import software.wings.helpers.ext.pcf.CfDeploymentManagerUnsupported;
 import software.wings.helpers.ext.sftp.SftpService;
 import software.wings.helpers.ext.sftp.SftpServiceImpl;
 import software.wings.helpers.ext.smb.SmbService;
@@ -1136,7 +1136,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(CloudToHarnessMappingService.class).to(CloudToHarnessMappingServiceImpl.class);
     bind(DeploymentService.class).to(DeploymentServiceImpl.class);
     bind(HelmDeployService.class).to(HelmDeployServiceUnsupported.class).in(Singleton.class);
-    bind(PcfDeploymentManager.class).to(PcfDeploymentManagerUnsupported.class).in(Singleton.class);
+    bind(CfDeploymentManager.class).to(CfDeploymentManagerUnsupported.class).in(Singleton.class);
 
     bind(LogVerificationService.class).to(LogVerificationServiceImpl.class);
     bind(CVConfigurationService.class).to(CVConfigurationServiceImpl.class);

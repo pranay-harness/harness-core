@@ -2,10 +2,10 @@ package software.wings.sm.states;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
 import static io.harness.k8s.KubernetesConvention.getNormalizedInfraMappingIdLabelValue;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
 import static software.wings.yaml.YamlHelper.trimYaml;
@@ -16,6 +16,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.k8s.KubernetesConvention;
 import io.harness.k8s.KubernetesHelperService;
@@ -33,7 +34,6 @@ import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupParams;

@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.DelegateInfoHelper;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
-import io.harness.beans.converter.GraphVertexConverter;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.execution.NodeExecution;
@@ -73,7 +73,7 @@ public class GraphStatusUpdateHelper {
     log.info("Updating graph vertex for [{}] with status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
         nodeExecution.getStatus(), planExecutionId);
     graphVertexMap.computeIfPresent(nodeExecutionId, (key, prevValue) -> {
-      GraphVertex newValue = GraphVertexConverter.convertFrom(nodeExecution);
+      GraphVertex newValue = convertFromNodeExecution(prevValue, nodeExecution);
       if (StatusUtils.isFinalStatus(newValue.getStatus())) {
         newValue.setOutcomeDocuments(PmsOutcomeMapper.convertJsonToDocument(
             pmsOutcomeService.findAllOutcomesMapByRuntimeId(planExecutionId, nodeExecutionId)));
@@ -83,5 +83,32 @@ public class GraphStatusUpdateHelper {
       }
       return newValue;
     });
+  }
+
+  public GraphVertex convertFromNodeExecution(GraphVertex prevValue, NodeExecution nodeExecution) {
+    return GraphVertex.builder()
+        .uuid(nodeExecution.getUuid())
+        .ambiance(nodeExecution.getAmbiance())
+        .planNodeId(nodeExecution.getNode().getUuid())
+        .identifier(nodeExecution.getNode().getIdentifier())
+        .name(nodeExecution.getNode().getName())
+        .startTs(nodeExecution.getStartTs())
+        .endTs(nodeExecution.getEndTs())
+        .initialWaitDuration(nodeExecution.getInitialWaitDuration())
+        .lastUpdatedAt(nodeExecution.getLastUpdatedAt())
+        .stepType(nodeExecution.getNode().getStepType().getType())
+        .status(nodeExecution.getStatus())
+        .failureInfo(nodeExecution.getFailureInfo())
+        .skipInfo(nodeExecution.getSkipInfo())
+        .nodeRunInfo(nodeExecution.getNodeRunInfo())
+        .stepParameters(nodeExecution.getResolvedStepInputs())
+        .mode(nodeExecution.getMode())
+        .executableResponses(CollectionUtils.emptyIfNull(nodeExecution.getExecutableResponses()))
+        .interruptHistories(nodeExecution.getInterruptHistories())
+        .retryIds(nodeExecution.getRetryIds())
+        .skipType(nodeExecution.getNode().getSkipType())
+        .unitProgresses(nodeExecution.getUnitProgresses())
+        .progressData(nodeExecution.getProgressData())
+        .build();
   }
 }

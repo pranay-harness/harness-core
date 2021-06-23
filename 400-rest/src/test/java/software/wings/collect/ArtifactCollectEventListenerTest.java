@@ -45,6 +45,7 @@ import software.wings.beans.artifact.AzureArtifactsArtifactStream;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -93,6 +94,12 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                                                             .accountId(ACCOUNT_ID)
                                                             .build())
                                              .build();
+    JenkinsTaskParams jenkinsTaskParams = JenkinsTaskParams.builder()
+                                              .jenkinsConfig((JenkinsConfig) SETTING_ATTRIBUTE.getValue())
+                                              .jobName(JOB_NAME)
+                                              .artifactPaths(Collections.singletonList(ARTIFACT_PATH))
+                                              .metaData(Collections.emptyMap())
+                                              .build();
     when(settingsService.get(SETTING_ID)).thenReturn(SETTING_ATTRIBUTE);
 
     sendTaskHelper(JenkinsArtifactStream.builder()
@@ -105,9 +112,10 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
 
     ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
-    assertThat(delegateTaskArgumentCaptor.getValue())
-        .isNotNull()
-        .hasFieldOrPropertyWithValue("data.taskType", JENKINS_COLLECTION.name());
+    DelegateTask delegateTask = delegateTaskArgumentCaptor.getValue();
+    assertThat(delegateTask).isNotNull().hasFieldOrPropertyWithValue("data.taskType", JENKINS_COLLECTION.name());
+    assertThat(delegateTask.getData().getParameters()[0])
+        .isEqualToIgnoringGivenFields(jenkinsTaskParams, "encryptedDataDetails");
   }
 
   @Test

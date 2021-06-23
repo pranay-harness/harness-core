@@ -59,7 +59,7 @@ import io.harness.exception.exceptionmanager.ExceptionModule;
 import io.harness.file.NGFileServiceModule;
 import io.harness.gitsync.GitSyncModule;
 import io.harness.gitsync.core.runnable.HarnessToGitPushMessageListener;
-import io.harness.gitsync.core.webhook.createbranchevent.GitCreateBranchEventStreamListener;
+import io.harness.gitsync.core.webhook.createbranchevent.GitBranchHookEventStreamListener;
 import io.harness.gitsync.core.webhook.pushevent.GitPushEventStreamListener;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
@@ -608,8 +608,8 @@ public class NextGenModule extends AbstractModule {
         .annotatedWith(Names.named(EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM))
         .to(GitPushEventStreamListener.class);
     bind(MessageListener.class)
-        .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CREATE_BRANCH_EVENT_STREAM))
-        .to(GitCreateBranchEventStreamListener.class);
+        .annotatedWith(Names.named(EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM))
+        .to(GitBranchHookEventStreamListener.class);
     bind(ServiceAccountService.class).to(ServiceAccountServiceImpl.class);
   }
 

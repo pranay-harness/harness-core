@@ -22,6 +22,7 @@ import io.harness.accesscontrol.commons.bootstrap.AccessControlManagementJob;
 import io.harness.accesscontrol.commons.events.EntityCrudEventListenerService;
 import io.harness.accesscontrol.commons.events.FeatureFlagEventListenerService;
 import io.harness.accesscontrol.commons.events.UserMembershipEventListenerService;
+import io.harness.accesscontrol.principals.serviceaccounts.iterators.ServiceAccountReconciliationIterator;
 import io.harness.accesscontrol.principals.usergroups.iterators.UserGroupReconciliationIterator;
 import io.harness.accesscontrol.principals.users.iterators.UserReconciliationIterator;
 import io.harness.accesscontrol.principals.users.migration.UserBootstrapMigrationService;
@@ -162,6 +163,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     injector.getInstance(ResourceGroupReconciliationIterator.class).registerIterators();
     injector.getInstance(UserGroupReconciliationIterator.class).registerIterators();
     injector.getInstance(UserReconciliationIterator.class).registerIterators();
+    injector.getInstance(ServiceAccountReconciliationIterator.class).registerIterators();
   }
 
   public void registerScheduledJobs(Injector injector) {

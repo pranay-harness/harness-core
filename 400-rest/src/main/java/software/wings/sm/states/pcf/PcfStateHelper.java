@@ -8,6 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.LogLevel.INFO;
+import static io.harness.pcf.CfCommandUnitConstants.FetchFiles;
 import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST;
 import static io.harness.pcf.model.ManifestType.AUTOSCALAR_MANIFEST;
 import static io.harness.pcf.model.ManifestType.VARIABLE_MANIFEST;
@@ -23,7 +24,6 @@ import static io.harness.pcf.model.PcfConstants.ROUTE_PLACEHOLDER_TOKEN_DEPRECAT
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
-import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.EnvironmentGlobal;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.ServiceOverride;
@@ -44,7 +44,11 @@ import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
+import io.harness.delegate.task.pcf.CfCommandRequest;
+import io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.delegate.task.pcf.request.CfCommandRouteUpdateRequest;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -92,10 +96,6 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
-import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
-import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PcfInfraStructure;
 import software.wings.service.ServiceHelper;
@@ -111,6 +111,7 @@ import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.service.mappers.artifact.CfConfigToInternalMapper;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -214,13 +215,13 @@ public class PcfStateHelper {
   }
 
   public PcfRouteUpdateStateExecutionData getRouteUpdateStateExecutionData(String activityId, String appId,
-      String accountId, PcfCommandRequest pcfCommandRequest, String commandName,
-      PcfRouteUpdateRequestConfigData requestConfigData, List<String> tags) {
+      String accountId, CfCommandRequest cfCommandRequest, String commandName,
+      CfRouteUpdateRequestConfigData requestConfigData, List<String> tags) {
     return PcfRouteUpdateStateExecutionData.builder()
         .activityId(activityId)
         .accountId(accountId)
         .appId(appId)
-        .pcfCommandRequest(pcfCommandRequest)
+        .pcfCommandRequest(cfCommandRequest)
         .commandName(commandName)
         .pcfRouteUpdateRequestConfigData(requestConfigData)
         .tags(tags)
@@ -268,14 +269,14 @@ public class PcfStateHelper {
     PcfInfrastructureMapping pcfInfrastructureMapping = queueRequestData.getPcfInfrastructureMapping();
     String activityId = queueRequestData.getActivityId();
 
-    PcfCommandRequest pcfCommandRequest =
-        PcfCommandRouteUpdateRequest.builder()
+    CfCommandRequest cfCommandRequest =
+        CfCommandRouteUpdateRequest.builder()
             .pcfCommandType(PcfCommandType.UPDATE_ROUTE)
             .commandName(queueRequestData.getCommandName())
             .appId(app.getUuid())
             .accountId(app.getAccountId())
             .activityId(activityId)
-            .pcfConfig(queueRequestData.getPcfConfig())
+            .pcfConfig(CfConfigToInternalMapper.toCfInternalConfig(queueRequestData.getPcfConfig()))
             .organization(getOrganizationFromSetupContext(setupSweepingOutputPcf))
             .space(getSpaceFromSetupContext(setupSweepingOutputPcf))
             .pcfRouteUpdateConfigData(queueRequestData.getRequestConfigData())
@@ -291,7 +292,7 @@ public class PcfStateHelper {
             .build();
 
     PcfRouteUpdateStateExecutionData stateExecutionData =
-        getRouteUpdateStateExecutionData(activityId, app.getUuid(), app.getAccountId(), pcfCommandRequest,
+        getRouteUpdateStateExecutionData(activityId, app.getUuid(), app.getAccountId(), cfCommandRequest,
             queueRequestData.getCommandName(), queueRequestData.getRequestConfigData(), renderedTags);
 
     DelegateTask delegateTask =
@@ -304,7 +305,7 @@ public class PcfStateHelper {
                             .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
                             .environmentType(queueRequestData.getEnvironmentType())
                             .serviceId(pcfInfrastructureMapping.getServiceId())
-                            .parameters(new Object[] {pcfCommandRequest, queueRequestData.getEncryptedDataDetails()})
+                            .parameters(new Object[] {cfCommandRequest, queueRequestData.getEncryptedDataDetails()})
                             .selectionLogsTrackingEnabled(selectionLogsEnabled)
                             .taskDescription("PCF Route update task execution")
                             .timeout(timeoutIntervalInMinutes)

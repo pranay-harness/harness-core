@@ -318,7 +318,6 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(EntityOperationIdentifier.class, 97021);
     kryo.register(EntityOperationIdentifier.EntityOperation.class, 97022);
     kryo.register(CfCliVersion.class, 97023);
-
     kryo.register(KubernetesResourceId.class, 97031);
   }
 }
