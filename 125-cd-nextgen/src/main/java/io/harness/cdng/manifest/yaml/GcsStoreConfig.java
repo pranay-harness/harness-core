@@ -9,6 +9,7 @@ import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 import io.harness.filters.ConnectorRefExtractorHelper;
 import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.SkipAutoEvaluation;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -30,11 +31,19 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(ManifestStoreType.GCS)
 @SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("gcsStore")
-public class GcsStoreConfig
-    implements io.harness.cdng.manifest.yaml.storeConfig.StoreConfig, Visitable, WithConnectorRef {
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> connectorRef;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> bucketName;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> folderPath;
+public class GcsStoreConfig implements StoreConfig, Visitable, WithConnectorRef {
+  @SkipAutoEvaluation
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  private ParameterField<String> connectorRef;
+  @SkipAutoEvaluation
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  private ParameterField<String> bucketName;
+  @SkipAutoEvaluation
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  private ParameterField<String> folderPath;
 
   @Override
   public String getKind() {
@@ -46,13 +55,12 @@ public class GcsStoreConfig
     return connectorRef;
   }
 
-  @Override
-  public io.harness.cdng.manifest.yaml.storeConfig.StoreConfig cloneInternal() {
+  public StoreConfig cloneInternal() {
     return GcsStoreConfig.builder().connectorRef(connectorRef).bucketName(bucketName).folderPath(folderPath).build();
   }
 
   @Override
-  public io.harness.cdng.manifest.yaml.storeConfig.StoreConfig applyOverrides(StoreConfig overrideConfig) {
+  public StoreConfig applyOverrides(StoreConfig overrideConfig) {
     GcsStoreConfig gcsStoreConfig = (GcsStoreConfig) overrideConfig;
     GcsStoreConfig resultantGcsStore = this;
     if (!ParameterField.isNull(gcsStoreConfig.getConnectorRef())) {

@@ -15,6 +15,7 @@ import io.harness.cdng.visitor.helpers.manifest.HelmChartManifestVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.SkipAutoEvaluation;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -47,10 +48,10 @@ import org.springframework.data.annotation.TypeAlias;
 public class HelmChartManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
   @Wither @JsonProperty("store") StoreConfigWrapper store;
-  @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) ParameterField<String> chartName;
-  @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) ParameterField<String> chartVersion;
+  @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) @SkipAutoEvaluation ParameterField<String> chartName;
+  @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) @SkipAutoEvaluation ParameterField<String> chartVersion;
   @Wither HelmVersion helmVersion;
-  @Wither @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipResourceVersioning;
+  @Wither @YamlSchemaTypes({string, bool}) @SkipAutoEvaluation ParameterField<Boolean> skipResourceVersioning;
   @Wither List<HelmManifestCommandFlag> commandFlags;
 
   @Override
