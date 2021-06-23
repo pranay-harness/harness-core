@@ -64,11 +64,11 @@ public class RunStepInfo implements CIStepInfo, WithConnectorRef {
   private ParameterField<Map<String, String>> envVariables;
   private UnitTestReport reports;
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> image;
-  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
+  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   private ContainerResource resources;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> privileged;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
-  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<CIShellType> shell;
+  @ApiModelProperty(dataType = "io.harness.beans.yaml.extended.CIShellType") private ParameterField<CIShellType> shell;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "command", "outputVariables", "reports", "envVariables",
