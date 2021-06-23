@@ -18,7 +18,7 @@ func CreatePR(ctx context.Context, request *pb.CreatePRRequest, log *zap.Sugared
 
 	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
 	if err != nil {
-		log.Errorw("CreatePR failure", "bad provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("CreatePR failure", "bad provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
@@ -31,7 +31,7 @@ func CreatePR(ctx context.Context, request *pb.CreatePRRequest, log *zap.Sugared
 
 	pr, response, err := client.PullRequests.Create(ctx, request.GetSlug(), &inputParams)
 	if err != nil {
-		log.Errorw("CreatePR failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "source", request.GetSource(), "target", request.GetTarget(),
+		log.Errorw("CreatePR failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "source", request.GetSource(), "target", request.GetTarget(),
 			"elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 
 		// hard error from git
@@ -61,13 +61,13 @@ func FindFilesInPR(ctx context.Context, request *pb.FindFilesInPRRequest, log *z
 
 	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
 	if err != nil {
-		log.Errorw("FindFilesInPR failure", "bad provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("FindFilesInPR failure", "bad provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
 	changes, response, err := client.PullRequests.ListChanges(ctx, request.GetSlug(), int(request.GetNumber()), scm.ListOptions{Page: int(request.GetPagination().GetPage())})
 	if err != nil {
-		log.Errorw("FindFilesInPR failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "number", request.GetNumber(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("FindFilesInPR failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "number", request.GetNumber(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 	log.Infow("FindFilesInPR success", "slug", request.GetSlug(), "number", request.GetNumber(), "elapsed_time_ms", utils.TimeSince(start))
@@ -87,13 +87,13 @@ func ListCommitsInPR(ctx context.Context, request *pb.ListCommitsInPRRequest, lo
 
 	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
 	if err != nil {
-		log.Errorw("ListCommitsInPR failure", "bad provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("ListCommitsInPR failure", "bad provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
 	commits, response, err := client.PullRequests.ListCommits(ctx, request.GetSlug(), int(request.GetNumber()), scm.ListOptions{Page: int(request.GetPagination().GetPage())})
 	if err != nil {
-		log.Errorw("ListCommitsInPR failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "number", request.GetNumber(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("ListCommitsInPR failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "number", request.GetNumber(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 	log.Infow("ListCommitsInPR success", "slug", request.GetSlug(), "number", request.GetNumber(), "elapsed_time_ms", utils.TimeSince(start))
@@ -113,7 +113,7 @@ func CreateBranch(ctx context.Context, request *pb.CreateBranchRequest, log *zap
 
 	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
 	if err != nil {
-		log.Errorw("CreateBranch failure", "bad provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("CreateBranch failure", "bad provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
@@ -124,7 +124,7 @@ func CreateBranch(ctx context.Context, request *pb.CreateBranchRequest, log *zap
 
 	response, err := client.Git.CreateBranch(ctx, request.GetSlug(), &inputParams)
 	if err != nil {
-		log.Errorw("CreateBranch failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "Name", request.GetName(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("CreateBranch failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "Name", request.GetName(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 
 		// hard error from git
 		if response == nil {
@@ -152,19 +152,19 @@ func GetLatestCommit(ctx context.Context, request *pb.GetLatestCommitRequest, lo
 
 	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
 	if err != nil {
-		log.Errorw("GetLatestCommit failure", "bad provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("GetLatestCommit failure", "bad provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
 	ref, err := gitclient.GetValidRef(*request.Provider, "", request.GetBranch())
 	if err != nil {
-		log.Errorw("GetLatestCommit failure, bad ref/branch", "provider", request.GetProvider(), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("GetLatestCommit failure, bad ref/branch", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
 	refResponse, response, err := client.Git.FindCommit(ctx, request.GetSlug(), ref)
 	if err != nil {
-		log.Errorw("GetLatestCommit failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("GetLatestCommit failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		// this is a hard error with no response
 		if refResponse == nil {
 			return nil, err
@@ -194,13 +194,13 @@ func ListBranches(ctx context.Context, request *pb.ListBranchesRequest, log *zap
 
 	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
 	if err != nil {
-		log.Errorw("ListBranches failure", "bad provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("ListBranches failure", "bad provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
 	branchesContent, response, err := client.Git.ListBranches(ctx, request.GetSlug(), scm.ListOptions{Page: int(request.GetPagination().GetPage())})
 	if err != nil {
-		log.Errorw("ListBranches failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("ListBranches failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 	log.Infow("ListBranches success", "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start))
@@ -224,19 +224,19 @@ func ListCommits(ctx context.Context, request *pb.ListCommitsRequest, log *zap.S
 
 	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
 	if err != nil {
-		log.Errorw("ListCommits failure", "bad provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("ListCommits failure", "bad provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
 	ref, err := gitclient.GetValidRef(*request.Provider, request.GetRef(), request.GetBranch())
 	if err != nil {
-		log.Errorw("ListCommits failure, bad ref/branch", "provider", request.GetProvider(), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("ListCommits failure, bad ref/branch", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
 	commits, response, err := client.Git.ListCommits(ctx, request.GetSlug(), scm.CommitListOptions{Ref: ref, Page: int(request.GetPagination().GetPage())})
 	if err != nil {
-		log.Errorw("ListCommits failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("ListCommits failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 	log.Infow("ListCommits success", "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start))
@@ -260,13 +260,13 @@ func CompareCommits(ctx context.Context, request *pb.CompareCommitsRequest, log 
 
 	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
 	if err != nil {
-		log.Errorw("CompareCommits failure", "bad provider", request.GetProvider(), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("CompareCommits failure", "bad provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
 	changes, response, err := client.Git.CompareChanges(ctx, request.GetSlug(), request.GetSource(), request.GetTarget(), scm.ListOptions{Page: int(request.GetPagination().GetPage())})
 	if err != nil {
-		log.Errorw("CompareCommits failure", "provider", request.GetProvider(), "slug", request.GetSlug(), "source", request.GetSource(), "target", request.GetTarget(),
+		log.Errorw("CompareCommits failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "source", request.GetSource(), "target", request.GetTarget(),
 			"elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
@@ -287,13 +287,13 @@ func GetAuthenticatedUser(ctx context.Context, request *pb.GetAuthenticatedUserR
 
 	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
 	if err != nil {
-		log.Errorw("GetAuthenticatedUser failure", "bad provider", request.GetProvider(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("GetAuthenticatedUser failure", "bad provider", gitclient.GetProvider(*request.GetProvider()), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
 	response, _, err := client.Users.Find(ctx)
 	if err != nil {
-		log.Errorw("GetAuthenticatedUser failure", "provider", request.GetProvider(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("GetAuthenticatedUser failure", "provider", gitclient.GetProvider(*request.GetProvider()), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 	log.Infow("GetAuthenticatedUser success", "elapsed_time_ms", utils.TimeSince(start))
@@ -310,14 +310,14 @@ func GetUserRepos(ctx context.Context, request *pb.GetUserReposRequest, log *zap
 
 	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
 	if err != nil {
-		log.Errorw("GetUserRepos failure", "bad provider", request.GetProvider(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("GetUserRepos failure", "bad provider", gitclient.GetProvider(*request.GetProvider()), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
 	}
 
 	repoList, response, err := client.Repositories.List(ctx, scm.ListOptions{Page: int(request.GetPagination().GetPage())})
 
 	if err != nil {
-		log.Errorw("GetUserRepos failure", "provider", request.GetProvider(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		log.Errorw("GetUserRepos failure", "provider", gitclient.GetProvider(*request.GetProvider()), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		out = &pb.GetUserReposResponse{
 			Status: int32(response.Status),
 			Error:  err.Error(),

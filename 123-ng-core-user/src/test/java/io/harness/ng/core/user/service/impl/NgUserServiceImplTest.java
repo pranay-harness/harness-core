@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.ARVIND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -88,12 +89,12 @@ public class NgUserServiceImplTest extends CategoryTest {
     Project proj2 = Project.builder().name("P2").build();
     List<Project> projects = Arrays.asList(proj1, proj2);
     doReturn(projects).when(userMembershipRepository).findProjectList(eq(user), any(), any());
-    doReturn(5L).when(userMembershipRepository).getProjectCount(user);
+    doReturn(5L).when(userMembershipRepository).getProjectCount(any(), anyString());
 
     Page<ProjectDTO> projectsResponse =
         ngUserService.listProjects("account", PageRequest.builder().pageSize(2).pageIndex(0).build());
     assertThat(projectsResponse).isNotNull();
-    assertThat(projectsResponse.getTotalPages()).isEqualTo(1);
+    assertThat(projectsResponse.getTotalPages()).isEqualTo(3);
     assertThat(projectsResponse.getContent())
         .isEqualTo(projects.stream().map(ProjectMapper::writeDTO).collect(Collectors.toList()));
   }

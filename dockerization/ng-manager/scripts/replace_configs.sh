@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 CONFIG_FILE=/opt/harness/config.yml
+REDISSON_CACHE_FILE=/opt/harness/redisson-jcache.yaml
 
 replace_key_value () {
   CONFIG_KEY="$1";
@@ -228,13 +229,11 @@ if [[ "" != "$FILE_STORAGE_CLUSTER_NAME" ]]; then
   yq write -i $CONFIG_FILE fileServiceConfiguration.clusterName "$FILE_STORAGE_CLUSTER_NAME"
 fi
 
-if [[ "" != "$LOCK_CONFIG_REDIS_SENTINELS" ]]; then
-  IFS=',' read -ra SENTINEL_URLS <<< "$LOCK_CONFIG_REDIS_SENTINELS"
-  INDEX=0
-  for REDIS_SENTINEL_URL in "${SENTINEL_URLS[@]}"; do
-    yq write -i $CONFIG_FILE redisLockConfig.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
-    INDEX=$(expr $INDEX + 1)
-  done
+yq delete -i $REDISSON_CACHE_FILE codec
+
+if [[ "$REDIS_SCRIPT_CACHE" == "false" ]]; then
+  yq write -i $CONFIG_FILE redisLockConfig.useScriptCache false
+  yq write -i $REDISSON_CACHE_FILE useScriptCache false
 fi
 
 replace_key_value distributedLockImplementation $DISTRIBUTED_LOCK_IMPLEMENTATION
@@ -245,6 +244,36 @@ replace_key_value redisLockConfig.redisUrl $LOCK_CONFIG_REDIS_URL
 replace_key_value redisLockConfig.masterName $LOCK_CONFIG_SENTINEL_MASTER_NAME
 replace_key_value redisLockConfig.userName $LOCK_CONFIG_REDIS_USERNAME
 replace_key_value redisLockConfig.password $LOCK_CONFIG_REDIS_PASSWORD
+replace_key_value redisLockConfig.nettyThreads $REDIS_NETTY_THREADS
+
+if [[ "" != "$LOCK_CONFIG_REDIS_URL" ]]; then
+  yq write -i $REDISSON_CACHE_FILE singleServerConfig.address "$LOCK_CONFIG_REDIS_URL"
+fi
+
+if [[ "$LOCK_CONFIG_USE_SENTINEL" == "true" ]]; then
+  yq delete -i $REDISSON_CACHE_FILE singleServerConfig
+fi
+
+if [[ "" != "$LOCK_CONFIG_SENTINEL_MASTER_NAME" ]]; then
+  yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.masterName "$LOCK_CONFIG_SENTINEL_MASTER_NAME"
+fi
+
+if [[ "" != "$LOCK_CONFIG_REDIS_SENTINELS" ]]; then
+  IFS=',' read -ra SENTINEL_URLS <<< "$LOCK_CONFIG_REDIS_SENTINELS"
+  INDEX=0
+  for REDIS_SENTINEL_URL in "${SENTINEL_URLS[@]}"; do
+    yq write -i $CONFIG_FILE redisLockConfig.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
+    yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[+] "${REDIS_SENTINEL_URL}"
+    INDEX=$(expr $INDEX + 1)
+  done
+fi
+
+if [[ "" != "$REDIS_NETTY_THREADS" ]]; then
+  yq write -i $REDISSON_CACHE_FILE nettyThreads "$REDIS_NETTY_THREADS"
+fi
+
+replace_key_value cacheConfig.cacheNamespace $CACHE_NAMESPACE
+replace_key_value cacheConfig.cacheBackend $CACHE_BACKEND
 
 replace_key_value eventsFramework.redis.sentinel $EVENTS_FRAMEWORK_USE_SENTINEL
 replace_key_value eventsFramework.redis.envNamespace $EVENTS_FRAMEWORK_ENV_NAMESPACE

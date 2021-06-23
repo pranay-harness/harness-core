@@ -52,6 +52,11 @@ public class K8SDirectInfrastructure implements Infrastructure, Visitable, WithC
   }
 
   @Override
+  public ParameterField<String> getConnectorReference() {
+    return connectorRef;
+  }
+
+  @Override
   public Infrastructure applyOverrides(Infrastructure overrideConfig) {
     K8SDirectInfrastructure config = (K8SDirectInfrastructure) overrideConfig;
     K8SDirectInfrastructure resultantInfra = this;

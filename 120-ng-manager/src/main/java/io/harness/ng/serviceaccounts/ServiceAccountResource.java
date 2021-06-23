@@ -1,8 +1,17 @@
 package io.harness.ng.serviceaccounts;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.SERVICEACCOUNT;
 
+import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
+import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
+import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.accesscontrol.PlatformPermissions;
+import io.harness.ng.core.OrgIdentifier;
+import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -44,13 +53,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(PL)
 public class ServiceAccountResource {
-  @Inject private ServiceAccountService serviceAccountService;
+  @Inject private final ServiceAccountService serviceAccountService;
 
   @POST
   @ApiOperation(value = "Create service account", nickname = "createServiceAccount")
-  public ResponseDTO<ServiceAccountDTO> createServiceAccount(@QueryParam("accountIdentifier") String accountIdentifier,
-      @Optional @QueryParam("orgIdentifier") String orgIdentifier,
-      @Optional @QueryParam("projectIdentifier") String projectIdentifier,
+  @NGAccessControlCheck(resourceType = SERVICEACCOUNT, permission = PlatformPermissions.EDIT_SERVICEACCOUNT_PERMISSION)
+  public ResponseDTO<ServiceAccountDTO> createServiceAccount(
+      @QueryParam("accountIdentifier") @AccountIdentifier String accountIdentifier,
+      @Optional @QueryParam("orgIdentifier") @OrgIdentifier String orgIdentifier,
+      @Optional @QueryParam("projectIdentifier") @ProjectIdentifier String projectIdentifier,
       @Valid ServiceAccountRequestDTO serviceAccountRequestDTO) {
     ServiceAccountDTO serviceAccountDTO = serviceAccountService.createServiceAccount(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceAccountRequestDTO);
@@ -60,9 +71,12 @@ public class ServiceAccountResource {
   @PUT
   @Path("{identifier}")
   @ApiOperation(value = "Update service account", nickname = "updateServiceAccount")
-  public ResponseDTO<ServiceAccountDTO> updateServiceAccount(@QueryParam("accountIdentifier") String accountIdentifier,
-      @Optional @QueryParam("orgIdentifier") String orgIdentifier,
-      @Optional @QueryParam("projectIdentifier") String projectIdentifier, @PathParam("identifier") String identifier,
+  @NGAccessControlCheck(resourceType = SERVICEACCOUNT, permission = PlatformPermissions.EDIT_SERVICEACCOUNT_PERMISSION)
+  public ResponseDTO<ServiceAccountDTO> updateServiceAccount(
+      @QueryParam("accountIdentifier") @AccountIdentifier String accountIdentifier,
+      @Optional @QueryParam("orgIdentifier") @OrgIdentifier String orgIdentifier,
+      @Optional @QueryParam("projectIdentifier") @ProjectIdentifier String projectIdentifier,
+      @PathParam("identifier") @ResourceIdentifier String identifier,
       @Valid ServiceAccountRequestDTO serviceAccountRequestDTO) {
     ServiceAccountDTO serviceAccountDTO = serviceAccountService.updateServiceAccount(
         accountIdentifier, orgIdentifier, projectIdentifier, identifier, serviceAccountRequestDTO);
@@ -72,9 +86,13 @@ public class ServiceAccountResource {
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete service account", nickname = "deleteServiceAccount")
-  public ResponseDTO<Boolean> deleteServiceAccount(@QueryParam("accountIdentifier") String accountIdentifier,
-      @Optional @QueryParam("orgIdentifier") String orgIdentifier,
-      @Optional @QueryParam("projectIdentifier") String projectIdentifier, @PathParam("identifier") String identifier) {
+  @NGAccessControlCheck(
+      resourceType = SERVICEACCOUNT, permission = PlatformPermissions.DELETE_SERVICEACCOUNT_PERMISSION)
+  public ResponseDTO<Boolean>
+  deleteServiceAccount(@QueryParam("accountIdentifier") @AccountIdentifier String accountIdentifier,
+      @Optional @QueryParam("orgIdentifier") @OrgIdentifier String orgIdentifier,
+      @Optional @QueryParam("projectIdentifier") @ProjectIdentifier String projectIdentifier,
+      @PathParam("identifier") @ResourceIdentifier String identifier) {
     boolean deleted =
         serviceAccountService.deleteServiceAccount(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return ResponseDTO.newResponse(deleted);
@@ -82,12 +100,14 @@ public class ServiceAccountResource {
 
   @GET
   @ApiOperation(value = "List service account", nickname = "listServiceAccount")
+  @NGAccessControlCheck(resourceType = SERVICEACCOUNT, permission = PlatformPermissions.VIEW_SERVICEACCOUNT_PERMISSION)
   public ResponseDTO<List<ServiceAccountDTO>> listServiceAccounts(
-      @QueryParam("accountIdentifier") String accountIdentifier,
-      @Optional @QueryParam("orgIdentifier") String orgIdentifier,
-      @Optional @QueryParam("projectIdentifier") String projectIdentifier) {
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Optional @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Optional @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Optional @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers) {
     List<ServiceAccountDTO> requestDTOS =
-        serviceAccountService.listServiceAccounts(accountIdentifier, orgIdentifier, projectIdentifier);
+        serviceAccountService.listServiceAccounts(accountIdentifier, orgIdentifier, projectIdentifier, identifiers);
     return ResponseDTO.newResponse(requestDTOS);
   }
 }

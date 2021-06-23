@@ -3,6 +3,8 @@ package software.wings.sm.states.pcf;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
+import static io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType.UPDATE_ROUTE;
 import static io.harness.pcf.model.PcfConstants.INSTANCE_PLACEHOLDER_TOKEN_DEPRECATED;
 import static io.harness.pcf.model.PcfConstants.LEGACY_NAME_PCF_MANIFEST;
 import static io.harness.pcf.model.PcfConstants.MANIFEST_YML;
@@ -15,11 +17,9 @@ import static io.harness.rule.OwnerRule.TMACARI;
 
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.TaskType.COMMAND;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.Remote;
-import static software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType.UPDATE_ROUTE;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 import static software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes.PCF_BG_SWAP_ROUTE_COMMAND;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -62,7 +62,10 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
+import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.delegate.task.pcf.request.CfCommandRouteUpdateRequest;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -103,10 +106,7 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
-import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
-import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
-import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
+import software.wings.helpers.ext.pcf.request.CfCommandSetupRequest;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PcfInfraStructure;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -475,13 +475,13 @@ public class PcfStateHelperTest extends WingsBaseTest {
             .commandName(PCF_BG_SWAP_ROUTE_COMMAND)
             .pcfConfig(
                 PcfConfig.builder().endpointUrl("pcfUrl").username(USER_NAME_DECRYPTED).password(PASSWORD).build())
-            .requestConfigData(PcfRouteUpdateRequestConfigData.builder()
+            .requestConfigData(CfRouteUpdateRequestConfigData.builder()
                                    .newApplicatiaonName("newApp")
                                    .downsizeOldApplication(false)
                                    .isRollback(false)
                                    .existingApplicationNames(Arrays.asList("oldApp"))
 
-                                   .existingApplicationDetails(Arrays.asList(PcfAppSetupTimeDetails.builder()
+                                   .existingApplicationDetails(Arrays.asList(CfAppSetupTimeDetails.builder()
                                                                                  .applicationGuid("AppGuid1")
                                                                                  .applicationName("pcfApp")
                                                                                  .initialInstanceCount(1)
@@ -492,7 +492,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
 
     ExecutionResponse response = pcfStateHelper.queueDelegateTaskForRouteUpdate(requestData,
         SetupSweepingOutputPcf.builder()
-            .pcfCommandRequest(PcfCommandSetupRequest.builder().organization("org").space("space").build())
+            .pcfCommandRequest(CfCommandSetupRequest.builder().organization("org").space("space").build())
             .build(),
         null, false, renderedTags);
     assertThat(response).isNotNull();
@@ -509,8 +509,8 @@ public class PcfStateHelperTest extends WingsBaseTest {
     assertThat(stateExecutionData.getActivityId()).isEqualTo(ACTIVITY_ID);
     assertThat("PCF BG Swap Route").isEqualTo(stateExecutionData.getCommandName());
 
-    assertThat(stateExecutionData.getPcfCommandRequest() instanceof PcfCommandRouteUpdateRequest).isTrue();
-    PcfCommandRouteUpdateRequest request = (PcfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
+    assertThat(stateExecutionData.getPcfCommandRequest() instanceof CfCommandRouteUpdateRequest).isTrue();
+    CfCommandRouteUpdateRequest request = (CfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
     assertThat(stateExecutionData.getAppId()).isEqualTo(APP_ID);
     assertThat("PCF BG Swap Route").isEqualTo(stateExecutionData.getCommandName());
     assertThat(request.getAccountId()).isEqualTo(ACCOUNT_ID);
@@ -525,14 +525,14 @@ public class PcfStateHelperTest extends WingsBaseTest {
     assertThat(request.getPcfConfig().getUsername()).isEqualTo(USER_NAME_DECRYPTED);
     assertThat(request.getPcfConfig().getPassword()).isEqualTo(PASSWORD);
 
-    PcfRouteUpdateRequestConfigData pcfRouteUpdateRequestConfigData =
+    CfRouteUpdateRequestConfigData cfRouteUpdateRequestConfigData =
         stateExecutionData.getPcfRouteUpdateRequestConfigData();
-    assertThat(pcfRouteUpdateRequestConfigData).isNotNull();
-    assertThat(pcfRouteUpdateRequestConfigData.getNewApplicatiaonName()).isEqualTo("newApp");
-    assertThat(pcfRouteUpdateRequestConfigData.isDownsizeOldApplication()).isFalse();
-    assertThat(pcfRouteUpdateRequestConfigData.isRollback()).isFalse();
-    assertThat(pcfRouteUpdateRequestConfigData.getExistingApplicationDetails().size()).isEqualTo(1);
-    assertThat(pcfRouteUpdateRequestConfigData.getExistingApplicationNames().size()).isEqualTo(1);
+    assertThat(cfRouteUpdateRequestConfigData).isNotNull();
+    assertThat(cfRouteUpdateRequestConfigData.getNewApplicatiaonName()).isEqualTo("newApp");
+    assertThat(cfRouteUpdateRequestConfigData.isDownsizeOldApplication()).isFalse();
+    assertThat(cfRouteUpdateRequestConfigData.isRollback()).isFalse();
+    assertThat(cfRouteUpdateRequestConfigData.getExistingApplicationDetails().size()).isEqualTo(1);
+    assertThat(cfRouteUpdateRequestConfigData.getExistingApplicationNames().size()).isEqualTo(1);
   }
 
   @Test
@@ -805,8 +805,8 @@ public class PcfStateHelperTest extends WingsBaseTest {
             .name(PCF_SERVICE_NAME)
             .maxInstanceCount(10)
             .desiredActualFinalCount(10)
-            .pcfCommandRequest(PcfCommandSetupRequest.builder().space("SPACE").organization("ORG").build())
-            .newPcfApplicationDetails(PcfAppSetupTimeDetails.builder()
+            .pcfCommandRequest(CfCommandSetupRequest.builder().space("SPACE").organization("ORG").build())
+            .newPcfApplicationDetails(CfAppSetupTimeDetails.builder()
                                           .applicationName("APP_NAME_SERVICE_NAME_ENV_NAME__1")
                                           .applicationGuid("1")
                                           .build())
@@ -864,8 +864,8 @@ public class PcfStateHelperTest extends WingsBaseTest {
             .name(PCF_SERVICE_NAME)
             .maxInstanceCount(10)
             .desiredActualFinalCount(10)
-            .pcfCommandRequest(PcfCommandSetupRequest.builder().space("SPACE").organization("ORG").build())
-            .newPcfApplicationDetails(PcfAppSetupTimeDetails.builder()
+            .pcfCommandRequest(CfCommandSetupRequest.builder().space("SPACE").organization("ORG").build())
+            .newPcfApplicationDetails(CfAppSetupTimeDetails.builder()
                                           .applicationName("APP_NAME_SERVICE_NAME_ENV_NAME__1")
                                           .applicationGuid("1")
                                           .build())
@@ -998,8 +998,8 @@ public class PcfStateHelperTest extends WingsBaseTest {
             .name(PCF_SERVICE_NAME)
             .maxInstanceCount(10)
             .desiredActualFinalCount(10)
-            .pcfCommandRequest(PcfCommandSetupRequest.builder().space("SPACE").organization("ORG").build())
-            .newPcfApplicationDetails(PcfAppSetupTimeDetails.builder()
+            .pcfCommandRequest(CfCommandSetupRequest.builder().space("SPACE").organization("ORG").build())
+            .newPcfApplicationDetails(CfAppSetupTimeDetails.builder()
                                           .applicationName("APP_NAME_SERVICE_NAME_ENV_NAME__1")
                                           .applicationGuid("1")
                                           .build())
@@ -1130,8 +1130,8 @@ public class PcfStateHelperTest extends WingsBaseTest {
             .name(PCF_SERVICE_NAME)
             .maxInstanceCount(10)
             .desiredActualFinalCount(10)
-            .pcfCommandRequest(PcfCommandSetupRequest.builder().space("SPACE").organization("ORG").build())
-            .newPcfApplicationDetails(PcfAppSetupTimeDetails.builder()
+            .pcfCommandRequest(CfCommandSetupRequest.builder().space("SPACE").organization("ORG").build())
+            .newPcfApplicationDetails(CfAppSetupTimeDetails.builder()
                                           .applicationName("APP_NAME_SERVICE_NAME_ENV_NAME__1")
                                           .applicationGuid("1")
                                           .build())
@@ -1444,7 +1444,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
     PcfRouteUpdateStateExecutionData stateExecutionData =
         PcfRouteUpdateStateExecutionData.builder()
             .pcfRouteUpdateRequestConfigData(
-                PcfRouteUpdateRequestConfigData.builder().finalRoutes(Collections.singletonList("NEW_ROUTE")).build())
+                CfRouteUpdateRequestConfigData.builder().finalRoutes(Collections.singletonList("NEW_ROUTE")).build())
             .build();
     InfoVariables infoVariables = InfoVariables.builder().newAppRoutes(Collections.singletonList("TEMP_ROUTE")).build();
     doReturn(SweepingOutputInstance.builder().uuid("1").value(infoVariables).build())

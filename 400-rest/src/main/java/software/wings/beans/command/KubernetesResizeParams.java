@@ -1,8 +1,9 @@
 package software.wings.beans.command;
 
+import io.harness.delegate.beans.pcf.ResizeStrategy;
+
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.InstanceUnitType;
-import software.wings.beans.ResizeStrategy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;

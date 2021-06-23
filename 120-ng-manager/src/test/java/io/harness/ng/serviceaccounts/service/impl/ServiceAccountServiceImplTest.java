@@ -2,6 +2,7 @@ package io.harness.ng.serviceaccounts.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.RAJ;
 import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,6 +21,7 @@ import io.harness.rule.Owner;
 import io.harness.serviceaccount.ServiceAccountDTO;
 
 import io.fabric8.utils.Lists;
+import java.util.Collections;
 import java.util.List;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -99,8 +101,27 @@ public class ServiceAccountServiceImplTest extends NgManagerTestBase {
         .when(serviceAccountRepository)
         .findAllByAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
             accountIdentifier, orgIdentifier, projectIdentifier);
-    List<ServiceAccountDTO> accounts =
-        serviceAccountService.listServiceAccounts(accountIdentifier, orgIdentifier, projectIdentifier);
+    List<ServiceAccountDTO> accounts = serviceAccountService.listServiceAccounts(
+        accountIdentifier, orgIdentifier, projectIdentifier, Collections.emptyList());
+    assertThat(accounts.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = RAJ)
+  @Category(UnitTests.class)
+  public void listServiceAccountDTOWithIdentifiers() {
+    doReturn(Lists.newArrayList(ServiceAccount.builder()
+                                    .name(name)
+                                    .identifier(identifier)
+                                    .accountIdentifier(accountIdentifier)
+                                    .orgIdentifier(orgIdentifier)
+                                    .projectIdentifier(projectIdentifier)
+                                    .build()))
+        .when(serviceAccountRepository)
+        .findAllByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifierIsIn(
+            accountIdentifier, orgIdentifier, projectIdentifier, Collections.singletonList(identifier));
+    List<ServiceAccountDTO> accounts = serviceAccountService.listServiceAccounts(
+        accountIdentifier, orgIdentifier, projectIdentifier, Collections.singletonList(identifier));
     assertThat(accounts.size()).isEqualTo(1);
   }
 

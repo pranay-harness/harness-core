@@ -2,9 +2,9 @@ package software.wings.api;
 
 import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 
 import software.wings.api.AwsAmiInfoVariables.AwsAmiInfoVariablesBuilder;
-import software.wings.beans.ResizeStrategy;
 import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;

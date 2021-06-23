@@ -4,6 +4,7 @@ import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PIPELINE_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
@@ -54,6 +55,7 @@ import io.harness.pms.approval.notification.ApprovalNotificationHandlerImpl;
 import io.harness.pms.barriers.service.PMSBarrierService;
 import io.harness.pms.barriers.service.PMSBarrierServiceImpl;
 import io.harness.pms.event.entitycrud.PipelineEntityCRUDStreamListener;
+import io.harness.pms.event.featureflag.PipelineServiceFeatureFlagListener;
 import io.harness.pms.event.webhookevent.WebhookEventStreamListener;
 import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
 import io.harness.pms.jira.JiraStepHelperServiceImpl;
@@ -210,7 +212,7 @@ public class PipelineServiceModule extends AbstractModule {
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new DelegateSelectionLogHttpClientModule(configuration.getManagerClientConfig(),
         configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
-    install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
+    install(new PipelineServiceEventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
     install(new EntitySetupUsageClientModule(this.configuration.getNgManagerServiceHttpClientConfig(),
         this.configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new LogStreamingModule(configuration.getLogStreamingServiceConfig().getBaseUrl()));
@@ -284,8 +286,10 @@ public class PipelineServiceModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(PIPELINE_ENTITY + ENTITY_CRUD))
         .to(PipelineEntityCRUDStreamListener.class);
-
     bind(MessageListener.class).annotatedWith(Names.named(WEBHOOK_EVENTS_STREAM)).to(WebhookEventStreamListener.class);
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(PIPELINE_ENTITY + FEATURE_FLAG_STREAM))
+        .to(PipelineServiceFeatureFlagListener.class);
   }
 
   @Provides

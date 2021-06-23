@@ -1,7 +1,9 @@
 package io.harness.stateutils.buildstate;
 
+import static io.harness.beans.serializer.RunTimeInputHandler.UNRESOLVED_PARAMETER;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveIntegerParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
 import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODE_BASE_CONNECTOR_REF;
 import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS;
 import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
@@ -174,14 +176,20 @@ public class K8BuildSetupUtils {
         "annotations", "K8BuildInfra", "stageSetup", k8sDirectInfraYaml.getSpec().getLabels(), false);
 
     Integer stageRunAsUser = resolveIntegerParameter(k8sDirectInfraYaml.getSpec().getRunAsUser(), null);
-
+    String resolveStringParameter = resolveStringParameter(
+        "serviceAccountName", null, "infrastructure", k8sDirectInfraYaml.getSpec().getServiceAccountName(), false);
+    String serviceAccountName = null;
+    if (resolveStringParameter != null && !resolveStringParameter.equals(UNRESOLVED_PARAMETER)) {
+      serviceAccountName = resolveStringParameter;
+    }
     PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
 
     ConnectorDetails k8sConnector = connectorUtils.getConnectorDetails(ngAccess, clusterName);
     String workDir = ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getWorkDir();
-    CIK8PodParams<CIK8ContainerParams> podParams = getPodParams(ngAccess, k8PodDetails, liteEngineTaskStepInfo,
-        liteEngineTaskStepInfo.isUsePVC(), liteEngineTaskStepInfo.getCiCodebase(),
-        liteEngineTaskStepInfo.isSkipGitClone(), logPrefix, ambiance, annotations, labels, stageRunAsUser);
+    CIK8PodParams<CIK8ContainerParams> podParams =
+        getPodParams(ngAccess, k8PodDetails, liteEngineTaskStepInfo, liteEngineTaskStepInfo.isUsePVC(),
+            liteEngineTaskStepInfo.getCiCodebase(), liteEngineTaskStepInfo.isSkipGitClone(), logPrefix, ambiance,
+            annotations, labels, stageRunAsUser, serviceAccountName);
 
     log.info("Created pod params for pod name [{}]", podSetupInfo.getName());
     return CIK8BuildTaskParams.builder().k8sConnector(k8sConnector).cik8PodParams(podParams).build();
@@ -199,7 +207,7 @@ public class K8BuildSetupUtils {
   public CIK8PodParams<CIK8ContainerParams> getPodParams(NGAccess ngAccess, K8PodDetails k8PodDetails,
       LiteEngineTaskStepInfo liteEngineTaskStepInfo, boolean usePVC, CodeBase ciCodebase, boolean skipGitClone,
       String logPrefix, Ambiance ambiance, Map<String, String> annotations, Map<String, String> labels,
-      Integer stageRunAsUser) {
+      Integer stageRunAsUser, String serviceAccountName) {
     PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
     ConnectorDetails harnessInternalImageConnector = null;
     if (isNotEmpty(ciExecutionServiceConfig.getDefaultInternalImageConnector())) {
@@ -257,6 +265,7 @@ public class K8BuildSetupUtils {
         .name(podSetupInfo.getName())
         .namespace(k8sDirectInfraYaml.getSpec().getNamespace())
         .labels(buildLabels)
+        .serviceAccountName(serviceAccountName)
         .annotations(annotations)
         .gitConnector(gitConnector)
         .containerParamsList(containerParamsList)

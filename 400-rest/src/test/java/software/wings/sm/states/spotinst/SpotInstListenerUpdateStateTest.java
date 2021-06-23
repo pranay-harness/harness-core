@@ -2,13 +2,13 @@ package software.wings.sm.states.spotinst;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
 import static io.harness.rule.OwnerRule.SATYAM;
 
 import static software.wings.beans.AmiDeploymentType.SPOTINST;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;

@@ -5,6 +5,7 @@ import static io.harness.lock.DistributedLockImplementation.NOOP;
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
@@ -28,7 +29,6 @@ import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -112,7 +112,7 @@ public class FeatureFlagRule implements MethodRule, InjectorRuleMixin, MongoRule
         bind(Producer.class)
             .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
             .toInstance(NoOpProducer.of("dummy_topic_name"));
-        bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+        bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
       }
     });
 

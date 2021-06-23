@@ -71,6 +71,7 @@ public abstract class BasePodSpecBuilder {
         .endMetadata()
         .withNewSpec()
         .withContainers(containers)
+        .withServiceAccountName(podParams.getServiceAccountName())
         .withInitContainers(initContainers)
         .withImagePullSecrets(imageSecrets)
         .withHostAliases(getHostAliases(podParams.getHostAliasParamsList()))

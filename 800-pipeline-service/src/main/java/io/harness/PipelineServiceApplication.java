@@ -523,14 +523,13 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     PipelineEventConsumerController pipelineEventConsumerController =
         injector.getInstance(PipelineEventConsumerController.class);
     pipelineEventConsumerController.register(injector.getInstance(InterruptEventRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class), 1);
     pipelineEventConsumerController.register(injector.getInstance(FacilitatorEventRedisConsumer.class), 1);
-    pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class), 4);
-    pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 2);
-    pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 4);
-    pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 4);
-
-    pipelineEventConsumerController.register(injector.getInstance(SdkResponseEventRedisConsumer.class), 5);
+    pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(SdkResponseEventRedisConsumer.class), 3);
   }
 
   private void registerCorsFilter(PipelineServiceConfiguration appConfig, Environment environment) {

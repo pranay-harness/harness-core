@@ -1,5 +1,7 @@
 package io.harness.connector.entities.embedded.jira;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
 
 import lombok.AccessLevel;
@@ -12,6 +14,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(HarnessTeam.CDC)
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "JiraConnectorKeys")
@@ -23,5 +26,6 @@ import org.springframework.data.annotation.TypeAlias;
 public class JiraConnector extends Connector {
   String jiraUrl;
   String username;
+  String usernameRef;
   String passwordRef;
 }

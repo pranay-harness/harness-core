@@ -117,7 +117,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
     resolveGitAppFunctor(ambiance, ciStepInfo);
 
     long timeoutInMillis = ciStepInfo.getDefaultTimeout();
-    String stringTimeout = null;
+    String stringTimeout = "2h";
 
     if (timeout != null && timeout.fetchFinalValue() != null) {
       timeoutInMillis = Timeout.fromString((String) timeout.fetchFinalValue()).getTimeoutInMillis() + bufferTimeMillis;
