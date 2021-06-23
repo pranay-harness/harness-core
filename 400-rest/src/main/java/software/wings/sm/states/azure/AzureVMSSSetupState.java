@@ -11,9 +11,9 @@ import static io.harness.azure.model.AzureConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.azure.model.AzureConstants.SETUP_COMMAND_UNIT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.StateType.AZURE_VMSS_SETUP;
 
 import static java.util.Collections.singletonList;
@@ -26,6 +26,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
@@ -42,7 +43,6 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureVMSSInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.AzureVMSSDummyCommandUnit;
