@@ -49,6 +49,7 @@ import io.harness.aggregator.AggregatorModule;
 import io.harness.aggregator.consumers.ChangeEventFailureHandler;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.client.remote.AuditClientModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
@@ -69,7 +70,6 @@ import io.harness.threading.ThreadPool;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.usermembership.UserMembershipClientModule;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
@@ -179,7 +179,7 @@ public class AccessControlModule extends AbstractModule {
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
         5, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     install(ExecutorModule.getInstance());
-    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
     install(PersistentLockModule.getInstance());
     Multibinder<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
         Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends MorphiaRegistrar>>() {});

@@ -6,7 +6,6 @@ import static java.lang.System.currentTimeMillis;
 import io.harness.concurrent.HTimeLimiter;
 
 import com.codahale.metrics.health.HealthCheck;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -31,7 +30,7 @@ public class HealthService extends HealthCheck {
   @Inject
   public HealthService(ExecutorService executorService) {
     initial = true;
-    timeLimiter = new SimpleTimeLimiter(executorService);
+    timeLimiter = HTimeLimiter.create(executorService);
     this.executorService = executorService;
   }
 
