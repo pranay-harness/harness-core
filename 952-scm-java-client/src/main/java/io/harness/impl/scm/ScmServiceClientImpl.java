@@ -481,10 +481,12 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     try {
       ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(prResponse.getStatus(), prResponse.getError());
     } catch (WingsException e) {
-      if (ErrorCode.SCM_NOT_MODIFIED.equals(e.getCode())) {
+      final WingsException cause = ExceptionUtils.cause(ErrorCode.SCM_NOT_MODIFIED, e);
+      if (cause != null) {
         throw new ExplanationException("A PR already exist for given branches", e);
+      } else {
+        throw new ExplanationException("Failed to create PR", e);
       }
-      throw e;
     }
     return prResponse;
   }
