@@ -131,6 +131,12 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
         + "uuid";
     public static final String planNodeIdentifier = NodeExecutionKeys.node + "."
         + "identifier";
+    public static final String lastLevelEndTs = NodeExecutionKeys.ambiance + "."
+        + "levels"
+        + "."
+        + "%s"
+        + "."
+        + "endTs";
   }
 
   public static class NodeExecutionBuilder {

@@ -8,6 +8,8 @@ import static io.harness.pms.contracts.execution.Status.ERRORED;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
+import static java.lang.String.format;
+
 import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -32,6 +34,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
+import io.harness.grpc.utils.HTimestamps;
 import io.harness.logging.AutoLogContext;
 import io.harness.observer.Subject;
 import io.harness.pms.contracts.advisers.AdviseType;
@@ -110,10 +113,17 @@ public class OrchestrationEngine {
     String uuid = generateUuid();
     NodeExecution previousNodeExecution = null;
     if (AmbianceUtils.obtainCurrentRuntimeId(ambiance) != null) {
+      long prevNodeEndTs = System.currentTimeMillis();
       previousNodeExecution = nodeExecutionService.update(AmbianceUtils.obtainCurrentRuntimeId(ambiance),
-          ops -> ops.set(NodeExecutionKeys.nextId, uuid).set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
+          ops
+          -> ops.set(NodeExecutionKeys.nextId, uuid)
+                 .set(NodeExecutionKeys.endTs, prevNodeEndTs)
+                 .set(format(NodeExecutionKeys.lastLevelEndTs, AmbianceUtils.obtainCurrentLevelIndex(ambiance)),
+                     HTimestamps.fromMillis(prevNodeEndTs)));
     }
-    Ambiance cloned = reBuildAmbiance(ambiance, node, uuid);
+
+    long currNodeStartTs = System.currentTimeMillis();
+    Ambiance cloned = reBuildAmbiance(ambiance, node, uuid, currNodeStartTs);
     NodeExecution nodeExecution =
         NodeExecution.builder()
             .uuid(uuid)
@@ -124,15 +134,16 @@ public class OrchestrationEngine {
             .parentId(previousNodeExecution == null ? null : previousNodeExecution.getParentId())
             .previousId(previousNodeExecution == null ? null : previousNodeExecution.getUuid())
             .unitProgresses(new ArrayList<>())
+            .startTs(currNodeStartTs)
             .build();
     nodeExecutionService.save(nodeExecution);
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(cloned).orchestrationEngine(this).build());
   }
 
-  private Ambiance reBuildAmbiance(Ambiance ambiance, PlanNodeProto node, String uuid) {
+  private Ambiance reBuildAmbiance(Ambiance ambiance, PlanNodeProto node, String uuid, long currLevelStartTs) {
     Ambiance cloned =
         AmbianceUtils.obtainCurrentRuntimeId(ambiance) == null ? ambiance : AmbianceUtils.cloneForFinish(ambiance);
-    cloned = cloned.toBuilder().addLevels(LevelUtils.buildLevelFromPlanNode(uuid, node)).build();
+    cloned = cloned.toBuilder().addLevels(LevelUtils.buildLevelFromPlanNode(uuid, node, currLevelStartTs)).build();
     return cloned;
   }
 
