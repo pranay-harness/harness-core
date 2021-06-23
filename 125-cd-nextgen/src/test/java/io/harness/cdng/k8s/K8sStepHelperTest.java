@@ -285,7 +285,10 @@ public class K8sStepHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetHelmChartManifestsOutcome() {
     HelmChartManifestOutcome helmChartManifestOutcome =
-        HelmChartManifestOutcome.builder().helmVersion(HelmVersion.V3).skipResourceVersioning(true).build();
+        HelmChartManifestOutcome.builder()
+            .helmVersion(HelmVersion.V3)
+            .skipResourceVersioning(ParameterField.createValueField(true))
+            .build();
     ValuesManifestOutcome valuesManifestOutcome = ValuesManifestOutcome.builder().build();
     List<ManifestOutcome> manifestOutcomes = new ArrayList<>();
     manifestOutcomes.add(helmChartManifestOutcome);
@@ -372,7 +375,7 @@ public class K8sStepHelperTest extends CategoryTest {
                        .connectorRef(ParameterField.createValueField("org.connectorRef"))
                        .paths(ParameterField.createValueField(asList("file1", "file2")))
                        .build())
-            .skipResourceVersioning(true)
+            .skipResourceVersioning(ParameterField.createValueField(true))
             .helmVersion(HelmVersion.V3)
             .commandFlags(commandFlags)
             .build();
@@ -400,29 +403,29 @@ public class K8sStepHelperTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testShouldReturnSkipResourceVersioning() {
-    boolean result =
-        k8sStepHelper.getSkipResourceVersioning(K8sManifestOutcome.builder().skipResourceVersioning(true).build());
+    boolean result = k8sStepHelper.getSkipResourceVersioning(
+        K8sManifestOutcome.builder().skipResourceVersioning(ParameterField.createValueField(true)).build());
     assertThat(result).isTrue();
-    result =
-        k8sStepHelper.getSkipResourceVersioning(K8sManifestOutcome.builder().skipResourceVersioning(false).build());
+    result = k8sStepHelper.getSkipResourceVersioning(
+        K8sManifestOutcome.builder().skipResourceVersioning(ParameterField.createValueField(false)).build());
     assertThat(result).isFalse();
     result = k8sStepHelper.getSkipResourceVersioning(
-        HelmChartManifestOutcome.builder().skipResourceVersioning(true).build());
+        HelmChartManifestOutcome.builder().skipResourceVersioning(ParameterField.createValueField(true)).build());
     assertThat(result).isTrue();
     result = k8sStepHelper.getSkipResourceVersioning(
-        HelmChartManifestOutcome.builder().skipResourceVersioning(false).build());
+        HelmChartManifestOutcome.builder().skipResourceVersioning(ParameterField.createValueField(false)).build());
     assertThat(result).isFalse();
     result = k8sStepHelper.getSkipResourceVersioning(
-        KustomizeManifestOutcome.builder().skipResourceVersioning(true).build());
+        KustomizeManifestOutcome.builder().skipResourceVersioning(ParameterField.createValueField(true)).build());
     assertThat(result).isTrue();
     result = k8sStepHelper.getSkipResourceVersioning(
-        KustomizeManifestOutcome.builder().skipResourceVersioning(false).build());
+        KustomizeManifestOutcome.builder().skipResourceVersioning(ParameterField.createValueField(false)).build());
     assertThat(result).isFalse();
     result = k8sStepHelper.getSkipResourceVersioning(
-        OpenshiftManifestOutcome.builder().skipResourceVersioning(true).build());
+        OpenshiftManifestOutcome.builder().skipResourceVersioning(ParameterField.createValueField(true)).build());
     assertThat(result).isTrue();
     result = k8sStepHelper.getSkipResourceVersioning(
-        OpenshiftManifestOutcome.builder().skipResourceVersioning(false).build());
+        OpenshiftManifestOutcome.builder().skipResourceVersioning(ParameterField.createValueField(false)).build());
     assertThat(result).isFalse();
 
     result = k8sStepHelper.getSkipResourceVersioning(ValuesManifestOutcome.builder().build());
@@ -441,7 +444,7 @@ public class K8sStepHelperTest extends CategoryTest {
                        .paths(ParameterField.createValueField(asList("file1")))
                        .folderPath(ParameterField.createValueField("kustomize-dir"))
                        .build())
-            .pluginPath("/usr/bin/kustomize")
+            .pluginPath(ParameterField.createValueField("/usr/bin/kustomize"))
             .build();
 
     doReturn(
@@ -478,8 +481,8 @@ public class K8sStepHelperTest extends CategoryTest {
     HelmChartManifestOutcome manifestOutcome =
         HelmChartManifestOutcome.builder()
             .store(HttpStoreConfig.builder().connectorRef(ParameterField.createValueField(connectorRef)).build())
-            .chartName(chartName)
-            .chartVersion(chartVersion)
+            .chartName(ParameterField.createValueField(chartName))
+            .chartVersion(ParameterField.createValueField(chartVersion))
             .build();
 
     doReturn(Optional.of(ConnectorResponseDTO.builder()
@@ -719,8 +722,8 @@ public class K8sStepHelperTest extends CategoryTest {
                        .region(ParameterField.createValueField(region))
                        .folderPath(ParameterField.createValueField(folderPath))
                        .build())
-            .chartName(chartName)
-            .chartVersion(chartVersion)
+            .chartName(ParameterField.createValueField(chartName))
+            .chartVersion(ParameterField.createValueField(chartVersion))
             .build();
 
     doReturn(
@@ -762,8 +765,8 @@ public class K8sStepHelperTest extends CategoryTest {
 
     HelmChartManifestOutcome helmChartManifestOutcome =
         HelmChartManifestOutcome.builder()
-            .chartVersion(chartVersion)
-            .chartName(chartName)
+            .chartVersion(ParameterField.createValueField(chartVersion))
+            .chartName(ParameterField.createValueField(chartName))
             .store(GcsStoreConfig.builder()
                        .connectorRef(ParameterField.createValueField(connectorRef))
                        .bucketName(ParameterField.createValueField(bucketName))
@@ -967,8 +970,11 @@ public class K8sStepHelperTest extends CategoryTest {
                                 .connectorRef(ParameterField.createValueField("aws-connector"))
                                 .build();
 
-    HelmChartManifestOutcome helmChartManifestOutcome =
-        HelmChartManifestOutcome.builder().identifier("helm").store(s3Store).build();
+    HelmChartManifestOutcome helmChartManifestOutcome = HelmChartManifestOutcome.builder()
+                                                            .identifier("helm")
+                                                            .store(s3Store)
+                                                            .chartName(ParameterField.createValueField("chart"))
+                                                            .build();
     Map<String, ManifestOutcome> manifestOutcomeMap = ImmutableMap.of("k8s", helmChartManifestOutcome);
     RefObject manifests = RefObject.newBuilder()
                               .setName(OutcomeExpressionConstants.MANIFESTS)
@@ -1039,8 +1045,11 @@ public class K8sStepHelperTest extends CategoryTest {
                                   .connectorRef(ParameterField.createValueField("gcs-connector"))
                                   .build();
 
-    HelmChartManifestOutcome helmChartManifestOutcome =
-        HelmChartManifestOutcome.builder().identifier("helm").store(gcsStore).build();
+    HelmChartManifestOutcome helmChartManifestOutcome = HelmChartManifestOutcome.builder()
+                                                            .identifier("helm")
+                                                            .store(gcsStore)
+                                                            .chartName(ParameterField.createValueField("chart"))
+                                                            .build();
     Map<String, ManifestOutcome> manifestOutcomeMap = ImmutableMap.of("k8s", helmChartManifestOutcome);
     RefObject manifests = RefObject.newBuilder()
                               .setName(OutcomeExpressionConstants.MANIFESTS)
@@ -1107,8 +1116,11 @@ public class K8sStepHelperTest extends CategoryTest {
     HttpStoreConfig httpStore =
         HttpStoreConfig.builder().connectorRef(ParameterField.createValueField("http-connector")).build();
 
-    HelmChartManifestOutcome helmChartManifestOutcome =
-        HelmChartManifestOutcome.builder().identifier("helm").store(httpStore).build();
+    HelmChartManifestOutcome helmChartManifestOutcome = HelmChartManifestOutcome.builder()
+                                                            .identifier("helm")
+                                                            .store(httpStore)
+                                                            .chartName(ParameterField.createValueField("chart"))
+                                                            .build();
     Map<String, ManifestOutcome> manifestOutcomeMap = ImmutableMap.of("k8s", helmChartManifestOutcome);
     RefObject manifests = RefObject.newBuilder()
                               .setName(OutcomeExpressionConstants.MANIFESTS)
