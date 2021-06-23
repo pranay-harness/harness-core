@@ -40,6 +40,7 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
   @Inject private AccountService accountService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject @Named("AsyncArtifactCleanupService") private ArtifactCleanupService artifactCleanupServiceAsync;
+  @Inject @Named("SyncArtifactCleanupService") private ArtifactCleanupService artifactCleanupServiceSync;
   @Inject ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private MorphiaPersistenceRequiredProvider<ArtifactStream> persistenceProvider;
 
@@ -76,6 +77,11 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
     executeInternal(artifactStream);
   }
 
+  public void handleManually(ArtifactStream artifactStream) {
+    log.info("Received the artifact cleanup for ArtifactStream manually");
+    executeInternalInSync(artifactStream);
+  }
+
   private void executeInternal(ArtifactStream artifactStream) {
     String artifactStreamId = artifactStream.getUuid();
     try {
@@ -83,7 +89,8 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
         return;
       }
 
-      artifactCleanupServiceAsync.cleanupArtifactsAsync(artifactStream);
+      artifactCleanupServiceAsync.cleanupArtifacts(artifactStream);
+
     } catch (WingsException exception) {
       log.warn("Failed to cleanup artifacts for artifact stream. Reason {}", exception.getMessage());
       exception.addContext(Account.class, artifactStream.getAccountId());
@@ -92,5 +99,13 @@ public class ArtifactCleanupHandler implements Handler<ArtifactStream> {
     } catch (Exception e) {
       log.warn("Failed to cleanup artifacts for artifactStream. Reason {}", e.getMessage());
     }
+  }
+
+  private void executeInternalInSync(ArtifactStream artifactStream) {
+    if (artifactCollectionUtils.skipArtifactStreamIteration(artifactStream, false)) {
+      return;
+    }
+
+    artifactCleanupServiceSync.cleanupArtifacts(artifactStream);
   }
 }
