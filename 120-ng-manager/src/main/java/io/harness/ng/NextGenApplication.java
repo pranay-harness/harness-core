@@ -267,11 +267,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     if (appConfig.getShouldDeployWithGitSync()) {
       GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
     }
-    // Access all caches before coming out of maintenance
-    Cache<String, String> cache =
-        injector.getInstance(Key.get(new TypeLiteral<Cache<String, String>>() {}, Names.named("TestCache")));
-    cache.put("Test", "Value");
-    log.info("CACHE_TESTING: Get value from cache {}", cache.get("Test"));
 
     // Will create collections and Indexes
     injector.getInstance(HPersistence.class);

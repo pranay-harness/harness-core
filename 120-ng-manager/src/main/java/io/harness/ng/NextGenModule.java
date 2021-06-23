@@ -278,14 +278,6 @@ public class NextGenModule extends AbstractModule {
     return appConfig.getRedisLockConfig();
   }
 
-  @Provides
-  @Named("TestCache")
-  @Singleton
-  Cache<String, String> getTestCache(HarnessCacheManager harnessCacheManager, VersionInfoManager versionInfoManager) {
-    return harnessCacheManager.getCache("TestCache", String.class, String.class,
-        AccessedExpiryPolicy.factoryOf(Duration.TWENTY_MINUTES), versionInfoManager.getVersionInfo().getBuildNo());
-  }
-
   private DelegateCallbackToken getDelegateCallbackToken(
       DelegateServiceGrpcClient delegateServiceClient, NextGenConfiguration appConfig) {
     log.info("Generating Delegate callback token");
