@@ -63,7 +63,8 @@ public class RestoreCacheGCSStepInfo implements PluginCompatibleStep, WithConnec
   @YamlSchemaTypes({string})
   @ApiModelProperty(dataType = BOOLEAN_CLASSPATH)
   private ParameterField<Boolean> failIfKeyNotFound;
-  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<ArchiveFormat> archiveFormat;
+  @ApiModelProperty(dataType = "io.harness.beans.yaml.extended.ArchiveFormat")
+  private ParameterField<ArchiveFormat> archiveFormat;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "resources", "key", "bucket",
