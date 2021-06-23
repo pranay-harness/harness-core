@@ -2,11 +2,9 @@ package io.harness.pms.sdk.execution.events.node.start;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_START_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_START_LISTENER;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
-import io.harness.ng.core.event.MessageListener;
 import io.harness.pms.events.base.PmsAbstractRedisConsumer;
 
 import com.google.inject.Inject;
@@ -17,10 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(PIPELINE)
 @Singleton
-public class NodeStartEventRedisConsumer extends PmsAbstractRedisConsumer {
+public class NodeStartEventRedisConsumer extends PmsAbstractRedisConsumer<NodeStartEventMessageListener> {
   @Inject
-  public NodeStartEventRedisConsumer(@Named(PT_NODE_START_CONSUMER) Consumer redisConsumer,
-      @Named(PT_NODE_START_LISTENER) MessageListener messageListener) {
+  public NodeStartEventRedisConsumer(
+      @Named(PT_NODE_START_CONSUMER) Consumer redisConsumer, NodeStartEventMessageListener messageListener) {
     super(redisConsumer, messageListener);
   }
 }

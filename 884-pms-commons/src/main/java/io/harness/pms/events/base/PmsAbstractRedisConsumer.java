@@ -9,7 +9,6 @@ import static java.time.Duration.ofSeconds;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
-import io.harness.ng.core.event.MessageListener;
 
 import java.time.Duration;
 import java.util.List;
@@ -18,23 +17,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class PmsAbstractRedisConsumer implements Runnable {
+public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListener> implements Runnable {
   private static final int WAIT_TIME_IN_SECONDS = 10;
   private final Consumer redisConsumer;
-  private final MessageListener messageListener;
+  private final T messageListener;
   private AtomicBoolean shouldStop = new AtomicBoolean(false);
-  private boolean isLazy;
 
-  public PmsAbstractRedisConsumer(Consumer redisConsumer, MessageListener messageListener) {
+  public PmsAbstractRedisConsumer(Consumer redisConsumer, T messageListener) {
     this.redisConsumer = redisConsumer;
     this.messageListener = messageListener;
-    this.isLazy = false;
-  }
-
-  public PmsAbstractRedisConsumer(Consumer redisConsumer, MessageListener messageListener, boolean isLazy) {
-    this.redisConsumer = redisConsumer;
-    this.messageListener = messageListener;
-    this.isLazy = isLazy;
   }
 
   @Override
@@ -48,9 +39,6 @@ public abstract class PmsAbstractRedisConsumer implements Runnable {
       do {
         while (getMaintenanceFlag()) {
           sleep(ofSeconds(1));
-        }
-        if (isLazy) {
-          sleep(ofSeconds(WAIT_TIME_IN_SECONDS));
         }
         readEventsFrameworkMessages();
       } while (!Thread.currentThread().isInterrupted() && !shouldStop.get());
@@ -95,10 +83,17 @@ public abstract class PmsAbstractRedisConsumer implements Runnable {
 
   private boolean processMessage(Message message) {
     AtomicBoolean success = new AtomicBoolean(true);
-    if (!messageListener.handleMessage(message)) {
-      success.set(false);
+    if (messageListener.isProcessable(message) && !isAlreadyProcessed(message)) {
+      if (!messageListener.handleMessage(message)) {
+        success.set(false);
+      }
     }
     return success.get();
+  }
+
+  // Todo(hindwani): Add a distributed cache support here
+  private boolean isAlreadyProcessed(Message message) {
+    return false;
   }
 
   public void shutDown() {

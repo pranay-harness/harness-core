@@ -11,7 +11,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 @OwnedBy(PIPELINE)
 public class TimeoutUtils {
-  private final String DEFAULT_TIMEOUT = "10h";
+  public static final String DEFAULT_TIMEOUT = "10h";
 
   public long getTimeoutInSeconds(Timeout timeout, long defaultTimeoutInSeconds) {
     if (timeout == null) {

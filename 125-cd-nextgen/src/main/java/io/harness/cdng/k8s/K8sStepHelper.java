@@ -28,6 +28,7 @@ import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
+import io.harness.cdng.expressions.CDExpressionResolveFunctor;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
@@ -37,16 +38,21 @@ import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.ManifestType;
+import io.harness.cdng.manifest.mappers.ManifestOutcomeValidator;
 import io.harness.cdng.manifest.steps.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
+import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome.HelmChartManifestOutcomeKeys;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
 import io.harness.cdng.manifest.yaml.HttpStoreConfig;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
+import io.harness.cdng.manifest.yaml.K8sManifestOutcome.K8sManifestOutcomeKeys;
 import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
+import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome.KustomizeManifestOutcomeKeys;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
+import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome.OpenshiftManifestOutcomeKeys;
 import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
 import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
@@ -101,6 +107,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepConstants;
+import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.helm.HelmSubCommandType;
@@ -286,8 +293,8 @@ public class K8sStepHelper {
         return HelmChartManifestDelegateConfig.builder()
             .storeDelegateConfig(getStoreDelegateConfig(helmChartManifestOutcome.getStore(), ambiance,
                 manifestOutcome.getType(), manifestOutcome.getType() + " manifest"))
-            .chartName(helmChartManifestOutcome.getChartName())
-            .chartVersion(helmChartManifestOutcome.getChartVersion())
+            .chartName(getParameterFieldValue(helmChartManifestOutcome.getChartName()))
+            .chartVersion(getParameterFieldValue(helmChartManifestOutcome.getChartVersion()))
             .helmVersion(helmChartManifestOutcome.getHelmVersion())
             .helmCommandFlag(getDelegateHelmCommandFlag(helmChartManifestOutcome.getCommandFlags()))
             .build();
@@ -303,7 +310,7 @@ public class K8sStepHelper {
         return KustomizeManifestDelegateConfig.builder()
             .storeDelegateConfig(getStoreDelegateConfig(kustomizeManifestOutcome.getStore(), ambiance,
                 manifestOutcome.getType(), manifestOutcome.getType() + " manifest"))
-            .pluginPath(kustomizeManifestOutcome.getPluginPath())
+            .pluginPath(getParameterFieldValue(kustomizeManifestOutcome.getPluginPath()))
             .kustomizeDirPath(getParameterFieldValue(gitStoreConfig.getFolderPath()))
             .build();
 
@@ -844,6 +851,9 @@ public class K8sStepHelper {
     ManifestsOutcome manifestsOutcome = resolveManifestsOutcome(ambiance);
     InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
+    ExpressionEvaluatorUtils.updateExpressions(
+        manifestsOutcome, new CDExpressionResolveFunctor(engineExpressionService, ambiance));
+    manifestsOutcome.values().forEach(value -> ManifestOutcomeValidator.validate(value, false));
 
     ManifestOutcome k8sManifestOutcome = getK8sSupportedManifestOutcome(new LinkedList<>(manifestsOutcome.values()));
     if (ManifestType.Kustomize.equals(k8sManifestOutcome.getType())) {
@@ -1227,19 +1237,23 @@ public class K8sStepHelper {
     switch (manifestOutcome.getType()) {
       case ManifestType.K8Manifest:
         K8sManifestOutcome k8sManifestOutcome = (K8sManifestOutcome) manifestOutcome;
-        return k8sManifestOutcome.isSkipResourceVersioning();
+        return getParameterFieldBooleanValue(k8sManifestOutcome.getSkipResourceVersioning(),
+            K8sManifestOutcomeKeys.skipResourceVersioning, k8sManifestOutcome);
 
       case ManifestType.HelmChart:
         HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestOutcome;
-        return helmChartManifestOutcome.isSkipResourceVersioning();
+        return getParameterFieldBooleanValue(helmChartManifestOutcome.getSkipResourceVersioning(),
+            HelmChartManifestOutcomeKeys.skipResourceVersioning, helmChartManifestOutcome);
 
       case ManifestType.Kustomize:
         KustomizeManifestOutcome kustomizeManifestOutcome = (KustomizeManifestOutcome) manifestOutcome;
-        return kustomizeManifestOutcome.isSkipResourceVersioning();
+        return getParameterFieldBooleanValue(kustomizeManifestOutcome.getSkipResourceVersioning(),
+            KustomizeManifestOutcomeKeys.skipResourceVersioning, kustomizeManifestOutcome);
 
       case ManifestType.OpenshiftTemplate:
         OpenshiftManifestOutcome openshiftManifestOutcome = (OpenshiftManifestOutcome) manifestOutcome;
-        return openshiftManifestOutcome.isSkipResourceVersioning();
+        return getParameterFieldBooleanValue(openshiftManifestOutcome.getSkipResourceVersioning(),
+            OpenshiftManifestOutcomeKeys.skipResourceVersioning, openshiftManifestOutcome);
 
       default:
         return false;
@@ -1289,6 +1303,17 @@ public class K8sStepHelper {
     } catch (Exception e) {
       String message = String.format("%s for field %s in %s step with identifier: %s", e.getMessage(), fieldName,
           stepElement.getType(), stepElement.getIdentifier());
+      throw new InvalidArgumentsException(message);
+    }
+  }
+
+  public static boolean getParameterFieldBooleanValue(
+      ParameterField<?> fieldValue, String fieldName, ManifestOutcome manifestOutcome) {
+    try {
+      return getBooleanParameterFieldValue(fieldValue);
+    } catch (Exception e) {
+      String message = String.format("%s for field %s in %s manifest with identifier: %s", e.getMessage(), fieldName,
+          manifestOutcome.getType(), manifestOutcome.getIdentifier());
       throw new InvalidArgumentsException(message);
     }
   }

@@ -1,6 +1,8 @@
 package io.harness.ci.integrationstage;
 
 import static io.harness.beans.serializer.RunTimeInputHandler.UNRESOLVED_PARAMETER;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveBooleanParameter;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveIntegerParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
 import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_ARGS;
 import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_ENTRYPOINT;
@@ -76,6 +78,9 @@ public class CIServiceBuilder {
     String connectorRef = RunTimeInputHandler.resolveStringParameter(
         "connectorRef", "serviceDependency", identifier, service.getConnectorRef(), true);
 
+    boolean privileged = resolveBooleanParameter(service.getPrivileged(), false);
+    Integer runAsUser = resolveIntegerParameter(service.getRunAsUser(), null);
+
     List<String> args =
         RunTimeInputHandler.resolveListParameter("args", "serviceDependency", identifier, service.getArgs(), false);
 
@@ -110,6 +115,8 @@ public class CIServiceBuilder {
         .containerType(CIContainerType.SERVICE)
         .stepIdentifier(service.getIdentifier())
         .stepName(service.getName())
+        .privileged(privileged)
+        .runAsUser(runAsUser)
         .build();
   }
 
