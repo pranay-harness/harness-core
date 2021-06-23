@@ -8,7 +8,9 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.0
 	github.com/dchest/authcookie v0.0.0-20190824115100-f900d2294c8e
 	github.com/go-chi/chi v1.5.1
+	github.com/go-redis/redis/v7 v7.4.0
 	github.com/golang/mock v1.4.4
+	github.com/golang/protobuf v1.3.3
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	github.com/jackc/pgx v3.6.2+incompatible // indirect
 	github.com/jackc/pgx/v4 v4.10.0 // indirect
@@ -17,6 +19,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/mattn/go-zglob v0.0.3
 	github.com/robinjoseph08/redisqueue v1.1.0
+	github.com/robinjoseph08/redisqueue/v2 v2.1.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.5.1
 	go.mongodb.org/mongo-driver v1.3.4

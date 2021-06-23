@@ -10,8 +10,9 @@ go_library(
         "//product/ci/scm/proto:go_default_library",
         "//product/ci/ti-service/db:go_default_library",
         "//product/ci/ti-service/types:go_default_library",
+        "@com_github_go_redis_redis_v7//:go_default_library",
         "@com_github_golang_protobuf//proto:go_default_library",
-        "@com_github_robinjoseph08_redisqueue//:go_default_library",
+        "@com_github_robinjoseph08_redisqueue_v2//:go_default_library",
         "@org_uber_go_zap//:go_default_library",
     ],
 )

@@ -5237,6 +5237,14 @@ go_repository(
     version = "v1.3.1",
 )
 
+go_repository(
+    name = "com_github_robinjoseph08_redisqueue_v2",
+    importpath = "github.com/robinjoseph08/redisqueue/v2",
+    sum = "h1:GactHlrxS8YSCJc4CbP1KbTObo14pieNmNWSUlquTGI=",
+    version = "v2.1.0",
+)
+
+
 #========== Python Configuration Begin=========================
 
 # Special logic for building python interpreter with OpenSSL from homebrew.

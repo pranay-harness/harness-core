@@ -6,10 +6,12 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"errors"
-	"github.com/robinjoseph08/redisqueue"
+	"github.com/robinjoseph08/redisqueue/v2"
 	"io/ioutil"
+	"strings"
 	"time"
 
+	"github.com/go-redis/redis/v7"
 	"github.com/golang/protobuf/proto"
 	pb "github.com/wings-software/portal/953-events-api/src/main/proto/io/harness/eventsframework/schemas/webhookpayloads"
 	scmpb "github.com/wings-software/portal/product/ci/scm/proto"
@@ -25,30 +27,12 @@ type RedisBroker struct {
 	log      *zap.SugaredLogger
 }
 
-func New(endpoint, password string, enableTLS bool, certPath string, log *zap.SugaredLogger) (*RedisBroker, error) {
-	// TODO: (vistaar) Configure with options using values suitable for prod and pass as env variables.
-	opt := redisqueue.RedisOptions{Addr: endpoint}
-	if password != "" {
-		opt.Password = password
-	}
-	if enableTLS == true {
-		// Create TLS config using cert PEM
-		rootPem, err := ioutil.ReadFile(certPath)
-		if err != nil {
-			log.Errorw("could not read certificate file", "path", certPath, zap.Error(err))
-			return nil, err
-		}
-
-		roots := x509.NewCertPool()
-		ok := roots.AppendCertsFromPEM(rootPem)
-		if !ok {
-			log.Errorw("could not use cert", "path", certPath, zap.Error(err))
-			return nil, err
-		}
-		opt.TLSConfig = &tls.Config{RootCAs: roots}
-	}
+func New(endpoint, password string, useSentinel, enableTLS bool, certPath, sentinelMaster, sentinelURLs string, log *zap.SugaredLogger) (*RedisBroker, error) {
+	usePassword := password != ""
+	client := NewRedisClientFromConfig(endpoint, false, "se", "ds", usePassword,
+		password, enableTLS, certPath, log)
 	c1, err := redisqueue.NewConsumerWithOptions(&redisqueue.ConsumerOptions{
-		RedisOptions:      &opt,
+		RedisClient: client,
 		VisibilityTimeout: 60 * time.Second,
 		BlockingTimeout:   5 * time.Second,
 		ReclaimInterval:   1 * time.Second,
@@ -63,6 +47,98 @@ func New(endpoint, password string, enableTLS bool, certPath string, log *zap.Su
 		}
 	}()
 	return &RedisBroker{consumer: c1, log: log}, nil
+}
+
+func NewRedisClientFromConfig(endpoint string, useSentinel bool, sentinelMaster, sentinelURLs string, usePassword bool, password string, useTLS bool, certPathForTLS string, log *zap.SugaredLogger) redis.UniversalClient {
+	log.Info("NewRedisClientFromConfig")
+	var redisClient redis.UniversalClient
+
+	if useSentinel {
+		log.Infow("Sentinel enabled for redis, setting it up", "urls", sentinelURLs)
+		log.Infow("Sentinel master", sentinelMaster)
+		opt := redis.FailoverOptions{
+			MasterName: sentinelMaster,
+		}
+		if usePassword {
+			log.Infow("Using redis password")
+			opt.Password = password
+		} else {
+			log.Infow("Not using redis password")
+		}
+		if useTLS {
+			log.Infow("TLS enabled for redis sentinel, so setting it up")
+			newTlSConfig, err := newTlSConfig(certPathForTLS, log)
+			if err != nil {
+				log.Fatal(err)
+			}
+			opt.TLSConfig = newTlSConfig
+		} else {
+			log.Info("TLS not enabled for redis sentinel, so not setting it up")
+		}
+
+		sentinelURLsArray := strings.Split(sentinelURLs, ",")
+		opt.SentinelAddrs = sentinelURLsArray
+		redisClient = newRedisSentinelClient(&opt)
+	} else {
+		log.Infof("Regular redis configured, so setting it up for address: %s", endpoint)
+
+		opt := redisqueue.RedisOptions{Addr: endpoint}
+		if usePassword {
+			log.Info("Using redis password")
+			opt.Password = password
+		} else {
+			log.Info("Not using redis password")
+		}
+
+		if useTLS {
+			log.Info("TLS enabled for redis, so setting it up")
+			newTlSConfig, err := newTlSConfig(certPathForTLS, log)
+			if err != nil {
+				log.Fatal(err)
+			}
+			opt.TLSConfig = newTlSConfig
+		} else {
+			log.Info("TLS not enabled for redis, so not setting it up")
+		}
+
+		redisClient = newRedisClient(&opt)
+	}
+	return redisClient
+}
+
+
+func newRedisClient(redisOptions *redis.Options) redis.UniversalClient {
+	return redis.NewClient(redisOptions)
+}
+
+func newRedisSentinelClient(redisOptions *redis.FailoverOptions) redis.UniversalClient {
+	return redis.NewFailoverClient(redisOptions)
+}
+
+func newRedisClusterClient(redisOptions *redis.UniversalOptions) redis.UniversalClient {
+	return redis.NewUniversalClient(redisOptions)
+}
+
+func newTlSConfig(certPathForTLS string, log *zap.SugaredLogger) (*tls.Config, error) {
+	// Create TLS config using cert PEM
+	rootPem, err := ioutil.ReadFile(certPathForTLS)
+	if err != nil {
+		log.Errorf("could not read certificate file (%s), error: %s", certPathForTLS, err.Error())
+		return nil, err
+	}
+	//// Base64 decode the PEM file
+	//rootPemDec, err := base64.StdEncoding.DecodeString(string(rootPem))
+	//if err != nil {
+	//	log.Errorf("could not b64 decode cert: %s. error: %s", certPathForTLS, err.Error())
+	//	return nil, err
+	//}
+	roots := x509.NewCertPool()
+	ok := roots.AppendCertsFromPEM(rootPem)
+	if !ok {
+		log.Errorf("error adding cert (%s) to pool, error: %s", certPathForTLS, err.Error())
+		return nil, err
+	}
+	return &tls.Config{RootCAs: roots}, nil
 }
 
 func (r *RedisBroker) Register(topic string, fn func(msg *redisqueue.Message) error) {

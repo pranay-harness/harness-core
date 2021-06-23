@@ -110,7 +110,10 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 				config.EventsFramework.RedisUrl,
 				config.EventsFramework.RedisPassword,
 				config.EventsFramework.SSLEnabled,
+				config.EventsFramework.UseSentinel,
 				config.EventsFramework.CertPath,
+				config.EventsFramework.SentinelMaster,
+				config.EventsFramework.SentienlURLs,
 				log)
 			if err != nil {
 				log.Errorw("could not establish connection with events framework Redis")
