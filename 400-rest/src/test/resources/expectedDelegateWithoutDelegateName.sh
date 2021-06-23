@@ -45,6 +45,8 @@ esac
 
 JVM_URL=http://localhost:8888/jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
 
+ALPN_BOOT_JAR_URL=http://localhost:8888/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
+
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
   DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
@@ -140,10 +142,6 @@ fi
 
 export DEPLOY_MODE=KUBERNETES
 
-if [[ -z "$MANAGER_SERVICE_SECRET" || "$MANAGER_SERVICE_SECRET" == "null" ]]; then
-  export MANAGER_SERVICE_SECRET=**********
-fi
-
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
   DELEGATE_STORAGE_URL=http://localhost:8888
@@ -163,6 +161,10 @@ if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
       curl $MANAGER_PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
     fi
   fi
+fi
+
+if [ -z $CLIENT_TOOLS_DOWNLOAD_DISABLED ]; then
+  export CLIENT_TOOLS_DOWNLOAD_DISABLED=false
 fi
 
 if [ ! -e config-delegate.yml ]; then
@@ -219,6 +221,7 @@ else
   sed -i.bak "s|^cdnUrl:.*$|cdnUrl: http://localhost:9500|" config-delegate.yml
 fi
 
+
 if ! `grep grpcServiceEnabled config-delegate.yml > /dev/null`; then
   echo "grpcServiceEnabled: $GRPC_SERVICE_ENABLED" >> config-delegate.yml
 else
@@ -231,16 +234,14 @@ else
   sed -i.bak "s|^grpcServiceConnectorPort:.*$|grpcServiceConnectorPort: $GRPC_SERVICE_CONNECTOR_PORT|" config-delegate.yml
 fi
 
-if ! `grep managerServiceSecret config-delegate.yml > /dev/null`; then
-  echo "managerServiceSecret: $MANAGER_SERVICE_SECRET" >> config-delegate.yml
-else
-  sed -i.bak "s|^managerServiceSecret:.*$|managerServiceSecret: $MANAGER_SERVICE_SECRET|" config-delegate.yml
-fi
-
 if ! `grep logStreamingServiceBaseUrl config-delegate.yml > /dev/null`; then
   echo "logStreamingServiceBaseUrl: http://localhost:8079" >> config-delegate.yml
 else
   sed -i.bak "s|^logStreamingServiceBaseUrl:.*$|logStreamingServiceBaseUrl: http://localhost:8079|" config-delegate.yml
+fi
+
+if ! `grep clientToolsDownloadDisabled config-delegate.yml > /dev/null`; then
+  echo "clientToolsDownloadDisabled: $CLIENT_TOOLS_DOWNLOAD_DISABLED" >> config-delegate.yml
 fi
 
 if [ ! -z "$KUSTOMIZE_PATH" ] && ! `grep kustomizePath config-delegate.yml > /dev/null` ; then
@@ -253,6 +254,14 @@ fi
 
 if [ ! -z "$KUBECTL_PATH" ] && ! `grep kubectlPath config-delegate.yml > /dev/null` ; then
   echo "kubectlPath: $KUBECTL_PATH" >> config-delegate.yml
+fi
+
+if [ ! -z "$CF_CLI6_PATH" ] && ! `grep cfCli6Path config-delegate.yml > /dev/null` ; then
+  echo "cfCli6Path: $CF_CLI6_PATH" >> config-delegate.yml
+fi
+
+if [ ! -z "$CF_CLI7_PATH" ] && ! `grep cfCli7Path config-delegate.yml > /dev/null` ; then
+  echo "cfCli7Path: $CF_CLI7_PATH" >> config-delegate.yml
 fi
 
 rm -f -- *.bak
@@ -272,7 +281,7 @@ if [[ ! -z $INSTRUMENTATION ]]; then
 fi
 
 if [ ! -e alpn-boot-8.1.13.v20181017.jar ]; then
-  curl $MANAGER_PROXY_CURL -ks https://app.harness.io/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar  --output alpn-boot-8.1.13.v20181017.jar
+  curl $MANAGER_PROXY_CURL -ks $ALPN_BOOT_JAR_URL -o alpn-boot-8.1.13.v20181017.jar
 fi
 
 if [[ $DEPLOY_MODE == "KUBERNETES" ]]; then

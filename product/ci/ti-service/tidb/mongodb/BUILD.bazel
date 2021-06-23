@@ -27,6 +27,7 @@ go_test(
     deps = [
         "//commons/go/lib/logs:go_default_library",
         "//product/ci/addon/ti:go_default_library",
+        "//product/ci/ti-service/types:go_default_library",
         "@com_github_stretchr_testify//assert:go_default_library",
         "@org_mongodb_go_mongo_driver//bson:go_default_library",
         "@org_mongodb_go_mongo_driver//mongo/options:go_default_library",

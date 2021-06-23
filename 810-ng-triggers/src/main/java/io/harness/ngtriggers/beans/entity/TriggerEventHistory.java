@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ngtriggers.beans.response.TargetExecutionSummary;
@@ -44,6 +45,11 @@ public class TriggerEventHistory implements PersistentEntity {
                  .name("accountId_createdAt_desc")
                  .field(TriggerEventHistoryKeys.accountId)
                  .descSortField(TriggerEventHistoryKeys.createdAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_eventCorrelationId")
+                 .field(TriggerEventHistoryKeys.accountId)
+                 .field(TriggerEventHistoryKeys.eventCorrelationId)
                  .build())
         .build();
   }

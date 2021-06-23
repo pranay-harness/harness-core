@@ -67,6 +67,8 @@ public class WorkflowStatsDataFetcher
         return "appId";
       case OrchestrationWorkflowType:
         return "orchestration.orchestrationWorkflowType";
+      case Workflow:
+        return "_id";
       default:
         throw new InvalidRequestException("Unknown aggregation type" + aggregation);
     }
@@ -102,6 +104,8 @@ public class WorkflowStatsDataFetcher
     switch (groupByTag.getEntityType()) {
       case APPLICATION:
         return QLWorkflowEntityAggregation.Application;
+      case WORKFLOW:
+        return QLWorkflowEntityAggregation.Workflow;
       default:
         log.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);

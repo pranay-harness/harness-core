@@ -2,11 +2,12 @@ package io.harness.entities.instance;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.EnvironmentType;
+import io.harness.entities.ArtifactDetails;
 import io.harness.entities.InstanceType;
 import io.harness.entities.instanceinfo.InstanceInfo;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.core.environment.beans.EnvironmentType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
@@ -59,10 +60,7 @@ public class Instance {
   private String infrastructureMappingId;
   private String infraMappingType;
 
-  private String connectorId;
-  private String lastArtifactId;
-  private String lastArtifactName;
-  private String lastArtifactBuildNum;
+  private ArtifactDetails primaryArtifact;
 
   private String lastDeployedById;
   private String lastDeployedByName;

@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
+import io.harness.ngtriggers.beans.dto.WebhookEventProcessingDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 
@@ -34,6 +35,8 @@ public interface NGTriggerService {
 
   List<NGTriggerEntity> findTriggersForCustomWehbook(
       TriggerWebhookEvent triggerWebhookEvent, boolean isDeleted, boolean enabled);
+  List<NGTriggerEntity> findTriggersForWehbookBySourceRepoType(
+      TriggerWebhookEvent triggerWebhookEvent, boolean isDeleted, boolean enabled);
 
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String targetIdentifier,
       String identifier, Long version);
@@ -46,4 +49,6 @@ public interface NGTriggerService {
   void validateTriggerConfig(TriggerDetails triggerDetails);
   boolean deleteAllForPipeline(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier);
+
+  WebhookEventProcessingDetails fetchTriggerEventHistory(String accountId, String eventId);
 }

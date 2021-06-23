@@ -39,9 +39,6 @@ import io.harness.beans.steps.CIStepInfoUtils;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
-import io.harness.beans.yaml.extended.container.ContainerResource;
-import io.harness.beans.yaml.extended.container.quantity.unit.DecimalQuantityUnit;
-import io.harness.beans.yaml.extended.container.quantity.unit.MemoryQuantityUnit;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure.Type;
 import io.harness.ci.config.CIExecutionServiceConfig;
@@ -65,6 +62,9 @@ import io.harness.yaml.core.timeout.TimeoutUtils;
 import io.harness.yaml.core.variables.NGVariableType;
 import io.harness.yaml.core.variables.SecretNGVariable;
 import io.harness.yaml.core.variables.StringNGVariable;
+import io.harness.yaml.extended.ci.container.ContainerResource;
+import io.harness.yaml.extended.ci.container.quantity.unit.DecimalQuantityUnit;
+import io.harness.yaml.extended.ci.container.quantity.unit.MemoryQuantityUnit;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -302,6 +302,7 @@ public class BuildJobEnvInfoBuilder {
                                    .imageDetails(IntegrationStageUtils.getImageInfo(
                                        CIStepInfoUtils.getPluginCustomStepImage(stepInfo, ciExecutionServiceConfig)))
                                    .build())
+        .isHarnessManagedImage(true)
         .containerResourceParams(getStepContainerResource(stepInfo.getResources(), stepType, identifier))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.PLUGIN)
@@ -403,6 +404,10 @@ public class BuildJobEnvInfoBuilder {
         envVarMap.put(key, entry.getValue());
       }
     }
+    if (!isEmpty(pluginStepInfo.getEnvVariables())) {
+      envVarMap.putAll(pluginStepInfo.getEnvVariables());
+    }
+
     boolean privileged = resolveBooleanParameter(pluginStepInfo.getPrivileged(), false);
     Integer runAsUser = resolveIntegerParameter(pluginStepInfo.getRunAsUser(), null);
 
@@ -420,6 +425,7 @@ public class BuildJobEnvInfoBuilder {
                                        "connectorRef", "Plugin", identifier, pluginStepInfo.getConnectorRef(), true))
                                    .build())
         .containerResourceParams(getStepContainerResource(pluginStepInfo.getResources(), "Plugin", identifier))
+        .isHarnessManagedImage(pluginStepInfo.isHarnessManagedImage())
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.PLUGIN)
         .stepName(name)

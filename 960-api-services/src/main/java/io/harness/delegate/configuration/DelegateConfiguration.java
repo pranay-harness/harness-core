@@ -1,10 +1,15 @@
 package io.harness.delegate.configuration;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(DEL)
 public class DelegateConfiguration {
   private String accountId;
   private String accountSecret;
@@ -34,10 +39,12 @@ public class DelegateConfiguration {
   private String helmPath;
   private String helm3Path;
 
+  private String cfCli6Path;
+  private String cfCli7Path;
+
   private boolean grpcServiceEnabled;
   private Integer grpcServiceConnectorPort;
 
-  private String managerServiceSecret;
-
   private String logStreamingServiceBaseUrl;
+  private boolean clientToolsDownloadDisabled;
 }

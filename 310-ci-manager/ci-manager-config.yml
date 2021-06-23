@@ -111,7 +111,7 @@ ciExecutionServiceConfig:
   isLocal: false
   stepConfig:
     gitCloneConfig:
-      image: drone/git:1.2.1-linux-amd64
+      image: harness/drone-git:v1.0.0
       entrypoint:
         - /usr/local/bin/clone
     buildAndPushDockerRegistryConfig:
@@ -174,3 +174,22 @@ timescaledb:
   logUnclosedConnections: false
   loggerLevel: OFF
 
+eventsFramework:
+  redis:
+    sentinel: false
+    masterName: "test"
+    redisUrl: "redis://localhost:6379"
+    sentinelUrls:
+      - "redis://redis1:26379"
+      - "redis://redis2:26379"
+      - "redis://redis3:26379"
+    envNamespace: ""
+    readMode: MASTER
+    nettyThreads: 16
+    useScriptCache: true
+    userName: ""
+    password: ""
+    sslConfig:
+      enabled: false
+      CATrustStorePath: "/tmp/ca_trust_store"
+      CATrustStorePassword: ""

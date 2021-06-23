@@ -8,6 +8,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.Misc.normalizeExpression;
+import static io.harness.pcf.CfCommandUnitConstants.CheckExistingApps;
+import static io.harness.pcf.CfCommandUnitConstants.FetchFiles;
+import static io.harness.pcf.CfCommandUnitConstants.PcfSetup;
+import static io.harness.pcf.CfCommandUnitConstants.Wrapup;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
 import static io.harness.pcf.model.PcfConstants.PCF_INFRA_ROUTE;
@@ -15,10 +19,6 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
-import static software.wings.beans.command.PcfDummyCommandUnit.CheckExistingApps;
-import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
-import static software.wings.beans.command.PcfDummyCommandUnit.PcfSetup;
-import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -33,7 +33,12 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.pcf.CfInternalConfig;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
+import io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
+import io.harness.delegate.task.pcf.response.CfSetupCommandResponse;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -57,7 +62,6 @@ import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.AppManifestKind;
@@ -73,10 +77,7 @@ import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
-import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
-import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
+import software.wings.helpers.ext.pcf.request.CfCommandSetupRequest;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -85,6 +86,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.service.mappers.artifact.CfConfigToInternalMapper;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -172,6 +174,7 @@ public class PcfSetupState extends State {
   @Getter @Setter private boolean enforceSslValidation;
   @Getter @Setter private boolean useArtifactProcessingScript;
   @Getter @Setter private String artifactProcessingScript;
+  @Getter @Setter private List<String> tags;
 
   public PcfSetupState(String name) {
     super(name, StateType.PCF_SETUP.name());
@@ -251,12 +254,10 @@ public class PcfSetupState extends State {
     PcfInfrastructureMapping pcfInfrastructureMapping =
         (PcfInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
 
-    Activity activity = updateActivity(activityId, app.getUuid(), artifact, artifactStream);
-
     SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
-    PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
-        (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
+    CfInternalConfig pcfConfig = CfConfigToInternalMapper.toCfInternalConfig((PcfConfig) settingAttribute.getValue());
+    List<EncryptedDataDetail> encryptedDataDetails =
+        secretManager.getEncryptionDetails(pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
 
     PcfManifestsPackage pcfManifestsPackage =
         pcfStateHelper.generateManifestMap(context, appManifestMap, app, serviceElement);
@@ -291,9 +292,9 @@ public class PcfSetupState extends State {
     artifactStreamAttributes.getMetadata().put(
         ArtifactMetadataKeys.artifactPath, artifactPathForSource(artifact, artifactStreamAttributes));
 
-    PcfCommandSetupRequest pcfCommandSetupRequest =
-        PcfCommandSetupRequest.builder()
-            .activityId(activity.getUuid())
+    CfCommandSetupRequest cfCommandSetupRequest =
+        CfCommandSetupRequest.builder()
+            .activityId(activityId)
             .appId(app.getUuid())
             .accountId(app.getAccountId())
             .commandName(PCF_SETUP_COMMAND)
@@ -322,25 +323,26 @@ public class PcfSetupState extends State {
             .limitPcfThreads(featureFlagService.isEnabled(LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
             .ignorePcfConnectionContextCache(
                 featureFlagService.isEnabled(IGNORE_PCF_CONNECTION_CONTEXT_CACHE, pcfConfig.getAccountId()))
+            .cfCliVersion(pcfStateHelper.getCfCliVersionOrDefault(app.getAppId(), serviceElement.getUuid()))
             .build();
 
     if (featureFlagService.isEnabled(CF_CUSTOM_EXTRACTION, pcfConfig.getAccountId()) && useArtifactProcessingScript
         && isNotEmpty(artifactProcessingScript)) {
-      if (pcfCommandSetupRequest.getArtifactStreamAttributes().isDockerBasedDeployment()) {
+      if (cfCommandSetupRequest.getArtifactStreamAttributes().isDockerBasedDeployment()) {
         throw new InvalidRequestException("Docker based deployment shouldn't contain an artifact processing script");
       }
       String rawScript = pcfStateHelper.removeCommentedLineFromScript(artifactProcessingScript);
-      pcfCommandSetupRequest.setArtifactProcessingScript(context.renderExpression(rawScript));
+      cfCommandSetupRequest.setArtifactProcessingScript(context.renderExpression(rawScript));
     }
 
     PcfSetupStateExecutionData stateExecutionData =
         PcfSetupStateExecutionData.builder()
-            .activityId(activity.getUuid())
+            .activityId(activityId)
             .accountId(app.getAccountId())
             .appId(app.getUuid())
             .envId(env.getUuid())
             .infraMappingId(pcfInfrastructureMapping.getUuid())
-            .pcfCommandRequest(pcfCommandSetupRequest)
+            .pcfCommandRequest(cfCommandSetupRequest)
             .commandName(PCF_SETUP_COMMAND)
             .maxInstanceCount(maxCount)
             .useCurrentRunningInstanceCount(useCurrentRunningCount)
@@ -360,9 +362,12 @@ public class PcfSetupState extends State {
             .pcfManifestsPackage(pcfManifestsPackage)
             .useArtifactProcessingScript(useArtifactProcessingScript)
             .artifactProcessingScript(artifactProcessingScript)
+            .tags(tags)
             .build();
 
     String waitId = generateUuid();
+
+    List<String> renderedTags = pcfStateHelper.getRenderedTags(context, tags);
 
     DelegateTask delegateTask = pcfStateHelper.getDelegateTask(
         PcfDelegateTaskCreationData.builder()
@@ -373,11 +378,12 @@ public class PcfSetupState extends State {
             .envId(env.getUuid())
             .environmentType(env.getEnvironmentType())
             .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
-            .parameters(new Object[] {pcfCommandSetupRequest, encryptedDataDetails})
+            .parameters(new Object[] {cfCommandSetupRequest, encryptedDataDetails})
             .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .taskDescription("PCF setup task execution")
             .serviceId(pcfInfrastructureMapping.getServiceId())
             .timeout(timeoutIntervalInMinutes == null ? DEFAULT_PCF_TASK_TIMEOUT_MIN : timeoutIntervalInMinutes)
+            .tagList(renderedTags)
             .build());
 
     delegateService.queueTask(delegateTask);
@@ -409,6 +415,7 @@ public class PcfSetupState extends State {
     finalRouteMap = pcfSetupStateExecutionData.getFinalRoutesOnSetupState();
     useArtifactProcessingScript = pcfSetupStateExecutionData.isUseArtifactProcessingScript();
     artifactProcessingScript = pcfSetupStateExecutionData.getArtifactProcessingScript();
+    tags = pcfSetupStateExecutionData.getTags();
   }
 
   @VisibleForTesting
@@ -601,7 +608,7 @@ public class PcfSetupState extends State {
   protected ExecutionResponse handleAsyncResponseForPCFTask(
       ExecutionContext context, Map<String, ResponseData> response) {
     String activityId = getActivityId(context);
-    PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();
+    CfCommandExecutionResponse executionResponse = (CfCommandExecutionResponse) response.values().iterator().next();
     ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
         ? ExecutionStatus.SUCCESS
         : ExecutionStatus.FAILED;
@@ -610,38 +617,38 @@ public class PcfSetupState extends State {
     stateExecutionData.setStatus(executionStatus);
     stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
 
-    PcfSetupCommandResponse pcfSetupCommandResponse =
-        (PcfSetupCommandResponse) executionResponse.getPcfCommandResponse();
+    CfSetupCommandResponse cfSetupCommandResponse = (CfSetupCommandResponse) executionResponse.getPcfCommandResponse();
 
-    boolean isPcfSetupCommandResponseNull = pcfSetupCommandResponse == null;
+    boolean isPcfSetupCommandResponseNull = cfSetupCommandResponse == null;
     SetupSweepingOutputPcfBuilder setupSweepingOutputPcfBuilder =
         SetupSweepingOutputPcf.builder()
             .serviceId(stateExecutionData.getServiceId())
             .commandName(PCF_SETUP_COMMAND)
             .maxInstanceCount(stateExecutionData.getMaxInstanceCount())
             .useCurrentRunningInstanceCount(stateExecutionData.isUseCurrentRunningInstanceCount())
-            .currentRunningInstanceCount(generateCurrentRunningCount(pcfSetupCommandResponse))
-            .desiredActualFinalCount(getActualDesiredCount(stateExecutionData, pcfSetupCommandResponse))
+            .currentRunningInstanceCount(generateCurrentRunningCount(cfSetupCommandResponse))
+            .desiredActualFinalCount(getActualDesiredCount(stateExecutionData, cfSetupCommandResponse))
             .resizeStrategy(stateExecutionData.getResizeStrategy())
             .infraMappingId(stateExecutionData.getInfraMappingId())
             .pcfCommandRequest(stateExecutionData.getPcfCommandRequest())
             .isStandardBlueGreenWorkflow(stateExecutionData.isStandardBlueGreen())
             .mostRecentInactiveAppVersionDetails(
-                isPcfSetupCommandResponseNull ? null : pcfSetupCommandResponse.getMostRecentInactiveAppVersion())
+                isPcfSetupCommandResponseNull ? null : cfSetupCommandResponse.getMostRecentInactiveAppVersion())
             .useAppAutoscalar(stateExecutionData.isUseAppAutoscalar())
             .enforceSslValidation(stateExecutionData.isEnforceSslValidation())
             .pcfManifestsPackage(stateExecutionData.getPcfManifestsPackage())
+            .tags(stateExecutionData.getTags())
             .isUseCfCli(true);
 
     if (!isPcfSetupCommandResponseNull) {
       setupSweepingOutputPcfBuilder.timeoutIntervalInMinutes(timeoutIntervalInMinutes)
           .totalPreviousInstanceCount(
-              Optional.ofNullable(pcfSetupCommandResponse.getTotalPreviousInstanceCount()).orElse(0))
-          .appDetailsToBeDownsized(pcfSetupCommandResponse.getDownsizeDetails());
+              Optional.ofNullable(cfSetupCommandResponse.getTotalPreviousInstanceCount()).orElse(0))
+          .appDetailsToBeDownsized(cfSetupCommandResponse.getDownsizeDetails());
       if (ExecutionStatus.SUCCESS == executionStatus) {
         setupSweepingOutputPcfBuilder.isSuccess(true);
-        setupSweepingOutputPcfBuilder.newPcfApplicationDetails(pcfSetupCommandResponse.getNewApplicationDetails());
-        addNewlyCreateRouteMapIfRequired(stateExecutionData, pcfSetupCommandResponse, setupSweepingOutputPcfBuilder,
+        setupSweepingOutputPcfBuilder.newPcfApplicationDetails(cfSetupCommandResponse.getNewApplicationDetails());
+        addNewlyCreateRouteMapIfRequired(stateExecutionData, cfSetupCommandResponse, setupSweepingOutputPcfBuilder,
             context.getWorkflowExecutionId());
       }
     }
@@ -662,12 +669,12 @@ public class PcfSetupState extends State {
 
   @VisibleForTesting
   Integer getActualDesiredCount(
-      PcfSetupStateExecutionData stateExecutionData, PcfSetupCommandResponse pcfSetupCommandResponse) {
+      PcfSetupStateExecutionData stateExecutionData, CfSetupCommandResponse cfSetupCommandResponse) {
     Integer actualDesiredCount = stateExecutionData.getMaxInstanceCount();
 
     // When currentRunningCount = 0, use instance count from manifest
     if (stateExecutionData.isUseCurrentRunningInstanceCount()) {
-      Integer currentRunningCount = generateCurrentRunningCount(pcfSetupCommandResponse);
+      Integer currentRunningCount = generateCurrentRunningCount(cfSetupCommandResponse);
       if (currentRunningCount.intValue() > 0) {
         actualDesiredCount = currentRunningCount;
       }
@@ -677,12 +684,12 @@ public class PcfSetupState extends State {
   }
 
   @VisibleForTesting
-  Integer generateCurrentRunningCount(PcfSetupCommandResponse pcfSetupCommandResponse) {
-    if (pcfSetupCommandResponse == null) {
+  Integer generateCurrentRunningCount(CfSetupCommandResponse cfSetupCommandResponse) {
+    if (cfSetupCommandResponse == null) {
       return Integer.valueOf(0);
     }
 
-    Integer currentRunningCountFetched = pcfSetupCommandResponse.getInstanceCountForMostRecentVersion();
+    Integer currentRunningCountFetched = cfSetupCommandResponse.getInstanceCountForMostRecentVersion();
     if (currentRunningCountFetched == null || currentRunningCountFetched.intValue() <= 0) {
       return Integer.valueOf(0);
     }
@@ -691,7 +698,7 @@ public class PcfSetupState extends State {
   }
 
   private void addNewlyCreateRouteMapIfRequired(PcfSetupStateExecutionData stateExecutionData,
-      PcfSetupCommandResponse pcfSetupCommandResponse, SetupSweepingOutputPcfBuilder setupSweepingOutputPcfBuilder,
+      CfSetupCommandResponse cfSetupCommandResponse, SetupSweepingOutputPcfBuilder setupSweepingOutputPcfBuilder,
       String workflowExecutionId) {
     PcfInfrastructureMapping infrastructureMapping = (PcfInfrastructureMapping) infrastructureMappingService.get(
         stateExecutionData.getAppId(), stateExecutionData.getInfraMappingId());
@@ -700,7 +707,7 @@ public class PcfSetupState extends State {
       List<String> tempRoutes = stateExecutionData.getTempRouteMaps();
       if (EmptyPredicate.isEmpty(tempRoutes)
           || tempRoutes.stream().anyMatch(str -> str.startsWith("((") && str.endsWith("))"))) {
-        tempRoutes = pcfSetupCommandResponse.getNewApplicationDetails().getUrls();
+        tempRoutes = cfSetupCommandResponse.getNewApplicationDetails().getUrls();
         isInfraUpdated = true;
         infrastructureMapping.setTempRouteMap(tempRoutes);
       }
@@ -711,7 +718,7 @@ public class PcfSetupState extends State {
       List<String> routes = stateExecutionData.getRouteMaps();
       if (EmptyPredicate.isEmpty(routes)
           || routes.stream().anyMatch(str -> str.startsWith("((") && str.endsWith("))"))) {
-        routes = pcfSetupCommandResponse.getNewApplicationDetails().getUrls();
+        routes = cfSetupCommandResponse.getNewApplicationDetails().getUrls();
         isInfraUpdated = true;
         infrastructureMapping.setRouteMaps(routes);
       }
@@ -736,6 +743,12 @@ public class PcfSetupState extends State {
 
     List<CommandUnit> commandUnitList = getCommandUnitList(remoteManifestType);
 
+    PhaseElement phaseElement = executionContext.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
+    ServiceElement serviceElement = phaseElement.getServiceElement();
+    Artifact artifact =
+        ((DeploymentExecutionContext) executionContext).getDefaultArtifactForService(serviceElement.getUuid());
+    notNullCheck("Artifact Can not be null", artifact);
+
     ActivityBuilder activityBuilder = pcfStateHelper.getActivityBuilder(PcfActivityBuilderCreationData.builder()
                                                                             .appName(app.getName())
                                                                             .appId(app.getUuid())
@@ -748,23 +761,20 @@ public class PcfSetupState extends State {
                                                                             .environment(env)
                                                                             .build());
 
+    activityBuilder.artifactId(artifact.getUuid());
+    activityBuilder.artifactName(artifact.getDisplayName());
+    ArtifactStream artifactStream = artifactStreamService.get(artifact.getArtifactStreamId());
+    activityBuilder.artifactStreamId(artifactStream.getUuid());
+    activityBuilder.artifactStreamName(artifactStream.getSourceName());
     return activityService.save(activityBuilder.build());
-  }
-
-  private Activity updateActivity(String activityId, String appId, Artifact artifact, ArtifactStream artifactStream) {
-    Activity activity = activityService.get(activityId, appId);
-    activity.setArtifactStreamId(artifactStream.getUuid());
-    activity.setArtifactStreamName(artifactStream.getSourceName());
-    activity.setArtifactName(artifact.getDisplayName());
-    activity.setArtifactId(artifact.getUuid());
-
-    return activityService.save(activity);
   }
 
   private ExecutionResponse executeGitTask(
       ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId) {
     final DelegateTask gitFetchFileTask = pcfStateHelper.createGitFetchFileAsyncTask(
         context, appManifestMap, activityId, isSelectionLogsTrackingForTasksEnabled());
+    gitFetchFileTask.setTags(pcfStateHelper.getRenderedTags(context, tags));
+
     final String delegateTaskId = delegateService.queueTask(gitFetchFileTask);
     appendDelegateTaskDetails(context, gitFetchFileTask);
     return ExecutionResponse.builder()
@@ -787,6 +797,7 @@ public class PcfSetupState extends State {
                                 .finalRoutesOnSetupState(finalRouteMap)
                                 .useArtifactProcessingScript(useArtifactProcessingScript)
                                 .artifactProcessingScript(artifactProcessingScript)
+                                .tags(tags)
                                 .build())
         .delegateTaskId(delegateTaskId)
         .build();

@@ -3,6 +3,7 @@ package io.harness.ccm.views.entities;
 import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -21,11 +22,12 @@ import org.mongodb.morphia.annotations.Id;
 
 @Data
 @Builder
-@StoreIn("events")
+@StoreIn(DbAliases.CENG)
 @FieldNameConstants(innerTypeName = "ViewCustomFieldKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "viewCustomField", noClassnameStored = true)
-public class ViewCustomField implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+public final class ViewCustomField
+    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

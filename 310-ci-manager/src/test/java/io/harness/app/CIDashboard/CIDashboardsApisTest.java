@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.app.beans.entities.AuthorInfo;
 import io.harness.app.beans.entities.BuildActiveInfo;
 import io.harness.app.beans.entities.BuildCount;
 import io.harness.app.beans.entities.BuildExecutionInfo;
@@ -15,6 +16,7 @@ import io.harness.app.beans.entities.BuildRepositoryCount;
 import io.harness.app.beans.entities.DashboardBuildExecutionInfo;
 import io.harness.app.beans.entities.DashboardBuildRepositoryInfo;
 import io.harness.app.beans.entities.DashboardBuildsHealthInfo;
+import io.harness.app.beans.entities.LastRepositoryInfo;
 import io.harness.app.beans.entities.RepositoryBuildInfo;
 import io.harness.app.beans.entities.RepositoryInfo;
 import io.harness.app.beans.entities.RepositoryInformation;
@@ -74,9 +76,9 @@ public class CIDashboardsApisTest {
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
   public void testGetDashBoardBuildHealthInfoWithRate() {
-    String startInterval = "2021-04-25";
-    String endInterval = "2021-04-30";
-    String previousInterval = "2021-04-20";
+    long startInterval = 1619308800000L;
+    long endInterval = 1619740800000L;
+    long previousInterval = 1587340800000L;
 
     List<String> status = new ArrayList<>();
     status.add(ExecutionStatus.SUCCESS.name());
@@ -90,22 +92,22 @@ public class CIDashboardsApisTest {
     status.add(ExecutionStatus.SUCCESS.name());
     status.add(ExecutionStatus.SUCCESS.name());
 
-    List<String> time = new ArrayList<>();
-    time.add("2021-04-25 16:40:21.123");
-    time.add("2021-04-25 16:40:21.123");
-    time.add("2021-04-27 16:40:21.123");
-    time.add("2021-04-28 16:40:21.123");
-    time.add("2021-04-30 16:40:21.123");
+    List<Long> time = new ArrayList<>();
+    time.add(1619349021000L);
+    time.add(1619349021000L);
+    time.add(1619521821000L);
+    time.add(1619608221000L);
+    time.add(1619781021000L);
 
-    time.add("2021-04-20 16:40:21.123");
-    time.add("2021-04-24 16:40:21.123");
-    time.add("2021-04-23 16:40:21.123");
-    time.add("2021-04-21 16:40:21.123");
+    time.add(1618917021000L);
+    time.add(1619262621000L);
+    time.add(1619176221000L);
+    time.add(1619003421000L);
 
     StatusAndTime statusAndTime = StatusAndTime.builder().time(time).status(status).build();
     String queryRequired =
-        "select status,startts from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and startts between '"
-        + previousInterval + "' and '2021-05-01';";
+        "select status,startts from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and startts>="
+        + previousInterval + " and startts<1619827200000;";
 
     doReturn(statusAndTime).when(ciOverviewDashboardServiceImpl).queryCalculatorForStatusAndTime(queryRequired);
 
@@ -128,8 +130,8 @@ public class CIDashboardsApisTest {
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
   public void testGetBuildExecutionBetweenIntervals() {
-    String startInterval = "2021-04-25";
-    String endInterval = "2021-04-30";
+    long startInterval = 1619308800000L;
+    long endInterval = 1619740800000L;
 
     List<String> status = new ArrayList<>();
     status.add(ExecutionStatus.SUCCESS.name());
@@ -142,21 +144,21 @@ public class CIDashboardsApisTest {
     status.add(ExecutionStatus.SUCCESS.name());
     status.add(ExecutionStatus.SUCCESS.name());
 
-    List<String> time = new ArrayList<>();
-    time.add("2021-04-25 16:40:21.123");
-    time.add("2021-04-25 16:40:21.123");
-    time.add("2021-04-27 16:40:21.123");
-    time.add("2021-04-28 16:40:21.123");
-    time.add("2021-04-30 16:40:21.123");
-    time.add("2021-04-28 16:40:21.123");
-    time.add("2021-04-26 16:40:21.123");
-    time.add("2021-04-25 16:40:21.123");
-    time.add("2021-04-25 16:40:21.123");
+    List<Long> time = new ArrayList<>();
+    time.add(1619349021000L);
+    time.add(1619349021000L);
+    time.add(1619521821000L);
+    time.add(1619608221000L);
+    time.add(1619781021000L);
+    time.add(1619608221000L);
+    time.add(1619435421000L);
+    time.add(1619349021000L);
+    time.add(1619349021000L);
 
     StatusAndTime statusAndTime = StatusAndTime.builder().time(time).status(status).build();
     String queryRequired =
-        "select status,startts from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and startts between '"
-        + startInterval + "' and '2021-05-01';";
+        "select status,startts from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and startts>="
+        + startInterval + " and startts<1619827200000;";
 
     doReturn(statusAndTime).when(ciOverviewDashboardServiceImpl).queryCalculatorForStatusAndTime(queryRequired);
 
@@ -165,27 +167,27 @@ public class CIDashboardsApisTest {
 
     List<BuildExecutionInfo> buildExecutionInfoList = new ArrayList<>();
     buildExecutionInfoList.add(BuildExecutionInfo.builder()
-                                   .time("2021-04-25")
+                                   .time(1619308800000L)
                                    .builds(BuildCount.builder().total(4).success(3).failed(1).build())
                                    .build());
     buildExecutionInfoList.add(BuildExecutionInfo.builder()
-                                   .time("2021-04-26")
+                                   .time(1619395200000L)
                                    .builds(BuildCount.builder().total(1).success(0).failed(1).build())
                                    .build());
     buildExecutionInfoList.add(BuildExecutionInfo.builder()
-                                   .time("2021-04-27")
+                                   .time(1619481600000L)
                                    .builds(BuildCount.builder().total(1).success(0).failed(1).build())
                                    .build());
     buildExecutionInfoList.add(BuildExecutionInfo.builder()
-                                   .time("2021-04-28")
+                                   .time(1619568000000L)
                                    .builds(BuildCount.builder().total(2).success(2).failed(0).build())
                                    .build());
     buildExecutionInfoList.add(BuildExecutionInfo.builder()
-                                   .time("2021-04-29")
+                                   .time(1619654400000L)
                                    .builds(BuildCount.builder().total(0).success(0).failed(0).build())
                                    .build());
     buildExecutionInfoList.add(BuildExecutionInfo.builder()
-                                   .time("2021-04-30")
+                                   .time(1619740800000L)
                                    .builds(BuildCount.builder().total(1).success(1).failed(0).build())
                                    .build());
     DashboardBuildExecutionInfo expectedBuildExecution =
@@ -199,16 +201,19 @@ public class CIDashboardsApisTest {
   @Category(UnitTests.class)
   public void testGetDashboardBuildFailureInfo() {
     String queryRequired =
-        "select name, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, startts, endts  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status in ('FAILED','ABORTED','EXPIRED') ORDER BY startts DESC LIMIT 5;";
+        "select name, pipelineidentifier, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, moduleinfo_author_id, author_avatar, startts, endts, status  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status in ('FAILED','ABORTED','EXPIRED','IGNOREFAILED','ERRORED') ORDER BY startts DESC LIMIT 5;";
 
     List<BuildFailureInfo> buildFailureInfos = new ArrayList<>();
     buildFailureInfos.add(BuildFailureInfo.builder()
                               .piplineName("pip")
+                              .pipelineIdentifier("pip")
                               .branch("branch")
                               .commit("commit")
                               .commitID("commitId")
-                              .startTs("2021-04-21")
-                              .endTs("2021-04-22")
+                              .author(AuthorInfo.builder().name(null).url(null).build())
+                              .startTs(20L)
+                              .endTs(30L)
+                              .status("status")
                               .build());
 
     doReturn(buildFailureInfos).when(ciOverviewDashboardServiceImpl).queryCalculatorBuildFailureInfo(queryRequired);
@@ -222,16 +227,18 @@ public class CIDashboardsApisTest {
   @Category(UnitTests.class)
   public void testGetDashboardBuildActiveInfo() {
     String queryRequired =
-        "select name, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, startts, status  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status IN ( 'RUNNING' , 'INTERVENTION_WAITING' , 'TIMED_WAITING' , 'ASYNC_WAITING' , 'TASK_WAITING' , 'DISCONTINUING' , 'APPROVAL_WAITING' , 'RESOURCE_WAITING' ) ORDER BY startts DESC LIMIT 5;";
+        "select name, pipelineidentifier, moduleinfo_branch_name, moduleinfo_branch_commit_message, moduleinfo_branch_commit_id, moduleinfo_author_id, author_avatar, startts, status  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and status IN ('RUNNING','ASYNCWAITING','TASKWAITING','TIMEDWAITING','PAUSED','PAUSING') ORDER BY startts DESC LIMIT 5;";
 
     List<BuildActiveInfo> buildActiveInfos = new ArrayList<>();
     buildActiveInfos.add(BuildActiveInfo.builder()
                              .piplineName("pip")
+                             .pipelineIdentifier("pip")
                              .branch("branch")
                              .commit("commit")
                              .commitID("commitId")
-                             .startTs("2021-04-21")
-                             .endTs("2021-04-22")
+                             .author(AuthorInfo.builder().name(null).url(null).build())
+                             .startTs(20L)
+                             .endTs(30L)
                              .status("Running")
                              .build());
 
@@ -245,14 +252,16 @@ public class CIDashboardsApisTest {
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
   public void testGetDashboardBuildRepository() {
-    String startInterval = "2021-04-25";
-    String endInterval = "2021-04-30";
-    String previousInterval = "2021-04-20";
+    long startInterval = 1619308800000L;
+    long endInterval = 1619740800000L;
+    long previousInterval = 1587340800000L;
 
     List<String> repoName = new ArrayList<>();
     List<String> status = new ArrayList<>();
-    List<String> time = new ArrayList<>();
+    List<Long> time = new ArrayList<>();
+    List<Long> endTime = new ArrayList<>();
     List<String> commitMessage = new ArrayList<>();
+    List<AuthorInfo> authorInfoList = new ArrayList<>();
 
     repoName.add("repo1");
     repoName.add("repo2");
@@ -276,16 +285,27 @@ public class CIDashboardsApisTest {
     status.add(ExecutionStatus.SUCCESS.name());
     status.add(ExecutionStatus.SUCCESS.name());
 
-    time.add("2021-04-25 16:40:21.123");
-    time.add("2021-04-25 16:40:21.123");
-    time.add("2021-04-25 16:50:21.123");
-    time.add("2021-04-28 16:40:21.123");
-    time.add("2021-04-30 16:40:21.123");
+    time.add(1619349021000L);
+    time.add(1619349021000L);
+    time.add(1619349621000L);
+    time.add(1619608221000L);
+    time.add(1619781021000L);
 
-    time.add("2021-04-20 16:40:21.123");
-    time.add("2021-04-24 16:40:21.123");
-    time.add("2021-04-23 16:40:21.123");
-    time.add("2021-04-21 16:40:21.123");
+    time.add(1618917021000L);
+    time.add(1619262621000L);
+    time.add(1619176221000L);
+    time.add(1619003421000L);
+
+    endTime.add(-1L);
+    endTime.add(-1L);
+    endTime.add(-1L);
+    endTime.add(-1L);
+    endTime.add(-1L);
+
+    endTime.add(-1L);
+    endTime.add(-1L);
+    endTime.add(-1L);
+    endTime.add(-1L);
 
     commitMessage.add("commit101");
     commitMessage.add("commit102");
@@ -298,15 +318,28 @@ public class CIDashboardsApisTest {
     commitMessage.add("commit108");
     commitMessage.add("commit109");
 
+    authorInfoList.add(AuthorInfo.builder().name("name1").url("url1").build());
+    authorInfoList.add(AuthorInfo.builder().name("name2").url("url2").build());
+    authorInfoList.add(AuthorInfo.builder().name("name3").url("url3").build());
+    authorInfoList.add(AuthorInfo.builder().name("name4").url("url4").build());
+    authorInfoList.add(AuthorInfo.builder().name("name5").url("url5").build());
+
+    authorInfoList.add(AuthorInfo.builder().name("name6").url("url6").build());
+    authorInfoList.add(AuthorInfo.builder().name("name7").url("url7").build());
+    authorInfoList.add(AuthorInfo.builder().name("name8").url("url8").build());
+    authorInfoList.add(AuthorInfo.builder().name("name9").url("url9").build());
+
     String queryRequired =
-        "select moduleinfo_repository, status, startts, moduleinfo_branch_commit_message  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and moduleinfo_repository IS NOT NULL and startts between '"
-        + previousInterval + "' and '2021-05-01';";
+        "select moduleinfo_repository, status, startts, endts, moduleinfo_branch_commit_message, moduleinfo_author_id, author_avatar  from pipeline_execution_summary_ci where accountid='acc' and orgidentifier='org' and projectidentifier='pro' and moduleinfo_repository IS NOT NULL and startts>="
+        + previousInterval + " and startts<1619827200000;";
 
     RepositoryInformation repositoryInformation = RepositoryInformation.builder()
                                                       .repoName(repoName)
                                                       .status(status)
                                                       .commitMessage(commitMessage)
-                                                      .time(time)
+                                                      .startTime(time)
+                                                      .endTime(endTime)
+                                                      .authorInfoList(authorInfoList)
                                                       .build();
     doReturn(repositoryInformation).when(ciOverviewDashboardServiceImpl).queryRepositoryCalculator(queryRequired);
 
@@ -315,80 +348,80 @@ public class CIDashboardsApisTest {
 
     List<RepositoryBuildInfo> repo1 = new ArrayList<>();
     repo1.add(RepositoryBuildInfo.builder()
-                  .time("2021-04-25")
+                  .time(1619308800000L)
                   .builds(BuildRepositoryCount.builder().count(1).build())
                   .build());
     repo1.add(RepositoryBuildInfo.builder()
-                  .time("2021-04-26")
+                  .time(1619395200000L)
                   .builds(BuildRepositoryCount.builder().count(0).build())
                   .build());
     repo1.add(RepositoryBuildInfo.builder()
-                  .time("2021-04-27")
+                  .time(1619481600000L)
                   .builds(BuildRepositoryCount.builder().count(0).build())
                   .build());
     repo1.add(RepositoryBuildInfo.builder()
-                  .time("2021-04-28")
+                  .time(1619568000000L)
                   .builds(BuildRepositoryCount.builder().count(0).build())
                   .build());
     repo1.add(RepositoryBuildInfo.builder()
-                  .time("2021-04-29")
+                  .time(1619654400000L)
                   .builds(BuildRepositoryCount.builder().count(0).build())
                   .build());
     repo1.add(RepositoryBuildInfo.builder()
-                  .time("2021-04-30")
+                  .time(1619740800000L)
                   .builds(BuildRepositoryCount.builder().count(1).build())
                   .build());
 
     // repo 2
     List<RepositoryBuildInfo> repo2 = new ArrayList<>();
     repo2.add(RepositoryBuildInfo.builder()
-                  .time("2021-04-25")
+                  .time(1619308800000L)
                   .builds(BuildRepositoryCount.builder().count(2).build())
                   .build());
     repo2.add(RepositoryBuildInfo.builder()
-                  .time("2021-04-26")
+                  .time(1619395200000L)
                   .builds(BuildRepositoryCount.builder().count(0).build())
                   .build());
     repo2.add(RepositoryBuildInfo.builder()
-                  .time("2021-04-27")
+                  .time(1619481600000L)
                   .builds(BuildRepositoryCount.builder().count(0).build())
                   .build());
     repo2.add(RepositoryBuildInfo.builder()
-                  .time("2021-04-28")
+                  .time(1619568000000L)
                   .builds(BuildRepositoryCount.builder().count(0).build())
                   .build());
     repo2.add(RepositoryBuildInfo.builder()
-                  .time("2021-04-29")
+                  .time(1619654400000L)
                   .builds(BuildRepositoryCount.builder().count(0).build())
                   .build());
     repo2.add(RepositoryBuildInfo.builder()
-                  .time("2021-04-30")
+                  .time(1619740800000L)
                   .builds(BuildRepositoryCount.builder().count(0).build())
                   .build());
 
     List<RepositoryBuildInfo> repo3 = new ArrayList<>();
     repo3.add(RepositoryBuildInfo.builder()
-                  .time("2021-04-25")
+                  .time(1619308800000L)
                   .builds(BuildRepositoryCount.builder().count(0).build())
                   .build());
     repo3.add(RepositoryBuildInfo.builder()
-                  .time("2021-04-26")
+                  .time(1619395200000L)
                   .builds(BuildRepositoryCount.builder().count(0).build())
                   .build());
     repo3.add(RepositoryBuildInfo.builder()
-                  .time("2021-04-27")
+                  .time(1619481600000L)
                   .builds(BuildRepositoryCount.builder().count(0).build())
                   .build());
     repo3.add(RepositoryBuildInfo.builder()
-                  .time("2021-04-28")
+                  .time(1619568000000L)
                   .builds(BuildRepositoryCount.builder().count(1).build())
                   .build());
     repo3.add(RepositoryBuildInfo.builder()
-                  .time("2021-04-29")
+                  .time(1619654400000L)
                   .builds(BuildRepositoryCount.builder().count(0).build())
                   .build());
     repo3.add(RepositoryBuildInfo.builder()
-                  .time("2021-04-30")
+                  .time(1619740800000L)
                   .builds(BuildRepositoryCount.builder().count(0).build())
                   .build());
 
@@ -396,33 +429,46 @@ public class CIDashboardsApisTest {
 
     repositoryInfoList.add(RepositoryInfo.builder()
                                .name("repo2")
-                               .time("2021-04-25 16:50:21.123")
-                               .lastCommit("commit103")
+                               .lastRepository(LastRepositoryInfo.builder()
+                                                   .StartTime(1619349621000L)
+                                                   .status(ExecutionStatus.EXPIRED.name())
+                                                   .EndTime(-1L)
+                                                   .commit("commit103")
+                                                   .author(AuthorInfo.builder().name("name3").url("url3").build())
+                                                   .build())
                                .buildCount(2)
                                .countList(repo2)
-                               .lastStatus(ExecutionStatus.EXPIRED.name())
                                .percentSuccess(0)
                                .successRate(-100.0)
                                .build());
 
     repositoryInfoList.add(RepositoryInfo.builder()
                                .name("repo3")
-                               .time("2021-04-28 16:40:21.123")
-                               .lastCommit("commit104")
+                               .lastRepository(LastRepositoryInfo.builder()
+                                                   .StartTime(1619608221000L)
+                                                   .status(ExecutionStatus.SUCCESS.name())
+                                                   .EndTime(-1L)
+                                                   .commit("commit104")
+                                                   .author(AuthorInfo.builder().name("name4").url("url4").build())
+                                                   .build())
                                .buildCount(1)
                                .countList(repo3)
-                               .lastStatus(ExecutionStatus.SUCCESS.name())
                                .percentSuccess(100.0)
                                .successRate(0.0)
                                .build());
 
     repositoryInfoList.add(RepositoryInfo.builder()
                                .name("repo1")
-                               .time("2021-04-30 16:40:21.123")
-                               .lastCommit("commit105")
+                               .lastRepository(LastRepositoryInfo.builder()
+                                                   .StartTime(1619781021000L)
+                                                   .status(ExecutionStatus.SUCCESS.name())
+                                                   .EndTime(-1L)
+                                                   .commit("commit105")
+                                                   .author(AuthorInfo.builder().name("name5").url("url5").build())
+                                                   .build())
+
                                .buildCount(2)
                                .countList(repo1)
-                               .lastStatus(ExecutionStatus.SUCCESS.name())
                                .percentSuccess(100.0)
                                .successRate(0.0)
                                .build());
@@ -439,27 +485,30 @@ public class CIDashboardsApisTest {
   public void testGetActiveAndFailedBuild() {
     BuildFailureInfo failureBuild = BuildFailureInfo.builder()
                                         .piplineName("pip1")
+                                        .pipelineIdentifier("pip1")
                                         .commit("commit1")
-                                        .endTs("endts")
-                                        .startTs("startts")
+                                        .endTs(13L)
+                                        .startTs(10L)
                                         .commitID("id1")
                                         .branch("branch1")
+                                        .status("status")
                                         .build();
     BuildActiveInfo activeInfo = BuildActiveInfo.builder()
                                      .piplineName("pip2")
+                                     .pipelineIdentifier("pip2")
                                      .commit("commit2")
                                      .branch("branch2")
                                      .commitID("id2")
-                                     .endTs("endts")
-                                     .startTs("startts")
+                                     .endTs(13L)
+                                     .startTs(10L)
                                      .status(ExecutionStatus.RUNNING.name())
                                      .build();
 
     assertThat(failureBuild)
         .isEqualTo(ciOverviewDashboardServiceImpl.getBuildFailureInfo(
-            "pip1", "branch1", "commit1", "id1", "startts", "endts"));
+            "pip1", "pip1", "branch1", "commit1", "id1", 10, 13, null, "status"));
     assertThat(activeInfo)
         .isEqualTo(ciOverviewDashboardServiceImpl.getBuildActiveInfo(
-            "pip2", "branch2", "commit2", "id2", "startts", ExecutionStatus.RUNNING.name(), "endts"));
+            "pip2", "pip2", "branch2", "commit2", "id2", null, 10, ExecutionStatus.RUNNING.name(), 13));
   }
 }

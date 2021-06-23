@@ -10,22 +10,28 @@ import java.util.Arrays;
 import java.util.List;
 
 public enum ServiceDefinitionType {
-  @JsonProperty(ServiceSpecType.SSH) SSH("Ssh", Lists.newArrayList(ExecutionStrategyType.BASIC), ServiceSpecType.SSH),
   @JsonProperty(ServiceSpecType.KUBERNETES)
   KUBERNETES("Kubernetes",
       Lists.newArrayList(ExecutionStrategyType.ROLLING, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY,
           ExecutionStrategyType.DEFAULT),
       ServiceSpecType.KUBERNETES),
+  @JsonProperty(ServiceSpecType.NATIVE_HELM)
+  NATIVE_HELM("NativeHelm", Lists.newArrayList(ExecutionStrategyType.BASIC), ServiceSpecType.NATIVE_HELM);
+
+  /*
+  //Unsupported for now
+  //Also commented out in
+  125-cd-nextgen/src/test/java/io/harness/cdng/pipeline/resources/CDNGPipelineConfigurationResourceTest.java
   @JsonProperty(ServiceSpecType.ECS)
   ECS("Ecs",
-      Lists.newArrayList(ExecutionStrategyType.BASIC, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY),
-      ServiceSpecType.ECS),
-  @JsonProperty(ServiceSpecType.NATIVE_HELM)
-  NATIVE_HELM("NativeHelm", Lists.newArrayList(ExecutionStrategyType.BASIC), ServiceSpecType.NATIVE_HELM),
+    Lists.newArrayList(ExecutionStrategyType.BASIC, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY),
+    ServiceSpecType.ECS),
+  @JsonProperty(ServiceSpecType.SSH) SSH("Ssh", Lists.newArrayList(ExecutionStrategyType.BASIC), ServiceSpecType.SSH),
   @JsonProperty(ServiceSpecType.PCF)
   PCF("Pcf",
       Lists.newArrayList(ExecutionStrategyType.BASIC, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY),
       ServiceSpecType.PCF);
+  */
 
   private String displayName;
   private String yamlName;

@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static java.util.Collections.emptyList;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ngtriggers.beans.source.webhook.WebhookCondition;
+import io.harness.ngtriggers.beans.source.webhook.v2.TriggerEventDataCondition;
 import io.harness.ngtriggers.beans.source.webhook.v2.git.GitAction;
 import io.harness.ngtriggers.beans.source.webhook.v2.git.GitEvent;
 
@@ -24,8 +24,8 @@ import lombok.experimental.FieldDefaults;
 public class BitbucketPushSpec implements BitbucketEventSpec {
   String connectorRef;
   String repoName;
-  List<WebhookCondition> headerConditions;
-  List<WebhookCondition> payloadConditions;
+  List<TriggerEventDataCondition> headerConditions;
+  List<TriggerEventDataCondition> payloadConditions;
   String jexlCondition;
   boolean autoAbortPreviousExecutions;
 
@@ -50,12 +50,12 @@ public class BitbucketPushSpec implements BitbucketEventSpec {
   }
 
   @Override
-  public List<WebhookCondition> fetchHeaderConditions() {
+  public List<TriggerEventDataCondition> fetchHeaderConditions() {
     return headerConditions;
   }
 
   @Override
-  public List<WebhookCondition> fetchPayloadConditions() {
+  public List<TriggerEventDataCondition> fetchPayloadConditions() {
     return payloadConditions;
   }
 

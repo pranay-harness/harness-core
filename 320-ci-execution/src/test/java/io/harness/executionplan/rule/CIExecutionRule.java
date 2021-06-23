@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 
 import io.harness.CIExecutionServiceModule;
 import io.harness.CIExecutionTestModule;
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
@@ -20,12 +21,11 @@ import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
-import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.queue.QueueController;
 import io.harness.registrars.ExecutionAdvisers;
 import io.harness.registrars.ExecutionRegistrar;
-import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.springdata.SpringPersistenceTestModule;
@@ -42,6 +42,7 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
@@ -133,6 +134,13 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
       protected NgDelegate2TaskExecutor ngDelegate2TaskExecutor() {
         return mock(NgDelegate2TaskExecutor.class);
       }
+
+      @Provides
+      @Named("disableDeserialization")
+      @Singleton
+      public boolean getSerializationForDelegate() {
+        return false;
+      }
     });
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration()));
     return modules;
@@ -140,12 +148,11 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
 
   private PmsSdkConfiguration getPmsSdkConfiguration() {
     return PmsSdkConfiguration.builder()
-        .deploymentMode(DeployMode.LOCAL)
-        .serviceName("ci")
+        .deploymentMode(SdkDeployMode.LOCAL)
+        .moduleType(ModuleType.CI)
         .engineSteps(ExecutionRegistrar.getEngineSteps())
         .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())
-        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
-        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(false))
+        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
         .build();
   }
 

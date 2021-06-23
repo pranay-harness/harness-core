@@ -28,6 +28,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.invites.remote.InviteAcceptResponse;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
@@ -70,10 +71,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.mongodb.MongoClientURI;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -88,7 +93,9 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.message.BasicNameValuePair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -108,6 +115,7 @@ public class InviteServiceImpl implements InviteService {
   private static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
   private static final String INVITE_URL =
       "/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s&generation=NG";
+  private static final String ACCEPT_INVITE_PATH = "/ng/api/invites/verify";
   private final String jwtPasswordSecret;
   private final JWTGeneratorUtils jwtGeneratorUtils;
   private final NgUserService ngUserService;
@@ -121,6 +129,9 @@ public class InviteServiceImpl implements InviteService {
   private final ProjectService projectService;
   private final AccessControlClient accessControlClient;
   private final String currentGenUiUrl;
+  private final String nextGenUiUrl;
+  private final String nextGenAuthUiUrl;
+  private final boolean isNgAuthUIEnabled;
 
   private final RetryPolicy<Object> transactionRetryPolicy =
       RetryUtils.getRetryPolicy("[Retrying]: Failed to mark previous invites as stale; attempt: {}",
@@ -132,7 +143,9 @@ public class InviteServiceImpl implements InviteService {
       JWTGeneratorUtils jwtGeneratorUtils, NgUserService ngUserService, TransactionTemplate transactionTemplate,
       InviteRepository inviteRepository, NotificationClient notificationClient, AccountClient accountClient,
       OutboxService outboxService, OrganizationService organizationService, ProjectService projectService,
-      AccessControlClient accessControlClient, @Named("currentGenUiUrl") String currentGenUiUrl) {
+      AccessControlClient accessControlClient, @Named("currentGenUiUrl") String currentGenUiUrl,
+      @Named("nextGenUiUrl") String nextGenUiUrl, @Named("nextGenAuthUiUrl") String nextGenAuthUiUrl,
+      @Named("isNgAuthUIEnabled") boolean isNgAuthUIEnabled) {
     this.jwtPasswordSecret = jwtPasswordSecret;
     this.jwtGeneratorUtils = jwtGeneratorUtils;
     this.ngUserService = ngUserService;
@@ -144,6 +157,9 @@ public class InviteServiceImpl implements InviteService {
     this.organizationService = organizationService;
     this.projectService = projectService;
     this.currentGenUiUrl = currentGenUiUrl;
+    this.nextGenUiUrl = nextGenUiUrl;
+    this.nextGenAuthUiUrl = nextGenAuthUiUrl;
+    this.isNgAuthUIEnabled = isNgAuthUIEnabled;
     this.accessControlClient = accessControlClient;
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri());
     useMongoTransactions = uri.getHosts().size() > 2;
@@ -160,11 +176,15 @@ public class InviteServiceImpl implements InviteService {
       return InviteOperationResponse.USER_ALREADY_ADDED;
     }
     Optional<Invite> existingInviteOptional = getExistingInvite(invite);
-    if (existingInviteOptional.isPresent() && TRUE.equals(existingInviteOptional.get().getApproved())) {
-      return InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
+    if (existingInviteOptional.isPresent()) {
+      if (TRUE.equals(existingInviteOptional.get().getApproved())) {
+        return InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
+      }
+      wrapperForTransactions(this::resendInvite, existingInviteOptional.get());
+      return InviteOperationResponse.USER_ALREADY_INVITED;
     }
     try {
-      return createInvite(invite, existingInviteOptional.orElse(null));
+      return wrapperForTransactions(this::newInvite, invite);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(getExceptionMessage(invite), USER_SRE, ex);
     }
@@ -193,17 +213,13 @@ public class InviteServiceImpl implements InviteService {
         .isPresent();
   }
 
-  private InviteOperationResponse createInvite(Invite newInvite, Invite existingInvite) {
-    if (Objects.isNull(existingInvite)) {
-      return wrapperForTransactions(this::newInvite, newInvite);
-    }
-    wrapperForTransactions(this::resendInvite, existingInvite, newInvite);
-    return InviteOperationResponse.USER_ALREADY_INVITED;
-  }
-
   @Override
-  public Optional<Invite> getInvite(String inviteId) {
-    return inviteRepository.findFirstByIdAndDeleted(inviteId, FALSE);
+  public Optional<Invite> getInvite(String inviteId, boolean allowDeleted) {
+    if (allowDeleted) {
+      return inviteRepository.findById(inviteId);
+    } else {
+      return inviteRepository.findFirstByIdAndDeleted(inviteId, FALSE);
+    }
   }
 
   @Override
@@ -226,7 +242,7 @@ public class InviteServiceImpl implements InviteService {
 
   @Override
   public Optional<Invite> deleteInvite(String inviteId) {
-    Optional<Invite> inviteOptional = getInvite(inviteId);
+    Optional<Invite> inviteOptional = getInvite(inviteId, false);
     if (inviteOptional.isPresent()) {
       Invite invite = inviteOptional.get();
       checkPermissions(invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier());
@@ -254,27 +270,110 @@ public class InviteServiceImpl implements InviteService {
     return true;
   }
 
-  private Invite resendInvite(Invite existingInvite, Invite newInvite) {
+  @Override
+  public boolean isUserPasswordSet(String accountIdentifier, String email) {
+    return ngUserService.isUserPasswordSet(accountIdentifier, email);
+  }
+
+  @Override
+  public URI getRedirectUrl(InviteAcceptResponse inviteAcceptResponse, String email, String jwtToken) {
+    String accountIdentifier = inviteAcceptResponse.getAccountIdentifier();
+    if (inviteAcceptResponse.getResponse().equals(FAIL)) {
+      return getLoginPageUrl(accountIdentifier);
+    }
+
+    UserInfo userInfo = inviteAcceptResponse.getUserInfo();
+    if (userInfo == null) {
+      return getUserInfoSubmitUrl(email, jwtToken, inviteAcceptResponse);
+    }
+
+    boolean isUserPasswordSet = isUserPasswordSet(accountIdentifier, userInfo.getEmail());
+    if (!isUserPasswordSet) {
+      return getUserInfoSubmitUrl(email, jwtToken, inviteAcceptResponse);
+    }
+
+    completeInvite(jwtToken);
+    return getResourceUrl(inviteAcceptResponse);
+  }
+
+  private URI getResourceUrl(InviteAcceptResponse inviteAcceptResponse) {
+    String accountIdentifier = inviteAcceptResponse.getAccountIdentifier();
+    String orgIdentifier = inviteAcceptResponse.getOrgIdentifier();
+    String projectIdentifier = inviteAcceptResponse.getProjectIdentifier();
+
+    String baseUrl = getBaseUrl(accountIdentifier, nextGenUiUrl);
+    String resourceUrl = String.format("%saccount/%s/home/get-started", baseUrl, accountIdentifier);
+    if (isNotEmpty(projectIdentifier)) {
+      resourceUrl = String.format("%saccount/%s/home/orgs/%s/projects/%s/details", baseUrl, accountIdentifier,
+          orgIdentifier, projectIdentifier);
+    } else if (isNotEmpty(orgIdentifier)) {
+      resourceUrl =
+          String.format("%saccount/%s/home/organizations/%s/details", baseUrl, accountIdentifier, orgIdentifier);
+    }
+
+    try {
+      return new URI(resourceUrl);
+    } catch (URISyntaxException e) {
+      throw new WingsException(e);
+    }
+  }
+
+  private URI getUserInfoSubmitUrl(String email, String jwtToken, InviteAcceptResponse inviteAcceptResponse) {
+    String accountIdentifier = inviteAcceptResponse.getAccountIdentifier();
+    try {
+      String accountCreationFragment = String.format("accountIdentifier=%s&email=%s&token=%s&returnUrl=%s",
+          accountIdentifier, email, jwtToken, getResourceUrl(inviteAcceptResponse));
+      String baseUrl = getBaseUrl(accountIdentifier, nextGenAuthUiUrl);
+      URIBuilder uriBuilder = new URIBuilder(baseUrl);
+
+      uriBuilder.setFragment("/accept-invite?" + accountCreationFragment);
+      return uriBuilder.build();
+    } catch (URISyntaxException e) {
+      throw new WingsException(e);
+    }
+  }
+
+  private URI getLoginPageUrl(String accountIdentifier) {
+    try {
+      String baseUrl = getBaseUrl(accountIdentifier, nextGenAuthUiUrl);
+      URIBuilder uriBuilder = new URIBuilder(baseUrl);
+      uriBuilder.setFragment("/signin");
+      return uriBuilder.build();
+    } catch (URISyntaxException e) {
+      throw new WingsException(e);
+    }
+  }
+
+  private String getBaseUrl(String accountIdentifier, String defaultEnvUrl) {
+    String accountBaseUrl = RestClientUtils.getResponse(accountClient.getBaseUrl(accountIdentifier));
+    if (Objects.isNull(accountBaseUrl)) {
+      accountBaseUrl = defaultEnvUrl;
+    }
+    return accountBaseUrl;
+  }
+
+  private Invite resendInvite(Invite newInvite) {
     checkPermissions(newInvite.getAccountIdentifier(), newInvite.getOrgIdentifier(), newInvite.getProjectIdentifier());
     Update update = new Update()
                         .set(InviteKeys.createdAt, new Date())
                         .set(InviteKeys.validUntil,
                             Date.from(OffsetDateTime.now().plusDays(INVITATION_VALIDITY_IN_DAYS).toInstant()))
                         .set(InviteKeys.roleBindings, newInvite.getRoleBindings());
-    inviteRepository.updateInvite(existingInvite.getId(), update);
-    outboxService.save(
-        new UserInviteUpdateEvent(existingInvite.getAccountIdentifier(), existingInvite.getOrgIdentifier(),
-            existingInvite.getProjectIdentifier(), writeDTO(existingInvite), writeDTO(newInvite)));
+    inviteRepository.updateInvite(newInvite.getId(), update);
+    outboxService.save(new UserInviteUpdateEvent(newInvite.getAccountIdentifier(), newInvite.getOrgIdentifier(),
+        newInvite.getProjectIdentifier(), writeDTO(newInvite), writeDTO(newInvite)));
     try {
-      sendInvitationMail(existingInvite);
+      sendInvitationMail(newInvite);
     } catch (URISyntaxException e) {
-      log.error("Mail embed url incorrect. can't sent email", e);
+      log.error("Mail embed url incorrect. can't sent email. InviteId: " + newInvite.getId(), e);
+    } catch (UnsupportedEncodingException e) {
+      log.error("Invite Email sending failed due to encoding exception. InviteId: " + newInvite.getId(), e);
     }
-    return existingInvite;
+    return newInvite;
   }
 
   public InviteAcceptResponse acceptInvite(String jwtToken) {
-    Optional<Invite> inviteOptional = getInviteFromToken(jwtToken);
+    Optional<Invite> inviteOptional = getInviteFromToken(jwtToken, true);
     if (!inviteOptional.isPresent() || !inviteOptional.get().getInviteToken().equals(jwtToken)) {
       log.warn("Invite token {} is invalid", jwtToken);
       return InviteAcceptResponse.builder().response(InviteOperationResponse.FAIL).build();
@@ -286,10 +385,15 @@ public class InviteServiceImpl implements InviteService {
     return InviteAcceptResponse.builder()
         .response(InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED)
         .userInfo(ngUserOpt.orElse(null))
+        .accountIdentifier(invite.getAccountIdentifier())
+        .orgIdentifier(invite.getOrgIdentifier())
+        .projectIdentifier(invite.getProjectIdentifier())
+        .inviteId(invite.getId())
         .build();
   }
 
-  private Optional<Invite> getInviteFromToken(String jwtToken) {
+  @Override
+  public Optional<Invite> getInviteFromToken(String jwtToken, boolean allowDeleted) {
     if (isBlank(jwtToken)) {
       return Optional.empty();
     }
@@ -303,7 +407,7 @@ public class InviteServiceImpl implements InviteService {
       log.warn("Invalid token. verification failed");
       return Optional.empty();
     }
-    return getInvite(inviteIdOptional.get());
+    return getInvite(inviteIdOptional.get(), allowDeleted);
   }
 
   @Override
@@ -312,15 +416,22 @@ public class InviteServiceImpl implements InviteService {
       return Optional.empty();
     }
     preCreateInvite(updatedInvite);
-    Optional<Invite> inviteOptional = getInvite(updatedInvite.getId());
+    Optional<Invite> inviteOptional = getInvite(updatedInvite.getId(), false);
     if (!inviteOptional.isPresent() || TRUE.equals(inviteOptional.get().getApproved())) {
       return Optional.empty();
     }
 
     Invite existingInvite = inviteOptional.get();
+    updatedInvite.setAccountIdentifier(existingInvite.getAccountIdentifier());
+    updatedInvite.setOrgIdentifier(existingInvite.getOrgIdentifier());
+    updatedInvite.setProjectIdentifier(existingInvite.getProjectIdentifier());
+
+    Preconditions.checkState(updatedInvite.getEmail().equals(existingInvite.getEmail()),
+        "Can't update recipient of an Invite after creation");
+
     if (existingInvite.getInviteType() == ADMIN_INITIATED_INVITE) {
-      wrapperForTransactions(this::resendInvite, existingInvite, updatedInvite);
-      return Optional.of(existingInvite);
+      wrapperForTransactions(this::resendInvite, updatedInvite);
+      return Optional.of(updatedInvite);
     } else if (existingInvite.getInviteType() == USER_INITIATED_INVITE) {
       throw new UnsupportedOperationException("User initiated requests are not supported yet");
     }
@@ -353,8 +464,11 @@ public class InviteServiceImpl implements InviteService {
     try {
       sendInvitationMail(savedInvite);
     } catch (URISyntaxException e) {
-      log.error("Mail embed url incorrect. can't sent email", e);
+      log.error("Mail embed url incorrect. can't sent email. InviteId: " + savedInvite.getId(), e);
+    } catch (UnsupportedEncodingException e) {
+      log.error("Invite Email sending failed due to encoding exception. InviteId: " + savedInvite.getId(), e);
     }
+
     return InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
   }
 
@@ -379,9 +493,9 @@ public class InviteServiceImpl implements InviteService {
     inviteRepository.updateInvite(invite.getId(), update);
   }
 
-  private void sendInvitationMail(Invite invite) throws URISyntaxException {
+  private void sendInvitationMail(Invite invite) throws URISyntaxException, UnsupportedEncodingException {
     updateJWTTokenInInvite(invite);
-    String url = getInvitationMailEmbedUrl(invite);
+    String url = isNgAuthUIEnabled ? getAcceptInviteUrl(invite) : getInvitationMailEmbedUrl(invite);
     EmailChannelBuilder emailChannelBuilder = EmailChannel.builder()
                                                   .accountId(invite.getAccountIdentifier())
                                                   .recipients(Collections.singletonList(invite.getEmail()))
@@ -427,21 +541,38 @@ public class InviteServiceImpl implements InviteService {
   }
 
   private String getInvitationMailEmbedUrl(Invite invite) throws URISyntaxException {
-    String accountBaseUrl = RestClientUtils.getResponse(accountClient.getBaseUrl(invite.getAccountIdentifier()));
     AccountDTO account = RestClientUtils.getResponse(accountClient.getAccountDTO(invite.getAccountIdentifier()));
     String fragment = String.format(INVITE_URL, invite.getAccountIdentifier(), account.getName(),
         account.getCompanyName(), invite.getEmail(), invite.getInviteToken());
-    if (Objects.isNull(accountBaseUrl)) {
-      accountBaseUrl = currentGenUiUrl;
-    }
-    URIBuilder uriBuilder = new URIBuilder(accountBaseUrl);
+
+    String baseUrl = getBaseUrl(invite.getAccountIdentifier(), currentGenUiUrl);
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
     uriBuilder.setFragment(fragment);
     return uriBuilder.toString();
   }
 
+  private String getAcceptInviteUrl(Invite invite) throws URISyntaxException, UnsupportedEncodingException {
+    String baseUrl = getBaseUrl(invite.getAccountIdentifier(), currentGenUiUrl);
+    URIBuilder uriBuilder = new URIBuilder(baseUrl);
+    uriBuilder.setPath(ACCEPT_INVITE_PATH);
+    uriBuilder.setParameters(getParameterList(invite));
+    uriBuilder.setFragment(null);
+    log.info("Accept invite url: {}", uriBuilder.toString());
+    return uriBuilder.toString();
+  }
+
+  private List<NameValuePair> getParameterList(Invite invite) throws UnsupportedEncodingException {
+    AccountDTO account = RestClientUtils.getResponse(accountClient.getAccountDTO(invite.getAccountIdentifier()));
+    return Arrays.asList(new BasicNameValuePair("accountIdentifier", invite.getAccountIdentifier()),
+        new BasicNameValuePair("accountName", account.getName()),
+        new BasicNameValuePair("company", account.getCompanyName()),
+        new BasicNameValuePair("email", URLEncoder.encode(invite.getEmail(), "UTF-8")),
+        new BasicNameValuePair("token", invite.getInviteToken()));
+  }
+
   @Override
   public boolean completeInvite(String token) {
-    Optional<Invite> inviteOpt = getInviteFromToken(token);
+    Optional<Invite> inviteOpt = getInviteFromToken(token, false);
     if (!inviteOpt.isPresent()) {
       return false;
     }

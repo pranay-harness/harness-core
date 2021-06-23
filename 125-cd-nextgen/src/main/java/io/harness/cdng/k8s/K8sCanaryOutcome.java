@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.data.Outcome;
-import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
@@ -23,14 +22,4 @@ public class K8sCanaryOutcome implements Outcome, ExecutionSweepingOutput {
   Integer releaseNumber;
   String canaryWorkload;
   boolean canaryWorkloadDeployed;
-
-  @Override
-  public String toViewJson() {
-    return RecastOrchestrationUtils.toDocumentJson(K8sCanaryOutcome.builder()
-                                                       .releaseName(releaseName)
-                                                       .targetInstances(targetInstances)
-                                                       .releaseNumber(releaseNumber)
-                                                       .canaryWorkload(canaryWorkload)
-                                                       .build());
-  }
 }

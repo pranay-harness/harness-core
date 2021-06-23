@@ -39,7 +39,7 @@ public class ParameterFieldProcessor {
         newValue = engineExpressionEvaluator.evaluateExpression(field.getExpressionValue());
       }
 
-      if (newValue instanceof String && EngineExpressionEvaluator.hasVariables((String) newValue)) {
+      if (newValue instanceof String && EngineExpressionEvaluator.hasExpressions((String) newValue)) {
         String newExpression = (String) newValue;
         if (newExpression.equals(field.getExpressionValue())) {
           return ProcessorResult.builder().build();
@@ -73,14 +73,21 @@ public class ParameterFieldProcessor {
   }
 
   private ProcessorResult validateUsingValidator(Object value, InputSetValidator inputSetValidator) {
-    if (inputSetValidator != null) {
-      RuntimeValidator runtimeValidator = inputSetValidatorFactory.obtainValidator(
-          inputSetValidator, engineExpressionEvaluator, skipUnresolvedExpressionsCheck);
-      RuntimeValidatorResponse validatorResponse =
-          runtimeValidator.isValidValue(value, inputSetValidator.getParameters());
-      if (!validatorResponse.isValid()) {
-        return ProcessorResult.builder().error(true).message(validatorResponse.getErrorMessage()).build();
-      }
+    if (inputSetValidator == null) {
+      return ProcessorResult.builder().build();
+    }
+
+    RuntimeValidator runtimeValidator = inputSetValidatorFactory.obtainValidator(
+        inputSetValidator, engineExpressionEvaluator, skipUnresolvedExpressionsCheck);
+    RuntimeValidatorResponse validatorResponse =
+        runtimeValidator.isValidValue(value, inputSetValidator.getParameters());
+    if (!validatorResponse.isValid()) {
+      return ProcessorResult.builder()
+          .error(true)
+          .expression(String.format(
+              "<+input>.%s(%s)", inputSetValidator.getValidatorType().getYamlName(), inputSetValidator.getParameters()))
+          .message(validatorResponse.getErrorMessage())
+          .build();
     }
     return ProcessorResult.builder().build();
   }

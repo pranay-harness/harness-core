@@ -1,5 +1,6 @@
 package io.harness.cvng.analysis.services.impl;
 
+import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
@@ -310,7 +311,8 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
   public void testScheduleDeploymentLogAnalysisTask_testVerificationWithNullBaseline() {
     VerificationJobInstance verificationJobInstance = newVerificationJobInstance();
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
-    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    String verificationTaskId =
+        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
     AnalysisInput input = AnalysisInput.builder()
                               .verificationTaskId(verificationTaskId)
                               .startTime(instant.plus(5, ChronoUnit.MINUTES))
@@ -342,8 +344,10 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
     ((TestVerificationJob) verificationJobInstance.getResolvedJob())
         .setBaselineVerificationJobInstanceId(baselineJobInstanceId);
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
-    String baselineVerificationTaskId = verificationTaskService.create(accountId, cvConfigId, baselineJobInstanceId);
-    String verificationTaskId = verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId);
+    String baselineVerificationTaskId =
+        verificationTaskService.create(accountId, cvConfigId, baselineJobInstanceId, APP_DYNAMICS);
+    String verificationTaskId =
+        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
     AnalysisInput input = AnalysisInput.builder()
                               .verificationTaskId(verificationTaskId)
                               .startTime(instant.plus(5, ChronoUnit.MINUTES))

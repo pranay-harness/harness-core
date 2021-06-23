@@ -15,6 +15,7 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.exception.ConstraintViolationExceptionMapper;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -184,12 +185,17 @@ public class CommandLibraryServerApplication extends Application<CommandLibraryS
     modules.add(new AbstractCfModule() {
       @Override
       public CfClientConfig cfClientConfig() {
-        return CfClientConfig.builder().build();
+        return configuration.getCfClientConfig();
       }
 
       @Override
       public CfMigrationConfig cfMigrationConfig() {
         return CfMigrationConfig.builder().build();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return configuration.getFeatureFlagConfig();
       }
     });
 

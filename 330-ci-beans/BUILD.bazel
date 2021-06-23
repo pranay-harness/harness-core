@@ -1,6 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//:macros.bzl", "run_analysis")
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "//860-orchestration-steps:module",
@@ -222,7 +222,6 @@ shared_dependencies = [
     "@maven//:io_grpc_grpc_grpclb",
     "@maven//:io_grpc_grpc_netty_shaded",
     "@maven//:io_grpc_grpc_protobuf",
-    "@maven//:io_grpc_grpc_protobuf_lite",
     "@maven//:io_grpc_grpc_services",
     "@maven//:io_grpc_grpc_stub",
     "@maven//:io_gsonfire_gson_fire",

@@ -35,13 +35,13 @@ import io.harness.tasks.ErrorResponseData;
 import io.harness.tasks.ResponseData;
 import io.harness.utils.ConnectorUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.VisibleForTesting;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -57,7 +57,7 @@ public class AwsCodeCommitDataObtainer implements GitProviderBaseDataObtainer {
   public void acquireProviderData(FilterRequestData filterRequestData) {
     WebhookPayloadData webhookPayloadData = filterRequestData.getWebhookPayloadData();
 
-    if (webhookPayloadData.getWebhookEvent().getType() != WebhookEvent.Type.BRANCH) {
+    if (webhookPayloadData.getWebhookEvent().getType() != WebhookEvent.Type.PUSH) {
       throw new TriggerException(String.format("Unsupported web hook event type:[%s] for aws codecommit",
                                      webhookPayloadData.getWebhookEvent().getType()),
           WingsException.SRE);

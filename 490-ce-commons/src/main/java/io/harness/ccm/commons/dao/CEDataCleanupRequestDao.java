@@ -2,8 +2,8 @@ package io.harness.ccm.commons.dao;
 
 import static io.harness.persistence.HQuery.excludeValidate;
 
-import io.harness.ccm.commons.entities.CEDataCleanupRequest;
-import io.harness.ccm.commons.entities.CEDataCleanupRequest.CEDataCleanupRequestKeys;
+import io.harness.ccm.commons.entities.batch.CEDataCleanupRequest;
+import io.harness.ccm.commons.entities.batch.CEDataCleanupRequest.CEDataCleanupRequestKeys;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 
@@ -22,9 +22,9 @@ public class CEDataCleanupRequestDao {
   }
 
   public List<CEDataCleanupRequest> getNotProcessedDataCleanupRequests() {
-    return persistence.createQuery(CEDataCleanupRequest.class)
+    return persistence.createQuery(CEDataCleanupRequest.class, excludeValidate)
         .field(CEDataCleanupRequestKeys.processedRequest)
-        .doesNotExist()
+        .equal(false)
         .order(CEDataCleanupRequestKeys.createdAt)
         .asList();
   }

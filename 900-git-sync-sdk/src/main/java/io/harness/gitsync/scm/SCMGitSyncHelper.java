@@ -7,6 +7,7 @@ import static io.harness.gitsync.GitSyncSdkModule.SCM_ON_MANAGER;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.FileInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceBlockingStub;
@@ -14,6 +15,7 @@ import io.harness.gitsync.InfoForPush;
 import io.harness.gitsync.UserPrincipal;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.interceptor.GitEntityInfo;
+import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.scm.beans.SCMNoOpResponse;
 import io.harness.gitsync.scm.beans.ScmPushResponse;
 import io.harness.ng.core.EntityDetail;
@@ -39,23 +41,30 @@ public class SCMGitSyncHelper {
   @Inject private EntityDetailRestToProtoMapper entityDetailRestToProtoMapper;
   @Inject @Named(SCM_ON_MANAGER) private ScmGitHelper scmManagerGitHelper;
   @Inject @Named(SCM_ON_DELEGATE) private ScmGitHelper scmDelegateGitHelper;
+  @Inject GitSyncSdkService gitSyncSdkService;
 
   public ScmPushResponse pushToGit(
       GitEntityInfo gitBranchInfo, String yaml, ChangeType changeType, EntityDetail entityDetail) {
-    final InfoForGitPush infoForPush = getInfoForPush(gitBranchInfo, entityDetail);
     if (gitBranchInfo.isSyncFromGit()) {
+      final boolean defaultBranch =
+          gitSyncSdkService.isDefaultBranch(entityDetail.getEntityRef().getAccountIdentifier(),
+              entityDetail.getEntityRef().getOrgIdentifier(), entityDetail.getEntityRef().getProjectIdentifier());
       return SCMNoOpResponse.builder()
           .filePath(gitBranchInfo.getFilePath())
-          .pushToDefaultBranch(infoForPush.isDefault())
+          .pushToDefaultBranch(defaultBranch)
           .objectId(gitBranchInfo.getLastObjectId())
           .yamlGitConfigId(gitBranchInfo.getYamlGitConfigId())
           .branch(gitBranchInfo.getBranch())
           .folderPath(gitBranchInfo.getFolderPath())
+          .commitId(gitBranchInfo.getCommitId())
           .build();
     }
+    final InfoForGitPush infoForPush = getInfoForPush(gitBranchInfo, entityDetail);
     if (infoForPush.isExecuteOnDelegate()) {
+      log.info("Pushing the changes using delegate");
       return scmDelegateGitHelper.pushToGitBasedOnChangeType(yaml, changeType, gitBranchInfo, infoForPush);
     } else {
+      log.info("Pushing the changes using manager");
       return scmManagerGitHelper.pushToGitBasedOnChangeType(yaml, changeType, gitBranchInfo, infoForPush);
     }
   }
@@ -71,7 +80,9 @@ public class SCMGitSyncHelper {
             .setUserPrincipal(getUserPrincipal())
             .build());
     if (!pushInfo.getStatus()) {
-      throw new InvalidRequestException(pushInfo.getException().getValue());
+      WingsException wingsException =
+          (WingsException) kryoSerializer.asObject(pushInfo.getException().getValue().toByteArray());
+      throw wingsException;
     }
     final ScmConnector scmConnector =
         (ScmConnector) kryoSerializer.asObject(pushInfo.getConnector().getValue().toByteArray());
@@ -105,6 +116,7 @@ public class SCMGitSyncHelper {
       return UserPrincipal.newBuilder()
           .setEmail(StringValue.of(userPrincipal.getEmail()))
           .setUserId(StringValue.of(userPrincipal.getName()))
+          .setUserName(StringValue.of(userPrincipal.getUsername()))
           .build();
     }
     throw new InvalidRequestException("User not set for push event.");

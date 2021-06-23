@@ -20,8 +20,12 @@ func TestCreateListAndDeleteWebhookGithub(t *testing.T) {
 		Name:   "drone",
 		Target: "https://example.com",
 		Secret: "topsecret",
-		Events: &pb.HookEvents{
-			Branch: true,
+		NativeEvents: &pb.NativeEvents{
+			NativeEvents: &pb.NativeEvents_Github{
+				Github: &pb.GithubWebhookEvents{
+					Events: []pb.GithubWebhookEvent{pb.GithubWebhookEvent_GITHUB_CREATE, pb.GithubWebhookEvent_GITHUB_DELETE},
+				},
+			},
 		},
 		SkipVerify: true,
 		Provider: &pb.Provider{
@@ -40,6 +44,7 @@ func TestCreateListAndDeleteWebhookGithub(t *testing.T) {
 
 	assert.Nil(t, err, "no errors")
 	assert.Equal(t, int32(201), got.Status, "Correct http response")
+	assert.Equal(t, 2, len(got.GetWebhook().GetNativeEvents().GetGithub().GetEvents()), "created a webhook with 2 events")
 
 	list := &pb.ListWebhooksRequest{
 		Slug: "tphoney/scm-test",
@@ -57,11 +62,11 @@ func TestCreateListAndDeleteWebhookGithub(t *testing.T) {
 	got2, err2 := ListWebhooks(context.Background(), list, log.Sugar())
 
 	assert.Nil(t, err2, "no errors")
-	assert.Equal(t, 1, len(got2.Webhooks), "there is 1 webhook")
+	assert.LessOrEqual(t, 1, len(got2.Webhooks), "there is 1 webhook")
 
 	del := &pb.DeleteWebhookRequest{
 		Slug: "tphoney/scm-test",
-		Id:   got.Id,
+		Id:   got.Webhook.Id,
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_Github{
 				Github: &pb.GithubProvider{

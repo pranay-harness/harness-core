@@ -20,6 +20,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.rule.InjectorRuleMixin;
@@ -132,6 +133,13 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
       public ObjectMapper getYamlSchemaObjectMapper() {
         return Jackson.newObjectMapper();
       }
+
+      @Provides
+      @Named("disableDeserialization")
+      @Singleton
+      public boolean getSerializationForDelegate() {
+        return false;
+      }
     });
 
     modules.add(mongoTypeModule(annotations));
@@ -176,7 +184,8 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
                                             .serviceName("ORCHESTRATION_STEPS_TEST")
                                             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                             .build()));
-    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder().serviceName("orchestrationStepsTest").build();
+    PmsSdkConfiguration sdkConfig =
+        PmsSdkConfiguration.builder().deploymentMode(SdkDeployMode.LOCAL).moduleType(ModuleType.PMS).build();
     modules.add(PmsSdkModule.getInstance(sdkConfig));
     modules.add(OrchestrationStepsModule.getInstance(null));
     return modules;

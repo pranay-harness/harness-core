@@ -213,12 +213,14 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
       int anomalousLogClustersCount[] = new int[] {0};
       for (DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis : deploymentTimeSeriesAnalysisList) {
         deploymentTimeSeriesAnalysis.getTransactionMetricSummaries().forEach(transactionMetricHostData
-            -> anomalousMetricsCount[0] += transactionMetricHostData.getHostData()
-                                               .stream()
-                                               .filter(hostData
-                                                   -> hostData.getHostName().get().equals(hostSummaryInfo.getHostName())
-                                                       && hostData.getRisk().isGreaterThanEq(Risk.MEDIUM))
-                                               .count());
+            -> anomalousMetricsCount[0] +=
+            transactionMetricHostData.getHostData()
+                .stream()
+                .filter(hostData
+                    -> hostData.getHostName().isPresent()
+                        && hostData.getHostName().get().equals(hostSummaryInfo.getHostName())
+                        && hostData.getRisk().isGreaterThanEq(Risk.MEDIUM))
+                .count());
       }
       for (DeploymentLogAnalysis deploymentLogAnalysis : deploymentLogAnalysisList) {
         if (deploymentLogAnalysis.getHostSummaries() != null) {

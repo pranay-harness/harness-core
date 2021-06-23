@@ -25,11 +25,13 @@ import org.springframework.data.mongodb.core.query.Query;
 @Slf4j
 public class MongoOffsetBackingStore extends MemoryOffsetBackingStore {
   private MongoTemplate mongoTemplate;
+  private String collectionName;
 
   @Override
   public void configure(WorkerConfig workerConfig) {
     super.configure(workerConfig);
     String connectionUri = workerConfig.getString("offset.storage.file.filename");
+    collectionName = workerConfig.getString("offset.storage.topic");
     MongoClientOptions primaryMongoClientOptions = MongoClientOptions.builder()
                                                        .retryWrites(true)
                                                        .connectTimeout(30000)
@@ -53,7 +55,7 @@ public class MongoOffsetBackingStore extends MemoryOffsetBackingStore {
     this.data = new HashMap<>();
     MongoReconciliationOffset mongoReconciliationOffset =
         mongoTemplate.findOne(new Query().with(Sort.by(Sort.Order.desc(MongoReconciliationOffset.keys.createdAt))),
-            MongoReconciliationOffset.class);
+            MongoReconciliationOffset.class, collectionName);
     if (mongoReconciliationOffset != null) {
       this.data.put(
           ByteBuffer.wrap(mongoReconciliationOffset.getKey()), ByteBuffer.wrap(mongoReconciliationOffset.getValue()));
@@ -74,7 +76,8 @@ public class MongoOffsetBackingStore extends MemoryOffsetBackingStore {
       byte[] key = (mapEntry.getKey() != null) ? mapEntry.getKey().array() : null;
       byte[] value = (mapEntry.getValue() != null) ? mapEntry.getValue().array() : null;
       MongoReconciliationOffset mongoReconciliationOffset = mongoTemplate.save(
-          MongoReconciliationOffset.builder().key(key).value(value).createdAt(System.currentTimeMillis()).build());
+          MongoReconciliationOffset.builder().key(key).value(value).createdAt(System.currentTimeMillis()).build(),
+          collectionName);
       log.info("Saved offset in db is: {}", mongoReconciliationOffset);
     }
   }

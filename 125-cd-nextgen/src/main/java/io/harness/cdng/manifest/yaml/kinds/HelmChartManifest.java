@@ -9,12 +9,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
-import io.harness.cdng.manifest.yaml.StoreConfig;
-import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
 import io.harness.cdng.visitor.helpers.manifest.HelmChartManifestVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.SkipAutoEvaluation;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -31,12 +32,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
 import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "HelmChartManifestKeys")
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ManifestType.HelmChart)
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -45,10 +48,10 @@ import org.springframework.data.annotation.TypeAlias;
 public class HelmChartManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
   @Wither @JsonProperty("store") StoreConfigWrapper store;
-  @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) ParameterField<String> chartName;
-  @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) ParameterField<String> chartVersion;
+  @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) @SkipAutoEvaluation ParameterField<String> chartName;
+  @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) @SkipAutoEvaluation ParameterField<String> chartVersion;
   @Wither HelmVersion helmVersion;
-  @Wither @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipResourceVersioning;
+  @Wither @YamlSchemaTypes({string, bool}) @SkipAutoEvaluation ParameterField<Boolean> skipResourceVersioning;
   @Wither List<HelmManifestCommandFlag> commandFlags;
 
   @Override

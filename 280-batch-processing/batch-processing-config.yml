@@ -91,6 +91,9 @@ cfMigrationConfig:
   connectionTimeout: 10000
   readTimeout: 30000
 
+featureFlagConfig:
+  featureFlagSystem: LOCAL
+  syncFeaturesToCF: false
 
 reportScheduleConfig:
   enabled: true
@@ -113,5 +116,11 @@ ngManagerServiceHttpClientConfig:
   baseUrl: http://localhost:7457/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
-ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
+# banzaicloud/telescopes repo
+banzaiRecommenderConfig:
+  baseUrl: http://104.155.154.180:9090/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM

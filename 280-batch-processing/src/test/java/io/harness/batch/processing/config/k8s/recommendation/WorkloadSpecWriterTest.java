@@ -11,14 +11,14 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
+import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
 import io.harness.ff.FeatureFlagService;
 import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec;
 import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec;
 import io.harness.rule.Owner;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
 
 import com.google.common.collect.ImmutableList;

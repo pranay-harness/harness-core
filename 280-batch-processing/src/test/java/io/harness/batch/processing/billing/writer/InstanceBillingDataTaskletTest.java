@@ -27,16 +27,16 @@ import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.PricingSource;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 import io.harness.rule.Owner;
 
 import software.wings.security.authentication.BatchQueryConfig;
@@ -308,7 +308,7 @@ public class InstanceBillingDataTaskletTest extends CategoryTest {
     when(customBillingMetaDataService.getAwsDataSetId(ACCOUNT_ID)).thenReturn("AWS_DATA_SETID");
     when(utilizationDataService.getUtilizationDataForInstances(any(), any(), any(), any(), any(), any()))
         .thenReturn(utilizationDataForInstances);
-    when(billingCalculationService.getInstanceBillingAmount(any(), any(), any(), any()))
+    when(billingCalculationService.getInstanceBillingAmount(any(), any(), any(), any(), any()))
         .thenReturn(new BillingData(BillingAmountBreakup.builder().billingAmount(BigDecimal.ONE).build(),
             new IdleCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO),
             new SystemCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO), USAGE_DURATION_SECONDS,

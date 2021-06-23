@@ -14,7 +14,8 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(PIPELINE)
 public interface PMSPipelineRepositoryCustom {
-  Page<PipelineEntity> findAll(Criteria criteria, Pageable pageable);
+  Page<PipelineEntity> findAll(
+      Criteria criteria, Pageable pageable, String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
   PipelineEntity save(PipelineEntity pipelineToSave, PipelineConfig yamlDTO);
 
@@ -23,7 +24,8 @@ public interface PMSPipelineRepositoryCustom {
 
   PipelineEntity updatePipelineYaml(PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO);
 
-  PipelineEntity updatePipelineMetadata(Criteria criteria, Update update);
+  PipelineEntity updatePipelineMetadata(
+      String accountId, String orgIdentifier, String projectIdentifier, Criteria criteria, Update update);
 
   PipelineEntity deletePipeline(PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO);
 }

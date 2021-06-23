@@ -14,7 +14,6 @@ import io.harness.connector.ConnectorResourceClient;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskMode;
 import io.harness.delegate.TaskSelector;
-import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
@@ -30,10 +29,10 @@ import io.harness.logstreaming.NGLogCallback;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
-import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -55,13 +54,11 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import java.time.Duration;
-import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.MapUtils;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -73,13 +70,14 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
   private final WaitNotifyEngine waitNotifyEngine;
   private final LogStreamingStepClientFactory logStreamingStepClientFactory;
   private final String publisherName;
+  private final PmsGitSyncHelper pmsGitSyncHelper;
 
   @Inject
   public JiraApprovalHelperServiceImpl(NgDelegate2TaskExecutor ngDelegate2TaskExecutor,
       ConnectorResourceClient connectorResourceClient, KryoSerializer kryoSerializer,
       SecretNGManagerClient secretManagerClient, WaitNotifyEngine waitNotifyEngine,
       LogStreamingStepClientFactory logStreamingStepClientFactory,
-      @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName) {
+      @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName, PmsGitSyncHelper pmsGitSyncHelper) {
     this.ngDelegate2TaskExecutor = ngDelegate2TaskExecutor;
     this.connectorResourceClient = connectorResourceClient;
     this.kryoSerializer = kryoSerializer;
@@ -87,11 +85,14 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
     this.waitNotifyEngine = waitNotifyEngine;
     this.logStreamingStepClientFactory = logStreamingStepClientFactory;
     this.publisherName = publisherName;
+    this.pmsGitSyncHelper = pmsGitSyncHelper;
   }
 
   @Override
   public void handlePollingEvent(JiraApprovalInstance instance) {
-    try (AutoLogContext ignore = instance.autoLogContext()) {
+    try (PmsGitSyncBranchContextGuard ignore1 =
+             pmsGitSyncHelper.createGitSyncBranchContextGuard(instance.getAmbiance(), true);
+         AutoLogContext ignore2 = instance.autoLogContext()) {
       handlePollingEventInternal(instance);
     }
   }
@@ -168,35 +169,23 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
   }
 
   private TaskRequest prepareJiraTaskRequest(Ambiance ambiance, JiraTaskNGParameters jiraTaskNGParameters) {
-    final String accountId = AmbianceUtils.getAccountId(ambiance);
-    LinkedHashMap<String, String> logAbstractionMap = StepUtils.generateLogAbstractions(ambiance);
-    DelegateTaskRequest.Builder requestBuilder =
-        DelegateTaskRequest.newBuilder()
-            .setAccountId(accountId)
-            .setDetails(
-                TaskDetails.newBuilder()
-                    .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(jiraTaskNGParameters) == null
-                            ? new byte[] {}
-                            : kryoSerializer.asDeflatedBytes(jiraTaskNGParameters)))
-                    .setExecutionTimeout(com.google.protobuf.Duration.newBuilder().setSeconds(20).build())
-                    .setMode(TaskMode.ASYNC)
-                    .setParked(false)
-                    .setType(TaskType.newBuilder().setType(software.wings.beans.TaskType.JIRA_TASK_NG.name()).build())
-                    .build())
-            .addAllSelectors(jiraTaskNGParameters.getDelegateSelectors()
-                                 .stream()
-                                 .map(s -> TaskSelector.newBuilder().setSelector(s).build())
-                                 .collect(Collectors.toList()))
-            .addAllLogKeys(StepUtils.generateLogKeys(logAbstractionMap, Collections.emptyList()))
-            .setSetupAbstractions(TaskSetupAbstractions.newBuilder()
-                                      .putAllValues(MapUtils.emptyIfNull(ambiance.getSetupAbstractionsMap()))
-                                      .build())
-            .setSelectionTrackingLogEnabled(true);
+    TaskDetails taskDetails =
+        TaskDetails.newBuilder()
+            .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(jiraTaskNGParameters) == null
+                    ? new byte[] {}
+                    : kryoSerializer.asDeflatedBytes(jiraTaskNGParameters)))
+            .setExecutionTimeout(com.google.protobuf.Duration.newBuilder().setSeconds(20).build())
+            .setMode(TaskMode.ASYNC)
+            .setParked(false)
+            .setType(TaskType.newBuilder().setType(software.wings.beans.TaskType.JIRA_TASK_NG.name()).build())
+            .build();
 
-    return TaskRequest.newBuilder()
-        .setDelegateTaskRequest(requestBuilder.build())
-        .setTaskCategory(TaskCategory.DELEGATE_TASK_V2)
-        .build();
+    List<TaskSelector> selectors = jiraTaskNGParameters.getDelegateSelectors()
+                                       .stream()
+                                       .map(s -> TaskSelector.newBuilder().setSelector(s).build())
+                                       .collect(Collectors.toList());
+
+    return StepUtils.prepareTaskRequest(ambiance, taskDetails, new ArrayList<>(), selectors, null, false);
   }
 
   @Override
@@ -222,7 +211,7 @@ public class JiraApprovalHelperServiceImpl implements JiraApprovalHelperService 
           format("Connector of other then Jira type was found : [%s] ", connectorIdentifierRef));
     } catch (Exception e) {
       throw new HarnessJiraException(
-          format("Error while getting connector information : [%s]", connectorIdentifierRef));
+          format("Error while getting connector information : [%s]", connectorIdentifierRef), e, null);
     }
   }
 

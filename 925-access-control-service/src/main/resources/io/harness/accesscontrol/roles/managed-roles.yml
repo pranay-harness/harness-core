@@ -15,6 +15,12 @@ roles:
         - core_connector_edit
         - core_connector_delete
         - core_connector_access
+        - core_delegate_view
+        - core_delegate_edit
+        - core_delegate_delete
+        - core_delegateconfiguration_view
+        - core_delegateconfiguration_edit
+        - core_delegateconfiguration_delete
         - core_pipeline_view
         - core_pipeline_edit
         - core_pipeline_delete
@@ -48,6 +54,8 @@ roles:
         - core_project_view
         - core_secret_view
         - core_connector_view
+        - core_delegate_view
+        - core_delegateconfiguration_view
         - core_pipeline_view
         - core_service_view
         - core_environment_view
@@ -77,6 +85,12 @@ roles:
         - core_connector_edit
         - core_connector_delete
         - core_connector_access
+        - core_delegate_view
+        - core_delegate_edit
+        - core_delegate_delete
+        - core_delegateconfiguration_view
+        - core_delegateconfiguration_edit
+        - core_delegateconfiguration_delete
         - core_service_view
         - core_service_edit
         - core_service_delete
@@ -108,6 +122,8 @@ roles:
         - core_project_create
         - core_secret_view
         - core_connector_view
+        - core_delegate_view
+        - core_delegateconfiguration_view
         - core_service_view
         - core_environment_view
         - core_audit_view
@@ -133,6 +149,12 @@ roles:
         - core_connector_edit
         - core_connector_delete
         - core_connector_access
+        - core_delegate_view
+        - core_delegate_edit
+        - core_delegate_delete
+        - core_delegateconfiguration_view
+        - core_delegateconfiguration_edit
+        - core_delegateconfiguration_delete
         - core_service_view
         - core_service_edit
         - core_service_delete
@@ -156,6 +178,9 @@ roles:
         - core_authsetting_view
         - core_authsetting_edit
         - core_authsetting_delete
+        - core_serviceaccount_view
+        - core_serviceaccount_edit
+        - core_serviceaccount_delete
       allowedScopeLevels:
         - account
       managed: true
@@ -166,6 +191,8 @@ roles:
         - core_organization_view
         - core_secret_view
         - core_connector_view
+        - core_delegate_view
+        - core_delegateconfiguration_view
         - core_service_view
         - core_environment_view
         - core_audit_view
@@ -201,3 +228,57 @@ roles:
       allowedScopeLevels:
         - project
       managed: true
+    - identifier: _feature_flag_admin
+      name: Feature Flag Admin
+      description: Can perform all actions for feature flags in a existing project
+      permissions:
+        - ff_featureflag_delete
+        - ff_featureflag_edit
+        - ff_featureflag_view
+        - ff_targetgroup_delete
+        - ff_targetgroup_view
+        - ff_targetgroup_edit
+        - ff_environment_targetGroupEdit
+        - ff_target_view
+        - ff_environment_apiKeyView
+        - ff_environment_apiKeyCreate
+        - ff_environment_apiKeyDelete
+        - ff_environment_edit
+        - ff_environment_view
+        - ff_featureflag_toggle
+      managed: true
+      allowedScopeLevels:
+        - account
+        - organization
+        - project
+    - identifier: _feature_flag_viewer
+      name: Feature Flag View Only Role
+      description: Can view existing feature flags
+      permissions:
+        - ff_featureflag_view
+        - ff_environment_view
+        - ff_environment_apiKeyView
+        - ff_targetgroup_view
+        - ff_target_view
+      managed: true
+      allowedScopeLevels:
+        - account
+        - organization
+        - project
+    - identifier: _feature_flag_manage_role
+      name: Feature Flag Manage Role
+      description: Can edit and view existing feature flags
+      permissions:
+        - ff_environment_edit
+        - ff_environment_view
+        - ff_featureflag_edit
+        - ff_featureflag_view
+        - ff_targetgroup_edit
+        - ff_targetgroup_view
+        - ff_target_view
+        - ff_environment_apiKeyView
+      managed: true
+      allowedScopeLevels:
+        - account
+        - organization
+        - project

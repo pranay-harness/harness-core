@@ -2,6 +2,7 @@ package software.wings.helpers.ext.external.comm.handlers;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
@@ -15,13 +16,12 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.EmailUtils;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 import javax.mail.AuthenticationFailedException;
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -37,7 +37,7 @@ public class EmailHandler implements CollaborationHandler {
   @Inject private KryoSerializer kryoSerializer;
 
   @Inject @Transient private transient EncryptionService encryptionService;
-  private static final TimeLimiter timeLimiter = new SimpleTimeLimiter();
+  private static final TimeLimiter timeLimiter = HTimeLimiter.create();
 
   @Override
   public CollaborationProviderResponse handle(CollaborationProviderRequest request) {
@@ -75,7 +75,7 @@ public class EmailHandler implements CollaborationHandler {
   private boolean validateDelegateConnectionInternal(
       SmtpConfig smtpConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
-      return timeLimiter.callWithTimeout(() -> {
+      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(10), () -> {
         boolean result = false;
         try {
           Properties props = new Properties();
@@ -108,7 +108,7 @@ public class EmailHandler implements CollaborationHandler {
           log.warn("SMTP: Unknown Exception", e);
         }
         return result;
-      }, 10000, TimeUnit.MILLISECONDS, true);
+      });
     } catch (Exception e) {
       log.warn("Failed to validate email delegate communication", e);
     }

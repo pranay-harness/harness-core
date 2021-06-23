@@ -18,10 +18,11 @@ import io.harness.cdng.creator.plan.PlanCreatorConstants;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
-import io.harness.pms.sdk.core.facilitator.chilidren.ChildrenFacilitator;
-import io.harness.pms.sdk.core.facilitator.task.TaskFacilitator;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.yaml.ParameterField;
@@ -45,6 +46,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 @UtilityClass
 public class ArtifactsPlanCreator {
   public PlanCreationResponse createPlanForArtifactsNode(ServiceConfig serviceConfig) {
+    String artifactsId = UUIDGenerator.generateUuid();
     ArtifactListConfig artifactListConfig = serviceConfig.getServiceDefinition().getServiceSpec().getArtifacts();
     ArtifactListBuilder artifactListBuilder = new ArtifactListBuilder(artifactListConfig);
     artifactListBuilder.addOverrideSets(serviceConfig);
@@ -62,8 +64,7 @@ public class ArtifactsPlanCreator {
       childrenIds.add(primaryNode.getUuid());
     }
     if (EmptyPredicate.isNotEmpty(artifactList.getSidecars())) {
-      ImmutablePair<String, List<PlanNode>> pair =
-          createPlanForSidecarsNode(artifactListConfig.getUuid(), artifactList);
+      ImmutablePair<String, List<PlanNode>> pair = createPlanForSidecarsNode(artifactsId, artifactList);
       planNodes.addAll(pair.getRight());
       childrenIds.add(pair.getLeft());
     }
@@ -71,13 +72,15 @@ public class ArtifactsPlanCreator {
     ForkStepParameters stepParameters = ForkStepParameters.builder().parallelNodeIds(childrenIds).build();
     PlanNode artifactsNode =
         PlanNode.builder()
-            .uuid(artifactListConfig.getUuid())
+            .uuid(artifactsId)
             .stepType(ArtifactsStep.STEP_TYPE)
             .name(PlanCreatorConstants.ARTIFACTS_NODE_NAME)
             .identifier(YamlTypes.ARTIFACT_LIST_CONFIG)
             .stepParameters(stepParameters)
             .facilitatorObtainment(
-                FacilitatorObtainment.newBuilder().setType(ChildrenFacilitator.FACILITATOR_TYPE).build())
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                    .build())
             .skipExpressionChain(false)
             .build();
     planNodes.add(artifactsNode);
@@ -106,7 +109,9 @@ public class ArtifactsPlanCreator {
             .identifier(YamlTypes.SIDECARS_ARTIFACT_CONFIG)
             .stepParameters(stepParameters)
             .facilitatorObtainment(
-                FacilitatorObtainment.newBuilder().setType(ChildrenFacilitator.FACILITATOR_TYPE).build())
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                    .build())
             .skipExpressionChain(false)
             .build();
     planNodes.add(sidecarsNode);
@@ -115,12 +120,15 @@ public class ArtifactsPlanCreator {
 
   private PlanNode createPlanForArtifactNode(String identifier, ArtifactInfo artifactInfo) {
     return PlanNode.builder()
-        .uuid(artifactInfo.getUuid())
+        .uuid(UUIDGenerator.generateUuid())
         .stepType(ArtifactStep.STEP_TYPE)
         .name(PlanCreatorConstants.ARTIFACT_NODE_NAME)
         .identifier(identifier)
         .stepParameters(artifactInfo.getParams())
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(TaskFacilitator.FACILITATOR_TYPE).build())
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                .build())
         .skipExpressionChain(false)
         .build();
   }
@@ -146,10 +154,9 @@ public class ArtifactsPlanCreator {
 
       PrimaryArtifact primarySpecWrapper = artifactListConfig.getPrimary();
       if (primarySpecWrapper != null) {
-        this.primary = new ArtifactInfoBuilder(primarySpecWrapper.getUuid(),
-            ArtifactStepParameters.builder()
-                .type(primarySpecWrapper.getSourceType())
-                .spec(primarySpecWrapper.getSpec()));
+        this.primary = new ArtifactInfoBuilder(ArtifactStepParameters.builder()
+                                                   .type(primarySpecWrapper.getSourceType())
+                                                   .spec(primarySpecWrapper.getSpec()));
       } else {
         this.primary = null;
       }
@@ -159,11 +166,10 @@ public class ArtifactsPlanCreator {
         artifactListConfig.getSidecars().forEach(sc -> {
           SidecarArtifact sidecar = sc.getSidecar();
           this.sidecars.put(sidecar.getIdentifier(),
-              new ArtifactInfoBuilder(sidecar.getUuid(),
-                  ArtifactStepParameters.builder()
-                      .identifier(sidecar.getIdentifier())
-                      .type(sidecar.getSourceType())
-                      .spec(sidecar.getSpec())));
+              new ArtifactInfoBuilder(ArtifactStepParameters.builder()
+                                          .identifier(sidecar.getIdentifier())
+                                          .type(sidecar.getSourceType())
+                                          .spec(sidecar.getSpec())));
         });
       }
     }
@@ -217,7 +223,7 @@ public class ArtifactsPlanCreator {
       PrimaryArtifact primarySpecWrapper = artifactListConfig.getPrimary();
       if (primarySpecWrapper != null) {
         if (primary == null) {
-          primary = new ArtifactInfoBuilder(primarySpecWrapper.getUuid(), ArtifactStepParameters.builder());
+          primary = new ArtifactInfoBuilder(ArtifactStepParameters.builder());
         }
         consumer.accept(primary.getBuilder(), primarySpecWrapper.getSpec());
       }
@@ -226,8 +232,7 @@ public class ArtifactsPlanCreator {
         for (SidecarArtifactWrapper sidecarWrapper : artifactListConfig.getSidecars()) {
           SidecarArtifact sidecar = sidecarWrapper.getSidecar();
           ArtifactInfoBuilder artifactInfoBuilder = sidecars.computeIfAbsent(sidecar.getIdentifier(),
-              identifier
-              -> new ArtifactInfoBuilder(sidecar.getUuid(), ArtifactStepParameters.builder().identifier(identifier)));
+              identifier -> new ArtifactInfoBuilder(ArtifactStepParameters.builder().identifier(identifier)));
           consumer.accept(artifactInfoBuilder.getBuilder(), sidecar.getSpec());
         }
       }
@@ -236,17 +241,15 @@ public class ArtifactsPlanCreator {
 
   @Value
   private static class ArtifactInfo {
-    String uuid;
     ArtifactStepParameters params;
   }
 
   @Value
   private static class ArtifactInfoBuilder {
-    String uuid;
     ArtifactStepParametersBuilder builder;
 
     ArtifactInfo build() {
-      return new ArtifactInfo(uuid, builder.build());
+      return new ArtifactInfo(builder.build());
     }
   }
 }

@@ -3,7 +3,13 @@ package io.harness.cdng.k8s;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.DeleteReleaseNameSpec.DeleteReleaseNameSpecKeys;
+import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
+import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.delegate.task.k8s.K8sDeleteRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -17,6 +23,7 @@ import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollb
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -27,6 +34,7 @@ import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
+import java.util.Collections;
 import java.util.List;
 
 @OwnedBy(HarnessTeam.CDP)
@@ -43,7 +51,15 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollback implements K8
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     K8sDeleteStepParameters k8sDeleteStepParameters = (K8sDeleteStepParameters) stepElementParameters.getSpec();
     validate(k8sDeleteStepParameters);
-    return k8sStepHelper.startChainLink(this, ambiance, stepElementParameters);
+    K8sDeleteStepParameters deleteStepParameters = (K8sDeleteStepParameters) stepElementParameters.getSpec();
+    if (DeleteResourcesType.ManifestPath == deleteStepParameters.getDeleteResources().getType()) {
+      return k8sStepHelper.startChainLink(this, ambiance, stepElementParameters);
+    } else {
+      InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
+          ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
+      return executeK8sTask(null, ambiance, stepElementParameters, Collections.emptyList(),
+          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), false);
+    }
   }
 
   private void validate(K8sDeleteStepParameters stepParameters) {
@@ -62,13 +78,14 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollback implements K8
 
   @Override
   public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
-      StepElementParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure,
-      boolean shouldOpenFetchFilesLogStream) {
+      StepElementParameters stepParameters, List<String> valuesFileContents,
+      K8sExecutionPassThroughData executionPassThroughData, boolean shouldOpenFetchFilesLogStream) {
     K8sDeleteStepParameters deleteStepParameters = (K8sDeleteStepParameters) stepParameters.getSpec();
     boolean isResourceName = io.harness.delegate.task.k8s.DeleteResourcesType.ResourceName
         == deleteStepParameters.getDeleteResources().getType();
     boolean isManifestFiles = DeleteResourcesType.ManifestPath == deleteStepParameters.getDeleteResources().getType();
 
+    InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
     final String accountId = AmbianceHelper.getAccountId(ambiance);
 
@@ -78,18 +95,26 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollback implements K8
             .releaseName(releaseName)
             .commandName(K8S_DELETE_COMMAND_NAME)
             .deleteResourcesType(deleteStepParameters.getDeleteResources().getType())
-            .resources(isResourceName ? deleteStepParameters.getDeleteResources().getSpec().getResourceNames() : "")
-            .deleteNamespacesForRelease(deleteStepParameters.deleteResources.getSpec().getDeleteNamespace())
-            .filePaths(isManifestFiles ? deleteStepParameters.getDeleteResources().getSpec().getManifestPaths() : "")
-            .valuesYamlList(k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents))
+            .resources(
+                isResourceName ? deleteStepParameters.getDeleteResources().getSpec().getResourceNamesValue() : "")
+            .deleteNamespacesForRelease(K8sStepHelper.getParameterFieldBooleanValue(
+                deleteStepParameters.getDeleteResources().getSpec().getDeleteNamespaceParameterField(),
+                DeleteReleaseNameSpecKeys.deleteNamespace, stepParameters))
+            .filePaths(
+                isManifestFiles ? deleteStepParameters.getDeleteResources().getSpec().getManifestPathsValue() : "")
+            .valuesYamlList(k8sManifestOutcome != null
+                    ? k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents)
+                    : Collections.emptyList())
             .taskType(K8sTaskType.DELETE)
             .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepParameters))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
-            .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
+            .manifestDelegateConfig(k8sManifestOutcome != null
+                    ? k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance)
+                    : null)
             .shouldOpenFetchFilesLogStream(shouldOpenFetchFilesLogStream)
             .build();
 
-    return k8sStepHelper.queueK8sTask(stepParameters, request, ambiance, infrastructure);
+    return k8sStepHelper.queueK8sTask(stepParameters, request, ambiance, executionPassThroughData);
   }
 
   @Override
@@ -101,16 +126,32 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollback implements K8
 
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, StepElementParameters stepParameters,
-      PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) throws Exception {
-    K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
-    StepResponseBuilder stepResponseBuilder =
-        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
-
-    if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, stepResponseBuilder).build();
+      PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) {
+    if (passThroughData instanceof GitFetchResponsePassThroughData) {
+      return k8sStepHelper.handleGitTaskFailure((GitFetchResponsePassThroughData) passThroughData);
     }
 
-    return stepResponseBuilder.status(Status.SUCCEEDED).build();
+    if (passThroughData instanceof HelmValuesFetchResponsePassThroughData) {
+      return k8sStepHelper.handleHelmValuesFetchFailure((HelmValuesFetchResponsePassThroughData) passThroughData);
+    }
+
+    if (passThroughData instanceof StepExceptionPassThroughData) {
+      return k8sStepHelper.handleStepExceptionFailure((StepExceptionPassThroughData) passThroughData);
+    }
+
+    try {
+      K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
+      StepResponseBuilder stepResponseBuilder = StepResponse.builder().unitProgressList(
+          k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
+
+      if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+        return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, stepResponseBuilder).build();
+      }
+
+      return stepResponseBuilder.status(Status.SUCCEEDED).build();
+    } catch (Exception e) {
+      return k8sStepHelper.handleTaskException(ambiance, (K8sExecutionPassThroughData) passThroughData, e);
+    }
   }
 
   @Override

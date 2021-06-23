@@ -5,8 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.ccm.budget.Budget;
 import io.harness.ccm.budget.BudgetService;
+import io.harness.ccm.commons.entities.billing.Budget;
 
 import software.wings.graphql.datafetcher.AbstractArrayDataFetcher;
 import software.wings.graphql.schema.query.QLBudgetQueryParameters;

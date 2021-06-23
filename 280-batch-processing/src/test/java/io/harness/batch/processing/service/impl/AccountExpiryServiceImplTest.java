@@ -11,7 +11,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
 import io.harness.rule.Owner;
 
 import software.wings.beans.Account;

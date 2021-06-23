@@ -5,16 +5,15 @@ import static io.harness.event.app.EventServiceApplication.EVENTS_STORE;
 import static com.google.common.base.Verify.verify;
 
 import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.mongo.IndexManager;
 import io.harness.persistence.HPersistence;
 import io.harness.timescaledb.TimeScaleDBService;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
@@ -35,18 +34,20 @@ public class ApplicationReadyListener {
   private final HPersistence hPersistence;
   private final IndexManager indexManager;
   private final Environment environment;
+  private final TimeLimiter timeLimiter;
 
   public ApplicationReadyListener(TimeScaleDBService timeScaleDBService, HPersistence hPersistence, Morphia morphia,
-      IndexManager indexManager, Environment environment) {
+      IndexManager indexManager, TimeLimiter timeLimiter, Environment environment) {
     this.timeScaleDBService = timeScaleDBService;
     this.hPersistence = hPersistence;
     this.morphia = morphia;
     this.indexManager = indexManager;
+    this.timeLimiter = timeLimiter;
     this.environment = environment;
   }
 
   @EventListener(ApplicationReadyEvent.class)
-  void ensureTimescaleConnectivity() {
+  public void ensureTimescaleConnectivity() {
     log.info("Inside ensureTimescaleConnectivity");
     if (Boolean.TRUE.equals(environment.getProperty("ensure-timescale", Boolean.class, Boolean.TRUE))) {
       verify(timeScaleDBService.isValid(), "Unable to connect to timescale db");
@@ -55,7 +56,7 @@ public class ApplicationReadyListener {
   }
 
   @EventListener(ApplicationReadyEvent.class)
-  void ensureIndexForEventsStore(ApplicationReadyEvent applicationReadyEvent) {
+  public void ensureIndexForEventsStore(ApplicationReadyEvent applicationReadyEvent) {
     AdvancedDatastore datastore = hPersistence.getDatastore(EVENTS_STORE);
     IndexManager.Mode indexManagerMode = applicationReadyEvent.getApplicationContext()
                                              .getBean(BatchMainConfig.class)
@@ -66,14 +67,13 @@ public class ApplicationReadyListener {
 
   @EventListener(ApplicationReadyEvent.class)
   @Order(Ordered.HIGHEST_PRECEDENCE)
-  void ensureMongoConnectivity() throws Exception {
+  public void ensureMongoConnectivity() throws Exception {
     log.info("Inside ensureMongoConnectivity");
-    TimeLimiter timeLimiter = new SimpleTimeLimiter();
     try {
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, hPersistence.healthExpectedResponseTimeout(), () -> {
         hPersistence.isHealthy();
         return null;
-      }, hPersistence.healthExpectedResponseTimeout().toMillis(), TimeUnit.MILLISECONDS, true);
+      });
     } catch (UncheckedTimeoutException e) {
       log.error("Timed out waiting for mongo connectivity");
       throw e;
@@ -82,11 +82,20 @@ public class ApplicationReadyListener {
   }
 
   @EventListener(ApplicationReadyEvent.class)
-  void createLivenessMarker() throws IOException {
+  public void createLivenessMarkerOnReadyEvent() throws IOException {
+    createLivenessMarker();
+  }
+
+  public static void createLivenessMarker() throws IOException {
     File livenessMarker = new File("batch-processing-up");
+    if (livenessMarker.exists()) {
+      log.info("Liveness marker already exists at {}", livenessMarker.getAbsolutePath());
+      return;
+    }
+
     boolean created = livenessMarker.createNewFile();
     if (created) {
-      log.info("Created liveness marker");
+      log.info("Created liveness marker at: {}", livenessMarker.getAbsolutePath());
     } else {
       log.error("Failed to create liveness marker");
     }

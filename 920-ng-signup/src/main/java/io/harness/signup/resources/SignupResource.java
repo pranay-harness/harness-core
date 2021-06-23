@@ -15,6 +15,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.annotations.PublicApi;
 import io.harness.signup.dto.OAuthSignupDTO;
 import io.harness.signup.dto.SignupDTO;
+import io.harness.signup.dto.VerifyTokenResponseDTO;
 import io.harness.signup.services.SignupService;
 
 import software.wings.security.annotations.AuthRule;
@@ -27,7 +28,6 @@ import io.swagger.annotations.ApiResponses;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -75,7 +75,14 @@ public class SignupResource {
     return new RestResponse<>(signupService.oAuthSignup(dto));
   }
 
-  @GET
+  @POST
+  @Path("/verify/{token}")
+  @PublicApi
+  public RestResponse<VerifyTokenResponseDTO> verifyToken(@PathParam("token") String token) {
+    return new RestResponse<>(signupService.verifyToken(token));
+  }
+
+  @POST
   @Path("{userId}/verify-notification")
   @Produces("application/json")
   @Consumes("application/json")

@@ -1,14 +1,16 @@
 package io.harness.ngtriggers.expressions.functors;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ngtriggers.Constants.EVENT_PAYLOAD;
+import static io.harness.ngtriggers.Constants.PAYLOAD;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.exception.InvalidRequestException;
+import io.harness.execution.PlanExecutionMetadata;
 import io.harness.expression.LateBindingValue;
-import io.harness.ngtriggers.helpers.TriggerAmbianceHelper;
+import io.harness.ngtriggers.helpers.TriggerHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.yaml.utils.JsonPipelineUtils;
 
 import java.io.IOException;
@@ -18,45 +20,25 @@ import java.util.Map;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class TriggerFunctor implements LateBindingValue {
   private final Ambiance ambiance;
+  private final PlanExecutionMetadataService planExecutionMetadataService;
 
-  public TriggerFunctor(Ambiance ambiance) {
+  public TriggerFunctor(Ambiance ambiance, PlanExecutionMetadataService planExecutionMetadataService) {
     this.ambiance = ambiance;
+    this.planExecutionMetadataService = planExecutionMetadataService;
   }
 
   @Override
   public Object bind() {
-    Map<String, Object> jsonObject = new HashMap<>();
-
-    ParsedPayload parsedPayload = ambiance.getMetadata().getTriggerPayload().getParsedPayload();
-    // branchesxv
-    switch (parsedPayload.getPayloadCase()) {
-      case PR:
-        jsonObject.put("branch", parsedPayload.getPr().getPr().getTarget());
-        jsonObject.put("targetBranch", parsedPayload.getPr().getPr().getTarget());
-        jsonObject.put("sourceBranch", parsedPayload.getPr().getPr().getSource());
-        jsonObject.put("event", "PR");
-        jsonObject.put("type", "WEBHOOK");
-        break;
-      case PUSH:
-        jsonObject.put("branch", parsedPayload.getPush().getRepo().getBranch());
-        jsonObject.put("targetBranch", parsedPayload.getPush().getRepo().getBranch());
-        jsonObject.put("event", "PUSH");
-        jsonObject.put("type", "WEBHOOK");
-        break;
-      default:
-        if (isEmpty(ambiance.getMetadata().getTriggerPayload().getJsonPayload())) {
-          jsonObject.put("type", "SCHEDULED");
-        } else {
-          jsonObject.put("type", "CUSTOM");
-        }
-        break;
-    }
-
-    // headers
-    jsonObject.put("header", TriggerAmbianceHelper.getEventPayload(ambiance));
+    PlanExecutionMetadata metadata =
+        planExecutionMetadataService.findByPlanExecutionId(ambiance.getPlanExecutionId())
+            .orElseThrow(()
+                             -> new IllegalStateException(
+                                 "No Metadata present for planExecution :" + ambiance.getPlanExecutionId()));
+    Map<String, Object> jsonObject = TriggerHelper.buildJsonObjectFromAmbiance(metadata.getTriggerPayload());
+    jsonObject.put(EVENT_PAYLOAD, metadata.getTriggerJsonPayload());
     // payload
     try {
-      jsonObject.put("payload", JsonPipelineUtils.read(TriggerAmbianceHelper.getEventPayload(ambiance), HashMap.class));
+      jsonObject.put(PAYLOAD, JsonPipelineUtils.read(metadata.getTriggerJsonPayload(), HashMap.class));
     } catch (IOException e) {
       throw new InvalidRequestException("Event payload could not be converted to a hashmap");
     }

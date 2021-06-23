@@ -24,7 +24,8 @@ public interface PMSPipelineService {
 
   PipelineEntity updatePipelineYaml(PipelineEntity pipelineEntity);
 
-  PipelineEntity updatePipelineMetadata(Criteria criteria, Update updateOperations);
+  PipelineEntity updatePipelineMetadata(
+      String accountId, String orgIdentifier, String projectIdentifier, Criteria criteria, Update updateOperations);
 
   void saveExecutionInfo(
       String accountId, String orgId, String projectId, String pipelineId, ExecutionSummaryInfo executionSummaryInfo);
@@ -35,7 +36,8 @@ public interface PMSPipelineService {
   boolean delete(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, Long version);
 
-  Page<PipelineEntity> list(Criteria criteria, Pageable pageable);
+  Page<PipelineEntity> list(
+      Criteria criteria, Pageable pageable, String accountId, String orgIdentifier, String projectIdentifier);
 
   StepCategory getSteps(String module, String category, String accountId);
 

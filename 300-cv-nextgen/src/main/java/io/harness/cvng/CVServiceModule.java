@@ -7,6 +7,11 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
+import io.harness.concurrent.HTimeLimiter;
+import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceUpdatableEntity;
+import io.harness.cvng.activity.entities.CD10ActivitySource.CD10ActivitySourceUpdatableEntity;
+import io.harness.cvng.activity.entities.CDNGActivitySource.CDNGActivitySourceUpdatableEntity;
+import io.harness.cvng.activity.entities.KubernetesActivitySource.KubernetesActivitySourceUpdatableEntity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
@@ -42,6 +47,7 @@ import io.harness.cvng.analysis.services.impl.TimeSeriesAnomalousPatternsService
 import io.harness.cvng.analysis.services.impl.TrendAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.VerificationJobInstanceAnalysisServiceImpl;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.activity.ActivitySourceType;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
 import io.harness.cvng.cdng.services.impl.CVNGStepTaskServiceImpl;
@@ -52,8 +58,10 @@ import io.harness.cvng.client.VerificationManagerServiceImpl;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.CVConfig.CVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicCVConfigUpdatableEntity;
+import io.harness.cvng.core.entities.PrometheusCVConfig.PrometheusUpdatableEntity;
 import io.harness.cvng.core.entities.SplunkCVConfig.SplunkCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.StackdriverCVConfig.StackDriverCVConfigUpdatableEntity;
+import io.harness.cvng.core.entities.StackdriverLogCVConfig.StackdriverLogCVConfigUpdatableEntity;
 import io.harness.cvng.core.jobs.AccountChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConnectorChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConsumerMessageProcessor;
@@ -84,6 +92,7 @@ import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.services.api.PrometheusService;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.cvng.core.services.api.StackdriverService;
+import io.harness.cvng.core.services.api.SumoLogicService;
 import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.WebhookService;
@@ -109,13 +118,17 @@ import io.harness.cvng.core.services.impl.NewRelicDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.NewRelicServiceImpl;
 import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
 import io.harness.cvng.core.services.impl.PrometheusCVConfigTransformer;
+import io.harness.cvng.core.services.impl.PrometheusDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.PrometheusServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
 import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.SplunkServiceImpl;
 import io.harness.cvng.core.services.impl.StackdriverCVConfigTransformer;
 import io.harness.cvng.core.services.impl.StackdriverDataCollectionInfoMapper;
+import io.harness.cvng.core.services.impl.StackdriverLogCVConfigTransformer;
+import io.harness.cvng.core.services.impl.StackdriverLogDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.StackdriverServiceImpl;
+import io.harness.cvng.core.services.impl.SumoLogicServiceImpl;
 import io.harness.cvng.core.services.impl.TimeSeriesRecordServiceImpl;
 import io.harness.cvng.core.services.impl.VerificationTaskServiceImpl;
 import io.harness.cvng.core.services.impl.WebhookServiceImpl;
@@ -144,6 +157,7 @@ import io.harness.cvng.verificationjob.services.impl.VerificationJobInstanceServ
 import io.harness.cvng.verificationjob.services.impl.VerificationJobServiceImpl;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.mongo.MongoPersistence;
+import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.redis.RedisConfig;
@@ -157,6 +171,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import io.harness.waiter.WaiterConfiguration;
 import io.harness.waiter.WaiterConfiguration.PersistenceLayer;
 import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import software.wings.jersey.JsonViews;
@@ -169,7 +184,7 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
@@ -180,10 +195,14 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.dropwizard.jackson.Jackson;
 import java.time.Clock;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import org.reflections.Reflections;
 
 /**
  * Guice Module for initializing all beans.
@@ -251,6 +270,17 @@ public class CVServiceModule extends AbstractModule {
     bind(VerificationJobUpdatableEntity.class)
         .annotatedWith(Names.named(VerificationJobType.CANARY.name()))
         .to(CanaryVerificationUpdatableEntity.class);
+
+    bind(ActivitySourceUpdatableEntity.class)
+        .annotatedWith(Names.named(ActivitySourceType.KUBERNETES.name()))
+        .to(KubernetesActivitySourceUpdatableEntity.class);
+    bind(ActivitySourceUpdatableEntity.class)
+        .annotatedWith(Names.named(ActivitySourceType.CDNG.name()))
+        .to(CDNGActivitySourceUpdatableEntity.class);
+    bind(ActivitySourceUpdatableEntity.class)
+        .annotatedWith(Names.named(ActivitySourceType.HARNESS_CD10.name()))
+        .to(CD10ActivitySourceUpdatableEntity.class);
+
     bind(CVConfigTransformer.class)
         .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
         .to(AppDynamicsCVConfigTransformer.class);
@@ -266,6 +296,9 @@ public class CVServiceModule extends AbstractModule {
     bind(CVConfigTransformer.class)
         .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
         .to(StackdriverCVConfigTransformer.class);
+    bind(CVConfigTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.STACKDRIVER_LOG.name()))
+        .to(StackdriverLogCVConfigTransformer.class);
     bind(DataCollectionInfoMapper.class)
         .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
         .to(AppDynamicsDataCollectionInfoMapper.class);
@@ -276,8 +309,14 @@ public class CVServiceModule extends AbstractModule {
         .annotatedWith(Names.named(DataSourceType.STACKDRIVER.name()))
         .to(StackdriverDataCollectionInfoMapper.class);
     bind(DataCollectionInfoMapper.class)
+        .annotatedWith(Names.named(DataSourceType.STACKDRIVER_LOG.name()))
+        .to(StackdriverLogDataCollectionInfoMapper.class);
+    bind(DataCollectionInfoMapper.class)
         .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
         .to(NewRelicDataCollectionInfoMapper.class);
+    bind(DataCollectionInfoMapper.class)
+        .annotatedWith(Names.named(DataSourceType.PROMETHEUS.name()))
+        .to(PrometheusDataCollectionInfoMapper.class);
 
     bind(MetricPackService.class).to(MetricPackServiceImpl.class);
     bind(AppDynamicsService.class).to(AppDynamicsServiceImpl.class);
@@ -303,7 +342,7 @@ public class CVServiceModule extends AbstractModule {
     bind(CVSetupService.class).to(CVSetupServiceImpl.class);
     bindTheMonitoringSourceImportStatusCreators();
     bind(CVNGMigrationService.class).to(CVNGMigrationServiceImpl.class).in(Singleton.class);
-    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
     bind(StackdriverService.class).to(StackdriverServiceImpl.class);
     bind(CVEventService.class).to(CVEventServiceImpl.class);
     bind(RedisConfig.class)
@@ -347,7 +386,10 @@ public class CVServiceModule extends AbstractModule {
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.APP_DYNAMICS)
         .to(AppDynamicsCVConfigUpdatableEntity.class);
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.NEW_RELIC).to(NewRelicCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.PROMETHEUS).to(PrometheusUpdatableEntity.class);
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.STACKDRIVER).to(StackDriverCVConfigUpdatableEntity.class);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.STACKDRIVER_LOG)
+        .to(StackdriverLogCVConfigUpdatableEntity.class);
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkCVConfigUpdatableEntity.class);
     // We have not used FeatureFlag module as it depends on stream and we don't have reliable way to tracking
     // if something goes wrong in feature flags stream
@@ -356,6 +398,7 @@ public class CVServiceModule extends AbstractModule {
     bind(CVNGStepTaskService.class).to(CVNGStepTaskServiceImpl.class);
     bind(PrometheusService.class).to(PrometheusServiceImpl.class);
     bind(CVNGYamlSchemaService.class).to(CVNGYamlSchemaServiceImpl.class);
+    bind(SumoLogicService.class).to(SumoLogicServiceImpl.class);
   }
 
   private void bindTheMonitoringSourceImportStatusCreators() {
@@ -397,6 +440,18 @@ public class CVServiceModule extends AbstractModule {
     ObjectMapper objectMapper = Jackson.newObjectMapper();
     configureYAMLSchemaObjectMapper(objectMapper);
     return objectMapper;
+  }
+
+  @Provides
+  @Named("yaml-schema-subtypes")
+  @Singleton
+  public Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes() {
+    Reflections reflections = new Reflections(HarnessPackages.IO_HARNESS);
+
+    Set<Class<? extends StepSpecType>> subTypesOfStepSpecType = reflections.getSubTypesOf(StepSpecType.class);
+    Set<Class<?>> set = new HashSet<>(subTypesOfStepSpecType);
+
+    return ImmutableMap.of(StepSpecType.class, set);
   }
 
   @Provides

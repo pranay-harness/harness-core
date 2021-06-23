@@ -1,5 +1,6 @@
 package io.harness.cvng.dashboard.services.impl;
 
+import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.KAMAL;
@@ -350,12 +351,12 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTestBase 
     Instant endTime = Instant.now();
     FieldUtils.writeField(heatMapService, "verificationTaskService", realVerificationTaskService, true);
     String verificationTaskId1 =
-        realVerificationTaskService.create(accountId, generateUuid(), verificationJobInstanceId);
+        realVerificationTaskService.create(accountId, generateUuid(), verificationJobInstanceId, APP_DYNAMICS);
     heatMapService.updateRisk(verificationTaskId1, .5, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
     heatMapService.updateRisk(
         verificationTaskId1, 0.7, endTime.plus(Duration.ofMinutes(15)), HealthVerificationPeriod.POST_ACTIVITY);
     String verificationTaskId2 =
-        realVerificationTaskService.create(accountId, generateUuid(), verificationJobInstanceId);
+        realVerificationTaskService.create(accountId, generateUuid(), verificationJobInstanceId, APP_DYNAMICS);
     heatMapService.updateRisk(verificationTaskId2, 0.9, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
     heatMapService.updateRisk(
         verificationTaskId2, 0.8, endTime.plus(Duration.ofMinutes(15)), HealthVerificationPeriod.POST_ACTIVITY);

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"time"
 
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
@@ -37,6 +38,7 @@ type runTestsStep struct {
 	containerPort uint32
 	so            output.StageOutput // Output variables of the stage
 	log           *zap.SugaredLogger // Logger
+	procWriter    io.Writer
 }
 
 // RunTestsStep represents interface to execute a run step
@@ -45,7 +47,7 @@ type RunTestsStep interface {
 }
 
 // NewRunTestsStep creates a run step executor
-func NewRunTestsStep(step *pb.UnitStep, tmpFilePath string, so output.StageOutput, log *zap.SugaredLogger) RunTestsStep {
+func NewRunTestsStep(step *pb.UnitStep, tmpFilePath string, so output.StageOutput, log *zap.SugaredLogger, procWriter io.Writer) RunTestsStep {
 	return &runTestsStep{
 		id:           step.GetId(),
 		tmpFilePath:  tmpFilePath,
@@ -53,6 +55,7 @@ func NewRunTestsStep(step *pb.UnitStep, tmpFilePath string, so output.StageOutpu
 		step:         step,
 		so:           so,
 		log:          log,
+		procWriter:   procWriter,
 	}
 }
 
@@ -61,9 +64,9 @@ func (e *runTestsStep) getDiffFiles(ctx context.Context) ([]types.File, error) {
 	if err != nil {
 		return []types.File{}, err
 	}
-	chFiles, err := getChFiles(ctx, workspace, e.log)
+	chFiles, err := getChFiles(ctx, workspace, e.log, e.procWriter)
 	if err != nil {
-		e.log.Errorw("failed to get changed filed in runTests step", "step_id", e.id, zap.Error(err))
+		e.log.Errorw("failed to get changed files in runTests step", "step_id", e.id, zap.Error(err))
 		return []types.File{}, err
 	}
 
@@ -74,7 +77,7 @@ func (e *runTestsStep) getDiffFiles(ctx context.Context) ([]types.File, error) {
 // Run executes tests with provided args with retries and timeout handling
 func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, error) {
 	if err := e.validate(); err != nil {
-		e.log.Errorw("failed to validate runTestsStep step", "step_id", e.id, zap.Error(err))
+		e.log.Errorw("failed to validate runTests step", "step_id", e.id, zap.Error(err))
 		return nil, int32(1), err
 	}
 	// TODO: Add JEXL resolution to fields that need to be resolved
@@ -98,9 +101,9 @@ func (e *runTestsStep) validate() error {
 func (e *runTestsStep) execute(ctx context.Context) (*output.StepOutput, int32, error) {
 	st := time.Now()
 
-	diffFiles, err := e.getDiffFiles(ctx)
-	if err != nil {
-		return nil, int32(1), err
+	diffFiles, diffErr := e.getDiffFiles(ctx)
+	if diffErr != nil {
+		e.log.Errorw("could not get changed files", "step_id", e.id, "error", diffErr)
 	}
 
 	addonClient, err := newAddonClient(uint(e.runTestsInfo.GetContainerPort()), e.log)
@@ -117,7 +120,7 @@ func (e *runTestsStep) execute(ctx context.Context) (*output.StepOutput, int32, 
 		return nil, int32(1), errors.Wrap(err, "could not marshal changed file")
 	}
 
-	arg := e.getExecuteStepArg(string(b))
+	arg := e.getExecuteStepArg(string(b), diffErr)
 	ret, err := c.ExecuteStep(ctx, arg, grpc_retry.WithMax(maxAddonRetries))
 	if err != nil {
 		e.log.Errorw("execute run tests step RPC failed", "step_id", e.id, "elapsed_time_ms",
@@ -130,9 +133,10 @@ func (e *runTestsStep) execute(ctx context.Context) (*output.StepOutput, int32, 
 	return stepOutput, ret.GetNumRetries(), nil
 }
 
-func (e *runTestsStep) getExecuteStepArg(diffFiles string) *addonpb.ExecuteStepRequest {
+func (e *runTestsStep) getExecuteStepArg(diffFiles string, err error) *addonpb.ExecuteStepRequest {
 	// not the best practice, can take up proxying git calls later
 	e.runTestsInfo.DiffFiles = diffFiles
+	//e.runTestsInfo.DiffErrorMsg = err.Error() // if any error message was encountered while getting changed files.
 	e.step.Step = &pb.UnitStep_RunTests{
 		RunTests: e.runTestsInfo,
 	}

@@ -4,8 +4,8 @@ import io.harness.batch.processing.ccm.BatchJobBucket;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.dao.intfc.BatchJobScheduledDataDao;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
-import io.harness.ccm.cluster.entities.BatchJobScheduledData;
-import io.harness.ccm.commons.entities.CEDataCleanupRequest;
+import io.harness.ccm.commons.entities.batch.BatchJobScheduledData;
+import io.harness.ccm.commons.entities.batch.CEDataCleanupRequest;
 import io.harness.ccm.health.LastReceivedPublishedMessageDao;
 
 import software.wings.beans.SettingAttribute;
@@ -105,6 +105,12 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
 
     if (null != instant && batchJobType == BatchJobType.K8S_WORKLOAD_RECOMMENDATION) {
       Instant startInstant = Instant.now().minus(2, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+      instant = startInstant.isAfter(instant) ? startInstant : instant;
+    }
+
+    // We can reduce the last days (to 2-3 days) data to generate, before GA if required.
+    if (null != instant && batchJobType == BatchJobType.K8S_NODE_RECOMMENDATION) {
+      Instant startInstant = Instant.now().minus(30, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }
     return instant;

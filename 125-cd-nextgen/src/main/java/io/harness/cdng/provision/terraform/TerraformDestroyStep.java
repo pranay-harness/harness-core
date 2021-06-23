@@ -2,8 +2,8 @@ package io.harness.cdng.provision.terraform;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
+import io.harness.common.ParameterFieldHelper;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.terraform.TFTaskType;
 import io.harness.delegate.task.terraform.TerraformCommand;
@@ -17,7 +17,6 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.UnitProgress;
 import io.harness.ngpipeline.common.AmbianceHelper;
-import io.harness.ngpipeline.common.ParameterFieldHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollback;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -76,7 +75,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
   private TaskRequest obtainInlineTask(
       Ambiance ambiance, TerraformDestroyStepParameters parameters, StepElementParameters stepElementParameters) {
     helper.validateDestroyStepConfigFilesInline(parameters);
-    TerrformStepConfigurationParameters configuration = parameters.getConfiguration();
+    TerraformStepConfigurationParameters configuration = parameters.getConfiguration();
     TerraformExecutionDataParameters spec = configuration.getSpec();
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder();
     String accountId = AmbianceHelper.getAccountId(ambiance);
@@ -94,7 +93,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
         .varFileInfos(helper.toTerraformVarFileInfo(spec.getVarFiles(), ambiance))
         .backendConfig(helper.getBackendConfig(spec.getBackendConfig()))
         .targets(ParameterFieldHelper.getParameterFieldValue(spec.getTargets()))
-        .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
+        .saveTerraformStateJson(false)
         .environmentVariables(helper.getEnvironmentVariablesMap(spec.getEnvironmentVariables()))
         .timeoutInMillis(
             StepUtils.getTimeoutMillis(stepElementParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT));
@@ -115,6 +114,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
   private TaskRequest obtainInheritedTask(
       Ambiance ambiance, TerraformDestroyStepParameters parameters, StepElementParameters stepElementParameters) {
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder().taskType(TFTaskType.DESTROY);
+    builder.terraformCommandUnit(TerraformCommandUnit.Destroy);
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
     String provisionerIdentifier = ParameterFieldHelper.getParameterFieldValue(parameters.getProvisionerIdentifier());
@@ -128,7 +128,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
         .varFileInfos(helper.prepareTerraformVarFileInfo(inheritOutput.getVarFileConfigs(), ambiance))
         .backendConfig(inheritOutput.getBackendConfig())
         .targets(inheritOutput.getTargets())
-        .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
+        .saveTerraformStateJson(false)
         .encryptionConfig(inheritOutput.getEncryptionConfig())
         .encryptedTfPlan(inheritOutput.getEncryptedTfPlan())
         .planName(inheritOutput.getPlanName())
@@ -152,6 +152,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
   private TaskRequest obtainLastApplyTask(
       Ambiance ambiance, TerraformDestroyStepParameters parameters, StepElementParameters stepElementParameters) {
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder().taskType(TFTaskType.DESTROY);
+    builder.terraformCommandUnit(TerraformCommandUnit.Destroy);
     String accountId = AmbianceHelper.getAccountId(ambiance);
     builder.accountId(accountId);
     String entityId = helper.generateFullIdentifier(
@@ -165,7 +166,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollback<TerraformTa
         .varFileInfos(helper.prepareTerraformVarFileInfo(terraformConfig.getVarFileConfigs(), ambiance))
         .backendConfig(terraformConfig.getBackendConfig())
         .targets(terraformConfig.getTargets())
-        .saveTerraformStateJson(cdFeatureFlagHelper.isEnabled(accountId, FeatureName.EXPORT_TF_PLAN))
+        .saveTerraformStateJson(false)
         .environmentVariables(terraformConfig.getEnvironmentVariables())
         .timeoutInMillis(
             StepUtils.getTimeoutMillis(stepElementParameters.getTimeout(), TerraformConstants.DEFAULT_TIMEOUT));

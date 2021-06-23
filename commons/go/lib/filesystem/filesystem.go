@@ -26,6 +26,7 @@ type FileSystem interface {
 	Remove(name string) error
 	Setenv(name, value string) error
 	Unsetenv(name string) error
+	MkdirAll(name string, perm os.FileMode) error
 	WriteFile(filename string, op func(at io.WriterAt) error) error
 }
 
@@ -68,6 +69,7 @@ func (*osFileSystem) Copy(dst io.Writer, src io.Reader) (int64, error) { return 
 func (*osFileSystem) Remove(name string) error                         { return os.Remove(name) }
 func (*osFileSystem) Setenv(name, value string) error                  { return os.Setenv(name, value) }
 func (*osFileSystem) Unsetenv(name string) error                       { return os.Unsetenv(name) }
+func (*osFileSystem) MkdirAll(name string, perm os.FileMode) error     { return os.MkdirAll(name, perm) }
 func (*osFileSystem) ReadFile(filename string, op func(io.Reader) error) error {
 	f, err := os.Open(filename)
 	if err != nil {

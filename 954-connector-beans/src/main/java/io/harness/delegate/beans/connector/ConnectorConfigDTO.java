@@ -8,10 +8,13 @@ import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConne
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorDTO;
+import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultConnectorDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
 import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
+import io.harness.delegate.beans.connector.dynatrace.DynatraceConnectorDTO;
 import io.harness.delegate.beans.connector.gcpccm.GcpCloudCostConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
@@ -28,6 +31,7 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
+import io.harness.delegate.beans.connector.sumologic.SumoLogicConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -43,11 +47,15 @@ import java.util.List;
       @JsonSubTypes.Type(value = AppDynamicsConnectorDTO.class, name = "AppDynamics"),
       @JsonSubTypes.Type(value = NewRelicConnectorDTO.class, name = "NewRelic"),
       @JsonSubTypes.Type(value = PrometheusConnectorDTO.class, name = "Prometheus"),
+      @JsonSubTypes.Type(value = DatadogConnectorDTO.class, name = "Datadog"),
+      @JsonSubTypes.Type(value = SumoLogicConnectorDTO.class, name = "SumoLogic"),
+      @JsonSubTypes.Type(value = DynatraceConnectorDTO.class, name = "Dynatrace"),
       @JsonSubTypes.Type(value = VaultConnectorDTO.class, name = "Vault"),
       @JsonSubTypes.Type(value = DockerConnectorDTO.class, name = "DockerRegistry"),
       @JsonSubTypes.Type(value = LocalConnectorDTO.class, name = "Local"),
       @JsonSubTypes.Type(value = GcpKmsConnectorDTO.class, name = "GcpKms"),
       @JsonSubTypes.Type(value = AwsKmsConnectorDTO.class, name = "AwsKms"),
+      @JsonSubTypes.Type(value = AzureKeyVaultConnectorDTO.class, name = "AzureKeyVault"),
       @JsonSubTypes.Type(value = GcpConnectorDTO.class, name = "Gcp"),
       @JsonSubTypes.Type(value = AwsConnectorDTO.class, name = "Aws"),
       @JsonSubTypes.Type(value = CEAwsConnectorDTO.class, name = "CEAws"),

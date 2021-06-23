@@ -91,6 +91,14 @@
           "value": ""
         },
         {
+          "name": "CF_CLI6_PATH",
+          "value": ""
+        },
+        {
+          "name": "CF_CLI7_PATH",
+          "value": ""
+        },
+        {
           "name": "KUSTOMIZE_PATH",
           "value": ""
         },
@@ -101,10 +109,6 @@
         {
            "name": "KUBECTL_PATH",
            "value": ""
-        },
-        {
-          "name": "MANAGER_SERVICE_SECRET",
-          "value": "${managerServiceSecret}"
         }
       ],
       "memory": 6144,

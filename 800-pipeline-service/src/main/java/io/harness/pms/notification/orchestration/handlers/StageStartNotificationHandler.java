@@ -1,20 +1,34 @@
 package io.harness.pms.notification.orchestration.handlers;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.observers.NodeExecutionStartObserver;
+import io.harness.engine.observers.NodeStartInfo;
+import io.harness.execution.NodeExecution;
 import io.harness.notification.PipelineEventType;
+import io.harness.observer.AsyncInformObserver;
 import io.harness.pms.notification.NotificationHelper;
-import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import java.util.concurrent.ExecutorService;
 
-public class StageStartNotificationHandler implements AsyncOrchestrationEventHandler {
+@OwnedBy(HarnessTeam.PIPELINE)
+public class StageStartNotificationHandler implements AsyncInformObserver, NodeExecutionStartObserver {
+  @Inject @Named("PipelineExecutorService") ExecutorService executorService;
   @Inject NotificationHelper notificationHelper;
 
   @Override
-  public void handleEvent(OrchestrationEvent event) {
-    if (notificationHelper.isStageNode(event.getNodeExecutionProto())) {
+  public void onNodeStart(NodeStartInfo nodeStartInfo) {
+    NodeExecution nodeExecution = nodeStartInfo.getNodeExecution();
+    if (notificationHelper.isStageNode(nodeExecution)) {
       notificationHelper.sendNotification(
-          event.getNodeExecutionProto().getAmbiance(), PipelineEventType.STAGE_START, event.getNodeExecutionProto());
+          nodeExecution.getAmbiance(), PipelineEventType.STAGE_START, nodeExecution, nodeStartInfo.getUpdatedTs());
     }
+  }
+
+  @Override
+  public ExecutorService getInformExecutorService() {
+    return executorService;
   }
 }

@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.steps.StepInfo;
+import io.harness.pms.helpers.PmsFeatureFlagHelper;
 import io.harness.pms.pipeline.CommonStepInfo;
 import io.harness.pms.pipeline.StepCategory;
 import io.harness.pms.pipeline.StepData;
@@ -24,12 +26,31 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(PIPELINE)
 public class PMSPipelineServiceStepHelper {
+  @Inject private final PmsFeatureFlagHelper pmsFeatureFlagHelper;
   @Inject private final CommonStepInfo commonStepInfo;
   @VisibleForTesting static String LIBRARY = "Library";
 
-  public static StepCategory calculateStepsForCategory(String module, List<StepInfo> stepInfoList) {
+  public List<StepInfo> filterStepsOnFeatureFlag(List<StepInfo> stepInfoList, String accountId) {
+    try {
+      List<StepInfo> ffEnabledStepInfoList = new ArrayList<>();
+      if (!stepInfoList.isEmpty()) {
+        ffEnabledStepInfoList = stepInfoList.stream()
+                                    .filter(stepInfo
+                                        -> EmptyPredicate.isEmpty(stepInfo.getFeatureFlag())
+                                            || pmsFeatureFlagHelper.isEnabled(accountId, stepInfo.getFeatureFlag()))
+                                    .collect(Collectors.toList());
+      }
+      return ffEnabledStepInfoList;
+    } catch (Exception ex) {
+      log.error(ex.getMessage());
+      throw new InvalidRequestException(String.format("Could not fetch feature flags for accountID: %s", accountId));
+    }
+  }
+
+  public StepCategory calculateStepsForCategory(String module, List<StepInfo> stepInfoList, String accountId) {
+    List<StepInfo> ffEnabledStepInfoList = filterStepsOnFeatureFlag(stepInfoList, accountId);
     StepCategory stepCategory = StepCategory.builder().name(module).build();
-    for (StepInfo stepType : stepInfoList) {
+    for (StepInfo stepType : ffEnabledStepInfoList) {
       addToTopLevel(stepCategory, stepType);
     }
     return stepCategory;
@@ -46,15 +67,11 @@ public class PMSPipelineServiceStepHelper {
                       || EmptyPredicate.isEmpty(stepInfo.getStepMetaData().getCategoryList()))
               .collect(Collectors.toList());
     }
-    filteredStepTypes.addAll(commonStepInfo.getCommonSteps(accountId));
-    StepCategory stepCategory = StepCategory.builder().name(LIBRARY).build();
-    for (StepInfo stepType : filteredStepTypes) {
-      addToTopLevel(stepCategory, stepType);
-    }
-    return stepCategory;
+    filteredStepTypes.addAll(commonStepInfo.getCommonSteps());
+    return calculateStepsForCategory(LIBRARY, filteredStepTypes, accountId);
   }
 
-  public static void addToTopLevel(StepCategory stepCategory, StepInfo stepInfo) {
+  public void addToTopLevel(StepCategory stepCategory, StepInfo stepInfo) {
     StepCategory currentStepCategory = stepCategory;
     if (stepInfo != null) {
       String folderPath = stepInfo.getStepMetaData().getFolderPath();

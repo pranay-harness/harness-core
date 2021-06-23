@@ -36,6 +36,7 @@ type runTask struct {
 	id                string
 	displayName       string
 	command           string
+	shellType         pb.ShellType
 	envVarOutputs     []string
 	environment       map[string]string
 	timeoutSecs       int64
@@ -70,6 +71,7 @@ func NewRunTask(step *pb.UnitStep, prevStepOutputs map[string]*pb.StepOutput, tm
 		id:                step.GetId(),
 		displayName:       step.GetDisplayName(),
 		command:           r.GetCommand(),
+		shellType:         r.GetShellType(),
 		tmpFilePath:       tmpFilePath,
 		envVarOutputs:     r.GetEnvVarOutputs(),
 		environment:       r.GetEnvironment(),
@@ -132,13 +134,13 @@ func (r *runTask) fetchOutputVariables(outputFile string) (map[string]string, er
 	for s.Scan() {
 		line := s.Text()
 		sa := strings.Split(line, " ")
-		if len(sa) != 2 {
+		if len(sa) < 2 {
 			r.log.Warnw(
 				"output variable does not exist",
 				"variable", sa[0],
 			)
 		} else {
-			envVarMap[sa[0]] = sa[1]
+			envVarMap[sa[0]] = line[len(sa[0])+1:]
 		}
 	}
 	if err := s.Err(); err != nil {
@@ -166,7 +168,7 @@ func (r *runTask) execute(ctx context.Context, retryCount int32) (map[string]str
 
 	cmdArgs := []string{"-c", cmdToExecute}
 
-	cmd := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).
+	cmd := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, r.getShell(), cmdArgs...).
 		WithStdout(r.procWriter).WithStderr(r.procWriter).WithEnvVarsMap(envVars)
 	err = runCmd(ctx, cmd, r.id, cmdArgs, retryCount, start, r.logMetrics, r.addonLogger)
 	if err != nil {
@@ -205,13 +207,17 @@ func (r *runTask) getScript(ctx context.Context, outputVarFile string) (string, 
 		return "", err
 	}
 
-	command := fmt.Sprintf("set -e\n %s %s", resolvedCmd, outputVarCmd)
-	logCmd, err := utils.GetLoggableCmd(command)
-	if err != nil {
-		r.addonLogger.Warn("failed to parse command using mvdan/sh. ", "command", command, zap.Error(err))
-		return fmt.Sprintf("echo '---%s'\n%s", command, command), nil
+	// Using set -xe instead of printing command via utils.GetLoggableCmd(command) since if ' is present in a command,
+	// echo on the command fails with an error.
+	command := fmt.Sprintf("set -xe\n%s %s", resolvedCmd, outputVarCmd)
+	return command, nil
+}
+
+func (r *runTask) getShell() string {
+	if r.shellType == pb.ShellType_BASH {
+		return "bash"
 	}
-	return logCmd, nil
+	return "sh"
 }
 
 // resolveExprInEnv resolves JEXL expressions & env var present in plugin settings environment variables

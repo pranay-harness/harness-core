@@ -1,7 +1,13 @@
 package io.harness.pms.plan.execution.handlers;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.executions.plan.PlanService;
+import io.harness.engine.observers.OrchestrationStartObserver;
+import io.harness.engine.observers.beans.OrchestrationStartInfo;
 import io.harness.execution.PlanExecution;
+import io.harness.plan.Plan;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
@@ -15,8 +21,6 @@ import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.creation.NodeTypeLookupService;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
-import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
 
 import com.google.inject.Inject;
@@ -25,26 +29,41 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.bson.Document;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
-public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEventHandler {
-  @Inject PMSPipelineService pmsPipelineService;
-  @Inject private PlanExecutionService planExecutionService;
-  @Inject private NodeTypeLookupService nodeTypeLookupService;
-  @Inject private PmsExecutionSummaryRespository pmsExecutionSummaryRespository;
+public class ExecutionSummaryCreateEventHandler implements OrchestrationStartObserver {
+  private final PMSPipelineService pmsPipelineService;
+  private final PlanService planService;
+  private final PlanExecutionService planExecutionService;
+  private final NodeTypeLookupService nodeTypeLookupService;
+  private final PmsExecutionSummaryRespository pmsExecutionSummaryRespository;
+
+  @Inject
+  public ExecutionSummaryCreateEventHandler(PMSPipelineService pmsPipelineService, PlanService planService,
+      PlanExecutionService planExecutionService, NodeTypeLookupService nodeTypeLookupService,
+      PmsExecutionSummaryRespository pmsExecutionSummaryRespository) {
+    this.pmsPipelineService = pmsPipelineService;
+    this.planService = planService;
+    this.planExecutionService = planExecutionService;
+    this.nodeTypeLookupService = nodeTypeLookupService;
+    this.pmsExecutionSummaryRespository = pmsExecutionSummaryRespository;
+  }
 
   @Override
-  public void handleEvent(OrchestrationEvent event) {
-    Ambiance ambiance = event.getAmbiance();
+  public void onStart(OrchestrationStartInfo orchestrationStartInfo) {
+    Ambiance ambiance = orchestrationStartInfo.getAmbiance();
     String accountId = AmbianceUtils.getAccountId(ambiance);
     String projectId = AmbianceUtils.getProjectIdentifier(ambiance);
     String orgId = AmbianceUtils.getOrgIdentifier(ambiance);
     String planExecutionId = ambiance.getPlanExecutionId();
     PlanExecution planExecution = planExecutionService.get(planExecutionId);
+
     ExecutionMetadata metadata = planExecution.getMetadata();
     String pipelineId = metadata.getPipelineIdentifier();
     Optional<PipelineEntity> pipelineEntity = pmsPipelineService.get(accountId, orgId, projectId, pipelineId, false);
@@ -53,10 +72,11 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
     }
     updateExecutionInfoInPipelineEntity(
         accountId, orgId, projectId, pipelineId, pipelineEntity.get().getExecutionSummaryInfo(), planExecutionId);
-    Map<String, GraphLayoutNode> layoutNodeMap = planExecution.getPlan().getGraphLayoutInfo().getLayoutNodesMap();
-    String startingNodeId = planExecution.getPlan().getGraphLayoutInfo().getStartingNodeId();
+    Plan plan = planService.fetchPlan(ambiance.getPlanId());
+    Map<String, GraphLayoutNode> layoutNodeMap = plan.getGraphLayoutInfo().getLayoutNodesMap();
+    String startingNodeId = plan.getGraphLayoutInfo().getStartingNodeId();
     Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = new HashMap<>();
-    List<String> modules = new ArrayList<>();
+    Set<String> modules = new LinkedHashSet<>();
     for (Map.Entry<String, GraphLayoutNode> entry : layoutNodeMap.entrySet()) {
       GraphLayoutNodeDTO graphLayoutNodeDTO = GraphLayoutDtoMapper.toDto(entry.getValue());
       if (entry.getValue().getNodeType().equals("parallel")) {
@@ -79,22 +99,23 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
             .startingNodeId(startingNodeId)
             .planExecutionId(planExecutionId)
             .name(pipelineEntity.get().getName())
-            .inputSetYaml(metadata.getInputSetYaml())
+            .inputSetYaml(orchestrationStartInfo.getPlanExecutionMetadata().getInputSetYaml())
             .internalStatus(Status.NO_OP)
-            .status(ExecutionStatus.NOT_STARTED)
+            .status(ExecutionStatus.NOTSTARTED)
             .startTs(planExecution.getStartTs())
             .startingNodeId(startingNodeId)
             .accountId(accountId)
             .projectIdentifier(projectId)
             .orgIdentifier(orgId)
-            .executionTriggerInfo(planExecution.getMetadata().getTriggerInfo())
+            .executionTriggerInfo(metadata.getTriggerInfo())
+            .gitSyncBranchContext(metadata.getGitSyncBranchContext())
             .tags(pipelineEntity.get().getTags())
-            .modules(modules)
+            .modules(new ArrayList<>(modules))
             .build();
     pmsExecutionSummaryRespository.save(pipelineExecutionSummaryEntity);
   }
 
-  public void updateExecutionInfoInPipelineEntity(String accountId, String orgId, String projectId, String pipelineId,
+  private void updateExecutionInfoInPipelineEntity(String accountId, String orgId, String projectId, String pipelineId,
       ExecutionSummaryInfo executionSummaryInfo, String planExecutionId) {
     if (executionSummaryInfo == null) {
       executionSummaryInfo = ExecutionSummaryInfo.builder().build();

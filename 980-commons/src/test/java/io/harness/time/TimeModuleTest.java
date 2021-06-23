@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.logging.AutoLogContext;
 import io.harness.rule.Owner;
 import io.harness.threading.ExecutorModule;
@@ -14,10 +15,10 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.MDC;
@@ -33,10 +34,10 @@ public class TimeModuleTest extends CategoryTest {
     Injector injector = Guice.createInjector(modules);
     TimeLimiter timeLimiter = injector.getInstance(TimeLimiter.class);
     try (AutoLogContext context = new TestLogContext("foo", "bar", AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(1), () -> {
         assertThat(MDC.get("foo")).isEqualTo("bar");
         return null;
-      }, 1, TimeUnit.MINUTES, false);
+      });
     }
   }
 

@@ -13,4 +13,5 @@ message Ambiance {
   string planExecutionId = 3;
   io.harness.pms.contracts.plan.ExecutionMetadata metadata = 4;
   int64 expressionFunctorToken = 5;
+  string planId = 6;
 }

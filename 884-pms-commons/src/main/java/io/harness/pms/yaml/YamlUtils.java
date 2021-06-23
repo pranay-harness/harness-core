@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -153,7 +154,7 @@ public class YamlUtils {
     }
   }
 
-  private boolean checkIfNodeIsArrayWithPrimitiveTypes(JsonNode jsonNode) {
+  public boolean checkIfNodeIsArrayWithPrimitiveTypes(JsonNode jsonNode) {
     if (jsonNode.isArray()) {
       ArrayNode arrayNode = (ArrayNode) jsonNode;
       // Empty array is not primitive array
@@ -397,6 +398,76 @@ public class YamlUtils {
 
   public String getStageIdentifierFromFqn(String fqn) {
     String[] strings = fqn.split("\\.");
-    return strings[2];
+    if (strings.length < 2) {
+      return null;
+    }
+    if (strings[1].equals("stages")) {
+      return strings[2];
+    }
+    return null;
+  }
+
+  public String getPipelineVariableNameFromFqn(String fqn) {
+    String[] strings = fqn.split("\\.");
+    if (strings.length < 2) {
+      return null;
+    }
+    if (strings[1].equals("variables")) {
+      return strings[2];
+    }
+    return null;
+  }
+
+  private String getErrorNodePartialFQN(String startingFQN, IOException e) {
+    if (!(e.getClass().isAssignableFrom(JsonMappingException.class))) {
+      return startingFQN;
+    }
+
+    JsonMappingException ex = (JsonMappingException) e;
+    List<JsonMappingException.Reference> path = ex.getPath();
+    StringBuilder partialFQN = new StringBuilder(startingFQN);
+    for (JsonMappingException.Reference pathNode : path) {
+      if (pathNode.getFieldName() == null) {
+        break;
+      }
+      partialFQN.append('.').append(pathNode.getFieldName());
+    }
+    return partialFQN.toString();
+  }
+
+  public String getErrorNodePartialFQN(YamlNode yamlNode, IOException e) {
+    String startingFQN = getFullyQualifiedName(yamlNode);
+    return getErrorNodePartialFQN(startingFQN, e);
+  }
+
+  public String getErrorNodePartialFQN(IOException e) {
+    return getErrorNodePartialFQN("", e);
+  }
+
+  public void removeUuid(JsonNode node) {
+    if (node.isObject()) {
+      removeUuidInObject(node);
+    } else if (node.isArray()) {
+      removeUuidInArray(node);
+    }
+  }
+
+  private void removeUuidInObject(JsonNode node) {
+    ObjectNode objectNode = (ObjectNode) node;
+    for (Iterator<Entry<String, JsonNode>> it = objectNode.fields(); it.hasNext();) {
+      Entry<String, JsonNode> field = it.next();
+      if (field.getKey().equals(YamlNode.UUID_FIELD_NAME)) {
+        objectNode.remove(field.getKey());
+      } else {
+        removeUuid(field.getValue());
+      }
+    }
+  }
+
+  private void removeUuidInArray(JsonNode node) {
+    ArrayNode arrayNode = (ArrayNode) node;
+    for (Iterator<JsonNode> it = arrayNode.elements(); it.hasNext();) {
+      removeUuid(it.next());
+    }
   }
 }

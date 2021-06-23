@@ -5,10 +5,10 @@ import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
-import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage.LastReceivedPublishedMessageKeys;
-import io.harness.ccm.commons.entities.LatestClusterInfo;
-import io.harness.ccm.commons.entities.LatestClusterInfo.LatestClusterInfoKeys;
+import io.harness.ccm.commons.entities.batch.LastReceivedPublishedMessage;
+import io.harness.ccm.commons.entities.batch.LastReceivedPublishedMessage.LastReceivedPublishedMessageKeys;
+import io.harness.ccm.commons.entities.batch.LatestClusterInfo;
+import io.harness.ccm.commons.entities.batch.LatestClusterInfo.LatestClusterInfoKeys;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;

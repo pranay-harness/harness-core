@@ -5,6 +5,7 @@ import static io.harness.AuthorizationServiceHeader.BEARER;
 import static io.harness.AuthorizationServiceHeader.CI_MANAGER;
 import static io.harness.AuthorizationServiceHeader.CV_NEXT_GEN;
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
+import static io.harness.AuthorizationServiceHeader.DELEGATE_SERVICE;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
@@ -21,15 +22,21 @@ import io.harness.accesscontrol.commons.bootstrap.AccessControlManagementJob;
 import io.harness.accesscontrol.commons.events.EntityCrudEventListenerService;
 import io.harness.accesscontrol.commons.events.FeatureFlagEventListenerService;
 import io.harness.accesscontrol.commons.events.UserMembershipEventListenerService;
+import io.harness.accesscontrol.principals.serviceaccounts.iterators.ServiceAccountReconciliationIterator;
 import io.harness.accesscontrol.principals.usergroups.iterators.UserGroupReconciliationIterator;
+import io.harness.accesscontrol.principals.users.iterators.UserReconciliationIterator;
+import io.harness.accesscontrol.principals.users.migration.UserBootstrapMigrationService;
 import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroupReconciliationIterator;
-import io.harness.aggregator.AggregatorApplication;
+import io.harness.aggregator.AggregatorService;
+import io.harness.aggregator.MongoOffsetCleanupJob;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.metrics.jobs.RecordMetricsJob;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
@@ -114,8 +121,6 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     Injector injector =
         Guice.createInjector(AccessControlModule.getInstance(appConfig), new MetricRegistryModule(metricRegistry));
     injector.getInstance(HPersistence.class);
-    AggregatorApplication aggregatorApplication = injector.getInstance(AggregatorApplication.class);
-    aggregatorApplication.run();
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment);
@@ -131,7 +136,21 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     AccessControlManagementJob accessControlManagementJob = injector.getInstance(AccessControlManagementJob.class);
     accessControlManagementJob.run();
 
+    if (appConfig.getAggregatorConfiguration().isEnabled()) {
+      environment.lifecycle().manage(injector.getInstance(AggregatorService.class));
+      environment.lifecycle().manage(injector.getInstance(MongoOffsetCleanupJob.class));
+    }
+
+    if (appConfig.getAggregatorConfiguration().isExportMetricsToStackDriver()) {
+      initializeMonitoring(injector);
+    }
+
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void initializeMonitoring(Injector injector) {
+    injector.getInstance(MetricService.class).initializeMetrics();
+    injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {
@@ -143,6 +162,8 @@ public class AccessControlApplication extends Application<AccessControlConfigura
   public void registerIterators(Injector injector) {
     injector.getInstance(ResourceGroupReconciliationIterator.class).registerIterators();
     injector.getInstance(UserGroupReconciliationIterator.class).registerIterators();
+    injector.getInstance(UserReconciliationIterator.class).registerIterators();
+    injector.getInstance(ServiceAccountReconciliationIterator.class).registerIterators();
   }
 
   public void registerScheduledJobs(Injector injector) {
@@ -179,6 +200,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
       environment.lifecycle().manage(injector.getInstance(UserMembershipEventListenerService.class));
     }
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
+    environment.lifecycle().manage(injector.getInstance(UserBootstrapMigrationService.class));
   }
 
   private void registerJerseyProviders(Environment environment) {
@@ -229,6 +251,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     serviceToSecretMapping.put(NG_MANAGER.getServiceId(), configuration.getDefaultServiceSecret());
     serviceToSecretMapping.put(CI_MANAGER.getServiceId(), configuration.getDefaultServiceSecret());
     serviceToSecretMapping.put(CV_NEXT_GEN.getServiceId(), configuration.getDefaultServiceSecret());
+    serviceToSecretMapping.put(DELEGATE_SERVICE.getServiceId(), configuration.getDefaultServiceSecret());
     serviceToSecretMapping.put(NOTIFICATION_SERVICE.getServiceId(), configuration.getDefaultServiceSecret());
     serviceToSecretMapping.put(PIPELINE_SERVICE.getServiceId(), configuration.getDefaultServiceSecret());
     serviceToSecretMapping.put(ACCESS_CONTROL_SERVICE.getServiceId(), configuration.getDefaultServiceSecret());

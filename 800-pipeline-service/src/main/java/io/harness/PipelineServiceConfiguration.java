@@ -71,6 +71,8 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
   @JsonProperty("orchestrationStepConfig") private OrchestrationStepConfig orchestrationStepConfig;
   @JsonProperty("enableDashboardTimescale") private Boolean enableDashboardTimescale;
+  @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
+  @JsonProperty(value = "enableAudit") private boolean enableAudit;
 
   private String managerServiceSecret;
   private String managerTarget;
@@ -80,7 +82,6 @@ public class PipelineServiceConfiguration extends Configuration {
   private PipelineServiceIteratorsConfig iteratorsConfig;
   private boolean shouldDeployWithGitSync;
   private GitSdkConfiguration gitSdkConfiguration;
-
   public PipelineServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
     defaultServerFactory.setJerseyRootPath("/api");

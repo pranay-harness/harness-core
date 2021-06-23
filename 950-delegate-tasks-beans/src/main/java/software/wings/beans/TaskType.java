@@ -110,7 +110,6 @@ public enum TaskType {
   APPDYNAMICS_COLLECT_METRIC_DATA_V2(TaskGroup.APPDYNAMICS),
   APPDYNAMICS_COLLECT_24_7_METRIC_DATA(TaskGroup.GUARD_24x7),
   APPDYNAMICS_METRIC_DATA_FOR_NODE(TaskGroup.APPDYNAMICS),
-  APPDYNAMICS_METRIC_PACK_DATA(TaskGroup.APPDYNAMICS),
   INSTANA_GET_INFRA_METRICS(TaskGroup.INSTANA),
   INSTANA_GET_TRACE_METRICS(TaskGroup.INSTANA),
   INSTANA_COLLECT_METRIC_DATA(TaskGroup.INSTANA),
@@ -251,6 +250,7 @@ public enum TaskType {
   K8S_COMMAND_TASK_NG(TaskGroup.K8S_NG, "K8s Task"),
   K8S_WATCH_TASK(TaskGroup.CE),
   TRIGGER_TASK(TaskGroup.TRIGGER),
+  WEBHOOK_TRIGGER_TASK(TaskGroup.TRIGGER),
   JIRA(TaskGroup.JIRA),
   CONNECTIVITY_VALIDATION(TaskGroup.CONNECTIVITY_VALIDATION),
   GIT_COMMAND(TaskGroup.GIT),
@@ -278,6 +278,7 @@ public enum TaskType {
   CI_EXECUTE_STEP(TaskGroup.CI),
   AWS_S3_TASK(TaskGroup.AWS),
   CUSTOM_MANIFEST_VALUES_FETCH_TASK(TaskGroup.CUSTOM_MANIFEST_VALUES_FETCH_TASK),
+  CUSTOM_MANIFEST_FETCH_TASK(TaskGroup.CUSTOM_MANIFEST_FETCH_TASK),
 
   // Add all NG tasks below this.
   GCP_TASK(TaskGroup.GCP),
@@ -308,9 +309,11 @@ public enum TaskType {
   NG_DECRYT_GIT_API_ACCESS_TASK(TaskGroup.GIT_NG),
   TERRAFORM_TASK_NG(TaskGroup.TERRAFORM_NG, "Terraform Task"),
   SCM_PUSH_TASK(TaskGroup.GIT, "SCM Push Task"),
+  SCM_PATH_FILTER_EVALUATION_TASK(TaskGroup.GIT, "SCM Path Filter Evaluation Task"),
   SCM_GIT_REF_TASK(TaskGroup.GIT, "SCM Git Ref Task"),
   SCM_GIT_FILE_TASK(TaskGroup.GIT, "SCM Git File Task"),
-  SCM_PULL_REQUEST_TASK(TaskGroup.GIT, "SCM Git PR Task");
+  SCM_PULL_REQUEST_TASK(TaskGroup.GIT, "SCM Git PR Task"),
+  SCM_GIT_WEBHOOK_TASK(TaskGroup.GIT, "SCM Git Webhook Task");
 
   private final TaskGroup taskGroup;
   private final String displayName;

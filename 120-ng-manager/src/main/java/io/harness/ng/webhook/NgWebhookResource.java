@@ -29,8 +29,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Api("webhook")
-@Path("webhook")
+@Api(WebhookConstants.WEBHOOK_ENDPOINT)
+@Path(WebhookConstants.WEBHOOK_ENDPOINT)
 @Produces({"application/json", "application/yaml", "text/plain"})
 @Consumes({"application/json", "application/yaml", "text/plain"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))

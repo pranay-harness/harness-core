@@ -1,8 +1,5 @@
 package io.harness.ff;
 
-import static io.harness.beans.FeatureName.NEXT_GEN_ENABLED;
-import static io.harness.beans.FeatureName.NG_ACCESS_CONTROL_MIGRATION;
-import static io.harness.beans.FeatureName.NG_RBAC_ENABLED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -21,6 +18,9 @@ import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureFlag.FeatureFlagKeys;
 import io.harness.beans.FeatureFlag.Scope;
 import io.harness.beans.FeatureName;
+import io.harness.cf.CfMigrationConfig;
+import io.harness.cf.client.api.CfClient;
+import io.harness.cf.client.dto.Target;
 import io.harness.configuration.DeployMode;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
@@ -30,9 +30,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -64,11 +62,12 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   @Named(EventsFrameworkConstants.FEATURE_FLAG_STREAM)
   private Producer eventProducer;
 
-  private final List<FeatureName> featureFlagsToSendEvent =
-      Lists.newArrayList(ImmutableList.of(NG_ACCESS_CONTROL_MIGRATION, NG_RBAC_ENABLED, NEXT_GEN_ENABLED));
   private long lastEpoch;
   private final Map<FeatureName, FeatureFlag> cache = new HashMap<>();
   @Inject CfMigrationService cfMigrationService;
+  @Inject CfMigrationConfig cfMigrationConfig;
+  @Inject CfClient cfClient;
+  @Inject FeatureFlagConfig featureFlagConfig;
   @Override
   public boolean isEnabledReloadCache(FeatureName featureName, String accountId) {
     synchronized (cache) {
@@ -89,9 +88,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
                                                          .setOnInsert(FeatureFlagKeys.obsolete, false)
                                                          .setOnInsert(FeatureFlagKeys.enabled, false);
     FeatureFlag featureFlag = persistence.findAndModify(query, updateOperations, HPersistence.upsertReturnNewOptions);
-    if (featureFlagsToSendEvent.contains(featureName)) {
-      publishEvent(accountId, featureName, true);
-    }
+    publishEvent(accountId, featureName, true);
     synchronized (cache) {
       cache.put(featureName, featureFlag);
     }
@@ -134,12 +131,11 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       featureFlag.getAccountIds().remove(accountId);
     }
     persistence.save(featureFlag);
-    if (featureFlagsToSendEvent.contains(FeatureName.valueOf(featureName))) {
-      publishEvent(accountId, FeatureName.valueOf(featureName), enabled);
-    }
+    publishEvent(accountId, FeatureName.valueOf(featureName), enabled);
     synchronized (cache) {
       cache.put(FeatureName.valueOf(featureName), featureFlag);
     }
+    cfMigrationService.syncFeatureFlagWithCF(featureFlag);
     return featureFlag;
   }
 
@@ -176,6 +172,16 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   }
   @Override
   public boolean isGlobalEnabled(FeatureName featureName) {
+    switch (featureFlagConfig.getFeatureFlagSystem()) {
+      case CF:
+        return cfFeatureFlagEvaluation(featureName, null);
+      case LOCAL:
+      default:
+        return isLocalGlobalEnabled(featureName);
+    }
+  }
+
+  private boolean isLocalGlobalEnabled(FeatureName featureName) {
     if (featureName.getScope() != Scope.GLOBAL) {
       log.warn("FeatureFlag {} is not global", featureName.name(), new Exception(""));
     }
@@ -210,6 +216,27 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
   @Override
   public boolean isEnabled(@NonNull FeatureName featureName, String accountId) {
+    switch (featureFlagConfig.getFeatureFlagSystem()) {
+      case CF:
+        return cfFeatureFlagEvaluation(featureName, accountId);
+      case LOCAL:
+      default:
+        return localFeatureFlagEvaluation(featureName, accountId);
+    }
+  }
+
+  private boolean cfFeatureFlagEvaluation(@NonNull FeatureName featureName, String accountId) {
+    if (Scope.GLOBAL.equals(featureName.getScope()) || isEmpty(accountId)) {
+      /**
+       * If accountID is null or empty, use a static accountID
+       */
+      accountId = FeatureFlagConstants.STATIC_ACCOUNT_ID;
+    }
+    Target target = Target.builder().identifier(accountId).name(accountId).build();
+    return cfClient.boolVariation(featureName.name(), target, false);
+  }
+
+  private boolean localFeatureFlagEvaluation(@NonNull FeatureName featureName, String accountId) {
     Optional<FeatureFlag> featureFlagOptional = getFeatureFlag(featureName);
     boolean featureValue = false;
 
@@ -246,6 +273,16 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
   @Override
   public boolean isEnabledForAllAccounts(FeatureName featureName) {
+    switch (featureFlagConfig.getFeatureFlagSystem()) {
+      case CF:
+        return cfFeatureFlagEvaluation(featureName, null);
+      case LOCAL:
+      default:
+        return localIsEnabledForAllAccounts(featureName);
+    }
+  }
+
+  private boolean localIsEnabledForAllAccounts(FeatureName featureName) {
     Optional<FeatureFlag> featureFlagOptional = getFeatureFlag(featureName);
     if (featureFlagOptional.isPresent()) {
       FeatureFlag featureFlag = featureFlagOptional.get();
@@ -322,7 +359,26 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
             persistence.createUpdateOperations(FeatureFlag.class).set(FeatureFlagKeys.enabled, enabled.contains(name)));
       }
     }
-    cfMigrationService.syncAllFlagsWithCFServer(this);
+    /**
+     *
+     * If featureFlagConfig mode is CF and sync is enabled, then only sync creation of feature flags to CF
+     *
+     * else
+     *
+     * if Migration is enabled,
+     * migrate everything including current configuration over to CF -> This will be required initially as we migrate
+     * our current system over to CF
+     *
+     */
+    if (FeatureFlagSystem.CF.equals(featureFlagConfig.getFeatureFlagSystem())
+        && featureFlagConfig.isSyncFeaturesToCF()) {
+      log.info("FeatureFlagSystem is CF and sync is turned on, will only create flags not in the system");
+      cfMigrationService.syncAllFlagsWithCFServer(this, false);
+    } else if (cfMigrationConfig.isEnabled()) {
+      log.info("migration is enabled, will sync feature flags and rules");
+      cfMigrationService.syncAllFlagsWithCFServer(this, true);
+      return;
+    }
   }
 
   /**
@@ -347,20 +403,18 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
       return Optional.empty();
     }
     persistence.save(featureFlag);
-    if (featureFlagsToSendEvent.contains(FeatureName.valueOf(featureFlagName))) {
-      FeatureFlag existingFeatureFlag = featureFlagOptional.get();
-      Set<String> existingAccounts =
-          existingFeatureFlag.getAccountIds() != null ? existingFeatureFlag.getAccountIds() : emptySet();
-      Set<String> newAccounts = featureFlag.getAccountIds() != null ? featureFlag.getAccountIds() : emptySet();
-      Set<String> accountsAdded = Sets.difference(newAccounts, existingAccounts);
-      Set<String> accountsRemoved = Sets.difference(existingAccounts, newAccounts);
+    FeatureFlag existingFeatureFlag = featureFlagOptional.get();
+    Set<String> existingAccounts =
+        existingFeatureFlag.getAccountIds() != null ? existingFeatureFlag.getAccountIds() : emptySet();
+    Set<String> newAccounts = featureFlag.getAccountIds() != null ? featureFlag.getAccountIds() : emptySet();
+    Set<String> accountsAdded = Sets.difference(newAccounts, existingAccounts);
+    Set<String> accountsRemoved = Sets.difference(existingAccounts, newAccounts);
 
-      // for accounts which have been added, send enabled event
-      accountsAdded.forEach(account -> publishEvent(account, FeatureName.valueOf(featureFlagName), true));
+    // for accounts which have been added, send enabled event
+    accountsAdded.forEach(account -> publishEvent(account, FeatureName.valueOf(featureFlagName), true));
 
-      // for accounts which have been removed, send disabled event
-      accountsRemoved.forEach(account -> publishEvent(account, FeatureName.valueOf(featureFlagName), false));
-    }
+    // for accounts which have been removed, send disabled event
+    accountsRemoved.forEach(account -> publishEvent(account, FeatureName.valueOf(featureFlagName), false));
     synchronized (cache) {
       cache.put(FeatureName.valueOf(featureFlagName), featureFlag);
     }

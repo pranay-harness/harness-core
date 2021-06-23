@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DEL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.kryo.CgOrchestrationBeansKryoRegistrar;
 import io.harness.serializer.kryo.DelegateTasksBeansKryoRegister;
 import io.harness.serializer.kryo.RbacCoreKryoRegistrar;
 import io.harness.serializer.morphia.DelegateTasksBeansMorphiaRegistrar;
@@ -27,6 +28,7 @@ public class DelegateTasksBeansRegistrars {
           .addAll(FileServiceCommonsRegistrars.kryoRegistrars)
           .add(RbacCoreKryoRegistrar.class)
           .add(DelegateTasksBeansKryoRegister.class)
+          .add(CgOrchestrationBeansKryoRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

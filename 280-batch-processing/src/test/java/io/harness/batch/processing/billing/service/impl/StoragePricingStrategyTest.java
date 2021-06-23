@@ -11,7 +11,7 @@ import io.harness.batch.processing.ccm.PricingSource;
 import io.harness.batch.processing.pricing.service.support.StorageCustomPricingProvider;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.StorageResource;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 import io.harness.rule.Owner;
 
 import java.time.Instant;
@@ -36,8 +36,8 @@ public class StoragePricingStrategyTest extends CategoryTest {
     InstanceData instanceData =
         InstanceData.builder().storageResource(StorageResource.builder().capacity(STORAGE_CAPACITY).build()).build();
 
-    PricingData pricingData =
-        storagePricingStrategy.getPricePerHour(instanceData, NOW.minus(24, ChronoUnit.HOURS), NOW, 24 * 3600D);
+    PricingData pricingData = storagePricingStrategy.getPricePerHour(
+        instanceData, NOW.minus(24, ChronoUnit.HOURS), NOW, 24 * 3600D, 24 * 3600D);
 
     assertThat(pricingData.getPricingSource()).isEqualTo(PricingSource.HARDCODED);
     assertThat(pricingData.getStorageMb()).isEqualTo(STORAGE_CAPACITY);

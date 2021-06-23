@@ -1,8 +1,8 @@
 package io.harness.time;
 
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.threading.ExecutorModule;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -27,6 +27,6 @@ public class TimeModule extends AbstractModule {
   @Provides
   @Singleton
   public TimeLimiter timeLimiter(ExecutorService executorService) {
-    return new SimpleTimeLimiter(executorService);
+    return HTimeLimiter.create(executorService);
   }
 }

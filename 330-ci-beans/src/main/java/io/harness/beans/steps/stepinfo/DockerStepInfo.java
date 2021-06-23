@@ -12,13 +12,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
-import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.filters.WithConnectorRef;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.yaml.YamlSchemaTypes;
+import io.harness.yaml.extended.ci.container.ContainerResource;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -72,9 +72,9 @@ public class DockerStepInfo implements PluginCompatibleStep, WithConnectorRef {
   @YamlSchemaTypes(value = {string})
   @ApiModelProperty(dataType = STRING_MAP_CLASSPATH)
   private ParameterField<Map<String, String>> buildArgs;
-  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
-  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> optimize;
-  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> remoteCacheImage;
+  @YamlSchemaTypes({string}) @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
+  @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> optimize;
+  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> remoteCacheRepo;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "resources", "repo", "tags", "context",
@@ -83,7 +83,7 @@ public class DockerStepInfo implements PluginCompatibleStep, WithConnectorRef {
       ContainerResource resources, ParameterField<String> repo, ParameterField<List<String>> tags,
       ParameterField<String> context, ParameterField<String> dockerfile, ParameterField<String> target,
       ParameterField<Map<String, String>> labels, ParameterField<Map<String, String>> buildArgs,
-      ParameterField<Integer> runAsUser, ParameterField<Boolean> optimize, ParameterField<String> remoteCacheImage) {
+      ParameterField<Integer> runAsUser, ParameterField<Boolean> optimize, ParameterField<String> remoteCacheRepo) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -99,7 +99,7 @@ public class DockerStepInfo implements PluginCompatibleStep, WithConnectorRef {
     this.buildArgs = buildArgs;
     this.runAsUser = runAsUser;
     this.optimize = optimize;
-    this.remoteCacheImage = remoteCacheImage;
+    this.remoteCacheRepo = remoteCacheRepo;
   }
 
   @Override

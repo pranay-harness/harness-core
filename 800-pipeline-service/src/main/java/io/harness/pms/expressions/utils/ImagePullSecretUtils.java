@@ -17,6 +17,7 @@ import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
+import io.harness.delegate.task.artifacts.ArtifactDelegateRequestUtils;
 import io.harness.delegate.task.artifacts.ArtifactSourceConstants;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.ArtifactTaskType;
@@ -58,7 +59,7 @@ public class ImagePullSecretUtils {
   public String getImagePullSecret(ArtifactOutcome artifactOutcome, Ambiance ambiance) {
     ImageDetailsBuilder imageDetailsBuilder = ImageDetails.builder();
     switch (artifactOutcome.getArtifactType()) {
-      case ArtifactSourceConstants.DOCKER_HUB_NAME:
+      case ArtifactSourceConstants.DOCKER_REGISTRY_NAME:
         getImageDetailsFromDocker((DockerArtifactOutcome) artifactOutcome, imageDetailsBuilder, ambiance);
         break;
       case ArtifactSourceConstants.GCR_NAME:
@@ -75,12 +76,20 @@ public class ImagePullSecretUtils {
     if (EmptyPredicate.isNotEmpty(imageDetails.getRegistryUrl()) && isNotBlank(imageDetails.getUsername())
         && isNotBlank(imageDetails.getPassword())) {
       return getArtifactRegistryCredentials(imageDetails);
+    } else if (EmptyPredicate.isNotEmpty(imageDetails.getRegistryUrl()) && isNotBlank(imageDetails.getUsernameRef())
+        && isNotBlank(imageDetails.getPassword())) {
+      return getArtifactRegistryCredentialsFromUsernameRef(imageDetails);
     }
     return "";
   }
 
   public static String getArtifactRegistryCredentials(ImageDetails imageDetails) {
     return "${imageSecret.create(\"" + imageDetails.getRegistryUrl() + "\", \"" + imageDetails.getUsername() + "\", "
+        + imageDetails.getPassword() + ")}";
+  }
+
+  public static String getArtifactRegistryCredentialsFromUsernameRef(ImageDetails imageDetails) {
+    return "${imageSecret.create(\"" + imageDetails.getRegistryUrl() + "\", " + imageDetails.getUsernameRef() + ", "
         + imageDetails.getPassword() + ")}";
   }
 
@@ -93,6 +102,10 @@ public class ImagePullSecretUtils {
         && connectorConfig.getAuth().getAuthType() == DockerAuthType.USER_PASSWORD) {
       DockerUserNamePasswordDTO credentials = (DockerUserNamePasswordDTO) connectorConfig.getAuth().getCredentials();
       String passwordRef = credentials.getPasswordRef().toSecretRefStringValue();
+      if (credentials.getUsernameRef() != null) {
+        imageDetailsBuilder.usernameRef(
+            getPasswordExpression(credentials.getUsernameRef().toSecretRefStringValue(), ambiance));
+      }
       imageDetailsBuilder.username(credentials.getUsername());
       imageDetailsBuilder.password(getPasswordExpression(passwordRef, ambiance));
       imageDetailsBuilder.registryUrl(connectorConfig.getDockerRegistryUrl());
@@ -123,14 +136,9 @@ public class ImagePullSecretUtils {
     AwsConnectorDTO connectorDTO = (AwsConnectorDTO) connectorIntoDTO.getConnectorConfig();
     List<EncryptedDataDetail> encryptionDetails =
         ecrImagePullSecretHelper.getEncryptionDetails(connectorDTO, baseNGAccess);
-    EcrArtifactDelegateRequest ecrRequest = EcrArtifactDelegateRequest.builder()
-                                                .awsConnectorDTO(connectorDTO)
-                                                .encryptedDataDetails(encryptionDetails)
-                                                .imagePath(ecrArtifactOutcome.getImagePath())
-                                                .tag(ecrArtifactOutcome.getTag())
-                                                .sourceType(ArtifactSourceType.ECR)
-                                                .region(ecrArtifactOutcome.getRegion())
-                                                .build();
+    EcrArtifactDelegateRequest ecrRequest = ArtifactDelegateRequestUtils.getEcrDelegateRequest(
+        ecrArtifactOutcome.getImagePath(), ecrArtifactOutcome.getTag(), null, null, ecrArtifactOutcome.getRegion(),
+        connectorRef, connectorDTO, encryptionDetails, ArtifactSourceType.ECR);
     ArtifactTaskExecutionResponse artifactTaskExecutionResponseForImageUrl = ecrImagePullSecretHelper.executeSyncTask(
         ambiance, ecrRequest, ArtifactTaskType.GET_IMAGE_URL, baseNGAccess, "Ecr Get image URL failure due to error");
     String imageUrl =

@@ -6,6 +6,7 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
 import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
 import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ARVIND;
@@ -19,7 +20,6 @@ import static software.wings.beans.Activity.Type.Command;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AWS_ECS_SERVICE_SETUP;
@@ -66,6 +66,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
+import io.harness.deployment.InstanceDetails;
 import io.harness.ecs.EcsContainerDetails;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -84,6 +85,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ecs.EcsBGRoute53SetupStateExecutionData;
 import software.wings.api.ecs.EcsSetupStateExecutionData;
+import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
@@ -557,19 +559,31 @@ public class EcsStateHelperTest extends CategoryTest {
                     .build())
             .build();
     ContainerDeploymentManagerHelper mockHelper = mock(ContainerDeploymentManagerHelper.class);
-    doReturn(singletonList(anInstanceStatusSummary()
-                               .withInstanceElement(anInstanceElement()
-                                                        .dockerId("DockerId")
-                                                        .hostName("HostName")
-                                                        .host(HostElement.builder().build())
-                                                        .ecsContainerDetails(EcsContainerDetails.builder().build())
-                                                        .build())
-                               .build()))
+    doReturn(singletonList(
+                 anInstanceStatusSummary()
+                     .withInstanceElement(anInstanceElement()
+                                              .dockerId("DockerId")
+                                              .hostName("HostName")
+                                              .host(HostElement.builder().build())
+                                              .ecsContainerDetails(EcsContainerDetails.builder()
+                                                                       .taskId("TASK_ID")
+                                                                       .taskArn("TASK_ARN")
+                                                                       .completeDockerId("COMPLETE_DOCKER_ID")
+                                                                       .containerInstanceId("CONTAINER_INSTANCE_ID")
+                                                                       .containerInstanceArn("CONTAINER_INSTANCE_ARN")
+                                                                       .containerId("CONTAINER_ID")
+                                                                       .ecsServiceName("ECS_SERVICE_NAME")
+                                                                       .dockerId("DOCKER_ID")
+                                                                       .build())
+                                              .build())
+                     .build()))
         .doReturn(emptyList())
         .when(mockHelper)
         .getInstanceStatusSummaries(any(), anyList());
     ActivityService mockService = mock(ActivityService.class);
-    doReturn(null).when(sweepingOutputService).save(any());
+    ArgumentCaptor<SweepingOutputInstance> sweepingOutputInstanceCaptor =
+        ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    doReturn(null).when(sweepingOutputService).save(sweepingOutputInstanceCaptor.capture());
     doReturn("").when(mockContext).appendStateExecutionId(anyString());
     doReturn(SweepingOutputInstance.builder())
         .doReturn(SweepingOutputInstance.builder())
@@ -596,6 +610,19 @@ public class EcsStateHelperTest extends CategoryTest {
     assertThat(listParam.getInstanceElements().get(0).getHostName()).isEqualTo("HostName");
     assertThat(listParam.getInstanceElements().get(0).getDockerId()).isEqualTo("DockerId");
     assertThat(response.getFailureTypes()).isNull();
+
+    InstanceDetails.AWS aws = ((InstanceInfoVariables) sweepingOutputInstanceCaptor.getValue().getValue())
+                                  .getInstanceDetails()
+                                  .get(0)
+                                  .getAws();
+    assertThat(aws.getTaskId()).isEqualTo("TASK_ID");
+    assertThat(aws.getTaskArn()).isEqualTo("TASK_ARN");
+    assertThat(aws.getCompleteDockerId()).isEqualTo("COMPLETE_DOCKER_ID");
+    assertThat(aws.getContainerInstanceId()).isEqualTo("CONTAINER_INSTANCE_ID");
+    assertThat(aws.getContainerInstanceArn()).isEqualTo("CONTAINER_INSTANCE_ARN");
+    assertThat(aws.getContainerId()).isEqualTo("CONTAINER_ID");
+    assertThat(aws.getEcsServiceName()).isEqualTo("ECS_SERVICE_NAME");
+    assertThat(aws.getDockerId()).isEqualTo("DOCKER_ID");
 
     delegateResponse.getEcsCommandResponse().setTimeoutFailure(true);
     response = helper.handleDelegateResponseForEcsDeploy(

@@ -21,6 +21,7 @@ import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceInfo;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -30,16 +31,19 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(PL)
 public class OrganizationResourceImpl implements Resource {
   OrganizationClient organizationClient;
+
+  @Inject
+  public OrganizationResourceImpl(@Named("PRIVILEGED") OrganizationClient organizationClient) {
+    this.organizationClient = organizationClient;
+  }
 
   @Override
   public List<Boolean> validate(List<String> resourceIds, Scope scope) {

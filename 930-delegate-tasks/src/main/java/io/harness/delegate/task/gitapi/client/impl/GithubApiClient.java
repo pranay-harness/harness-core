@@ -62,8 +62,8 @@ public class GithubApiClient implements GitApiClient {
       String token = retrieveAuthToken(gitConnector);
       String gitApiURL = getGitApiURL(gitConfigDTO.getUrl());
 
-      String prJson = githubService.findPR(gitApiURL, token, null, gitApiTaskParams.getOwner(),
-          gitApiTaskParams.getRepo(), gitApiTaskParams.getPrNumber());
+      String prJson = githubService.findPR(
+          gitApiURL, token, gitApiTaskParams.getOwner(), gitApiTaskParams.getRepo(), gitApiTaskParams.getPrNumber());
       if (isNotBlank(prJson)) {
         responseBuilder.commandExecutionStatus(CommandExecutionStatus.SUCCESS)
             .gitApiResult(GitApiFindPRTaskResponse.builder().prJson(prJson).build());
@@ -133,13 +133,11 @@ public class GithubApiClient implements GitApiClient {
   }
 
   private String fetchTokenUsingGithubAppSpec(GithubConnectorDTO gitConfigDTO, GithubAppSpecDTO spec) {
-    GithubAppSpecDTO githubAppSpecDTO = spec;
     return githubService.getToken(GithubAppConfig.builder()
-                                      .installationId(githubAppSpecDTO.getInstallationId())
-                                      .appId(githubAppSpecDTO.getApplicationId())
-                                      .privateKey(new String(githubAppSpecDTO.getPrivateKeyRef().getDecryptedValue()))
+                                      .installationId(spec.getInstallationId())
+                                      .appId(spec.getApplicationId())
+                                      .privateKey(new String(spec.getPrivateKeyRef().getDecryptedValue()))
                                       .githubUrl(getGitApiURL(gitConfigDTO.getUrl()))
-                                      .build(),
-        null);
+                                      .build());
   }
 }

@@ -9,6 +9,7 @@ import io.harness.interrupts.InterruptEffect;
 import io.harness.logging.UnitProgress;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
@@ -28,7 +29,10 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.timeout.TimeoutDetails;
 
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.ByteString;
 import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -54,6 +58,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("nodeExecution")
 @StoreIn(DbAliases.PMS)
 public final class NodeExecution implements PersistentEntity, UuidAware {
+  public static final long TTL_MONTHS = 6;
+
   // Immutable
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotNull Ambiance ambiance;
@@ -63,6 +69,8 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   private Long startTs;
   private Long endTs;
   private Duration initialWaitDuration;
+
+  @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
 
   // Resolved StepParameters stored just before invoking step.
   org.bson.Document resolvedStepParameters;
@@ -105,14 +113,6 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   // Timeouts for advisers
   List<String> adviserTimeoutInstanceIds;
   TimeoutDetails adviserTimeoutDetails;
-
-  public boolean isChildSpawningMode() {
-    return mode == ExecutionMode.CHILD || mode == ExecutionMode.CHILDREN || mode == ExecutionMode.CHILD_CHAIN;
-  }
-
-  public boolean isTaskSpawningMode() {
-    return mode == ExecutionMode.TASK || mode == ExecutionMode.TASK_CHAIN;
-  }
 
   public ExecutableResponse obtainLatestExecutableResponse() {
     if (isEmpty(executableResponses)) {
@@ -189,6 +189,19 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
                  .field(NodeExecutionKeys.status)
                  .field(NodeExecutionKeys.oldRetry)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("planExecutionId_mode_status_oldRetry_idx")
+                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.mode)
+                 .field(NodeExecutionKeys.status)
+                 .field(NodeExecutionKeys.oldRetry)
+                 .build())
+        .add(CompoundMongoIndex.builder().name("previous_id_idx").field(NodeExecutionKeys.previousId).build())
         .build();
+  }
+
+  public ByteString getResolvedStepParametersBytes() {
+    String resolvedStepParams = this.getResolvedStepParameters().toJson();
+    return ByteString.copyFromUtf8(resolvedStepParams);
   }
 }

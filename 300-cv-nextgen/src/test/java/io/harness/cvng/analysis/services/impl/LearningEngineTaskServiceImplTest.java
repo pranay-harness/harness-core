@@ -3,11 +3,13 @@ package io.harness.cvng.analysis.services.impl;
 import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType.SERVICE_GUARD_FEEDBACK_ANALYSIS;
 import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS;
 import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType.SERVICE_GUARD_TIME_SERIES;
+import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -16,8 +18,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
-import io.harness.cvng.analysis.exceptions.ServiceGuardAnalysisException;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -47,10 +49,16 @@ public class LearningEngineTaskServiceImplTest extends CvNextGenTestBase {
   @Mock FieldEnd mockField;
 
   @Inject private LearningEngineTaskService learningEngineTaskService;
-
+  @Inject private VerificationTaskService verificationTaskService;
+  private String accountId;
+  private String cvConfigId;
+  private String verificationTaskId;
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
+    accountId = generateUuid();
+    cvConfigId = generateUuid();
+    verificationTaskId = verificationTaskService.create(accountId, cvConfigId, APP_DYNAMICS);
   }
 
   @Test
@@ -179,14 +187,13 @@ public class LearningEngineTaskServiceImplTest extends CvNextGenTestBase {
     assertThat(taskToSave.getTaskStatus().name()).isEqualTo(ExecutionStatus.SUCCESS.name());
   }
 
-  @Test(expected = ServiceGuardAnalysisException.class)
+  @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testMarkCompleted_badTaskId() {
     LearningEngineTask taskToSave = getTaskToSave(ExecutionStatus.RUNNING);
     hPersistence.save(taskToSave);
-
-    learningEngineTaskService.markCompleted(null);
+    assertThatThrownBy(() -> learningEngineTaskService.markCompleted(null)).isInstanceOf(NullPointerException.class);
   }
 
   @Test
@@ -202,21 +209,20 @@ public class LearningEngineTaskServiceImplTest extends CvNextGenTestBase {
     assertThat(taskToSave.getTaskStatus().name()).isEqualTo(ExecutionStatus.FAILED.name());
   }
 
-  @Test(expected = ServiceGuardAnalysisException.class)
+  @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
   public void testMarkFailed_badTaskId() {
     LearningEngineTask taskToSave = getTaskToSave(ExecutionStatus.RUNNING);
     hPersistence.save(taskToSave);
-
-    learningEngineTaskService.markFailure(null);
+    assertThatThrownBy(() -> learningEngineTaskService.markFailure(null)).isInstanceOf(NullPointerException.class);
   }
 
   private LearningEngineTask getTaskToSave(ExecutionStatus taskStatus) {
     LearningEngineTask taskToSave = TimeSeriesLearningEngineTask.builder().build();
     taskToSave.setUuid("leTaskId1");
     taskToSave.setTaskStatus(taskStatus);
-    taskToSave.setVerificationTaskId(generateUuid());
+    taskToSave.setVerificationTaskId(verificationTaskId);
     taskToSave.setAnalysisType(SERVICE_GUARD_LOG_ANALYSIS);
     return taskToSave;
   }

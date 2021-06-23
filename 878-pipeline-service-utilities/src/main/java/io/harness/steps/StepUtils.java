@@ -24,6 +24,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.SimpleHDelegateTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
@@ -34,6 +35,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
@@ -48,13 +50,14 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import org.apache.commons.collections4.ListUtils;
-import org.apache.commons.collections4.MapUtils;
 
 @OwnedBy(PIPELINE)
 public class StepUtils {
@@ -63,24 +66,19 @@ public class StepUtils {
   public static StepResponse createStepResponseFromChildResponse(Map<String, ResponseData> responseDataMap) {
     StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
 
-    for (ResponseData responseData : responseDataMap.values()) {
-      if (((StepResponseNotifyData) responseData).getStatus() == Status.FAILED) {
-        responseBuilder.status(Status.FAILED);
-        responseBuilder.failureInfo(((StepResponseNotifyData) responseData).getFailureInfo());
-        return responseBuilder.build();
-      }
-    }
+    List<Status> childStatuses = new LinkedList<>();
+    String nodeExecutionId = "";
 
     for (ResponseData responseData : responseDataMap.values()) {
       StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) responseData;
       Status executionStatus = responseNotifyData.getStatus();
-      if (!StatusUtils.positiveStatuses().contains(executionStatus)) {
-        responseBuilder.status(executionStatus);
-      }
+      childStatuses.add(executionStatus);
+      nodeExecutionId = responseNotifyData.getNodeUuid();
       if (StatusUtils.brokeStatuses().contains(executionStatus)) {
         responseBuilder.failureInfo(responseNotifyData.getFailureInfo());
       }
     }
+    responseBuilder.status(StatusUtils.calculateStatusForNode(childStatuses, nodeExecutionId));
     return responseBuilder.build();
   }
 
@@ -131,19 +129,19 @@ public class StepUtils {
   public static TaskRequest prepareTaskRequestWithTaskSelector(
       Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer, List<TaskSelector> selectors) {
     return prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2,
-        Collections.emptyList(), true, null, selectors);
+        Collections.emptyList(), true, null, selectors, Scope.PROJECT);
   }
 
   public static TaskRequest prepareTaskRequestWithTaskSelector(Ambiance ambiance, TaskData taskData,
       KryoSerializer kryoSerializer, String taskName, List<TaskSelector> selectors) {
     return prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2,
-        Collections.emptyList(), true, taskName, selectors);
+        Collections.emptyList(), true, taskName, selectors, Scope.PROJECT);
   }
 
   public static TaskRequest prepareTaskRequestWithTaskSelector(Ambiance ambiance, TaskData taskData,
       KryoSerializer kryoSerializer, List<String> units, String taskName, List<TaskSelector> selectors) {
-    return prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, units, true, taskName, selectors);
+    return prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, units, true, taskName,
+        selectors, Scope.PROJECT);
   }
 
   public static TaskRequest prepareTaskRequestWithoutLogs(
@@ -157,13 +155,22 @@ public class StepUtils {
     return prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, units, true, taskName);
   }
 
-  public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer,
-      TaskCategory taskCategory, List<String> units, boolean withLogs, String taskName) {
-    return prepareTaskRequest(ambiance, taskData, kryoSerializer, taskCategory, units, withLogs, taskName, null);
+  public static TaskRequest prepareTaskRequestWithTaskSelector(Ambiance ambiance, TaskData taskData,
+      KryoSerializer kryoSerializer, TaskCategory taskCategory, List<String> units, boolean withLogs, String taskName,
+      List<TaskSelector> selectors) {
+    return prepareTaskRequest(
+        ambiance, taskData, kryoSerializer, taskCategory, units, withLogs, taskName, selectors, Scope.PROJECT);
   }
 
   public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer,
-      TaskCategory taskCategory, List<String> units, boolean withLogs, String taskName, List<TaskSelector> selectors) {
+      TaskCategory taskCategory, List<String> units, boolean withLogs, String taskName) {
+    return prepareTaskRequest(
+        ambiance, taskData, kryoSerializer, taskCategory, units, withLogs, taskName, null, Scope.PROJECT);
+  }
+
+  public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer,
+      TaskCategory taskCategory, List<String> units, boolean withLogs, String taskName, List<TaskSelector> selectors,
+      Scope taskScope) {
     String accountId = Preconditions.checkNotNull(ambiance.getSetupAbstractionsMap().get("accountId"));
     TaskParameters taskParameters = (TaskParameters) taskData.getParameters()[0];
     List<ExecutionCapability> capabilities = new ArrayList<>();
@@ -193,9 +200,8 @@ public class StepUtils {
             .addAllSelectors(CollectionUtils.emptyIfNull(selectors))
             .addAllLogKeys(CollectionUtils.emptyIfNull(generateLogKeys(logAbstractionMap, units)))
             .setLogAbstractions(TaskLogAbstractions.newBuilder().putAllValues(logAbstractionMap).build())
-            .setSetupAbstractions(TaskSetupAbstractions.newBuilder()
-                                      .putAllValues(MapUtils.emptyIfNull(ambiance.getSetupAbstractionsMap()))
-                                      .build())
+            .setSetupAbstractions(
+                TaskSetupAbstractions.newBuilder().putAllValues(buildAbstractions(ambiance, taskScope)).build())
             .setSelectionTrackingLogEnabled(true)
             .setTaskName(taskName == null ? taskData.getTaskType() : taskName);
 
@@ -215,6 +221,58 @@ public class StepUtils {
         .setDelegateTaskRequest(requestBuilder.build())
         .setTaskCategory(taskCategory)
         .build();
+  }
+
+  public static TaskRequest prepareTaskRequest(
+      Ambiance ambiance, TaskDetails taskDetails, List<String> units, List<TaskSelector> selectors, String taskName) {
+    return prepareTaskRequest(ambiance, taskDetails, units, selectors, taskName, true);
+  }
+
+  public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskDetails taskDetails, List<String> units,
+      List<TaskSelector> selectors, String taskName, boolean withLogs) {
+    DelegateTaskRequest delegateTaskRequest =
+        DelegateTaskRequest.newBuilder()
+            .setAccountId(AmbianceUtils.getAccountId(ambiance))
+            .setDetails(taskDetails)
+            .setSetupAbstractions(
+                TaskSetupAbstractions.newBuilder().putAllValues(buildAbstractions(ambiance, Scope.PROJECT)).build())
+            .addAllUnits(withLogs ? CollectionUtils.emptyIfNull(units) : Collections.emptyList())
+            .addAllLogKeys(
+                withLogs ? CollectionUtils.emptyIfNull(generateLogKeys(ambiance, units)) : Collections.emptyList())
+            .addAllSelectors(CollectionUtils.emptyIfNull(selectors))
+            .setLogAbstractions(TaskLogAbstractions.newBuilder()
+                                    .putAllValues(withLogs ? generateLogAbstractions(ambiance) : Collections.emptyMap())
+                                    .build())
+            .setTaskName(taskName == null ? taskDetails.getType().getType() : taskName)
+            .setSelectionTrackingLogEnabled(true)
+            .build();
+    return TaskRequest.newBuilder()
+        .setDelegateTaskRequest(delegateTaskRequest)
+        .setTaskCategory(TaskCategory.DELEGATE_TASK_V2)
+        .build();
+  }
+
+  public static Map<String, String> buildAbstractions(Ambiance ambiance, Scope taskScope) {
+    Map<String, String> setupMap = new HashMap<>();
+    if (!isEmpty(ambiance.getSetupAbstractionsMap())) {
+      setupMap.putAll(ambiance.getSetupAbstractionsMap());
+    }
+    setupMap.put("ng", "true");
+    switch (taskScope) {
+      case ORG:
+        setupMap.put("owner", AmbianceUtils.getOrgIdentifier(ambiance));
+        break;
+      case PROJECT:
+        setupMap.put(
+            "owner", AmbianceUtils.getOrgIdentifier(ambiance) + "/" + AmbianceUtils.getProjectIdentifier(ambiance));
+        break;
+      case UNKNOWN:
+      case ACCOUNT:
+      default:
+        // Doing Nothing here no owner key verify this behaviour
+        break;
+    }
+    return setupMap;
   }
 
   public static List<String> generateLogKeys(Ambiance ambiance, List<String> units) {

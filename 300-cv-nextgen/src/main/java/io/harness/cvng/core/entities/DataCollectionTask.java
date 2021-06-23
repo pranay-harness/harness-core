@@ -3,6 +3,7 @@ package io.harness.cvng.core.entities;
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -10,6 +11,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -20,8 +22,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import lombok.AccessLevel;
@@ -41,6 +46,7 @@ import org.mongodb.morphia.annotations.PrePersist;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "dataCollectionTasks")
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.CVNG)
 public abstract class DataCollectionTask
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
@@ -71,7 +77,7 @@ public abstract class DataCollectionTask
 
   @FdIndex private long createdAt;
   @FdIndex private long lastUpdatedAt;
-
+  private Instant lastPickedAt;
   private int retryCount;
 
   private String exception;
@@ -103,4 +109,16 @@ public abstract class DataCollectionTask
   public abstract Instant getNextValidAfter(Instant currentTime);
 
   public enum Type { SERVICE_GUARD, DEPLOYMENT }
+
+  public Duration totalTime(Instant currentTime) {
+    return Duration.between(
+        Collections.max(Arrays.asList(validAfter, Instant.ofEpochMilli(getCreatedAt()))), currentTime);
+  }
+  public Duration runningTime(Instant currentTime) {
+    return Duration.between(lastPickedAt, currentTime);
+  }
+
+  public Duration waitTime() {
+    return Duration.between(Instant.ofEpochMilli(getCreatedAt()), lastPickedAt);
+  }
 }

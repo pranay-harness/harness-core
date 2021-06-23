@@ -26,11 +26,11 @@ import io.harness.plancreator.stages.GenericStagePlanCreator;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
-import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
@@ -137,7 +137,10 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
         .stepType(CISpecStep.STEP_TYPE)
         .name(YAMLFieldNameConstants.SPEC)
         .stepParameters(stepParameters)
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                .build())
         .skipGraphType(SkipType.SKIP_NODE)
         .build();
   }
@@ -171,7 +174,6 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
   private BuildStatusUpdateParameter obtainBuildStatusUpdateParameter(
       PlanCreationContext ctx, StageElementConfig stageElementConfig) {
     PlanCreationContextValue planCreationContextValue = ctx.getGlobalContext().get("metadata");
-    ExecutionMetadata executionMetadata = planCreationContextValue.getMetadata();
 
     CodeBase codeBase = getCICodebase(ctx);
 
@@ -181,7 +183,7 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
     }
 
     ExecutionSource executionSource = IntegrationStageUtils.buildExecutionSource(
-        executionMetadata, stageElementConfig.getIdentifier(), codeBase.getBuild());
+        planCreationContextValue, stageElementConfig.getIdentifier(), codeBase.getBuild());
 
     if (executionSource != null && executionSource.getType() == ExecutionSource.Type.WEBHOOK) {
       String sha = retrieveLastCommitSha((WebhookExecutionSource) executionSource);

@@ -12,17 +12,28 @@ import static java.util.Collections.singletonList;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
+import io.harness.engine.OrchestrationEngine;
+import io.harness.engine.OrchestrationService;
+import io.harness.engine.OrchestrationServiceImpl;
+import io.harness.engine.events.NodeExecutionStatusUpdateEventHandler;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
+import io.harness.engine.interrupts.OrchestrationEndInterruptHandler;
+import io.harness.event.OrchestrationEndGraphHandler;
+import io.harness.event.OrchestrationLogPublisher;
+import io.harness.event.OrchestrationStartEventHandler;
 import io.harness.exception.GeneralException;
-import io.harness.execution.SdkResponseEventListener;
+import io.harness.execution.consumers.SdkResponseEventRedisConsumer;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
 import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.gitsync.GitSyncEntitiesConfiguration;
 import io.harness.gitsync.GitSyncSdkConfiguration;
 import io.harness.gitsync.GitSyncSdkInitHelper;
 import io.harness.gitsync.persistance.GitAwarePersistence;
+import io.harness.gitsync.persistance.GitSyncSdkService;
+import io.harness.gitsync.persistance.NoOpGitSyncSdkServiceImpl;
 import io.harness.gitsync.persistance.testing.NoOpGitAwarePersistenceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthMonitor;
@@ -30,20 +41,30 @@ import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
-import io.harness.monitoring.MonitoringQueueObserver;
+import io.harness.migration.MigrationProvider;
+import io.harness.migration.NGMigrationSdkInitHelper;
+import io.harness.migration.NGMigrationSdkModule;
+import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
+import io.harness.outbox.OutboxEventPollService;
 import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.approval.ApprovalInstanceExpirationJob;
 import io.harness.pms.approval.ApprovalInstanceHandler;
 import io.harness.pms.event.PMSEventConsumerService;
-import io.harness.pms.exception.WingsExceptionMapper;
+import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.inputset.gitsync.InputSetEntityGitSyncHelper;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTO;
+import io.harness.pms.migration.PipelineCoreMigrationProvider;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.observers.InputSetsDeleteObserver;
+import io.harness.pms.notification.orchestration.handlers.NotificationInformHandler;
+import io.harness.pms.notification.orchestration.handlers.PipelineStartNotificationHandler;
+import io.harness.pms.notification.orchestration.handlers.StageStartNotificationHandler;
+import io.harness.pms.notification.orchestration.handlers.StageStatusUpdateNotificationEventHandler;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntityCrudObserver;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
@@ -53,29 +74,46 @@ import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
 import io.harness.pms.plan.creation.PipelineServiceFilterCreationResponseMerger;
 import io.harness.pms.plan.creation.PipelineServiceInternalInfoProvider;
 import io.harness.pms.plan.execution.PmsExecutionServiceInfoProvider;
+import io.harness.pms.plan.execution.handlers.ExecutionInfoUpdateEventHandler;
+import io.harness.pms.plan.execution.handlers.ExecutionSummaryCreateEventHandler;
+import io.harness.pms.plan.execution.handlers.ExecutionSummaryStatusUpdateEventHandler;
+import io.harness.pms.plan.execution.handlers.ExecutionSummaryUpdateEventHandler;
+import io.harness.pms.plan.execution.handlers.PipelineStatusUpdateEventHandler;
+import io.harness.pms.plan.execution.handlers.PlanStatusEventEmitterHandler;
 import io.harness.pms.plan.execution.observers.PipelineExecutionSummaryDeleteObserver;
-import io.harness.pms.plan.execution.registrar.PmsOrchestrationEventRegistrar;
 import io.harness.pms.sdk.PmsSdkConfiguration;
-import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
+import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.interrupts.InterruptEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.resume.NodeResumeEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.start.NodeStartEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.pms.triggers.scheduled.ScheduledTriggerHandler;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
-import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.registrars.PipelineServiceFacilitatorRegistrar;
 import io.harness.registrars.PipelineServiceStepRegistrar;
+import io.harness.request.RequestContextFilter;
 import io.harness.resource.VersionInfoResource;
 import io.harness.security.NextGenAuthenticationFilter;
+import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.serializer.PipelineServiceUtilAdviserRegistrar;
 import io.harness.serializer.jackson.PipelineServiceJacksonModule;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.service.impl.GraphGenerationServiceImpl;
+import io.harness.steps.barriers.BarrierInitializer;
+import io.harness.steps.barriers.event.BarrierDropper;
+import io.harness.steps.barriers.event.BarrierPositionHelperEventHandler;
 import io.harness.steps.barriers.service.BarrierServiceImpl;
+import io.harness.steps.resourcerestraint.ResourceRestraintInitializer;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMonitor;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -92,6 +130,7 @@ import io.harness.yaml.YamlSdkInitHelper;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -200,7 +239,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     modules.add(new NotificationClientModule(appConfig.getNotificationClientConfiguration()));
     modules.add(PipelineServiceModule.getInstance(appConfig));
     modules.add(new MetricRegistryModule(metricRegistry));
-    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(appConfig)));
+    modules.add(NGMigrationSdkModule.getInstance());
     if (appConfig.isShouldDeployWithGitSync()) {
       GitSyncSdkConfiguration gitSyncSdkConfiguration = getGitSyncConfiguration(appConfig);
       modules.add(new AbstractGitSyncSdkModule() {
@@ -215,6 +254,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         @Override
         protected void configure() {
           bind(GitAwarePersistence.class).to(NoOpGitAwarePersistenceImpl.class);
+          bind(GitSyncSdkService.class).to(NoOpGitSyncSdkServiceImpl.class);
         }
 
         @Override
@@ -223,6 +263,11 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         }
       });
     }
+
+    // Pipeline Service Modules
+    PmsSdkConfiguration pmsSdkConfiguration = getPmsSdkConfiguration(appConfig);
+    modules.add(PmsSdkModule.getInstance(pmsSdkConfiguration));
+    modules.add(PipelineServiceUtilityModule.getInstance());
 
     Injector injector = Guice.createInjector(modules);
     registerEventListeners(injector);
@@ -235,6 +280,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerAuthFilters(appConfig, environment, injector);
     registerHealthCheck(environment, injector);
     registerObservers(injector);
+    registerMigrations(injector);
+    registerRequestContextFilter(environment);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     injector.getInstance(TriggerWebhookExecutionService.class).registerIterators();
@@ -243,7 +290,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     injector.getInstance(BarrierServiceImpl.class).registerIterators();
     injector.getInstance(ApprovalInstanceHandler.class).registerIterators();
     injector.getInstance(ResourceRestraintPersistenceMonitor.class).registerIterators();
-    injector.getInstance(GraphGenerationServiceImpl.class).registerIterators();
     injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
 
     log.info("Initializing gRPC servers...");
@@ -259,12 +305,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     registerCorrelationFilter(environment, injector);
     registerNotificationTemplates(injector);
-    createConsumerThreadsToListenToEvents(environment, injector);
+    registerPmsSdkEvents(injector);
     MaintenanceController.forceMaintenance(false);
-  }
-
-  private void createConsumerThreadsToListenToEvents(Environment environment, Injector injector) {
-    environment.lifecycle().manage(injector.getInstance(PMSEventConsumerService.class));
   }
 
   private static void registerObservers(Injector injector) {
@@ -279,12 +321,72 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     NodeExecutionServiceImpl nodeExecutionService =
         (NodeExecutionServiceImpl) injector.getInstance(Key.get(NodeExecutionService.class));
+
+    // NodeStatusUpdateObserver
     nodeExecutionService.getStepStatusUpdateSubject().register(
         injector.getInstance(Key.get(PlanExecutionService.class)));
+    nodeExecutionService.getStepStatusUpdateSubject().register(
+        injector.getInstance(Key.get(StageStatusUpdateNotificationEventHandler.class)));
+    nodeExecutionService.getStepStatusUpdateSubject().register(
+        injector.getInstance(Key.get(BarrierPositionHelperEventHandler.class)));
+    nodeExecutionService.getStepStatusUpdateSubject().register(injector.getInstance(Key.get(BarrierDropper.class)));
+    nodeExecutionService.getStepStatusUpdateSubject().register(
+        injector.getInstance(Key.get(NodeExecutionStatusUpdateEventHandler.class)));
+    nodeExecutionService.getStepStatusUpdateSubject().register(
+        injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
+    nodeExecutionService.getStepStatusUpdateSubject().register(
+        injector.getInstance(Key.get(ExecutionSummaryStatusUpdateEventHandler.class)));
 
-    SdkResponseEventListener sdkResponseEventListener = injector.getInstance(SdkResponseEventListener.class);
-    sdkResponseEventListener.getQueueListenerObserverSubject().register(
-        injector.getInstance(Key.get(MonitoringQueueObserver.class)));
+    // NodeUpdateObservers
+    nodeExecutionService.getNodeUpdateObserverSubject().register(
+        injector.getInstance(Key.get(ExecutionSummaryUpdateEventHandler.class)));
+    nodeExecutionService.getNodeUpdateObserverSubject().register(
+        injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
+    nodeExecutionService.getNodeUpdateObserverSubject().register(
+        injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
+
+    // NodeExecutionStartObserver
+    nodeExecutionService.getNodeExecutionStartSubject().register(
+        injector.getInstance(Key.get(StageStartNotificationHandler.class)));
+
+    PlanStatusEventEmitterHandler planStatusEventEmitterHandler =
+        injector.getInstance(Key.get(PlanStatusEventEmitterHandler.class));
+    planStatusEventEmitterHandler.getPlanExecutionSubject().register(
+        injector.getInstance(Key.get(NotificationInformHandler.class)));
+
+    PlanExecutionServiceImpl planExecutionService =
+        (PlanExecutionServiceImpl) injector.getInstance(Key.get(PlanExecutionService.class));
+    planExecutionService.getPlanStatusUpdateSubject().register(
+        injector.getInstance(Key.get(ExecutionInfoUpdateEventHandler.class)));
+    planExecutionService.getPlanStatusUpdateSubject().register(planStatusEventEmitterHandler);
+    planExecutionService.getPlanStatusUpdateSubject().register(
+        injector.getInstance(Key.get(PipelineStatusUpdateEventHandler.class)));
+    planExecutionService.getPlanStatusUpdateSubject().register(
+        injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
+
+    OrchestrationServiceImpl orchestrationService =
+        (OrchestrationServiceImpl) injector.getInstance(Key.get(OrchestrationService.class));
+    orchestrationService.getOrchestrationStartSubject().register(
+        injector.getInstance(Key.get(PipelineStartNotificationHandler.class)));
+    orchestrationService.getOrchestrationStartSubject().register(
+        injector.getInstance(Key.get(BarrierInitializer.class)));
+    orchestrationService.getOrchestrationStartSubject().register(
+        injector.getInstance(Key.get(ResourceRestraintInitializer.class)));
+    orchestrationService.getOrchestrationStartSubject().register(
+        injector.getInstance(Key.get(OrchestrationStartEventHandler.class)));
+    orchestrationService.getOrchestrationStartSubject().register(
+        injector.getInstance(Key.get(ExecutionSummaryCreateEventHandler.class)));
+
+    OrchestrationEngine orchestrationEngine = injector.getInstance(Key.get(OrchestrationEngine.class));
+    orchestrationEngine.getOrchestrationEndSubject().register(
+        injector.getInstance(Key.get(OrchestrationEndGraphHandler.class)));
+    orchestrationEngine.getOrchestrationEndSubject().register(
+        injector.getInstance(Key.get(OrchestrationEndInterruptHandler.class)));
+
+    GraphGenerationServiceImpl graphGenerationService =
+        (GraphGenerationServiceImpl) injector.getInstance(Key.get(GraphGenerationServiceImpl.class));
+    graphGenerationService.getGraphNodeUpdateObserverSubject().register(
+        injector.getInstance(Key.get(ExecutionSummaryStatusUpdateEventHandler.class)));
   }
 
   private void registerCorrelationFilter(Environment environment, Injector injector) {
@@ -295,7 +397,9 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     if (config.isEnableAuth()) {
       Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
           -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(PipelineServiceAuth.class) != null
-          || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(PipelineServiceAuth.class) != null;
+          || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(PipelineServiceAuth.class) != null
+          || resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
+          || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
       Map<String, String> serviceToSecretMapping = new HashMap<>();
       serviceToSecretMapping.put(AuthorizationServiceHeader.BEARER.getServiceId(), config.getJwtAuthSecret());
       serviceToSecretMapping.put(
@@ -322,16 +426,16 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
   private PmsSdkConfiguration getPmsSdkConfiguration(PipelineServiceConfiguration config) {
     return PmsSdkConfiguration.builder()
-        .deploymentMode(DeployMode.REMOTE_IN_PROCESS)
-        .serviceName(PmsConstants.INTERNAL_SERVICE_NAME)
-        .mongoConfig(config.getMongoConfig())
+        .deploymentMode(SdkDeployMode.REMOTE_IN_PROCESS)
+        .moduleType(ModuleType.PMS)
         .pipelineServiceInfoProviderClass(PipelineServiceInternalInfoProvider.class)
         .filterCreationResponseMerger(new PipelineServiceFilterCreationResponseMerger())
         .engineSteps(PipelineServiceStepRegistrar.getEngineSteps())
         .engineFacilitators(PipelineServiceFacilitatorRegistrar.getEngineFacilitators())
         .engineAdvisers(PipelineServiceUtilAdviserRegistrar.getEngineAdvisers())
-        .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers())
+        .engineEventHandlersMap(ImmutableMap.of())
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
+        .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
         .build();
   }
 
@@ -379,8 +483,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   private void registerEventListeners(Injector injector) {
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(SdkResponseEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(PmsNotifyEventListener.class), 5);
+    queueListenerController.register(injector.getInstance(PmsNotifyEventListener.class), 3);
   }
 
   private void registerWaitEnginePublishers(Injector injector) {
@@ -408,8 +511,25 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   private void registerManagedBeans(Environment environment, Injector injector) {
+    environment.lifecycle().manage(injector.getInstance(PMSEventConsumerService.class));
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(ApprovalInstanceExpirationJob.class));
+    environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
+    environment.lifecycle().manage(injector.getInstance(PipelineEventConsumerController.class));
+  }
+
+  private void registerPmsSdkEvents(Injector injector) {
+    log.info("Initializing pms sdk redis abstract consumers...");
+    PipelineEventConsumerController pipelineEventConsumerController =
+        injector.getInstance(PipelineEventConsumerController.class);
+    pipelineEventConsumerController.register(injector.getInstance(InterruptEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(FacilitatorEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 2);
+    pipelineEventConsumerController.register(injector.getInstance(SdkResponseEventRedisConsumer.class), 3);
   }
 
   private void registerCorsFilter(PipelineServiceConfiguration appConfig, Environment environment) {
@@ -433,7 +553,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   private void registerJerseyProviders(Environment environment, Injector injector) {
     environment.jersey().register(JsonProcessingExceptionMapper.class);
     environment.jersey().register(EarlyEofExceptionMapper.class);
-    environment.jersey().register(WingsExceptionMapper.class);
+    environment.jersey().register(WingsExceptionMapperV2.class);
 
     environment.jersey().register(MultiPartFeature.class);
     //    environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));
@@ -454,5 +574,23 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     ExecutorService executorService =
         injector.getInstance(Key.get(ExecutorService.class, Names.named("templateRegistrationExecutorService")));
     executorService.submit(injector.getInstance(NotificationTemplateRegistrar.class));
+  }
+
+  private void registerRequestContextFilter(Environment environment) {
+    environment.jersey().register(new RequestContextFilter());
+  }
+
+  private void registerMigrations(Injector injector) {
+    NGMigrationConfiguration config = getMigrationSdkConfiguration();
+    NGMigrationSdkInitHelper.initialize(injector, config);
+  }
+
+  private NGMigrationConfiguration getMigrationSdkConfiguration() {
+    return NGMigrationConfiguration.builder()
+        .microservice(Microservice.PMS)
+        .migrationProviderList(new ArrayList<Class<? extends MigrationProvider>>() {
+          { add(PipelineCoreMigrationProvider.class); } // Add all migration provider classes here
+        })
+        .build();
   }
 }

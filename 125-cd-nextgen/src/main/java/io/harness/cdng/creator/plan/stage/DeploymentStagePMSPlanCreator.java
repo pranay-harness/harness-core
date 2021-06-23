@@ -1,7 +1,6 @@
 package io.harness.cdng.creator.plan.stage;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.execution.CDExecutionPMSPlanCreator;
@@ -23,7 +22,6 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.utilities.ResourceConstraintUtility;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -39,6 +37,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 @OwnedBy(CDC)
 public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
@@ -110,27 +109,30 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
       infraSectionNodeChildId = InfrastructurePmsPlanCreator.getProvisionerNodeId(infraField);
     }
 
+    YamlField infrastructureDefField =
+        Preconditions.checkNotNull(infraField.getNode().getField(YamlTypes.INFRASTRUCTURE_DEF));
+    PlanNode infraDefPlanNode =
+        InfrastructurePmsPlanCreator.getInfraDefPlanNode(infrastructureDefField, infraSectionNodeChildId);
+    planCreationResponseMap.put(infraDefPlanNode.getUuid(),
+        PlanCreationResponse.builder().node(infraDefPlanNode.getUuid(), infraDefPlanNode).build());
+
     YamlNode infraNode = infraField.getNode();
 
     YamlField rcYamlField = constructResourceConstraintYamlField(infraNode);
 
     PlanNode infraSectionPlanNode = InfrastructurePmsPlanCreator.getInfraSectionPlanNode(
-        infraNode, infraSectionNodeChildId, pipelineInfrastructure, kryoSerializer, infraField, rcYamlField);
+        infraNode, infraDefPlanNode.getUuid(), pipelineInfrastructure, kryoSerializer, infraField, rcYamlField);
     planCreationResponseMap.put(
         infraNode.getUuid(), PlanCreationResponse.builder().node(infraNode.getUuid(), infraSectionPlanNode).build());
 
     // Add dependency for resource constraint
-    if (!ParameterField.isNull(pipelineInfrastructure.getAllowSimultaneousDeployments())
-        && pipelineInfrastructure.getAllowSimultaneousDeployments().isExpression()) {
-      throw new InvalidRequestException(
-          "AllowedSimultaneous Deployment field is not a fixed value during execution of pipeline.");
-    }
-    boolean allowSimultaneousDeployments = false;
-    if (!ParameterField.isNull(pipelineInfrastructure.getAllowSimultaneousDeployments())) {
-      allowSimultaneousDeployments = pipelineInfrastructure.getAllowSimultaneousDeployments().getValue();
-    }
-    if (allowSimultaneousDeployments) {
+    boolean allowSimultaneousDeployments = ResourceConstraintUtility.isSimultaneousDeploymentsAllowed(
+        pipelineInfrastructure.getAllowSimultaneousDeployments(), rcYamlField);
+
+    if (!allowSimultaneousDeployments && rcYamlField != null) {
       dependenciesNodeMap.put(rcYamlField.getNode().getUuid(), rcYamlField);
+      planCreationResponseMap.put(
+          rcYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
     }
 
     // Add dependency for execution
@@ -141,27 +143,27 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
     PlanCreationResponse planForExecution = CDExecutionPMSPlanCreator.createPlanForExecution(executionField);
     planCreationResponseMap.put(executionField.getNode().getUuid(), planForExecution);
 
-    planCreationResponseMap.put(
-        rcYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
-
     return planCreationResponseMap;
   }
 
+  @Nullable
   private YamlField constructResourceConstraintYamlField(YamlNode infraNode) {
-    JsonNode resourceConstraintJsonNode =
-        ResourceConstraintUtility.getResourceConstraintJsonNode(obtainResourceUnitFromInfrastructure(infraNode));
+    String resourceUnit = obtainResourceUnitFromInfrastructure(infraNode);
+    if (resourceUnit == null) {
+      return null;
+    }
+    JsonNode resourceConstraintJsonNode = ResourceConstraintUtility.getResourceConstraintJsonNode(resourceUnit);
     return new YamlField("step", new YamlNode(resourceConstraintJsonNode, infraNode.getParentNode()));
   }
 
+  @Nullable
   private String obtainResourceUnitFromInfrastructure(YamlNode infraNode) {
     JsonNode infrastructureKey = infraNode.getCurrJsonNode().get("infrastructureKey");
-    String resourceUnit;
-    if (infrastructureKey == null) {
-      resourceUnit = generateUuid();
-    } else {
-      resourceUnit = infrastructureKey.asText();
+    if (infrastructureKey == null || EmptyPredicate.isEmpty(infrastructureKey.asText())) {
+      return null;
     }
-    return resourceUnit;
+
+    return infrastructureKey.asText();
   }
 
   private void validateFailureStrategy(StageElementConfig stageElementConfig) {
@@ -171,11 +173,11 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
       throw new InvalidRequestException("There should be atleast one failure strategy configured at stage level.");
     }
 
-    // checking stageFailureStrategies is having one strategy with error type as AnyOther and along with that no
+    // checking stageFailureStrategies is having one strategy with error type as AllErrors and along with that no
     // error type is involved
-    if (!GenericStepPMSPlanCreator.containsOnlyAnyOtherErrorInSomeConfig(stageFailureStrategies)) {
+    if (!GenericStepPMSPlanCreator.containsOnlyAllErrorsInSomeConfig(stageFailureStrategies)) {
       throw new InvalidRequestException(
-          "There should be a Failure strategy that contains one error type as AnyOther, with no other error type along with it in that Failure Strategy.");
+          "There should be a Failure strategy that contains one error type as AllErrors, with no other error type along with it in that Failure Strategy.");
     }
   }
 }

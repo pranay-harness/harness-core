@@ -32,6 +32,7 @@ import static io.harness.k8s.KubernetesConvention.getPrefixFromControllerName;
 import static io.harness.k8s.KubernetesConvention.getRevisionFromControllerName;
 import static io.harness.k8s.KubernetesConvention.getServiceNameFromControllerName;
 import static io.harness.k8s.model.ContainerApiVersions.KUBERNETES_V1;
+import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static io.harness.threading.Morpheus.sleep;
 
@@ -61,6 +62,8 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UrlNotProvidedException;
+import io.harness.exception.UrlNotReachableException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.kubectl.Kubectl;
@@ -422,6 +425,18 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public void validate(KubernetesConfig kubernetesConfig) {
     tryListControllersKubectl(kubernetesConfig);
+  }
+
+  @Override
+  public void validateMasterUrl(KubernetesConfig kubernetesConfig) {
+    final String url = kubernetesConfig.getMasterUrl();
+    if (url == null) {
+      throw new UrlNotProvidedException("Url does not exist in the config");
+    }
+    final boolean isHostConnectable = connectableHttpUrl(url);
+    if (!isHostConnectable) {
+      throw new UrlNotReachableException("Could not connect to the master url: " + url);
+    }
   }
 
   @Override
@@ -1006,8 +1021,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         if (isResourceNotFoundException(exception.getCode())) {
           return null;
         }
-        String message =
-            format("Unable to get service. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+        String message = format("Unable to get %s/Service/%s. Code: %s, message: %s", namespace, name,
+            exception.getCode(), exception.getResponseBody());
         log.error(message);
         throw new InvalidRequestException(message, exception, USER);
       }
@@ -1114,8 +1129,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       return new CoreV1Api(apiClient).replaceNamespacedConfigMap(
           name, kubernetesConfig.getNamespace(), definition, null, null, null);
     } catch (ApiException exception) {
-      String message = format(
-          "Failed to replace ConfigMap. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+      String configMapDef = definition.getMetadata() != null && isNotEmpty(definition.getMetadata().getName())
+          ? format("%s/ConfigMap/%s", kubernetesConfig.getNamespace(), definition.getMetadata().getName())
+          : "ConfigMap";
+      String message = format("Failed to replace %s. Code: %s, message: %s", configMapDef, exception.getCode(),
+          exception.getResponseBody());
       log.error(message);
       throw new InvalidRequestException(message, exception, USER);
     }
@@ -1130,8 +1148,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         return new CoreV1Api(apiClient).createNamespacedConfigMap(
             kubernetesConfig.getNamespace(), definition, null, null, null);
       } catch (ApiException exception) {
-        String message = format(
-            "Failed to create ConfigMap. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+        String configMapDef = definition.getMetadata() != null && isNotEmpty(definition.getMetadata().getName())
+            ? format("%s/ConfigMap/%s", kubernetesConfig.getNamespace(), definition.getMetadata().getName())
+            : "ConfigMap";
+        String message = format("Failed to create %s. Code: %s, message: %s", configMapDef, exception.getCode(),
+            exception.getResponseBody());
         log.error(message);
         throw new InvalidRequestException(message, exception, USER);
       }
@@ -1165,8 +1186,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         if (isResourceNotFoundException(exception.getCode())) {
           return null;
         }
-        String message =
-            format("Failed to get ConfigMap. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+        String message = format("Failed to get %s/ConfigMap/%s. Code: %s, message: %s", kubernetesConfig.getNamespace(),
+            name, exception.getCode(), exception.getResponseBody());
         log.error(message);
         throw new InvalidRequestException(message, exception, USER);
       }
@@ -1192,8 +1213,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         new CoreV1Api(apiClient).deleteNamespacedConfigMap(
             name, kubernetesConfig.getNamespace(), null, null, null, null, null, null);
       } catch (ApiException exception) {
-        String message = format(
-            "Failed to delete ConfigMap. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+        String message = format("Failed to delete %s/ConfigMap/%s. Code: %s, message: %s",
+            kubernetesConfig.getNamespace(), name, exception.getCode(), exception.getResponseBody());
         log.error(message);
         throw new InvalidRequestException(message, exception, USER);
       }
@@ -1376,8 +1397,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         if (isResourceNotFoundException(exception.getCode())) {
           return null;
         }
-        String message =
-            format("Failed to get Secret. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+        String message = format("Failed to get %s/Secret/%s. Code: %s, message: %s", kubernetesConfig.getNamespace(),
+            secretName, exception.getCode(), exception.getResponseBody());
         log.error(message);
         throw new InvalidRequestException(message, exception, USER);
       }
@@ -1403,8 +1424,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         new CoreV1Api(apiClient).deleteNamespacedSecret(
             secretName, kubernetesConfig.getNamespace(), null, null, null, null, null, null);
       } catch (ApiException exception) {
-        String message =
-            format("Failed to delete Secret. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+        String message = format("Failed to delete %s/Secret/%s. Code: %s, message: %s", kubernetesConfig.getNamespace(),
+            secretName, exception.getCode(), exception.getResponseBody());
         log.error(message);
         throw new InvalidRequestException(message, exception, USER);
       }
@@ -1436,8 +1457,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         return new CoreV1Api(apiClient).createNamespacedSecret(
             kubernetesConfig.getNamespace(), secret, null, null, null);
       } catch (ApiException exception) {
-        String message =
-            format("Failed to create Secret. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+        String secretDef = secret.getMetadata() != null && isNotEmpty(secret.getMetadata().getName())
+            ? format("%s/Secret/%s", kubernetesConfig.getNamespace(), secret.getMetadata().getName())
+            : "Secret";
+        String message = format(
+            "Failed to create %s. Code: %s, message: %s", secretDef, exception.getCode(), exception.getResponseBody());
         log.error(message);
         throw new InvalidRequestException(message, exception, USER);
       }
@@ -1454,8 +1478,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       return new CoreV1Api(apiClient).replaceNamespacedSecret(
           name, kubernetesConfig.getNamespace(), secret, null, null, null);
     } catch (ApiException exception) {
-      String message =
-          format("Failed to replace Secret. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
+      String secretDef = secret.getMetadata() != null && isNotEmpty(secret.getMetadata().getName())
+          ? format("%s/Secret/%s", kubernetesConfig.getNamespace(), secret.getMetadata().getName())
+          : "Secret";
+      String message = format(
+          "Failed to replace %s. Code: %s, message: %s", secretDef, exception.getCode(), exception.getResponseBody());
       log.error(message);
       throw new InvalidRequestException(message, exception, USER);
     }
@@ -1821,23 +1848,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
 
     return createOrReplaceSecret(kubernetesConfig, secret);
-  }
-
-  @Override
-  @Deprecated
-  public List<Pod> getRunningPodsWithLabelsFabric8(
-      KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels) {
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
-        .pods()
-        .inNamespace(namespace)
-        .withLabels(labels)
-        .list()
-        .getItems()
-        .stream()
-        .filter(pod
-            -> StringUtils.isBlank(pod.getMetadata().getDeletionTimestamp())
-                && StringUtils.equals(pod.getStatus().getPhase(), RUNNING))
-        .collect(Collectors.toList());
   }
 
   @Override

@@ -4,9 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
+import static io.harness.provision.TerraformConstants.TERRAFORM_BACKEND_CONFIGS_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_VARIABLES_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TF_VAR_FILES_DIR;
 import static io.harness.provision.TerraformConstants.TF_WORKING_DIR;
+
+import static software.wings.beans.LogHelper.color;
 
 import static java.lang.String.format;
 
@@ -15,6 +18,7 @@ import io.harness.cli.CliResponse;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.task.terraform.TerraformBaseHelper;
+import io.harness.delegate.task.terraform.TerraformCommand;
 import io.harness.delegate.task.terraform.TerraformTaskNGParameters;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.exception.ExceptionUtils;
@@ -23,14 +27,20 @@ import io.harness.git.model.GitBaseRequest;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.PlanJsonLogOutputStream;
+import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.terraform.TerraformHelperUtils;
 import io.harness.terraform.request.TerraformExecuteStepRequest;
+
+import software.wings.beans.LogColor;
+import software.wings.beans.LogWeight;
 
 import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -42,8 +52,6 @@ public class TerraformPlanTaskHandler extends TerraformAbstractTaskHandler {
   public TerraformTaskNGResponse executeTaskInternal(TerraformTaskNGParameters taskParameters, String delegateId,
       String taskId, LogCallback logCallback) throws IOException {
     GitStoreDelegateConfig confileFileGitStore = taskParameters.getConfigFile().getGitStoreDelegateConfig();
-    GitConfigDTO configFileGitConfigDTO =
-        (GitConfigDTO) taskParameters.getConfigFile().getGitStoreDelegateConfig().getGitConfigDTO();
     String scriptPath = confileFileGitStore.getPaths().get(0);
 
     if (isNotEmpty(confileFileGitStore.getBranch())) {
@@ -77,7 +85,10 @@ public class TerraformPlanTaskHandler extends TerraformAbstractTaskHandler {
     try (PlanJsonLogOutputStream planJsonLogOutputStream = new PlanJsonLogOutputStream()) {
       TerraformExecuteStepRequest terraformExecuteStepRequest =
           TerraformExecuteStepRequest.builder()
-              .tfBackendConfigsFile(taskParameters.getBackendConfig())
+              .tfBackendConfigsFile(taskParameters.getBackendConfig() != null
+                      ? TerraformHelperUtils.createFileFromStringContent(
+                          taskParameters.getBackendConfig(), scriptDirectory, TERRAFORM_BACKEND_CONFIGS_FILE_NAME)
+                      : taskParameters.getBackendConfig())
               .tfOutputsFile(tfOutputsFile.getAbsolutePath())
               .tfVarFilePaths(varFilePaths)
               .workspace(taskParameters.getWorkspace())
@@ -89,27 +100,39 @@ public class TerraformPlanTaskHandler extends TerraformAbstractTaskHandler {
               .isSaveTerraformJson(taskParameters.isSaveTerraformStateJson())
               .logCallback(logCallback)
               .planJsonLogOutputStream(planJsonLogOutputStream)
+              .timeoutInMillis(taskParameters.getTimeoutInMillis())
+              .isTfPlanDestroy(taskParameters.getTerraformCommand() == TerraformCommand.DESTROY)
               .build();
 
       CliResponse response = terraformBaseHelper.executeTerraformPlanStep(terraformExecuteStepRequest);
 
       logCallback.saveExecutionLog("Script execution finished with status: " + response.getCommandExecutionStatus(),
-          INFO, response.getCommandExecutionStatus());
+          INFO, CommandExecutionStatus.RUNNING);
+
+      Map<String, String> commitIdToFetchedFilesMap = terraformBaseHelper.buildcommitIdToFetchedFilesMap(
+          taskParameters.getAccountId(), taskParameters.getConfigFile().getIdentifier(), gitBaseRequestForConfigFile,
+          taskParameters.getVarFileInfos());
 
       File tfStateFile = TerraformHelperUtils.getTerraformStateFile(scriptDirectory, taskParameters.getWorkspace());
 
-      String stateFileId = terraformBaseHelper.uploadTfStateFile(
+      String uploadedTfStateFile = terraformBaseHelper.uploadTfStateFile(
           taskParameters.getAccountId(), delegateId, taskId, taskParameters.getEntityId(), tfStateFile);
 
+      logCallback.saveExecutionLog(color("\nEncrypting terraform plan \n", LogColor.Yellow, LogWeight.Bold), INFO,
+          CommandExecutionStatus.RUNNING);
+
+      String planName = terraformBaseHelper.getPlanName(taskParameters.getTerraformCommand());
+
+      EncryptedRecordData encryptedTfPlan = terraformBaseHelper.encryptPlan(
+          Files.readAllBytes(Paths.get(scriptDirectory, planName)), planName, taskParameters.getEncryptionConfig());
+
+      logCallback.saveExecutionLog("\nDone \n", INFO, CommandExecutionStatus.SUCCESS);
+
       return TerraformTaskNGResponse.builder()
-          .commitIdForConfigFilesMap(terraformBaseHelper.buildcommitIdToFetchedFilesMap(taskParameters.getAccountId(),
-              taskParameters.getConfigFile().getIdentifier(),
-              terraformBaseHelper.getGitBaseRequestForConfigFile(
-                  taskParameters.getAccountId(), confileFileGitStore, configFileGitConfigDTO),
-              taskParameters.getVarFileInfos()))
-          .encryptedTfPlan(taskParameters.getEncryptedTfPlan())
+          .commitIdForConfigFilesMap(commitIdToFetchedFilesMap)
+          .encryptedTfPlan(encryptedTfPlan)
           .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-          .stateFileId(stateFileId)
+          .stateFileId(uploadedTfStateFile)
           .build();
 
     } catch (TerraformCommandExecutionException terraformCommandExecutionException) {

@@ -4,13 +4,12 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.data.Outcome;
 
+import java.util.HashMap;
 import java.util.Map;
-import lombok.Builder;
-import lombok.Data;
 
 @OwnedBy(HarnessTeam.CDP)
-@Data
-@Builder
-public class TerraformApplyOutcome implements Outcome {
-  Map<String, Object> outputs;
+public class TerraformApplyOutcome extends HashMap<String, Object> implements Outcome {
+  public TerraformApplyOutcome(Map<String, ?> m) {
+    super(m);
+  }
 }

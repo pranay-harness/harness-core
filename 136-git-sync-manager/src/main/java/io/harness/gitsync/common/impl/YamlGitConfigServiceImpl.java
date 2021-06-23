@@ -6,9 +6,11 @@ import static io.harness.data.structure.HarnessStringUtils.nullIfEmpty;
 import static io.harness.encryption.ScopeHelper.getScope;
 import static io.harness.gitsync.common.YamlConstants.HARNESS_FOLDER_EXTENSION;
 import static io.harness.gitsync.common.YamlConstants.PATH_DELIMITER;
+import static io.harness.gitsync.common.beans.BranchSyncStatus.SYNCED;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConfig;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.HookEventType;
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
@@ -28,8 +30,10 @@ import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.remote.YamlGitConfigMapper;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
+import io.harness.ng.webhook.UpsertWebhookRequestDTO;
+import io.harness.ng.webhook.UpsertWebhookResponseDTO;
+import io.harness.ng.webhook.services.api.WebhookEventService;
 import io.harness.repositories.repositories.yamlGitConfig.YamlGitConfigRepository;
-import io.harness.tasks.DecryptGitApiAccessHelper;
 import io.harness.utils.IdentifierRefHelper;
 
 import software.wings.utils.CryptoUtils;
@@ -40,6 +44,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -48,6 +53,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 
 @Singleton
 @Slf4j
@@ -55,26 +61,25 @@ import lombok.extern.slf4j.Slf4j;
 public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private final YamlGitConfigRepository yamlGitConfigRepository;
   private final ConnectorService connectorService;
-  private final DecryptGitApiAccessHelper decryptScmApiAccess;
   private final Producer gitSyncConfigEventProducer;
   private final ExecutorService executorService;
   private final GitBranchService gitBranchService;
   private final GitSyncConnectorHelper gitSyncConnectorHelper;
+  private final WebhookEventService webhookEventService;
 
   @Inject
   public YamlGitConfigServiceImpl(YamlGitConfigRepository yamlGitConfigRepository,
       @Named("connectorDecoratorService") ConnectorService connectorService,
-      DecryptGitApiAccessHelper decryptScmApiAccess,
       @Named(EventsFrameworkConstants.GIT_CONFIG_STREAM) Producer gitSyncConfigEventProducer,
-      ExecutorService executorService, GitBranchService gitBranchService,
-      GitSyncConnectorHelper gitSyncConnectorHelper) {
+      ExecutorService executorService, GitBranchService gitBranchService, GitSyncConnectorHelper gitSyncConnectorHelper,
+      WebhookEventService webhookEventService) {
     this.yamlGitConfigRepository = yamlGitConfigRepository;
     this.connectorService = connectorService;
-    this.decryptScmApiAccess = decryptScmApiAccess;
     this.gitSyncConfigEventProducer = gitSyncConfigEventProducer;
     this.executorService = executorService;
     this.gitBranchService = gitBranchService;
     this.gitSyncConnectorHelper = gitSyncConnectorHelper;
+    this.webhookEventService = webhookEventService;
   }
 
   @Override
@@ -203,15 +208,8 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
 
   private String getYamlGitConfigNotFoundMessage(
       String accountId, String organizationId, String projectId, String identifier) {
-    return String.format("No yaml git config exists with the id %s, in account %s, org %s, project %s", identifier,
+    return String.format("No git sync config exists with the id %s, in account %s, org %s, project %s", identifier,
         accountId, organizationId, projectId);
-  }
-
-  @Override
-  public Optional<ConnectorInfoDTO> getGitConnector(YamlGitConfigDTO ygs, String gitConnectorId) {
-    Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(
-        ygs.getAccountIdentifier(), ygs.getOrganizationIdentifier(), ygs.getProjectIdentifier(), gitConnectorId);
-    return connectorDTO.map(ConnectorResponseDTO::getConnector);
   }
 
   public YamlGitConfigDTO save(YamlGitConfigDTO ygs, String accountId, boolean performFullSync) {
@@ -223,21 +221,61 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     validateTheGitConfigInput(gitSyncConfigDTO);
     YamlGitConfig yamlGitConfigToBeSaved = toYamlGitConfig(gitSyncConfigDTO, accountId);
     yamlGitConfigToBeSaved.setWebhookToken(CryptoUtils.secureRandAlphaNumString(40));
+    registerWebhookAsync(gitSyncConfigDTO);
     YamlGitConfig savedYamlGitConfig = null;
     try {
       savedYamlGitConfig = yamlGitConfigRepository.save(yamlGitConfigToBeSaved);
-    } catch (Exception ex) {
-      throw new InvalidRequestException(String.format("A git sync config with the repo %s and branch %s already exists",
-          gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getBranch()));
+    } catch (DuplicateKeyException ex) {
+      throw new InvalidRequestException(
+          String.format("A git sync config with this identifier or repo %s and branch %s already exists",
+              gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getBranch()));
     }
     sendEventForConfigChange(accountId, yamlGitConfigToBeSaved.getOrgIdentifier(),
         yamlGitConfigToBeSaved.getProjectIdentifier(), yamlGitConfigToBeSaved.getIdentifier(), "Save");
-    executorService.submit(
-        ()
-            -> gitBranchService.createBranches(accountId, gitSyncConfigDTO.getOrganizationIdentifier(),
-                gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getGitConnectorRef(),
-                gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getIdentifier()));
+    executorService.submit(() -> {
+      gitBranchService.createBranches(accountId, gitSyncConfigDTO.getOrganizationIdentifier(),
+          gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getGitConnectorRef(), gitSyncConfigDTO.getRepo(),
+          gitSyncConfigDTO.getIdentifier());
+      gitBranchService.updateBranchSyncStatus(
+          accountId, gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getBranch(), SYNCED);
+    });
+
     return YamlGitConfigMapper.toYamlGitConfigDTO(savedYamlGitConfig);
+  }
+
+  private void registerWebhookAsync(YamlGitConfigDTO gitSyncConfigDTO) {
+    executorService.submit(() -> saveWebhook(gitSyncConfigDTO));
+  }
+
+  private void saveWebhook(YamlGitConfigDTO gitSyncConfigDTO) {
+    if (isNewRepoInProject(gitSyncConfigDTO)) {
+      UpsertWebhookResponseDTO upsertWebhookResponseDTO = registerWebhook(gitSyncConfigDTO);
+      log.info("Response of Upsert Webhook {}", upsertWebhookResponseDTO);
+    }
+  }
+
+  private UpsertWebhookResponseDTO registerWebhook(YamlGitConfigDTO gitSyncConfigDTO) {
+    UpsertWebhookRequestDTO upsertWebhookRequest = getUpsertWebhookRequest(gitSyncConfigDTO);
+    return webhookEventService.upsertWebhook(upsertWebhookRequest);
+  }
+
+  private UpsertWebhookRequestDTO getUpsertWebhookRequest(YamlGitConfigDTO gitSyncConfigDTO) {
+    return UpsertWebhookRequestDTO.builder()
+        .accountIdentifier(gitSyncConfigDTO.getAccountIdentifier())
+        .orgIdentifier(gitSyncConfigDTO.getOrganizationIdentifier())
+        .projectIdentifier(gitSyncConfigDTO.getProjectIdentifier())
+        .connectorIdentifierRef(gitSyncConfigDTO.getGitConnectorRef())
+        .hookEventType(HookEventType.TRIGGER_EVENTS)
+        .repoURL(gitSyncConfigDTO.getRepo())
+        .build();
+  }
+
+  private boolean isNewRepoInProject(YamlGitConfigDTO gitSyncConfigDTO) {
+    final Optional<YamlGitConfig> yamlGitConfig =
+        yamlGitConfigRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
+            gitSyncConfigDTO.getAccountIdentifier(), gitSyncConfigDTO.getOrganizationIdentifier(),
+            gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getIdentifier());
+    return !yamlGitConfig.isPresent();
   }
 
   private void sendEventForConfigChange(
@@ -269,7 +307,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private void validateAPIAccessFieldPresence(YamlGitConfigDTO ygs) {
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(ygs.getGitConnectorRef(),
         ygs.getAccountIdentifier(), ygs.getOrganizationIdentifier(), ygs.getProjectIdentifier());
-    Optional<ConnectorInfoDTO> gitConnectorOptional = getGitConnector(ygs, identifierRef.getIdentifier());
+    Optional<ConnectorInfoDTO> gitConnectorOptional = getGitConnector(identifierRef);
     if (gitConnectorOptional.isPresent()) {
       ConnectorConfigDTO connectorConfig = gitConnectorOptional.get().getConnectorConfig();
       if (connectorConfig instanceof ScmConnector) {
@@ -282,6 +320,13 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
       throw new InvalidRequestException(
           String.format("No connector found for the connector reference %s", ygs.getGitConnectorRef()));
     }
+  }
+
+  @Override
+  public Optional<ConnectorInfoDTO> getGitConnector(IdentifierRef identifierRef) {
+    Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(identifierRef.getAccountIdentifier(),
+        identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
+    return connectorDTO.map(ConnectorResponseDTO::getConnector);
   }
 
   /**
@@ -361,5 +406,20 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   public Boolean isGitSyncEnabled(String accountIdentifier, String organizationIdentifier, String projectIdentifier) {
     return yamlGitConfigRepository.existsByAccountIdAndOrgIdentifierAndProjectIdentifier(
         accountIdentifier, nullIfEmpty(organizationIdentifier), nullIfEmpty(projectIdentifier));
+  }
+
+  @Override
+  public Boolean isRepoExists(String repo) {
+    return yamlGitConfigRepository.existsByRepo(repo);
+  }
+
+  @Override
+  public List<YamlGitConfigDTO> getByRepo(String repo) {
+    List<YamlGitConfigDTO> yamlGitConfigDTOs = new ArrayList<>();
+
+    Set<YamlGitConfig> yamlGitConfigs = new HashSet<>(yamlGitConfigRepository.findByRepo(repo));
+    yamlGitConfigs.forEach(
+        yamlGitConfig -> yamlGitConfigDTOs.add(YamlGitConfigMapper.toYamlGitConfigDTO(yamlGitConfig)));
+    return yamlGitConfigDTOs;
   }
 }

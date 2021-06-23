@@ -620,7 +620,8 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
         .thenThrow(new ApiException(403, "", emptyMap(), "{error: \"unable to get service\"}"));
 
     assertThatThrownBy(() -> kubernetesContainerService.getService(KUBERNETES_CONFIG, "service"))
-        .hasMessageContaining("Unable to get service. Code: 403, message: {error: \"unable to get service\"}");
+        .hasMessageContaining(
+            "Unable to get default/Service/service. Code: 403, message: {error: \"unable to get service\"}");
   }
 
   @Test
@@ -1002,7 +1003,8 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
         .thenThrow(new ApiException(403, "", emptyMap(), "{error: \"cluster not found\"}"));
 
     assertThatThrownBy(() -> kubernetesContainerService.getConfigMap(KUBERNETES_CONFIG, "configmap"))
-        .hasMessageContaining("Failed to get ConfigMap. Code: 403, message: {error: \"cluster not found\"}");
+        .hasMessageContaining(
+            "Failed to get default/ConfigMap/configmap. Code: 403, message: {error: \"cluster not found\"}");
   }
 
   @Test
@@ -1039,7 +1041,8 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
         .thenThrow(new ApiException(403, "", emptyMap(), "{error: \"cluster not found\"}"));
 
     assertThatThrownBy(() -> kubernetesContainerService.getSecret(KUBERNETES_CONFIG, "secret"))
-        .hasMessageContaining("Failed to get Secret. Code: 403, message: {error: \"cluster not found\"}");
+        .hasMessageContaining(
+            "Failed to get default/Secret/secret. Code: 403, message: {error: \"cluster not found\"}");
   }
 
   @Test

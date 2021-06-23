@@ -7,11 +7,13 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNEC
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.SECRET_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_ENTITY;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
@@ -24,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class EntityCRUDStreamConsumer implements Runnable {
+  private static final int WAIT_TIME_IN_SECONDS = 10;
   private final Consumer redisConsumer;
   private final Map<String, MessageProcessor> processorMap;
   private final List<MessageListener> messageListenersList;
@@ -41,13 +45,15 @@ public class EntityCRUDStreamConsumer implements Runnable {
       @Named(PROJECT_ENTITY + ENTITY_CRUD) MessageListener projectEntityCRUDStreamListener,
       @Named(CONNECTOR_ENTITY + ENTITY_CRUD) MessageListener connectorEntityCRUDStreamListener,
       @Named(SETUP_USAGE_ENTITY) MessageProcessor setupUsageChangeEventMessageProcessor,
-      @Named(USER_ENTITY + ENTITY_CRUD) MessageListener userEntityCRUDStreamListener) {
+      @Named(USER_ENTITY + ENTITY_CRUD) MessageListener userEntityCRUDStreamListener,
+      @Named(SECRET_ENTITY + ENTITY_CRUD) MessageListener secretEntityCRUDStreamListner) {
     this.redisConsumer = redisConsumer;
     messageListenersList = new ArrayList<>();
     messageListenersList.add(organizationEntityCRUDStreamListener);
     messageListenersList.add(projectEntityCRUDStreamListener);
     messageListenersList.add(connectorEntityCRUDStreamListener);
     messageListenersList.add(userEntityCRUDStreamListener);
+    messageListenersList.add(secretEntityCRUDStreamListner);
     processorMap = new HashMap<>();
     processorMap.put(SETUP_USAGE_ENTITY, setupUsageChangeEventMessageProcessor);
   }
@@ -55,22 +61,35 @@ public class EntityCRUDStreamConsumer implements Runnable {
   @Override
   public void run() {
     log.info("Started the consumer for entity crud stream");
-    SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
     try {
+      SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
       while (!Thread.currentThread().isInterrupted()) {
-        pollAndProcessMessages();
+        readEventsFrameworkMessages();
       }
+    } catch (InterruptedException ex) {
+      SecurityContextBuilder.unsetCompleteContext();
+      Thread.currentThread().interrupt();
     } catch (Exception ex) {
       log.error("Entity crud stream consumer unexpectedly stopped", ex);
+    } finally {
+      SecurityContextBuilder.unsetCompleteContext();
     }
-    SecurityContextBuilder.unsetCompleteContext();
+  }
+
+  private void readEventsFrameworkMessages() throws InterruptedException {
+    try {
+      pollAndProcessMessages();
+    } catch (EventsFrameworkDownException e) {
+      log.error("Events framework is down for Entity crud stream consumer. Retrying again...", e);
+      TimeUnit.SECONDS.sleep(WAIT_TIME_IN_SECONDS);
+    }
   }
 
   private void pollAndProcessMessages() {
     List<Message> messages;
     String messageId;
     boolean messageProcessed;
-    messages = redisConsumer.read(Duration.ofSeconds(10));
+    messages = redisConsumer.read(Duration.ofSeconds(WAIT_TIME_IN_SECONDS));
     for (Message message : messages) {
       messageId = message.getId();
       messageProcessed = handleMessage(message);

@@ -1,7 +1,5 @@
 package io.harness.serializer.kryo;
 
-import io.harness.cdng.manifest.yaml.StoreConfig;
-import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStageElement;
@@ -11,6 +9,7 @@ import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.variables.NumberNGVariable;
 import io.harness.yaml.core.variables.StringNGVariable;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
+import io.harness.yaml.extended.ci.container.ContainerResource;
 
 import com.esotericsoftware.kryo.Kryo;
 
@@ -25,8 +24,7 @@ public class YamlKryoRegistrar implements KryoRegistrar {
     kryo.register(ParallelStepElement.class, 35009);
     kryo.register(ParallelStageElement.class, 35010);
     kryo.register(CodeBase.class, 35011);
-
-    kryo.register(StoreConfig.class, 8022);
-    kryo.register(StoreConfigWrapper.class, 8045);
+    kryo.register(ContainerResource.class, 35013);
+    kryo.register(ContainerResource.Limits.class, 35014);
   }
 }

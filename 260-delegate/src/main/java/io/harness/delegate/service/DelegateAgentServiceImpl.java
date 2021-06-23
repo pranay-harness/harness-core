@@ -13,6 +13,7 @@ import static io.harness.delegate.configuration.InstallUtils.installKustomize;
 import static io.harness.delegate.configuration.InstallUtils.installOc;
 import static io.harness.delegate.configuration.InstallUtils.installScm;
 import static io.harness.delegate.configuration.InstallUtils.installTerraformConfigInspect;
+import static io.harness.delegate.configuration.InstallUtils.validateCfCliExists;
 import static io.harness.delegate.message.ManagerMessageConstants.JRE_VERSION;
 import static io.harness.delegate.message.ManagerMessageConstants.MIGRATE;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
@@ -65,6 +66,7 @@ import static io.harness.network.SafeHttpCall.execute;
 import static io.harness.threading.Morpheus.sleep;
 
 import static java.lang.Boolean.TRUE;
+import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofMinutes;
@@ -76,6 +78,7 @@ import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
@@ -85,6 +88,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateHeartbeatResponse;
+import io.harness.beans.DelegateTaskEventsResponse;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.data.structure.NullSafeImmutableMap;
@@ -305,6 +310,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject @Named("systemExecutor") private ExecutorService systemExecutor;
   @Inject @Named("taskPollExecutor") private ExecutorService taskPollExecutor;
   @Inject @Named("asyncExecutor") private ExecutorService asyncExecutor;
+  @Inject @Named("asyncTaskDispatchExecutor") private ExecutorService asyncTaskDispatchExecutor;
   @Inject @Named("artifactExecutor") private ExecutorService artifactExecutor;
   @Inject @Named("timeoutExecutor") private ExecutorService timeoutEnforcement;
   @Inject @Named("grpcServiceExecutor") private ExecutorService grpcServiceExecutor;
@@ -381,6 +387,16 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     return Optional.ofNullable(delegateId);
   }
 
+  boolean kubectlInstalled;
+  boolean goTemplateInstalled;
+  boolean harnessPywinrmInstalled;
+  boolean helmInstalled;
+  boolean chartMuseumInstalled;
+  boolean tfConfigInspectInstalled;
+  boolean ocInstalled;
+  boolean kustomizeInstalled;
+  boolean scmInstalled;
+
   @Override
   @SuppressWarnings("unchecked")
   public void run(boolean watched) {
@@ -420,15 +436,29 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         }
       }
 
-      boolean kubectlInstalled = installKubectl(delegateConfiguration);
-      boolean goTemplateInstalled = installGoTemplateTool(delegateConfiguration);
-      boolean harnessPywinrmInstalled = installHarnessPywinrm(delegateConfiguration);
-      boolean helmInstalled = installHelm(delegateConfiguration);
-      boolean chartMuseumInstalled = installChartMuseum(delegateConfiguration);
-      boolean tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
-      boolean ocInstalled = installOc(delegateConfiguration);
-      boolean kustomizeInstalled = installKustomize(delegateConfiguration);
-      boolean scmInstalled = installScm(delegateConfiguration);
+      if (delegateConfiguration.isClientToolsDownloadDisabled()) {
+        kubectlInstalled = true;
+        goTemplateInstalled = true;
+        harnessPywinrmInstalled = true;
+        helmInstalled = true;
+        chartMuseumInstalled = true;
+        tfConfigInspectInstalled = true;
+        ocInstalled = true;
+        kustomizeInstalled = true;
+        scmInstalled = true;
+      } else {
+        kubectlInstalled = installKubectl(delegateConfiguration);
+        goTemplateInstalled = installGoTemplateTool(delegateConfiguration);
+        harnessPywinrmInstalled = installHarnessPywinrm(delegateConfiguration);
+        helmInstalled = installHelm(delegateConfiguration);
+        chartMuseumInstalled = installChartMuseum(delegateConfiguration);
+        tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
+        ocInstalled = installOc(delegateConfiguration);
+        kustomizeInstalled = installKustomize(delegateConfiguration);
+        scmInstalled = installScm(delegateConfiguration);
+      }
+
+      logCfCliConfiguration();
 
       long start = clock.millis();
       String descriptionFromConfigFile = isBlank(delegateDescription) ? "" : delegateDescription;
@@ -718,6 +748,20 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     log.info("No proxy for hosts with suffix in: {}", nonProxyHosts);
   }
 
+  private void logCfCliConfiguration() {
+    String cfCli6Path = delegateConfiguration.getCfCli6Path();
+    if (isNoneBlank(cfCli6Path)) {
+      log.info(format("Found custom CF CLI6 binary path: %s", cfCli6Path));
+    }
+
+    String cfCli7Path = delegateConfiguration.getCfCli7Path();
+    if (isNoneBlank(cfCli7Path)) {
+      log.info(format("Found custom CF CLI7 binary path: %s", cfCli7Path));
+    }
+
+    validateCfCliExists();
+  }
+
   private void handleOpen(Object o) {
     log.info("Event:{}, message:[{}]", Event.OPEN.name(), o.toString());
   }
@@ -851,8 +895,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             dispatchDelegateTask(delegateTaskEvent);
           }
         }
-      } catch (Exception e) {
-        log.info(message);
+      } catch (Throwable e) {
         log.error("Exception while decoding task", e);
       }
     }
@@ -939,8 +982,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         if (errorResponse.contains(INVALID_TOKEN.name())) {
           log.warn("Delegate used invalid token. Self destruct procedure will be initiated.");
           initiateSelfDestruct();
-        } else if (errorResponse.contains(
-                       String.format(DUPLICATE_DELEGATE_ERROR_MESSAGE, delegateId, delegateConnectionId))) {
+        } else if (errorResponse.contains(format(DUPLICATE_DELEGATE_ERROR_MESSAGE, delegateId, delegateConnectionId))) {
           initiateSelfDestruct();
         } else if (errorResponse.contains(EXPIRED_TOKEN.name())) {
           log.warn("Delegate used expired token. It will be frozen and drained.");
@@ -1027,11 +1069,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         boolean resultExists = new File("profile.result").exists();
         String profileId = profileParams == null ? "" : profileParams.getProfileId();
         long updated = profileParams == null || !resultExists ? 0L : profileParams.getProfileLastUpdatedAt();
-        RestResponse<DelegateProfileParams> response = timeLimiter.callWithTimeout(
-            ()
-                -> delegateExecute(
-                    delegateAgentManagerClient.checkForProfile(delegateId, accountId, profileId, updated)),
-            15L, TimeUnit.SECONDS, true);
+        RestResponse<DelegateProfileParams> response =
+            HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+                ()
+                    -> delegateExecute(
+                        delegateAgentManagerClient.checkForProfile(delegateId, accountId, profileId, updated)));
         if (response != null) {
           applyProfile(response.getResource());
         }
@@ -1149,10 +1191,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
     // MultipartBody.Part is used to send also the actual file name
     Part part = Part.createFormData("file", profileResult.getName(), requestFile);
-    timeLimiter.callWithTimeout(()
-                                    -> delegateExecute(delegateAgentManagerClient.saveProfileResult(
-                                        delegateId, accountId, exitCode != 0, FileBucket.PROFILE_RESULTS, part)),
-        15L, TimeUnit.SECONDS, true);
+    HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+        ()
+            -> delegateExecute(delegateAgentManagerClient.saveProfileResult(
+                delegateId, accountId, exitCode != 0, FileBucket.PROFILE_RESULTS, part)));
   }
 
   private void startInputCheck() {
@@ -1226,10 +1268,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       } else {
         log.info("Checking for upgrade");
         try {
-          RestResponse<DelegateScripts> restResponse = timeLimiter.callWithTimeout(
-              ()
-                  -> delegateExecute(delegateAgentManagerClient.getDelegateScripts(accountId, version)),
-              1L, TimeUnit.MINUTES, true);
+          RestResponse<DelegateScripts> restResponse =
+              HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(1),
+                  () -> delegateExecute(delegateAgentManagerClient.getDelegateScripts(accountId, version)));
           DelegateScripts delegateScripts = restResponse.getResource();
           if (delegateScripts.isDoUpgrade()) {
             upgradePending.set(true);
@@ -1272,20 +1313,18 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private void pollForTask() {
     if (pollingForTasks.get() && shouldContactManager()) {
       try {
-        List<DelegateTaskEvent> taskEvents = timeLimiter.callWithTimeout(
-            ()
-                -> delegateExecute(delegateAgentManagerClient.pollTaskEvents(delegateId, accountId)),
-            15L, TimeUnit.SECONDS, true);
-        if (isNotEmpty(taskEvents)) {
-          log.info("Processing DelegateTaskEvents {}", taskEvents);
-          for (DelegateTaskEvent taskEvent : taskEvents) {
-            try (TaskLogContext ignore = new TaskLogContext(taskEvent.getDelegateTaskId(), OVERRIDE_ERROR)) {
-              if (taskEvent instanceof DelegateTaskAbortEvent) {
-                abortDelegateTask((DelegateTaskAbortEvent) taskEvent);
-              } else {
-                dispatchDelegateTask(taskEvent);
-              }
-            }
+        DelegateTaskEventsResponse taskEventsResponse =
+            HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+                () -> delegateExecute(delegateAgentManagerClient.pollTaskEvents(delegateId, accountId)));
+        if (shouldProcessDelegateTaskEvents(taskEventsResponse)) {
+          boolean processTaskEventsAsync = taskEventsResponse.isProcessTaskEventsAsync();
+          List<DelegateTaskEvent> taskEvents = taskEventsResponse.getDelegateTaskEvents();
+          if (processTaskEventsAsync) {
+            log.info("Processing DelegateTaskEvents async {}", taskEvents);
+            processDelegateTaskEventsAsync(taskEvents);
+          } else {
+            log.info("Processing DelegateTaskEvents {}", taskEvents);
+            processDelegateTaskEventsInBlockingLoop(taskEvents);
           }
         }
       } catch (UncheckedTimeoutException tex) {
@@ -1294,6 +1333,32 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         log.warn("Delegate service is being shut down, this task is being interrupted.", ie);
       } catch (Exception e) {
         log.error("Exception while decoding task", e);
+      }
+    }
+  }
+
+  private boolean shouldProcessDelegateTaskEvents(DelegateTaskEventsResponse taskEventsResponse) {
+    return taskEventsResponse != null && isNotEmpty(taskEventsResponse.getDelegateTaskEvents());
+  }
+
+  private void processDelegateTaskEventsAsync(List<DelegateTaskEvent> taskEvents) {
+    taskEvents.forEach(this::submitTaskEventForExecution);
+  }
+
+  private void processDelegateTaskEventsInBlockingLoop(List<DelegateTaskEvent> taskEvents) {
+    taskEvents.forEach(this::processDelegateTaskEvent);
+  }
+
+  private void submitTaskEventForExecution(DelegateTaskEvent taskEvent) {
+    asyncTaskDispatchExecutor.submit(() -> processDelegateTaskEvent(taskEvent));
+  }
+
+  private void processDelegateTaskEvent(DelegateTaskEvent taskEvent) {
+    try (TaskLogContext ignore = new TaskLogContext(taskEvent.getDelegateTaskId(), OVERRIDE_ERROR)) {
+      if (taskEvent instanceof DelegateTaskAbortEvent) {
+        abortDelegateTask((DelegateTaskAbortEvent) taskEvent);
+      } else {
+        dispatchDelegateTask(taskEvent);
       }
     }
   }
@@ -1519,7 +1584,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
               .build();
 
       try {
-        timeLimiter.callWithTimeout(() -> socket.fire(JsonUtils.asJson(delegateParams)), 15L, TimeUnit.SECONDS, true);
+        HTimeLimiter.callInterruptible(
+            timeLimiter, Duration.ofSeconds(15), () -> socket.fire(JsonUtils.asJson(delegateParams)));
         lastHeartbeatSentAt.set(clock.millis());
       } catch (UncheckedTimeoutException ex) {
         log.warn("Timed out sending heartbeat", ex);
@@ -1540,10 +1606,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       log.info("Sending keepAlive packet...");
       updateBuilderIfEcsDelegate(builder);
       try {
-        timeLimiter.callWithTimeout(() -> {
+        HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15), () -> {
           DelegateParams delegateParams = builder.build().toBuilder().keepAlivePacket(true).build();
           return socket.fire(JsonUtils.asJson(delegateParams));
-        }, 15L, TimeUnit.SECONDS, true);
+        });
       } catch (UncheckedTimeoutException ex) {
         log.warn("Timed out sending keep alive packet", ex);
       } catch (Exception e) {
@@ -1600,10 +1666,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       setSwitchStorage(receivedDelegateResponse.isUseCdn());
       updateJreVersion(receivedDelegateResponse.getJreVersion());
 
-      timeLimiter.callWithTimeout(()
-                                      -> delegateExecute(delegateAgentManagerClient.doConnectionHeartbeat(
-                                          delegateId, accountId, connectionHeartbeat)),
-          15L, TimeUnit.SECONDS, true);
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+          ()
+              -> delegateExecute(
+                  delegateAgentManagerClient.doConnectionHeartbeat(delegateId, accountId, connectionHeartbeat)));
       lastHeartbeatSentAt.set(clock.millis());
 
     } catch (UncheckedTimeoutException ex) {
@@ -2071,7 +2137,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private void addSystemSecrets(Set<String> secrets) {
     // Add config file secrets
     secrets.add(delegateConfiguration.getAccountSecret());
-    secrets.add(delegateConfiguration.getManagerServiceSecret());
 
     // Add environment variable secrets
     String delegateProfileId = System.getenv().get("DELEGATE_PROFILE");
@@ -2160,7 +2225,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       Response<ResponseBody> response = null;
       try {
-        response = timeLimiter.callWithTimeout(() -> {
+        response = HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(30), () -> {
           Response<ResponseBody> resp = null;
           int retries = 3;
           while (retries-- > 0) {
@@ -2175,7 +2240,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             }
           }
           return resp;
-        }, 30L, TimeUnit.SECONDS, true);
+        });
       } catch (UncheckedTimeoutException ex) {
         log.warn("Timed out sending response to manager", ex);
       } catch (Exception e) {
@@ -2218,7 +2283,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
     if (taskFuture != null) {
       try {
-        timeLimiter.callWithTimeout(taskFuture::get, 5L, TimeUnit.SECONDS, true);
+        HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(5), taskFuture::get);
       } catch (UncheckedTimeoutException e) {
         ignoredOnPurpose(e);
         log.error("Timed out getting task future");

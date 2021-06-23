@@ -2,6 +2,7 @@ package software.wings.beans.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.WorkflowType.PIPELINE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
@@ -10,11 +11,15 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.iterator.PersistentCronIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
@@ -26,12 +31,16 @@ import software.wings.beans.trigger.ArtifactSelection.ArtifactSelectionKeys;
 import software.wings.beans.trigger.ArtifactTriggerCondition.ArtifactTriggerConditionKeys;
 import software.wings.beans.trigger.ManifestTriggerCondition.ManifestTriggerConditionKeys;
 import software.wings.beans.trigger.TriggerCondition.TriggerConditionKeys;
+import software.wings.scheduler.ScheduledTriggerJob;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.BaseEntityYaml;
 import software.wings.yaml.trigger.TriggerConditionYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +65,8 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "triggers")
 @HarnessEntity(exportable = true)
 
-public class Trigger extends Base implements NameAccess, TagAware, ApplicationAccess {
+public class Trigger extends Base
+    implements NameAccess, TagAware, AccountAccess, ApplicationAccess, EncryptableSetting, PersistentCronIterable {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -78,6 +88,11 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
         .add(CompoundMongoIndex.builder()
                  .name("artifactSelectionsArtifactStreamId")
                  .field(TriggerKeys.artifactSelections + "." + ArtifactSelectionKeys.artifactStreamId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("triggerConditionNextIterations")
+                 .field(TriggerKeys.triggerConditionType)
+                 .field(TriggerKeys.nextIterations)
                  .build())
         .build();
   }
@@ -101,6 +116,7 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
   private boolean excludeHostsWithSameArtifact;
   private transient List<HarnessTagLink> tagLinks;
   private boolean disabled;
+  @FdIndex private List<Long> nextIterations = new ArrayList<>();
 
   @Builder
   public Trigger(String uuid, String appId, String accountId, EmbeddedUser createdBy, long createdAt,
@@ -174,6 +190,34 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
     return workflowVariables;
   }
 
+  @Override
+  @JsonIgnore
+  @SchemaIgnore
+  public SettingVariableTypes getSettingType() {
+    return SettingVariableTypes.TRIGGER;
+  }
+
+  public List<Long> recalculateNextIterations(String fieldName, boolean skipMissed, long throttled) {
+    if (!TriggerConditionType.SCHEDULED.equals(condition.getConditionType()) || disabled) {
+      nextIterations = new ArrayList<>();
+      return nextIterations;
+    }
+    nextIterations = isEmpty(nextIterations) ? new ArrayList<>() : nextIterations;
+
+    ScheduledTriggerCondition scheduledCondition = (ScheduledTriggerCondition) condition;
+    if (expandNextIterations(skipMissed, throttled, ScheduledTriggerJob.PREFIX + scheduledCondition.getCronExpression(),
+            nextIterations)) {
+      return nextIterations;
+    }
+
+    return Collections.singletonList(Long.MAX_VALUE);
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    return EmptyPredicate.isEmpty(nextIterations) ? null : nextIterations.get(0);
+  }
+
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
@@ -225,5 +269,6 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
     public static final String appId = "appId";
     public static final String createdAt = "createdAt";
     public static final String uuid = "uuid";
+    public static final String triggerConditionType = "condition.conditionType";
   }
 }

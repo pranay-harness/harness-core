@@ -24,3 +24,10 @@ spec:
               spec:
                 matchAnyCondition: false
                 conditions: []
+      - step:
+          name: "Jira Update"
+          identifier: jiraUpdate
+          type: JiraUpdate
+          timeout: 5m
+          spec:
+            fields: []

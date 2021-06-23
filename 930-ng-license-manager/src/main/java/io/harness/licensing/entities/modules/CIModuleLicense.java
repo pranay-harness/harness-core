@@ -18,5 +18,5 @@ import org.springframework.data.annotation.TypeAlias;
 @Persistent
 @TypeAlias("io.harness.license.entities.module.CIModuleLicense")
 public class CIModuleLicense extends ModuleLicense {
-  private int numberOfCommitters;
+  private Integer numberOfCommitters;
 }

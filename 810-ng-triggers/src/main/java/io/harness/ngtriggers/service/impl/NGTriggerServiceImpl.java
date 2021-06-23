@@ -7,6 +7,7 @@ import static io.harness.exception.WingsException.USER_SRE;
 
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorResourceClient;
@@ -17,16 +18,20 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.TriggerException;
 import io.harness.network.SafeHttpCall;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
+import io.harness.ngtriggers.beans.dto.WebhookEventProcessingDetails;
+import io.harness.ngtriggers.beans.dto.WebhookEventProcessingDetails.WebhookEventProcessingDetailsBuilder;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
+import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
-import io.harness.ngtriggers.beans.source.NGTriggerSource;
+import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.repositories.spring.NGTriggerRepository;
+import io.harness.repositories.spring.TriggerEventHistoryRepository;
 import io.harness.repositories.spring.TriggerWebhookEventRepository;
 
 import com.cronutils.model.Cron;
@@ -54,8 +59,10 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Slf4j
 @OwnedBy(PIPELINE)
 public class NGTriggerServiceImpl implements NGTriggerService {
+  public static final long TRIGGER_CURRENT_YML_VERSION = 2l;
   private final NGTriggerRepository ngTriggerRepository;
   private final TriggerWebhookEventRepository webhookEventQueueRepository;
+  private final TriggerEventHistoryRepository triggerEventHistoryRepository;
   private final ConnectorResourceClient connectorResourceClient;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING = "Trigger [%s] already exists";
@@ -80,6 +87,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
 
   @Override
   public NGTriggerEntity update(NGTriggerEntity ngTriggerEntity) {
+    ngTriggerEntity.setYmlVersion(TRIGGER_CURRENT_YML_VERSION);
     Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
     NGTriggerEntity updatedEntity = ngTriggerRepository.update(criteria, ngTriggerEntity);
     if (updatedEntity == null) {
@@ -179,6 +187,35 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   }
 
   @Override
+  public WebhookEventProcessingDetails fetchTriggerEventHistory(String accountId, String eventId) {
+    TriggerEventHistory triggerEventHistory =
+        triggerEventHistoryRepository.findByAccountIdAndEventCorrelationId(accountId, eventId);
+    WebhookEventProcessingDetailsBuilder builder =
+        WebhookEventProcessingDetails.builder().eventId(eventId).accountIdentifier(accountId);
+    if (triggerEventHistory == null) {
+      builder.eventFound(false);
+    } else {
+      builder.eventFound(true)
+          .orgIdentifier(triggerEventHistory.getOrgIdentifier())
+          .projectIdentifier(triggerEventHistory.getProjectIdentifier())
+          .triggerIdentifier(triggerEventHistory.getTriggerIdentifier())
+          .pipelineIdentifier(triggerEventHistory.getTargetIdentifier())
+          .exceptionOccured(triggerEventHistory.isExceptionOccurred())
+          .status(triggerEventHistory.getFinalStatus())
+          .message(triggerEventHistory.getMessage())
+          .payload(triggerEventHistory.getPayload())
+          .eventCreatedAt(triggerEventHistory.getCreatedAt());
+
+      if (triggerEventHistory.getTargetExecutionSummary() != null) {
+        builder.pipelineExecutionId(triggerEventHistory.getTargetExecutionSummary().getPlanExecutionId())
+            .runtimeInput(triggerEventHistory.getTargetExecutionSummary().getRuntimeInput());
+      }
+    }
+
+    return builder.build();
+  }
+
+  @Override
   public TriggerWebhookEvent addEventToQueue(TriggerWebhookEvent webhookEventQueueRecord) {
     try {
       return webhookEventQueueRepository.save(webhookEventQueueRecord);
@@ -207,6 +244,16 @@ public class NGTriggerServiceImpl implements NGTriggerService {
   public List<NGTriggerEntity> findTriggersForCustomWehbook(
       TriggerWebhookEvent triggerWebhookEvent, boolean isDeleted, boolean enabled) {
     Page<NGTriggerEntity> triggersPage = list(TriggerFilterHelper.createCriteriaForCustomWebhookTriggerGetList(
+                                                  triggerWebhookEvent, EMPTY, isDeleted, enabled),
+        Pageable.unpaged());
+
+    return triggersPage.get().collect(Collectors.toList());
+  }
+
+  @Override
+  public List<NGTriggerEntity> findTriggersForWehbookBySourceRepoType(
+      TriggerWebhookEvent triggerWebhookEvent, boolean isDeleted, boolean enabled) {
+    Page<NGTriggerEntity> triggersPage = list(TriggerFilterHelper.createCriteriaFormWebhookTriggerGetListByRepoType(
                                                   triggerWebhookEvent, EMPTY, isDeleted, enabled),
         Pageable.unpaged());
 
@@ -264,7 +311,15 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     // for the validation.
 
     // trigger source validation
-    NGTriggerSource triggerSource = triggerDetails.getNgTriggerConfig().getSource();
+    if (isBlank(triggerDetails.getNgTriggerEntity().getIdentifier())) {
+      throw new InvalidArgumentsException("Identifier can not be empty");
+    }
+
+    if (isBlank(triggerDetails.getNgTriggerEntity().getName())) {
+      throw new InvalidArgumentsException("Name can not be empty");
+    }
+
+    NGTriggerSourceV2 triggerSource = triggerDetails.getNgTriggerConfigV2().getSource();
     switch (triggerSource.getType()) {
       case WEBHOOK:
         return; // TODO(adwait): define trigger source validation

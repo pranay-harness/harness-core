@@ -21,7 +21,9 @@ import io.harness.cdng.manifest.yaml.GitStoreConfig;
 import io.harness.cdng.manifest.yaml.GitStoreConfigDTO;
 import io.harness.cdng.manifest.yaml.GithubStore;
 import io.harness.cdng.manifest.yaml.GithubStoreDTO;
-import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigType;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
+import io.harness.common.ParameterFieldHelper;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
@@ -32,7 +34,6 @@ import io.harness.delegate.task.terraform.RemoteTerraformVarFileInfo;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.delegate.task.terraform.TerraformVarFileInfo;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
-import io.harness.ngpipeline.common.ParameterFieldHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -44,6 +45,7 @@ import io.harness.security.encryption.EncryptionType;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.Rule;
@@ -87,7 +89,7 @@ public class TerraformStepHelperTest extends CategoryTest {
                                               .gitFetchType(FetchType.BRANCH)
                                               .folderPath(ParameterField.createValueField("Config/"))
                                               .build())
-                                    .type("Github")
+                                    .type(StoreConfigType.GITHUB)
                                     .build());
     InlineTerraformVarFileSpec inlineTerraformVarFileSpec = new InlineTerraformVarFileSpec();
     inlineTerraformVarFileSpec.setContent(ParameterField.createValueField("var-content"));
@@ -95,6 +97,9 @@ public class TerraformStepHelperTest extends CategoryTest {
     inlineTerraformBackendConfigSpec.setContent(ParameterField.createValueField("back-content"));
     TerraformBackendConfig terraformBackendConfig = new TerraformBackendConfig();
     terraformBackendConfig.setTerraformBackendConfigSpec(inlineTerraformBackendConfigSpec);
+    LinkedHashMap<String, TerraformVarFile> varFilesMap = new LinkedHashMap<>();
+    varFilesMap.put("var-file-1",
+        TerraformVarFile.builder().identifier("var-file-1").type("Inline").spec(inlineTerraformVarFileSpec).build());
     TerraformPlanStepParameters planStepParameters =
         TerraformPlanStepParameters.infoBuilder()
             .provisionerIdentifier(ParameterField.createValueField("provId"))
@@ -102,12 +107,7 @@ public class TerraformStepHelperTest extends CategoryTest {
                                .configFiles(configFilesWrapper)
                                .command(TerraformPlanCommand.APPLY)
                                .secretManagerRef(ParameterField.createValueField("secret"))
-                               .varFiles(ImmutableMap.of("var-file-1",
-                                   TerraformVarFile.builder()
-                                       .identifier("var-file-1")
-                                       .type("Inline")
-                                       .spec(inlineTerraformVarFileSpec)
-                                       .build()))
+                               .varFiles(varFilesMap)
                                .environmentVariables(ImmutableMap.of("KEY", ParameterField.createValueField("VAL")))
                                .backendConfig(terraformBackendConfig)
                                .build())
@@ -152,29 +152,26 @@ public class TerraformStepHelperTest extends CategoryTest {
                                               .gitFetchType(FetchType.BRANCH)
                                               .folderPath(ParameterField.createValueField("Config/"))
                                               .build())
-                                    .type("Github")
+                                    .type(StoreConfigType.GITHUB)
                                     .build());
     RemoteTerraformVarFileSpec remoteTerraformVarFileSpec = new RemoteTerraformVarFileSpec();
-    remoteTerraformVarFileSpec.setStoreConfigWrapper(
-        StoreConfigWrapper.builder()
-            .spec(GitLabStore.builder()
-                      .branch(ParameterField.createValueField("master"))
-                      .gitFetchType(FetchType.BRANCH)
-                      .folderPath(ParameterField.createValueField("VarFiles/"))
-                      .build())
-            .type("GitLab")
-            .build());
+    remoteTerraformVarFileSpec.setStore(StoreConfigWrapper.builder()
+                                            .spec(GitLabStore.builder()
+                                                      .branch(ParameterField.createValueField("master"))
+                                                      .gitFetchType(FetchType.BRANCH)
+                                                      .folderPath(ParameterField.createValueField("VarFiles/"))
+                                                      .build())
+                                            .type(StoreConfigType.GITLAB)
+                                            .build());
+    LinkedHashMap<String, TerraformVarFile> varFilesMap = new LinkedHashMap<>();
+    varFilesMap.put("var-file-1",
+        TerraformVarFile.builder().identifier("var-file-1").type("Inline").spec(remoteTerraformVarFileSpec).build());
     TerraformApplyStepParameters parameters = TerraformApplyStepParameters.infoBuilder()
-                                                  .configuration(TerrformStepConfigurationParameters.builder()
+                                                  .configuration(TerraformStepConfigurationParameters.builder()
                                                                      .type(TerraformStepConfigurationType.INLINE)
                                                                      .spec(TerraformExecutionDataParameters.builder()
                                                                                .configFiles(configFilesWrapper)
-                                                                               .varFiles(ImmutableMap.of("var-file-1",
-                                                                                   TerraformVarFile.builder()
-                                                                                       .identifier("var-file-1")
-                                                                                       .type("Inline")
-                                                                                       .spec(remoteTerraformVarFileSpec)
-                                                                                       .build()))
+                                                                               .varFiles(varFilesMap)
                                                                                .build())
                                                                      .build())
                                                   .build();
@@ -215,7 +212,7 @@ public class TerraformStepHelperTest extends CategoryTest {
   public void testToTerraformVarFileInfo() {
     Ambiance ambiance = getAmbiance();
     RemoteTerraformVarFileSpec remoteTerraformVarFileSpec = new RemoteTerraformVarFileSpec();
-    remoteTerraformVarFileSpec.setStoreConfigWrapper(
+    remoteTerraformVarFileSpec.setStore(
         StoreConfigWrapper.builder()
             .spec(GitLabStore.builder()
                       .branch(ParameterField.createValueField("master"))
@@ -223,7 +220,7 @@ public class TerraformStepHelperTest extends CategoryTest {
                       .paths(ParameterField.createValueField(Collections.singletonList("VarFiles/")))
                       .connectorRef(ParameterField.createValueField("ConnectorRef"))
                       .build())
-            .type("GitLab")
+            .type(StoreConfigType.GITLAB)
             .build());
     InlineTerraformVarFileSpec inlineTerraformVarFileSpec = new InlineTerraformVarFileSpec();
     inlineTerraformVarFileSpec.setContent(ParameterField.createValueField("var-content"));

@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessModule._890_SM_CORE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.FileBucket.CONFIGS;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
@@ -60,37 +61,40 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
   private EncryptedData encrypt(String accountIdentifier, SecretManagerConfig secretManagerConfig, String name,
       byte[] bytes, EncryptedData savedEncryptedData) {
     String fileContent = new String(CHARSET.decode(ByteBuffer.wrap(encodeBase64ToByteArray(bytes))).array());
-    EncryptedRecord encryptedRecord;
-    switch (secretManagerConfig.getEncryptionType()) {
-      case VAULT:
-        VaultEncryptor vaultEncryptor = vaultRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType());
-        if (savedEncryptedData == null) {
-          encryptedRecord = vaultEncryptor.createSecret(accountIdentifier, name, fileContent, secretManagerConfig);
-        } else {
-          encryptedRecord = vaultEncryptor.updateSecret(
-              accountIdentifier, name, fileContent, savedEncryptedData, secretManagerConfig);
-        }
-        break;
-      case GCP_KMS:
-      case KMS:
-      case LOCAL:
-        encryptedRecord = kmsRegistry.getKmsEncryptor(secretManagerConfig)
-                              .encryptSecret(accountIdentifier, fileContent, secretManagerConfig);
-        String encryptedFileId =
-            secretFileService.createFile(name, accountIdentifier, encryptedRecord.getEncryptedValue());
-        encryptedRecord = EncryptedRecordData.builder()
-                              .encryptedValue(encryptedFileId.toCharArray())
-                              .encryptionKey(encryptedRecord.getEncryptionKey())
-                              .build();
-        break;
-      default:
-        throw new UnsupportedOperationException(
-            "Encryption type " + secretManagerConfig.getEncryptionType() + " not supported in next gen");
+    EncryptedRecord encryptedRecord = null;
+    if (isNotEmpty(fileContent)) {
+      switch (secretManagerConfig.getEncryptionType()) {
+        case VAULT:
+        case AZURE_VAULT:
+          VaultEncryptor vaultEncryptor = vaultRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType());
+          if (savedEncryptedData == null) {
+            encryptedRecord = vaultEncryptor.createSecret(accountIdentifier, name, fileContent, secretManagerConfig);
+          } else {
+            encryptedRecord = vaultEncryptor.updateSecret(
+                accountIdentifier, name, fileContent, savedEncryptedData, secretManagerConfig);
+          }
+          break;
+        case GCP_KMS:
+        case KMS:
+        case LOCAL:
+          encryptedRecord = kmsRegistry.getKmsEncryptor(secretManagerConfig)
+                                .encryptSecret(accountIdentifier, fileContent, secretManagerConfig);
+          String encryptedFileId =
+              secretFileService.createFile(name, accountIdentifier, encryptedRecord.getEncryptedValue());
+          encryptedRecord = EncryptedRecordData.builder()
+                                .encryptedValue(encryptedFileId.toCharArray())
+                                .encryptionKey(encryptedRecord.getEncryptionKey())
+                                .build();
+          break;
+        default:
+          throw new UnsupportedOperationException(
+              "Encryption type " + secretManagerConfig.getEncryptionType() + " not supported in next gen");
+      }
     }
     return EncryptedData.builder()
         .name(name)
-        .encryptedValue(encryptedRecord.getEncryptedValue())
-        .encryptionKey(encryptedRecord.getEncryptionKey())
+        .encryptedValue(encryptedRecord == null ? null : encryptedRecord.getEncryptedValue())
+        .encryptionKey(encryptedRecord == null ? null : encryptedRecord.getEncryptionKey())
         .base64Encoded(true)
         .fileSize(bytes.length)
         .build();
@@ -202,14 +206,7 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
         if (!dto.getName().equals(encryptedData.getName())) {
           ngSecretService.deleteSecretInSecretManager(account, encryptedData, secretManagerConfigOptional.get());
         }
-        switch (secretManagerConfigOptional.get().getEncryptionType()) {
-          case LOCAL:
-          case GCP_KMS:
-          case KMS:
-            fileService.deleteFile(String.valueOf(encryptedData.getEncryptedValue()), CONFIGS);
-            break;
-          default:
-        }
+        char[] existingFileId = encryptedData.getEncryptedValue();
 
         // decrypt secrets of secret manager before sending secret manager config to delegate
         secretManagerConfigService.decryptEncryptionConfigSecrets(
@@ -228,7 +225,16 @@ public class NGSecretFileServiceImpl implements NGSecretFileService {
         encryptedData.getNgMetadata().setTags(dto.getTags());
 
         // save to DB and return
-        wingsPersistence.save(savedEncryptedData);
+        wingsPersistence.save(encryptedData);
+
+        switch (secretManagerConfigOptional.get().getEncryptionType()) {
+          case LOCAL:
+          case GCP_KMS:
+          case KMS:
+            fileService.deleteFile(String.valueOf(existingFileId), CONFIGS);
+            break;
+          default:
+        }
         return true;
       } else {
         throw new SecretManagementException(

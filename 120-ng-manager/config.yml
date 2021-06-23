@@ -27,6 +27,7 @@ nextGen:
   managerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   userVerificationSecret: dyBvaWVmbGRrYyB6aHpjeHZvaWxzamt6ZGN6c2RhZmh5dBrebhmnjryRe54rX43W3565ytgbsDvnjws5
   ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  pipelineServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
   jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=
 
@@ -66,6 +67,9 @@ mongo:
   transactionsEnabled: false
   aliasDBName: ng-harness
 
+accountConfig:
+  deploymentClusterName: ""
+
 #[secondary-db] : Uncomment the following if you want to connect to another database
 #secondary - mongo:
 #uri : mongodb:  // localhost:27017/cd-nextgen-secondary
@@ -90,6 +94,11 @@ managerClientConfig:
 
 ngManagerClientConfig:
   baseUrl: http://localhost:7457/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+pipelineServiceClientConfig:
+  baseUrl: http://localhost:12001/api/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
@@ -146,6 +155,8 @@ eventsFramework:
       CATrustStorePath: "/tmp/ca_trust_store"
       CATrustStorePassword: ""
 
+distributedLockImplementation: MONGO
+
 redisLockConfig:
   sentinel: false
   masterName: "test"
@@ -158,6 +169,7 @@ redisLockConfig:
   readMode: MASTER
   nettyThreads: 16
   useScriptCache: true
+  userName: ""
   password: ""
 
 pmsSdkGrpcServerConfig:
@@ -179,6 +191,10 @@ ceAwsSetupConfig:
   secretKey: ce_aws_secretKey_placeholder
   destinationBucket: ce_aws_destinationBucket_placeholder
   templateURL: https://continuous-efficiency-templates.s3.amazonaws.com/templateOptimOnly.yaml
+
+ceAzureSetupConfig:
+  azureAppClientId: azureAppClientIdPlaceholder
+  azureAppClientSecret: azureAppClientSecretplaceholder
 
 ciDefaultEntityConfiguration:
   harnessImageUseName: harnessdev
@@ -215,6 +231,7 @@ outboxPollConfig:
   initialDelayInSeconds: 5
   pollingIntervalInSeconds: 5
   maximumRetryAttemptsForAnEvent: 7
+  lockId: NextGenManager
 
 segmentConfiguration:
   enabled: false
@@ -242,7 +259,7 @@ accessControlAdminClient:
 
 gitGrpcClientConfigs:
   pms:
-    target: localhost:12011
+    target: localhost:14001
     authority: localhost
   core:
     target: localhost:13001
@@ -265,6 +282,11 @@ gitSdkConfiguration:
 
 baseUrls:
   currentGenUiUrl: http://localhost:8181/#/
+  nextGenUiUrl: http://localhost:8181/ng/#/
+  nextGenAuthUiUrl: http://localhost:8181/auth/#/
+  webhookBaseUrl: http://localhost:7457/
+
+ngAuthUIEnabled: false
 
 enableDefaultResourceGroupCreation: true
 
@@ -276,17 +298,9 @@ cfClientConfig:
   connectionTimeout: 10000
   readTimeout: 30000
 
-cfMigrationConfig:
-  enabled: false
-  adminUrl : "http://localhost:3000/api/1.0"
-  apiKey: ""
-  account: "default"
-  org: "default_org"
-  project: "project1"
-  environment: "environment1"
-  connectionTimeout: 10000
-  readTimeout: 30000
-
+featureFlagConfig:
+  featureFlagSystem: LOCAL
+  syncFeaturesToCF: false
 
 enableDashboardTimescale: false
 
@@ -298,15 +312,6 @@ timescaledb:
   socketTimeout: 30
   logUnclosedConnections: false
   loggerLevel: OFF
-
-yamlSchemaClientConfig:
-  yamlSchemaHttpClientMap:
-    cvng:
-      serviceHttpClientConfig:
-        baseUrl: http://localhost:6457/cv/api/
-        connectTimeOutSeconds: 15
-        readTimeOutSeconds: 15
-      secret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
 
 signupNotificationConfiguration:
   projectId: "projectId_place_holder"
@@ -320,3 +325,7 @@ signupNotificationConfiguration:
       templateId: "signup_confirmation"
   expireDurationInMinutes: 60
 
+cacheConfig:
+  cacheBackend: REDIS
+  cacheNamespace: ""
+  disabledCaches: [ ]

@@ -3,7 +3,9 @@ package io.harness.engine.executions.node;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
 import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
+import static io.harness.pms.contracts.execution.Status.ERRORED;
 import static io.harness.springdata.SpringDataMongoUtils.returnNewOptions;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -11,22 +13,31 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdate;
-import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
+import io.harness.engine.executions.plan.PlanExecutionMetadataService;
+import io.harness.engine.observers.NodeExecutionStartObserver;
+import io.harness.engine.observers.NodeStartInfo;
+import io.harness.engine.observers.NodeStatusUpdateObserver;
+import io.harness.engine.observers.NodeUpdateInfo;
+import io.harness.engine.observers.NodeUpdateObserver;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
+import io.harness.execution.PlanExecutionMetadata;
 import io.harness.observer.Subject;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.events.OrchestrationEvent;
+import io.harness.pms.contracts.execution.events.OrchestrationEvent.Builder;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
-import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.utils.StatusUtils;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.serializer.ProtoUtils;
 
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 import com.mongodb.client.result.UpdateResult;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -38,19 +49,23 @@ import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-@OwnedBy(PIPELINE)
 @Slf4j
+@OwnedBy(PIPELINE)
 public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
+  @Inject private PlanExecutionMetadataService planExecutionMetadataService;
 
-  @Getter private final Subject<StepStatusUpdate> stepStatusUpdateSubject = new Subject<>();
+  @Getter private final Subject<NodeStatusUpdateObserver> stepStatusUpdateSubject = new Subject<>();
+  @Getter private final Subject<NodeExecutionStartObserver> nodeExecutionStartSubject = new Subject<>();
+  @Getter private final Subject<NodeUpdateObserver> nodeUpdateObserverSubject = new Subject<>();
 
   @Override
   public NodeExecution get(String nodeExecutionId) {
@@ -120,26 +135,9 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
-  public List<NodeExecution> fetchNodeExecutionsByNotifyId(
-      String planExecutionId, String notifyId, boolean isOldRetry) {
-    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
-                      .addCriteria(where(NodeExecutionKeys.notifyId).is(notifyId))
-                      .addCriteria(where(NodeExecutionKeys.oldRetry).is(isOldRetry))
-                      .with(Sort.by(Direction.DESC, NodeExecutionKeys.createdAt));
-    return mongoTemplate.find(query, NodeExecution.class);
-  }
-
-  @Override
   public List<NodeExecution> fetchNodeExecutionsByStatus(String planExecutionId, Status status) {
     Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
                       .addCriteria(where(NodeExecutionKeys.status).is(status));
-    return mongoTemplate.find(query, NodeExecution.class);
-  }
-
-  @Override
-  public List<NodeExecution> fetchNodeExecutionsByStatuses(String planExecutionId, EnumSet<Status> statuses) {
-    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
-                      .addCriteria(where(NodeExecutionKeys.status).in(statuses));
     return mongoTemplate.find(query, NodeExecution.class);
   }
 
@@ -153,28 +151,29 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       throw new NodeExecutionUpdateFailedException(
           "Node Execution Cannot be updated with provided operations" + nodeExecutionId);
     }
-
-    emitEvent(updated, OrchestrationEventType.NODE_EXECUTION_UPDATE);
+    nodeUpdateObserverSubject.fireInform(
+        NodeUpdateObxxxxxxxx:onNodeUpdate, NodeUpdateInfo.builder().nodeExecution(updated).build());
     return updated;
-  }
-
-  @Override
-  public List<NodeExecution> fetchChildrenNodeExecutionsByStatuses(
-      String planExecutionId, List<String> parentIds, EnumSet<Status> statuses) {
-    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
-                      .addCriteria(where(NodeExecutionKeys.parentId).in(parentIds))
-                      .addCriteria(where(NodeExecutionKeys.status).in(statuses));
-    return mongoTemplate.find(query, NodeExecution.class);
   }
 
   @Override
   public NodeExecution save(NodeExecution nodeExecution) {
     if (nodeExecution.getVersion() == null) {
-      eventEmitter.emitEvent(OrchestrationEvent.builder()
-                                 .ambiance(nodeExecution.getAmbiance())
-                                 .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
-                                 .eventType(OrchestrationEventType.NODE_EXECUTION_START)
-                                 .build());
+      // Havnt added triggerPayload in the event as no one is consuming triggerPayload on NodeExecutionStart
+      Builder builder = OrchestrationEvent.newBuilder()
+                            .setAmbiance(nodeExecution.getAmbiance())
+                            .setStatus(nodeExecution.getStatus())
+                            .setEventType(OrchestrationEventType.NODE_EXECUTION_START)
+                            .setServiceName(nodeExecution.getNode().getServiceName())
+                            .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()));
+
+      if (nodeExecution.getResolvedStepParameters() != null) {
+        builder.setStepParameters(
+            ByteString.copyFromUtf8(emptyIfNull(nodeExecution.getResolvedStepParameters().toJson())));
+      }
+      eventEmitter.emitEvent(builder.build());
+      nodeExecutionStartSubject.fireInform(
+          NodeExecutionStartObxxxxxxxx:onNodeStart, NodeStartInfo.builder().nodeExecution(nodeExecution).build());
       return mongoTemplate.insert(nodeExecution);
     } else {
       return mongoTemplate.save(nodeExecution);
@@ -213,19 +212,14 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       log.warn("Cannot update execution status for the node {} with {}", nodeExecutionId, status);
     } else {
       emitEvent(updated, OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE);
-      stepStatusUpdateSubject.fireInform(StepStatusUpdate::onStepStatusUpdate,
-          StepStatusUpdateInfo.builder()
-              .nodeExecutionId(updated.getUuid())
-              .planExecutionId(updated.getAmbiance().getPlanExecutionId())
-              .status(updated.getStatus())
-              .build());
+      stepStatusUpdateSubject.fireInform(
+          NodeStatusUpdateObxxxxxxxx:onNodeStatusUpdate, NodeUpdateInfo.builder().nodeExecution(updated).build());
     }
     return updated;
   }
 
   @Override
-  public boolean markLeavesDiscontinuingOnAbort(
-      String interruptId, InterruptType interruptType, String planExecutionId, List<String> leafInstanceIds) {
+  public long markLeavesDiscontinuingOnAbort(String planExecutionId, List<String> leafInstanceIds) {
     Update ops = new Update();
     ops.set(NodeExecutionKeys.status, DISCONTINUING);
     Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
@@ -233,9 +227,25 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     UpdateResult updateResult = mongoTemplate.updateMulti(query, ops, NodeExecution.class);
     if (!updateResult.wasAcknowledged()) {
       log.warn("No NodeExecutions could be marked as DISCONTINUING -  planExecutionId: {}", planExecutionId);
-      return false;
+      return -1;
     }
-    return true;
+    return updateResult.getModifiedCount();
+  }
+
+  @Override
+  public long markAllLeavesDiscontinuingOnAbort(String planExecutionId, EnumSet<Status> statuses) {
+    Update ops = new Update();
+    ops.set(NodeExecutionKeys.status, DISCONTINUING);
+    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
+                      .addCriteria(where(NodeExecutionKeys.mode).in(ExecutionModeUtils.leafModes()))
+                      .addCriteria(where(NodeExecutionKeys.status).in(statuses))
+                      .addCriteria(where(NodeExecutionKeys.oldRetry).is(false));
+    UpdateResult updateResult = mongoTemplate.updateMulti(query, ops, NodeExecution.class);
+    if (!updateResult.wasAcknowledged()) {
+      log.warn("No NodeExecutions could be marked as DISCONTINUING -  planExecutionId: {}", planExecutionId);
+      return -1;
+    }
+    return updateResult.getModifiedCount();
   }
 
   /**
@@ -252,7 +262,8 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       log.error("Failed to mark node as retry");
       return false;
     }
-    emitEvent(nodeExecution, OrchestrationEventType.NODE_EXECUTION_UPDATE);
+    nodeUpdateObserverSubject.fireInform(
+        NodeUpdateObxxxxxxxx:onNodeUpdate, NodeUpdateInfo.builder().nodeExecution(nodeExecution).build());
     return true;
   }
 
@@ -283,12 +294,18 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
-  public List<NodeExecution> fetchNodeExecutionsByStatusAndIdIn(
-      String planExecutionId, Status status, List<String> targetIds) {
+  public boolean errorOutActiveNodes(String planExecutionId) {
+    Update ops = new Update();
+    ops.set(NodeExecutionKeys.status, ERRORED);
+    ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis());
     Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
-                      .addCriteria(where(NodeExecutionKeys.status).is(status))
-                      .addCriteria(where(NodeExecutionKeys.uuid).in(targetIds));
-    return mongoTemplate.find(query, NodeExecution.class);
+                      .addCriteria(where(NodeExecutionKeys.status).in(StatusUtils.activeStatuses()));
+    UpdateResult updateResult = mongoTemplate.updateMulti(query, ops, NodeExecution.class);
+    if (!updateResult.wasAcknowledged()) {
+      log.warn("No NodeExecutions could be marked as ERRORED -  planExecutionId: {}", planExecutionId);
+      return false;
+    }
+    return true;
   }
 
   @Override
@@ -335,10 +352,27 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   private void emitEvent(NodeExecution nodeExecution, OrchestrationEventType orchestrationEventType) {
-    eventEmitter.emitEvent(OrchestrationEvent.builder()
-                               .ambiance(nodeExecution.getAmbiance())
-                               .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
-                               .eventType(orchestrationEventType)
+    Document resolvedStepParameters = nodeExecution != null ? nodeExecution.getResolvedStepParameters() : null;
+    String stepParametersJson = resolvedStepParameters != null ? resolvedStepParameters.toJson() : null;
+
+    TriggerPayload triggerPayload = TriggerPayload.newBuilder().build();
+    if (nodeExecution != null && nodeExecution.getAmbiance() != null) {
+      PlanExecutionMetadata metadata =
+          planExecutionMetadataService.findByPlanExecutionId(nodeExecution.getAmbiance().getPlanExecutionId())
+              .orElseThrow(()
+                               -> new InvalidRequestException("No Metadata present for planExecution :"
+                                   + nodeExecution.getAmbiance().getPlanExecutionId()));
+      triggerPayload = metadata.getTriggerPayload() != null ? metadata.getTriggerPayload() : triggerPayload;
+    }
+
+    eventEmitter.emitEvent(OrchestrationEvent.newBuilder()
+                               .setAmbiance(nodeExecution.getAmbiance())
+                               .setStatus(nodeExecution.getStatus())
+                               .setStepParameters(ByteString.copyFromUtf8(emptyIfNull(stepParametersJson)))
+                               .setEventType(orchestrationEventType)
+                               .setServiceName(nodeExecution.getNode().getServiceName())
+                               .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
+                               .setTriggerPayload(triggerPayload)
                                .build());
   }
 }

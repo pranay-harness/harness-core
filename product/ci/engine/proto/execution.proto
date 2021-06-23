@@ -7,6 +7,11 @@ option go_package = "cienginepb";
 
 import "product/ci/engine/proto/publish_artifact.proto";
 
+enum ShellType {
+  SH = 0;
+  BASH = 1;
+}
+
 message StepContext {
   int32 num_retries = 1;  // Deprecated
   int64 execution_timeout_secs = 2;
@@ -40,18 +45,18 @@ message RunTestsStep {
   string preTestCommand = 10;          // Pre-commands to setup environment before running tests
   string postTestCommand = 11;         // Post commands after running tests
   repeated string envVarOutputs = 12;  // produced output variables
-  // This is added on by the lite engine specifically. Ideally we should just forward
-  // to addon and have it calculate this, this proxy can be added later.
+  // TODO (Vistaar): Proxy this call from addon to LE.
   string diff_files = 13;
 }
 
 message RunStep {
   string command = 1;
   StepContext context = 2;
-  repeated string envVarOutputs = 3;  // output variables to export as step outcome
-  uint32 container_port = 4;          // Deprecated. Port of the container on which run step needs to be executed
+  repeated string env_var_outputs = 3;  // output variables to export as step outcome
+  uint32 container_port = 4;            // Deprecated. Port of the container on which run step needs to be executed
   repeated Report reports = 5;
   map<string, string> environment = 6;
+  ShellType shell_type = 7;
 }
 
 message PluginStep {

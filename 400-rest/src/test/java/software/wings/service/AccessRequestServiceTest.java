@@ -28,6 +28,7 @@ import software.wings.beans.User;
 import software.wings.beans.security.AccessRequest;
 import software.wings.beans.security.AccessRequestDTO;
 import software.wings.beans.security.HarnessUserGroup;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccessRequestService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -44,6 +45,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @OwnedBy(HarnessTeam.PL)
 @TargetModule(HarnessModule._970_RBAC_CORE)
@@ -51,6 +53,7 @@ public class AccessRequestServiceTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private UserService userService;
   @Mock private HarnessUserGroupService harnessUserGroupService;
+  @Inject private WingsPersistence wingsPersistence;
   @InjectMocks @Inject private AccessRequestService accessRequestService;
 
   private String accountId1 = UUIDGenerator.generateUuid();
@@ -192,8 +195,6 @@ public class AccessRequestServiceTest extends WingsBaseTest {
     assertThat(accessRequest1).isNull();
   }
 
-  //  public void testAccessRequest_autoUpdate(){}
-
   @Test
   @Owner(developers = NANDAN)
   @Category(UnitTests.class)
@@ -264,6 +265,44 @@ public class AccessRequestServiceTest extends WingsBaseTest {
 
     assertThat(accessRequestList.size()).isEqualTo(1);
     assertThat(accessRequestList.get(0).getUuid()).isEqualTo(accessRequest.getUuid());
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testAccessRequest_getAllAccessRequestForAccount() {
+    long accessReq1StartAt = Instant.now().toEpochMilli();
+    long accessReq1EndAt = Instant.now().plus(24, ChronoUnit.HOURS).toEpochMilli();
+    AccessRequestDTO accessReq1DTO = AccessRequestDTO.builder()
+                                         .accountId(ACCOUNT_ID)
+                                         .harnessUserGroupId(harnessUserGroupId)
+                                         .accessStartAt(accessReq1StartAt)
+                                         .accessEndAt(accessReq1EndAt)
+                                         .build();
+    AccessRequest accessReq1 = accessRequestService.createAccessRequest(accessReq1DTO);
+
+    long accessReq2StartAt = Instant.now().minus(2, ChronoUnit.HOURS).toEpochMilli();
+    long accessReq2EndAt = Instant.now().minus(1, ChronoUnit.HOURS).toEpochMilli();
+    AccessRequestDTO accessReq2DTO = AccessRequestDTO.builder()
+                                         .accountId(ACCOUNT_ID)
+                                         .harnessUserGroupId(harnessUserGroupId)
+                                         .accessStartAt(accessReq2StartAt)
+                                         .accessEndAt(accessReq2EndAt)
+                                         .build();
+    AccessRequest accessReq2 = accessRequestService.createAccessRequest(accessReq2DTO);
+    accessReq2.setAccessActive(false);
+
+    UpdateOperations<AccessRequest> updateOperations = wingsPersistence.createUpdateOperations(AccessRequest.class);
+    updateOperations.set("accessActive", false);
+    wingsPersistence.update(accessReq2, updateOperations);
+
+    List<AccessRequest> accessRequestList = accessRequestService.getAllAccessRequestForAccount(ACCOUNT_ID);
+
+    assertThat(accessRequestList.size()).isEqualTo(2);
+    assertThat(accessRequestList.get(0).getUuid()).isEqualTo(accessReq1.getUuid());
+    assertThat(accessRequestList.get(0).isAccessActive()).isTrue();
+    assertThat(accessRequestList.get(1).getUuid()).isEqualTo(accessReq2.getUuid());
+    assertThat(accessRequestList.get(1).isAccessActive()).isFalse();
   }
 
   @Test

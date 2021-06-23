@@ -3,6 +3,7 @@ package io.harness.repositories.executions;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 
 import com.google.inject.Inject;
@@ -55,10 +56,15 @@ public class PmsExecutionSummaryRepositoryCustomImpl implements PmsExecutionSumm
 
   @Override
   public Page<PipelineExecutionSummaryEntity> findAll(Criteria criteria, Pageable pageable) {
-    Query query = new Query(criteria).with(pageable);
-    List<PipelineExecutionSummaryEntity> projects = mongoTemplate.find(query, PipelineExecutionSummaryEntity.class);
-    return PageableExecutionUtils.getPage(projects, pageable,
-        () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), PipelineExecutionSummaryEntity.class));
+    try {
+      Query query = new Query(criteria).with(pageable);
+      List<PipelineExecutionSummaryEntity> projects = mongoTemplate.find(query, PipelineExecutionSummaryEntity.class);
+      return PageableExecutionUtils.getPage(projects, pageable,
+          () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), PipelineExecutionSummaryEntity.class));
+    } catch (IllegalArgumentException ex) {
+      log.error(ex.getMessage(), ex);
+      throw new InvalidRequestException("Execution Status not found", ex);
+    }
   }
 
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {

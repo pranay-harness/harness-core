@@ -7,9 +7,12 @@ import io.harness.data.ExecutionSweepingOutputInstance;
 import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
+import io.harness.execution.PlanExecutionMetadata;
 import io.harness.interrupts.Interrupt;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
+import io.harness.plan.Plan;
+import io.harness.pms.sdk.PmsSdkInstance;
 
 import java.util.Set;
 
@@ -22,6 +25,9 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Interrupt.class);
     set.add(OutcomeInstance.class);
     set.add(ExecutionSweepingOutputInstance.class);
+    set.add(PmsSdkInstance.class);
+    set.add(Plan.class);
+    set.add(PlanExecutionMetadata.class);
   }
 
   @Override

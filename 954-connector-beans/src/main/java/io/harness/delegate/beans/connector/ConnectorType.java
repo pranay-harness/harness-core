@@ -16,13 +16,14 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("Splunk") SPLUNK("Splunk"),
   @JsonProperty("AppDynamics") APP_DYNAMICS("AppDynamics"),
   @JsonProperty("Prometheus") PROMETHEUS("Prometheus"),
+  @JsonProperty("Dynatrace") DYNATRACE("Dynatrace"),
   @JsonProperty("Vault") VAULT("Vault"),
+  @JsonProperty("AzureKeyVault") AZURE_KEY_VAULT("AzureKeyVault"),
   @JsonProperty("DockerRegistry") DOCKER("DockerRegistry"),
   @JsonProperty("Local") LOCAL("Local"),
   @JsonProperty("AwsKms") AWS_KMS("AwsKms"),
   @JsonProperty("GcpKms") GCP_KMS("GcpKms"),
   //  @JsonProperty("Awssecretsmanager") AWS_SECRETS_MANAGER("Awssecretsmanager"),
-  //  @JsonProperty("Azurevault") AZURE_VAULT("Azurevault"),
   //  @JsonProperty("Cyberark") CYBERARK("Cyberark"),
   //  @JsonProperty("CustomSecretManager") CUSTOM("CustomSecretManager"),
   @JsonProperty("Gcp") GCP("Gcp"),
@@ -39,7 +40,9 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("GcpCloudCost") GCP_CLOUD_COST("GcpCloudCost"),
   @JsonProperty("CEK8sCluster") CE_KUBERNETES_CLUSTER("CEK8sCluster"),
   @JsonProperty("HttpHelmRepo") HTTP_HELM_REPO("HttpHelmRepo"),
-  @JsonProperty("NewRelic") NEW_RELIC("NewRelic");
+  @JsonProperty("NewRelic") NEW_RELIC("NewRelic"),
+  @JsonProperty("Datadog") DATADOG("Datadog"),
+  @JsonProperty("SumoLogic") SUMOLOGIC("SumoLogic");
   private final String displayName;
 
   @JsonCreator

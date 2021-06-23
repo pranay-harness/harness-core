@@ -12,6 +12,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.NgAutoLogContext;
@@ -48,6 +49,8 @@ import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.helpers.GitContextHelper;
+import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.activityhistory.NGActivityType;
@@ -67,6 +70,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.domain.Page;
 
 @Slf4j
@@ -121,12 +125,23 @@ public class ConnectorServiceImpl implements ConnectorService {
 
   @Override
   public ConnectorResponseDTO create(@NotNull ConnectorDTO connector, String accountIdentifier) {
+    return createInternal(connector, accountIdentifier, ChangeType.ADD);
+  }
+
+  @Override
+  public ConnectorResponseDTO create(ConnectorDTO connector, String accountIdentifier, ChangeType gitChangeType) {
+    return createInternal(connector, accountIdentifier, gitChangeType);
+  }
+
+  private ConnectorResponseDTO createInternal(
+      ConnectorDTO connector, String accountIdentifier, ChangeType gitChangeType) {
     PerpetualTaskId connectorHeartbeatTaskId = null;
     try (AutoLogContext ignore1 = new NgAutoLogContext(connector.getConnectorInfo().getProjectIdentifier(),
              connector.getConnectorInfo().getOrgIdentifier(), accountIdentifier, OVERRIDE_ERROR);
          AutoLogContext ignore2 =
              new ConnectorLogContext(connector.getConnectorInfo().getIdentifier(), OVERRIDE_ERROR)) {
       ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
+      connectorInfo.getConnectorConfig().validate();
       boolean isHarnessManagedSecretManager =
           harnessManagedConnectorHelper.isHarnessManagedSecretManager(connectorInfo);
       boolean isDefaultBranchConnector = gitSyncSdkService.isDefaultBranch(accountIdentifier,
@@ -136,8 +151,14 @@ public class ConnectorServiceImpl implements ConnectorService {
             connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
       }
       if (connectorHeartbeatTaskId != null || isHarnessManagedSecretManager || !isDefaultBranchConnector) {
-        ConnectorResponseDTO connectorResponse =
-            getConnectorService(connectorInfo.getConnectorType()).create(connector, accountIdentifier);
+        ConnectorResponseDTO connectorResponse;
+        if (GitContextHelper.isUpdateToNewBranch()) {
+          connectorResponse = getConnectorService(connectorInfo.getConnectorType())
+                                  .create(connector, accountIdentifier, ChangeType.MODIFY);
+        } else {
+          connectorResponse =
+              getConnectorService(connectorInfo.getConnectorType()).create(connector, accountIdentifier);
+        }
         if (connectorResponse != null && isDefaultBranchConnector) {
           ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
           createConnectorCreationActivity(accountIdentifier, savedConnector);
@@ -183,6 +204,14 @@ public class ConnectorServiceImpl implements ConnectorService {
     }
   }
 
+  /***
+   * The usual update logic involves getting the entity, updating it and saving it
+   * In the case when user selected commit to a new branch while updating a connector
+   * We need to
+   *   1. Update the connector in git
+   *   2. Create a new record for this branch in our mongo
+   * We are handling this case using the below if statement
+   ***/
   @Override
   public ConnectorResponseDTO update(@NotNull ConnectorDTO connector, String accountIdentifier) {
     try (AutoLogContext ignore1 = new NgAutoLogContext(connector.getConnectorInfo().getProjectIdentifier(),
@@ -192,6 +221,13 @@ public class ConnectorServiceImpl implements ConnectorService {
       boolean isDefaultBranchConnector = gitSyncSdkService.isDefaultBranch(accountIdentifier,
           connector.getConnectorInfo().getOrgIdentifier(), connector.getConnectorInfo().getProjectIdentifier());
       ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
+
+      connectorInfo.getConnectorConfig().validate();
+      validateTheUpdateRequestIsValid(connectorInfo, accountIdentifier);
+      if (GitContextHelper.isUpdateToNewBranch()) {
+        return create(connector, accountIdentifier, ChangeType.MODIFY);
+      }
+
       ConnectorResponseDTO connectorResponse =
           getConnectorService(connectorInfo.getConnectorType()).update(connector, accountIdentifier);
       if (isDefaultBranchConnector) {
@@ -202,6 +238,63 @@ public class ConnectorServiceImpl implements ConnectorService {
             EventsFrameworkMetadataConstants.UPDATE_ACTION);
       }
       return connectorResponse;
+    }
+  }
+
+  private Optional<ConnectorResponseDTO> findExistingConnector(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    GitEntityInfo gitEntityInfo = GitContextHelper.getGitEntityInfo();
+    if (gitEntityInfo != null) {
+      String repo = gitEntityInfo.getYamlGitConfigId();
+      if (GitContextHelper.isUpdateToNewBranch()) {
+        return getFromBranch(
+            accountIdentifier, orgIdentifier, projectIdentifier, identifier, repo, gitEntityInfo.getBaseBranch());
+      }
+    }
+    return get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+  }
+
+  private void validateTheUpdateRequestIsValid(ConnectorInfoDTO connectorInfo, String accountIdentifier) {
+    final Optional<ConnectorResponseDTO> connectorDTO = findExistingConnector(accountIdentifier,
+        connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
+    if (!connectorDTO.isPresent()) {
+      throw new ConnectorNotFoundException(
+          connectorErrorMessagesHelper.createConnectorNotFoundMessage(accountIdentifier,
+              connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier()),
+          USER);
+    }
+    ConnectorInfoDTO existingConnector = connectorDTO.get().getConnector();
+    validateTheConnectorTypeIsNotChanged(existingConnector.getConnectorType(), connectorInfo.getConnectorType(),
+        accountIdentifier, connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(),
+        connectorInfo.getIdentifier());
+    validateNameIsUnique(connectorInfo, accountIdentifier, existingConnector.getIdentifier());
+  }
+
+  private void validateNameIsUnique(ConnectorInfoDTO connectorInfo, String accountIdentifier, String identifier) {
+    final Optional<ConnectorResponseDTO> existingConnector = getByName(accountIdentifier,
+        connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getName(), true);
+    if (!existingConnector.isPresent()) {
+      return;
+    }
+    String existingConnectorIdentifier = existingConnector.get().getConnector().getIdentifier();
+    if (!isTheSameConnector(existingConnectorIdentifier, identifier)) {
+      throw new InvalidRequestException(format("Connector with name [%s] already exists", connectorInfo.getName()));
+    }
+  }
+
+  private boolean isTheSameConnector(String existingConnectorIdentifier, String newConnectorIdentifier) {
+    return newConnectorIdentifier.equals(existingConnectorIdentifier);
+  }
+
+  private void validateTheConnectorTypeIsNotChanged(ConnectorType existingConnectorType,
+      ConnectorType typeInTheUpdateRequest, String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifier) {
+    if (existingConnectorType != typeInTheUpdateRequest) {
+      String noConnectorExistsWithTypeMessage = String.format("%s with type %s",
+          connectorErrorMessagesHelper.createConnectorNotFoundMessage(
+              accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier),
+          typeInTheUpdateRequest);
+      throw new InvalidRequestException(noConnectorExistsWithTypeMessage);
     }
   }
 
@@ -500,6 +593,18 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
+  public String getHeartbeatPerpetualTaskId(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    return defaultConnectorService.getHeartbeatPerpetualTaskId(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+  }
+
+  @Override
+  public void resetHeartbeatForReferringConnectors(List<Pair<String, String>> connectorPerpetualTaskInfoList) {
+    defaultConnectorService.resetHeartbeatForReferringConnectors(connectorPerpetualTaskInfoList);
+  }
+
+  @Override
   public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier,
       ConnectorFilterPropertiesDTO filterProperties, String orgIdentifier, String projectIdentifier,
       String filterIdentifier, String searchTerm, Boolean includeAllConnectorsAccessibleAtScope,
@@ -529,5 +634,19 @@ public class ConnectorServiceImpl implements ConnectorService {
         .testedAt(System.currentTimeMillis())
         .status(FAILURE)
         .build();
+  }
+
+  @Override
+  public Optional<ConnectorResponseDTO> getByName(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String name, boolean isDeletedAllowed) {
+    return defaultConnectorService.getByName(
+        accountIdentifier, orgIdentifier, projectIdentifier, name, isDeletedAllowed);
+  }
+
+  @Override
+  public Optional<ConnectorResponseDTO> getFromBranch(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String connectorIdentifier, String repo, String branch) {
+    return defaultConnectorService.getFromBranch(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, repo, branch);
   }
 }

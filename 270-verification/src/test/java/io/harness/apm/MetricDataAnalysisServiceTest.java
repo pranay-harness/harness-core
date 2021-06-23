@@ -387,7 +387,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBase {
       numOfAlerts = alertQuery.count();
       tryCount++;
       sleep(ofMillis(500));
-    } while (numOfAlerts < expectedNumOfAlerts && tryCount < 10);
+    } while (numOfAlerts < expectedNumOfAlerts && tryCount < 20);
   }
 
   private void verifyAnalysisOffsetPageSizeAndSorting(int total) {

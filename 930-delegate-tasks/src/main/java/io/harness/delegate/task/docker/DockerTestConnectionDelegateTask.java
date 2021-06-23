@@ -49,4 +49,9 @@ public class DockerTestConnectionDelegateTask extends AbstractDelegateRunnableTa
   public DockerTestConnectionTaskResponse run(Object[] parameters) {
     throw new NotImplementedException("Not implemented");
   }
+
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
+  }
 }

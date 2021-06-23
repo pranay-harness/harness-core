@@ -5,15 +5,14 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.DelegateInfoHelper;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
-import io.harness.beans.converter.GraphVertexConverter;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.generator.OrchestrationAdjacencyListGenerator;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 import io.harness.service.GraphGenerationService;
 
@@ -31,17 +30,13 @@ public class GraphStatusUpdateHelper {
   @Inject private OrchestrationAdjacencyListGenerator orchestrationAdjacencyListGenerator;
   @Inject private DelegateInfoHelper delegateInfoHelper;
 
-  public OrchestrationGraph handleEvent(OrchestrationEvent event, OrchestrationGraph orchestrationGraph) {
-    // ToDo(Alexei) rewrite when proto will contain all the fields
-    NodeExecutionProto nodeExecutionProto = event.getNodeExecutionProto();
-    String nodeExecutionId = nodeExecutionProto.getUuid();
-    String planExecutionId = nodeExecutionProto.getAmbiance().getPlanExecutionId();
+  public OrchestrationGraph handleEvent(String planExecutionId, String nodeExecutionId,
+      OrchestrationEventType eventType, OrchestrationGraph orchestrationGraph) {
     if (isEmpty(nodeExecutionId)) {
       return orchestrationGraph;
     }
     try {
-      log.info("[{}] event log handler started for [{}] for plan [{}]", event.getEventType(), nodeExecutionId,
-          planExecutionId);
+      log.info("[{}] event log handler started for [{}] for plan [{}]", eventType, nodeExecutionId, planExecutionId);
 
       NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
 
@@ -59,15 +54,14 @@ public class GraphStatusUpdateHelper {
         } else {
           updateGraphVertex(graphVertexMap, nodeExecution, planExecutionId);
         }
-      } else {
+      } else if (!nodeExecution.isOldRetry()) {
         log.info("Adding graph vertex with id [{}] and status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
             nodeExecution.getStatus(), planExecutionId);
         orchestrationAdjacencyListGenerator.addVertex(orchestrationGraph.getAdjacencyList(), nodeExecution);
       }
-      log.info("[{}] event log handler completed for [{}] for plan [{}]", event.getEventType(), nodeExecutionId,
-          planExecutionId);
+      log.info("[{}] event log handler completed for [{}] for plan [{}]", eventType, nodeExecutionId, planExecutionId);
     } catch (Exception e) {
-      log.error("[{}] event failed for [{}] for plan [{}]", event.getEventType(), nodeExecutionId, planExecutionId, e);
+      log.error("[{}] event failed for [{}] for plan [{}]", eventType, nodeExecutionId, planExecutionId, e);
       throw e;
     }
     return orchestrationGraph;
@@ -79,15 +73,42 @@ public class GraphStatusUpdateHelper {
     log.info("Updating graph vertex for [{}] with status [{}]. PlanExecutionId: [{}]", nodeExecutionId,
         nodeExecution.getStatus(), planExecutionId);
     graphVertexMap.computeIfPresent(nodeExecutionId, (key, prevValue) -> {
-      GraphVertex newValue = GraphVertexConverter.convertFrom(nodeExecution);
+      GraphVertex newValue = convertFromNodeExecution(prevValue, nodeExecution);
       if (StatusUtils.isFinalStatus(newValue.getStatus())) {
         newValue.setOutcomeDocuments(PmsOutcomeMapper.convertJsonToDocument(
-            pmsOutcomeService.findAllByRuntimeId(planExecutionId, nodeExecutionId, true)));
+            pmsOutcomeService.findAllOutcomesMapByRuntimeId(planExecutionId, nodeExecutionId)));
         newValue.setGraphDelegateSelectionLogParams(
             delegateInfoHelper.getDelegateInformationForGivenTask(nodeExecution.getExecutableResponses(),
                 nodeExecution.getMode(), AmbianceUtils.getAccountId(nodeExecution.getAmbiance())));
       }
       return newValue;
     });
+  }
+
+  public GraphVertex convertFromNodeExecution(GraphVertex prevValue, NodeExecution nodeExecution) {
+    return GraphVertex.builder()
+        .uuid(nodeExecution.getUuid())
+        .ambiance(nodeExecution.getAmbiance())
+        .planNodeId(nodeExecution.getNode().getUuid())
+        .identifier(nodeExecution.getNode().getIdentifier())
+        .name(nodeExecution.getNode().getName())
+        .startTs(nodeExecution.getStartTs())
+        .endTs(nodeExecution.getEndTs())
+        .initialWaitDuration(nodeExecution.getInitialWaitDuration())
+        .lastUpdatedAt(nodeExecution.getLastUpdatedAt())
+        .stepType(nodeExecution.getNode().getStepType().getType())
+        .status(nodeExecution.getStatus())
+        .failureInfo(nodeExecution.getFailureInfo())
+        .skipInfo(nodeExecution.getSkipInfo())
+        .nodeRunInfo(nodeExecution.getNodeRunInfo())
+        .stepParameters(nodeExecution.getResolvedStepInputs())
+        .mode(nodeExecution.getMode())
+        .executableResponses(CollectionUtils.emptyIfNull(nodeExecution.getExecutableResponses()))
+        .interruptHistories(nodeExecution.getInterruptHistories())
+        .retryIds(nodeExecution.getRetryIds())
+        .skipType(nodeExecution.getNode().getSkipType())
+        .unitProgresses(nodeExecution.getUnitProgresses())
+        .progressData(nodeExecution.getProgressData())
+        .build();
   }
 }

@@ -11,8 +11,8 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/metrics"
 	"github.com/wings-software/portal/product/ci/common/external"
 	"github.com/wings-software/portal/product/ci/engine/consts"
-	"github.com/wings-software/portal/product/ci/engine/executor"
 	"github.com/wings-software/portal/product/ci/engine/grpc"
+	"github.com/wings-software/portal/product/ci/engine/legacy/executor"
 	"go.uber.org/zap"
 )
 
@@ -64,7 +64,8 @@ func main() {
 	// Lite engine logs that are not part of any step are logged with ID engine:main
 	remoteLogger := getRemoteLogger("engine:main")
 	log := remoteLogger.BaseLogger
-	defer remoteLogger.Writer.Close() // upload the logs to object store and close the stream
+	procWriter := remoteLogger.Writer
+	defer procWriter.Close() // upload the logs to object store and close the stream
 
 	if args.LogMetrics {
 		metrics.Log(int32(os.Getpid()), "engine", log)
@@ -89,9 +90,10 @@ func main() {
 // starts grpc server in background
 func startServer(rl *logs.RemoteLogger, background bool) {
 	log := rl.BaseLogger
+	procWriter := rl.Writer
 
 	log.Infow("Starting CI engine server", "port", consts.LiteEnginePort)
-	s, err := engineServer(consts.LiteEnginePort, log)
+	s, err := engineServer(consts.LiteEnginePort, log, procWriter)
 	if err != nil {
 		log.Errorw("error on running CI engine server", "port", consts.LiteEnginePort, "error_msg", zap.Error(err))
 		rl.Writer.Close()
@@ -103,6 +105,7 @@ func startServer(rl *logs.RemoteLogger, background bool) {
 		go func() {
 			if err := s.Start(); err != nil {
 				log.Errorw("error in CI engine grpc server", "port", consts.LiteEnginePort, "error_msg", zap.Error(err))
+				rl.Writer.Close()
 			}
 		}()
 	} else {

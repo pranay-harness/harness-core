@@ -22,7 +22,8 @@ public class EntityYamlRootNames {
   public static String SECRET = "secret";
   public static String SERVICE = "service";
   public static String ENVIRONMENT = "environment";
-  public static String INPUT_SET = "inputSets";
+  public static String INPUT_SET = "inputSet";
+  public static String OVERLAY_INPUT_SET = "overlayInputSet";
   public static String CV_CONFIG = "cvConfig";
   public static String DELEGATE = "delegate";
   public static String DELEGATE_CONFIGURATION = "delegateConfigurations";
@@ -32,6 +33,7 @@ public class EntityYamlRootNames {
   public static String CV_KUBERNETES_ACTIVITY_SOURCE = "cvKubernetesActivitySource";
   public static String DEPLOYMENT_STEP = "deploymentSteps";
   public static String DEPLOYMENT_STAGE = "deploymentStage";
+  public static String FEATURE_FLAG_STAGE = "featureFlagStage";
   public static String APPROVAL_STAGE = "approvalStage";
   public static String TRIGGERS = "trigger";
 }

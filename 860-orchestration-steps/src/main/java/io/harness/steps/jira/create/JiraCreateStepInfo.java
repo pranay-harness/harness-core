@@ -8,7 +8,7 @@ import io.harness.filters.WithConnectorRef;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.steps.StepSpecTypeConstants;
@@ -20,11 +20,11 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
@@ -34,9 +34,9 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.JIRA_CREATE)
 @TypeAlias("jiraCreateStepInfo")
 public class JiraCreateStepInfo implements PMSStepInfo, WithConnectorRef {
-  @NotEmpty @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> connectorRef;
-  @NotEmpty @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> projectKey;
-  @NotEmpty @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> issueType;
+  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> connectorRef;
+  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> projectKey;
+  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> issueType;
 
   List<JiraField> fields;
 
@@ -56,7 +56,7 @@ public class JiraCreateStepInfo implements PMSStepInfo, WithConnectorRef {
         .connectorRef(connectorRef)
         .projectKey(projectKey)
         .issueType(issueType)
-        .fields(JiraStepUtils.prepareFieldMap(fields))
+        .fields(JiraStepUtils.processJiraFieldsList(fields))
         .build();
   }
 

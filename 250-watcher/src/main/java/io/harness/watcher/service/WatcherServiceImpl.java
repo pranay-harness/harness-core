@@ -3,6 +3,7 @@ package io.harness.watcher.service;
 import static io.harness.concurrent.HTimeLimiter.callInterruptible;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.DelegateConfiguration.Action.SELF_DESTRUCT;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_GO_AHEAD;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_HEARTBEAT;
@@ -74,13 +75,13 @@ import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.message.Message;
 import io.harness.delegate.message.MessageService;
 import io.harness.event.client.impl.tailer.ChronicleEventTailer;
-import io.harness.exception.GeneralException;
 import io.harness.filesystem.FileIo;
 import io.harness.grpc.utils.DelegateGrpcConfigExtractor;
 import io.harness.managerclient.ManagerClientV2;
 import io.harness.managerclient.SafeHttpCall;
 import io.harness.network.Http;
 import io.harness.rest.RestResponse;
+import io.harness.security.SignVerifier;
 import io.harness.threading.Schedulable;
 import io.harness.utils.ProcessControl;
 import io.harness.version.VersionInfoManager;
@@ -119,7 +120,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -133,7 +133,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -168,7 +167,6 @@ public class WatcherServiceImpl implements WatcherService {
   private static final String DELEGATE_RESTART_SCRIPT = "DelegateRestartScript";
   private static final String NO_SPACE_LEFT_ON_DEVICE_ERROR = "No space left on device";
   private static final String FILE_HANDLES_LOGS_FOLDER = "file_handle_logs";
-  private static final String HARNESS_SIGNATURE_FILE_NAME = "META-INF/HARNESSJ.SF";
   private final String watcherJreVersion = System.getProperty("java.version");
   private long delegateRestartedToUpgradeJreAt;
   private boolean watcherRestartedToUpgradeJre;
@@ -449,21 +447,22 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void heartbeat() {
-    if (!isDiskFull()) {
-      try {
-        Map<String, Object> heartbeatData = new HashMap<>();
-        heartbeatData.put(WATCHER_HEARTBEAT, clock.millis());
-        heartbeatData.put(WATCHER_PROCESS, getProcessId());
-        heartbeatData.put(WATCHER_VERSION, getVersion());
-        messageService.putAllData(WATCHER_DATA, heartbeatData);
-      } catch (Exception e) {
-        if (e.getMessage().contains(NO_SPACE_LEFT_ON_DEVICE_ERROR)) {
-          lastAvailableDiskSpace.set(getDiskFreeSpace());
-          log.error("Disk space is full. Free space: {}", lastAvailableDiskSpace.get());
-        } else {
-          log.error("Error putting all watcher data", e);
-          throw e;
-        }
+    if (isDiskFull()) {
+      return;
+    }
+    try {
+      Map<String, Object> heartbeatData = new HashMap<>();
+      heartbeatData.put(WATCHER_HEARTBEAT, clock.millis());
+      heartbeatData.put(WATCHER_PROCESS, getProcessId());
+      heartbeatData.put(WATCHER_VERSION, getVersion());
+      messageService.putAllData(WATCHER_DATA, heartbeatData);
+    } catch (Exception e) {
+      if (e.getMessage().contains(NO_SPACE_LEFT_ON_DEVICE_ERROR)) {
+        lastAvailableDiskSpace.set(getDiskFreeSpace());
+        log.error("Disk space is full. Free space: {}", lastAvailableDiskSpace.get());
+      } else {
+        log.error("Error putting all watcher data", e);
+        throw e;
       }
     }
   }
@@ -924,7 +923,7 @@ public class WatcherServiceImpl implements WatcherService {
   public List<String> findExpectedDelegateVersions() {
     try {
       if (multiVersion) {
-        RestResponse<DelegateConfiguration> restResponse = callInterruptible(timeLimiter, ofSeconds(15),
+        RestResponse<DelegateConfiguration> restResponse = callInterruptible(timeLimiter, ofSeconds(30),
             () -> SafeHttpCall.execute(managerClient.getDelegateConfiguration(watcherConfiguration.getAccountId())));
 
         if (restResponse == null) {
@@ -933,7 +932,11 @@ public class WatcherServiceImpl implements WatcherService {
 
         DelegateConfiguration config = restResponse.getResource();
 
-        return config.getDelegateVersions();
+        if (config != null && config.getAction() == SELF_DESTRUCT) {
+          selfDestruct();
+        }
+
+        return config != null ? config.getDelegateVersions() : null;
       } else {
         String delegateMetadata =
             Http.getResponseStringFromUrl(watcherConfiguration.getDelegateCheckLocation(), 10, 10);
@@ -945,7 +948,7 @@ public class WatcherServiceImpl implements WatcherService {
     } catch (Exception e) {
       log.warn("Unable to fetch delegate version information", e);
     }
-    throw new GeneralException("Couldn't get delegate versions.");
+    return null;
   }
 
   private int getMinorVersion(String delegateVersion) {
@@ -1053,21 +1056,16 @@ public class WatcherServiceImpl implements WatcherService {
         log.info("Downloaded delegate jar version {} to the temporary location", version);
 
         try (JarFile delegateJar = new JarFile(downloadDestination)) {
-          // Check if jar is signed properly (This will pass if jar was not signed at all)
-          boolean verified = verify(delegateJar);
-
-          // Additional check to make sure that jar file was signed by Harness
-          JarEntry harnessSignatureFile = delegateJar.getJarEntry(HARNESS_SIGNATURE_FILE_NAME);
-
-          if (verified && harnessSignatureFile != null) {
+          if (SignVerifier.meticulouslyVerify(delegateJar)) {
             FileUtils.moveFile(downloadDestination, finalDestination);
             log.info("Moved delegate jar version {} to the final location", version);
           } else {
-            log.error("Downloaded delegate jar version {} is corrupted. Removing invalid file.", version);
+            log.warn("Downloaded delegate jar version {} is corrupted. Removing invalid file.", version);
             FileUtils.forceDelete(downloadDestination);
           }
         } catch (Exception ex) {
-          log.error("Unexpected error occurred during jar file verification. File will be deleted.", ex);
+          log.warn("Unexpected error occurred during jar file verification with message: {}. File will be deleted.",
+              ex.getMessage());
         } finally {
           if (downloadDestination.exists()) {
             FileUtils.forceDelete(downloadDestination);
@@ -1077,27 +1075,6 @@ public class WatcherServiceImpl implements WatcherService {
     }
 
     log.info("Finished downloading delegate jar version {} in {} seconds", version, timer.elapsed(TimeUnit.SECONDS));
-  }
-
-  private boolean verify(JarFile jar) throws IOException {
-    // Since jarverifier is not available in JRE we will have to manually trigger the verification by reading
-    // some portion of each of the jar entries.
-    Enumeration<JarEntry> entries = jar.entries();
-    while (entries.hasMoreElements()) {
-      JarEntry entry = entries.nextElement();
-      byte[] buffer = new byte[2048];
-      try (InputStream is = jar.getInputStream(entry)) {
-        while ((is.read(buffer, 0, buffer.length)) != -1) {
-          // We just read. This will throw a SecurityException
-          // if a signature/digest check fails.
-          log.trace("Reading jar entries to trigger signing check...");
-        }
-      } catch (SecurityException se) {
-        log.error("Jar signing verification failed", se);
-        return false;
-      }
-    }
-    return true;
   }
 
   private void drainDelegateProcess(String delegateProcess) {
@@ -1126,7 +1103,8 @@ public class WatcherServiceImpl implements WatcherService {
         String newDelegateProcess = null;
 
         if (newDelegate.getProcess().isAlive()) {
-          Message message = messageService.waitForMessage(NEW_DELEGATE, TimeUnit.MINUTES.toMillis(4));
+          Message message =
+              messageService.waitForMessage(NEW_DELEGATE, TimeUnit.MINUTES.toMillis(version == null ? 15 : 4));
           if (message != null) {
             newDelegateProcess = message.getParams().get(0);
             log.info("Got process ID from new delegate: {}", newDelegateProcess);

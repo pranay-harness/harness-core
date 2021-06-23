@@ -28,7 +28,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -163,7 +165,7 @@ public class ConnectorMapper {
         connectorEntityToDTOMapperMap.get(connector.getType().toString());
     ConnectorConfigDTO connectorDTO = connectorEntityToDTOMapper.createConnectorDTO(connector);
     if (connectorDTO instanceof DelegateSelectable) {
-      Set<String> delegateSelectors = connector.getDelegateSelectors();
+      Set<String> delegateSelectors = Optional.ofNullable(connector.getDelegateSelectors()).orElse(new HashSet<>());
       ((DelegateSelectable) connectorDTO).setDelegateSelectors(delegateSelectors);
     }
     return connectorDTO;

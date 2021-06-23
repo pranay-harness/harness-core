@@ -1,6 +1,7 @@
 package io.harness.accesscontrol;
 
 import static io.harness.AuthorizationServiceHeader.ACCESS_CONTROL_SERVICE;
+import static io.harness.accesscontrol.principals.PrincipalType.SERVICE_ACCOUNT;
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ACCOUNT;
@@ -18,20 +19,29 @@ import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.AccessControlClientModule;
 import io.harness.DecisionModule;
+import io.harness.accesscontrol.aggregator.AggregatorStackDriverMetricsPublisherImpl;
+import io.harness.accesscontrol.aggregator.consumers.AccessControlChangeEventFailureHandler;
 import io.harness.accesscontrol.commons.events.EventConsumer;
 import io.harness.accesscontrol.commons.iterators.AccessControlIteratorsConfig;
+import io.harness.accesscontrol.commons.notifications.NotificationConfig;
 import io.harness.accesscontrol.commons.outbox.AccessControlOutboxEventHandler;
 import io.harness.accesscontrol.commons.validation.HarnessActionValidator;
 import io.harness.accesscontrol.preference.AccessControlPreferenceModule;
 import io.harness.accesscontrol.preference.events.NGRBACEnabledFeatureFlagEventConsumer;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.principals.PrincipalValidator;
-import io.harness.accesscontrol.principals.user.UserValidator;
-import io.harness.accesscontrol.principals.user.events.UserMembershipEventConsumer;
+import io.harness.accesscontrol.principals.serviceaccounts.HarnessServiceAccountService;
+import io.harness.accesscontrol.principals.serviceaccounts.HarnessServiceAccountServiceImpl;
+import io.harness.accesscontrol.principals.serviceaccounts.ServiceAccountValidator;
+import io.harness.accesscontrol.principals.serviceaccounts.events.ServiceAccountMembershipEventConsumer;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupService;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupServiceImpl;
 import io.harness.accesscontrol.principals.usergroups.UserGroupValidator;
 import io.harness.accesscontrol.principals.usergroups.events.UserGroupEventConsumer;
+import io.harness.accesscontrol.principals.users.HarnessUserService;
+import io.harness.accesscontrol.principals.users.HarnessUserServiceImpl;
+import io.harness.accesscontrol.principals.users.UserValidator;
+import io.harness.accesscontrol.principals.users.events.UserMembershipEventConsumer;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupServiceImpl;
 import io.harness.accesscontrol.resources.resourcegroups.events.ResourceGroupEventConsumer;
@@ -41,13 +51,17 @@ import io.harness.accesscontrol.scopes.core.ScopeLevel;
 import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParamsFactory;
 import io.harness.aggregator.AggregatorModule;
+import io.harness.aggregator.consumers.ChangeEventFailureHandler;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.client.remote.AuditClientModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
+import io.harness.metrics.modules.MetricsModule;
+import io.harness.metrics.service.api.MetricsPublisher;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
@@ -56,16 +70,17 @@ import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.serializer.morphia.OutboxEventMorphiaRegistrar;
 import io.harness.serializer.morphia.PrimaryVersionManagerMorphiaRegistrar;
+import io.harness.serviceaccount.ServiceAccountClientModule;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.usermembership.UserMembershipClientModule;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
@@ -76,10 +91,12 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @OwnedBy(PL)
+@Slf4j
 public class AccessControlModule extends AbstractModule {
   private static AccessControlModule instance;
   private final AccessControlConfiguration config;
@@ -99,6 +116,12 @@ public class AccessControlModule extends AbstractModule {
   @Singleton
   DistributedLockImplementation distributedLockImplementation() {
     return config.getDistributedLockImplementation() == null ? MONGO : config.getDistributedLockImplementation();
+  }
+
+  @Provides
+  @Singleton
+  NotificationConfig notificationConfig() {
+    return config.getNotificationConfig();
   }
 
   @Provides
@@ -162,7 +185,7 @@ public class AccessControlModule extends AbstractModule {
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
         5, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     install(ExecutorModule.getInstance());
-    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
     install(PersistentLockModule.getInstance());
     Multibinder<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
         Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends MorphiaRegistrar>>() {});
@@ -173,7 +196,13 @@ public class AccessControlModule extends AbstractModule {
     install(new ValidationModule(validatorFactory));
     install(AccessControlCoreModule.getInstance());
     install(DecisionModule.getInstance(config.getDecisionModuleConfiguration()));
+    install(
+        new ServiceAccountClientModule(config.getServiceAccountClientConfiguration().getServiceAccountServiceConfig(),
+            config.getServiceAccountClientConfiguration().getServiceAccountServiceSecret(),
+            ACCESS_CONTROL_SERVICE.getServiceId()));
+
     if (config.getAggregatorConfiguration().isEnabled()) {
+      bind(ChangeEventFailureHandler.class).to(AccessControlChangeEventFailureHandler.class);
       install(AggregatorModule.getInstance(config.getAggregatorConfiguration()));
     }
 
@@ -203,16 +232,20 @@ public class AccessControlModule extends AbstractModule {
 
     bind(HarnessResourceGroupService.class).to(HarnessResourceGroupServiceImpl.class);
     bind(HarnessUserGroupService.class).to(HarnessUserGroupServiceImpl.class);
+    bind(HarnessUserService.class).to(HarnessUserServiceImpl.class);
+    bind(HarnessServiceAccountService.class).to(HarnessServiceAccountServiceImpl.class);
 
     MapBinder<PrincipalType, PrincipalValidator> validatorByPrincipalType =
         MapBinder.newMapBinder(binder(), PrincipalType.class, PrincipalValidator.class);
     validatorByPrincipalType.addBinding(USER).to(UserValidator.class);
     validatorByPrincipalType.addBinding(USER_GROUP).to(UserGroupValidator.class);
+    validatorByPrincipalType.addBinding(SERVICE_ACCOUNT).to(ServiceAccountValidator.class);
 
     Multibinder<EventConsumer> entityCrudEventConsumers =
         Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(ENTITY_CRUD));
     entityCrudEventConsumers.addBinding().to(ResourceGroupEventConsumer.class);
     entityCrudEventConsumers.addBinding().to(UserGroupEventConsumer.class);
+    entityCrudEventConsumers.addBinding().to(ServiceAccountMembershipEventConsumer.class);
 
     Multibinder<EventConsumer> featureFlagEventConsumers =
         Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(FEATURE_FLAG_STREAM));
@@ -226,6 +259,13 @@ public class AccessControlModule extends AbstractModule {
         .bind(HarnessActionValidator.class)
         .annotatedWith(Names.named(RoleAssignmentDTO.MODEL_NAME))
         .to(RoleAssignmentActionValidator.class);
+
+    if (config.getAggregatorConfiguration().isExportMetricsToStackDriver()) {
+      install(new MetricsModule());
+      bind(MetricsPublisher.class).to(AggregatorStackDriverMetricsPublisherImpl.class).in(Scopes.SINGLETON);
+    } else {
+      log.info("No configuration provided for Stack Driver, aggregator metrics will not be recorded");
+    }
 
     registerRequiredBindings();
   }

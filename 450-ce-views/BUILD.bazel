@@ -1,6 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//:macros.bzl", "run_analysis")
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 java_library(
     name = "module",
@@ -17,6 +17,7 @@ java_library(
         "@maven//:com_google_inject_guice",
         "@maven//:com_hazelcast_hazelcast",
         "@maven//:com_healthmarketscience_sqlbuilder_sqlbuilder",
+        "@maven//:io_leangen_graphql_spqr",
         "@maven//:javax_validation_validation_api",
         "@maven//:org_hibernate_hibernate_validator",
         "@maven//:org_jfree_jfreechart",

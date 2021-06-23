@@ -206,7 +206,7 @@ public class K8sCanaryDeployTest extends CategoryTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testCommandUnitList() {
-    List<CommandUnit> blueGreenCommandUnits = k8sCanaryDeploy.commandUnitList(true);
+    List<CommandUnit> blueGreenCommandUnits = k8sCanaryDeploy.commandUnitList(true, "accountId");
     assertThat(blueGreenCommandUnits).isNotEmpty();
     assertThat(blueGreenCommandUnits.get(0).getName()).isEqualTo(K8sCommandUnitConstants.FetchFiles);
     assertThat(blueGreenCommandUnits.get(1).getName()).isEqualTo(K8sCommandUnitConstants.Init);

@@ -8,6 +8,7 @@ import "io/harness/pms/contracts/plan/plan_node_proto.proto";
 import "io/harness/pms/contracts/plan/graph_layout.proto";
 import "io/harness/pms/contracts/plan/variables.proto";
 import "io/harness/pms/contracts/plan/execution_metadata.proto";
+import "io/harness/pms/contracts/triggers/trigger_payload.proto";
 import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_detail.proto";
 
 service PlanCreationService {
@@ -46,6 +47,7 @@ message PlanCreationContextValue {
     string stringValue = 1;
     ExecutionMetadata metadata = 2;
   }
+  triggers.TriggerPayload triggerPayload = 3;
 }
 
 message YamlFieldBlob {
@@ -77,6 +79,7 @@ message FilterCreationBlobResponse {
 
 message VariablesCreationBlobRequest {
   map<string, YamlFieldBlob> dependencies = 1;
+  VariablesCreationMetadata metadata = 2;
 }
 
 message VariablesCreationResponse {
@@ -91,6 +94,7 @@ message VariablesCreationBlobResponse {
   map<string, YamlFieldBlob> dependencies = 2;
   map<string, YamlFieldBlob> resolvedDependencies = 3;
   repeated ErrorResponse errorResponse = 4;
+  map<string, YamlOutputProperties> yamlOutputProperties = 5;
 }
 
 message ErrorResponse {
@@ -101,4 +105,9 @@ message SetupMetadata {
   string accountId = 1;
   string projectId = 2;
   string orgId = 3;
+  bytes gitSyncBranchContext = 4;
+}
+
+message VariablesCreationMetadata {
+  bytes gitSyncBranchContext = 1;
 }

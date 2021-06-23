@@ -13,6 +13,8 @@ import static com.google.inject.matcher.Matchers.not;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.ModuleType;
+import io.harness.PipelineServiceUtilityModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.AbstractCfModule;
@@ -49,6 +51,7 @@ import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.exception.BadRequestExceptionMapper;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
 import io.harness.cvng.exception.NotFoundExceptionMapper;
+import io.harness.cvng.metrics.services.impl.CVNGMetricsPublisher;
 import io.harness.cvng.migration.CVNGSchemaHandler;
 import io.harness.cvng.migration.beans.CVNGSchema;
 import io.harness.cvng.migration.beans.CVNGSchema.CVNGSchemaKeys;
@@ -65,6 +68,7 @@ import io.harness.cvng.verificationjob.jobs.VerificationJobInstanceTimeoutHandle
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.iterator.PersistenceIterator;
@@ -88,9 +92,18 @@ import io.harness.notification.module.NotificationClientModule;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
+import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.interrupts.InterruptEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.resume.NodeResumeEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.node.start.NodeStartEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -112,6 +125,7 @@ import io.harness.yaml.YamlSdkInitHelper;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -155,12 +169,14 @@ import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.reflections.Reflections;
+import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CV)
 public class VerificationApplication extends Application<VerificationConfiguration> {
   private static String APPLICATION_NAME = "Verification NextGen Application";
+
   private final MetricRegistry metricRegistry = new MetricRegistry();
   private HarnessMetricRegistry harnessMetricRegistry;
   private HPersistence hPersistence;
@@ -240,6 +256,12 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .addAll(CvNextGenRegistrars.morphiaConverters)
             .build();
       }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder().build();
+      }
     });
 
     modules.add(new AbstractCfModule() {
@@ -250,7 +272,12 @@ public class VerificationApplication extends Application<VerificationConfigurati
 
       @Override
       public CfMigrationConfig cfMigrationConfig() {
-        return configuration.getCfMigrationConfig();
+        return CfMigrationConfig.builder().build();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return configuration.getFeatureFlagConfig();
       }
     });
     modules.add(MetricsInstrumentationModule.builder()
@@ -301,19 +328,22 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new CVNextGenCommonsServiceModule());
     modules.add(new NotificationClientModule(configuration.getNotificationClientConfiguration()));
     modules.add(new CvPersistenceModule());
-    modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(configuration)));
     YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
                                                     .requireSchemaInit(true)
                                                     .requireSnippetInit(false)
                                                     .requireValidatorInit(false)
                                                     .build();
+
+    // Pipeline Service Modules
+    PmsSdkConfiguration pmsSdkConfiguration = getPmsSdkConfiguration(configuration);
+    modules.add(PmsSdkModule.getInstance(pmsSdkConfiguration));
+    modules.add(PipelineServiceUtilityModule.getInstance());
+
     Injector injector = Guice.createInjector(modules);
     YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
     initializeServiceSecretKeys();
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
-    if (!configuration.getShouldConfigureWithPMS()) {
-      initMetrics(injector);
-    }
+    initMetrics(injector);
     autoCreateCollectionsAndIndexes(injector);
     registerCorrelationFilter(environment, injector);
     registerAuthFilters(environment, injector, configuration);
@@ -334,6 +364,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerVerificationJobInstanceTimeoutIterator(injector);
     registerPipelineSDK(configuration, injector);
     registerWaitEnginePublishers(injector);
+    registerPmsSdkEvents(injector);
+
     log.info("Leaving startup maintenance mode");
     MaintenanceController.forceMaintenance(false);
     registerUpdateProgressScheduler(injector);
@@ -367,7 +399,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
 
   public void registerPipelineSDK(VerificationConfiguration configuration, Injector injector) {
     PmsSdkConfiguration sdkConfig = getPmsSdkConfiguration(configuration);
-    if (sdkConfig.getDeploymentMode().equals(PmsSdkConfiguration.DeployMode.REMOTE)) {
+    if (sdkConfig.getDeploymentMode().equals(SdkDeployMode.REMOTE)) {
       try {
         PmsSdkInitHelper.initializeSDKInstance(injector, sdkConfig);
         if (configuration.getShouldConfigureWithPMS()) {
@@ -388,9 +420,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
     }
 
     return PmsSdkConfiguration.builder()
-        .deploymentMode(remote ? PmsSdkConfiguration.DeployMode.REMOTE : PmsSdkConfiguration.DeployMode.LOCAL)
-        .serviceName("cvng")
-        .mongoConfig(config.getPmsMongoConfig())
+        .deploymentMode(remote ? SdkDeployMode.REMOTE : SdkDeployMode.LOCAL)
+        .moduleType(ModuleType.CV)
         .pipelineServiceInfoProviderClass(CVNGPipelineServiceInfoProvider.class)
         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
         .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
@@ -399,11 +430,13 @@ public class VerificationApplication extends Application<VerificationConfigurati
         .engineFacilitators(new HashMap<>())
         .filterCreationResponseMerger(new CVNGFilterCreationResponseMerger())
         .executionSummaryModuleInfoProviderClass(CVNGModuleInfoProvider.class)
+        .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
         .build();
   }
 
   private void initMetrics(Injector injector) {
-    injector.getInstance(MetricService.class).initializeMetrics();
+    injector.getInstance(MetricService.class)
+        .initializeMetrics(Arrays.asList(injector.getInstance(CVNGMetricsPublisher.class)));
     injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
   }
 
@@ -687,6 +720,22 @@ public class VerificationApplication extends Application<VerificationConfigurati
 
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(MaintenanceController.class));
+
+    // Pipeline SDK Consumers
+    environment.lifecycle().manage(injector.getInstance(PipelineEventConsumerController.class));
+  }
+
+  private void registerPmsSdkEvents(Injector injector) {
+    log.info("Initializing sdk event redis abstract consumers...");
+    PipelineEventConsumerController pipelineEventConsumerController =
+        injector.getInstance(PipelineEventConsumerController.class);
+    pipelineEventConsumerController.register(injector.getInstance(InterruptEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(OrchestrationEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(FacilitatorEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(NodeStartEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(ProgressEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 1);
   }
 
   private void registerResources(Environment environment, Injector injector) {

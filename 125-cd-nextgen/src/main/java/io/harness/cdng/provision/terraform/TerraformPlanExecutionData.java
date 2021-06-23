@@ -1,5 +1,7 @@
 package io.harness.cdng.provision.terraform;
 
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
@@ -7,6 +9,7 @@ import io.harness.cdng.provision.terraform.TerraformPlanExecutionDataParameters.
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.validation.Validator;
+import io.harness.yaml.YamlSchemaTypes;
 import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.utils.NGVariablesUtils;
 
@@ -14,7 +17,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,14 +29,16 @@ import lombok.experimental.FieldDefaults;
 @OwnedBy(HarnessTeam.CDP)
 public class TerraformPlanExecutionData {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> workspace;
-  @JsonProperty("configFiles") TerraformConfigFilesWrapper terraformConfigFilesWrapper;
+  @NotNull @JsonProperty("configFiles") TerraformConfigFilesWrapper terraformConfigFilesWrapper;
   @JsonProperty("varFiles") List<TerraformVarFileWrapper> terraformVarFiles;
   @JsonProperty("backendConfig") TerraformBackendConfig terraformBackendConfig;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH) ParameterField<List<String>> targets;
+  @YamlSchemaTypes(value = {string})
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  ParameterField<List<String>> targets;
   List<NGVariable> environmentVariables;
 
-  TerraformPlanCommand command;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> secretManagerRef;
+  @NotNull TerraformPlanCommand command;
+  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> secretManagerRef;
 
   public TerraformPlanExecutionDataParameters toStepParameters() {
     Validator.notNullCheck("Config files are null", terraformConfigFilesWrapper);
@@ -48,7 +53,7 @@ public class TerraformPlanExecutionData {
             .environmentVariables(NGVariablesUtils.getMapOfVariables(environmentVariables, 0L))
             .command(command)
             .secretManagerRef(secretManagerRef);
-    Map<String, TerraformVarFile> varFiles = new LinkedHashMap<>();
+    LinkedHashMap<String, TerraformVarFile> varFiles = new LinkedHashMap<>();
     if (EmptyPredicate.isNotEmpty(terraformVarFiles)) {
       terraformVarFiles.forEach(terraformVarFile -> {
         if (terraformVarFile != null) {

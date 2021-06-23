@@ -21,6 +21,7 @@ import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorDTO;
+import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
@@ -42,6 +43,7 @@ import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -70,8 +72,27 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
+  public Optional<ConnectorResponseDTO> getByName(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String name, boolean isDeletedAllowed) {
+    return defaultConnectorService.getByName(
+        accountIdentifier, orgIdentifier, projectIdentifier, name, isDeletedAllowed);
+  }
+
+  @Override
+  public Optional<ConnectorResponseDTO> getFromBranch(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String connectorIdentifier, String repo, String branch) {
+    return defaultConnectorService.getFromBranch(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, repo, branch);
+  }
+
+  @Override
   public ConnectorResponseDTO create(@Valid ConnectorDTO connector, String accountIdentifier) {
     return createSecretManagerConnector(connector, accountIdentifier);
+  }
+
+  @Override
+  public ConnectorResponseDTO create(ConnectorDTO connector, String accountIdentifier, ChangeType gitChangeType) {
+    return defaultConnectorService.create(connector, accountIdentifier, gitChangeType);
   }
 
   private ConnectorResponseDTO createSecretManagerConnector(ConnectorDTO connector, String accountIdentifier) {
@@ -106,6 +127,8 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
     switch (connector.getConnectorType()) {
       case VAULT:
         return ((VaultConnectorDTO) connector.getConnectorConfig()).isDefault();
+      case AZURE_KEY_VAULT:
+        return ((AzureKeyVaultConnectorDTO) connector.getConnectorConfig()).isDefault();
       case GCP_KMS:
         return ((GcpKmsConnectorDTO) connector.getConnectorConfig()).isDefault();
       case AWS_KMS:
@@ -195,8 +218,13 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   @Override
   public boolean delete(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    boolean success = ngSecretManagerService.deleteSecretManager(
-        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    SecretManagerConfigDTO secretManagerConfigDTO = ngSecretManagerService.getSecretManager(
+        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, true);
+    boolean success = true;
+    if (secretManagerConfigDTO != null) {
+      success = ngSecretManagerService.deleteSecretManager(
+          accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    }
     if (success) {
       return defaultConnectorService.delete(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     }
@@ -253,6 +281,18 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   public ConnectorStatistics getConnectorStatistics(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     return defaultConnectorService.getConnectorStatistics(accountIdentifier, orgIdentifier, projectIdentifier);
+  }
+
+  @Override
+  public String getHeartbeatPerpetualTaskId(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    return defaultConnectorService.getHeartbeatPerpetualTaskId(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+  }
+
+  @Override
+  public void resetHeartbeatForReferringConnectors(List<Pair<String, String>> connectorPerpetualTaskInfoList) {
+    defaultConnectorService.resetHeartbeatForReferringConnectors(connectorPerpetualTaskInfoList);
   }
 
   @Override

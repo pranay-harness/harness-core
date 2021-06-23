@@ -3,6 +3,7 @@ package io.harness.engine.interrupts;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.interrupts.Interrupt.State;
+import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
 import static io.harness.interrupts.Interrupt.State.REGISTERED;
 
@@ -12,6 +13,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.ExecutionCheck;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.interrupts.handlers.AbortInterruptHandler;
 import io.harness.engine.interrupts.handlers.PauseAllInterruptHandler;
 import io.harness.engine.interrupts.handlers.ResumeAllInterruptHandler;
 import io.harness.exception.InvalidRequestException;
@@ -23,8 +25,10 @@ import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.repositories.InterruptRepository;
 
 import com.google.inject.Inject;
+import com.mongodb.client.result.UpdateResult;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -32,13 +36,14 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-@OwnedBy(PIPELINE)
 @Slf4j
+@OwnedBy(PIPELINE)
 public class InterruptServiceImpl implements InterruptService {
   @Inject private InterruptRepository interruptRepository;
   @Inject private MongoTemplate mongoTemplate;
   @Inject private PauseAllInterruptHandler pauseAllInterruptHandler;
   @Inject private ResumeAllInterruptHandler resumeAllInterruptHandler;
+  @Inject private AbortInterruptHandler abortInterruptHandler;
   @Inject private NodeExecutionService nodeExecutionService;
 
   @Override
@@ -58,11 +63,15 @@ public class InterruptServiceImpl implements InterruptService {
     if (isEmpty(interrupts)) {
       return ExecutionCheck.builder().proceed(true).reason("[InterruptCheck] No Interrupts Found").build();
     }
-    if (interrupts.size() > 1) {
+    if (interrupts.stream().filter(interrupt -> interrupt.getNodeExecutionId() == null).count() > 1) {
       throw new InvalidRequestException("More than 2 active Plan Level Interrupts Present: "
           + interrupts.stream().map(interrupt -> interrupt.getType().toString()).collect(Collectors.joining("|")));
     }
-    Interrupt interrupt = interrupts.get(0);
+
+    Optional<Interrupt> optionalInterrupt =
+        InterruptUtils.obtainOptionalInterruptFromActiveInterrupts(interrupts, planExecutionId, nodeExecutionId);
+
+    Interrupt interrupt = optionalInterrupt.orElseThrow(() -> new InvalidRequestException("Interrupt was not found"));
 
     switch (interrupt.getType()) {
       case PAUSE_ALL:
@@ -74,9 +83,20 @@ public class InterruptServiceImpl implements InterruptService {
       case RESUME_ALL:
         resumeAllInterruptHandler.handleInterruptForNodeExecution(interrupt, nodeExecutionId);
         return ExecutionCheck.builder().proceed(true).reason("[InterruptCheck] RESUME_ALL interrupt found").build();
+      case ABORT_ALL:
+        if (abortRequired(nodeExecutionId)) {
+          abortInterruptHandler.handleInterruptForNodeExecution(interrupt, nodeExecutionId);
+          return ExecutionCheck.builder().proceed(false).reason("[InterruptCheck] ABORT_ALL interrupt found").build();
+        }
+        return ExecutionCheck.builder().proceed(true).reason("[InterruptCheck] No Interrupts Found").build();
       default:
         throw new InvalidRequestException("No Handler Present for interrupt type: " + interrupt.getType());
     }
+  }
+
+  private boolean abortRequired(String nodeExecutionId) {
+    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    return !ExecutionModeUtils.isParentMode(nodeExecution.getMode());
   }
 
   private boolean pauseRequired(Interrupt interrupt, String nodeExecutionId) {
@@ -105,7 +125,8 @@ public class InterruptServiceImpl implements InterruptService {
   @Override
   public List<Interrupt> fetchActivePlanLevelInterrupts(String planExecutionId) {
     return interruptRepository.findByPlanExecutionIdAndStateInAndTypeInOrderByCreatedAtDesc(planExecutionId,
-        EnumSet.of(REGISTERED, PROCESSING), EnumSet.of(InterruptType.PAUSE_ALL, InterruptType.RESUME_ALL));
+        EnumSet.of(REGISTERED, PROCESSING),
+        EnumSet.of(InterruptType.PAUSE_ALL, InterruptType.RESUME_ALL, InterruptType.ABORT_ALL));
   }
 
   @Override
@@ -140,6 +161,20 @@ public class InterruptServiceImpl implements InterruptService {
   public List<Interrupt> fetchActiveInterrupts(String planExecutionId) {
     return interruptRepository.findByPlanExecutionIdAndStateInOrderByCreatedAtDesc(
         planExecutionId, EnumSet.of(REGISTERED, PROCESSING));
+  }
+
+  @Override
+  public long closeActiveInterrupts(String planExecutionId) {
+    Query query = query(where(InterruptKeys.planExecutionId).is(planExecutionId))
+                      .addCriteria(where(InterruptKeys.state).in(EnumSet.of(REGISTERED, PROCESSING)));
+    Update update = new Update().set(InterruptKeys.state, PROCESSED_SUCCESSFULLY);
+    UpdateResult updateResult = mongoTemplate.updateMulti(query, update, Interrupt.class);
+    if (!updateResult.wasAcknowledged()) {
+      log.error("Failed to close Active interrupt for planExecutionId: {}", planExecutionId);
+      return -1;
+    }
+    log.info("Closed {} active interrupts for planExecutionId {}", updateResult.getModifiedCount(), planExecutionId);
+    return updateResult.getModifiedCount();
   }
 
   @Override

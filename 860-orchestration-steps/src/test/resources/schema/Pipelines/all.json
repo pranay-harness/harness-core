@@ -149,8 +149,30 @@
         "connectorRef": {
           "type": "string"
         },
+        "depth": {
+          "type": "integer",
+          "format": "int32"
+        },
         "repoName": {
           "type": "string"
+        },
+        "resources": {
+          "$ref": "#/definitions/ContainerResource"
+        },
+        "sslVerify": {
+          "type": "boolean"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ContainerResource": {
+      "type": "object",
+      "required": [
+        "limits"
+      ],
+      "properties": {
+        "limits": {
+          "$ref": "#/definitions/Limits"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -259,6 +281,25 @@
           }
         }
       ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "Limits": {
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "memory": {
+          "type": "string"
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "ManualFailureSpecConfig": {
@@ -473,6 +514,10 @@
               "type": "number",
               "format": "double"
             },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
             "type": {
               "type": "string",
               "enum": [
@@ -480,8 +525,15 @@
               ]
             },
             "value": {
-              "type": "number",
-              "format": "double"
+              "oneOf": [
+                {
+                  "type": "number",
+                  "format": "double"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           }
         }
@@ -525,7 +577,8 @@
           "items": {
             "type": "string",
             "enum": [
-              "AnyOther",
+              "Unknown",
+              "AllErrors",
               "Authentication",
               "Connectivity",
               "Timeout",
@@ -680,10 +733,12 @@
           "$ref": "#/definitions/FlowControlConfig"
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "notificationRules": {
           "type": "array",
@@ -876,7 +931,9 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -894,6 +951,10 @@
           "properties": {
             "default": {
               "type": "string"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
             },
             "type": {
               "type": "string",
@@ -927,10 +988,12 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "spec": {
           "$ref": "#/definitions/StageInfoConfig"
@@ -1031,6 +1094,11 @@
     },
     "StepElementConfig": {
       "type": "object",
+      "required": [
+        "identifier",
+        "name",
+        "type"
+      ],
       "properties": {
         "description": {
           "type": "string"
@@ -1042,16 +1110,19 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "spec": {
           "$ref": "#/definitions/StepSpecType"
         },
         "timeout": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*))$"
         },
         "type": {
           "type": "string"
@@ -1076,10 +1147,12 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "rollbackSteps": {
           "type": "array",
@@ -1160,6 +1233,10 @@
           "properties": {
             "default": {
               "type": "string"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
             },
             "type": {
               "type": "string",

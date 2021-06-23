@@ -16,8 +16,6 @@ public interface ACLService {
 
   long saveAll(List<ACL> acls);
 
-  void deleteAll(List<ACL> acls);
-
   long deleteByRoleAssignment(String roleAssignmentId);
 
   List<ACL> getByRoleAssignment(String roleAssignmentId);

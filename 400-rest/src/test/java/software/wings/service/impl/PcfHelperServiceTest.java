@@ -1,11 +1,11 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.delegate.task.pcf.response.CfInstanceSyncResponse.builder;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 
-import static software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse.builder;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import static junit.framework.TestCase.assertEquals;
@@ -19,14 +19,14 @@ import static org.mockito.Mockito.when;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
+import io.harness.delegate.task.pcf.response.CfInstanceSyncResponse;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.PcfConfig;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
-import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
 import software.wings.service.intfc.DelegateService;
 
 import java.util.ArrayList;
@@ -51,8 +51,7 @@ public class PcfHelperServiceTest extends WingsBaseTest {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     encryptedDataDetails.add(EncryptedDataDetail.builder().fieldName("password").build());
 
-    when(delegateService.executeTask(any(DelegateTask.class)))
-        .thenReturn(PcfCommandExecutionResponse.builder().build());
+    when(delegateService.executeTask(any(DelegateTask.class))).thenReturn(CfCommandExecutionResponse.builder().build());
     doReturn(true).when(mockFeatureFlagService).isEnabled(any(), anyString());
 
     pcfHelperService.validate(pcfConfig, encryptedDataDetails);
@@ -73,11 +72,11 @@ public class PcfHelperServiceTest extends WingsBaseTest {
     instances.add("DummyInstanceId1");
     instances.add("DummyInstanceId2");
 
-    PcfInstanceSyncResponse pcfInstanceSyncResponse = builder().instanceIndicesx(instances).build();
-    PcfCommandExecutionResponse response = PcfCommandExecutionResponse.builder()
-                                               .commandExecutionStatus(SUCCESS)
-                                               .pcfCommandResponse(pcfInstanceSyncResponse)
-                                               .build();
+    CfInstanceSyncResponse cfInstanceSyncResponse = builder().instanceIndicesx(instances).build();
+    CfCommandExecutionResponse response = CfCommandExecutionResponse.builder()
+                                              .commandExecutionStatus(SUCCESS)
+                                              .pcfCommandResponse(cfInstanceSyncResponse)
+                                              .build();
 
     assertEquals(2, pcfHelperService.getInstanceCount(response));
   }

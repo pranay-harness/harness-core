@@ -1,7 +1,6 @@
 package io.harness.pms.sdk.core.resolver.outcome;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.refobjects.RefObject;
@@ -20,6 +19,7 @@ import io.harness.pms.contracts.service.OutcomeResolveOptionalBlobRequest;
 import io.harness.pms.contracts.service.OutcomeResolveOptionalBlobResponse;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
+import io.harness.pms.sdk.core.grpc.client.PmsSdkGrpcClientUtils;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 
 import com.google.inject.Inject;
@@ -27,7 +27,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 import lombok.NonNull;
 
-@OwnedBy(CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 public class OutcomeGrpcServiceImpl implements OutcomeService {
   private final OutcomeProtoServiceBlockingStub outcomeProtoServiceBlockingStub;
@@ -39,48 +39,54 @@ public class OutcomeGrpcServiceImpl implements OutcomeService {
 
   @Override
   public List<Outcome> findAllByRuntimeId(String planExecutionId, String runtimeId) {
-    OutcomeFindAllBlobResponse allByRuntimeId = outcomeProtoServiceBlockingStub.findAllByRuntimeId(
-        OutcomeFindAllBlobRequest.newBuilder().setPlanExecutionId(planExecutionId).setRuntimeId(runtimeId).build());
+    OutcomeFindAllBlobResponse allByRuntimeId =
+        PmsSdkGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::findAllByRuntimeId,
+            OutcomeFindAllBlobRequest.newBuilder().setPlanExecutionId(planExecutionId).setRuntimeId(runtimeId).build());
     return PmsOutcomeMapper.convertJsonToOutcome(allByRuntimeId.getOutcomesList());
   }
 
   @Override
   public List<Outcome> fetchOutcomes(List<String> outcomeInstanceIds) {
-    OutcomeFetchOutcomesBlobResponse outcomeFetchOutcomesBlobResponse = outcomeProtoServiceBlockingStub.fetchOutcomes(
-        OutcomeFetchOutcomesBlobRequest.newBuilder().addAllOutcomeInstanceIds(outcomeInstanceIds).build());
+    OutcomeFetchOutcomesBlobResponse outcomeFetchOutcomesBlobResponse =
+        PmsSdkGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::fetchOutcomes,
+            OutcomeFetchOutcomesBlobRequest.newBuilder().addAllOutcomeInstanceIds(outcomeInstanceIds).build());
     return PmsOutcomeMapper.convertJsonToOutcome(outcomeFetchOutcomesBlobResponse.getOutcomesList());
   }
 
   @Override
   public Outcome fetchOutcome(@NonNull String outcomeInstanceId) {
-    OutcomeFetchOutcomeBlobResponse outcomeFetchOutcomeBlobResponse = outcomeProtoServiceBlockingStub.fetchOutcome(
-        OutcomeFetchOutcomeBlobRequest.newBuilder().setOutcomeInstanceId(outcomeInstanceId).build());
+    OutcomeFetchOutcomeBlobResponse outcomeFetchOutcomeBlobResponse =
+        PmsSdkGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::fetchOutcome,
+            OutcomeFetchOutcomeBlobRequest.newBuilder().setOutcomeInstanceId(outcomeInstanceId).build());
     return PmsOutcomeMapper.convertJsonToOutcome(outcomeFetchOutcomeBlobResponse.getOutcome());
   }
 
   @Override
   public Outcome resolve(Ambiance ambiance, RefObject refObject) {
-    OutcomeResolveBlobResponse resolve = outcomeProtoServiceBlockingStub.resolve(
-        OutcomeResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
+    OutcomeResolveBlobResponse resolve =
+        PmsSdkGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::resolve,
+            OutcomeResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
     return PmsOutcomeMapper.convertJsonToOutcome(resolve.getStepTransput());
   }
 
   @Override
   public String consume(Ambiance ambiance, String name, Outcome value, String groupName) {
     OutcomeConsumeBlobResponse response =
-        outcomeProtoServiceBlockingStub.consume(OutcomeConsumeBlobRequest.newBuilder()
-                                                    .setAmbiance(ambiance)
-                                                    .setName(name)
-                                                    .setValue(PmsOutcomeMapper.convertOutcomeValueToJson(value))
-                                                    .setGroupName(groupName)
-                                                    .build());
+        PmsSdkGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::consume,
+            OutcomeConsumeBlobRequest.newBuilder()
+                .setAmbiance(ambiance)
+                .setName(name)
+                .setValue(PmsOutcomeMapper.convertOutcomeValueToJson(value))
+                .setGroupName(groupName)
+                .build());
     return response.getResponse();
   }
 
   @Override
   public OptionalOutcome resolveOptional(Ambiance ambiance, RefObject refObject) {
-    OutcomeResolveOptionalBlobResponse response = outcomeProtoServiceBlockingStub.resolveOptional(
-        OutcomeResolveOptionalBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
+    OutcomeResolveOptionalBlobResponse response =
+        PmsSdkGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::resolveOptional,
+            OutcomeResolveOptionalBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
     return OptionalOutcome.builder()
         .found(response.getFound())
         .outcome(PmsOutcomeMapper.convertJsonToOutcome(response.getOutcome()))

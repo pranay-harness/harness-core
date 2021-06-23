@@ -1,5 +1,6 @@
 package io.harness.ccm;
 
+import static io.harness.AuthorizationServiceHeader.CE_NEXT_GEN;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
@@ -11,8 +12,21 @@ import io.harness.annotations.retry.MethodExecutionHelper;
 import io.harness.annotations.retry.RetryOnException;
 import io.harness.annotations.retry.RetryOnExceptionInterceptor;
 import io.harness.app.PrimaryVersionManagerModule;
+import io.harness.ccm.bigQuery.BigQueryService;
+import io.harness.ccm.bigQuery.BigQueryServiceImpl;
+import io.harness.ccm.commons.beans.config.GcpConfig;
 import io.harness.ccm.eventframework.ConnectorEntityCRUDStreamListener;
-import io.harness.ccm.persistence.JooqExecuteListener;
+import io.harness.ccm.perpetualtask.K8sWatchTaskResourceClientModule;
+import io.harness.ccm.service.impl.CEYamlServiceImpl;
+import io.harness.ccm.service.intf.CEYamlService;
+import io.harness.ccm.views.service.CEReportScheduleService;
+import io.harness.ccm.views.service.CEViewService;
+import io.harness.ccm.views.service.ViewCustomFieldService;
+import io.harness.ccm.views.service.ViewsBillingService;
+import io.harness.ccm.views.service.impl.CEReportScheduleServiceImpl;
+import io.harness.ccm.views.service.impl.CEViewServiceImpl;
+import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
+import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.govern.ProviderMethodInterceptor;
@@ -29,13 +43,14 @@ import io.harness.persistence.UserProvider;
 import io.harness.queryconverter.SQLConverter;
 import io.harness.queryconverter.SQLConverterImpl;
 import io.harness.redis.RedisConfig;
-import io.harness.serializer.CENextGenRegistrars;
+import io.harness.serializer.CENextGenModuleRegistrars;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.morphia.PrimaryVersionManagerMorphiaRegistrar;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.timescaledb.JooqModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
+import io.harness.timescaledb.metrics.HExecuteListener;
+import io.harness.timescaledb.metrics.QueryStatsPrinter;
 import io.harness.version.VersionModule;
 
 import com.google.common.collect.ImmutableMap;
@@ -70,7 +85,7 @@ public class CENextGenModule extends AbstractModule {
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(CENextGenRegistrars.kryoRegistrars)
+            .addAll(CENextGenModuleRegistrars.kryoRegistrars)
             .build();
       }
 
@@ -78,15 +93,16 @@ public class CENextGenModule extends AbstractModule {
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-            .addAll(CENextGenRegistrars.morphiaRegistrars)
-            .add(PrimaryVersionManagerMorphiaRegistrar.class)
+            .addAll(CENextGenModuleRegistrars.morphiaRegistrars)
             .build();
       }
 
       @Provides
       @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
-        return ImmutableSet.<Class<? extends TypeConverter>>builder().build();
+        return ImmutableSet.<Class<? extends TypeConverter>>builder()
+            .addAll(CENextGenModuleRegistrars.morphiaConverters)
+            .build();
       }
 
       @Provides
@@ -106,9 +122,19 @@ public class CENextGenModule extends AbstractModule {
       @Singleton
       @Named("PSQLExecuteListener")
       ExecuteListener executeListener() {
-        return new JooqExecuteListener();
+        return HExecuteListener.getInstance();
+      }
+
+      @Provides
+      @Singleton
+      @Named("gcpConfig")
+      GcpConfig gcpConfig() {
+        return configuration.getGcpConfig();
       }
     });
+
+    // Bind Services
+    bind(CEYamlService.class).to(CEYamlServiceImpl.class);
 
     install(ExecutorModule.getInstance());
     install(new AbstractMongoModule() {
@@ -119,6 +145,8 @@ public class CENextGenModule extends AbstractModule {
     });
     install(new ConnectorResourceClientModule(
         configuration.getNgManagerClientConfig(), configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
+    install(new K8sWatchTaskResourceClientModule(
+        configuration.getManagerClientConfig(), configuration.getNgManagerServiceSecret(), CE_NEXT_GEN.getServiceId()));
     install(VersionModule.getInstance());
     install(PrimaryVersionManagerModule.getInstance());
     install(new ValidationModule(getValidatorFactory()));
@@ -129,6 +157,13 @@ public class CENextGenModule extends AbstractModule {
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(CENextGenConfiguration.class).toInstance(configuration);
     bind(SQLConverter.class).to(SQLConverterImpl.class);
+    bind(BigQueryService.class).to(BigQueryServiceImpl.class);
+    bind(ViewsBillingService.class).to(ViewsBillingServiceImpl.class);
+    bind(CEViewService.class).to(CEViewServiceImpl.class);
+    bind(ViewCustomFieldService.class).to(ViewCustomFieldServiceImpl.class);
+    bind(CEReportScheduleService.class).to(CEReportScheduleServiceImpl.class);
+    bind(QueryStatsPrinter.class).toInstance(HExecuteListener.getInstance());
+
     registerEventsFrameworkMessageListeners();
 
     bindRetryOnExceptionInterceptor();

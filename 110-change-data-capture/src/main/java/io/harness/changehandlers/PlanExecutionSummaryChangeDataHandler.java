@@ -6,7 +6,6 @@ import io.harness.changestreamsframework.ChangeEvent;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,25 +66,36 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
           DBObject branch = (DBObject) (ciExecutionInfo.get("branch"));
 
           HashMap firstCommit = null;
-          if (branch != null) {
-            firstCommit = (HashMap) ((List) branch.get("commits")).get(0);
+          String commits = "commits";
+          if (branch != null && branch.get(commits) != null && ((List) branch.get(commits)).size() > 0) {
+            firstCommit = (HashMap) ((List) branch.get(commits)).get(0);
             if (firstCommit != null) {
-              columnValueMapping.put("moduleInfo_branch_commit_id", firstCommit.get("id").toString());
-              columnValueMapping.put("moduleInfo_branch_commit_message", firstCommit.get("message").toString());
+              if (firstCommit.get("id") != null) {
+                columnValueMapping.put("moduleInfo_branch_commit_id", firstCommit.get("id").toString());
+              }
+              if (firstCommit.get("message") != null) {
+                columnValueMapping.put("moduleInfo_branch_commit_message", firstCommit.get("message").toString());
+              }
             }
           } else if (ciExecutionInfo.get("pullRequest") != null) {
             DBObject pullRequestObject = (DBObject) ciExecutionInfo.get("pullRequest");
-            if (pullRequestObject.get("commits") != null) {
-              firstCommit = (HashMap) ((List) pullRequestObject.get("commits")).get(0);
+            if (pullRequestObject.get(commits) != null && ((List) pullRequestObject.get(commits)).size() > 0) {
+              firstCommit = (HashMap) ((List) pullRequestObject.get(commits)).get(0);
               if (firstCommit != null) {
-                columnValueMapping.put("moduleInfo_branch_commit_id", firstCommit.get("id").toString());
-                columnValueMapping.put("moduleInfo_branch_commit_message", firstCommit.get("message").toString());
+                if (firstCommit.get("id") != null) {
+                  columnValueMapping.put("moduleInfo_branch_commit_id", firstCommit.get("id").toString());
+                }
+                if (firstCommit.get("message") != null) {
+                  columnValueMapping.put("moduleInfo_branch_commit_message", firstCommit.get("message").toString());
+                }
               }
             }
           }
           DBObject author = (DBObject) (ciExecutionInfo.get("author"));
           if (author != null) {
             columnValueMapping.put("moduleInfo_author_id", author.get("id").toString());
+            columnValueMapping.put("author_name", author.get("name").toString());
+            columnValueMapping.put("author_avatar", author.get("avatar").toString());
           }
           if (ciExecutionInfo.get("event") != null) {
             columnValueMapping.put("moduleInfo_event", ciExecutionInfo.get("event").toString());
@@ -98,10 +108,9 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
       // no information mention related to moduleInfo
       return null;
     }
-    columnValueMapping.put(
-        "startTs", String.valueOf(new Timestamp(Long.parseLong(dbObject.get("startTs").toString()))));
+    columnValueMapping.put("startTs", String.valueOf(Long.parseLong(dbObject.get("startTs").toString())));
     if (dbObject.get("endTs") != null) {
-      columnValueMapping.put("endTs", String.valueOf(new Timestamp(Long.parseLong(dbObject.get("endTs").toString()))));
+      columnValueMapping.put("endTs", String.valueOf(Long.parseLong(dbObject.get("endTs").toString())));
     }
 
     return columnValueMapping;

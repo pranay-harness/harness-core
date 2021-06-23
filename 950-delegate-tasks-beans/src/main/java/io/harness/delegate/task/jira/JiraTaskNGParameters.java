@@ -38,6 +38,8 @@ public class JiraTaskNGParameters implements TaskParameters, ExecutionCapability
   String expand;
   // Fetch status along with create metadata.
   boolean fetchStatus;
+  // Do not fetch comment along with create metadata.
+  boolean ignoreComment;
 
   // Transition to do while updating (optional).
   String transitionToStatus; // required in a transition

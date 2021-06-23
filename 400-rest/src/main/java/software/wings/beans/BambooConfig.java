@@ -28,6 +28,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
@@ -77,6 +78,15 @@ public class BambooConfig extends SettingValue implements EncryptableSetting, Ar
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Arrays.asList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(bambooUrl, maskingEvaluator));
+  }
+
+  @Override
+  public boolean shouldDeleteArtifact(SettingValue prev) {
+    if (!(prev instanceof BambooConfig)) {
+      return true;
+    }
+    BambooConfig prevConfig = (BambooConfig) prev;
+    return !StringUtils.equals(prevConfig.getBambooUrl(), bambooUrl);
   }
 
   @Override

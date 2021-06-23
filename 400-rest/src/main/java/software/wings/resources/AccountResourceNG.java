@@ -81,6 +81,13 @@ public class AccountResourceNG {
     return new RestResponse<>(accounts.stream().map(AccountMapper::toAccountDTO).collect(Collectors.toList()));
   }
 
+  @PUT
+  @Path("/{accountId}/name")
+  public RestResponse<Account> updateAccountName(
+      @PathParam("accountId") @NotEmpty String accountId, @Body AccountDTO dto) {
+    return new RestResponse<>(accountService.updateAccountName(accountId, dto.getName(), null));
+  }
+
   @GET
   @Path("/feature-flag-enabled")
   public RestResponse<Boolean> isFeatureFlagEnabled(
@@ -126,15 +133,41 @@ public class AccountResourceNG {
   }
 
   @PUT
-  @Path("/{accountId}/default-experience")
-  public RestResponse<Boolean> updateDefaultExperienceIfNull(
+  @Path("/{accountId}/default-experience-if-applicable")
+  public RestResponse<Boolean> updateDefaultExperienceIfApplicable(
       @PathParam("accountId") @AccountIdentifier String accountId,
       @QueryParam("defaultExperience") DefaultExperience defaultExperience) {
     Account account = accountService.get(accountId);
-    if (account.getDefaultExperience() == null) {
+    if (canUpdateDefaultExperience(defaultExperience, account)) {
       account.setDefaultExperience(defaultExperience);
       accountService.update(account);
+      log.info("Updated default experience to {} for Account {}", defaultExperience, accountId);
     }
     return new RestResponse(true);
+  }
+
+  private boolean canUpdateDefaultExperience(DefaultExperience defaultExperience, Account account) {
+    // due to CD trial started by default, new NG user with CD trial can be updated
+    return DefaultExperience.isNGExperience(defaultExperience) // accept changing defaultExperience to NG only
+        && account.getDefaultExperience() == null // don't overwrite current defaultExperience
+        && account.isCreatedFromNG() // new NG account only
+        && account.getCeLicenseInfo() == null // Verify account doesn't work on CG
+        && (account.getLicenseInfo() == null || AccountType.TRIAL.equals(account.getLicenseInfo().getAccountType()));
+  }
+
+  /**
+   * This is only intended for an NG user to switch their account experience
+   * Please use updateDefaultExperienceIfApplicable for all internal calls / side effects
+   * @param accountId
+   * @param dto
+   * @return
+   */
+  @PUT
+  @Path("/{accountId}/default-experience")
+  public RestResponse<AccountDTO> updateDefaultExperience(
+      @PathParam("accountId") @AccountIdentifier String accountId, @Body AccountDTO dto) {
+    Account account = accountService.get(accountId);
+    account.setDefaultExperience(dto.getDefaultExperience());
+    return new RestResponse(AccountMapper.toAccountDTO(accountService.update(account)));
   }
 }

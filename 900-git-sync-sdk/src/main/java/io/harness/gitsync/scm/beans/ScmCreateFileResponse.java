@@ -23,4 +23,5 @@ public class ScmCreateFileResponse implements ScmPushResponse {
   String orgIdentifier;
   String accountIdentifier;
   String branch;
+  String commitId;
 }

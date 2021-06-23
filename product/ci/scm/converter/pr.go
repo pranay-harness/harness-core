@@ -12,7 +12,7 @@ func ConvertPRHook(h *scm.PullRequestHook) (*pb.PullRequestHook, error) {
 		return nil, nil
 	}
 
-	repo, err := convertRepo(&h.Repo)
+	repo, err := ConvertRepo(&h.Repo)
 	if err != nil {
 		return nil, err
 	}

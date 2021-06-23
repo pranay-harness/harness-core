@@ -1,6 +1,8 @@
 package io.harness.gitsync;
 
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
+import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
+import static io.harness.remote.NGObjectMapperHelper.NG_DEFAULT_OBJECT_MAPPER;
 
 import static org.mockito.Mockito.mock;
 
@@ -19,18 +21,25 @@ import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.lock.PersistentLocker;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.NGCoreModule;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
 import io.harness.ng.userprofile.services.api.SourceCodeManagerService;
+import io.harness.ng.webhook.services.api.WebhookEventService;
+import io.harness.outbox.api.OutboxService;
+import io.harness.outbox.api.impl.OutboxDaoImpl;
+import io.harness.outbox.api.impl.OutboxServiceImpl;
 import io.harness.persistence.HPersistence;
+import io.harness.repositories.outbox.OutboxEventRepository;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
+import io.harness.springdata.HTransactionTemplate;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -66,6 +75,8 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.mongodb.MongoTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @OwnedBy(HarnessTeam.DX)
 @Slf4j
@@ -104,6 +115,8 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
             .toInstance(mock(NoOpProducer.class));
         bind(ExecutorService.class).toInstance(mock(ExecutorService.class));
         bind(SourceCodeManagerService.class).toInstance(mock(SourceCodeManagerService.class));
+        bind(PersistentLocker.class).toInstance(mock(PersistentLocker.class));
+        bind(WebhookEventService.class).toInstance(mock(WebhookEventService.class));
       }
     });
 
@@ -137,12 +150,32 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
       }
 
       @Provides
+      @Named(OUTBOX_TRANSACTION_TEMPLATE)
+      @Singleton
+      TransactionTemplate getTransactionTemplate(MongoTransactionManager mongoTransactionManager) {
+        return new HTransactionTemplate(mongoTransactionManager, false);
+      }
+
+      @Provides
+      @Singleton
+      OutboxService getOutboxService(OutboxEventRepository outboxEventRepository) {
+        return new OutboxServiceImpl(new OutboxDaoImpl(outboxEventRepository), NG_DEFAULT_OBJECT_MAPPER);
+      }
+
+      @Provides
       @Singleton
       @Named("GitSyncGrpcClientConfigs")
       public Map<Microservice, GrpcClientConfig> grpcClientConfigs() {
         Map<Microservice, GrpcClientConfig> map = new HashMap<>();
         map.put(Microservice.CORE, GrpcClientConfig.builder().target("localhost:12001").authority("localhost").build());
         return map;
+      }
+
+      @Provides
+      @Named("disableDeserialization")
+      @Singleton
+      public boolean getSerializationForDelegate() {
+        return false;
       }
     });
     modules.add(KryoModule.getInstance());

@@ -6,7 +6,6 @@ import io.harness.cdng.advisers.RollbackCustomAdviser;
 import io.harness.cdng.creator.plan.PlanCreatorConstants;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.infra.steps.InfraSectionStepParameters;
-import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
@@ -22,17 +21,17 @@ import io.harness.plancreator.utils.CommonPlanCreatorUtils;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
-import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
-import io.harness.pms.sdk.core.facilitator.sync.SyncFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.PlanNode.PlanNodeBuilder;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.utilities.ResourceConstraintUtility;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -59,11 +58,13 @@ public class InfrastructurePmsPlanCreator {
     return PlanNode.builder()
         .uuid(UUIDGenerator.generateUuid())
         .name(PlanCreatorConstants.INFRA_NODE_NAME)
-        .identifier(PlanCreatorConstants.INFRA_DEFINITION_NODE_IDENTIFIER)
+        .identifier(PlanCreatorConstants.SPEC_IDENTIFIER)
         .stepType(InfrastructureStep.STEP_TYPE)
-        .skipExpressionChain(true)
-        .stepParameters(InfraStepParameters.builder().pipelineInfrastructure(actualInfraConfig).build())
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(SyncFacilitator.FACILITATOR_TYPE).build())
+        .stepParameters(actualInfraConfig.getInfrastructureDefinition().getSpec())
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                .build())
         .build();
   }
 
@@ -72,15 +73,14 @@ public class InfrastructurePmsPlanCreator {
       YamlField resourceConstraintField) {
     PipelineInfrastructure actualInfraConfig = getActualInfraConfig(infrastructure, infraField);
 
-    if (!ParameterField.isNull(infrastructure.getAllowSimultaneousDeployments())
-        && infrastructure.getAllowSimultaneousDeployments().isExpression()) {
-      throw new InvalidRequestException(
-          "AllowedSimultaneous Deployment field is not a fixed value during execution of pipeline.");
-    }
-    boolean allowSimultaneousDeployments = false;
-    if (!ParameterField.isNull(infrastructure.getAllowSimultaneousDeployments())) {
-      allowSimultaneousDeployments = infrastructure.getAllowSimultaneousDeployments().getValue();
-    }
+    boolean allowSimultaneousDeployments = ResourceConstraintUtility.isSimultaneousDeploymentsAllowed(
+        infrastructure.getAllowSimultaneousDeployments(), resourceConstraintField);
+
+    InfraSectionStepParameters infraSectionStepParameters = InfraSectionStepParameters.builder()
+                                                                .environmentRef(actualInfraConfig.getEnvironmentRef())
+                                                                .environment(actualInfraConfig.getEnvironment())
+                                                                .childNodeID(infraStepNodeUuid)
+                                                                .build();
 
     PlanNodeBuilder planNodeBuilder =
         PlanNode.builder()
@@ -89,12 +89,14 @@ public class InfrastructurePmsPlanCreator {
             .identifier(PlanCreatorConstants.INFRA_SECTION_NODE_IDENTIFIER)
             .group(OutcomeExpressionConstants.INFRASTRUCTURE_GROUP)
             .stepType(InfrastructureSectionStep.STEP_TYPE)
-            .stepParameters(InfraSectionStepParameters.getStepParameters(actualInfraConfig, infraStepNodeUuid))
+            .stepParameters(infraSectionStepParameters)
             .facilitatorObtainment(
-                FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                    .build())
             .adviserObtainments(allowSimultaneousDeployments
-                    ? getAdviserObtainmentFromMetaDataToResourceConstraint(resourceConstraintField, kryoSerializer)
-                    : getAdviserObtainmentFromMetaDataToExecution(infraSectionNode, kryoSerializer));
+                    ? getAdviserObtainmentFromMetaDataToExecution(infraSectionNode, kryoSerializer)
+                    : getAdviserObtainmentFromMetaDataToResourceConstraint(resourceConstraintField, kryoSerializer));
 
     if (!isProvisionerConfigured(actualInfraConfig)) {
       planNodeBuilder.skipGraphType(SkipType.SKIP_NODE);
@@ -209,6 +211,9 @@ public class InfrastructurePmsPlanCreator {
   }
 
   public boolean isProvisionerConfigured(PipelineInfrastructure actualInfraConfig) {
+    if (actualInfraConfig.getInfrastructureDefinition() == null) {
+      throw new InvalidRequestException("Infrastructure Definition can not be empty, please add it and try again");
+    }
     return actualInfraConfig.getInfrastructureDefinition().getProvisioner() != null;
   }
 
@@ -222,7 +227,10 @@ public class InfrastructurePmsPlanCreator {
         .stepType(NGSectionStep.STEP_TYPE)
         .name(YAMLFieldNameConstants.PROVISIONER)
         .stepParameters(stepParameters)
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                .build())
         .adviserObtainment(
             AdviserObtainment.newBuilder()
                 .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
@@ -239,7 +247,24 @@ public class InfrastructurePmsPlanCreator {
     return provisionerYamlField.getNode().getUuid();
   }
 
-  public boolean areSimultaneousDeploymentsAllowed(YamlNode infraNode) {
-    return infraNode.getCurrJsonNode().get("allowSimultaneousDeployments") != null;
+  public boolean areSimultaneousDeploymentsAllowed(boolean allowSimultaneousDeployments, YamlField rcField) {
+    return !(allowSimultaneousDeployments || rcField == null);
+  }
+
+  public static PlanNode getInfraDefPlanNode(YamlField infrastructureDefField, String childNodeId) {
+    StepParameters stepParameters =
+        NGSectionStepParameters.builder().childNodeId(childNodeId).logMessage("Infra Definition").build();
+    return PlanNode.builder()
+        .uuid(infrastructureDefField.getNode().getUuid())
+        .identifier(YamlTypes.INFRASTRUCTURE_DEF)
+        .stepType(NGSectionStep.STEP_TYPE)
+        .name(YamlTypes.INFRASTRUCTURE_DEF)
+        .stepParameters(stepParameters)
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                .build())
+        .skipGraphType(SkipType.SKIP_NODE)
+        .build();
   }
 }

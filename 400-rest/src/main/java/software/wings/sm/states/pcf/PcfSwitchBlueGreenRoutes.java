@@ -1,6 +1,8 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -14,7 +16,9 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
+import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -34,9 +38,6 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
-import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
-import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -55,6 +56,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(CDP)
@@ -67,6 +70,8 @@ public class PcfSwitchBlueGreenRoutes extends State {
   @Inject private transient PcfStateHelper pcfStateHelper;
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject protected transient FeatureFlagService featureFlagService;
+
+  @Getter @Setter private List<String> tags;
 
   public static final String PCF_BG_SWAP_ROUTE_COMMAND = "PCF BG Swap Route";
   static final String PCF_BG_SKIP_SWAP_ROUTE_MESG = "Skipping route swapping";
@@ -119,7 +124,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
 
     SetupSweepingOutputPcf setupSweepingOutputPcf = pcfStateHelper.findSetupSweepingOutputPcf(context, isRollback());
     pcfStateHelper.populatePcfVariables(context, setupSweepingOutputPcf);
-    PcfRouteUpdateRequestConfigData requestConfigData = getPcfRouteUpdateRequestConfigData(setupSweepingOutputPcf);
+    CfRouteUpdateRequestConfigData requestConfigData = getPcfRouteUpdateRequestConfigData(setupSweepingOutputPcf);
     Activity activity = createActivity(context);
 
     if (isRollback()) {
@@ -134,6 +139,11 @@ public class PcfSwitchBlueGreenRoutes extends State {
       if (sweepingOutputInstance != null) {
         SwapRouteRollbackSweepingOutputPcf swapRouteRollbackSweepingOutputPcf =
             (SwapRouteRollbackSweepingOutputPcf) sweepingOutputInstance.getValue();
+
+        if (isEmpty(tags) && isNotEmpty(swapRouteRollbackSweepingOutputPcf.getTags())) {
+          tags = swapRouteRollbackSweepingOutputPcf.getTags();
+        }
+
         // it means no update route happened.
         if (swapRouteRollbackSweepingOutputPcf.getPcfRouteUpdateRequestConfigData() != null) {
           downsizeOldApps =
@@ -151,6 +161,9 @@ public class PcfSwitchBlueGreenRoutes extends State {
 
     // update value as for rollback, we need to readt it from SweepingOutput
     requestConfigData.setDownsizeOldApplication(downsizeOldApps);
+
+    List<String> renderedTags = pcfStateHelper.getRenderedTags(context, tags);
+
     return pcfStateHelper.queueDelegateTaskForRouteUpdate(
         PcfRouteUpdateQueueRequestData.builder()
             .pcfConfig(pcfConfig)
@@ -166,24 +179,24 @@ public class PcfSwitchBlueGreenRoutes extends State {
             .downsizeOldApps(downsizeOldApps)
             .useCfCli(true)
             .build(),
-        setupSweepingOutputPcf, context.getStateExecutionInstanceId(), isSelectionLogsTrackingForTasksEnabled());
+        setupSweepingOutputPcf, context.getStateExecutionInstanceId(), isSelectionLogsTrackingForTasksEnabled(),
+        renderedTags);
   }
 
-  private PcfRouteUpdateRequestConfigData getPcfRouteUpdateRequestConfigData(
+  private CfRouteUpdateRequestConfigData getPcfRouteUpdateRequestConfigData(
       SetupSweepingOutputPcf setupSweepingOutputPcf) {
     List<String> existingAppNames;
 
-    if (setupSweepingOutputPcf != null
-        && EmptyPredicate.isNotEmpty(setupSweepingOutputPcf.getAppDetailsToBeDownsized())) {
+    if (setupSweepingOutputPcf != null && isNotEmpty(setupSweepingOutputPcf.getAppDetailsToBeDownsized())) {
       existingAppNames = setupSweepingOutputPcf.getAppDetailsToBeDownsized()
                              .stream()
-                             .map(PcfAppSetupTimeDetails::getApplicationName)
+                             .map(CfAppSetupTimeDetails::getApplicationName)
                              .collect(toList());
     } else {
       existingAppNames = emptyList();
     }
 
-    return PcfRouteUpdateRequestConfigData.builder()
+    return CfRouteUpdateRequestConfigData.builder()
         .newApplicatiaonName(getNewApplicationName(setupSweepingOutputPcf))
         .existingApplicationDetails(
             setupSweepingOutputPcf != null ? setupSweepingOutputPcf.getAppDetailsToBeDownsized() : null)
@@ -210,7 +223,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
       String activityId = response.keySet().iterator().next();
-      PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();
+      CfCommandExecutionResponse executionResponse = (CfCommandExecutionResponse) response.values().iterator().next();
       ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
           ? ExecutionStatus.SUCCESS
           : ExecutionStatus.FAILED;
@@ -231,6 +244,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
                 .name(pcfStateHelper.obtainSwapRouteSweepingOutputName(context, false))
                 .value(SwapRouteRollbackSweepingOutputPcf.builder()
                            .pcfRouteUpdateRequestConfigData(stateExecutionData.getPcfRouteUpdateRequestConfigData())
+                           .tags(stateExecutionData.getTags())
                            .build())
                 .build());
       }

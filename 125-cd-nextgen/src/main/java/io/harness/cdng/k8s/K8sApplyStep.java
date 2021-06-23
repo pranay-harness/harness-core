@@ -1,12 +1,16 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.K8sApplyBaseStepInfo.K8sApplyBaseStepInfoKeys;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
+import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -49,10 +53,25 @@ public class K8sApplyStep extends TaskChainExecutableWithRollback implements K8s
   public TaskChainResponse startChainLink(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     K8sApplyStepParameters k8sApplyStepParameters = (K8sApplyStepParameters) stepElementParameters.getSpec();
-    if (k8sApplyStepParameters.getFilePaths() == null || isEmpty(k8sApplyStepParameters.getFilePaths().getValue())) {
+    validateFilePaths(k8sApplyStepParameters);
+    return k8sStepHelper.startChainLink(this, ambiance, stepElementParameters);
+  }
+
+  private void validateFilePaths(K8sApplyStepParameters k8sApplyStepParameters) {
+    if (ParameterField.isNull(k8sApplyStepParameters.getFilePaths())) {
       throw new InvalidRequestException("File/Folder path must be present");
     }
-    return k8sStepHelper.startChainLink(this, ambiance, stepElementParameters);
+
+    if (isEmpty(getParameterFieldValue(k8sApplyStepParameters.getFilePaths()))) {
+      throw new InvalidRequestException("File/Folder path must be present");
+    }
+
+    List<String> filePaths = getParameterFieldValue(k8sApplyStepParameters.getFilePaths());
+    for (String filePath : filePaths) {
+      if (isEmpty(filePath)) {
+        throw new InvalidRequestException("File/Folder path must be present");
+      }
+    }
   }
 
   @Override
@@ -65,13 +84,15 @@ public class K8sApplyStep extends TaskChainExecutableWithRollback implements K8s
   @Override
   public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
       StepElementParameters stepElementParameters, List<String> valuesFileContents,
-      InfrastructureOutcome infrastructure, boolean shouldOpenFetchFilesLogStream) {
+      K8sExecutionPassThroughData executionPassThroughData, boolean shouldOpenFetchFilesLogStream) {
+    InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
     K8sApplyStepParameters k8sApplyStepParameters = (K8sApplyStepParameters) stepElementParameters.getSpec();
-    boolean skipDryRun = !ParameterField.isNull(k8sApplyStepParameters.getSkipDryRun())
-        && k8sApplyStepParameters.getSkipDryRun().getValue();
-    boolean skipSteadyStateCheck = !ParameterField.isNull(k8sApplyStepParameters.getSkipSteadyStateCheck())
-        && k8sApplyStepParameters.getSkipSteadyStateCheck().getValue();
+    boolean skipDryRun = K8sStepHelper.getParameterFieldBooleanValue(
+        k8sApplyStepParameters.getSkipDryRun(), K8sApplyBaseStepInfoKeys.skipDryRun, stepElementParameters);
+    boolean skipSteadyStateCheck =
+        K8sStepHelper.getParameterFieldBooleanValue(k8sApplyStepParameters.getSkipSteadyStateCheck(),
+            K8sApplyBaseStepInfoKeys.skipSteadyStateCheck, stepElementParameters);
 
     final String accountId = AmbianceHelper.getAccountId(ambiance);
     K8sApplyRequest k8sApplyRequest =
@@ -90,12 +111,12 @@ public class K8sApplyStep extends TaskChainExecutableWithRollback implements K8s
             .skipSteadyStateCheck(skipSteadyStateCheck)
             .shouldOpenFetchFilesLogStream(shouldOpenFetchFilesLogStream)
             .build();
-    return k8sStepHelper.queueK8sTask(stepElementParameters, k8sApplyRequest, ambiance, infrastructure);
+    return k8sStepHelper.queueK8sTask(stepElementParameters, k8sApplyRequest, ambiance, executionPassThroughData);
   }
 
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, StepElementParameters stepElementParameters,
-      PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) throws Exception {
+      PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) {
     if (passThroughData instanceof GitFetchResponsePassThroughData) {
       return k8sStepHelper.handleGitTaskFailure((GitFetchResponsePassThroughData) passThroughData);
     }
@@ -104,13 +125,21 @@ public class K8sApplyStep extends TaskChainExecutableWithRollback implements K8s
       return k8sStepHelper.handleHelmValuesFetchFailure((HelmValuesFetchResponsePassThroughData) passThroughData);
     }
 
-    K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
-    StepResponseBuilder stepResponseBuilder =
-        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
-
-    if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, stepResponseBuilder).build();
+    if (passThroughData instanceof StepExceptionPassThroughData) {
+      return k8sStepHelper.handleStepExceptionFailure((StepExceptionPassThroughData) passThroughData);
     }
-    return stepResponseBuilder.status(Status.SUCCEEDED).build();
+
+    try {
+      K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
+      StepResponseBuilder stepResponseBuilder = StepResponse.builder().unitProgressList(
+          k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
+
+      if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+        return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, stepResponseBuilder).build();
+      }
+      return stepResponseBuilder.status(Status.SUCCEEDED).build();
+    } catch (Exception e) {
+      return k8sStepHelper.handleTaskException(ambiance, (K8sExecutionPassThroughData) passThroughData, e);
+    }
   }
 }

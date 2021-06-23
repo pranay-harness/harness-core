@@ -1,6 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//:macros.bzl", "run_analysis")
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 java_library(
     name = "module",
@@ -21,6 +21,10 @@ java_library(
         "@maven//:com_sumologic_api_client_sumo_java_client",
         "@maven//:io_fabric8_kubernetes_client",
         "@maven//:io_kubernetes_client_java",
+        "@maven//:org_cloudfoundry_cloudfoundry_client",
+        "@maven//:org_cloudfoundry_cloudfoundry_client_reactor",
+        "@maven//:org_cloudfoundry_cloudfoundry_operations",
+        "@maven//:org_cloudfoundry_cloudfoundry_util",
         "@maven//:org_codehaus_jackson_jackson_core_asl",
         "@maven//:org_json_json",
     ],
@@ -38,6 +42,9 @@ java_library(
         ":module",
         "//:lombok",
         "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
     ],
 )
 

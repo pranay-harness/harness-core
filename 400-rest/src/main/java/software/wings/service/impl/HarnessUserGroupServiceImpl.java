@@ -26,6 +26,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Event.Type;
 import software.wings.beans.User;
 import software.wings.beans.security.AccessRequest;
+import software.wings.beans.security.HarnessSupportUserDTO;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.HarnessUserGroupDTO;
 import software.wings.dl.WingsPersistence;
@@ -257,7 +258,43 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
     query.filter("memberIds", memberId);
     query.filter("groupType", groupType);
     return query.asList();
-  };
+  }
+
+  public List<User> listAllHarnessSupportUsers() {
+    Set<User> userSet = new HashSet<>();
+    Query<HarnessUserGroup> query = wingsPersistence.createQuery(HarnessUserGroup.class, excludeAuthority);
+    List<HarnessUserGroup> harnessUserGroupList = query.asList();
+    harnessUserGroupList.forEach(harnessUserGroup -> {
+      harnessUserGroup.getMemberIds().forEach(memberId -> {
+        User user = userService.get(memberId);
+        if (user != null) {
+          userSet.add(user);
+        }
+      });
+    });
+    List<User> userList = new ArrayList<>(userSet);
+    Collections.sort(userList, Comparator.comparing(user -> user.getEmail()));
+    return userList;
+  }
+
+  @Override
+  public HarnessSupportUserDTO toHarnessSupportUser(User user) {
+    notNullCheck("HarnessSupportUser: Invalid user", user);
+    notNullCheck("HarnessSupportUser: userId " + user.getUuid() + "doesn't have emailId", user.getName());
+
+    return HarnessSupportUserDTO.builder().name(user.getName()).emailId(user.getEmail()).id(user.getUuid()).build();
+  }
+
+  @Override
+  public List<HarnessSupportUserDTO> toHarnessSupportUser(List<User> userList) {
+    List<HarnessSupportUserDTO> harnessSupportUserDTOList = new ArrayList<>();
+
+    if (isNotEmpty(userList)) {
+      userList.forEach(user -> harnessSupportUserDTOList.add(toHarnessSupportUser(user)));
+    }
+
+    return harnessSupportUserDTOList;
+  }
 
   private Set<String> getMemberIds(HarnessUserGroupDTO harnessUserGroupDTO) {
     if (isEmpty(harnessUserGroupDTO.getEmailIds())) {

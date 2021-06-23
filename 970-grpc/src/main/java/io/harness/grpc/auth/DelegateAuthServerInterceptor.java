@@ -2,7 +2,7 @@ package io.harness.grpc.auth;
 
 import io.harness.grpc.InterceptorPriority;
 import io.harness.grpc.utils.GrpcAuthUtils;
-import io.harness.security.TokenAuthenticator;
+import io.harness.security.DelegateTokenAuthenticator;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
@@ -29,12 +29,12 @@ public class DelegateAuthServerInterceptor implements ServerInterceptor {
   public static final Context.Key<String> ACCOUNT_ID_CTX_KEY = Context.key("accountId");
   private static final ServerCall.Listener NOOP_LISTENER = new ServerCall.Listener() {};
   private static final Set<String> INCLUDED_SERVICES = ImmutableSet.of("io.harness.perpetualtask.PerpetualTaskService",
-      "io.harness.event.PingPongService", "io.harness.event.EventPublisher");
+      "io.harness.event.PingPongService", "io.harness.event.EventPublisher", "io.harness.delegate.DelegateService");
 
-  private final TokenAuthenticator tokenAuthenticator;
+  private final DelegateTokenAuthenticator tokenAuthenticator;
 
   @Inject
-  public DelegateAuthServerInterceptor(TokenAuthenticator tokenAuthenticator) {
+  public DelegateAuthServerInterceptor(DelegateTokenAuthenticator tokenAuthenticator) {
     this.tokenAuthenticator = tokenAuthenticator;
   }
 
@@ -47,6 +47,16 @@ public class DelegateAuthServerInterceptor implements ServerInterceptor {
 
     String accountId = metadata.get(DelegateAuthCallCredentials.ACCOUNT_ID_METADATA_KEY);
     String token = metadata.get(DelegateAuthCallCredentials.TOKEN_METADATA_KEY);
+
+    // Urgent fix for DEL-1954. We are allowing delegate service to be invoked by delegate agent, in which case
+    // accountId is mandatory, but also by other backend services, in which case serviceId is mandatory. If accountId is
+    // present this interceptor should authorize, but if it is not present and serviceId is present, then we need to let
+    // ServiceAuthServerInterceptor with lower interceptor priority to authorize.
+    String serviceId = GrpcAuthUtils.getServiceIdFromRequest(metadata).orElse(null);
+    if (accountId == null && serviceId != null) {
+      return Contexts.interceptCall(Context.current(), call, metadata, next);
+    }
+
     @SuppressWarnings("unchecked") Listener<ReqT> noopListener = NOOP_LISTENER;
     if (accountId == null) {
       log.warn("No account id in metadata. Token verification failed");
@@ -60,7 +70,7 @@ public class DelegateAuthServerInterceptor implements ServerInterceptor {
     }
     Context ctx;
     try {
-      tokenAuthenticator.validateToken(accountId, token);
+      tokenAuthenticator.validateDelegateToken(accountId, token);
       ctx = GrpcAuthUtils.newAuthenticatedContext().withValue(ACCOUNT_ID_CTX_KEY, accountId);
     } catch (Exception e) {
       log.warn("Token verification failed. Unauthenticated", e);

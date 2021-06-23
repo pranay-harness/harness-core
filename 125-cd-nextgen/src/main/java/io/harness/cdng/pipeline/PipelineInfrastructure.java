@@ -34,6 +34,7 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @AllArgsConstructor
 @OneOfField(fields = {"environment", "environmentRef"})
+@OneOfField(fields = {"infrastructureDefinition", "useFromStage"})
 @SimpleVisitorHelper(helperClass = PipelineInfrastructureVisitorHelper.class)
 @TypeAlias("pipelineInfrastructure")
 public class PipelineInfrastructure implements StepParameters, Visitable {

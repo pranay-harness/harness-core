@@ -2,12 +2,15 @@ package external
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/logs"
+	plogs "github.com/wings-software/portal/product/ci/common/logs"
 	ticlient "github.com/wings-software/portal/product/ci/ti-service/client"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"github.com/wings-software/portal/product/log-service/client"
@@ -28,6 +31,7 @@ const (
 	logPrefixEnv     = "HARNESS_LOG_PREFIX"
 	serviceLogKeyEnv = "HARNESS_SERVICE_LOG_KEY"
 	secretList       = "HARNESS_SECRETS_LIST"
+	dBranch          = "DRONE_COMMIT_BRANCH"
 	dSourceBranch    = "DRONE_SOURCE_BRANCH"
 	dTargetBranch    = "DRONE_TARGET_BRANCH"
 	dRemoteUrl       = "DRONE_REMOTE_URL"
@@ -39,9 +43,10 @@ const (
 
 // GetChangedFiles executes a shell command and returns a list of files changed in the PR
 // along with their corresponding status
-func GetChangedFiles(ctx context.Context, workspace string, log *zap.SugaredLogger) ([]types.File, error) {
+func GetChangedFiles(ctx context.Context, workspace string, log *zap.SugaredLogger, procWriter io.Writer) ([]types.File, error) {
 	cmdContextFactory := exec.OsCommandContextGracefulWithLog(log)
-	cmd := cmdContextFactory.CmdContext(ctx, "sh", "-c", fmt.Sprintf(diffFilesCmd, gitBin)).WithDir(workspace)
+	cmd := cmdContextFactory.CmdContext(ctx, "sh", "-c", fmt.Sprintf(diffFilesCmd, gitBin)).
+		WithDir(workspace).WithStdout(procWriter).WithStderr(procWriter)
 	out, err := cmd.Output()
 	if err != nil {
 		return nil, err
@@ -75,6 +80,15 @@ func GetChangedFiles(ctx context.Context, workspace string, log *zap.SugaredLogg
 	return res, nil
 }
 
+func GetNudges() []logs.Nudge {
+	// <search-term> <resolution> <error-msg>
+	return []logs.Nudge{
+		logs.NewNudge("[Kk]illed", "Increase memory resources for the step", errors.New("Out of memory")),
+		logs.NewNudge(".*git.* SSL certificate problem",
+			"Set sslVerify to false in CI codebase properties", errors.New("SSL certificate error")),
+	}
+}
+
 func GetSecrets() []logs.Secret {
 	res := []logs.Secret{}
 	secrets := os.Getenv(secretList)
@@ -100,7 +114,7 @@ func GetHTTPRemoteLogger(key string) (*logs.RemoteLogger, error) {
 	if err != nil {
 		return nil, err
 	}
-	rw, err := logs.NewRemoteWriter(client, key)
+	rw, err := plogs.NewRemoteWriter(client, key, GetNudges())
 	if err != nil {
 		return nil, err
 	}
@@ -214,6 +228,14 @@ func GetStageId() (string, error) {
 	return stage, nil
 }
 
+func GetBranch() (string, error) {
+	source, ok := os.LookupEnv(dBranch)
+	if !ok {
+		return "", fmt.Errorf("branch variable not set %s", dBranch)
+	}
+	return source, nil
+}
+
 func GetSourceBranch() (string, error) {
 	source, ok := os.LookupEnv(dSourceBranch)
 	if !ok {
@@ -252,4 +274,14 @@ func GetWrkspcPath() (string, error) {
 		return "", fmt.Errorf("workspace path variable not set %s", wrkspcPath)
 	}
 	return path, nil
+}
+
+func IsManualExecution() bool {
+	_, err1 := GetSourceBranch()
+	_, err2 := GetTargetBranch()
+	_, err3 := GetSha()
+	if err1 != nil || err2 != nil || err3 != nil {
+		return true // if any of them are not set, treat as a manual execution
+	}
+	return false
 }

@@ -5,6 +5,9 @@ import static io.harness.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.lock.mongo.MongoPersistentLocker.LOCKS_STORE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
@@ -51,6 +54,9 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.delegate.event.handler.DelegateProfileEventHandler;
+import io.harness.delegate.event.listener.OrganizationEntityCRUDEventListener;
+import io.harness.delegate.event.listener.ProjectEntityCRUDEventListener;
+import io.harness.delegate.eventstream.EntityCRUDConsumer;
 import io.harness.delegate.resources.DelegateTaskResource;
 import io.harness.delegate.task.executioncapability.BlockingCapabilityPermissionsRecordHandler;
 import io.harness.delegate.task.executioncapability.DelegateCapabilitiesRecordHandler;
@@ -63,6 +69,7 @@ import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.exception.WingsException;
 import io.harness.execution.export.background.ExportExecutionsRequestCleanupHandler;
 import io.harness.execution.export.background.ExportExecutionsRequestHandler;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.ff.FeatureFlagService;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.GrpcServiceConfigurationModule;
@@ -83,6 +90,8 @@ import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.QuartzCleaner;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.ng.core.event.MessageListener;
+import io.harness.outbox.OutboxEventPollService;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.CustomDeploymentInstanceSyncClient;
@@ -167,6 +176,7 @@ import software.wings.scheduler.AccessRequestHandler;
 import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.scheduler.DeletedEntityHandler;
 import software.wings.scheduler.InstancesPurgeJob;
+import software.wings.scheduler.LdapGroupSyncJobHandler;
 import software.wings.scheduler.ManagerVersionsCleanUpJob;
 import software.wings.scheduler.ResourceLookupSyncHandler;
 import software.wings.scheduler.UsageMetricsHandler;
@@ -210,6 +220,7 @@ import software.wings.service.impl.infrastructuredefinition.InfrastructureDefini
 import software.wings.service.impl.instance.DeploymentEventListener;
 import software.wings.service.impl.instance.InstanceEventListener;
 import software.wings.service.impl.instance.InstanceSyncPerpetualTaskMigrationJob;
+import software.wings.service.impl.trigger.ScheduledTriggerHandler;
 import software.wings.service.impl.yaml.YamlPushServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -268,10 +279,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import javax.cache.Cache;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -522,6 +530,11 @@ public class WingsApplication extends Application<MainConfiguration> {
       public CfMigrationConfig cfMigrationConfig() {
         return configuration.getCfMigrationConfig();
       }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return configuration.getFeatureFlagConfig();
+      }
     });
     Injector injector = Guice.createInjector(modules);
 
@@ -543,6 +556,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     registerQueueListeners(injector);
 
     scheduleJobs(injector, configuration);
+
+    registerEventConsumers(injector);
 
     registerObservers(injector);
 
@@ -623,6 +638,12 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     log.info("Starting app done");
     log.info("Manager is running on JRE: {}", System.getProperty("java.version"));
+  }
+
+  private void registerEventConsumers(final Injector injector) {
+    final ExecutorService entityCRUDConsumerExecutor =
+        Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(ENTITY_CRUD).build());
+    entityCRUDConsumerExecutor.execute(injector.getInstance(EntityCRUDConsumer.class));
   }
 
   private void registerCVNGVerificationTaskIterator(Injector injector) {
@@ -782,6 +803,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(ArtifactStreamPTaskMigrationJob.class));
     environment.lifecycle().manage(injector.getInstance(InstanceSyncPerpetualTaskMigrationJob.class));
+    environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
   }
 
   private void registerWaitEnginePublishers(Injector injector) {
@@ -994,6 +1016,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(SettingAttributeValidateConnectivityHandler.class).registerIterators();
     injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators();
     injector.getInstance(VaultSecretManagerRenewalHandler.class).registerIterators();
+    injector.getInstance(LdapGroupSyncJobHandler.class).registerIterators();
     injector.getInstance(SettingAttributesSecretsMigrationHandler.class).registerIterators();
     injector.getInstance(GitSyncEntitiesExpiryHandler.class).registerIterators();
     injector.getInstance(ExportExecutionsRequestHandler.class).registerIterators();
@@ -1010,6 +1033,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(EncryptedDataAwsKmsToGcpKmsMigrationHandler.class).registerIterators();
     injector.getInstance(ResourceLookupSyncHandler.class).registerIterators();
     injector.getInstance(AccessRequestHandler.class).registerIterators();
+    injector.getInstance(ScheduledTriggerHandler.class).registerIterators();
   }
 
   private void registerCronJobs(Injector injector) {

@@ -9,10 +9,10 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.pcf.CfCommandUnitConstants.FetchFiles;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
-import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP_ROUTE53;
@@ -27,10 +27,10 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -50,7 +50,6 @@ import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.artifact.Artifact;
@@ -144,10 +143,8 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
     EcsSetUpDataBag dataBag = ecsStateHelper.prepareBagForEcsSetUp(context, serviceSteadyStateTimeout,
         artifactCollectionUtils, serviceResourceService, infrastructureMappingService, settingsService, secretManager);
 
-    if (featureFlagService.isEnabled(FeatureName.ECS_REMOTE_MANIFEST, context.getAccountId())) {
-      appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.K8S_MANIFEST);
-      valuesInGit = ecsStateHelper.isRemoteManifest(appManifestMap);
-    }
+    appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.K8S_MANIFEST);
+    valuesInGit = ecsStateHelper.isRemoteManifest(appManifestMap);
 
     Activity activity = ecsStateHelper.createActivity(context, ECS_SERVICE_SETUP_COMMAND_ROUTE53, getStateType(),
         CommandUnitType.AWS_ECS_SERVICE_SETUP_ROUTE53, activityService);

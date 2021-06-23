@@ -15,31 +15,33 @@ service GitToHarnessService {
 
 message ChangeSets {
   repeated ChangeSet change_set = 1;
-  string account_id = 2;
 }
 
 message ChangeSet {
-  string id = 1;
-  string yaml = 2;
-  string account_id = 3;
-  io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum entity_type = 4;
-  google.protobuf.StringValue commit_id = 5;
-  google.protobuf.StringValue object_id = 6;
-  io.harness.gitsync.ChangeType change_type = 7;
-  string filePath = 8;
+  string yaml = 1;
+  string account_id = 2;
+  io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum entity_type = 3;
+  google.protobuf.StringValue object_id = 4;
+  io.harness.gitsync.ChangeType change_type = 5;
+  string file_path = 6;
+  YamlGitConfigInfo yaml_git_config_info = 7;
+  string change_set_id = 8;
 }
 
 message ProcessingResponse {
   repeated FileProcessingResponse response = 1;
   string account_id = 2;
   ProcessingFailureStage processing_failure_stage = 3;
+  // used for sending status
+  // false: reached the last stage of processing and processing_failure_stage can be ignored.
+  // true: failed in one of the stages.
+  bool is_error = 4;
 }
 
 message FileProcessingResponse {
-  string id = 1;
-  string account_id = 2;
-  FileProcessingStatus status = 3;
-  string error_msg = 4;
+  string file_path = 1;
+  FileProcessingStatus status = 2;
+  google.protobuf.StringValue error_msg = 3;
 }
 
 enum FileProcessingStatus {
@@ -48,7 +50,6 @@ enum FileProcessingStatus {
   SKIPPED = 2;
   // Used for internal flag for files not processed. Externally it is same as SKIPPED.
   UNPROCESSED = 3;
-  // todo(abhinav): Already processed?
 }
 
 enum ProcessingFailureStage {
@@ -59,14 +60,20 @@ enum ProcessingFailureStage {
 }
 
 message GitToHarnessInfo {
-  string accountIdentifier = 1;
-  string yamlGitConfigOrgIdentifier = 2;
-  string yamlGitConfigProjectIdentifier = 3;
-  string yamlGitConfigId = 4;
-  string branch = 5;
+  string branch = 1;
+  string repo_url = 2;
 }
 
 message GitToHarnessProcessRequest {
   ChangeSets change_sets = 1;
   GitToHarnessInfo gitToHarnessBranchInfo = 2;
+  string account_id = 3;
+  google.protobuf.StringValue commit_id = 4;
+}
+
+message YamlGitConfigInfo {
+  google.protobuf.StringValue yaml_git_config_org_identifier = 1;
+  google.protobuf.StringValue yaml_git_config_project_identifier = 2;
+  string yaml_git_config_id = 3;
+  string account_id = 4;
 }

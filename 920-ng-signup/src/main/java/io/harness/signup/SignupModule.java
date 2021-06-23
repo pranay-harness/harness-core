@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.GTM;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cloud.google.GoogleCloudFileModule;
+import io.harness.ff.FeatureFlagModule;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.signup.notification.SignupNotificationHelper;
 import io.harness.signup.notification.SignupNotificationTemplateLoader;
@@ -25,18 +26,23 @@ public class SignupModule extends AbstractModule {
   private final String managerServiceSecret;
   private final String clientId;
   private final SignupNotificationConfiguration notificationConfiguration;
+  private final String nextGenManagerUri;
+  private final String nextGenAuthUri;
   private static final int NUMBER_OF_NOTIFICATION_THREADS = 10;
 
   public SignupModule(ServiceHttpClientConfig serviceHttpClientConfig, String managerServiceSecret, String clientId,
-      SignupNotificationConfiguration notificationConfiguration) {
+      SignupNotificationConfiguration notificationConfiguration, String nextGenManagerUri, String nextGenAuthUri) {
     this.serviceHttpClientConfig = serviceHttpClientConfig;
     this.managerServiceSecret = managerServiceSecret;
     this.clientId = clientId;
     this.notificationConfiguration = notificationConfiguration;
+    this.nextGenManagerUri = nextGenManagerUri;
+    this.nextGenAuthUri = nextGenAuthUri;
   }
 
   @Override
   protected void configure() {
+    install(FeatureFlagModule.getInstance());
     install(UserClientModule.getInstance(serviceHttpClientConfig, managerServiceSecret, clientId));
     install(GoogleCloudFileModule.getInstance());
     bind(SignupService.class).to(SignupServiceImpl.class);
@@ -56,5 +62,17 @@ public class SignupModule extends AbstractModule {
   @Singleton
   public SignupNotificationConfiguration notificationConfiguration() {
     return notificationConfiguration;
+  }
+
+  @Provides
+  @Named("nextGenManagerUri")
+  public String getNextGenManagerUri() {
+    return nextGenManagerUri;
+  }
+
+  @Provides
+  @Named("nextGenAuthUri")
+  public String getNextGenAuthUri() {
+    return nextGenAuthUri;
   }
 }

@@ -27,6 +27,7 @@ import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import org.bson.Document;
 @Singleton
 public class OrchestrationAdjacencyListGenerator {
   @Inject private PmsOutcomeService pmsOutcomeService;
+  @Inject private GraphVertexConverter graphVertexConverter;
 
   public OrchestrationAdjacencyListInternal generateAdjacencyList(
       String startingNodeExId, List<NodeExecution> nodeExecutions, boolean isOutcomePresent) {
@@ -63,7 +65,7 @@ public class OrchestrationAdjacencyListGenerator {
     Map<String, EdgeListInternal> adjacencyList = adjacencyListInternal.getAdjacencyMap();
 
     String currentUuid = nodeExecution.getUuid();
-    graphVertexMap.put(currentUuid, GraphVertexConverter.convertFrom(nodeExecution));
+    graphVertexMap.put(currentUuid, graphVertexConverter.convertFrom(nodeExecution));
 
     // compute adjList
     String parentId = null;
@@ -225,13 +227,15 @@ public class OrchestrationAdjacencyListGenerator {
         String currentNodeId = queue.removeFirst();
         NodeExecution nodeExecution = nodeExIdMap.get(currentNodeId);
 
-        List<Document> outcomes = new ArrayList<>();
+        Map<String, Document> outcomes;
         if (isOutcomePresent) {
-          outcomes = PmsOutcomeMapper.convertJsonToDocument(pmsOutcomeService.findAllByRuntimeId(
-              nodeExecution.getAmbiance().getPlanExecutionId(), currentNodeId, true));
+          outcomes = PmsOutcomeMapper.convertJsonToDocument(pmsOutcomeService.findAllOutcomesMapByRuntimeId(
+              nodeExecution.getAmbiance().getPlanExecutionId(), currentNodeId));
+        } else {
+          outcomes = new LinkedHashMap<>();
         }
 
-        GraphVertex graphVertex = GraphVertexConverter.convertFrom(nodeExecution, outcomes);
+        GraphVertex graphVertex = graphVertexConverter.convertFrom(nodeExecution, outcomes);
 
         if (graphVertexMap.containsKey(graphVertex.getUuid())) {
           continue;

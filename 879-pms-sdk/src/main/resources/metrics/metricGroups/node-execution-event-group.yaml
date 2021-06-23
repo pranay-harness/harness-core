@@ -4,8 +4,3 @@ labels:
   - accountId
   - orgIdentifier
   - projectIdentifier
-  - planExecutionId
-  - runtimeId
-  - stepType
-  - module
-  - pipelineIdentifier

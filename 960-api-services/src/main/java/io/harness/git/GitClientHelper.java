@@ -6,6 +6,7 @@ import static io.harness.eraro.ErrorCode.GIT_CONNECTION_ERROR;
 import static io.harness.exception.WingsException.ADMIN_SRE;
 import static io.harness.exception.WingsException.NOBODY;
 import static io.harness.exception.WingsException.SRE;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.git.Constants.GIT_DEFAULT_LOG_PREFIX;
 import static io.harness.git.Constants.GIT_HELM_LOG_PREFIX;
@@ -68,10 +69,11 @@ import org.eclipse.jgit.errors.TransportException;
 @Singleton
 @Slf4j
 public class GitClientHelper {
-  private static final String GIT_URL_REGEX = "(http|https|git)(:\\/\\/|@)([^\\/:]+)[\\/:]([^\\/:]+)\\/(.+)?(.git)?";
+  private static final String GIT_URL_REGEX =
+      "(http|https|git)(:\\/\\/|@)([^\\/:]+(:\\d+)?)[\\/:]([^\\/:]+)\\/(.+)?(.git)?";
   private static final Pattern GIT_URL = Pattern.compile(GIT_URL_REGEX);
-  private static final Integer OWNER_GROUP = 4;
-  private static final Integer REPO_GROUP = 5;
+  private static final Integer OWNER_GROUP = 5;
+  private static final Integer REPO_GROUP = 6;
   private static final Integer SCM_GROUP = 3;
 
   private static final LoadingCache<String, Object> cache = CacheBuilder.newBuilder()
@@ -121,8 +123,41 @@ public class GitClientHelper {
   public static boolean isGithubSAAS(String url) {
     return getGitSCM(url).equals("github.com");
   }
+  public static boolean isGitlabSAAS(String url) {
+    return getGitSCM(url).contains("gitlab.com");
+  }
 
-  public static String getGitSCM(String url) {
+  public static boolean isBitBucketSAAS(String url) {
+    return getGitSCM(url).contains("bitbucket.org");
+  }
+
+  public static String getGithubApiURL(String url) {
+    if (GitClientHelper.isGithubSAAS(url)) {
+      return "https://api.github.com/";
+    } else {
+      String domain = GitClientHelper.getGitSCM(url);
+      return "https://" + domain + "/api/v3/";
+    }
+  }
+  public static String getGitlabApiURL(String url) {
+    if (GitClientHelper.isGitlabSAAS(url)) {
+      return "https://gitlab.com/";
+    } else {
+      String domain = GitClientHelper.getGitSCM(url);
+      return "https://" + domain + "/";
+    }
+  }
+
+  public static String getBitBucketApiURL(String url) {
+    if (isBitBucketSAAS(url)) {
+      return "https://api.bitbucket.org/";
+    } else {
+      String domain = GitClientHelper.getGitSCM(url);
+      return "https://" + domain + "/";
+    }
+  }
+
+  private static String getGitSCMHost(String url) {
     Matcher m = GIT_URL.matcher(url);
     try {
       if (m.find()) {
@@ -133,6 +168,22 @@ public class GitClientHelper {
 
     } catch (Exception e) {
       throw new GitClientException(format("Failed to parse repo from git url  %s", url), SRE);
+    }
+  }
+
+  public static String getGitSCM(String url) {
+    String host = getGitSCMHost(url);
+    return host.split(":")[0];
+  }
+
+  // Returns port on which git SCM is running. Returns null if port is not present in the url.
+  public static String getGitSCMPort(String url) {
+    String host = getGitSCMHost(url);
+    String[] hostParts = host.split(":");
+    if (hostParts.length == 2) {
+      return host.split(":")[1];
+    } else {
+      return null;
     }
   }
 
@@ -266,6 +317,15 @@ public class GitClientHelper {
     if ((ex instanceof GitAPIException && ex.getCause() instanceof TransportException)
         || ex instanceof JGitInternalException || ex instanceof MissingObjectException) {
       throw new GitConnectionDelegateException(GIT_CONNECTION_ERROR, ex.getCause(), ex.getMessage(), USER_ADMIN);
+    }
+  }
+
+  public void checkIfMissingCommitIdIssue(Exception ex, String commitId) {
+    if ((ex instanceof JGitInternalException && ex.getCause() instanceof MissingObjectException)
+        || ex instanceof MissingObjectException) {
+      throw new GitClientException(
+          format("Unable to find any references with commit id: %s. Check provided value for commit id", commitId),
+          USER);
     }
   }
 

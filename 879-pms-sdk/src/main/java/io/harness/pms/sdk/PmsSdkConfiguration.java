@@ -1,31 +1,38 @@
 package io.harness.pms.sdk;
 
+import io.harness.ModuleType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
-import io.harness.mongo.MongoConfig;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
-import io.harness.pms.sdk.core.facilitator.Facilitator;
+import io.harness.pms.sdk.core.execution.events.node.facilitate.Facilitator;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.steps.Step;
+import io.harness.redis.RedisConfig;
 
 import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
+import lombok.Builder.Default;
+import lombok.NonNull;
 import lombok.Value;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Value
 @Builder
 public class PmsSdkConfiguration {
-  @Builder.Default DeployMode deploymentMode = DeployMode.LOCAL;
-  String serviceName;
-  MongoConfig mongoConfig;
+  @Builder.Default SdkDeployMode deploymentMode = SdkDeployMode.LOCAL;
+  @NonNull ModuleType moduleType;
   GrpcServerConfig grpcServerConfig;
   GrpcClientConfig pmsGrpcClientConfig;
   Class<? extends PipelineServiceInfoProvider> pipelineServiceInfoProviderClass;
@@ -36,13 +43,13 @@ public class PmsSdkConfiguration {
   Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap;
   Class<? extends ExecutionSummaryModuleInfoProvider> executionSummaryModuleInfoProviderClass;
 
-  public enum DeployMode {
-    LOCAL,
-    REMOTE,
-    REMOTE_IN_PROCESS;
+  @Default
+  EventsFrameworkConfiguration eventsFrameworkConfiguration =
+      EventsFrameworkConfiguration.builder()
+          .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
+          .build();
 
-    public boolean isNonLocal() {
-      return this != LOCAL;
-    }
+  public String getServiceName() {
+    return moduleType.name().toLowerCase();
   }
 }

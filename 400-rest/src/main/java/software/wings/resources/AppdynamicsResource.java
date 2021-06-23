@@ -5,17 +5,10 @@ import static io.harness.annotations.dev.HarnessTeam.CV;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
-import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.cvng.beans.AppdynamicsValidationResponse;
-import io.harness.cvng.beans.appd.AppDynamicsApplication;
-import io.harness.cvng.beans.appd.AppDynamicsTier;
-import io.harness.cvng.beans.appd.AppdynamicsMetricPackDataValidationRequest;
-import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.rest.RestResponse;
-import io.harness.security.annotations.LearningEngineAuth;
 
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -33,13 +26,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import retrofit2.http.Body;
 
 /**
  * Created by rsingh on 4/14/17.
@@ -90,49 +81,5 @@ public class AppdynamicsResource {
       @QueryParam("accountId") final String accountId,
       @Valid AppdynamicsSetupTestNodeData appdynamicsSetupTestNodeData) {
     return new RestResponse<>(appdynamicsService.getMetricsWithDataForNode(appdynamicsSetupTestNodeData));
-  }
-
-  @POST
-  @Path("/metric-data")
-  @Timed
-  @ExceptionMetered
-  @LearningEngineAuth
-  @ExposeInternalException(withStackTrace = true)
-  public RestResponse<Set<AppdynamicsValidationResponse>> getMetricData(
-      @QueryParam("accountId") @NotNull String accountId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      @QueryParam("appName") @NotNull String appName, @QueryParam("tierName") @NotNull String tierName,
-      @QueryParam("requestGuid") @NotNull String requestGuid,
-      @NotNull @Valid @Body AppdynamicsMetricPackDataValidationRequest validationRequest) {
-    return new RestResponse<>(appdynamicsService.getMetricPackData(
-        accountId, orgIdentifier, projectIdentifier, appName, tierName, requestGuid, validationRequest));
-  }
-
-  @POST
-  @Path("/applications-ng")
-  @Timed
-  @ExceptionMetered
-  @LearningEngineAuth
-  @ExposeInternalException(withStackTrace = true)
-  public RestResponse<List<AppDynamicsApplication>> getAllApplications(@QueryParam("accountId") String accountId,
-      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      AppDynamicsConnectorDTO appDynamicsConnectorDTO) {
-    return new RestResponse<>(
-        appdynamicsService.getApplications(appDynamicsConnectorDTO, orgIdentifier, projectIdentifier));
-  }
-
-  @POST
-  @Path("/tiers-ng")
-  @Timed
-  @ExceptionMetered
-  @LearningEngineAuth
-  @ExposeInternalException(withStackTrace = true)
-  public RestResponse<Set<AppDynamicsTier>> getAllTiers(@QueryParam("accountId") String accountId,
-      @QueryParam("appDynamicsAppId") Long appDynamicsAppId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
-      AppDynamicsConnectorDTO appDynamicsConnectorDTO) {
-    return new RestResponse<>(
-        appdynamicsService.getTiers(appDynamicsConnectorDTO, orgIdentifier, projectIdentifier, appDynamicsAppId));
   }
 }

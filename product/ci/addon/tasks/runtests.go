@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -14,6 +13,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
+	"github.com/wings-software/portal/product/ci/common/external"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
@@ -30,6 +30,14 @@ const (
 	// as it is also used in init container.
 	javaAgentArg = "-javaagent:/addon/bin/java-agent.jar=%s"
 	tiConfigPath = ".ticonfig.yaml"
+)
+
+var (
+	selectTestsFn        = selectTests
+	collectCgFn          = collectCg
+	collectTestReportsFn = collectTestReports
+	runCmdFn             = runCmd
+	isManualFn           = external.IsManualExecution
 )
 
 // RunTestsTask represents an interface to run tests intelligently
@@ -66,7 +74,7 @@ type runTestsTask struct {
 }
 
 func NewRunTestsTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger,
-	w io.Writer, logMetrics bool, addonLogger *zap.SugaredLogger) RunTestsTask {
+	w io.Writer, logMetrics bool, addonLogger *zap.SugaredLogger) *runTestsTask {
 	r := step.GetRunTests()
 	fs := filesystem.NewOSFileSystem(log)
 	timeoutSecs := r.GetContext().GetExecutionTimeoutSecs()
@@ -112,8 +120,8 @@ func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 			st := time.Now()
 			// even if the collectCg fails, try to collect reports. Both are parallel features and one should
 			// work even if the other one fails.
-			errCg = collectCg(ctx, r.id, cgDir, r.log)
-			err = collectTestReports(ctx, r.reports, r.id, r.log)
+			errCg = collectCgFn(ctx, r.id, cgDir, r.log)
+			err = collectTestReportsFn(ctx, r.reports, r.id, r.log)
 			if errCg != nil {
 				// If there's an error in collecting callgraph, we won't retry but
 				// the step will be marked as an error
@@ -138,8 +146,8 @@ func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 	if err != nil {
 		// Run step did not execute successfully
 		// Try and collect callgraph and reports, ignore any errors during collection steps itself
-		errCg = collectCg(ctx, r.id, cgDir, r.log)
-		errc := collectTestReports(ctx, r.reports, r.id, r.log)
+		errCg = collectCgFn(ctx, r.id, cgDir, r.log)
+		errc := collectTestReportsFn(ctx, r.reports, r.id, r.log)
 		if errc != nil {
 			r.log.Errorw("error while collecting test reports", zap.Error(errc))
 		}
@@ -157,7 +165,7 @@ func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 func (r *runTestsTask) createJavaAgentArg() (string, error) {
 	// Create config file
 	dir := fmt.Sprintf(outDir, r.tmpFilePath)
-	err := os.MkdirAll(dir, os.ModePerm)
+	err := r.fs.MkdirAll(dir, os.ModePerm)
 	if err != nil {
 		r.log.Errorw(fmt.Sprintf("could not create nested directory %s", dir), zap.Error(err))
 		return "", err
@@ -173,7 +181,12 @@ instrPackages: %s`, dir, r.packages)
 	}
 	iniFile := fmt.Sprintf("%s/config.ini", r.tmpFilePath)
 	r.log.Infow(fmt.Sprintf("attempting to write %s to %s", data, iniFile))
-	err = ioutil.WriteFile(iniFile, []byte(data), 0644)
+	f, err := r.fs.Create(iniFile)
+	if err != nil {
+		r.log.Errorw(fmt.Sprintf("could not create file %s", iniFile), zap.Error(err))
+		return "", err
+	}
+	_, err = f.Write([]byte(data))
 	if err != nil {
 		r.log.Errorw(fmt.Sprintf("could not write %s to file %s", data, iniFile), zap.Error(err))
 		return "", err
@@ -197,25 +210,29 @@ func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
 	if !r.runOnlySelectedTests {
 		// Run all the tests
 		// TODO -- Aman - check if instumentation is required here too.
-		return fmt.Sprintf("%s %s -am -DargLine=%s", mvnCmd, r.args, instrArg), nil
+		return strings.TrimSpace(fmt.Sprintf("%s -am -DargLine=%s %s", mvnCmd, instrArg, r.args)), nil
 	}
 	if len(tests) == 0 {
 		return fmt.Sprintf("echo \"Skipping test run, received no tests to execute\""), nil
 	}
-	// Use only unique classes
-	// TODO: Figure out how to incorporate package information in this
-	set := make(map[string]interface{})
+	// Use only unique <package, class> tuples
+	set := make(map[types.RunnableTest]interface{})
 	ut := []string{}
 	for _, t := range tests {
-		if _, ok := set[t.Class]; ok {
-			// The class has already been added
+		w := types.RunnableTest{Pkg: t.Pkg, Class: t.Class}
+		if _, ok := set[w]; ok {
+			// The test has already been added
 			continue
 		}
-		set[t.Class] = struct{}{}
-		ut = append(ut, t.Class)
+		set[w] = struct{}{}
+		if t.Pkg != "" {
+			ut = append(ut, t.Pkg+"."+t.Class) // We should always have a package name. If not, use class to run
+		} else {
+			ut = append(ut, t.Class)
+		}
 	}
 	testStr := strings.Join(ut, ",")
-	return fmt.Sprintf("%s %s -Dtest=%s -am -DargLine=%s", mvnCmd, r.args, testStr, instrArg), nil
+	return strings.TrimSpace(fmt.Sprintf("%s -Dtest=%s -am -DargLine=%s %s", mvnCmd, testStr, instrArg, r.args)), nil
 }
 
 func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTest) (string, error) {
@@ -224,9 +241,7 @@ func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTe
 		return "", err
 	}
 	bazelInstrArg := fmt.Sprintf("--define=HARNESS_ARGS=%s", instrArg)
-	// Don't run all the tests for now. TODO: Needs to be fixed
-	// defaultCmd := fmt.Sprintf("%s %s %s //...", bazelCmd, r.args, bazelInstrArg) // run all the tests
-	defaultCmd := fmt.Sprintf("echo \"There was some issue with getting tests. Skipping run\"")
+	defaultCmd := fmt.Sprintf("%s %s %s //...", bazelCmd, r.args, bazelInstrArg) // run all the tests
 	if !r.runOnlySelectedTests {
 		// Run all the tests
 		return defaultCmd, nil
@@ -304,28 +319,33 @@ func valid(tests []types.RunnableTest) bool {
 
 func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
 	// Get the tests that need to be run if we are running selected tests
-	var err error
 	var selection types.SelectTestsResp
-	if r.runOnlySelectedTests {
-		var files []types.File
-		err := json.Unmarshal([]byte(r.diffFiles), &files)
-		if err != nil {
-			return "", err
-		}
-		selection, err = selectTests(ctx, files, r.id, r.log, r.fs)
-		if err != nil {
-			r.log.Errorw("there was some issue in trying to figure out tests to run. Running all the tests", zap.Error(err))
-			// Set run only selected tests to false if there was some issue in the response
-			r.runOnlySelectedTests = false
-		} else if selection.SelectAll == true {
-			r.log.Infow("TI service wants to run all the tests to be sure")
-			r.runOnlySelectedTests = false
-		} else if !valid(selection.Tests) { // This shouldn't happen
-			r.log.Warnw("did not receive accurate test list from TI service.")
-			r.runOnlySelectedTests = false
-		} else {
-			r.log.Infow(fmt.Sprintf("got tests list: %s from TI service", selection.Tests))
-		}
+	var files []types.File
+	err := json.Unmarshal([]byte(r.diffFiles), &files)
+	if err != nil {
+		return "", err
+	}
+	isManual := isManualFn()
+	if len(files) == 0 {
+		r.log.Errorw("unable to get changed files list")
+		r.runOnlySelectedTests = false // run all the tests if we could not find changed files list correctly
+	}
+	if isManual {
+		r.log.Infow("detected manual execution - for intelligence to be configured, a PR must be raised. Running all the tests.")
+		r.runOnlySelectedTests = false // run all the tests if it is a manual execution
+	}
+	selection, err = selectTestsFn(ctx, files, r.runOnlySelectedTests, r.id, r.log, r.fs)
+	if err != nil {
+		r.log.Errorw("there was some issue in trying to intelligently figure out tests to run. Running all the tests.", zap.Error(err))
+		r.runOnlySelectedTests = false // run all the tests if an error was encountered
+	} else if !valid(selection.Tests) { // This shouldn't happen
+		r.log.Warnw("test intelligence did not return suitable tests")
+		r.runOnlySelectedTests = false // TI did not return suitable tests
+	} else if selection.SelectAll == true {
+		r.log.Infow("intelligently determined to run all the tests")
+		r.runOnlySelectedTests = false // TI selected all the tests to be run
+	} else {
+		r.log.Infow(fmt.Sprintf("intelligently running tests: %s", selection.Tests))
 	}
 
 	var testCmd string
@@ -370,7 +390,7 @@ func (r *runTestsTask) execute(ctx context.Context, retryCount int32) error {
 
 	cmd := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).
 		WithStdout(r.procWriter).WithStderr(r.procWriter).WithEnvVarsMap(nil)
-	err = runCmd(ctx, cmd, r.id, cmdArgs, retryCount, start, r.logMetrics, r.addonLogger)
+	err = runCmdFn(ctx, cmd, r.id, cmdArgs, retryCount, start, r.logMetrics, r.addonLogger)
 	if err != nil {
 		return err
 	}

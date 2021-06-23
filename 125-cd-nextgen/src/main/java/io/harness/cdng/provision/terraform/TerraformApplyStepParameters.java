@@ -20,11 +20,11 @@ import lombok.NonNull;
 @EqualsAndHashCode(callSuper = true)
 @OwnedBy(CDP)
 public class TerraformApplyStepParameters extends TerraformApplyBaseStepInfo implements SpecParameters {
-  @NonNull TerrformStepConfigurationParameters configuration;
+  @NonNull TerraformStepConfigurationParameters configuration;
 
   @Builder(builderMethodName = "infoBuilder")
   public TerraformApplyStepParameters(ParameterField<String> provisionerIdentifier,
-      ParameterField<List<String>> delegateSelectors, @NonNull TerrformStepConfigurationParameters configuration) {
+      ParameterField<List<String>> delegateSelectors, @NonNull TerraformStepConfigurationParameters configuration) {
     super(provisionerIdentifier, delegateSelectors);
     this.configuration = configuration;
   }

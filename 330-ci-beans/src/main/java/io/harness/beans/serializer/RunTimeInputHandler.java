@@ -10,6 +10,7 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.yaml.extended.ArchiveFormat;
+import io.harness.beans.yaml.extended.CIShellType;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.ngexception.CIStageExecutionUserException;
 import io.harness.pms.yaml.ParameterField;
@@ -42,11 +43,19 @@ public class RunTimeInputHandler {
     }
   }
 
-  public ArchiveFormat resolveArchiveFormat(ParameterField<ArchiveFormat> archiveFromat) {
-    if (archiveFromat == null || archiveFromat.isExpression() || archiveFromat.getValue() == null) {
+  public ArchiveFormat resolveArchiveFormat(ParameterField<ArchiveFormat> archiveFormat) {
+    if (archiveFormat == null || archiveFormat.isExpression() || archiveFormat.getValue() == null) {
       return ArchiveFormat.TAR;
     } else {
-      return archiveFromat.getValue();
+      return ArchiveFormat.fromString(archiveFormat.fetchFinalValue().toString());
+    }
+  }
+
+  public CIShellType resolveShellType(ParameterField<CIShellType> shellType) {
+    if (shellType == null || shellType.isExpression() || shellType.getValue() == null) {
+      return CIShellType.SH;
+    } else {
+      return CIShellType.fromString(shellType.fetchFinalValue().toString());
     }
   }
 

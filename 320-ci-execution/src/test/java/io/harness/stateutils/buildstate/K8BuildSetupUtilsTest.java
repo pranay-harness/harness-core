@@ -3,7 +3,6 @@ package io.harness.stateutils.buildstate;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_AWS_REGION;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
 import static io.harness.common.CIExecutionConstants.ACCESS_KEY_MINIO_VARIABLE;
-import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
@@ -77,6 +76,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
+
 @Slf4j
 public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
@@ -158,7 +158,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
 
     CIK8PodParams<CIK8ContainerParams> podParams = k8BuildSetupUtils.getPodParams(ngAccess, k8PodDetails,
         ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), true, null, true,
-        "workspace", null, "foo", null, ambiance, null, null, null);
+        "workspace", ambiance, null, null, null, null);
 
     List<SecretVariableDetails> secretVariableDetails =
         new ArrayList<>(ciExecutionPlanTestHelper.getSecretVariableDetails());
@@ -207,8 +207,6 @@ public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
         .containsAnyElementsOf(secretVariableDetails);
     assertThat(podParams.getContainerParamsList().get(3).getEnvVars()).containsAllEntriesOf(stepEnvVars);
 
-    stepEnvVars.put(DELEGATE_SERVICE_TOKEN_VARIABLE,
-        podParams.getContainerParamsList().get(4).getEnvVars().get(DELEGATE_SERVICE_TOKEN_VARIABLE));
     assertThat(podParams.getContainerParamsList().get(4))
         .isEqualToIgnoringGivenFields(
             ciExecutionPlanTestHelper.getPluginStepCIK8Container().build(), "envVars", "containerSecrets");

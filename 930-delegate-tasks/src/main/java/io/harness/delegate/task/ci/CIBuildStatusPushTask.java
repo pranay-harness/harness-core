@@ -85,6 +85,8 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
         }
 
         if (statusSent) {
+          log.info("Successfully sent the git status for sha {}, stage identifier {}",
+              ciBuildStatusPushParameters.getSha(), ciBuildStatusPushParameters.getIdentifier());
           return BuildStatusPushResponse.builder().status(Status.SUCCESS).build();
         } else {
           return BuildStatusPushResponse.builder().status(Status.ERROR).build();
@@ -123,7 +125,7 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
             .githubUrl(getGitApiURL(gitConfigDTO.getUrl()))
             .build();
 
-    String token = githubService.getToken(githubAppConfig, null);
+    String token = githubService.getToken(githubAppConfig);
 
     if (isNotEmpty(token)) {
       Map<String, Object> bodyObjectMap = new HashMap<>();
@@ -132,7 +134,7 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
       bodyObjectMap.put(STATE, ciBuildStatusPushParameters.getState());
       bodyObjectMap.put(TARGET_URL, ciBuildStatusPushParameters.getDetailsUrl());
 
-      return githubService.sendStatus(githubAppConfig, token, null, ciBuildStatusPushParameters.getSha(),
+      return githubService.sendStatus(githubAppConfig, token, ciBuildStatusPushParameters.getSha(),
           ciBuildStatusPushParameters.getOwner(), ciBuildStatusPushParameters.getRepo(), bodyObjectMap);
     } else {
       log.error("Not sending status because token is empty for appId {}, installationId {}, sha {}",

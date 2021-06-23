@@ -240,7 +240,8 @@
           "items": {
             "type": "string",
             "enum": [
-              "AnyOther",
+              "Unknown",
+              "AllErrors",
               "Authentication",
               "Connectivity",
               "Timeout",
@@ -376,7 +377,9 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -405,6 +408,11 @@
     },
     "StepElementConfig": {
       "type": "object",
+      "required": [
+        "identifier",
+        "name",
+        "type"
+      ],
       "properties": {
         "description": {
           "type": "string"
@@ -416,16 +424,19 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "spec": {
           "$ref": "#/definitions/StepSpecType"
         },
         "timeout": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*))$"
         },
         "type": {
           "type": "string"
@@ -450,10 +461,12 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "rollbackSteps": {
           "type": "array",

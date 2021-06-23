@@ -61,7 +61,7 @@ public class CVConfigServiceImpl implements CVConfigService {
     checkArgument(cvConfig.getUuid() == null, "UUID should be null when creating CVConfig");
     cvConfig.validate();
     hPersistence.save(cvConfig);
-    verificationTaskService.create(cvConfig.getAccountId(), cvConfig.getUuid());
+    verificationTaskService.create(cvConfig.getAccountId(), cvConfig.getUuid(), cvConfig.getType());
     sendScopedCreateEvent(cvConfig);
     return cvConfig;
   }
@@ -444,19 +444,6 @@ public class CVConfigServiceImpl implements CVConfigService {
   public void deleteByAccountIdentifier(Class<CVConfig> clazz, String accountId) {
     Preconditions.checkState(clazz.equals(CVConfig.class), "Class should be of type CVConfig");
     this.deleteConfigsForEntity(accountId, null, null);
-  }
-
-  @Override
-  public List<CVConfig> getExistingMappedConfigs(
-      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String identifier) {
-    return hPersistence.createQuery(CVConfig.class, excludeAuthority)
-        .filter(CVConfigKeys.accountId, accountId)
-        .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
-        .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
-        .filter(CVConfigKeys.connectorIdentifier, connectorIdentifier)
-        .field(CVConfigKeys.identifier)
-        .notEqual(identifier)
-        .asList();
   }
 
   @Override

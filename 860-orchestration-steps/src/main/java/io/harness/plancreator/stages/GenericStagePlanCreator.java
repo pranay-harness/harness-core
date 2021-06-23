@@ -15,10 +15,11 @@ import io.harness.plancreator.steps.common.StepParametersUtils;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
-import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
@@ -80,7 +81,10 @@ public abstract class GenericStagePlanCreator extends ChildrenPlanCreator<StageE
         .stepType(getStepType(stageElementConfig))
         .skipCondition(SkipInfoUtils.getSkipCondition(stageElementConfig.getSkipCondition()))
         .whenCondition(RunInfoUtils.getRunCondition(stageElementConfig.getWhen()))
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                .build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
         .build();
   }

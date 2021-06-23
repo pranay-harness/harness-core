@@ -6,7 +6,7 @@ import io.harness.cdng.pipeline.CDStepInfo;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.validation.Validator;
 
@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +29,7 @@ import lombok.experimental.FieldDefaults;
 @JsonTypeName(StepSpecTypeConstants.TERRAFORM_PLAN)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TerraformPlanStepInfo extends TerraformPlanBaseStepInfo implements CDStepInfo {
-  @JsonProperty("configuration") TerraformPlanExecutionData terraformPlanExecutionData;
+  @NotNull @JsonProperty("configuration") TerraformPlanExecutionData terraformPlanExecutionData;
 
   @Builder(builderMethodName = "infoBuilder")
   public TerraformPlanStepInfo(ParameterField<String> provisionerIdentifier,

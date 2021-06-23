@@ -70,7 +70,7 @@ public abstract class AbstractHttpClientFactory {
     this.clientMode = ClientMode.NON_PRIVILEGED;
   }
 
-  public AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
+  protected AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
       ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId,
       boolean enableCircuitBreaker, ClientMode clientMode) {
     this.serviceHttpClientConfig = secretManagerConfig;
@@ -169,6 +169,8 @@ public abstract class AbstractHttpClientFactory {
                           .newBuilder()
                           .addQueryParameter("repoIdentifier", gitBranchInfo.getYamlGitConfigId())
                           .addQueryParameter("branch", gitBranchInfo.getBranch())
+                          .addQueryParameter(
+                              "getDefaultFromOtherRepo", String.valueOf(gitBranchInfo.isFindDefaultFromOtherRepos()))
                           .build();
         return chain.proceed(request.newBuilder().url(url).build());
       } else {

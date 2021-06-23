@@ -43,6 +43,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.mindrot.jbcrypt.BCrypt.checkpw;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
@@ -57,6 +58,8 @@ import io.harness.ccm.license.CeLicenseType;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
+import io.harness.event.handler.impl.segment.SegmentHandler.Keys;
+import io.harness.event.handler.impl.segment.SegmentHelper;
 import io.harness.event.model.EventType;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -82,7 +85,10 @@ import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.ng.core.common.beans.Generation;
+import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.invites.InviteOperationResponse;
+import io.harness.ng.core.user.PasswordChangeDTO;
+import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UuidAware;
@@ -184,6 +190,7 @@ import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.interfaces.Claim;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
@@ -202,7 +209,6 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
-import graphql.VisibleForTesting;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -268,6 +274,8 @@ public class UserServiceImpl implements UserService {
   private static final String LOGIN_URL_FORMAT = "/login?company=%s&account=%s&email=%s";
   private static final String HARNESS_ISSUER = "Harness Inc";
   private static final int MINIMAL_ORDER_QUANTITY = 1;
+  private static final String SYSTEM = "system";
+  private static final String SETUP_ACCOUNT_FROM_MARKETPLACE = "Account Setup from Marketplace";
 
   /**
    * The Executor service.
@@ -307,6 +315,7 @@ public class UserServiceImpl implements UserService {
   @Inject private NgInviteClient ngInviteClient;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
   @Inject private AccessRequestService accessRequestService;
+  @Inject private SegmentHelper segmentHelper;
 
   private Cache<String, User> getUserCache() {
     if (configurationController.isPrimary()) {
@@ -668,16 +677,17 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public String generateVerificationUrl(String userId, String accountId) throws URISyntaxException {
-    EmailVerificationToken emailVerificationToken =
-        wingsPersistence.saveAndGet(EmailVerificationToken.class, new EmailVerificationToken(userId));
-    return buildAbsoluteUrl(
-        configuration.getPortal().getVerificationUrl() + "/" + emailVerificationToken.getToken(), accountId);
+  public void setUserEmailVerified(String userId) {
+    wingsPersistence.updateFields(User.class, userId, ImmutableMap.of("emailVerified", true));
   }
 
   @Override
-  public String generateLoginUrl(String accountId) throws URISyntaxException {
-    return buildAbsoluteUrl("/login", accountId);
+  public boolean isUserPasswordPresent(String accountId, String emailId) {
+    User user = getUserByEmail(emailId);
+
+    Account account = accountService.get(accountId);
+    AuthenticationMechanism authMechanism = account.getAuthenticationMechanism();
+    return !((authMechanism == null || authMechanism == USER_PASSWORD) && isEmpty(user.getPasswordHash()));
   }
 
   @Override
@@ -840,8 +850,12 @@ public class UserServiceImpl implements UserService {
   }
 
   private void sendVerificationEmail(User user) {
+    EmailVerificationToken emailVerificationToken =
+        wingsPersistence.saveAndGet(EmailVerificationToken.class, new EmailVerificationToken(user.getUuid()));
     try {
-      String verificationUrl = generateVerificationUrl(user.getUuid(), user.getDefaultAccountId());
+      String verificationUrl =
+          buildAbsoluteUrl(configuration.getPortal().getVerificationUrl() + "/" + emailVerificationToken.getToken(),
+              user.getDefaultAccountId());
       Map<String, String> templateModel = getTemplateModel(user.getName(), verificationUrl);
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
@@ -979,7 +993,7 @@ public class UserServiceImpl implements UserService {
     return inviteOperationResponses;
   }
 
-  private void limitCheck(String accountId, UserInvite userInvite) {
+  private void limitCheck(String accountId, String email) {
     try {
       Account account = accountService.get(accountId);
       if (null == account) {
@@ -989,8 +1003,7 @@ public class UserServiceImpl implements UserService {
       Query<User> query = getListUserQuery(accountId, true);
       query.criteria(UserKeys.disabled).notEqual(true);
       List<User> existingUsersAndInvites = query.asList();
-      userServiceLimitChecker.limitCheck(
-          accountId, existingUsersAndInvites, new HashSet<>(Arrays.asList(userInvite.getEmail())));
+      userServiceLimitChecker.limitCheck(accountId, existingUsersAndInvites, new HashSet<>(Arrays.asList(email)));
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -1005,7 +1018,7 @@ public class UserServiceImpl implements UserService {
     signupService.checkIfEmailIsValid(userInvite.getEmail());
 
     String accountId = userInvite.getAccountId();
-    limitCheck(accountId, userInvite);
+    limitCheck(accountId, userInvite.getEmail());
 
     Account account = accountService.get(accountId);
 
@@ -1347,6 +1360,13 @@ public class UserServiceImpl implements UserService {
     return wingsPersistence.createQuery(UserInvite.class).filter(UserInvite.UUID_KEY, inviteId).get();
   }
 
+  private UserInvite getInviteFromEmail(String accountId, String email) {
+    return wingsPersistence.createQuery(UserInvite.class)
+        .filter(UserInviteKeys.accountId, accountId)
+        .filter(UserInviteKeys.email, email)
+        .get();
+  }
+
   @Override
   public List<UserInvite> getInvitesFromAccountId(String accountId) {
     return wingsPersistence.createQuery(UserInvite.class).filter(UserInvite.ACCOUNT_ID_KEY2, accountId).asList();
@@ -1406,13 +1426,15 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public User completeInviteAndSignIn(UserInvite userInvite, Generation gen) {
-    if (gen != null && gen.equals(NG)) {
-      completeNGInvite(userInvite);
-    } else {
-      completeInvite(userInvite);
-    }
+  public User completeInviteAndSignIn(UserInvite userInvite) {
+    completeInvite(userInvite);
     return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
+  }
+
+  @Override
+  public User completeNGInviteAndSignIn(UserInviteDTO userInvite) {
+    completeNGInvite(userInvite);
+    return authenticationManager.defaultLogin(userInvite.getEmail(), userInvite.getPassword());
   }
 
   @Override
@@ -1470,9 +1492,9 @@ public class UserServiceImpl implements UserService {
     return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
   }
 
-  private void completeNGInvite(UserInvite userInvite) {
+  private void completeNGInvite(UserInviteDTO userInvite) {
     String accountId = userInvite.getAccountId();
-    limitCheck(accountId, userInvite);
+    limitCheck(accountId, userInvite.getEmail());
     Account account = accountService.get(accountId);
     User user = getUserByEmail(userInvite.getEmail());
     if (user == null) {
@@ -1495,13 +1517,13 @@ public class UserServiceImpl implements UserService {
     Preconditions.checkState(authenticationMechanism == USER_PASSWORD,
         "Invalid request. Complete invite should only be called if Auth Mechanism is UsePass");
     loginSettingsService.verifyPasswordStrength(
-        accountService.get(userInvite.getAccountId()), userInvite.getPassword());
+        accountService.get(userInvite.getAccountId()), userInvite.getPassword().toCharArray());
 
-    user.setPasswordHash(hashpw(new String(userInvite.getPassword()), BCrypt.gensalt()));
+    user.setPasswordHash(hashpw(userInvite.getPassword(), BCrypt.gensalt()));
     user = createUser(user, accountId);
     user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
     eventPublishHelper.publishUserRegistrationCompletionEvent(userInvite.getAccountId(), user);
-    NGRestUtils.getResponse(ngInviteClient.completeInvite(userInvite.getUuid()));
+    NGRestUtils.getResponse(ngInviteClient.completeInvite(userInvite.getToken()));
   }
 
   private void marketPlaceSignup(User user, final UserInvite userInvite, MarketPlaceType marketPlaceType) {
@@ -1876,16 +1898,43 @@ public class UserServiceImpl implements UserService {
       verifier.verify(resetPasswordToken);
       JWT decode = JWT.decode(resetPasswordToken);
       String email = decode.getClaim("email").asString();
-      User user = resetUserPassword(email, password, decode.getIssuedAt().getTime());
-      sendPasswordChangeEmail(user);
-      user.getAccounts().forEach(account
-          -> auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Type.RESET_PASSWORD));
+      User user = validateTokenAndGetUser(email, decode.getIssuedAt().getTime());
+      updatePasswordAndPostSteps(user, password);
     } catch (UnsupportedEncodingException exception) {
       throw new GeneralException("Invalid reset password link");
     } catch (JWTVerificationException exception) {
       throw new UnauthorizedException("Token has expired", USER);
     }
     return true;
+  }
+
+  @Override
+  public PasswordChangeResponse changePassword(String userId, PasswordChangeDTO passwordChangeDTO) {
+    User user = get(userId);
+    boolean correctUserPassword = checkpw(passwordChangeDTO.getCurrentPassword(), user.getPasswordHash());
+    if (!correctUserPassword) {
+      return PasswordChangeResponse.INCORRECT_CURRENT_PASSWORD;
+    }
+    try {
+      updatePasswordAndPostSteps(user, passwordChangeDTO.getNewPassword().toCharArray());
+    } catch (WingsException e) {
+      if (e.getMessage().matches("(.*)Password violates strength policy(.*)")) {
+        return PasswordChangeResponse.PASSWORD_STRENGTH_VIOLATED;
+      } else {
+        throw e;
+      }
+    }
+    return PasswordChangeResponse.PASSWORD_CHANGED;
+  }
+
+  private User validateTokenAndGetUser(String email, long tokenIssuedAt) {
+    User user = getUserByEmail(email);
+    if (user == null) {
+      throw new InvalidRequestException("Email doesn't exist");
+    } else if (user.getPasswordChangedAt() > tokenIssuedAt) {
+      throw new UnauthorizedException("Token has expired", USER);
+    }
+    return user;
   }
 
   @Override
@@ -1917,13 +1966,14 @@ public class UserServiceImpl implements UserService {
     return logoutResponse;
   }
 
-  private User resetUserPassword(String email, char[] password, long tokenIssuedAt) {
-    User user = getUserByEmail(email);
-    if (user == null) {
-      throw new InvalidRequestException("Email doesn't exist");
-    } else if (user.getPasswordChangedAt() > tokenIssuedAt) {
-      throw new UnauthorizedException("Token has expired", USER);
-    }
+  private void updatePasswordAndPostSteps(User existingUser, char[] password) {
+    User user = resetUserPassword(existingUser, password);
+    sendPasswordChangeEmail(user);
+    user.getAccounts().forEach(account
+        -> auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, user, Type.RESET_PASSWORD));
+  }
+
+  private User resetUserPassword(User user, char[] password) {
     loginSettingsService.verifyPasswordStrength(accountService.get(user.getDefaultAccountId()), password);
     String hashed = hashpw(new String(password), BCrypt.gensalt());
     wingsPersistence.update(user,
@@ -2280,11 +2330,20 @@ public class UserServiceImpl implements UserService {
     });
 
     users.forEach(user -> {
-      Collection<UserGroup> userGroups = userUserGroupMap.get(user.getUuid());
-      if (isEmpty(userGroups)) {
-        user.setUserGroups(new ArrayList<>());
+      if (isUserInvitedToAccount(user, accountId)) {
+        UserInvite userInvite = getInviteFromEmail(accountId, user.getEmail());
+        if (userInvite == null) {
+          user.setUserGroups(new ArrayList<>());
+        } else {
+          user.setUserGroups(userGroupService.getUserGroupSummary(userInvite.getUserGroups()));
+        }
       } else {
-        user.setUserGroups(new ArrayList<>(userGroups));
+        Collection<UserGroup> userGroups = userUserGroupMap.get(user.getUuid());
+        if (isEmpty(userGroups)) {
+          user.setUserGroups(new ArrayList<>());
+        } else {
+          user.setUserGroups(new ArrayList<>(userGroups));
+        }
       }
     });
   }
@@ -3249,6 +3308,7 @@ public class UserServiceImpl implements UserService {
     if (loadUserGroups) {
       loadUserGroupsForUsers(userList, accountId);
     }
+
     return userList;
   }
 
@@ -3407,6 +3467,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private String setupAccountBasedOnProduct(User user, UserInvite userInvite, MarketPlace marketPlace) {
+    String accountId;
     LicenseInfo licenseInfo = LicenseInfo.builder()
                                   .accountType(AccountType.PAID)
                                   .licenseUnits(marketPlace.getOrderQuantity())
@@ -3414,7 +3475,10 @@ public class UserServiceImpl implements UserService {
                                   .accountStatus(AccountStatus.ACTIVE)
                                   .build();
     if (marketPlace.getProductCode().equals(configuration.getMarketPlaceConfig().getAwsMarketPlaceProductCode())) {
-      return setupAccountForUser(user, userInvite, licenseInfo);
+      if (null != marketPlace.getLicenseType() && marketPlace.getLicenseType().equals("TRIAL")) {
+        licenseInfo.setAccountType(AccountType.TRIAL);
+      }
+      accountId = setupAccountForUser(user, userInvite, licenseInfo);
     } else if (marketPlace.getProductCode().equals(
                    configuration.getMarketPlaceConfig().getAwsMarketPlaceCeProductCode())) {
       CeLicenseType ceLicenseType = CeLicenseType.PAID;
@@ -3423,15 +3487,31 @@ public class UserServiceImpl implements UserService {
       }
       licenseInfo.setAccountType(AccountType.TRIAL);
       licenseInfo.setLicenseUnits(MINIMAL_ORDER_QUANTITY);
-      String accountId = setupAccountForUser(user, userInvite, licenseInfo);
+      accountId = setupAccountForUser(user, userInvite, licenseInfo);
       licenseService.updateCeLicense(accountId,
           CeLicenseInfo.builder()
               .expiryTime(marketPlace.getExpirationDate().getTime())
               .licenseType(ceLicenseType)
               .build());
-      return accountId;
     } else {
       throw new InvalidRequestException("Cannot resolve AWS marketplace order");
     }
+
+    Map<String, String> properties = new HashMap<String, String>() {
+      {
+        put("marketPlaceId", marketPlace.getUuid());
+        put("licenseType", marketPlace.getLicenseType());
+        put("productCode", marketPlace.getProductCode());
+      }
+    };
+    Map<String, Boolean> integrations = new HashMap<String, Boolean>() {
+      { put(Keys.SALESFORCE, Boolean.TRUE); }
+    };
+
+    log.info("Setting up account {} for Product: {} and licenseType: {}", accountId, marketPlace.getProductCode(),
+        marketPlace.getLicenseType());
+    segmentHelper.reportTrackEvent(SYSTEM, SETUP_ACCOUNT_FROM_MARKETPLACE, properties, integrations);
+
+    return accountId;
   }
 }

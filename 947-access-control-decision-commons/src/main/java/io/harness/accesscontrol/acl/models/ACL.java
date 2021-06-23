@@ -18,7 +18,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
-import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -33,7 +32,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "ACLKeys")
-@Document("acl")
+@Document(ACL.PRIMARY_COLLECTION)
 @Entity(value = "acl", noClassnameStored = true)
 @TypeAlias("acl")
 @StoreIn(ACCESS_CONTROL)
@@ -46,6 +45,8 @@ public class ACL implements PersistentEntity {
   public static final String ROLE_IDENTIFIER_KEY = ACLKeys.sourceMetadata + "." + SourceMetadataKeys.roleIdentifier;
   public static final String RESOURCE_GROUP_IDENTIFIER_KEY =
       ACLKeys.sourceMetadata + "." + SourceMetadataKeys.resourceGroupIdentifier;
+  public static final String PRIMARY_COLLECTION = "acl";
+  public static final String SECONDARY_COLLECTION = "acl_secondary";
 
   @Id @org.mongodb.morphia.annotations.Id private String id;
   @CreatedDate Long createdAt;
@@ -62,64 +63,7 @@ public class ACL implements PersistentEntity {
   @FdIndex @Getter(value = AccessLevel.NONE) private Boolean enabled;
 
   public boolean isEnabled() {
-    return this.enabled != null && enabled;
-  }
-
-  @Value
-  public static class RoleAssignmentPermissionPrincipal {
-    String scopeIdentifier;
-    String roleAssignmentIdentifier;
-    String permissionIdentifier;
-    String principalIdentifier;
-    String principalType;
-  }
-
-  @Value
-  public static class RoleAssignmentResourceSelectorPrincipal {
-    String scopeIdentifier;
-    String roleAssignmentIdentifier;
-    String resourceSelector;
-    String principalIdentifier;
-    String principalType;
-  }
-
-  @Value
-  public static class RoleAssignmentResourceSelectorPermission {
-    String scopeIdentifier;
-    String roleAssignmentIdentifier;
-    String resourceSelector;
-    String permissionIdentifier;
-  }
-
-  public RoleAssignmentPermissionPrincipal roleAssignmentPermissionPrincipal() {
-    return new RoleAssignmentPermissionPrincipal(this.scopeIdentifier,
-        this.sourceMetadata.getRoleAssignmentIdentifier(), this.permissionIdentifier, this.principalIdentifier,
-        this.principalType);
-  }
-
-  public RoleAssignmentResourceSelectorPrincipal roleAssignmentResourceSelectorPrincipal() {
-    return new RoleAssignmentResourceSelectorPrincipal(this.scopeIdentifier,
-        this.sourceMetadata.getRoleAssignmentIdentifier(), this.resourceSelector, this.principalIdentifier,
-        this.principalType);
-  }
-
-  public RoleAssignmentResourceSelectorPermission roleAssignmentResourceSelectorPermission() {
-    return new RoleAssignmentResourceSelectorPermission(this.scopeIdentifier,
-        this.sourceMetadata.getRoleAssignmentIdentifier(), this.resourceSelector, this.permissionIdentifier);
-  }
-
-  public static ACL copyOf(ACL acl) {
-    return ACL.builder()
-        .roleAssignmentId(acl.getRoleAssignmentId())
-        .scopeIdentifier(acl.getScopeIdentifier())
-        .permissionIdentifier(acl.getPermissionIdentifier())
-        .sourceMetadata(acl.getSourceMetadata())
-        .resourceSelector(acl.getResourceSelector())
-        .principalType(acl.getPrincipalType())
-        .principalIdentifier(acl.getPrincipalIdentifier())
-        .aclQueryString(acl.getAclQueryString())
-        .enabled(acl.isEnabled())
-        .build();
+    return Boolean.TRUE.equals(enabled);
   }
 
   public static String getAclQueryString(String scopeIdentifier, String resourceSelector, String principalType,
@@ -147,6 +91,21 @@ public class ACL implements PersistentEntity {
                  .field(ACLKeys.principalIdentifier)
                  .field(ACLKeys.principalType)
                  .unique(true)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("roleAssignmentIdResourceSelectorIdx")
+                 .field(ACLKeys.roleAssignmentId)
+                 .field(ACLKeys.resourceSelector)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("roleAssignmentIdPermissionIdx")
+                 .field(ACLKeys.roleAssignmentId)
+                 .field(ACLKeys.permissionIdentifier)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("roleAssignmentIdPrincipalIdx")
+                 .field(ACLKeys.roleAssignmentId)
+                 .field(ACLKeys.principalIdentifier)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("roleIdx")

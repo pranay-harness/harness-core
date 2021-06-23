@@ -40,6 +40,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -62,8 +63,8 @@ public class CIK8CtlHandler {
   @Inject Provider<ExecCommandListener> execListenerProvider;
   @Inject private Sleeper sleeper;
 
-  private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
-  private final int MAX_ATTEMPTS = 3;
+  private final int MAX_ATTEMPTS = 6;
+  private final int DELETION_MAX_ATTEMPTS = 15;
 
   public Secret createRegistrySecret(
       KubernetesClient kubernetesClient, String namespace, String secretName, ImageDetailsWithConnector imageDetails) {
@@ -134,6 +135,11 @@ public class CIK8CtlHandler {
     return secretSpecBuilder.fetchGithubAppToken(connectorDetailsMap);
   }
 
+  public Map<String, SecretParams> fetchEnvVarsWithSecretRefSecretParams(
+      Map<String, String> envVarsWithSecretRef, String containerName) {
+    return secretSpecBuilder.createSecretParamsForPlainTextSecret(envVarsWithSecretRef, containerName);
+  }
+
   public Secret createSecret(
       KubernetesClient kubernetesClient, String secretName, String namespace, Map<String, String> data) {
     Secret secret = secretSpecBuilder.createSecret(secretName, namespace, data);
@@ -188,7 +194,9 @@ public class CIK8CtlHandler {
     String errMsg;
     // If pod's container status list is non-empty, reason for pod not to be in running state is in waiting container's
     // status message. Else reason is present in pod conditions.
-    if (isNotEmpty(pod.getStatus().getContainerStatuses())) {
+    if (Duration.between(startTime, currTime).getSeconds() >= CIConstants.POD_MAX_WAIT_UNTIL_READY_SECS) {
+      errMsg = "Timeout exception: Pod containers failed to reach running state within 8 minutes";
+    } else if (isNotEmpty(pod.getStatus().getContainerStatuses())) {
       List<String> containerErrs =
           pod.getStatus()
               .getContainerStatuses()
@@ -286,15 +294,30 @@ public class CIK8CtlHandler {
   }
 
   public Boolean deletePod(KubernetesClient kubernetesClient, String podName, String namespace) {
-    return kubernetesClient.pods().inNamespace(namespace).withName(podName).delete();
+    RetryPolicy<Object> retryPolicy =
+        getRetryPolicyForDeletion(format("[Retrying failed to delete pod: [%s]; attempt: {}", podName),
+            format("Failed to delete pod after retrying {} times", podName));
+
+    return Failsafe.with(retryPolicy)
+        .get(() -> kubernetesClient.pods().inNamespace(namespace).withName(podName).delete());
   }
 
   public Boolean deleteService(KubernetesClient kubernetesClient, String namespace, String serviceName) {
-    return kubernetesClient.services().inNamespace(namespace).withName(serviceName).delete();
+    RetryPolicy<Object> retryPolicy =
+        getRetryPolicyForDeletion(format("[Retrying failed to delete service: [%s]; attempt: {}", serviceName),
+            format("Failed to delete service after retrying {} times", serviceName));
+
+    return Failsafe.with(retryPolicy)
+        .get(() -> kubernetesClient.services().inNamespace(namespace).withName(serviceName).delete());
   }
 
   public Boolean deleteSecret(KubernetesClient kubernetesClient, String namespace, String secretName) {
-    return kubernetesClient.secrets().inNamespace(namespace).withName(secretName).delete();
+    RetryPolicy<Object> retryPolicy =
+        getRetryPolicyForDeletion(format("[Retrying failed to delete secret: [%s]; attempt: {}", secretName),
+            format("Failed to delete secret after retrying {} times", secretName));
+
+    return Failsafe.with(retryPolicy)
+        .get(() -> kubernetesClient.secrets().inNamespace(namespace).withName(secretName).delete());
   }
 
   public void createGitSecret(KubernetesClient kubernetesClient, String namespace, ConnectorDetails gitConnector)
@@ -345,8 +368,17 @@ public class CIK8CtlHandler {
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
     return new RetryPolicy<>()
         .handle(Exception.class)
-        .withDelay(RETRY_SLEEP_DURATION)
+        .withBackoff(2, 10, ChronoUnit.SECONDS)
         .withMaxAttempts(MAX_ATTEMPTS)
+        .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
+        .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
+  }
+
+  private RetryPolicy<Object> getRetryPolicyForDeletion(String failedAttemptMessage, String failureMessage) {
+    return new RetryPolicy<>()
+        .handle(Exception.class)
+        .withMaxAttempts(DELETION_MAX_ATTEMPTS)
+        .withBackoff(5, 60, ChronoUnit.SECONDS)
         .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
         .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
   }

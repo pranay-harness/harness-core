@@ -120,3 +120,13 @@ fi
 if [[ "" != "$GRPC_SERVER_PORT" ]]; then
   yq write -i $CONFIG_FILE pmsSdkGrpcServerConfig.connectors[0].port "$GRPC_SERVER_PORT"
 fi
+
+replace_key_value cfClientConfig.apiKey "$CF_CLIENT_API_KEY"
+replace_key_value cfClientConfig.configUrl "$CF_CLIENT_CONFIG_URL"
+replace_key_value cfClientConfig.eventUrl "$CF_CLIENT_EVENT_URL"
+replace_key_value cfClientConfig.analyticsEnabled "$CF_CLIENT_ANALYTICS_ENABLED"
+replace_key_value cfClientConfig.connectionTimeout "$CF_CLIENT_CONNECTION_TIMEOUT"
+replace_key_value cfClientConfig.readTimeout "$CF_CLIENT_READ_TIMEOUT"
+replace_key_value featureFlagConfig.featureFlagSystem "$FEATURE_FLAG_SYSTEM"
+replace_key_value featureFlagConfig.syncFeaturesToCF "$SYNC_FEATURES_TO_CF"
+replace_key_value notificationClient.secrets.notificationClientSecret "$PLATFORM_SERVICE_SECRET"

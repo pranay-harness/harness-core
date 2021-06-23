@@ -7,6 +7,7 @@ import static io.harness.generator.SettingGenerator.Settings.AZURE_TEST_CLOUD_PR
 import static io.harness.generator.SettingGenerator.Settings.AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.GCP_PLAYGROUND;
+import static io.harness.generator.SettingGenerator.Settings.GCP_QA_TARGET;
 import static io.harness.generator.SettingGenerator.Settings.OPENSHIFT_TEST_CLUSTER;
 import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
 import static io.harness.generator.SettingGenerator.Settings.SPOTINST_TEST_CLOUD_PROVIDER;
@@ -190,6 +191,7 @@ public class InfrastructureDefinitionGenerator {
     MULTI_ARTIFACT_AWS_SSH_FUNCTIONAL_TEST,
     AZURE_HELM,
     GCP_HELM,
+    GCP_HELM_CUSTOM_MANIFEST_TEST,
     PIPELINE_RBAC_QA_AWS_SSH_TEST,
     PIPELINE_RBAC_PROD_AWS_SSH_TEST,
     AWS_WINRM_DOWNLOAD,
@@ -200,7 +202,7 @@ public class InfrastructureDefinitionGenerator {
     AZURE_WEB_APP_BLUE_GREEN_TEST,
     AZURE_WEB_APP_BLUE_GREEN_ROLLBACK_TEST,
     AZURE_WEB_APP_CANARY_TEST,
-    AZURE_WEB_APP_API_TEST
+    AZURE_WEB_APP_API_TEST;
   }
 
   public InfrastructureDefinition ensurePredefined(
@@ -242,6 +244,8 @@ public class InfrastructureDefinitionGenerator {
         return ensureAzureHelmInfraDef(seed, owners);
       case GCP_HELM:
         return ensureGcpHelmInfraDef(seed, owners, "fn-test-helm");
+      case GCP_HELM_CUSTOM_MANIFEST_TEST:
+        return ensureGcpHelmCustomManifestInfraDef(seed, owners, "fn-test-helm");
       case PIPELINE_RBAC_QA_AWS_SSH_TEST:
         return ensurePipelineRbacQaK8sTest(seed, owners);
       case PIPELINE_RBAC_PROD_AWS_SSH_TEST:
@@ -310,6 +314,32 @@ public class InfrastructureDefinitionGenerator {
             .infrastructure(GoogleKubernetesEngine.builder()
                                 .cloudProviderId(gcpCloudProvider.getUuid())
                                 .clusterName("us-central1-a/harness-test")
+                                .namespace(namespace)
+                                .build())
+            .deploymentType(DeploymentType.HELM)
+            .cloudProviderType(CloudProviderType.GCP)
+            .envId(environment.getUuid())
+            .appId(owners.obtainApplication().getUuid())
+            .build();
+
+    return ensureInfrastructureDefinition(infrastructureDefinition);
+  }
+
+  private InfrastructureDefinition ensureGcpHelmCustomManifestInfraDef(Seed seed, Owners owners, String namespace) {
+    Environment environment = owners.obtainEnvironment();
+    if (environment == null) {
+      environment = environmentGenerator.ensurePredefined(seed, owners, Environments.FUNCTIONAL_TEST);
+      owners.add(environment);
+    }
+
+    final SettingAttribute gcpCloudProvider = settingGenerator.ensurePredefined(seed, owners, GCP_QA_TARGET);
+
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .name("qa-target-helm-" + namespace)
+            .infrastructure(GoogleKubernetesEngine.builder()
+                                .cloudProviderId(gcpCloudProvider.getUuid())
+                                .clusterName("us-central1-a/qa-target")
                                 .namespace(namespace)
                                 .build())
             .deploymentType(DeploymentType.HELM)

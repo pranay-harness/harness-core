@@ -5,8 +5,10 @@ import static io.harness.lock.DistributedLockImplementation.NOOP;
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.lock.DistributedLockImplementation;
@@ -29,7 +31,6 @@ import io.harness.waiter.WaiterConfiguration;
 import io.harness.waiter.WaiterConfiguration.PersistenceLayer;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -67,7 +68,7 @@ public class DelegateServiceRule implements MethodRule, InjectorRuleMixin, Mongo
     modules.add(new ProviderModule() {
       @Override
       protected void configure() {
-        bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+        bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
       }
 
       @Provides
@@ -118,6 +119,11 @@ public class DelegateServiceRule implements MethodRule, InjectorRuleMixin, Mongo
       @Override
       public CfMigrationConfig cfMigrationConfig() {
         return CfMigrationConfig.builder().build();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return FeatureFlagConfig.builder().build();
       }
     });
 

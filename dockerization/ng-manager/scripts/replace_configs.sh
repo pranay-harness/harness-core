@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 CONFIG_FILE=/opt/harness/config.yml
+REDISSON_CACHE_FILE=/opt/harness/redisson-jcache.yaml
 
 replace_key_value () {
   CONFIG_KEY="$1";
@@ -106,6 +107,10 @@ if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE nextGen.jwtIdentityServiceSecret "$JWT_IDENTITY_SERVICE_SECRET"
 fi
 
+if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
+  yq write -i $CONFIG_FILE nextGen.pipelineServiceSecret "$NEXT_GEN_MANAGER_SECRET"
+fi
+
 if [[ "" != "$AUTH_ENABLED" ]]; then
   yq write -i $CONFIG_FILE enableAuth "$AUTH_ENABLED"
 fi
@@ -151,7 +156,6 @@ fi
 if [[ "" != "$PMS_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE pmsGrpcClientConfig.authority $PMS_AUTHORITY
 fi
-
 
 if [[ "" != "$NG_MANAGER_TARGET" ]]; then
  yq write -i $CONFIG_FILE gitGrpcClientConfigs.core.target $NG_MANAGER_TARGET
@@ -225,6 +229,52 @@ if [[ "" != "$FILE_STORAGE_CLUSTER_NAME" ]]; then
   yq write -i $CONFIG_FILE fileServiceConfiguration.clusterName "$FILE_STORAGE_CLUSTER_NAME"
 fi
 
+yq delete -i $REDISSON_CACHE_FILE codec
+
+if [[ "$REDIS_SCRIPT_CACHE" == "false" ]]; then
+  yq write -i $CONFIG_FILE redisLockConfig.useScriptCache false
+  yq write -i $REDISSON_CACHE_FILE useScriptCache false
+fi
+
+replace_key_value distributedLockImplementation $DISTRIBUTED_LOCK_IMPLEMENTATION
+
+replace_key_value redisLockConfig.sentinel $LOCK_CONFIG_USE_SENTINEL
+replace_key_value redisLockConfig.envNamespace $LOCK_CONFIG_ENV_NAMESPACE
+replace_key_value redisLockConfig.redisUrl $LOCK_CONFIG_REDIS_URL
+replace_key_value redisLockConfig.masterName $LOCK_CONFIG_SENTINEL_MASTER_NAME
+replace_key_value redisLockConfig.userName $LOCK_CONFIG_REDIS_USERNAME
+replace_key_value redisLockConfig.password $LOCK_CONFIG_REDIS_PASSWORD
+replace_key_value redisLockConfig.nettyThreads $REDIS_NETTY_THREADS
+
+if [[ "" != "$LOCK_CONFIG_REDIS_URL" ]]; then
+  yq write -i $REDISSON_CACHE_FILE singleServerConfig.address "$LOCK_CONFIG_REDIS_URL"
+fi
+
+if [[ "$LOCK_CONFIG_USE_SENTINEL" == "true" ]]; then
+  yq delete -i $REDISSON_CACHE_FILE singleServerConfig
+fi
+
+if [[ "" != "$LOCK_CONFIG_SENTINEL_MASTER_NAME" ]]; then
+  yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.masterName "$LOCK_CONFIG_SENTINEL_MASTER_NAME"
+fi
+
+if [[ "" != "$LOCK_CONFIG_REDIS_SENTINELS" ]]; then
+  IFS=',' read -ra SENTINEL_URLS <<< "$LOCK_CONFIG_REDIS_SENTINELS"
+  INDEX=0
+  for REDIS_SENTINEL_URL in "${SENTINEL_URLS[@]}"; do
+    yq write -i $CONFIG_FILE redisLockConfig.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
+    yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[+] "${REDIS_SENTINEL_URL}"
+    INDEX=$(expr $INDEX + 1)
+  done
+fi
+
+if [[ "" != "$REDIS_NETTY_THREADS" ]]; then
+  yq write -i $REDISSON_CACHE_FILE nettyThreads "$REDIS_NETTY_THREADS"
+fi
+
+replace_key_value cacheConfig.cacheNamespace $CACHE_NAMESPACE
+replace_key_value cacheConfig.cacheBackend $CACHE_BACKEND
+
 replace_key_value eventsFramework.redis.sentinel $EVENTS_FRAMEWORK_USE_SENTINEL
 replace_key_value eventsFramework.redis.envNamespace $EVENTS_FRAMEWORK_ENV_NAMESPACE
 replace_key_value eventsFramework.redis.redisUrl $EVENTS_FRAMEWORK_REDIS_URL
@@ -261,6 +311,8 @@ replace_key_value outboxPollConfig.maximumRetryAttemptsForAnEvent "$OUTBOX_MAX_R
 
 replace_key_value notificationClient.httpClient.baseUrl "$NOTIFICATION_BASE_URL"
 
+replace_key_value notificationClient.secrets.notificationClientSecret "$NEXT_GEN_MANAGER_SECRET"
+
 replace_key_value notificationClient.messageBroker.uri "${NOTIFICATION_MONGO_URI//\\&/&}"
 
 replace_key_value accessControlAdminClient.mockAccessControlService "${MOCK_ACCESS_CONTROL_SERVICE:-true}"
@@ -269,10 +321,35 @@ replace_key_value gitSdkConfiguration.scmConnectionConfig.url "$SCM_SERVICE_URL"
 
 replace_key_value resourceGroupClientConfig.serviceConfig.baseUrl "$RESOURCE_GROUP_BASE_URL"
 
+replace_key_value resourceGroupClientConfig.secret "$NEXT_GEN_MANAGER_SECRET"
+
 replace_key_value baseUrls.currentGenUiUrl "$CURRENT_GEN_UI_URL"
+replace_key_value baseUrls.nextGenUiUrl "$NEXT_GEN_UI_URL"
+replace_key_value baseUrls.nextGenAuthUiUrl "$NG_AUTH_UI_URL"
+replace_key_value baseUrls.webhookBaseUrl "$WEBHOOK_BASE_URL"
+
+replace_key_value ngAuthUIEnabled "$HARNESS_ENABLE_NG_AUTH_UI_PLACEHOLDER"
 
 replace_key_value enableDefaultResourceGroupCreation "${ENABLE_DEFAULT_RESOURCE_GROUP_CREATION:-false}"
 
-replace_key_value yamlSchemaClientConfig.yamlSchemaHttpClientMap.cvng.secret "$CVNG_SERVICE_SECRET"
+replace_key_value signupNotificationConfiguration.projectId "$SIGNUP_NOTIFICATION_GCS_PROJECT_ID"
+replace_key_value signupNotificationConfiguration.bucketName "$SIGNUP_NOTIFICATION_GCS_BUCKET_NAME"
 
-replace_key_value yamlSchemaClientConfig.yamlSchemaHttpClientMap.cvng.serviceHttpClientConfig.baseUrl $CVNG_BASE_URL
+replace_key_value segmentConfiguration.enabled "$SEGMENT_ENABLED"
+replace_key_value segmentConfiguration.apiKey "$SEGMENT_APIKEY"
+
+replace_key_value accountConfig.deploymentClusterName "$DEPLOYMENT_CLUSTER_NAME"
+
+replace_key_value gitGrpcClientConfigs.pms.target "$PMS_GITSYNC_TARGET"
+replace_key_value gitGrpcClientConfigs.pms.authority "$PMS_GITSYNC_AUTHORITY"
+
+replace_key_value cfClientConfig.apiKey "$CF_CLIENT_API_KEY"
+replace_key_value cfClientConfig.configUrl "$CF_CLIENT_CONFIG_URL"
+replace_key_value cfClientConfig.eventUrl "$CF_CLIENT_EVENT_URL"
+replace_key_value cfClientConfig.analyticsEnabled "$CF_CLIENT_ANALYTICS_ENABLED"
+replace_key_value cfClientConfig.connectionTimeout "$CF_CLIENT_CONNECTION_TIMEOUT"
+replace_key_value cfClientConfig.readTimeout "$CF_CLIENT_READ_TIMEOUT"
+replace_key_value featureFlagConfig.featureFlagSystem "$FEATURE_FLAG_SYSTEM"
+replace_key_value featureFlagConfig.syncFeaturesToCF "$SYNC_FEATURES_TO_CF"
+replace_key_value ceAzureSetupConfig.azureAppClientId "$AZURE_APP_CLIENT_ID"
+replace_key_value ceAzureSetupConfig.azureAppClientSecret "$AZURE_APP_CLIENT_SECRET"

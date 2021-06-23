@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
-import io.harness.pms.sdk.core.facilitator.Facilitator;
+import io.harness.pms.sdk.core.execution.events.node.facilitate.Facilitator;
 import io.harness.steps.resourcerestraint.ResourceRestraintFacilitator;
 
 import java.util.HashMap;

@@ -7,7 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.CEUserInfo;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
-import io.harness.ccm.commons.entities.CEMetadataRecord;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.ccm.config.GcpBillingAccount;
 
 import software.wings.api.DeploymentSummary;

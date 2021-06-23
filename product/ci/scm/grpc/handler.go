@@ -149,6 +149,16 @@ func (h *handler) ListCommits(ctx context.Context, in *pb.ListCommitsRequest) (*
 	return git.ListCommits(ctx, in, h.log)
 }
 
+// ListCommitsInPR is used to return a list of commit details given pr number.
+func (h *handler) ListCommitsInPR(ctx context.Context, in *pb.ListCommitsInPRRequest) (*pb.ListCommitsInPRResponse, error) {
+	return git.ListCommitsInPR(ctx, in, h.log)
+}
+
+// ListCommits is used to return a list of commit ids given a ref or branch.
+func (h *handler) CompareCommits(ctx context.Context, in *pb.CompareCommitsRequest) (*pb.CompareCommitsResponse, error) {
+	return git.CompareCommits(ctx, in, h.log)
+}
+
 // CreateWebhook is used to add a webhook to a repo.
 func (h *handler) CreateWebhook(ctx context.Context, in *pb.CreateWebhookRequest) (*pb.CreateWebhookResponse, error) {
 	return repo.CreateWebhook(ctx, in, h.log)
@@ -162,4 +172,13 @@ func (h *handler) DeleteWebhook(ctx context.Context, in *pb.DeleteWebhookRequest
 // ListWebhooks is used to list all webhooks associated with a repo.
 func (h *handler) ListWebhooks(ctx context.Context, in *pb.ListWebhooksRequest) (*pb.ListWebhooksResponse, error) {
 	return repo.ListWebhooks(ctx, in, h.log)
+}
+
+// GetAuthenticatedUser is used to get authenticated user.
+func (h *handler) GetAuthenticatedUser(ctx context.Context, in *pb.GetAuthenticatedUserRequest) (*pb.GetAuthenticatedUserResponse, error) {
+	return git.GetAuthenticatedUser(ctx, in, h.log)
+}
+
+func (h *handler) GetUserRepos(ctx context.Context, in *pb.GetUserReposRequest) (*pb.GetUserReposResponse, error) {
+	return git.GetUserRepos(ctx, in, h.log)
 }

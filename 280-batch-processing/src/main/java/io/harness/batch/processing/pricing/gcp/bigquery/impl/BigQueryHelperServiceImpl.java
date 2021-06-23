@@ -1,6 +1,7 @@
 package io.harness.batch.processing.pricing.gcp.bigquery.impl;
 
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.azureMeterCategory;
+import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.azureRate;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.azureVMMeterCategory;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.azureVMProviderId;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.billingAmountSum;
@@ -30,7 +31,7 @@ import io.harness.batch.processing.pricing.data.VMInstanceServiceBillingData;
 import io.harness.batch.processing.pricing.data.VMInstanceServiceBillingData.VMInstanceServiceBillingDataBuilder;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
-import io.harness.ccm.commons.entities.CEMetadataRecord.CEMetadataRecordBuilder;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord.CEMetadataRecordBuilder;
 
 import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 
@@ -198,10 +199,11 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
       if (azureVMMeterCategory.equals(vmInstanceServiceBillingData.getProductFamily())
           || vmInstanceServiceBillingData.getProductFamily() == null) {
         double cost = vmInstanceServiceBillingData.getCost();
+        double rate = vmInstanceServiceBillingData.getRate();
         if (null != vmInstanceServiceBillingData.getEffectiveCost()) {
           cost = vmInstanceServiceBillingData.getEffectiveCost();
         }
-        vmInstanceBillingData = vmInstanceBillingData.toBuilder().computeCost(cost).build();
+        vmInstanceBillingData = vmInstanceBillingData.toBuilder().computeCost(cost).rate(rate).build();
       }
 
       vmInstanceBillingDataMap.put(resourceId, vmInstanceBillingData);
@@ -224,6 +226,9 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
             break;
           case cost:
             dataBuilder.cost(getNumericValue(row, field));
+            break;
+          case azureRate:
+            dataBuilder.rate(getNumericValue(row, field));
             break;
           case azureMeterCategory:
             dataBuilder.productFamily(fetchStringValue(row, field));

@@ -72,9 +72,11 @@ import software.wings.beans.sso.SSOType;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.RbacFeature;
 import software.wings.features.api.UsageLimitedFeature;
+import software.wings.scheduler.LdapGroupSyncJobHelper;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.UserGroupUtils;
 import software.wings.service.impl.workflow.UserGroupDeleteEventHandler;
@@ -139,6 +141,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject private CCMSettingService ccmSettingService;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject @Named(RbacFeature.FEATURE_NAME) private UsageLimitedFeature rbacFeature;
+  @Inject private LdapGroupSyncJobHelper ldapGroupSyncJobHelper;
 
   @Override
   public UserGroup save(UserGroup userGroup) {
@@ -534,8 +537,6 @@ public class UserGroupServiceImpl implements UserGroupService {
             actionSet.add(EXECUTE_PIPELINE);
             actionSet.add(EXECUTE_WORKFLOW);
             actionSet.add(EXECUTE_WORKFLOW_ROLLBACK);
-          } else if (action != null && action.equals(EXECUTE_WORKFLOW)) {
-            actionSet.add(EXECUTE_WORKFLOW_ROLLBACK);
           }
           actionSet.add(action);
         });
@@ -775,6 +776,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     if (ssoType == SSOType.LDAP) {
       add(jobScheduler, accountId, ssoId);
+      ldapGroupSyncJobHelper.syncJob(ssoSettings);
     }
 
     return updatedGroup;
@@ -859,6 +861,7 @@ public class UserGroupServiceImpl implements UserGroupService {
                                    .filter(ID_KEY, userGroup.getUuid())
                                    .filter(UserGroupKeys.accountId, userGroup.getAccountId());
       wingsPersistence.update(query, operations);
+      updateUserPermissionAndRestrictionCache(userGroup);
     }
   }
 
@@ -962,6 +965,18 @@ public class UserGroupServiceImpl implements UserGroupService {
     return isEmpty(appPermission.getAppFilter().getIds());
   }
 
+  private void updateUserPermissionAndRestrictionCache(UserGroup userGroup) {
+    notNullCheck("Invalid userGroup", userGroup);
+    if (isNotEmpty(userGroup.getMemberIds())) {
+      userGroup.getMemberIds().forEach(userId -> {
+        User user = userService.get(userId);
+        String accountId = userGroup.getAccountId();
+        authService.updateUserPermissionCacheInfo(accountId, user, false);
+        UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user, false);
+        authService.updateUserRestrictionCacheInfo(accountId, user, userPermissionInfo, false);
+      });
+    }
+  }
   @Override
   public void pruneByApplication(String appId) {
     Set<String> deletedIds = new HashSet<>();
@@ -972,6 +987,7 @@ public class UserGroupServiceImpl implements UserGroupService {
                                  .project(UserGroup.ID_KEY2, true)
                                  .project(UserGroupKeys.accountId, true)
                                  .project(UserGroupKeys.appPermissions, true)
+                                 .project(UserGroupKeys.memberIds, true)
                                  .fetch())) {
       while (userGroupIterator.hasNext()) {
         final UserGroup userGroup = userGroupIterator.next();

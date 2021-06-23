@@ -6,6 +6,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.encryption.SecretRefData;
+import io.harness.exception.FilterCreatorException;
+import io.harness.exception.JsonSchemaValidationException;
+import io.harness.exception.PlanCreatorException;
+import io.harness.gitsync.interceptor.GitEntityInfo;
+import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.http.HttpHeaderConfig;
 import io.harness.ng.core.AccountScope;
 import io.harness.ng.core.BaseNGAccess;
@@ -24,6 +29,7 @@ import io.harness.request.RequestContext;
 import io.harness.request.RequestContextData;
 import io.harness.request.RequestMetadata;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serviceaccount.ServiceAccountDTO;
 
 import com.esotericsoftware.kryo.Kryo;
 
@@ -54,5 +60,12 @@ public class NGCommonsKryoRegistrar implements KryoRegistrar {
 
     kryo.register(RequestContextData.class, 970001);
     kryo.register(RequestContext.class, 970002);
+    kryo.register(GitSyncBranchContext.class, 970003);
+    kryo.register(GitEntityInfo.class, 970004);
+
+    kryo.register(JsonSchemaValidationException.class, 970005);
+    kryo.register(FilterCreatorException.class, 970006);
+    kryo.register(PlanCreatorException.class, 970007);
+    kryo.register(ServiceAccountDTO.class, 970008);
   }
 }

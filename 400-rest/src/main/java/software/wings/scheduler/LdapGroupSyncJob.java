@@ -2,7 +2,6 @@ package software.wings.scheduler;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.MongoUtils.setUnset;
@@ -14,8 +13,10 @@ import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FeatureName;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.AutoLogContext;
@@ -93,6 +94,9 @@ public class LdapGroupSyncJob implements Job {
   public static final String GROUP = "LDAP_GROUP_SYNC_CRON_JOB";
   private static final int POLL_INTERVAL = 900; // Seconds
 
+  public static final long MIN_LDAP_SYNC_TIMEOUT = 60 * 1000L; // 1 minute
+  public static final long MAX_LDAP_SYNC_TIMEOUT = 3 * 60 * 1000L; // 3 minute
+
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private PersistentLocker persistentLocker;
   @Inject private ExecutorService executorService;
@@ -102,6 +106,7 @@ public class LdapGroupSyncJob implements Job {
   @Inject private SecretManager secretManager;
   @Inject private UserService userService;
   @Inject private UserGroupService userGroupService;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject private AccountService accountService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject @Named(LdapFeature.FEATURE_NAME) private PremiumFeature ldapFeature;
@@ -185,6 +190,8 @@ public class LdapGroupSyncJob implements Job {
     if (!removedGroupMembers.containsKey(userGroup)) {
       removedGroupMembers.put(userGroup, Sets.newHashSet());
     }
+    log.info("LDAPIterator: Removing users {} as part of sync with usergroup {} in accountId {}", removedUsers,
+        userGroup.getUuid(), userGroup.getAccountId());
     removedGroupMembers.getOrDefault(userGroup, Sets.newHashSet()).addAll(removedUsers);
   }
 
@@ -272,12 +279,15 @@ public class LdapGroupSyncJob implements Job {
   @VisibleForTesting
   LdapGroupResponse fetchGroupDetails(
       LdapSettings ldapSettings, EncryptedDataDetail encryptedDataDetail, UserGroup userGroup) {
+    long userProvidedTimeout = ldapSettings.getConnectionSettings().getResponseTimeout();
+    // if user specified time
+    long ldapSyncTimeout = getLdapSyncTimeout(userProvidedTimeout);
+    log.info("Fetching LDAP group details for {} with timeout {}", ldapSettings.getAccountId(), ldapSyncTimeout);
     SyncTaskContext syncTaskContext = SyncTaskContext.builder()
                                           .accountId(ldapSettings.getAccountId())
                                           .appId(GLOBAL_APP_ID)
-                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                          .timeout(ldapSyncTimeout)
                                           .build();
-
     LdapGroupResponse groupResponse = delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
                                           .fetchGroupByDn(ldapSettings, encryptedDataDetail, userGroup.getSsoGroupId());
     if (null == groupResponse) {
@@ -287,6 +297,15 @@ public class LdapGroupSyncJob implements Job {
     }
     log.info("LDAP : Group Response from delegate {}", groupResponse);
     return groupResponse;
+  }
+
+  @VisibleForTesting
+  public long getLdapSyncTimeout(long userProvidedTimeout) {
+    if (userProvidedTimeout < MIN_LDAP_SYNC_TIMEOUT) {
+      return MIN_LDAP_SYNC_TIMEOUT;
+    } else {
+      return Math.min(userProvidedTimeout, MAX_LDAP_SYNC_TIMEOUT);
+    }
   }
 
   @VisibleForTesting
@@ -320,7 +339,7 @@ public class LdapGroupSyncJob implements Job {
               LdapConstants.USER_GROUP_SYNC_NOT_ELIGIBLE, userGroup.getName(), groupResponse.getMessage());
           throw new UnsupportedOperationException(message);
         }
-        userGroup = syncUserGroupMetadata(userGroup, groupResponse);
+        syncUserGroupMetadata(userGroup, groupResponse);
 
         updateRemovedGroupMembers(userGroup, groupResponse.getUsers(), removedGroupMembers);
         updateAddedGroupMembers(userGroup, groupResponse.getUsers(), addedGroupMembers);
@@ -348,6 +367,11 @@ public class LdapGroupSyncJob implements Job {
   private void executeInternal(String accountId, String ssoId) {
     if (!ldapFeature.isAvailableForAccount(accountId)) {
       log.info("Skipping LDAP sync. ssoId {} accountId {}", ssoId, accountId);
+      return;
+    }
+
+    if (featureFlagService.isEnabled(FeatureName.LDAP_GROUP_SYNC_JOB_ITERATOR, accountId)) {
+      log.info("LDAP_GROUP_SYNC_JOB_ITERATOR LDAP sync not for ssoId {} accountId {}", ssoId, accountId);
       return;
     }
 

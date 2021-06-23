@@ -5,6 +5,7 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.PrometheusCVConfig;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
@@ -126,11 +127,16 @@ public class PrometheusDSConfig extends DSConfig {
     private String metricName;
     private String serviceInstanceFieldName;
     private String prometheusMetric;
-    private PrometheusFilter serviceFilter;
-    private PrometheusFilter envFilter;
+    private List<PrometheusFilter> serviceFilter;
+    private List<PrometheusFilter> envFilter;
     private List<PrometheusFilter> additionalFilters;
     private String aggregation;
     RiskProfile riskProfile;
+
+    @JsonProperty(value = "isManualQuery")
+    public boolean isManualQuery() {
+      return isManualQuery;
+    }
   }
 
   @Data
@@ -138,6 +144,10 @@ public class PrometheusDSConfig extends DSConfig {
   public static class PrometheusFilter {
     private String labelName;
     private String labelValue;
+
+    public String getQueryFilterString() {
+      return labelName + "=\"" + labelValue + "\"";
+    }
   }
 
   @Value

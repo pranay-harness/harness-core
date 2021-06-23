@@ -2,7 +2,7 @@ package io.harness.gitsync.gitsyncerror.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncDirection.GIT_TO_HARNESS;
+import static io.harness.gitsync.common.beans.GitSyncDirection.GIT_TO_HARNESS;
 import static io.harness.gitsync.gitsyncerror.utils.GitSyncErrorUtils.getCommitIdOfError;
 
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
@@ -11,10 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.helper.GitFileLocationHelper;
-import io.harness.gitsync.common.service.YamlGitConfigService;
-import io.harness.gitsync.core.service.YamlGitService;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
-import io.harness.gitsync.gitfileactivity.service.GitSyncService;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
 import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails;
@@ -40,10 +37,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   private static final EnumSet<GitFileActivity.Status> TERMINATING_STATUSES =
       EnumSet.of(GitFileActivity.Status.EXPIRED, GitFileActivity.Status.DISCARDED);
-  private YamlGitService yamlGitService;
-  private GitSyncService gitSyncService;
   private GitSyncErrorRepository gitSyncErrorRepository;
-  private YamlGitConfigService yamlGitConfigService;
 
   @Override
   public void deleteByAccountIdOrgIdProjectIdAndFilePath(

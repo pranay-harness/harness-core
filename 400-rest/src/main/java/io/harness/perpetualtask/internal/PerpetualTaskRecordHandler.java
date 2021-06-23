@@ -256,6 +256,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
                   .parameters(executionCapabilityList.toArray())
                   .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
                   .build())
+        .setupAbstractions(perpetualTaskExecutionBundle.getSetupAbstractionsMap())
         .build();
   }
 

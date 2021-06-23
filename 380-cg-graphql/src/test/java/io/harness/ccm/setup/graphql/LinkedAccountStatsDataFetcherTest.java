@@ -9,11 +9,11 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.entities.billing.CECloudAccount;
+import io.harness.ccm.commons.entities.billing.CECloudAccount.AccountStatus;
 import io.harness.rule.Owner;
 
 import software.wings.beans.User;
-import software.wings.beans.ce.CECloudAccount;
-import software.wings.beans.ce.CECloudAccount.AccountStatus;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;

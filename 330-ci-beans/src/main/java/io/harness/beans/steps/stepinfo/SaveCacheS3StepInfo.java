@@ -12,13 +12,13 @@ import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.ArchiveFormat;
-import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.filters.WithConnectorRef;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.yaml.YamlSchemaTypes;
+import io.harness.yaml.extended.ci.container.ContainerResource;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -67,10 +67,11 @@ public class SaveCacheS3StepInfo implements PluginCompatibleStep, WithConnectorR
   private ParameterField<List<String>> sourcePaths;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> region;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> endpoint;
-  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> pathStyle;
-  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> override;
-  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<ArchiveFormat> archiveFormat;
-  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
+  @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> pathStyle;
+  @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> override;
+  @ApiModelProperty(dataType = "io.harness.beans.yaml.extended.ArchiveFormat")
+  private ParameterField<ArchiveFormat> archiveFormat;
+  @YamlSchemaTypes({string}) @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "resources", "key", "bucket", "sourcePaths",

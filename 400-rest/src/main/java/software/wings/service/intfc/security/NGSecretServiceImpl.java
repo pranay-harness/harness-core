@@ -2,6 +2,7 @@ package software.wings.service.intfc.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.FileBucket.CONFIGS;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
@@ -98,6 +99,7 @@ public class NGSecretServiceImpl implements NGSecretService {
     EncryptedRecord encryptedRecord;
     switch (encryptedData.getEncryptionType()) {
       case VAULT:
+      case AZURE_VAULT:
         VaultEncryptor vaultEncryptor = vaultRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType());
         encryptedRecord = vaultEncryptor.createSecret(
             encryptedData.getAccountId(), encryptedData.getName(), secretValue, secretManagerConfig);
@@ -185,7 +187,7 @@ public class NGSecretServiceImpl implements NGSecretService {
       wingsPersistence.save(data);
       return data;
     } else {
-      String message = "No such secret manager found";
+      String message = "No such secret manager found ";
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
           formNotFoundMessage(message, metadata.getOrgIdentifier(), metadata.getProjectIdentifier()), USER);
     }
@@ -301,15 +303,21 @@ public class NGSecretServiceImpl implements NGSecretService {
           accountIdentifier, orgIdentifier, projectIdentifier, metadata.getSecretManagerIdentifier(), true);
       if (secretManagerConfigOptional.isPresent()) {
         if (isReadOnlySecretManager(secretManagerConfigOptional.get())
-            && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
+            && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()
+            && !Optional.ofNullable(encryptedData.getPath()).isPresent()) {
           throw new SecretManagementException(
               SECRET_MANAGEMENT_ERROR, "Cannot delete an Inline secret in read only secret manager", USER);
         }
         // if  secret text was created inline (not referenced), delete the secret in secret manager also
-        if (!Optional.ofNullable(encryptedData.getPath()).isPresent()) {
+        if (!Optional.ofNullable(encryptedData.getPath()).isPresent()
+            && Optional.ofNullable(encryptedData.getEncryptedValue()).isPresent()) {
           deleteSecretInSecretManager(accountIdentifier, encryptedData, secretManagerConfigOptional.get());
         }
-        if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE) {
+        // delete secret text finally in db
+        boolean success = wingsPersistence.delete(EncryptedData.class, encryptedData.getUuid());
+
+        if (success && encryptedData.getType() == SettingVariableTypes.CONFIG_FILE
+            && isNotEmpty(encryptedData.getEncryptedValue())) {
           switch (secretManagerConfigOptional.get().getEncryptionType()) {
             case LOCAL:
             case GCP_KMS:
@@ -319,8 +327,7 @@ public class NGSecretServiceImpl implements NGSecretService {
             default:
           }
         }
-        // delete secret text finally in db
-        return wingsPersistence.delete(EncryptedData.class, encryptedData.getUuid());
+        return success;
       }
     }
     throw new InvalidRequestException("No such secret found", INVALID_REQUEST, USER);
@@ -330,6 +337,7 @@ public class NGSecretServiceImpl implements NGSecretService {
       String accountIdentifier, EncryptedData encryptedData, SecretManagerConfig secretManagerConfig) {
     switch (secretManagerConfig.getEncryptionType()) {
       case VAULT:
+      case AZURE_VAULT:
         vaultRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType())
             .deleteSecret(accountIdentifier, encryptedData, secretManagerConfig);
         return;

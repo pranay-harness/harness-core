@@ -3,6 +3,7 @@ package io.harness.delegate.beans.connector.scm.adapter;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.delegate.beans.connector.scm.GitAuthType.HTTP;
 import static io.harness.delegate.beans.connector.scm.GitAuthType.SSH;
+import static io.harness.delegate.beans.connector.scm.GitConnectionType.ACCOUNT;
 import static io.harness.delegate.beans.connector.scm.GitConnectionType.REPO;
 import static io.harness.rule.OwnerRule.DEEPAK;
 
@@ -53,6 +54,7 @@ public class BitbucketToGitMapperTest extends CategoryTest {
     final String appId = "appId";
     final String insId = "insId";
     final String privateKeyRef = "privateKeyRef";
+    final String validationRepo = "validationRepo";
 
     final BitbucketAuthenticationDTO bitbucketAuthenticationDTO =
         BitbucketAuthenticationDTO.builder()
@@ -67,7 +69,8 @@ public class BitbucketToGitMapperTest extends CategoryTest {
             .build();
     final BitbucketConnectorDTO bitbucketConnectorDTO = BitbucketConnectorDTO.builder()
                                                             .url(url)
-                                                            .connectionType(GitConnectionType.REPO)
+                                                            .validationRepo(validationRepo)
+                                                            .connectionType(GitConnectionType.ACCOUNT)
                                                             .authentication(bitbucketAuthenticationDTO)
                                                             .delegateSelectors(delegateSelectors)
                                                             .build();
@@ -76,8 +79,9 @@ public class BitbucketToGitMapperTest extends CategoryTest {
     assertThat(gitConfigDTO.getGitAuthType()).isEqualTo(HTTP);
     assertThat(gitConfigDTO.getDelegateSelectors()).isEqualTo(delegateSelectors);
     GitHTTPAuthenticationDTO gitAuthentication = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
-    assertThat(gitConfigDTO.getGitConnectionType()).isEqualTo(REPO);
+    assertThat(gitConfigDTO.getGitConnectionType()).isEqualTo(ACCOUNT);
     assertThat(gitConfigDTO.getUrl()).isEqualTo(url);
+    assertThat(gitConfigDTO.getValidationRepo()).isEqualTo(validationRepo);
     assertThat(gitAuthentication.getUsername()).isEqualTo(username);
     assertThat(gitAuthentication.getPasswordRef().toSecretRefStringValue()).isEqualTo(passwordRef);
   }

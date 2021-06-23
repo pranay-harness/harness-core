@@ -178,6 +178,10 @@ spec:
           value: ""
         - name: HELM_PATH
           value: ""
+        - name: CF_CLI6_PATH
+          value: ""
+        - name: CF_CLI7_PATH
+          value: ""
         - name: KUSTOMIZE_PATH
           value: ""
         - name: OC_PATH
@@ -190,8 +194,8 @@ spec:
           value: "${grpcServiceEnabled}"
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "${grpcServiceConnectorPort}"
-        - name: MANAGER_SERVICE_SECRET
-          value: "${managerServiceSecret}"
+        - name: CLIENT_TOOLS_DOWNLOAD_DISABLED
+          value: "false"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:

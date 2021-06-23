@@ -1,6 +1,7 @@
 package io.harness.batch.processing.billing.service;
 
 import static io.harness.ccm.commons.beans.InstanceType.K8S_NODE;
+import static io.harness.ccm.commons.beans.InstanceType.K8S_POD;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PVC;
 
@@ -9,18 +10,20 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
 import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.ccm.PricingSource;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.beans.CostAttribution;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.StorageResource;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,8 +41,21 @@ public class BillingCalculationService {
     this.instancePricingStrategyContext = instancePricingStrategyContext;
   }
 
-  public BillingData getInstanceBillingAmount(
-      InstanceData instanceData, UtilizationData utilizationData, Instant startTime, Instant endTime) {
+  public String getInstanceClusterIdKey(String instanceId, String clusterId) {
+    return String.format("%s:%s", instanceId, clusterId);
+  }
+
+  public Map<String, Double> getInstanceActiveSeconds(
+      List<InstanceData> instanceDataList, Instant startTime, Instant endTime) {
+    return instanceDataList.stream().collect(Collectors.toMap(instanceData
+        -> getInstanceClusterIdKey(instanceData.getInstanceId(), instanceData.getClusterId()),
+        instanceData
+        -> getInstanceActiveSeconds(instanceData, startTime, endTime),
+        (existing, replacement) -> existing));
+  }
+
+  public BillingData getInstanceBillingAmount(InstanceData instanceData, UtilizationData utilizationData,
+      Double parentInstanceActiveSecond, Instant startTime, Instant endTime) {
     double instanceActiveSeconds = getInstanceActiveSeconds(instanceData, startTime, endTime);
     if (instanceActiveSeconds == 0) {
       return new BillingData(BillingAmountBreakup.builder()
@@ -52,18 +68,27 @@ public class BillingCalculationService {
           new SystemCostData(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO), 0, 0, 0, 0, 0,
           PricingSource.PUBLIC_API);
     }
+    if (null == parentInstanceActiveSecond || parentInstanceActiveSecond == 0) {
+      parentInstanceActiveSecond = instanceActiveSeconds;
+      if (instanceData.getInstanceType() == K8S_POD) {
+        log.warn("Instance parent active time is 0 {} {}", instanceData.getInstanceId(), startTime);
+        parentInstanceActiveSecond = 24 * 3600D;
+      }
+    }
 
-    PricingData pricingData = getPricingData(instanceData, startTime, endTime, instanceActiveSeconds);
+    PricingData pricingData =
+        getPricingData(instanceData, startTime, endTime, instanceActiveSeconds, parentInstanceActiveSecond);
 
     return getBillingAmount(instanceData, utilizationData, pricingData, instanceActiveSeconds);
   }
 
-  private PricingData getPricingData(
-      InstanceData instanceData, Instant startTime, Instant endTime, double instanceActiveSeconds) {
+  private PricingData getPricingData(InstanceData instanceData, Instant startTime, Instant endTime,
+      double instanceActiveSeconds, double parentInstanceActiveSecond) {
     InstancePricingStrategy instancePricingStrategy =
         instancePricingStrategyContext.getInstancePricingStrategy(instanceData.getInstanceType());
 
-    return instancePricingStrategy.getPricePerHour(instanceData, startTime, endTime, instanceActiveSeconds);
+    return instancePricingStrategy.getPricePerHour(
+        instanceData, startTime, endTime, instanceActiveSeconds, parentInstanceActiveSecond);
   }
 
   BillingData getBillingAmount(InstanceData instanceData, UtilizationData utilizationData, PricingData pricingData,

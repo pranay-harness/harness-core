@@ -12,6 +12,7 @@ import io.harness.remote.client.RestClientUtils;
 import io.harness.signup.dto.SignupDTO;
 
 import com.google.inject.Inject;
+import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
@@ -30,7 +31,16 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public Boolean updateDefaultExperienceIfNull(String accountId, DefaultExperience defaultExperience) {
-    return RestClientUtils.getResponse(accountClient.updateDefaultExperienceIfNull(accountId, defaultExperience));
+  public Boolean updateDefaultExperienceIfApplicable(String accountId, DefaultExperience defaultExperience) {
+    return RestClientUtils.getResponse(accountClient.updateDefaultExperienceIfApplicable(accountId, defaultExperience));
+  }
+
+  @Override
+  public String getBaseUrl(String accountId, String defaultUrl) {
+    String accountBaseUrl = RestClientUtils.getResponse(accountClient.getBaseUrl(accountId));
+    if (Objects.isNull(accountBaseUrl)) {
+      accountBaseUrl = defaultUrl;
+    }
+    return accountBaseUrl;
   }
 }

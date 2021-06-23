@@ -138,9 +138,9 @@ public enum SettingVariableTypes {
   AZURE("Microsoft Azure"),
 
   /**
-   * Pivotal Cloud Foundry
+   * Tanzu Application Services
    */
-  PCF("Pivotal Cloud Foundry"),
+  PCF("Tanzu Application Services"),
 
   /**
    * Direct connection setting variable types.
@@ -281,7 +281,9 @@ public enum SettingVariableTypes {
 
   GIT_NG("Git Ng"),
 
-  GCP_SECRETS_MANAGER;
+  GCP_SECRETS_MANAGER,
+
+  TRIGGER;
 
   @Getter private String displayName;
 

@@ -1,6 +1,7 @@
 package io.harness.event.grpc;
 
-import io.harness.ccm.health.CeExceptionRecord;
+import io.harness.ccm.commons.entities.events.CeExceptionRecord;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.ccm.health.CeExceptionRecordDao;
 import io.harness.event.payloads.CeExceptionMessage;
 

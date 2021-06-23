@@ -1,6 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
-load("//:macros.bzl", "run_analysis")
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 Deprecated = True
 
@@ -16,7 +16,6 @@ shared_dependencies = [
     "//470-alert:module",
     "//490-ce-commons:module",
     "//835-notification-senders:module",
-    "//870-cg-yaml:module",
     "//870-cg-orchestration:module",
     "//874-orchestration-delay:module",
     "//890-sm-core:module",
@@ -29,6 +28,7 @@ shared_dependencies = [
     "//940-feature-flag:module",
     "//940-notification-client:module",
     "//940-secret-manager-client:module",
+    "//948-access-control-sdk:module",
     "//950-command-library-common:module",
     "//950-common-entities:module",
     "//950-delegate-tasks-beans:module",
@@ -40,6 +40,7 @@ shared_dependencies = [
     "//950-wait-engine:module",
     "//954-connector-beans:module",
     "//955-alert-beans:module",
+    "//955-cg-yaml:module",
     "//959-file-service-commons:module",
     "//960-api-services:module",
     "//960-continuous-features:module",
@@ -293,7 +294,6 @@ shared_dependencies = [
     "@maven//:commons_validator_commons_validator",
     "@maven//:de_bwaldvogel_mongo_java_server",
     "@maven//:de_danielbechler_java_object_diff",
-    "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_mongo",
     "@maven//:de_javakaffee_kryo_serializers",
     "@maven//:de_jkeylockmanager_jkeylockmanager",
     "@maven//:dk_brics_automaton_automaton",
@@ -341,7 +341,6 @@ shared_dependencies = [
     "@maven//:io_fabric8_kubernetes_api",
     "@maven//:io_fabric8_kubernetes_client",
     "@maven//:io_fabric8_kubernetes_model",
-    "@maven//:io_fabric8_kubernetes_server_mock",
     "@maven//:io_fabric8_openshift_client",
     "@maven//:io_fabric8_zjsonpatch",
     "@maven//:io_github_resilience4j_resilience4j_circuitbreaker",
@@ -358,7 +357,6 @@ shared_dependencies = [
     "@maven//:io_grpc_grpc_netty",
     "@maven//:io_grpc_grpc_netty_shaded",
     "@maven//:io_grpc_grpc_protobuf",
-    "@maven//:io_grpc_grpc_protobuf_lite",
     "@maven//:io_grpc_grpc_services",
     "@maven//:io_grpc_grpc_stub",
     "@maven//:io_gsonfire_gson_fire",
@@ -666,7 +664,7 @@ shared_dependencies = [
     "@maven//:xml_apis_xml_apis",
     "@maven//:xml_resolver_xml_resolver",
     "@maven//:xpp3_xpp3",
-    "@maven_harness//:io_harness_ff_java_server_sdk",
+    "@maven//:io_harness_ff_java_server_sdk",
     "@maven_harness//:io_harness_cv_data_collection_dsl",
 ]
 
@@ -734,6 +732,7 @@ test_dependencies = shared_dependencies + [
     "@maven//:org_powermock_powermock_module_junit4",
     "@maven//:pl_pragmatists_JUnitParams",
     "@maven//:io_grpc_grpc_testing",
+    "@maven//:io_fabric8_kubernetes_server_mock",
 ]
 
 run_package_tests(

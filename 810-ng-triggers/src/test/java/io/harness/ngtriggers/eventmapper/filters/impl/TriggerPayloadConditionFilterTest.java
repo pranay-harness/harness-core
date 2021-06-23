@@ -3,6 +3,8 @@ package io.harness.ngtriggers.eventmapper.filters.impl;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
+import static io.harness.ngtriggers.conditionchecker.ConditionOperator.EQUALS;
+import static io.harness.ngtriggers.conditionchecker.ConditionOperator.IN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
@@ -16,7 +18,7 @@ import io.harness.beans.PRWebhookEvent;
 import io.harness.beans.WebhookBaseAttributes;
 import io.harness.category.element.UnitTests;
 import io.harness.ngtriggers.NgTriggersTestHelper;
-import io.harness.ngtriggers.beans.config.NGTriggerConfig;
+import io.harness.ngtriggers.beans.config.NGTriggerConfigV2;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
@@ -24,12 +26,16 @@ import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
-import io.harness.ngtriggers.beans.source.NGTriggerSource;
-import io.harness.ngtriggers.beans.source.webhook.AwsCodeCommitTriggerSpec;
-import io.harness.ngtriggers.beans.source.webhook.GithubTriggerSpec;
-import io.harness.ngtriggers.beans.source.webhook.WebhookCondition;
-import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
-import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
+import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
+import io.harness.ngtriggers.beans.source.WebhookTriggerType;
+import io.harness.ngtriggers.beans.source.webhook.v2.TriggerEventDataCondition;
+import io.harness.ngtriggers.beans.source.webhook.v2.WebhookTriggerConfigV2;
+import io.harness.ngtriggers.beans.source.webhook.v2.awscodecommit.AwsCodeCommitSpec;
+import io.harness.ngtriggers.beans.source.webhook.v2.awscodecommit.event.AwsCodeCommitPushSpec;
+import io.harness.ngtriggers.beans.source.webhook.v2.awscodecommit.event.AwsCodeCommitTriggerEvent;
+import io.harness.ngtriggers.beans.source.webhook.v2.github.GithubSpec;
+import io.harness.ngtriggers.beans.source.webhook.v2.github.event.GithubPushSpec;
+import io.harness.ngtriggers.beans.source.webhook.v2.github.event.GithubTriggerEvent;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
@@ -85,66 +91,68 @@ public class TriggerPayloadConditionFilterTest extends CategoryTest {
             .enabled(true)
             .build();
 
-    NGTriggerConfig ngTriggerConfig1 =
-        NGTriggerConfig.builder()
-            .source(NGTriggerSource.builder()
-                        .type(WEBHOOK)
-                        .spec(WebhookTriggerConfig.builder()
-                                  .type("GITHUB")
-                                  .spec(GithubTriggerSpec.builder()
-                                            .event(WebhookEvent.PUSH)
-                                            .payloadConditions(Arrays.asList(WebhookCondition.builder()
-                                                                                 .key("sourceBranch")
-                                                                                 .operator("equals")
-                                                                                 .value("test")
-                                                                                 .build(),
-                                                WebhookCondition.builder()
-                                                    .key("targetBranch")
-                                                    .operator("equals")
-                                                    .value("master")
-                                                    .build()))
-                                            .build())
-                                  .build())
-                        .build())
+    NGTriggerConfigV2 ngTriggerConfig1 =
+        NGTriggerConfigV2.builder()
+            .source(
+                NGTriggerSourceV2.builder()
+                    .type(WEBHOOK)
+                    .spec(WebhookTriggerConfigV2.builder()
+                              .type(WebhookTriggerType.GITHUB)
+                              .spec(GithubSpec.builder()
+                                        .type(GithubTriggerEvent.PUSH)
+                                        .spec(GithubPushSpec.builder()
+                                                  .payloadConditions(Arrays.asList(TriggerEventDataCondition.builder()
+                                                                                       .key("sourceBranch")
+                                                                                       .operator(EQUALS)
+                                                                                       .value("test")
+                                                                                       .build(),
+                                                      TriggerEventDataCondition.builder()
+                                                          .key("targetBranch")
+                                                          .operator(EQUALS)
+                                                          .value("master")
+                                                          .build()))
+                                                  .build())
+                                        .build())
+                              .build())
+                    .build())
             .build();
 
-    NGTriggerConfig ngTriggerConfig2 =
-        NGTriggerConfig.builder()
-            .source(NGTriggerSource.builder()
-                        .type(WEBHOOK)
-                        .spec(WebhookTriggerConfig.builder()
-                                  .type("GITHUB")
-                                  .spec(GithubTriggerSpec.builder()
-                                            .event(WebhookEvent.PUSH)
-                                            .payloadConditions(Arrays.asList(WebhookCondition.builder()
-                                                                                 .key("sourceBranch")
-                                                                                 .operator("in")
-                                                                                 .value("test,uat")
-                                                                                 .build(),
-                                                WebhookCondition.builder()
-                                                    .key("targetBranch")
-                                                    .operator("equals")
-                                                    .value("main")
-                                                    .build()))
-                                            .build())
-                                  .build())
-                        .build())
+    NGTriggerConfigV2 ngTriggerConfig2 =
+        NGTriggerConfigV2.builder()
+            .source(
+                NGTriggerSourceV2.builder()
+                    .type(WEBHOOK)
+                    .spec(WebhookTriggerConfigV2.builder()
+                              .type(WebhookTriggerType.GITHUB)
+                              .spec(GithubSpec.builder()
+                                        .type(GithubTriggerEvent.PUSH)
+                                        .spec(GithubPushSpec.builder()
+                                                  .payloadConditions(Arrays.asList(TriggerEventDataCondition.builder()
+                                                                                       .key("sourceBranch")
+                                                                                       .operator(IN)
+                                                                                       .value("test,uat")
+                                                                                       .build(),
+                                                      TriggerEventDataCondition.builder()
+                                                          .key("targetBranch")
+                                                          .operator(EQUALS)
+                                                          .value("main")
+                                                          .build()))
+                                                  .build())
+                                        .build())
+                              .build())
+                    .build())
             .build();
-
-    // No payload match
-    doReturn(ngTriggerConfig1)
-        .doReturn(ngTriggerConfig1)
-        .doReturn(ngTriggerConfig2)
-        .when(ngTriggerElementMapper)
-        .toTriggerConfig("yaml");
 
     // Case 1
-    WebhookEventMappingResponse webhookEventMappingResponse = filter.applyFilter(
-        FilterRequestData.builder()
-            .details(Arrays.asList(TriggerDetails.builder().ngTriggerEntity(triggerEntityGithub1).build()))
-            .webhookPayloadData(webhookPayloadData)
-            .accountId("p")
-            .build());
+    WebhookEventMappingResponse webhookEventMappingResponse =
+        filter.applyFilter(FilterRequestData.builder()
+                               .details(Arrays.asList(TriggerDetails.builder()
+                                                          .ngTriggerConfigV2(ngTriggerConfig1)
+                                                          .ngTriggerEntity(triggerEntityGithub1)
+                                                          .build()))
+                               .webhookPayloadData(webhookPayloadData)
+                               .accountId("p")
+                               .build());
 
     assertThat(webhookEventMappingResponse.getWebhookEventResponse()).isNotNull();
     assertThat(webhookEventMappingResponse.isFailedToFindTrigger()).isTrue();
@@ -152,17 +160,23 @@ public class TriggerPayloadConditionFilterTest extends CategoryTest {
         .isEqualTo(NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS);
 
     // Trigger found
-    webhookEventMappingResponse = filter.applyFilter(
-        FilterRequestData.builder()
-            .details(Arrays.asList(TriggerDetails.builder().ngTriggerEntity(triggerEntityGithub1).build(),
-                TriggerDetails.builder().ngTriggerEntity(triggerEntityGithub1).build()))
-            .webhookPayloadData(webhookPayloadData)
-            .accountId("p")
-            .build());
+    webhookEventMappingResponse =
+        filter.applyFilter(FilterRequestData.builder()
+                               .details(Arrays.asList(TriggerDetails.builder()
+                                                          .ngTriggerConfigV2(ngTriggerConfig1)
+                                                          .ngTriggerEntity(triggerEntityGithub1)
+                                                          .build(),
+                                   TriggerDetails.builder()
+                                       .ngTriggerConfigV2(ngTriggerConfig2)
+                                       .ngTriggerEntity(triggerEntityGithub1)
+                                       .build()))
+                               .webhookPayloadData(webhookPayloadData)
+                               .accountId("p")
+                               .build());
 
     assertThat(webhookEventMappingResponse.isFailedToFindTrigger()).isFalse();
     assertThat(webhookEventMappingResponse.getTriggers().size()).isEqualTo(1);
-    assertThat(webhookEventMappingResponse.getTriggers().get(0).getNgTriggerConfig()).isEqualTo(ngTriggerConfig2);
+    assertThat(webhookEventMappingResponse.getTriggers().get(0).getNgTriggerConfigV2()).isEqualTo(ngTriggerConfig2);
   }
 
   @Test
@@ -184,31 +198,34 @@ public class TriggerPayloadConditionFilterTest extends CategoryTest {
             .enabled(true)
             .build();
 
-    NGTriggerConfig ngTriggerConfig =
-        NGTriggerConfig.builder()
-            .source(NGTriggerSource.builder()
-                        .type(WEBHOOK)
-                        .spec(WebhookTriggerConfig.builder()
-                                  .type("AWS_CODECOMMIT")
-                                  .spec(AwsCodeCommitTriggerSpec.builder()
-                                            .event(WebhookEvent.PUSH)
-                                            .payloadConditions(Arrays.asList(WebhookCondition.builder()
-                                                                                 .key("targetBranch")
-                                                                                 .operator("equals")
-                                                                                 .value("main")
-                                                                                 .build(),
-                                                WebhookCondition.builder()
-                                                    .key("<+trigger.payload.Type>")
-                                                    .operator("equals")
-                                                    .value("Notification")
-                                                    .build()))
-                                            .build())
-                                  .build())
-                        .build())
+    NGTriggerConfigV2 ngTriggerConfig =
+        NGTriggerConfigV2.builder()
+            .source(
+                NGTriggerSourceV2.builder()
+                    .type(WEBHOOK)
+                    .spec(WebhookTriggerConfigV2.builder()
+                              .type(WebhookTriggerType.AWS_CODECOMMIT)
+                              .spec(AwsCodeCommitSpec.builder()
+                                        .type(AwsCodeCommitTriggerEvent.PUSH)
+                                        .spec(AwsCodeCommitPushSpec.builder()
+                                                  .payloadConditions(Arrays.asList(TriggerEventDataCondition.builder()
+                                                                                       .key("targetBranch")
+                                                                                       .operator(EQUALS)
+                                                                                       .value("main")
+                                                                                       .build(),
+                                                      TriggerEventDataCondition.builder()
+                                                          .key("<+trigger.payload.Type>")
+                                                          .operator(EQUALS)
+                                                          .value("Notification")
+                                                          .build()))
+                                                  .build())
+                                        .build())
+                              .build())
+                    .build())
             .build();
 
     // No payload match
-    doReturn(ngTriggerConfig).doReturn(ngTriggerConfig).when(ngTriggerElementMapper).toTriggerConfig("yaml");
+    doReturn(ngTriggerConfig).doReturn(ngTriggerConfig).when(ngTriggerElementMapper).toTriggerConfigV2("yaml");
 
     // Case 1
     WebhookEventMappingResponse webhookEventMappingResponse = filter.applyFilter(
@@ -221,6 +238,6 @@ public class TriggerPayloadConditionFilterTest extends CategoryTest {
 
     assertThat(webhookEventMappingResponse.isFailedToFindTrigger()).isFalse();
     assertThat(webhookEventMappingResponse.getTriggers().size()).isEqualTo(1);
-    assertThat(webhookEventMappingResponse.getTriggers().get(0).getNgTriggerConfig()).isEqualTo(ngTriggerConfig);
+    assertThat(webhookEventMappingResponse.getTriggers().get(0).getNgTriggerConfigV2()).isEqualTo(ngTriggerConfig);
   }
 }

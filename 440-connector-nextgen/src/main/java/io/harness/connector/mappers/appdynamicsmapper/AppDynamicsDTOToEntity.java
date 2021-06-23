@@ -20,7 +20,6 @@ public class AppDynamicsDTOToEntity
         .accountname(connectorDTO.getAccountname())
         .passwordRef(SecretRefHelper.getSecretConfigString(connectorDTO.getPasswordRef()))
         .controllerUrl(connectorDTO.getControllerUrl())
-        .accountId(connectorDTO.getAccountId())
         .clientId(connectorDTO.getClientId())
         .clientSecret(SecretRefHelper.getSecretConfigString(connectorDTO.getClientSecretRef()))
         .authType(connectorDTO.getAuthType())

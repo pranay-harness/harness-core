@@ -11,6 +11,7 @@ import static java.util.stream.Collectors.joining;
 
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -29,6 +30,7 @@ import software.wings.beans.alert.SSOSyncFailedAlert;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
+import software.wings.beans.sso.SSOSettings.SSOSettingsKeys;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.dl.WingsPersistence;
@@ -39,6 +41,7 @@ import software.wings.features.api.RestrictedApi;
 import software.wings.features.extractors.LdapSettingsAccountIdExtractor;
 import software.wings.features.extractors.SamlSettingsAccountIdExtractor;
 import software.wings.scheduler.LdapGroupSyncJob;
+import software.wings.scheduler.LdapGroupSyncJobHelper;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.oauth.OauthOptions;
@@ -81,6 +84,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private OauthOptions oauthOptions;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private LdapGroupSyncJobHelper ldapGroupSyncJobHelper;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   static final int ONE_DAY = 86400000;
 
@@ -231,6 +235,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     settings.encryptFields(secretManager);
     LdapSettings savedSettings = wingsPersistence.saveAndGet(LdapSettings.class, settings);
     LdapGroupSyncJob.add(jobScheduler, savedSettings.getAccountId(), savedSettings.getUuid());
+    ldapGroupSyncJobHelper.syncJob(savedSettings);
     auditServiceHelper.reportForAuditingUsingAccountId(settings.getAccountId(), null, settings, Event.Type.CREATE);
     log.info("Auditing creation of LDAP Settings for account={}", settings.getAccountId());
     eventPublishHelper.publishSSOEvent(settings.getAccountId());
@@ -258,6 +263,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
         settings.getAccountId(), oldSettings, savedSettings, Event.Type.UPDATE);
     log.info("Auditing updation of LDAP for account={}", savedSettings.getAccountId());
     LdapGroupSyncJob.add(jobScheduler, savedSettings.getAccountId(), savedSettings.getUuid());
+    ldapGroupSyncJobHelper.syncJob(savedSettings);
     return savedSettings;
   }
 
@@ -287,10 +293,13 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public LdapSettings getLdapSettingsByAccountId(@NotBlank String accountId) {
+    if (EmptyPredicate.isEmpty(accountId)) {
+      return null;
+    }
     return wingsPersistence.createQuery(LdapSettings.class)
-        .field(LdapSettings.ACCOUNT_ID_KEY2)
+        .field(SSOSettingsKeys.accountId)
         .equal(accountId)
-        .field("type")
+        .field(SSOSettingsKeys.type)
         .equal(SSOType.LDAP)
         .get();
   }

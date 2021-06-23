@@ -3,20 +3,28 @@ package io.harness.cdng.k8s;
 import static io.harness.cdng.k8s.K8sDeleteStep.K8S_DELETE_COMMAND_NAME;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
+import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.delegate.task.k8s.K8sDeleteRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.execution.Status;
@@ -166,6 +174,34 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
   }
 
   @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testHandleTaskResultPassThroughFailed() throws Exception {
+    final K8sDeleteStepParameters stepParameters = K8sDeleteStepParameters.infoBuilder().build();
+    final StepElementParameters stepElementParameters = StepElementParameters.builder().spec(stepParameters).build();
+    final GitFetchResponsePassThroughData gitFetchPassThroughData = GitFetchResponsePassThroughData.builder().build();
+    final HelmValuesFetchResponsePassThroughData helmValuesPassThroughData =
+        HelmValuesFetchResponsePassThroughData.builder().build();
+    final StepExceptionPassThroughData stepExceptionPassThroughData = StepExceptionPassThroughData.builder().build();
+    final StepResponse gitFetchValuesFailed = StepResponse.builder().status(Status.FAILED).build();
+    final StepResponse helmFetchValuesFailed = StepResponse.builder().status(Status.FAILED).build();
+    final StepResponse stepException = StepResponse.builder().status(Status.FAILED).build();
+
+    doReturn(gitFetchValuesFailed).when(k8sStepHelper).handleGitTaskFailure(gitFetchPassThroughData);
+    doReturn(helmFetchValuesFailed).when(k8sStepHelper).handleHelmValuesFetchFailure(helmValuesPassThroughData);
+    doReturn(stepException).when(k8sStepHelper).handleStepExceptionFailure(stepExceptionPassThroughData);
+
+    assertThat(deleteStep.finalizeExecution(ambiance, stepElementParameters, gitFetchPassThroughData, () -> null))
+        .isSameAs(gitFetchValuesFailed);
+
+    assertThat(deleteStep.finalizeExecution(ambiance, stepElementParameters, helmValuesPassThroughData, () -> null))
+        .isSameAs(helmFetchValuesFailed);
+
+    assertThat(deleteStep.finalizeExecution(ambiance, stepElementParameters, stepExceptionPassThroughData, () -> null))
+        .isSameAs(stepException);
+  }
+
+  @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testValidateK8sDeleteStepParams() {
@@ -194,6 +230,25 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
   @Category(UnitTests.class)
   public void testGetK8sDeleteStepParameter() {
     assertThat(deleteStep.getStepParametersClass()).isEqualTo(StepElementParameters.class);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testFinalizeExecutionException() {
+    final StepElementParameters stepElementParameters = StepElementParameters.builder().build();
+    final Exception thrownException = new GeneralException("Something went wrong");
+    final K8sExecutionPassThroughData executionPassThroughData = K8sExecutionPassThroughData.builder().build();
+    final StepResponse stepResponse = StepResponse.builder().status(Status.FAILED).build();
+
+    doReturn(stepResponse).when(k8sStepHelper).handleTaskException(ambiance, executionPassThroughData, thrownException);
+
+    StepResponse response = deleteStep.finalizeExecution(
+        ambiance, stepElementParameters, executionPassThroughData, () -> { throw thrownException; });
+
+    assertThat(response).isEqualTo(stepResponse);
+
+    verify(k8sStepHelper, times(1)).handleTaskException(ambiance, executionPassThroughData, thrownException);
   }
 
   @Override

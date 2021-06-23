@@ -1,6 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//:macros.bzl", "run_analysis")
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 java_library(
     name = "abstract-module",
@@ -15,6 +15,7 @@ java_library(
 
 java_library(
     name = "module",
+    testonly = True,
     srcs = glob(["src/main/**/*.java"]),
     resource_jars = [
         ":abstract-module",
@@ -52,4 +53,6 @@ java_library(
 
 run_tests()
 
-run_analysis()
+run_analysis(
+    run_sonar = False,
+)

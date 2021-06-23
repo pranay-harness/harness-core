@@ -2,7 +2,7 @@
 
 sudo docker pull harness/delegate:latest
 
-sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
+sudo docker run -d --restart unless-stopped --hostname=$(hostname -f | head -c 63) \
 -e ACCOUNT_ID=ACCOUNT_ID \
 -e ACCOUNT_SECRET=ACCOUNT_KEY \
 -e MANAGER_HOST_AND_PORT=https://localhost:9090 \
@@ -28,5 +28,5 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e USE_CDN=false \
 -e CDN_URL=http://localhost:9500 \
 -e JRE_VERSION=1.8.0_242 \
--e MANAGER_SERVICE_SECRET=********** \
+-e CLIENT_TOOLS_DOWNLOAD_DISABLED=false \
 harness/delegate:latest

@@ -15,6 +15,7 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.event.PublishMessage;
 import io.harness.event.PublishRequest;
 import io.harness.event.PublishResponse;
@@ -75,7 +76,8 @@ public class EventPublisherServerImplTest extends CategoryTest {
     Instant occurredAt = Instant.now().minus(20, ChronoUnit.HOURS).truncatedTo(ChronoUnit.MILLIS);
     Context.current().withValue(DelegateAuthServerInterceptor.ACCOUNT_ID_CTX_KEY, TEST_ACC_ID).run(() -> {
       @SuppressWarnings("unchecked") // Casting as we can't use List<PublishedMessage> as the class type.
-      ArgumentCaptor<List<PublishedMessage>> captor = ArgumentCaptor.forClass((Class) List.class);
+      ArgumentCaptor<List<io.harness.ccm.commons.entities.events.PublishedMessage>> captor =
+          ArgumentCaptor.forClass((Class) List.class);
       PublishRequest publishRequest =
           PublishRequest.newBuilder()
               .addAllMessages(streamWithIndex(testMessages().stream())
@@ -92,11 +94,11 @@ public class EventPublisherServerImplTest extends CategoryTest {
               .build();
       publisherServer.publish(publishRequest, observer);
       verify(hPersistence).saveIgnoringDuplicateKeys(captor.capture());
-      List<PublishedMessage> captured = captor.getValue();
+      List<io.harness.ccm.commons.entities.events.PublishedMessage> captured = captor.getValue();
       assertThat(captured).containsExactlyElementsOf(
           streamWithIndex(testMessages().stream())
               .map(pair
-                  -> PublishedMessage.builder()
+                  -> io.harness.ccm.commons.entities.events.PublishedMessage.builder()
                          .uuid("id-" + pair.getLeft())
                          .type(Lifecycle.class.getName())
                          .data(Any.pack(pair.getRight()).toByteArray())

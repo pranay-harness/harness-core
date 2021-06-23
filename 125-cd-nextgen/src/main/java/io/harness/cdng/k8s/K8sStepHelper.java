@@ -3,43 +3,60 @@ package io.harness.cdng.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_GCP;
+import static io.harness.common.ParameterFieldHelper.getBooleanParameterFieldValue;
+import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
+import static io.harness.data.structure.ListUtils.trimStrings;
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.manifest.ManifestHelper.getValuesYamlGitFilePath;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
-import static io.harness.steps.StepUtils.prepareTaskRequest;
+import static io.harness.logging.UnitStatus.RUNNING;
+import static io.harness.steps.StepUtils.prepareTaskRequestWithTaskSelector;
 import static io.harness.validation.Validator.notEmptyCheck;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
+import io.harness.cdng.expressions.CDExpressionResolveFunctor;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
+import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.ManifestType;
+import io.harness.cdng.manifest.mappers.ManifestOutcomeValidator;
 import io.harness.cdng.manifest.steps.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
+import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome.HelmChartManifestOutcomeKeys;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
 import io.harness.cdng.manifest.yaml.HttpStoreConfig;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
+import io.harness.cdng.manifest.yaml.K8sManifestOutcome.K8sManifestOutcomeKeys;
 import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
+import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome.KustomizeManifestOutcomeKeys;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
+import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome.OpenshiftManifestOutcomeKeys;
 import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
 import io.harness.cdng.manifest.yaml.S3StoreConfig;
-import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.connector.ConnectorInfoDTO;
@@ -85,19 +102,32 @@ import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
+import io.harness.eraro.Level;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepConstants;
+import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.KubernetesHelperService;
+import io.harness.logging.LogCallback;
+import io.harness.logging.LogLevel;
+import io.harness.logging.UnitProgress;
+import io.harness.logging.UnitStatus;
+import io.harness.logstreaming.LogStreamingStepClientFactory;
+import io.harness.logstreaming.NGLogCallback;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
@@ -151,12 +181,13 @@ public class K8sStepHelper {
       "[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*";
   public static final Pattern releaseNamePattern = Pattern.compile(RELEASE_NAME_VALIDATION_REGEX);
   @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
-  @Inject private SecretManagerClientService secretManagerClientService;
+  @Named("PRIVILEGED") @Inject private SecretManagerClientService secretManagerClientService;
   @Inject private EngineExpressionService engineExpressionService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private OutcomeService outcomeService;
   @Inject GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
   @Inject private EncryptionHelper encryptionHelper;
+  @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
 
   String getReleaseName(InfrastructureOutcome infrastructure) {
     String releaseName;
@@ -262,8 +293,8 @@ public class K8sStepHelper {
         return HelmChartManifestDelegateConfig.builder()
             .storeDelegateConfig(getStoreDelegateConfig(helmChartManifestOutcome.getStore(), ambiance,
                 manifestOutcome.getType(), manifestOutcome.getType() + " manifest"))
-            .chartName(helmChartManifestOutcome.getChartName())
-            .chartVersion(helmChartManifestOutcome.getChartVersion())
+            .chartName(getParameterFieldValue(helmChartManifestOutcome.getChartName()))
+            .chartVersion(getParameterFieldValue(helmChartManifestOutcome.getChartVersion()))
             .helmVersion(helmChartManifestOutcome.getHelmVersion())
             .helmCommandFlag(getDelegateHelmCommandFlag(helmChartManifestOutcome.getCommandFlags()))
             .build();
@@ -279,7 +310,7 @@ public class K8sStepHelper {
         return KustomizeManifestDelegateConfig.builder()
             .storeDelegateConfig(getStoreDelegateConfig(kustomizeManifestOutcome.getStore(), ambiance,
                 manifestOutcome.getType(), manifestOutcome.getType() + " manifest"))
-            .pluginPath(kustomizeManifestOutcome.getPluginPath())
+            .pluginPath(getParameterFieldValue(kustomizeManifestOutcome.getPluginPath()))
             .kustomizeDirPath(getParameterFieldValue(gitStoreConfig.getFolderPath()))
             .build();
 
@@ -372,9 +403,9 @@ public class K8sStepHelper {
         .sshKeySpecDTO(sshKeySpecDTO)
         .encryptedDataDetails(encryptedDataDetailList)
         .fetchType(gitstoreConfig.getGitFetchType())
-        .branch(getParameterFieldValue(gitstoreConfig.getBranch()))
-        .commitId(getParameterFieldValue(gitstoreConfig.getCommitId()))
-        .paths(paths)
+        .branch(trim(getParameterFieldValue(gitstoreConfig.getBranch())))
+        .commitId(trim(getParameterFieldValue(gitstoreConfig.getCommitId())))
+        .paths(trimStrings(paths))
         .connectorName(connectorDTO.getName())
         .build();
   }
@@ -451,7 +482,7 @@ public class K8sStepHelper {
           KubernetesAuthCredentialDTO authCredentialDTO = clusterDetailsDTO.getAuth().getCredentials();
           return secretManagerClientService.getEncryptionDetails(ngAccess, authCredentialDTO);
         } else {
-          return Collections.emptyList();
+          return emptyList();
         }
 
       case HTTP_HELM_REPO:
@@ -460,7 +491,7 @@ public class K8sStepHelper {
         if (isNotEmpty(decryptableEntities)) {
           return secretManagerClientService.getEncryptionDetails(ngAccess, decryptableEntities.get(0));
         } else {
-          return Collections.emptyList();
+          return emptyList();
         }
 
       case AWS:
@@ -469,7 +500,7 @@ public class K8sStepHelper {
         if (isNotEmpty(awsDecryptableEntities)) {
           return secretManagerClientService.getEncryptionDetails(ngAccess, awsDecryptableEntities.get(0));
         } else {
-          return Collections.emptyList();
+          return emptyList();
         }
 
       case GCP:
@@ -478,7 +509,7 @@ public class K8sStepHelper {
         if (isNotEmpty(gcpDecryptableEntities)) {
           return secretManagerClientService.getEncryptionDetails(ngAccess, gcpDecryptableEntities.get(0));
         } else {
-          return Collections.emptyList();
+          return emptyList();
         }
 
       case APP_DYNAMICS:
@@ -528,7 +559,7 @@ public class K8sStepHelper {
   }
 
   public TaskChainResponse queueK8sTask(StepElementParameters stepElementParameters, K8sDeployRequest k8sDeployRequest,
-      Ambiance ambiance, InfrastructureOutcome infrastructure) {
+      Ambiance ambiance, K8sExecutionPassThroughData executionPassThroughData) {
     TaskData taskData = TaskData.builder()
                             .parameters(new Object[] {k8sDeployRequest})
                             .taskType(TaskType.K8S_COMMAND_TASK_NG.name())
@@ -538,16 +569,21 @@ public class K8sStepHelper {
 
     String taskName = TaskType.K8S_COMMAND_TASK_NG.getDisplayName() + " : " + k8sDeployRequest.getCommandName();
     K8sSpecParameters k8SSpecParameters = (K8sSpecParameters) stepElementParameters.getSpec();
-    final TaskRequest taskRequest =
-        prepareTaskRequest(ambiance, taskData, kryoSerializer, k8SSpecParameters.getCommandUnits(), taskName);
+    final TaskRequest taskRequest = prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        k8SSpecParameters.getCommandUnits(), taskName,
+        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))));
 
-    return TaskChainResponse.builder().taskRequest(taskRequest).chainEnd(true).passThroughData(infrastructure).build();
+    return TaskChainResponse.builder()
+        .taskRequest(taskRequest)
+        .chainEnd(true)
+        .passThroughData(executionPassThroughData)
+        .build();
   }
 
   public List<String> renderValues(
       ManifestOutcome manifestOutcome, Ambiance ambiance, List<String> valuesFileContents) {
     if (isEmpty(valuesFileContents) || ManifestType.Kustomize.equals(manifestOutcome.getType())) {
-      return Collections.emptyList();
+      return emptyList();
     }
 
     List<String> renderedValuesFileContents =
@@ -570,7 +606,7 @@ public class K8sStepHelper {
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
                                                         .k8sManifestOutcome(k8sManifestOutcome)
                                                         .valuesManifestOutcomes(aggregatedValuesManifests)
-                                                        .openshiftParamManifestOutcomes(Collections.emptyList())
+                                                        .openshiftParamManifestOutcomes(emptyList())
                                                         .infrastructure(infrastructure)
                                                         .helmValuesFileContent(helmValuesYamlContent)
                                                         .build();
@@ -595,7 +631,7 @@ public class K8sStepHelper {
 
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
                                                         .k8sManifestOutcome(k8sManifestOutcome)
-                                                        .valuesManifestOutcomes(Collections.emptyList())
+                                                        .valuesManifestOutcomes(emptyList())
                                                         .openshiftParamManifestOutcomes(openshiftParamManifests)
                                                         .infrastructure(infrastructure)
                                                         .build();
@@ -620,8 +656,8 @@ public class K8sStepHelper {
           ambiance, stepElementParameters, infrastructure, k8sManifestOutcome, aggregatedValuesManifests);
     }
 
-    return k8sStepExecutor.executeK8sTask(
-        k8sManifestOutcome, ambiance, stepElementParameters, Collections.emptyList(), infrastructure, true);
+    return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
+        K8sExecutionPassThroughData.builder().infrastructure(infrastructure).build(), true);
   }
 
   private TaskChainResponse prepareGitFetchValuesTaskChainResponse(StoreConfig storeConfig, Ambiance ambiance,
@@ -648,7 +684,7 @@ public class K8sStepHelper {
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
                                                         .k8sManifestOutcome(k8sManifestOutcome)
                                                         .valuesManifestOutcomes(orderedValuesManifests)
-                                                        .openshiftParamManifestOutcomes(Collections.emptyList())
+                                                        .openshiftParamManifestOutcomes(emptyList())
                                                         .infrastructure(infrastructure)
                                                         .build();
 
@@ -694,13 +730,14 @@ public class K8sStepHelper {
 
     String taskName = TaskType.HELM_VALUES_FETCH_NG.getDisplayName();
     K8sSpecParameters k8SSpecParameters = (K8sSpecParameters) stepElementParameters.getSpec();
-    final TaskRequest taskRequest =
-        prepareTaskRequest(ambiance, taskData, kryoSerializer, k8SSpecParameters.getCommandUnits(), taskName);
+    final TaskRequest taskRequest = prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        k8SSpecParameters.getCommandUnits(), taskName,
+        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))));
 
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
                                                         .k8sManifestOutcome(k8sManifestOutcome)
                                                         .valuesManifestOutcomes(aggregatedValuesManifests)
-                                                        .openshiftParamManifestOutcomes(Collections.emptyList())
+                                                        .openshiftParamManifestOutcomes(emptyList())
                                                         .infrastructure(infrastructure)
                                                         .build();
 
@@ -730,8 +767,9 @@ public class K8sStepHelper {
 
     String taskName = TaskType.GIT_FETCH_NEXT_GEN_TASK.getDisplayName();
     K8sSpecParameters k8SSpecParameters = (K8sSpecParameters) stepElementParameters.getSpec();
-    final TaskRequest taskRequest =
-        prepareTaskRequest(ambiance, taskData, kryoSerializer, k8SSpecParameters.getCommandUnits(), taskName);
+    final TaskRequest taskRequest = prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+        k8SSpecParameters.getCommandUnits(), taskName,
+        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))));
 
     return TaskChainResponse.builder()
         .chainEnd(false)
@@ -810,20 +848,17 @@ public class K8sStepHelper {
 
   public TaskChainResponse startChainLink(
       K8sStepExecutor k8sStepExecutor, Ambiance ambiance, StepElementParameters stepElementParameters) {
-    ManifestsOutcome manifestsOutcome = (ManifestsOutcome) outcomeService.resolve(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
-
+    ManifestsOutcome manifestsOutcome = resolveManifestsOutcome(ambiance);
     InfrastructureOutcome infrastructureOutcome = (InfrastructureOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
-
-    if (isEmpty(manifestsOutcome)) {
-      throw new InvalidRequestException("Manifests can't be empty");
-    }
+    ExpressionEvaluatorUtils.updateExpressions(
+        manifestsOutcome, new CDExpressionResolveFunctor(engineExpressionService, ambiance));
+    manifestsOutcome.values().forEach(value -> ManifestOutcomeValidator.validate(value, false));
 
     ManifestOutcome k8sManifestOutcome = getK8sSupportedManifestOutcome(new LinkedList<>(manifestsOutcome.values()));
     if (ManifestType.Kustomize.equals(k8sManifestOutcome.getType())) {
-      return k8sStepExecutor.executeK8sTask(
-          k8sManifestOutcome, ambiance, stepElementParameters, Collections.emptyList(), infrastructureOutcome, true);
+      return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
+          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true);
     }
 
     if (VALUES_YAML_SUPPORTED_MANIFEST_TYPES.contains(k8sManifestOutcome.getType())) {
@@ -835,18 +870,35 @@ public class K8sStepHelper {
     }
   }
 
+  private ManifestsOutcome resolveManifestsOutcome(Ambiance ambiance) {
+    ManifestsOutcome manifestsOutcome = null;
+    try {
+      manifestsOutcome = (ManifestsOutcome) outcomeService.resolve(
+          ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
+    } catch (Exception exception) {
+      throw new InvalidRequestException("Manifests can't be empty", exception);
+    }
+
+    if (isEmpty(manifestsOutcome)) {
+      throw new InvalidRequestException("Manifests can't be empty");
+    }
+
+    return manifestsOutcome;
+  }
+
   private TaskChainResponse prepareOcTemplateWithOcParamManifests(K8sStepExecutor k8sStepExecutor,
       List<ManifestOutcome> manifestOutcomes, ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
       StepElementParameters stepElementParameters, InfrastructureOutcome infrastructureOutcome) {
     List<OpenshiftParamManifestOutcome> openshiftParamManifests = getOpenshiftParamManifests(manifestOutcomes);
     if (isEmpty(openshiftParamManifests)) {
-      return k8sStepExecutor.executeK8sTask(
-          k8sManifestOutcome, ambiance, stepElementParameters, Collections.emptyList(), infrastructureOutcome, true);
+      return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
+          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true);
     }
     if (!isAnyOcParamRemoteStore(openshiftParamManifests)) {
-      List<String> openshiftParamContentsForLocalStore = Collections.emptyList();
+      List<String> openshiftParamContentsForLocalStore = emptyList();
       return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters,
-          openshiftParamContentsForLocalStore, infrastructureOutcome, true);
+          openshiftParamContentsForLocalStore,
+          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true);
     }
 
     return prepareOpenshiftParamFetchTask(
@@ -861,7 +913,8 @@ public class K8sStepHelper {
     if (isNotEmpty(aggregatedValuesManifests) && !isAnyRemoteStore(aggregatedValuesManifests)) {
       List<String> valuesFileContentsForLocalStore = getValuesFileContentsForLocalStore(aggregatedValuesManifests);
       return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters,
-          valuesFileContentsForLocalStore, infrastructureOutcome, true);
+          valuesFileContentsForLocalStore,
+          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true);
     }
 
     return prepareValuesFetchTask(k8sStepExecutor, ambiance, stepElementParameters, infrastructureOutcome,
@@ -923,7 +976,7 @@ public class K8sStepHelper {
 
   private List<String> getValuesFileContentsForLocalStore(List<ValuesManifestOutcome> aggregatedValuesManifests) {
     // TODO: implement when local store is available
-    return Collections.emptyList();
+    return emptyList();
   }
 
   private boolean isAnyOcParamRemoteStore(@NotEmpty List<OpenshiftParamManifestOutcome> openshiftParamManifests) {
@@ -942,18 +995,58 @@ public class K8sStepHelper {
     K8sStepPassThroughData k8sStepPassThroughData = (K8sStepPassThroughData) passThroughData;
     ManifestOutcome k8sManifest = k8sStepPassThroughData.getK8sManifestOutcome();
     ResponseData responseData = responseDataSupplier.get();
-    if (responseData instanceof GitFetchResponse) {
-      return handleGitFetchFilesResponse(
-          responseData, k8sStepExecutor, ambiance, stepElementParameters, k8sStepPassThroughData, k8sManifest);
+    UnitProgressData unitProgressData = null;
+
+    try {
+      if (responseData instanceof GitFetchResponse) {
+        unitProgressData = ((GitFetchResponse) responseData).getUnitProgressData();
+        return handleGitFetchFilesResponse(
+            responseData, k8sStepExecutor, ambiance, stepElementParameters, k8sStepPassThroughData, k8sManifest);
+      }
+
+      if (responseData instanceof HelmValuesFetchResponse) {
+        unitProgressData = ((HelmValuesFetchResponse) responseData).getUnitProgressData();
+        return handleHelmValuesFetchResponse(
+            responseData, k8sStepExecutor, ambiance, stepElementParameters, k8sStepPassThroughData, k8sManifest);
+      }
+    } catch (Exception e) {
+      return TaskChainResponse.builder()
+          .chainEnd(true)
+          .passThroughData(StepExceptionPassThroughData.builder()
+                               .errorMessage(ExceptionUtils.getMessage(e))
+                               .unitProgressData(completeUnitProgressData(unitProgressData, ambiance, e))
+                               .build())
+          .build();
     }
 
-    if (responseData instanceof HelmValuesFetchResponse) {
-      return handleHelmValuesFetchResponse(
-          responseData, k8sStepExecutor, ambiance, stepElementParameters, k8sStepPassThroughData, k8sManifest);
+    return k8sStepExecutor.executeK8sTask(k8sManifest, ambiance, stepElementParameters, emptyList(),
+        K8sExecutionPassThroughData.builder().infrastructure(k8sStepPassThroughData.getInfrastructure()).build(), true);
+  }
+
+  private UnitProgressData completeUnitProgressData(
+      UnitProgressData currentProgressData, Ambiance ambiance, Exception exception) {
+    if (currentProgressData == null) {
+      return UnitProgressData.builder().unitProgresses(new ArrayList<>()).build();
     }
 
-    return k8sStepExecutor.executeK8sTask(k8sManifest, ambiance, stepElementParameters, Collections.emptyList(),
-        k8sStepPassThroughData.getInfrastructure(), true);
+    List<UnitProgress> finalUnitProgressList =
+        currentProgressData.getUnitProgresses()
+            .stream()
+            .map(unitProgress -> {
+              if (unitProgress.getStatus() == RUNNING) {
+                LogCallback logCallback = getLogCallback(unitProgress.getUnitName(), ambiance, false);
+                logCallback.saveExecutionLog(ExceptionUtils.getMessage(exception), LogLevel.ERROR, FAILURE);
+                return UnitProgress.newBuilder(unitProgress)
+                    .setStatus(UnitStatus.FAILURE)
+                    .setEndTime(System.currentTimeMillis())
+                    .build();
+              }
+
+              return unitProgress;
+            })
+            .collect(Collectors.toList());
+
+    return UnitProgressData.builder().unitProgresses(finalUnitProgressList).build();
   }
 
   private TaskChainResponse handleGitFetchFilesResponse(ResponseData responseData, K8sStepExecutor k8sStepExecutor,
@@ -980,7 +1073,11 @@ public class K8sStepHelper {
     }
 
     return k8sStepExecutor.executeK8sTask(k8sManifest, ambiance, stepElementParameters, valuesFileContents,
-        k8sStepPassThroughData.getInfrastructure(), false);
+        K8sExecutionPassThroughData.builder()
+            .infrastructure(k8sStepPassThroughData.getInfrastructure())
+            .lastActiveUnitProgressData(gitFetchResponse.getUnitProgressData())
+            .build(),
+        false);
   }
 
   private TaskChainResponse handleHelmValuesFetchResponse(ResponseData responseData, K8sStepExecutor k8sStepExecutor,
@@ -1003,9 +1100,13 @@ public class K8sStepHelper {
           k8sStepPassThroughData.getK8sManifestOutcome(), aggregatedValuesManifest, valuesFileContent);
     } else {
       List<String> valuesFileContents =
-          (isNotEmpty(valuesFileContent)) ? ImmutableList.of(valuesFileContent) : Collections.emptyList();
+          (isNotEmpty(valuesFileContent)) ? ImmutableList.of(valuesFileContent) : emptyList();
       return k8sStepExecutor.executeK8sTask(k8sManifest, ambiance, stepElementParameters, valuesFileContents,
-          k8sStepPassThroughData.getInfrastructure(), false);
+          K8sExecutionPassThroughData.builder()
+              .infrastructure(k8sStepPassThroughData.getInfrastructure())
+              .lastActiveUnitProgressData(helmValuesFetchResponse.getUnitProgressData())
+              .build(),
+          false);
     }
   }
 
@@ -1106,6 +1207,24 @@ public class K8sStepHelper {
         .build();
   }
 
+  public StepResponse handleStepExceptionFailure(StepExceptionPassThroughData stepException) {
+    FailureData failureData = FailureData.newBuilder()
+                                  .addFailureTypes(FailureType.APPLICATION_FAILURE)
+                                  .setLevel(Level.ERROR.name())
+                                  .setCode(GENERAL_ERROR.name())
+                                  .setMessage(emptyIfNull(stepException.getErrorMessage()))
+                                  .build();
+    return StepResponse.builder()
+        .unitProgressList(stepException.getUnitProgressData().getUnitProgresses())
+        .status(Status.FAILED)
+        .failureInfo(FailureInfo.newBuilder()
+                         .addAllFailureTypes(failureData.getFailureTypesList())
+                         .setErrorMessage(failureData.getMessage())
+                         .addFailureData(failureData)
+                         .build())
+        .build();
+  }
+
   public static StepResponseBuilder getFailureResponseBuilder(
       K8sDeployResponse k8sDeployResponse, StepResponseBuilder stepResponseBuilder) {
     stepResponseBuilder.status(Status.FAILED)
@@ -1118,19 +1237,23 @@ public class K8sStepHelper {
     switch (manifestOutcome.getType()) {
       case ManifestType.K8Manifest:
         K8sManifestOutcome k8sManifestOutcome = (K8sManifestOutcome) manifestOutcome;
-        return k8sManifestOutcome.isSkipResourceVersioning();
+        return getParameterFieldBooleanValue(k8sManifestOutcome.getSkipResourceVersioning(),
+            K8sManifestOutcomeKeys.skipResourceVersioning, k8sManifestOutcome);
 
       case ManifestType.HelmChart:
         HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestOutcome;
-        return helmChartManifestOutcome.isSkipResourceVersioning();
+        return getParameterFieldBooleanValue(helmChartManifestOutcome.getSkipResourceVersioning(),
+            HelmChartManifestOutcomeKeys.skipResourceVersioning, helmChartManifestOutcome);
 
       case ManifestType.Kustomize:
         KustomizeManifestOutcome kustomizeManifestOutcome = (KustomizeManifestOutcome) manifestOutcome;
-        return kustomizeManifestOutcome.isSkipResourceVersioning();
+        return getParameterFieldBooleanValue(kustomizeManifestOutcome.getSkipResourceVersioning(),
+            KustomizeManifestOutcomeKeys.skipResourceVersioning, kustomizeManifestOutcome);
 
       case ManifestType.OpenshiftTemplate:
         OpenshiftManifestOutcome openshiftManifestOutcome = (OpenshiftManifestOutcome) manifestOutcome;
-        return openshiftManifestOutcome.isSkipResourceVersioning();
+        return getParameterFieldBooleanValue(openshiftManifestOutcome.getSkipResourceVersioning(),
+            OpenshiftManifestOutcomeKeys.skipResourceVersioning, openshiftManifestOutcome);
 
       default:
         return false;
@@ -1145,5 +1268,53 @@ public class K8sStepHelper {
     }
 
     return (InfrastructureOutcome) optionalOutcome.getOutcome();
+  }
+
+  public LogCallback getLogCallback(String commandUnitName, Ambiance ambiance, boolean shouldOpenStream) {
+    return new NGLogCallback(logStreamingStepClientFactory, ambiance, commandUnitName, shouldOpenStream);
+  }
+
+  public StepResponse handleTaskException(
+      Ambiance ambiance, K8sExecutionPassThroughData executionPassThroughData, Exception e) {
+    UnitProgressData unitProgressData =
+        completeUnitProgressData(executionPassThroughData.getLastActiveUnitProgressData(), ambiance, e);
+    FailureData failureData = FailureData.newBuilder()
+                                  .addFailureTypes(FailureType.APPLICATION_FAILURE)
+                                  .setLevel(Level.ERROR.name())
+                                  .setCode(GENERAL_ERROR.name())
+                                  .setMessage(emptyIfNull(ExceptionUtils.getMessage(e)))
+                                  .build();
+
+    return StepResponse.builder()
+        .unitProgressList(unitProgressData.getUnitProgresses())
+        .status(Status.FAILED)
+        .failureInfo(FailureInfo.newBuilder()
+                         .addAllFailureTypes(failureData.getFailureTypesList())
+                         .setErrorMessage(failureData.getMessage())
+                         .addFailureData(failureData)
+                         .build())
+        .build();
+  }
+
+  public static boolean getParameterFieldBooleanValue(
+      ParameterField<?> fieldValue, String fieldName, StepElementParameters stepElement) {
+    try {
+      return getBooleanParameterFieldValue(fieldValue);
+    } catch (Exception e) {
+      String message = String.format("%s for field %s in %s step with identifier: %s", e.getMessage(), fieldName,
+          stepElement.getType(), stepElement.getIdentifier());
+      throw new InvalidArgumentsException(message);
+    }
+  }
+
+  public static boolean getParameterFieldBooleanValue(
+      ParameterField<?> fieldValue, String fieldName, ManifestOutcome manifestOutcome) {
+    try {
+      return getBooleanParameterFieldValue(fieldValue);
+    } catch (Exception e) {
+      String message = String.format("%s for field %s in %s manifest with identifier: %s", e.getMessage(), fieldName,
+          manifestOutcome.getType(), manifestOutcome.getIdentifier());
+      throw new InvalidArgumentsException(message);
+    }
   }
 }

@@ -6,12 +6,12 @@ import static java.util.Optional.ofNullable;
 import io.harness.batch.processing.service.intfc.InstanceInfoTimescaleDAO;
 import io.harness.beans.FeatureName;
 import io.harness.ccm.commons.beans.recommendation.ResourceId;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
+import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
 import io.harness.ff.FeatureFlagService;
 import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
 
 import java.util.HashMap;

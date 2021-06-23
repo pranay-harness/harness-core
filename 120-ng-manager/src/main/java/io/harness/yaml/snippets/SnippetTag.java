@@ -24,6 +24,7 @@ public enum SnippetTag implements YamlSnippetTags {
   splunk,
   appdynamics,
   vault,
+  azurekeyvault,
   local,
   gcpkms,
   gcp,
@@ -42,5 +43,8 @@ public enum SnippetTag implements YamlSnippetTags {
   httphelmrepo,
   newrelic,
   gcpcloudcost,
-  prometheus
+  prometheus,
+  datadog,
+  sumologic,
+  dynatrace
 }

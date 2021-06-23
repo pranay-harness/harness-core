@@ -46,6 +46,7 @@ public class BitbucketEntityToDTOTest {
     final String passwordRef = "passwordRef";
     final String username = "username";
     final String privateKeyRef = "privateKeyRef";
+    final String validationRepo = "validationRepo";
 
     final BitbucketAuthenticationDTO bitbucketAuthenticationDTO =
         BitbucketAuthenticationDTO.builder()
@@ -69,7 +70,8 @@ public class BitbucketEntityToDTOTest {
             .build();
     final BitbucketConnectorDTO bitbucketConnectorDTO = BitbucketConnectorDTO.builder()
                                                             .url(url)
-                                                            .connectionType(GitConnectionType.REPO)
+                                                            .validationRepo(validationRepo)
+                                                            .connectionType(GitConnectionType.ACCOUNT)
                                                             .authentication(bitbucketAuthenticationDTO)
                                                             .apiAccess(bitbucketApiAccessDTO)
                                                             .build();
@@ -78,9 +80,10 @@ public class BitbucketEntityToDTOTest {
         BitbucketConnector.builder()
             .hasApiAccess(true)
             .url(url)
+            .validationRepo(validationRepo)
             .bitbucketApiAccess(
                 BitbucketUsernamePasswordApiAccess.builder().usernameRef(privateKeyRef).tokenRef(privateKeyRef).build())
-            .connectionType(GitConnectionType.REPO)
+            .connectionType(GitConnectionType.ACCOUNT)
             .authType(HTTP)
             .authenticationDetails(
                 BitbucketHttpAuthentication.builder()

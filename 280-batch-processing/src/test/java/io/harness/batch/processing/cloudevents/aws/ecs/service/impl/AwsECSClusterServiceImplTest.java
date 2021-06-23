@@ -12,11 +12,11 @@ import io.harness.batch.processing.cloudevents.aws.ecs.service.CEClusterDao;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsECSHelperService;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsHelperResourceService;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.entities.billing.CECloudAccount;
+import io.harness.ccm.commons.entities.billing.CECluster;
 import io.harness.rule.Owner;
 
 import software.wings.beans.NameValuePair;
-import software.wings.beans.ce.CECloudAccount;
-import software.wings.beans.ce.CECluster;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;

@@ -4,10 +4,11 @@ import io.harness.IdentifierRefProtoUtils;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.SecretRefData;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
-import io.harness.exception.InvalidRequestException;
+import io.harness.exception.InvalidYamlException;
 import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
@@ -39,7 +40,7 @@ public class FilterCreatorHelper {
         String fqn = YamlUtils.getFullyQualifiedName(uuidNode.getNode());
         errorMsg = errorMsg + ". FQN: " + fqn;
       }
-      throw new InvalidRequestException(errorMsg);
+      throw new InvalidYamlException(errorMsg);
     }
   }
 
@@ -55,6 +56,10 @@ public class FilterCreatorHelper {
         new HashMap<>(Collections.singletonMap(PreFlightCheckMetadata.FQN, fullQualifiedDomainName));
     if (!connectorRef.isExpression()) {
       String connectorRefString = connectorRef.getValue();
+      if (EmptyPredicate.isEmpty(connectorRefString)) {
+        throw new InvalidYamlException(
+            String.format("Connector ref is not present for property: %s", fullQualifiedDomainName));
+      }
       IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
           connectorRefString, accountIdentifier, orgIdentifier, projectIdentifier, metadata);
       return EntityDetailProtoDTO.newBuilder()
@@ -62,7 +67,12 @@ public class FilterCreatorHelper {
           .setType(entityTypeProtoEnum)
           .build();
     } else {
-      metadata.put(PreFlightCheckMetadata.EXPRESSION, connectorRef.getExpressionValue());
+      String expression = connectorRef.getExpressionValue();
+      if (EmptyPredicate.isEmpty(expression)) {
+        throw new InvalidYamlException(
+            String.format("Connector ref is not present for property: %s", fullQualifiedDomainName));
+      }
+      metadata.put(PreFlightCheckMetadata.EXPRESSION, expression);
       IdentifierRef identifierRef = IdentifierRefHelper.createIdentifierRefWithUnknownScope(
           accountIdentifier, orgIdentifier, projectIdentifier, connectorRef.getExpressionValue(), metadata);
       return EntityDetailProtoDTO.newBuilder()

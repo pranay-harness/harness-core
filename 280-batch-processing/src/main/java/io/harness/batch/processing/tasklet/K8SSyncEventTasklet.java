@@ -9,7 +9,8 @@ import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.writer.EventWriter;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.beans.FeatureName;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.beans.JobConstants;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.event.payloads.Lifecycle.EventType;
 import io.harness.ff.FeatureFlagService;
@@ -19,13 +20,13 @@ import io.harness.perpetualtask.k8s.watch.K8SClusterSyncEvent;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.protobuf.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -34,7 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
-  private JobParameters parameters;
   @Autowired private BatchMainConfig config;
   @Autowired private PublishedMessageDao publishedMessageDao;
   @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
@@ -46,15 +46,13 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
     if (config.getBatchQueryConfig().isSyncJobDisabled()) {
       return null;
     }
-    parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
+    final CCMJobConstants jobConstants = new CCMJobConstants(chunkContext);
     int batchSize = config.getBatchQueryConfig().getQueryBatchSize();
-    Long startTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE);
-    Long endTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE);
-    String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
 
     String messageType = EventTypeConstants.K8S_SYNC_EVENT;
     PublishedMessageReader publishedMessageReader =
-        new PublishedMessageReader(publishedMessageDao, accountId, messageType, startTime, endTime, batchSize);
+        new PublishedMessageReader(publishedMessageDao, jobConstants.getAccountId(), messageType,
+            jobConstants.getJobStartTime(), jobConstants.getJobEndTime(), batchSize);
     List<PublishedMessage> publishedMessageList;
     do {
       publishedMessageList = publishedMessageReader.getNext();
@@ -62,16 +60,25 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
 
       instanceDataBulkWriteService.updateList(lifecycleList);
 
-      if (featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_1, accountId)) {
-        // Since lifecycle event update uses instanceId (which is an uuid) as 'where' clause
-        // we can safely assume that it can't co exists between node_info and pod_info tables.
-        instanceInfoTimescaleDAO.updateNodeLifecycleEvent(accountId, lifecycleList);
-
-        instanceInfoTimescaleDAO.updatePodLifecycleEvent(accountId, lifecycleList);
+      if (featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_1, jobConstants.getAccountId())) {
+        updateInactiveInstancesInTimescale(jobConstants, publishedMessageList);
       }
 
     } while (publishedMessageList.size() == batchSize);
     return null;
+  }
+
+  private void updateInactiveInstancesInTimescale(JobConstants jobConstants, List<PublishedMessage> publishedMessages) {
+    for (PublishedMessage publishedMessage : publishedMessages) {
+      K8SClusterSyncEvent k8SClusterSyncEvent = (K8SClusterSyncEvent) publishedMessage.getMessage();
+
+      Instant syncEventTime = HTimestamps.toInstant(k8SClusterSyncEvent.getLastProcessedTimestamp());
+
+      instanceInfoTimescaleDAO.stopInactiveNodesAtTime(
+          jobConstants, k8SClusterSyncEvent.getClusterId(), syncEventTime, k8SClusterSyncEvent.getActiveNodeUidsList());
+      instanceInfoTimescaleDAO.stopInactivePodsAtTime(
+          jobConstants, k8SClusterSyncEvent.getClusterId(), syncEventTime, k8SClusterSyncEvent.getActivePodUidsList());
+    }
   }
 
   private List<Lifecycle> processK8SSyncEventMessage(List<PublishedMessage> publishedMessages) {

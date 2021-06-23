@@ -88,6 +88,11 @@ type SummaryResponse struct {
 	Tests      []TestSummary `json:"tests"`
 }
 
+type StepInfo struct {
+	Step  string `json:"step"`
+	Stage string `json:"stage"`
+}
+
 type TestSuite struct {
 	Name         string `json:"name"`
 	DurationMs   int64  `json:"duration_ms"`
@@ -121,6 +126,9 @@ type SelectTestsResp struct {
 }
 
 type SelectTestsReq struct {
+	// If this is specified, TI service will return saying it wants to run all the tests. We want to
+	// maintain stats even when all the tests are run.
+	SelectAll    bool     `json:"select_all"`
 	Files        []File   `json:"files"`
 	TargetBranch string   `json:"target_branch"`
 	Repo         string   `json:"repo"`

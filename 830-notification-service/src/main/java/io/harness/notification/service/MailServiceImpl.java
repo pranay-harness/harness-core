@@ -166,7 +166,7 @@ public class MailServiceImpl implements ChannelService {
     try {
       template = new Template(templateName, templateStr, cfg);
     } catch (IOException e) {
-      log.error("Can't parse the stored file as .ftl template file");
+      log.error("Can't parse the stored file as .ftl template file", e);
     }
 
     if (Objects.isNull(template)) {

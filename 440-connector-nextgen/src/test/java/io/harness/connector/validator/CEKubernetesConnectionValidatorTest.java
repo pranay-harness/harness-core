@@ -23,6 +23,7 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.helper.EncryptionHelper;
 import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
@@ -62,7 +63,10 @@ public class CEKubernetesConnectionValidatorTest extends CategoryTest {
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
 
-    ceKubernetesClusterConfigDTO = CEKubernetesClusterConfigDTO.builder().connectorRef(CONNECTOR_REF).build();
+    ceKubernetesClusterConfigDTO = CEKubernetesClusterConfigDTO.builder()
+                                       .connectorRef(CONNECTOR_REF)
+                                       .featuresEnabled(Collections.singletonList(CEFeatures.VISIBILITY))
+                                       .build();
 
     when(encryptionHelper.getEncryptionDetail(any(), any(), any(), any())).thenReturn(null);
     when(delegateGrpcClientWrapper.executeSyncTask(any()))

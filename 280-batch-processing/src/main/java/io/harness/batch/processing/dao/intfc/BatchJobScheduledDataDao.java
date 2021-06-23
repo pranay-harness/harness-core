@@ -1,8 +1,8 @@
 package io.harness.batch.processing.dao.intfc;
 
 import io.harness.batch.processing.ccm.BatchJobType;
-import io.harness.ccm.cluster.entities.BatchJobScheduledData;
-import io.harness.ccm.commons.entities.CEDataCleanupRequest;
+import io.harness.ccm.commons.entities.batch.BatchJobScheduledData;
+import io.harness.ccm.commons.entities.batch.CEDataCleanupRequest;
 
 import java.time.Instant;
 import java.util.List;

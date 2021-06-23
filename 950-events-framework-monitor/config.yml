@@ -1,0 +1,38 @@
+eventsFramework:
+  redis:
+    sentinel: false
+    masterName: "mymaster"
+    redisUrl: "redis://localhost:6379"
+    sentinelUrls:
+      - "redis://localhost:26379"
+      - "redis://localhost:26380"
+      - "redis://localhost:26381"
+    envNamespace: "test"
+    readMode: MASTER
+    nettyThreads: 16
+    useScriptCache: true
+    userName: ""
+    password: ""
+    sslConfig:
+      enabled: false
+      CATrustStorePath: "/tmp/ca_trust_store"
+      CATrustStorePassword: ""
+
+logging:
+  level: INFO
+  loggers:
+    org.glassfish.jersey: INFO
+    allbegray.slack: WARN
+    org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
+    io.harness.mongo.iterator.MongoPersistenceIterator: ERROR
+  appenders:
+    - type: console
+      threshold: TRACE
+      target: STDOUT
+      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
+    - type: gke-console
+      threshold: TRACE
+      target: STDOUT
+      stackdriverLogEnabled: false
+
+stackDriverMetricsPushEnabled: false

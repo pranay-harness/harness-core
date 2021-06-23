@@ -3,7 +3,6 @@ package io.harness.stateutils.buildstate.providers;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABLE_VALUE;
-import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_LOG_PREFIX_VARIABLE;
@@ -18,6 +17,8 @@ import static io.harness.common.CIExecutionConstants.LITE_ENGINE_CONTAINER_NAME;
 import static io.harness.common.CIExecutionConstants.SETUP_ADDON_ARGS;
 import static io.harness.common.CIExecutionConstants.SETUP_ADDON_CONTAINER_NAME;
 import static io.harness.common.CIExecutionConstants.SH_COMMAND;
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.delegate.beans.ci.pod.SecretParams.Type.TEXT;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -30,8 +31,9 @@ import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
 import io.harness.delegate.beans.ci.pod.ContainerSecrets;
 import io.harness.delegate.beans.ci.pod.ImageDetailsWithConnector;
-import io.harness.ngpipeline.common.AmbianceHelper;
+import io.harness.delegate.beans.ci.pod.SecretParams;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.execution.utils.AmbianceUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -51,18 +53,21 @@ public class InternalContainerParamsProvider {
   @Inject CIExecutionServiceConfig ciExecutionServiceConfig;
 
   public CIK8ContainerParams getSetupAddonContainerParams(
-      ConnectorDetails containerImageConnectorDetails, Map<String, String> volumeToMountPath, String workDir) {
+      ConnectorDetails harnessInternalImageConnector, Map<String, String> volumeToMountPath, String workDir) {
     List<String> args = new ArrayList<>(Collections.singletonList(SETUP_ADDON_ARGS));
     Map<String, String> envVars = new HashMap<>();
     envVars.put(HARNESS_WORKSPACE, workDir);
+
+    String imageName = ciExecutionServiceConfig.getAddonImage();
+    String fullyQualifiedImage =
+        IntegrationStageUtils.getFullyQualifiedImageName(imageName, harnessInternalImageConnector);
     return CIK8ContainerParams.builder()
         .name(SETUP_ADDON_CONTAINER_NAME)
         .envVars(envVars)
         .containerType(CIContainerType.ADD_ON)
-        .imageDetailsWithConnector(
-            ImageDetailsWithConnector.builder()
-                .imageDetails(IntegrationStageUtils.getImageInfo(ciExecutionServiceConfig.getAddonImage()))
-                .build())
+        .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
+                                       .imageDetails(IntegrationStageUtils.getImageInfo(fullyQualifiedImage))
+                                       .build())
         .containerSecrets(ContainerSecrets.builder().build())
         .volumeToMountPath(volumeToMountPath)
         .commands(SH_COMMAND)
@@ -70,48 +75,43 @@ public class InternalContainerParamsProvider {
         .build();
   }
 
-  public CIK8ContainerParams getLiteEngineContainerParams(ConnectorDetails containerImageConnectorDetails,
-      Map<String, ConnectorDetails> publishArtifactConnectors, K8PodDetails k8PodDetails, String serviceToken,
-      Integer stageCpuRequest, Integer stageMemoryRequest, List<Integer> serviceGrpcPortList,
-      Map<String, String> logEnvVars, Map<String, String> tiEnvVars, Map<String, String> volumeToMountPath,
-      String workDirPath, String logPrefix, Ambiance ambiance) {
+  public CIK8ContainerParams getLiteEngineContainerParams(ConnectorDetails harnessInternalImageConnector,
+      Map<String, ConnectorDetails> publishArtifactConnectors, K8PodDetails k8PodDetails, Integer stageCpuRequest,
+      Integer stageMemoryRequest, Map<String, String> logEnvVars, Map<String, String> tiEnvVars,
+      Map<String, String> volumeToMountPath, String workDirPath, String logPrefix, Ambiance ambiance) {
+    String imageName = ciExecutionServiceConfig.getLiteEngineImage();
+    String fullyQualifiedImage =
+        IntegrationStageUtils.getFullyQualifiedImageName(imageName, harnessInternalImageConnector);
     return CIK8ContainerParams.builder()
         .name(LITE_ENGINE_CONTAINER_NAME)
         .containerResourceParams(getLiteEngineResourceParams(stageCpuRequest, stageMemoryRequest))
-        .envVars(
-            getLiteEngineEnvVars(k8PodDetails, serviceToken, logEnvVars, tiEnvVars, workDirPath, logPrefix, ambiance))
+        .envVars(getLiteEngineEnvVars(k8PodDetails, workDirPath, logPrefix, ambiance))
         .containerType(CIContainerType.LITE_ENGINE)
-        .containerSecrets(ContainerSecrets.builder().connectorDetailsMap(publishArtifactConnectors).build())
-        .imageDetailsWithConnector(
-            ImageDetailsWithConnector.builder()
-                .imageDetails(IntegrationStageUtils.getImageInfo(ciExecutionServiceConfig.getLiteEngineImage()))
-                .imageConnectorDetails(containerImageConnectorDetails)
-                .build())
+        .containerSecrets(ContainerSecrets.builder()
+                              .connectorDetailsMap(publishArtifactConnectors)
+                              .plainTextSecretsByName(getLiteEngineSecretVars(logEnvVars, tiEnvVars))
+                              .build())
+        .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
+                                       .imageDetails(IntegrationStageUtils.getImageInfo(fullyQualifiedImage))
+                                       .imageConnectorDetails(harnessInternalImageConnector)
+                                       .build())
         .volumeToMountPath(volumeToMountPath)
         .workingDir(workDirPath)
         .build();
   }
 
-  private Map<String, String> getLiteEngineEnvVars(K8PodDetails k8PodDetails, String serviceToken,
-      Map<String, String> logEnvVars, Map<String, String> tiEnvVars, String workDirPath, String logPrefix,
-      Ambiance ambiance) {
+  private Map<String, String> getLiteEngineEnvVars(
+      K8PodDetails k8PodDetails, String workDirPath, String logPrefix, Ambiance ambiance) {
     Map<String, String> envVars = new HashMap<>();
-    final String accountID = AmbianceHelper.getAccountId(ambiance);
-    final String orgID = AmbianceHelper.getOrgIdentifier(ambiance);
-    final String projectID = AmbianceHelper.getProjectIdentifier(ambiance);
+    final String accountID = AmbianceUtils.getAccountId(ambiance);
+    final String orgID = AmbianceUtils.getOrgIdentifier(ambiance);
+    final String projectID = AmbianceUtils.getProjectIdentifier(ambiance);
     final String pipelineID = ambiance.getMetadata().getPipelineIdentifier();
     final int buildNumber = ambiance.getMetadata().getRunSequence();
     final String stageID = k8PodDetails.getStageID();
 
-    // Add log service environment variables
-    envVars.putAll(logEnvVars);
-
-    // Add TI service environment variables
-    envVars.putAll(tiEnvVars);
-
     // Add environment variables that need to be used inside the lite engine container
     envVars.put(HARNESS_WORKSPACE, workDirPath);
-    envVars.put(DELEGATE_SERVICE_TOKEN_VARIABLE, serviceToken);
     envVars.put(DELEGATE_SERVICE_ENDPOINT_VARIABLE, ciExecutionServiceConfig.getDelegateServiceEndpointVariableValue());
     envVars.put(DELEGATE_SERVICE_ID_VARIABLE, DELEGATE_SERVICE_ID_VARIABLE_VALUE);
     envVars.put(HARNESS_ACCOUNT_ID_VARIABLE, accountID);
@@ -122,6 +122,20 @@ public class InternalContainerParamsProvider {
     envVars.put(HARNESS_STAGE_ID_VARIABLE, stageID);
     envVars.put(HARNESS_LOG_PREFIX_VARIABLE, logPrefix);
     return envVars;
+  }
+
+  private Map<String, SecretParams> getLiteEngineSecretVars(
+      Map<String, String> logEnvVars, Map<String, String> tiEnvVars) {
+    Map<String, String> vars = new HashMap<>();
+    vars.putAll(logEnvVars);
+    vars.putAll(tiEnvVars);
+
+    Map<String, SecretParams> secretVars = new HashMap<>();
+    for (Map.Entry<String, String> entry : vars.entrySet()) {
+      secretVars.put(entry.getKey(),
+          SecretParams.builder().secretKey(entry.getKey()).value(encodeBase64(entry.getValue())).type(TEXT).build());
+    }
+    return secretVars;
   }
 
   private ContainerResourceParams getLiteEngineResourceParams(Integer stageCpuRequest, Integer stageMemoryRequest) {

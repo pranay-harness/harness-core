@@ -63,3 +63,7 @@ func (r *replacer) Start() error {
 func (r *replacer) Close() error {
 	return r.w.Close()
 }
+
+func (r *replacer) Error() error {
+	return r.w.Error()
+}

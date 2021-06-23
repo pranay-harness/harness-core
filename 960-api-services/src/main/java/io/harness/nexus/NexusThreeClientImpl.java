@@ -1,11 +1,14 @@
 package io.harness.nexus;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
+import static io.harness.nexus.NexusHelper.isSuccessful;
 
 import static java.util.Collections.emptyMap;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArtifactServerException;
+import io.harness.exception.NestedExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.nexus.model.Nexus3Repository;
 
@@ -21,6 +24,7 @@ import okhttp3.Credentials;
 import retrofit2.Response;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class NexusThreeClientImpl {
@@ -37,7 +41,7 @@ public class NexusThreeClientImpl {
       response = nexusThreeRestClient.listRepositories().execute();
     }
 
-    if (NexusHelper.isSuccessful(response)) {
+    if (isSuccessful(response)) {
       if (isNotEmpty(response.body())) {
         log.info("Retrieving {} repositories success", repositoryFormat);
         final Map<String, String> repositories;
@@ -54,8 +58,10 @@ public class NexusThreeClientImpl {
         log.info("Retrieved repositories are {}", repositories.values());
         return repositories;
       } else {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
-            .addParam("message", "Failed to fetch the repositories");
+        throw NestedExceptionUtils.hintWithExplanationException(
+            "Check if the connector details - URL & credentials are correct",
+            "No repositories were found for the connector",
+            new InvalidArtifactServerException("Failed to fetch the repositories", WingsException.USER));
       }
     }
     log.info("No repositories found returning empty map");
@@ -83,7 +89,9 @@ public class NexusThreeClientImpl {
     }
 
     if (response.code() == 404) {
-      throw new InvalidArtifactServerException("Invalid Artifact server");
+      throw NestedExceptionUtils.hintWithExplanationException("Check if the Nexus URL & Nexus version are correct",
+          "The Nexus URL for the connector is incorrect",
+          new InvalidArtifactServerException("Invalid Artifact server"));
     }
     return NexusHelper.isSuccessful(response);
   }

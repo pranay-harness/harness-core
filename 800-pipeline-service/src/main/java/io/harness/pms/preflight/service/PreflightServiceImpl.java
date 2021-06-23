@@ -5,11 +5,17 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.manage.ManagedExecutorService;
 import io.harness.ng.core.EntityDetail;
+import io.harness.pms.inputset.InputSetErrorDTOPMS;
+import io.harness.pms.inputset.InputSetErrorResponseDTOPMS;
+import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
+import io.harness.pms.inputset.helpers.MergeUtils;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.preflight.PreFlightCause;
 import io.harness.pms.preflight.PreFlightDTO;
 import io.harness.pms.preflight.PreFlightEntityErrorInfo;
 import io.harness.pms.preflight.PreFlightStatus;
@@ -18,8 +24,10 @@ import io.harness.pms.preflight.connector.ConnectorPreflightHandler;
 import io.harness.pms.preflight.entity.PreFlightEntity;
 import io.harness.pms.preflight.entity.PreFlightEntity.PreFlightEntityKeys;
 import io.harness.pms.preflight.handler.AsyncPreFlightHandler;
+import io.harness.pms.preflight.inputset.PipelineInputResponse;
 import io.harness.pms.preflight.mapper.PreFlightMapper;
 import io.harness.pms.rbac.validator.PipelineRbacService;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.preflight.PreFlightRepository;
 
 import com.google.inject.Inject;
@@ -28,6 +36,8 @@ import java.io.IOException;
 import java.sql.Date;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -41,14 +51,13 @@ import org.springframework.data.mongodb.core.query.Update;
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PreflightServiceImpl implements PreflightService {
-  private static final ExecutorService executorService = Executors.newFixedThreadPool(1);
+  private static final ExecutorService executorService = new ManagedExecutorService(Executors.newFixedThreadPool(1));
 
   @Inject PreFlightRepository preFlightRepository;
   @Inject ConnectorPreflightHandler connectorPreflightHandler;
   @Inject PMSPipelineService pmsPipelineService;
   @Inject PipelineSetupUsageHelper pipelineSetupUsageHelper;
   @Inject PipelineRbacService pipelineRbacServiceImpl;
-  @Inject PreflightService preflightService;
 
   public void updateStatus(String id, PreFlightStatus status, PreFlightEntityErrorInfo errorInfo) {
     Criteria criteria = Criteria.where(PreFlightEntityKeys.uuid).is(id);
@@ -80,10 +89,14 @@ public class PreflightServiceImpl implements PreflightService {
   }
 
   @Override
-  public PreFlightEntity saveEmptyPreflightEntity(String accountId, String orgIdentifier, String projectIdentifier,
-      String pipelineIdentifier, String pipelineYaml, List<EntityDetail> entityDetails) {
+  public PreFlightEntity saveInitialPreflightEntity(String accountId, String orgIdentifier, String projectIdentifier,
+      String pipelineIdentifier, String pipelineYaml, List<EntityDetail> entityDetails,
+      List<PipelineInputResponse> pipelineInputResponses) {
     PreFlightEntity preFlightEntity =
         PreFlightMapper.toEmptyEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
+
+    preFlightEntity.setPipelineInputResponse(pipelineInputResponses);
+
     List<EntityDetail> connectorUsages = entityDetails.stream()
                                              .filter(entityDetail -> entityDetail.getType() == EntityType.CONNECTORS)
                                              .collect(Collectors.toList());
@@ -116,14 +129,25 @@ public class PreflightServiceImpl implements PreflightService {
     if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
       pipelineYaml = pipelineEntity.get().getYaml();
     } else {
-      pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml, true);
+      pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml, false);
     }
     List<EntityDetail> entityDetails = pipelineSetupUsageHelper.getReferencesOfPipeline(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml, null);
     pipelineRbacServiceImpl.validateStaticallyReferredEntities(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml, entityDetails);
-    PreFlightEntity preFlightEntitySaved = preflightService.saveEmptyPreflightEntity(
-        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml, entityDetails);
+
+    InputSetErrorWrapperDTOPMS errorMap = EmptyPredicate.isEmpty(inputSetPipelineYaml)
+        ? null
+        : MergeUtils.getErrorMap(pipelineEntity.get().getYaml(), inputSetPipelineYaml);
+    PreFlightEntity preFlightEntitySaved;
+    if (errorMap == null) {
+      preFlightEntitySaved = saveInitialPreflightEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier,
+          pipelineYaml, entityDetails, Collections.emptyList());
+    } else {
+      List<PipelineInputResponse> pipelineInputResponses = getPipelineInputResponses(errorMap);
+      preFlightEntitySaved = saveInitialPreflightEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier,
+          pipelineYaml, entityDetails, pipelineInputResponses);
+    }
 
     executorService.submit(AsyncPreFlightHandler.builder()
                                .entity(preFlightEntitySaved)
@@ -131,5 +155,28 @@ public class PreflightServiceImpl implements PreflightService {
                                .preflightService(this)
                                .build());
     return preFlightEntitySaved.getUuid();
+  }
+
+  private List<PipelineInputResponse> getPipelineInputResponses(InputSetErrorWrapperDTOPMS errorMap) {
+    List<PipelineInputResponse> res = new ArrayList<>();
+    Map<String, InputSetErrorResponseDTOPMS> errorResponseMap = errorMap.getUuidToErrorResponseMap();
+    errorResponseMap.keySet().forEach(key -> {
+      List<InputSetErrorDTOPMS> errors = errorResponseMap.get(key).getErrors();
+      List<PreFlightCause> preFlightCauses =
+          errors.stream()
+              .map(error -> PreFlightCause.builder().cause(error.getMessage()).build())
+              .collect(Collectors.toList());
+      PreFlightEntityErrorInfo errorInfo = PreFlightEntityErrorInfo.builder()
+                                               .summary("Runtime value provided for " + key + " is wrong")
+                                               .causes(preFlightCauses)
+                                               .build();
+      res.add(PipelineInputResponse.builder()
+                  .success(false)
+                  .errorInfo(errorInfo)
+                  .fqn(key)
+                  .stageName(YamlUtils.getStageIdentifierFromFqn(key))
+                  .build());
+    });
+    return res;
   }
 }

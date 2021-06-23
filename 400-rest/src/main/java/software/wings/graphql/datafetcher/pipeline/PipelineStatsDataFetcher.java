@@ -65,6 +65,8 @@ public class PipelineStatsDataFetcher
     switch (pipelineAggregation) {
       case Application:
         return "appId";
+      case Pipeline:
+        return "_id";
       default:
         log.warn("Unknown aggregation type" + aggregation);
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);
@@ -101,6 +103,8 @@ public class PipelineStatsDataFetcher
     switch (groupByTag.getEntityType()) {
       case APPLICATION:
         return QLPipelineEntityAggregation.Application;
+      case PIPELINE:
+        return QLPipelineEntityAggregation.Pipeline;
       default:
         log.warn("Unsupported tag entity type {}", groupByTag.getEntityType());
         throw new InvalidRequestException(GENERIC_EXCEPTION_MSG);

@@ -53,6 +53,7 @@ public class JiraHelperService {
   private static final String WORKFLOW_EXECUTION_ID = "workflow";
   private static final long JIRA_DELEGATE_TIMEOUT_MILLIS = 60 * 1000 * 5;
   @Inject private DelegateServiceImpl delegateService;
+  @Inject private DelegateTaskServiceClassicImpl delegateTaskServiceClassic;
   @Inject @Transient private transient SecretManager secretManager;
   @Inject SettingsService settingService;
   @Inject WorkflowExecutionService workflowExecutionService;
@@ -235,8 +236,8 @@ public class JiraHelperService {
                                               .timeout(JIRA_DELEGATE_TIMEOUT_MILLIS)
                                               .build())
                                     .build();
+    DelegateResponseData responseData = delegateTaskServiceClassic.executeTask(delegateTask);
 
-    DelegateResponseData responseData = delegateService.executeTask(delegateTask);
     if (jiraTaskParameters.getJiraAction() == CHECK_APPROVAL && delegateTask != null) {
       log.info("Delegate task Id = {}, for Polling Jira Approval for IssueId {}", delegateTask.getUuid(),
           jiraTaskParameters.getIssueId());

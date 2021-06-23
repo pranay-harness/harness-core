@@ -1,12 +1,15 @@
 package io.harness.pms.sdk;
 
+import io.harness.ModuleType;
 import io.harness.PmsCommonsModule;
-import io.harness.PmsSdkCoreModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.pms.sdk.core.PmsSdkCoreConfig;
+import io.harness.pms.sdk.core.PmsSdkCoreModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 import io.harness.pms.serializer.kryo.PmsContractsKryoRegistrar;
 import io.harness.queue.QueueController;
@@ -47,13 +50,14 @@ public class PmsSdkRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
-
+    PmsSdkConfiguration sdkConfiguration =
+        PmsSdkConfiguration.builder().deploymentMode(SdkDeployMode.LOCAL).moduleType(ModuleType.PMS).build();
     List<Module> modules = new ArrayList<>();
     modules.add(new ClosingFactoryModule(closingFactory));
-    modules.add(PmsSdkModule.getInstance(PmsSdkConfiguration.builder().build()));
-    modules.add(PmsSdkCoreModule.getInstance());
+    modules.add(PmsSdkModule.getInstance(sdkConfiguration));
+    modules.add(PmsSdkCoreModule.getInstance(PmsSdkCoreConfig.builder().sdkDeployMode(SdkDeployMode.LOCAL).build()));
     modules.add(PmsCommonsModule.getInstance());
-    modules.add(PmsSdkRegistryModule.getInstance(PmsSdkConfiguration.builder().build()));
+    modules.add(PmsSdkRegistryModule.getInstance(sdkConfiguration));
     modules.add(mongoTypeModule(annotations));
     modules.add(KryoModule.getInstance());
 

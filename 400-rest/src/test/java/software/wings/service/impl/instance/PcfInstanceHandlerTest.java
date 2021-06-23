@@ -49,6 +49,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
+import io.harness.delegate.task.pcf.response.CfInstanceSyncResponse;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pcf.PcfAppNotFoundException;
 import io.harness.rule.Owner;
@@ -69,8 +71,6 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.PcfInstanceKey;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
-import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
 import software.wings.service.impl.PcfHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -411,16 +411,16 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
     InfrastructureMapping infrastructureMapping = mock(InfrastructureMapping.class);
     when(infrastructureMapping.getUuid()).thenReturn("ID");
 
-    PcfCommandExecutionResponse pcfCommandExecutionResponse = getPcfCommandExecutionResponse(SUCCESS);
-    when(pcfHelperService.getInstanceCount(pcfCommandExecutionResponse)).thenReturn(1);
+    CfCommandExecutionResponse cfCommandExecutionResponse = getPcfCommandExecutionResponse(SUCCESS);
+    when(pcfHelperService.getInstanceCount(cfCommandExecutionResponse)).thenReturn(1);
 
-    Status status = pcfInstanceHandler.getStatus(infrastructureMapping, pcfCommandExecutionResponse);
+    Status status = pcfInstanceHandler.getStatus(infrastructureMapping, cfCommandExecutionResponse);
     assertTrue(status.isSuccess());
     assertTrue(status.isRetryable());
     assertTrue(isEmpty(status.getErrorMessage()));
 
-    when(pcfHelperService.getInstanceCount(pcfCommandExecutionResponse)).thenReturn(0);
-    status = pcfInstanceHandler.getStatus(infrastructureMapping, pcfCommandExecutionResponse);
+    when(pcfHelperService.getInstanceCount(cfCommandExecutionResponse)).thenReturn(0);
+    status = pcfInstanceHandler.getStatus(infrastructureMapping, cfCommandExecutionResponse);
     assertTrue(status.isSuccess());
     assertFalse(status.isRetryable());
     assertTrue(isEmpty(status.getErrorMessage()));
@@ -434,25 +434,25 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
     InfrastructureMapping infrastructureMapping = mock(InfrastructureMapping.class);
     when(infrastructureMapping.getUuid()).thenReturn("ID");
 
-    PcfCommandExecutionResponse pcfCommandExecutionResponse = getPcfCommandExecutionResponse(FAILURE);
+    CfCommandExecutionResponse cfCommandExecutionResponse = getPcfCommandExecutionResponse(FAILURE);
 
-    Status status = pcfInstanceHandler.getStatus(infrastructureMapping, pcfCommandExecutionResponse);
+    Status status = pcfInstanceHandler.getStatus(infrastructureMapping, cfCommandExecutionResponse);
     assertFalse(status.isSuccess());
     assertTrue(status.isRetryable());
 
     when(pcfHelperService.validatePcfInstanceSyncResponse(any(), any(), any(), any()))
         .thenThrow(PcfAppNotFoundException.class);
-    status = pcfInstanceHandler.getStatus(infrastructureMapping, pcfCommandExecutionResponse);
+    status = pcfInstanceHandler.getStatus(infrastructureMapping, cfCommandExecutionResponse);
     assertFalse(status.isSuccess());
     assertFalse(status.isRetryable());
   }
 
-  private PcfCommandExecutionResponse getPcfCommandExecutionResponse(CommandExecutionStatus commandExecutionStatus) {
-    PcfInstanceSyncResponse pcfInstanceSyncResponse =
-        PcfInstanceSyncResponse.builder().commandExecutionStatus(commandExecutionStatus).build();
+  private CfCommandExecutionResponse getPcfCommandExecutionResponse(CommandExecutionStatus commandExecutionStatus) {
+    CfInstanceSyncResponse cfInstanceSyncResponse =
+        CfInstanceSyncResponse.builder().commandExecutionStatus(commandExecutionStatus).build();
 
-    return PcfCommandExecutionResponse.builder()
-        .pcfCommandResponse(pcfInstanceSyncResponse)
+    return CfCommandExecutionResponse.builder()
+        .pcfCommandResponse(cfInstanceSyncResponse)
         .commandExecutionStatus(commandExecutionStatus)
         .build();
   }

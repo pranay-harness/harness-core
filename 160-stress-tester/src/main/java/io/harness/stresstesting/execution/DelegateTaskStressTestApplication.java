@@ -59,7 +59,7 @@ public class DelegateTaskStressTestApplication extends Application<DelegateTaskS
   public void run(DelegateTaskStressTestConfiguration configuration, Environment environment) throws Exception {
     List<Module> modules = new ArrayList<>();
     modules.add(new io.harness.grpc.DelegateServiceDriverGrpcClientModule(
-        configuration.getServiceSecret(), configuration.getTarget(), configuration.getAuthority()));
+        configuration.getServiceSecret(), configuration.getTarget(), configuration.getAuthority(), false));
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

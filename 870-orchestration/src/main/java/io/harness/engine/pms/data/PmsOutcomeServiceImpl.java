@@ -28,9 +28,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import org.bson.Document;
@@ -61,8 +62,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
   }
 
   @Override
-  public String consumeInternal(
-      Ambiance ambiance, String name, String value, int levelsToKeep, boolean isGraphOutcome) {
+  public String consumeInternal(Ambiance ambiance, String name, String value, int levelsToKeep) {
     Level producedBy = AmbianceUtils.obtainCurrentLevel(ambiance);
     if (levelsToKeep >= 0) {
       ambiance = AmbianceUtils.clone(ambiance, levelsToKeep);
@@ -76,7 +76,6 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
                                    .levels(ambiance.getLevelsList())
                                    .producedBy(producedBy)
                                    .name(name)
-                                   .isGraphOutcome(isGraphOutcome)
                                    .outcome(RecastOrchestrationUtils.toDocumentFromJson(value))
                                    .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))
                                    .build());
@@ -88,22 +87,27 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
 
   @Override
   public List<String> findAllByRuntimeId(String planExecutionId, String runtimeId) {
-    return findAllByRuntimeId(planExecutionId, runtimeId, false);
+    Map<String, String> outcomesMap = findAllOutcomesMapByRuntimeId(planExecutionId, runtimeId);
+    if (isEmpty(outcomesMap)) {
+      return Collections.emptyList();
+    }
+    return new ArrayList<>(outcomesMap.values());
   }
 
   @Override
-  public List<String> findAllByRuntimeId(String planExecutionId, String runtimeId, boolean isGraphOutcome) {
+  public Map<String, String> findAllOutcomesMapByRuntimeId(String planExecutionId, String runtimeId) {
     Query query = query(where(OutcomeInstanceKeys.planExecutionId).is(planExecutionId))
                       .addCriteria(where(OutcomeInstanceKeys.producedByRuntimeId).is(runtimeId))
-                      .addCriteria(where(OutcomeInstanceKeys.isGraphOutcome).is(isGraphOutcome))
                       .with(Sort.by(Sort.Direction.DESC, OutcomeInstanceKeys.createdAt));
 
     List<OutcomeInstance> outcomeInstances = mongoTemplate.find(query, OutcomeInstance.class);
     if (isEmpty(outcomeInstances)) {
-      return Collections.emptyList();
+      return Collections.emptyMap();
     }
 
-    return outcomeInstances.stream().map(oi -> oi.getOutcome().toJson()).collect(Collectors.toList());
+    Map<String, String> outcomesMap = new LinkedHashMap<>();
+    outcomeInstances.forEach(oi -> outcomesMap.put(oi.getName(), oi.getOutcome().toJson()));
+    return outcomesMap;
   }
 
   @Override

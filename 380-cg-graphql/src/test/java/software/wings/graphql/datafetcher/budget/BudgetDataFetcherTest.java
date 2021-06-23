@@ -18,12 +18,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.budget.ApplicationBudgetScope;
-import io.harness.ccm.budget.Budget;
-import io.harness.ccm.budget.Budget.BudgetBuilder;
 import io.harness.ccm.budget.BudgetService;
 import io.harness.ccm.budget.BudgetType;
 import io.harness.ccm.budget.ClusterBudgetScope;
 import io.harness.ccm.budget.EnvironmentType;
+import io.harness.ccm.commons.entities.billing.Budget;
+import io.harness.ccm.commons.entities.billing.Budget.BudgetBuilder;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 

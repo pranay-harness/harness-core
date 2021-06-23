@@ -27,6 +27,7 @@ import io.harness.migrations.all.AddAccountIdToArtifactsMigration;
 import io.harness.migrations.all.AddCEPermissionToAllUserGroups;
 import io.harness.migrations.all.AddDisabledFieldMigration;
 import io.harness.migrations.all.AddDuplicateFieldToCVFeedbacks;
+import io.harness.migrations.all.AddEnableIteratorsToTriggers;
 import io.harness.migrations.all.AddHarnessCommandLibraryToAccount;
 import io.harness.migrations.all.AddHarnessGroupAccessFlagToAccount;
 import io.harness.migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
@@ -88,7 +89,6 @@ import io.harness.migrations.all.EntityNameValidationMigration_All_01;
 import io.harness.migrations.all.EntityNameValidationMigration_All_02;
 import io.harness.migrations.all.EntityNameValidationMigration_All_03;
 import io.harness.migrations.all.EntityNameValidationMigration_All_04;
-import io.harness.migrations.all.ExecuteWorkflowRollbackActionMigration;
 import io.harness.migrations.all.FixCVDashboardStatusMigration;
 import io.harness.migrations.all.GcsArtifactProjectIdMigration;
 import io.harness.migrations.all.GitCommitStatusMigration;
@@ -422,7 +422,8 @@ public class MigrationList {
         .add(Pair.of(355, BaseMigration.class))
         .add(Pair.of(356, CECloudAccountMigration.class))
         .add(Pair.of(357, SshAndWinRmAccountPermissionMigration.class))
-        .add(Pair.of(358, ExecuteWorkflowRollbackActionMigration.class))
+        .add(Pair.of(358, BaseMigration.class))
+        .add(Pair.of(359, AddEnableIteratorsToTriggers.class))
         .build();
   }
 }

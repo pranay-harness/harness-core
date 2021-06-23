@@ -96,6 +96,11 @@ public interface AuthService {
   UserRestrictionInfo getUserRestrictionInfo(
       String accountId, User user, UserPermissionInfo userPermissionInfo, boolean cacheOnly);
 
+  void updateUserPermissionCacheInfo(String accountId, User user, boolean cacheOnly);
+
+  void updateUserRestrictionCacheInfo(
+      String accountId, User user, UserPermissionInfo userPermissionInfo, boolean cacheOnly);
+
   void evictPermissionAndRestrictionCacheForUserGroup(UserGroup userGroup);
 
   void evictUserPermissionAndRestrictionCacheForAccount(String accountId, List<String> memberIds);
@@ -122,6 +127,8 @@ public interface AuthService {
   void checkIfUserAllowedToDeployWorkflowToEnv(String appId, String envId);
 
   void checkIfUserAllowedToDeployPipelineToEnv(String appId, String envId);
+
+  void checkIfUserAllowedToRollbackWorkflowToEnv(String appId, String envId);
 
   void checkIfUserCanCreateEnv(String appId, EnvironmentType envType);
 

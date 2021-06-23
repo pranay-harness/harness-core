@@ -13,11 +13,13 @@ import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.helper.EntityDistinctElementHelper;
 import io.harness.gitsync.persistance.GitAwarePersistence;
 import io.harness.gitsync.persistance.GitSyncableHarnessRepo;
+import io.harness.ng.core.utils.NGYamlUtils;
 
 import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -99,7 +101,7 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
 
   @Override
   public Connector save(Connector objectToSave, ConnectorDTO yaml) {
-    return gitAwarePersistence.save(objectToSave, yaml, ChangeType.ADD, Connector.class);
+    return gitAwarePersistence.save(objectToSave, NGYamlUtils.getYamlString(yaml), ChangeType.ADD, Connector.class);
   }
 
   @Override
@@ -109,6 +111,17 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
 
   @Override
   public Connector save(Connector objectToSave, ConnectorDTO connectorDTO, ChangeType changeType) {
-    return gitAwarePersistence.save(objectToSave, connectorDTO, changeType, Connector.class);
+    return gitAwarePersistence.save(objectToSave, NGYamlUtils.getYamlString(connectorDTO), changeType, Connector.class);
+  }
+
+  @Override
+  public Connector save(Connector objectToSave, ConnectorDTO connectorDTO, ChangeType changeType, Supplier functor) {
+    return gitAwarePersistence.save(
+        objectToSave, NGYamlUtils.getYamlString(connectorDTO), changeType, Connector.class, functor);
+  }
+
+  @Override
+  public Optional<Connector> findOne(Criteria criteria, String repo, String branch) {
+    return gitAwarePersistence.findOne(criteria, repo, branch, Connector.class);
   }
 }

@@ -1,9 +1,12 @@
 package io.harness.pms.preflight.handler;
 
+import static java.lang.String.format;
+
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.InvalidRequestException;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
+import io.harness.exception.InvalidYamlException;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.EntityDetail;
 import io.harness.pms.merger.fqn.FQN;
@@ -43,7 +46,9 @@ public class AsyncPreFlightHandler implements Runnable {
         fqnObjectMap.keySet().forEach(
             fqn -> fqnToObjectMapMergedYaml.put(fqn.getExpressionFqn(), fqnObjectMap.get(fqn)));
       } catch (IOException e) {
-        throw new InvalidRequestException("Invalid merged pipeline yaml");
+        log.error(format("Invalid merged pipeline yaml. Error in node [%s]", YamlUtils.getErrorNodePartialFQN(e)), e);
+        throw new InvalidYamlException(
+            format("Invalid merged pipeline yaml. Error in node [%s]", YamlUtils.getErrorNodePartialFQN(e)), e);
       }
       // update status to in progress
       preflightService.updateStatus(entity.getUuid(), PreFlightStatus.IN_PROGRESS, null);
@@ -56,8 +61,8 @@ public class AsyncPreFlightHandler implements Runnable {
               entity.getProjectIdentifier(), entity.getUuid(), fqnToObjectMapMergedYaml, connectorUsages);
       preflightService.updateStatus(
           entity.getUuid(), PreflightCommonUtils.getOverallStatus(connectorCheckResponses), null);
-    } catch (Exception e) {
-      log.error("Error occurred while handling preflight check", e);
+    } catch (EventsFrameworkDownException e) {
+      log.error("Error occurred while handling preflight check. Event Framework Down", e);
       preflightService.updateStatus(
           entity.getUuid(), PreFlightStatus.FAILURE, PreflightCommonUtils.getInternalIssueErrorInfo());
     }

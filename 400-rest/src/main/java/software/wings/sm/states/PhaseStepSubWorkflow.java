@@ -92,7 +92,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -408,8 +407,11 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                   .releaseName(k8sExecutionSummary.getReleaseName())
                   .targetInstances(k8sExecutionSummary.getTargetInstances())
                   .delegateSelectors((k8sExecutionSummary.getDelegateSelectors() == null)
-                          ? Collections.emptyList()
+                          ? emptyList()
                           : new ArrayList<>(k8sExecutionSummary.getDelegateSelectors()))
+                  .prunedResourcesIds(k8sExecutionSummary.getPrunedResourcesIds() == null
+                          ? emptyList()
+                          : k8sExecutionSummary.getPrunedResourcesIds())
                   .build();
           return asList(k8SContextElement);
         }

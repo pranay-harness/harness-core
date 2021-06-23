@@ -2,9 +2,7 @@ package io.harness.licensing.entities.modules;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.licensing.DeploymentUnitType;
 
-import java.util.Map;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -20,5 +18,6 @@ import org.springframework.data.annotation.TypeAlias;
 @Persistent
 @TypeAlias("io.harness.license.entities.module.CDModuleLicense")
 public class CDModuleLicense extends ModuleLicense {
-  private Map<DeploymentUnitType, Integer> deploymentUnits;
+  private Integer maxWorkLoads;
+  private Integer deploymentsPerDay;
 }

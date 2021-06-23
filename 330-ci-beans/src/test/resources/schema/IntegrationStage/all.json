@@ -1,5 +1,8 @@
 {
   "type": "object",
+  "required": [
+    "infrastructure"
+  ],
   "properties": {
     "cloneCodebase": {
       "type": "boolean"
@@ -68,6 +71,10 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "image"
+          ],
           "properties": {
             "args": {
               "oneOf": [
@@ -114,8 +121,29 @@
             "image": {
               "type": "string"
             },
+            "privileged": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
             "resources": {
               "$ref": "#/definitions/ContainerResource"
+            },
+            "runAsUser": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           }
         }
@@ -137,7 +165,8 @@
     "DependencyElement": {
       "type": "object",
       "required": [
-        "identifier"
+        "identifier",
+        "type"
       ],
       "properties": {
         "description": {
@@ -180,6 +209,9 @@
     },
     "ExecutionElementConfig": {
       "type": "object",
+      "required": [
+        "steps"
+      ],
       "properties": {
         "rollbackSteps": {
           "type": "array",
@@ -191,7 +223,9 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -281,24 +315,11 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "InputSetValidator": {
-      "type": "object",
-      "properties": {
-        "parameters": {
-          "type": "string"
-        },
-        "validatorType": {
-          "type": "string",
-          "enum": [
-            "ALLOWED_VALUES",
-            "REGEX"
-          ]
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "IntegrationStageConfig": {
       "type": "object",
+      "required": [
+        "infrastructure"
+      ],
       "properties": {
         "cloneCodebase": {
           "type": "boolean"
@@ -367,17 +388,55 @@
     },
     "K8sDirectInfraYamlSpec": {
       "type": "object",
+      "required": [
+        "connectorRef",
+        "namespace"
+      ],
       "properties": {
         "annotations": {
-          "$ref": "#/definitions/ParameterFieldMapStringString"
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "connectorRef": {
           "type": "string"
         },
         "labels": {
-          "$ref": "#/definitions/ParameterFieldMapStringString"
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "namespace": {
+          "type": "string"
+        },
+        "runAsUser": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "format": "int32"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "serviceAccountName": {
           "type": "string"
         }
       },
@@ -502,7 +561,17 @@
         "errors": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "Unknown",
+              "AllErrors",
+              "Authentication",
+              "Connectivity",
+              "Timeout",
+              "Authorization",
+              "Verification",
+              "DelegateProvisioning"
+            ]
           }
         }
       },
@@ -585,63 +654,6 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "ParameterField": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "object"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "ParameterFieldMapStringString": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "RetryFailureActionConfig": {
       "allOf": [
         {
@@ -688,7 +700,9 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -717,6 +731,11 @@
     },
     "StepElementConfig": {
       "type": "object",
+      "required": [
+        "identifier",
+        "name",
+        "type"
+      ],
       "properties": {
         "description": {
           "type": "string"
@@ -728,16 +747,19 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "spec": {
           "$ref": "#/definitions/StepSpecType"
         },
         "timeout": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*))$"
         },
         "type": {
           "type": "string"
@@ -762,10 +784,12 @@
           }
         },
         "identifier": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
         },
         "rollbackSteps": {
           "type": "array",
@@ -777,7 +801,9 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         },
         "when": {
           "$ref": "#/definitions/StepWhenCondition"

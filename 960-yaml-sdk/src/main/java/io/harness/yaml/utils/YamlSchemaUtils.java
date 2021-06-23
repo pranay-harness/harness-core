@@ -203,6 +203,19 @@ public class YamlSchemaUtils {
         .collect(Collectors.toSet());
   }
 
+  public Set<SubtypeClassMap> toSetOfSubtypeClassMap(Set<Class<?>> subtypes) {
+    return subtypes.stream()
+        .filter(c -> c.getAnnotation(JsonTypeName.class) != null)
+        .filter(c -> c.getAnnotation(YamlSchemaIgnoreSubtype.class) == null)
+        .map(aClass
+            -> SubtypeClassMap.builder()
+                   .subtypeEnum(aClass.getAnnotation(JsonTypeName.class).value())
+                   .subTypeDefinitionKey(io.harness.yaml.utils.YamlSchemaUtils.getSwaggerName(aClass))
+                   .subTypeClass(aClass)
+                   .build())
+        .collect(Collectors.toSet());
+  }
+
   /**
    * @param field field for which subtypes are required, this method looks for JsonSubTypes annotation in field
    *              annotations than in filed's class annotations

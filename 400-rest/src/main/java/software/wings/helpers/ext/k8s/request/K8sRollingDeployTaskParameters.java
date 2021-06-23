@@ -33,13 +33,14 @@ public class K8sRollingDeployTaskParameters extends K8sTaskParameters implements
   private boolean skipDryRun;
   private boolean localOverrideFeatureFlag;
   private Boolean skipVersioningForAllK8sObjects;
+  private boolean isPruningEnabled;
 
   @Builder
   public K8sRollingDeployTaskParameters(String accountId, String appId, String commandName, String activityId,
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesYamlList,
       boolean isInCanaryWorkflow, boolean skipDryRun, HelmVersion helmVersion, boolean localOverrideFeatureFlag,
-      Boolean skipVersioningForAllK8sObjects, Set<String> delegateSelectors) {
+      Boolean skipVersioningForAllK8sObjects, Set<String> delegateSelectors, boolean isPruningEnabled) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
         timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors);
     this.k8sDelegateManifestConfig = k8sDelegateManifestConfig;
@@ -48,6 +49,7 @@ public class K8sRollingDeployTaskParameters extends K8sTaskParameters implements
     this.skipDryRun = skipDryRun;
     this.localOverrideFeatureFlag = localOverrideFeatureFlag;
     this.skipVersioningForAllK8sObjects = skipVersioningForAllK8sObjects;
+    this.isPruningEnabled = isPruningEnabled;
   }
 
   @Override

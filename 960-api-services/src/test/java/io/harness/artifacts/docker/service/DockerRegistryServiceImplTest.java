@@ -19,6 +19,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.docker.DockerRegistryRestClient;
 import io.harness.artifacts.docker.beans.DockerInternalConfig;
@@ -27,12 +29,19 @@ import io.harness.artifacts.docker.client.DockerRestClientFactoryImpl;
 import io.harness.artifacts.docker.service.DockerRegistryServiceImpl.DockerImageTagResponse;
 import io.harness.artifacts.docker.service.DockerRegistryServiceImpl.DockerRegistryToken;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.ArtifactServerException;
+import io.harness.context.GlobalContext;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExplanationException;
+import io.harness.exception.HintException;
 import io.harness.exception.InvalidArtifactServerException;
+import io.harness.exception.runtime.DockerHubServerRuntimeException;
+import io.harness.globalcontex.ErrorHandlingGlobalContextData;
+import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 
+import com.github.tomakehurst.wiremock.core.Options;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -49,11 +58,15 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class DockerRegistryServiceImplTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule
-  public WireMockRule wireMockRule = new WireMockRule(
-      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("960-api-services/src/test/resources").port(0));
+  public WireMockRule wireMockRule =
+      new WireMockRule(WireMockConfiguration.wireMockConfig()
+                           .usingFilesUnderDirectory("960-api-services/src/test/resources")
+                           .port(Options.DYNAMIC_PORT),
+          false);
   @Mock private DockerRestClientFactory dockerRestClientFactory;
   @Mock private DockerRegistryUtils dockerRegistryUtils;
   @InjectMocks DockerRegistryServiceImpl dockerRegistryService;
@@ -98,6 +111,10 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
                                      + "/service/token\",service=\"harbor-registry\"")));
     doReturn(dockerRegistryRestClient).when(dockerRestClientFactory).getDockerRegistryRestClient(dockerConfig);
     assertThatThrownBy(() -> dockerRegistryService.validateCredentials(dockerConfig))
+        .isInstanceOf(HintException.class)
+        .getCause()
+        .isInstanceOf(ExplanationException.class)
+        .getCause()
         .isInstanceOf(InvalidArtifactServerException.class);
   }
 
@@ -113,6 +130,10 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
     wireMockRule.stubFor(get(urlEqualTo("/service/token?service=harbor-registry&scope=somevalue"))
                              .willReturn(aResponse().withBody(JsonUtils.asJson(dockerRegistryToken))));
     assertThatThrownBy(() -> dockerRegistryService.validateCredentials(dockerConfig))
+        .isInstanceOf(HintException.class)
+        .getCause()
+        .isInstanceOf(ExplanationException.class)
+        .getCause()
         .isInstanceOf(InvalidArtifactServerException.class);
   }
 
@@ -123,6 +144,10 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
     doReturn(dockerRegistryRestClient).when(dockerRestClientFactory).getDockerRegistryRestClient(dockerConfig);
     wireMockRule.stubFor(get(urlEqualTo("/v2/")).willReturn(aResponse().withFault(Fault.EMPTY_RESPONSE)));
     assertThatThrownBy(() -> dockerRegistryService.validateCredentials(dockerConfig))
+        .isInstanceOf(HintException.class)
+        .getCause()
+        .isInstanceOf(ExplanationException.class)
+        .getCause()
         .isInstanceOf(InvalidArtifactServerException.class);
   }
 
@@ -141,6 +166,10 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
     wireMockRule.stubFor(get(urlEqualTo("/service/token?service=harbor-registry&scope=somevalue"))
                              .willReturn(aResponse().withBody(JsonUtils.asJson(dockerRegistryToken))));
     assertThatThrownBy(() -> dockerRegistryService.validateCredentials(dockerConfig))
+        .isInstanceOf(HintException.class)
+        .getCause()
+        .isInstanceOf(ExplanationException.class)
+        .getCause()
         .isInstanceOf(InvalidArtifactServerException.class);
   }
 
@@ -159,6 +188,10 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
     wireMockRule.stubFor(get(urlEqualTo("/service/token?service=harbor-registry&scope=somevalue"))
                              .willReturn(aResponse().withBody(JsonUtils.asJson(dockerRegistryToken))));
     assertThatThrownBy(() -> dockerRegistryService.validateCredentials(dockerConfig))
+        .isInstanceOf(HintException.class)
+        .getCause()
+        .isInstanceOf(ExplanationException.class)
+        .getCause()
         .isInstanceOf(InvalidArtifactServerException.class)
         .extracting("params.message")
         .isEqualTo("Invalid Docker Registry credentials");
@@ -177,7 +210,9 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
       dockerRegistryService.validateCredentials(dockerInternalConfig);
       fail("Should not reach here");
     } catch (Exception exception) {
-      assertThat(getMessage(exception)).isEqualTo("Password is a required field along with Username");
+      assertThat(getMessage(exception))
+          .isEqualTo(
+              "Invalid Docker Credentials. Password field value cannot be empty if username field is not empty. Password is a required field along with Username");
     }
   }
 
@@ -190,7 +225,9 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
       dockerRegistryService.getBuilds(dockerConfig, "image", 10);
       fail("Should not reach here");
     } catch (Exception ex) {
-      assertThat(getMessage(ex)).isEqualTo("Bad Request");
+      assertThat(getMessage(ex))
+          .isEqualTo(
+              "Could not fetch tags for the image. Check if the image exists and if the permissions are scoped for the authenticated user. Unable to fetch the tags for the image. Check if the image exists and if the permissions are scoped for the authenticated user. Bad Request. Unable to fetch the tags for the image. Bad Request");
     }
   }
 
@@ -210,11 +247,17 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
       wireMockRule.stubFor(get(urlEqualTo("/service/token?service=harbor-registry&scope=somevalue"))
                                .willReturn(aResponse().withBody(JsonUtils.asJson(dockerRegistryToken))));
 
+      if (!GlobalContextManager.isAvailable()) {
+        GlobalContextManager.set(new GlobalContext());
+      }
+      GlobalContextManager.upsertGlobalContextRecord(
+          ErrorHandlingGlobalContextData.builder().isSupportedErrorFramework(true).build());
       dockerRegistryService.getBuilds(dockerConfig, "image", 10);
       fail("Should not reach here");
     } catch (Exception ex) {
-      assertThat(ex).isInstanceOf(ArtifactServerException.class);
-      assertThat(getMessage(ex)).isEqualTo("Invalid credentials");
+      GlobalContextManager.unset();
+      assertThat(ex).isInstanceOf(DockerHubServerRuntimeException.class);
+      assertThat(((DockerHubServerRuntimeException) ex).getCode()).isEqualTo(ErrorCode.INVALID_CREDENTIAL);
     }
   }
 
@@ -344,7 +387,9 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
       dockerRegistryService.getBuilds(dockerConfig, "image_500", 10);
       fail("Should not reach here");
     } catch (Exception ex) {
-      assertThat(getMessage(ex)).isEqualTo("Internal Server Error");
+      assertThat(getMessage(ex))
+          .isEqualTo(
+              "Could not fetch tags for the image. Check if the image exists and if the permissions are scoped for the authenticated user. Server Error");
     }
   }
 

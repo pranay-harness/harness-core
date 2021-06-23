@@ -13,6 +13,7 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlNode;
+import io.harness.validator.NGRegexValidatorConstants;
 import io.harness.when.beans.StepWhenCondition;
 import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
@@ -23,6 +24,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -45,10 +48,12 @@ public class StepElementConfig {
   @ApiModelProperty(hidden = true)
   String uuid;
 
-  @EntityIdentifier String identifier;
-  @EntityName String name;
+  @NotNull @EntityIdentifier @Pattern(regexp = NGRegexValidatorConstants.IDENTIFIER_PATTERN) String identifier;
+  @NotNull @EntityName @Pattern(regexp = NGRegexValidatorConstants.NAME_PATTERN) String name;
   String description;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<Timeout> timeout;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Pattern(regexp = NGRegexValidatorConstants.TIMEOUT_PATTERN)
+  ParameterField<Timeout> timeout;
   List<FailureStrategyConfig> failureStrategies;
 
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
@@ -57,7 +62,7 @@ public class StepElementConfig {
 
   StepWhenCondition when;
 
-  String type;
+  @NotNull String type;
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   StepSpecType stepSpecType;

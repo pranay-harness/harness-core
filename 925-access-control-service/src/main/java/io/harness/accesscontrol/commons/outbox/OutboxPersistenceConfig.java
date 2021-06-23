@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.MongoConfig;
+import io.harness.repositories.outbox.OutboxEventRepository;
 import io.harness.springdata.HMongoTemplate;
 
 import com.google.inject.Inject;
@@ -30,11 +31,10 @@ import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-
 @OwnedBy(PL)
 @Configuration
 @EnableMongoRepositories(
-    basePackages = {"io.harness.repositories"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
+    basePackageClasses = {OutboxEventRepository.class}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
 @EnableMongoAuditing
 public class OutboxPersistenceConfig extends AbstractMongoConfiguration {
   private final MongoConfig mongoBackendConfiguration;

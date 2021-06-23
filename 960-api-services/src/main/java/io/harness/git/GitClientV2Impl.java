@@ -1,5 +1,6 @@
 package io.harness.git;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
@@ -27,12 +28,16 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.GeneralException;
 import io.harness.exception.GitClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
+import io.harness.exception.runtime.JGitRuntimeException;
 import io.harness.filesystem.FileIo;
 import io.harness.git.model.AuthInfo;
 import io.harness.git.model.ChangeType;
@@ -107,6 +112,7 @@ import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
 public class GitClientV2Impl implements GitClientV2 {
   @Inject private GitClientHelper gitClientHelper;
 
@@ -117,6 +123,11 @@ public class GitClientV2Impl implements GitClientV2 {
     }
   }
 
+  /**
+   * Note: Checkout is added after clone as clone doesn't support throwing errors in case branch is not available
+   *
+   * @param request GitBaseRequest
+   */
   @Override
   public void ensureRepoLocallyClonedAndUpdated(GitBaseRequest request) {
     notNullCheck("Repo update request cannot be null", request);
@@ -173,6 +184,7 @@ public class GitClientV2Impl implements GitClientV2 {
     // opening/updating repo
     log.info(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Do a fresh clone");
     clone(request, gitClientHelper.getRepoDirectory(request), false);
+    checkout(request);
   }
 
   @VisibleForTesting
@@ -280,6 +292,30 @@ public class GitClientV2Impl implements GitClientV2 {
       return getMessage(e);
     }
     return null; // no error
+  }
+
+  @Override
+  public void validateOrThrow(GitBaseRequest request) {
+    notNullCheck("Validate request cannot be null", request);
+    cleanup(request);
+    notEmptyCheck("url cannot be empty", request.getRepoUrl());
+    String repoUrl = request.getRepoUrl();
+
+    try {
+      // Init Git repo
+      LsRemoteCommand lsRemoteCommand = Git.lsRemoteRepository();
+      lsRemoteCommand = (LsRemoteCommand) getAuthConfiguredCommand(lsRemoteCommand, request);
+      lsRemoteCommand.setRemote(repoUrl).setHeads(true).setTags(true).call();
+      log.info(
+          gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Remote branches found, validation success.");
+    } catch (Exception e) {
+      log.info(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + "Git validation failed [{}]", e);
+      if (e instanceof GitAPIException) {
+        throw new JGitRuntimeException(e.getMessage(), e);
+      } else {
+        throw new GeneralException(e.getMessage(), e);
+      }
+    }
   }
 
   @Override
@@ -776,6 +812,7 @@ public class GitClientV2Impl implements GitClientV2 {
       log.info("Successfully Checked out commitId: " + request.getNewCommitId());
     } catch (Exception ex) {
       log.error(gitClientHelper.getGitLogMessagePrefix(request.getRepoType()) + EXCEPTION_STRING, ex);
+      gitClientHelper.checkIfMissingCommitIdIssue(ex, request.getNewCommitId());
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out commit id " + request.getNewCommitId(), USER);
     }
@@ -940,6 +977,8 @@ public class GitClientV2Impl implements GitClientV2 {
                                          .append("]")
                                          .append(request.useBranch() ? "for Branch: " : "for CommitId: ")
                                          .append(request.useBranch() ? request.getBranch() : request.getCommitId())
+                                         .append(". Reason: ")
+                                         .append(ExceptionUtils.getMessage(e))
                                          .toString(),
             USER, e);
       }
@@ -1067,6 +1106,7 @@ public class GitClientV2Impl implements GitClientV2 {
       log.info("Successfully Checked out commitId: " + request.getCommitId());
     } catch (Exception ex) {
       log.error(GIT_YAML_LOG_PREFIX + EXCEPTION_STRING, ex);
+      gitClientHelper.checkIfMissingCommitIdIssue(ex, request.getCommitId());
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out commit id " + request.getCommitId(), USER);
     }
