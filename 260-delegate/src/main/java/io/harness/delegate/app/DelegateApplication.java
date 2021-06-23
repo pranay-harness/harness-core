@@ -163,7 +163,7 @@ public class DelegateApplication {
       }
     });
     modules.add(
-        new DelegateManagerClientModule(configuration.getManagerUrl(), configuration.getVerificationServiceUrl(),
+        new DelegateManagerClientModule(configuration.getDelegateSvcUrl(), configuration.getVerificationServiceUrl(),
             configuration.getCvNextGenUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
     modules.add(new LogStreamingModule(configuration.getLogStreamingServiceBaseUrl()));
     modules.add(new AbstractManagerGrpcClientModule() {

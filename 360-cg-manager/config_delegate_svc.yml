@@ -1,7 +1,7 @@
 xxxxxxxx
   applicationConnectors:
     - type: h2
-      port: 9090
+      port: 9080
       keyStorePath: keystore.jks
       keyStorePassword: password
       trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
@@ -13,7 +13,7 @@ xxxxxxxx
       maxRequestHeaderSize: 100KiB
   adminConnectors:
     - type: h2
-      port: 9091
+      port: 9081
       keyStorePath: keystore.jks
       keyStorePassword: password
       trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
@@ -240,15 +240,15 @@ timescaledb:
 
 grpcServerConfig:
   connectors:
-    - port: 9880
+    - port: 9890
       secure: true
       keyFilePath: key.pem
       certFilePath: cert.pem
-    - port: 9879
+    - port: 9889
 
 #Currently this should be pointing to the managers (71 - rest) grpc server from the grpcServerConfig property until delegate service becomes standalone service
 grpcDelegateServiceClientConfig:
-  target: localhost:9880
+  target: localhost:9890
   authority: localhost
 
 grpcClientConfig:
@@ -257,7 +257,7 @@ grpcClientConfig:
 
 #This will be used only by OnPrem delegates for grpc communication
 grpcOnpremDelegateClientConfig:
-  target: localhost:9880
+  target: localhost:9890
   authority: localhost
 
 mongo:
@@ -568,7 +568,7 @@ ngManagerServiceHttpClientConfig:
   baseUrl: http://localhost:7457/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
-  enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
+  enableHttpLogging: false
 
 cvngClientConfig:
   baseUrl: https://localhost:6060/cv/
@@ -616,3 +616,5 @@ auditClientConfig:
   readTimeOutSeconds: 15
 
 enableAudit: false
+
+delegateServiceConfig:
