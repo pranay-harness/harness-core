@@ -1,9 +1,7 @@
 import json
+import bq_schema
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
-from bq_schema import awsEc2InventorySchema, awsEc2InventoryCPUSchema, preAggreagtedTableSchema, \
-    unifiedTableTableSchema, clusterDataTableFields, awsEbsInventoryMetricsSchema, awsEbsInventorySchema, \
-    aws_cur_table_schema
 
 ACCOUNTID_LOG = ""
 TABLE_NAME_FORMAT = "%s.BillingReport_%s.%s"
@@ -44,49 +42,61 @@ def createTable(client, table_ref):
     print_("Creating %s table" % tableName)
     schema = []
     if tableName == "clusterData":
-        fieldset = clusterDataTableFields
+        fieldset = bq_schema.clusterDataTableFields
+        partition = bigquery.RangePartitioning(
+            field="starttime",
+            range_=bigquery.PartitionRange(start=1514745000000, end=1893436200000, interval=86400000)
+        )
+    elif tableName == "clusterDataAggregated":
+        fieldset = bq_schema.clusterDataAggregatedFields
+        partition = bigquery.RangePartitioning(
+            field="starttime",
+            range_=bigquery.PartitionRange(start=1514745000000, end=1893436200000, interval=86400000)
+        )
+    elif tableName == "clusterDataHourlyAggregated":
+        fieldset = bq_schema.clusterDataHourlyAggregatedFields
         partition = bigquery.RangePartitioning(
             field="starttime",
             range_=bigquery.PartitionRange(start=1514745000000, end=1893436200000, interval=86400000)
         )
     elif tableName == "preAggregated":
-        fieldset = preAggreagtedTableSchema
+        fieldset = bq_schema.preAggreagtedTableSchema
         partition = bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
             field="startTime"
         )
     elif tableName == "awsEc2InventoryMetric":
-        fieldset = awsEc2InventoryCPUSchema
+        fieldset = bq_schema.awsEc2InventoryCPUSchema
         partition = bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
             field="addedAt"
         )
     elif tableName.startswith("awsEc2Inventory"):
-        fieldset = awsEc2InventorySchema
+        fieldset = bq_schema.awsEc2InventorySchema
         partition = bigquery.RangePartitioning(
             range_=bigquery.PartitionRange(start=0, end=10000, interval=1),
             field="linkedAccountIdPartition"
         )
     elif tableName == "awsEbsInventoryMetrics":
-        fieldset = awsEbsInventoryMetricsSchema
+        fieldset = bq_schema.awsEbsInventoryMetricsSchema
         partition = bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
             field="addedAt"
         )
     elif tableName.startswith("awsEbsInventory"):
-        fieldset = awsEbsInventorySchema
+        fieldset = bq_schema.awsEbsInventorySchema
         partition = bigquery.RangePartitioning(
             range_=bigquery.PartitionRange(start=0, end=10000, interval=1),
             field="linkedAccountIdPartition"
         )
     elif tableName.startswith("awscur"):
-        fieldset = aws_cur_table_schema
+        fieldset = bq_schema.aws_cur_table_schema
         partition = bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
             field="usagestartdate"
         )
     else:
-        fieldset = unifiedTableTableSchema
+        fieldset = bq_schema.unifiedTableTableSchema
         partition = bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
             field="startTime"  # name of column to use for partitioning
