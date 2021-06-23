@@ -20,6 +20,7 @@ import static io.harness.rule.OwnerRule.DESCRIPTION;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.LUCAS;
 import static io.harness.rule.OwnerRule.MARKO;
+import static io.harness.rule.OwnerRule.MARKOM;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.PUNEET;
@@ -2589,106 +2590,87 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = MARKO)
+  @Owner(developers = MARKOM)
   @Category(UnitTests.class)
-  public void shouldGetAllDelegateSelectorsUpTheHierarchy() {
+  public void shouldGetAllDelegateSelectorsUpTheHierarchyAcct() {
     String accountId = generateUuid();
     String orgId = generateUuid();
     String projectId = generateUuid();
 
-    DelegateGroup acctGroup = DelegateGroup.builder().name("acctGrp").accountId(accountId).ng(true).build();
-    DelegateGroup orgGroup = DelegateGroup.builder()
-                                 .name("orgGrp")
-                                 .accountId(accountId)
-                                 .ng(true)
-                                 .owner(DelegateEntityOwnerHelper.buildOwner(orgId, null))
-                                 .build();
-    DelegateGroup projectGroup = DelegateGroup.builder()
-                                     .name("projectGrp")
-                                     .accountId(accountId)
-                                     .ng(true)
-                                     .owner(DelegateEntityOwnerHelper.buildOwner(orgId, projectId))
-                                     .build();
+    final DelegateGroup acctGroup = DelegateGroup.builder().name("acctGrp").accountId(accountId).ng(true).build();
+    final DelegateGroup orgGroup = DelegateGroup.builder()
+                                       .name("orgGrp")
+                                       .accountId(accountId)
+                                       .ng(true)
+                                       .owner(DelegateEntityOwnerHelper.buildOwner(orgId, null))
+                                       .build();
+    final DelegateGroup projectGroup = DelegateGroup.builder()
+                                           .name("projectGrp")
+                                           .accountId(accountId)
+                                           .ng(true)
+                                           .owner(DelegateEntityOwnerHelper.buildOwner(orgId, projectId))
+                                           .build();
 
     persistence.saveBatch(Arrays.asList(acctGroup, orgGroup, projectGroup));
 
-    DelegateProfile delegateProfile =
-        DelegateProfile.builder().uuid(generateUuid()).accountId(accountId).name(generateUuid()).build();
-    persistence.save(delegateProfile);
+    final Set<String> actual = delegateService.getAllDelegateSelectorsUpTheHierarchy(accountId, null, null);
+    assertThat(actual).containsExactlyInAnyOrder("acctgrp");
+  }
 
-    Delegate cgDelegate = Delegate.builder()
-                              .accountId(accountId)
-                              .ip("127.0.0.1")
-                              .hostName("c.g")
-                              .delegateName("testDelegateNameCg")
-                              .version(VERSION)
-                              .status(DelegateInstanceStatus.ENABLED)
-                              .lastHeartBeat(System.currentTimeMillis())
-                              .delegateProfileId(delegateProfile.getUuid())
-                              .tags(ImmutableList.of("cg"))
-                              .build();
-    persistence.save(cgDelegate);
+  @Test
+  @Owner(developers = MARKOM)
+  @Category(UnitTests.class)
+  public void shouldGetAllDelegateSelectorsUpTheHierarchyOrg() {
+    String accountId = generateUuid();
+    String orgId = generateUuid();
+    String projectId = generateUuid();
 
-    Delegate acctDelegate = Delegate.builder()
-                                .accountId(accountId)
-                                .ip("127.0.0.1")
-                                .hostName("a.c.c.t")
-                                .delegateName("acctGrp")
-                                .version(VERSION)
-                                .status(DelegateInstanceStatus.ENABLED)
-                                .lastHeartBeat(System.currentTimeMillis())
-                                .delegateProfileId(delegateProfile.getUuid())
-                                .tags(ImmutableList.of("acct"))
-                                .ng(true)
-                                .delegateGroupId(acctGroup.getUuid())
-                                .build();
-    persistence.save(acctDelegate);
+    final DelegateGroup acctGroup = DelegateGroup.builder().name("acctGrp").accountId(accountId).ng(true).build();
+    final DelegateGroup orgGroup = DelegateGroup.builder()
+                                       .name("orgGrp")
+                                       .accountId(accountId)
+                                       .ng(true)
+                                       .owner(DelegateEntityOwnerHelper.buildOwner(orgId, null))
+                                       .build();
+    final DelegateGroup projectGroup = DelegateGroup.builder()
+                                           .name("projectGrp")
+                                           .accountId(accountId)
+                                           .ng(true)
+                                           .owner(DelegateEntityOwnerHelper.buildOwner(orgId, projectId))
+                                           .build();
 
-    Delegate orgDelegate = Delegate.builder()
-                               .accountId(accountId)
-                               .ip("127.0.0.1")
-                               .hostName("o.r.g")
-                               .delegateName("orgGrp")
-                               .version(VERSION)
-                               .status(DelegateInstanceStatus.ENABLED)
-                               .lastHeartBeat(System.currentTimeMillis())
-                               .delegateProfileId(delegateProfile.getUuid())
-                               .tags(ImmutableList.of("org"))
-                               .ng(true)
-                               .delegateGroupId(orgGroup.getUuid())
-                               .owner(DelegateEntityOwner.builder().identifier(orgId).build())
-                               .build();
-    persistence.save(orgDelegate);
+    persistence.saveBatch(Arrays.asList(acctGroup, orgGroup, projectGroup));
 
-    Delegate projectDelegate = Delegate.builder()
-                                   .accountId(accountId)
-                                   .ip("127.0.0.1")
-                                   .hostName("p.r.o.j.e.c.t")
-                                   .delegateName("projectGrp")
-                                   .version(VERSION)
-                                   .status(DelegateInstanceStatus.ENABLED)
-                                   .lastHeartBeat(System.currentTimeMillis())
-                                   .delegateProfileId(delegateProfile.getUuid())
-                                   .tags(ImmutableList.of("project"))
-                                   .ng(true)
-                                   .delegateGroupId(projectGroup.getUuid())
-                                   .owner(DelegateEntityOwner.builder().identifier(orgId + "/" + projectId).build())
-                                   .build();
-    persistence.save(projectDelegate);
+    final Set<String> actual = delegateService.getAllDelegateSelectorsUpTheHierarchy(accountId, orgId, null);
+    assertThat(actual).containsExactlyInAnyOrder("acctgrp", "orggrp");
+  }
 
-    Set<String> tags = delegateService.getAllDelegateSelectorsUpTheHierarchy(accountId, null, null);
-    assertThat(tags.size()).isEqualTo(3);
-    assertThat(tags).containsExactlyInAnyOrder("acctgrp", "acct", delegateProfile.getName().toLowerCase());
+  @Test
+  @Owner(developers = MARKOM)
+  @Category(UnitTests.class)
+  public void shouldGetAllDelegateSelectorsUpTheHierarchyProj() {
+    final String accountId = generateUuid();
+    final String orgId = generateUuid();
+    final String projectId = generateUuid();
 
-    tags = delegateService.getAllDelegateSelectorsUpTheHierarchy(accountId, orgId, null);
-    assertThat(tags.size()).isEqualTo(5);
-    assertThat(tags).containsExactlyInAnyOrder(
-        "acctgrp", "orggrp", "acct", "org", delegateProfile.getName().toLowerCase());
+    final DelegateGroup acctGroup = DelegateGroup.builder().name("acctGrp").accountId(accountId).ng(true).build();
+    final DelegateGroup orgGroup = DelegateGroup.builder()
+                                       .name("orgGrp")
+                                       .accountId(accountId)
+                                       .ng(true)
+                                       .owner(DelegateEntityOwnerHelper.buildOwner(orgId, null))
+                                       .build();
+    final DelegateGroup projectGroup = DelegateGroup.builder()
+                                           .name("projectGrp")
+                                           .accountId(accountId)
+                                           .ng(true)
+                                           .owner(DelegateEntityOwnerHelper.buildOwner(orgId, projectId))
+                                           .build();
 
-    tags = delegateService.getAllDelegateSelectorsUpTheHierarchy(accountId, orgId, projectId);
-    assertThat(tags.size()).isEqualTo(7);
-    assertThat(tags).containsExactlyInAnyOrder(
-        "acctgrp", "orggrp", "projectgrp", "acct", "org", "project", delegateProfile.getName().toLowerCase());
+    persistence.saveBatch(Arrays.asList(acctGroup, orgGroup, projectGroup));
+
+    final Set<String> actual = delegateService.getAllDelegateSelectorsUpTheHierarchy(accountId, orgId, projectId);
+    assertThat(actual).containsExactlyInAnyOrder("acctgrp", "orggrp", "projectgrp");
   }
 
   @Test
@@ -2726,7 +2708,6 @@ public class DelegateServiceTest extends WingsBaseTest {
     persistence.save(delegate);
 
     Set<String> tags = delegateService.getAllDelegateSelectors(ACCOUNT_ID);
-    assertThat(tags.size()).isEqualTo(7);
     assertThat(tags).containsExactlyInAnyOrder("abc", "def", "testdelegatename1", "testdelegatename2", "a.b.c", "d.e.f",
         delegateProfile.getName().toLowerCase());
   }
