@@ -8,7 +8,6 @@ import io.harness.annotations.dev.OwnedBy;
 public enum PrincipalType {
   USER,
   USER_GROUP,
-  API_KEY,
   SERVICE,
   SERVICE_ACCOUNT;
 
@@ -16,8 +15,6 @@ public enum PrincipalType {
     switch (principalType) {
       case SERVICE:
         return SERVICE;
-      case API_KEY:
-        return API_KEY;
       case USER:
         return USER;
       case SERVICE_ACCOUNT:

@@ -63,8 +63,8 @@ public class ServiceAccountDBO implements PersistentRegularIterable, AccessContr
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .name("uniqueServiceAccountPrimaryKey")
-                 .field(UserDBOKeys.scopeIdentifier)
-                 .field(UserDBOKeys.identifier)
+                 .field(ServiceAccountDBOKeys.scopeIdentifier)
+                 .field(ServiceAccountDBOKeys.identifier)
                  .unique(true)
                  .build())
         .build();
