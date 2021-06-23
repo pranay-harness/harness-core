@@ -35,6 +35,8 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.utils.Utils.normalizeIdentifier;
+import static software.wings.utils.Utils.uuidToIdentifier;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static java.lang.String.format;
@@ -136,6 +138,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.Misc;
 import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
+import io.harness.ng.core.utils.NGUtils;
 import io.harness.observer.Subject;
 import io.harness.outbox.api.OutboxService;
 import io.harness.persistence.HIterator;
@@ -217,6 +220,7 @@ import com.mongodb.MongoGridFSException;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
+import io.dropwizard.jersey.validation.JerseyViolationException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -245,6 +249,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
+import javax.validation.ConstraintViolation;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.core.MediaType;
 import lombok.Getter;
@@ -259,6 +264,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -2760,6 +2766,16 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateGroup upsertDelegateGroup(String name, String accountId, DelegateSetupDetails delegateSetupDetails) {
     boolean isNg = delegateSetupDetails != null;
+    String delegateGroupIdentifier = getDelegateGroupIdentifier(name, delegateSetupDetails);
+
+    if (isNg) {
+      try {
+        delegateSetupDetails.setIdentifier(delegateGroupIdentifier);
+        NGUtils.validate(delegateSetupDetails);
+      } catch (JerseyViolationException exception) {
+        throw new InvalidRequestException(getMessage(exception));
+      }
+    }
 
     String description = delegateSetupDetails != null ? delegateSetupDetails.getDescription() : null;
     String delegateConfigurationId =
@@ -2787,11 +2803,27 @@ public class DelegateServiceImpl implements DelegateService {
                                      .filter(DelegateGroupKeys.ng, isNg)
                                      .filter(DelegateGroupKeys.owner, owner)
                                      .filter(DelegateGroupKeys.name, name);
-    UpdateOperations<DelegateGroup> updateOperations = this.persistence.createUpdateOperations(DelegateGroup.class)
-                                                           .setOnInsert(DelegateGroupKeys.uuid, generateUuid())
-                                                           .set(DelegateGroupKeys.name, name)
-                                                           .set(DelegateGroupKeys.accountId, accountId)
-                                                           .set(DelegateGroupKeys.ng, isNg);
+
+    // this statement is here because of identifier migration where we used normalized uuid for existing groups
+    DelegateGroup existingEntity = query.get();
+    if (existingEntity != null && uuidToIdentifier(existingEntity.getUuid()).equals(existingEntity.getIdentifier())) {
+      delegateGroupIdentifier = existingEntity.getIdentifier();
+    }
+
+    if (existingEntity != null && existingEntity.getIdentifier() == null) {
+      log.warn("Existing delegate group {} has null identifier. New entry will be created with identifier {}",
+          existingEntity, delegateGroupIdentifier);
+    }
+
+    query.filter(DelegateGroupKeys.identifier, delegateGroupIdentifier);
+
+    UpdateOperations<DelegateGroup> updateOperations =
+        this.persistence.createUpdateOperations(DelegateGroup.class)
+            .setOnInsert(DelegateGroupKeys.uuid, generateUuid())
+            .setOnInsert(DelegateGroupKeys.identifier, delegateGroupIdentifier)
+            .set(DelegateGroupKeys.name, name)
+            .set(DelegateGroupKeys.accountId, accountId)
+            .set(DelegateGroupKeys.ng, isNg);
 
     if (k8sConfigDetails != null) {
       updateOperations.set(DelegateGroupKeys.delegateType, KUBERNETES);
@@ -2814,6 +2846,30 @@ public class DelegateServiceImpl implements DelegateService {
             .delegateSetupDetails(delegateSetupDetails)
             .build());
     return delegateGroup;
+  }
+
+  @NotNull
+  private String getMessage(JerseyViolationException exception) {
+    return "Fields "
+        + exception.getConstraintViolations()
+              .stream()
+              .map(c -> ((PathImpl) c.getPropertyPath()).getLeafNode().getName())
+              .reduce("", (i, j) -> i + " <" + j + "> ")
+        + " did not pass validation checks: "
+        + exception.getConstraintViolations()
+              .stream()
+              .map(ConstraintViolation::getMessage)
+              .reduce("", (i, j) -> i + " <" + j + "> ");
+  }
+
+  private String getDelegateGroupIdentifier(String name, DelegateSetupDetails delegateSetupDetails) {
+    if (delegateSetupDetails != null && isNotBlank(delegateSetupDetails.getIdentifier())) {
+      return delegateSetupDetails.getIdentifier();
+    } else if (delegateSetupDetails != null && isBlank(delegateSetupDetails.getIdentifier())) {
+      return normalizeIdentifier(delegateSetupDetails.getName());
+    } else {
+      return normalizeIdentifier(name);
+    }
   }
 
   public void registerHeartbeat(

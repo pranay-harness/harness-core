@@ -9,6 +9,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery;
 
 import software.wings.service.intfc.DelegateProfileService;
+import software.wings.utils.Utils;
 
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -44,16 +45,12 @@ public class DelegateProfileIdentifierMigration implements Migration {
               .filter(DelegateProfile.DelegateProfileKeys.accountId, profile.getAccountId());
       UpdateOperations<DelegateProfile> updateOperations =
           persistence.createUpdateOperations(DelegateProfile.class)
-              .set(DelegateProfile.DelegateProfileKeys.identifier, uuidToIdentifier(profile.getUuid()));
+              .set(DelegateProfile.DelegateProfileKeys.identifier, Utils.uuidToIdentifier(profile.getUuid()));
 
       persistence.findAndModify(profileQuery, updateOperations, new FindAndModifyOptions());
       log.info("Delegate profile updated successfully.");
     } catch (Exception ex) {
       log.error("Unexpected error occurred while migrating delegate profile.", ex);
     }
-  }
-
-  private String uuidToIdentifier(String uuid) {
-    return "_" + uuid.replaceAll("-", "_");
   }
 }
