@@ -131,7 +131,6 @@ import software.wings.api.pcf.PcfPluginExecutionSummary;
 import software.wings.api.pcf.PcfPluginStateExecutionData;
 import software.wings.api.pcf.PcfRouteSwapExecutionSummary;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
-import software.wings.api.pcf.PcfServiceData;
 import software.wings.api.pcf.PcfSetupExecutionSummary;
 import software.wings.api.pcf.PcfSetupStateExecutionData;
 import software.wings.api.pcf.SetupSweepingOutputPcf;
@@ -216,7 +215,6 @@ import software.wings.beans.Permission;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.PipelineStageExecutionAdvisor;
 import software.wings.beans.PrometheusConfig;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.SSHExecutionCredential;
@@ -507,23 +505,7 @@ import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.SmtpConfig;
-import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters;
-import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
-import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
-import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
-import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
-import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
-import software.wings.helpers.ext.pcf.response.PcfCommandResponse;
-import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
-import software.wings.helpers.ext.pcf.response.PcfInfraMappingDataResponse;
-import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
-import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
+import software.wings.helpers.ext.pcf.request.CfCommandSetupRequest;
 import software.wings.helpers.ext.trigger.request.TriggerDeploymentNeededRequest;
 import software.wings.helpers.ext.trigger.request.TriggerRequest;
 import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededResponse;
@@ -908,7 +890,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(PcfDeployStateExecutionData.class, 5292);
     kryo.register(PcfRouteSwapExecutionSummary.class, 5300);
     kryo.register(PcfRouteUpdateStateExecutionData.class, 5299);
-    kryo.register(PcfServiceData.class, 5291);
+
     kryo.register(PcfSetupExecutionSummary.class, 5288);
     kryo.register(PcfInstanceElement.class, 5293);
     kryo.register(PhaseElement.class, 5078);
@@ -1066,7 +1048,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(Permission.class, 5310);
     kryo.register(PhaseStepType.class, 5026);
     kryo.register(PrometheusConfig.class, 5314);
-    kryo.register(ResizeStrategy.class, 5155);
     kryo.register(Role.class, 5194);
     kryo.register(RoleType.class, 5195);
     kryo.register(AccountPermissions.class, 5350);
@@ -1169,22 +1150,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(LdapResponse.class, 5504);
     kryo.register(EmailData.class, 5303);
     kryo.register(SmtpConfig.class, 5304);
-    kryo.register(PcfCommandDeployRequest.class, 5280);
-    kryo.register(PcfCommandRequest.PcfCommandType.class, 5282);
-    kryo.register(PcfCommandRequest.class, 5297);
-    kryo.register(PcfCommandRollbackRequest.class, 5281);
-    kryo.register(PcfCommandRouteUpdateRequest.class, 5298);
-    kryo.register(PcfCommandSetupRequest.class, 5279);
-    kryo.register(PcfInfraMappingDataRequest.class, 5295);
-    kryo.register(PcfInstanceSyncRequest.class, 5301);
-    kryo.register(PcfRouteUpdateRequestConfigData.class, 5508);
-    kryo.register(PcfAppSetupTimeDetails.class, 5509);
-    kryo.register(PcfCommandExecutionResponse.class, 5286);
-    kryo.register(PcfCommandResponse.class, 5283);
-    kryo.register(PcfDeployCommandResponse.class, 5284);
-    kryo.register(PcfInfraMappingDataResponse.class, 5294);
-    kryo.register(PcfInstanceSyncResponse.class, 5302);
-    kryo.register(PcfSetupCommandResponse.class, 5285);
+    kryo.register(CfCommandSetupRequest.class, 5279);
     kryo.register(TriggerDeploymentNeededRequest.class, 5553);
     kryo.register(TriggerRequest.class, 5557);
     kryo.register(TriggerDeploymentNeededResponse.class, 5554);
@@ -1388,7 +1354,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(NotificationChannelType.class, 7115);
     kryo.register(AwsLambdaFunctionRequest.class, 7116);
     kryo.register(AwsLambdaFunctionResponse.class, 7117);
-    kryo.register(PcfInfraMappingDataRequest.ActionType.class, 7118);
+
     kryo.register(SlackNotificationSetting.class, 7119);
     kryo.register(AwsAmiSetupExecutionData.class, 7120);
     kryo.register(EcsServiceSetupRequest.class, 7121);
@@ -1516,7 +1482,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sSwapServiceElement.class, 7260);
     kryo.register(SlackMessage.class, 7261);
     kryo.register(SlackMessageSenderImpl.class, 7262);
-    kryo.register(PcfRunPluginCommandRequest.class, 7263);
+
     kryo.register(PcfPluginExecutionSummary.class, 7264);
     kryo.register(PcfPluginStateExecutionData.class, 7265);
 
@@ -1581,7 +1547,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(BasicValidationInfo.class, 7325);
     kryo.register(SSHHostValidationCapability.class, 7326);
     kryo.register(WinrmHostValidationCapability.class, 7327);
-    kryo.register(PcfCommandTaskParameters.class, 7328);
+
     kryo.register(InstanceInfoVariables.class, 7331);
     kryo.register(AppDynamicsDataCollectionInfoV2.class, 7332);
     kryo.register(ScalyrConfig.class, 7334);

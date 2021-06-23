@@ -64,6 +64,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
@@ -106,7 +107,6 @@ import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PcfInfraStructure;
@@ -494,8 +494,8 @@ public class PcfPluginStateTest extends WingsBaseTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_handleAsyncResponseForPluginTask() {
-    final PcfCommandExecutionResponse commandExecutionResponse =
-        PcfCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+    final CfCommandExecutionResponse commandExecutionResponse =
+        CfCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
 
     Map<String, ResponseData> response = new HashMap<>();
     response.put("response", commandExecutionResponse);

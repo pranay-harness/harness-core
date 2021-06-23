@@ -20,6 +20,13 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType;
+import io.harness.delegate.task.pcf.request.CfInfraMappingDataRequest;
+import io.harness.delegate.task.pcf.request.CfInfraMappingDataRequest.ActionType;
+import io.harness.delegate.task.pcf.request.CfInstanceSyncRequest;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
+import io.harness.delegate.task.pcf.response.CfInfraMappingDataResponse;
+import io.harness.delegate.task.pcf.response.CfInstanceSyncResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -32,15 +39,9 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
-import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
-import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest.ActionType;
-import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
-import software.wings.helpers.ext.pcf.response.PcfInfraMappingDataResponse;
-import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.mappers.artifact.CfConfigToInternalMapper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -64,7 +65,7 @@ public class PcfHelperService {
 
   public void validate(PcfConfig pcfConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     DelegateResponseData notifyResponseData = null;
-    PcfCommandExecutionResponse pcfCommandExecutionResponse;
+    CfCommandExecutionResponse cfCommandExecutionResponse;
 
     try {
       notifyResponseData = delegateService.executeTask(
@@ -75,8 +76,8 @@ public class PcfHelperService {
                   TaskData.builder()
                       .async(false)
                       .taskType(TaskType.PCF_COMMAND_TASK.name())
-                      .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
-                                                    .pcfConfig(pcfConfig)
+                      .parameters(new Object[] {CfInfraMappingDataRequest.builder()
+                                                    .pcfConfig(CfConfigToInternalMapper.toCfInternalConfig(pcfConfig))
                                                     .pcfCommandType(PcfCommandType.VALIDATE)
                                                     .limitPcfThreads(featureFlagService.isEnabled(
                                                         LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
@@ -89,10 +90,10 @@ public class PcfHelperService {
                       .build())
               .build());
     } catch (InterruptedException e) {
-      pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
-                                        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                                        .errorMessage(ExceptionUtils.getMessage(e))
-                                        .build();
+      cfCommandExecutionResponse = CfCommandExecutionResponse.builder()
+                                       .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                                       .errorMessage(ExceptionUtils.getMessage(e))
+                                       .build();
     }
 
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
@@ -100,36 +101,36 @@ public class PcfHelperService {
     } else if (notifyResponseData instanceof RemoteMethodReturnValueData) {
       throw new InvalidRequestException(
           getMessage(((RemoteMethodReturnValueData) notifyResponseData).getException()), USER);
-    } else if (!(notifyResponseData instanceof PcfCommandExecutionResponse)) {
+    } else if (!(notifyResponseData instanceof CfCommandExecutionResponse)) {
       throw new InvalidRequestException(
           format("Unknown response from delegate: [%s]", notifyResponseData.getClass().getSimpleName()), USER);
     }
-    pcfCommandExecutionResponse = (PcfCommandExecutionResponse) notifyResponseData;
-    if (CommandExecutionStatus.FAILURE == pcfCommandExecutionResponse.getCommandExecutionStatus()) {
-      log.warn(pcfCommandExecutionResponse.getErrorMessage());
-      throw new InvalidRequestException(pcfCommandExecutionResponse.getErrorMessage());
+    cfCommandExecutionResponse = (CfCommandExecutionResponse) notifyResponseData;
+    if (CommandExecutionStatus.FAILURE == cfCommandExecutionResponse.getCommandExecutionStatus()) {
+      log.warn(cfCommandExecutionResponse.getErrorMessage());
+      throw new InvalidRequestException(cfCommandExecutionResponse.getErrorMessage());
     }
   }
 
   public List<PcfInstanceInfo> getApplicationDetails(String pcfApplicationName, String organization, String space,
-      PcfConfig pcfConfig, PcfCommandExecutionResponse pcfCommandExecutionPerpTaskResponse)
+      PcfConfig pcfConfig, CfCommandExecutionResponse pcfCommandExecutionPerpTaskResponse)
       throws PcfAppNotFoundException {
-    PcfCommandExecutionResponse pcfCommandExecutionResponse = pcfCommandExecutionPerpTaskResponse;
+    CfCommandExecutionResponse cfCommandExecutionResponse = pcfCommandExecutionPerpTaskResponse;
 
     try {
       List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
 
-      if (pcfCommandExecutionResponse == null) {
-        pcfCommandExecutionResponse =
+      if (cfCommandExecutionResponse == null) {
+        cfCommandExecutionResponse =
             executeTaskOnDelegate(pcfApplicationName, organization, space, pcfConfig, encryptionDetails);
       }
 
-      PcfInstanceSyncResponse pcfInstanceSyncResponse =
-          validatePcfInstanceSyncResponse(pcfApplicationName, organization, space, pcfCommandExecutionResponse);
+      CfInstanceSyncResponse cfInstanceSyncResponse =
+          validatePcfInstanceSyncResponse(pcfApplicationName, organization, space, cfCommandExecutionResponse);
 
       // creates the response based on the count of instances it has got.
-      if (isNotEmpty(pcfInstanceSyncResponse.getInstanceIndices())) {
-        return getPcfInstanceInfoList(pcfInstanceSyncResponse);
+      if (isNotEmpty(cfInstanceSyncResponse.getInstanceIndices())) {
+        return getPcfInstanceInfoList(cfInstanceSyncResponse);
       }
 
     } catch (InterruptedException e) {
@@ -139,18 +140,18 @@ public class PcfHelperService {
     return Collections.emptyList();
   }
 
-  private PcfCommandExecutionResponse executeTaskOnDelegate(String pcfApplicationName, String organization,
-      String space, PcfConfig pcfConfig, List<EncryptedDataDetail> encryptionDetails) throws InterruptedException {
-    PcfCommandExecutionResponse pcfCommandExecutionResponse;
-    pcfCommandExecutionResponse = delegateService.executeTask(
+  private CfCommandExecutionResponse executeTaskOnDelegate(String pcfApplicationName, String organization, String space,
+      PcfConfig pcfConfig, List<EncryptedDataDetail> encryptionDetails) throws InterruptedException {
+    CfCommandExecutionResponse cfCommandExecutionResponse;
+    cfCommandExecutionResponse = delegateService.executeTask(
         DelegateTask.builder()
             .accountId(pcfConfig.getAccountId())
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
             .data(TaskData.builder()
                       .async(false)
                       .taskType(TaskType.PCF_COMMAND_TASK.name())
-                      .parameters(new Object[] {PcfInstanceSyncRequest.builder()
-                                                    .pcfConfig(pcfConfig)
+                      .parameters(new Object[] {CfInstanceSyncRequest.builder()
+                                                    .pcfConfig(CfConfigToInternalMapper.toCfInternalConfig(pcfConfig))
                                                     .pcfApplicationName(pcfApplicationName)
                                                     .organization(organization)
                                                     .space(space)
@@ -165,56 +166,56 @@ public class PcfHelperService {
                       .timeout(TimeUnit.MINUTES.toMillis(5))
                       .build())
             .build());
-    return pcfCommandExecutionResponse;
+    return cfCommandExecutionResponse;
   }
 
-  public PcfInstanceSyncResponse validatePcfInstanceSyncResponse(String pcfApplicationName, String organization,
-      String space, PcfCommandExecutionResponse pcfCommandExecutionResponse) throws PcfAppNotFoundException {
-    PcfInstanceSyncResponse pcfInstanceSyncResponse =
-        (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
+  public CfInstanceSyncResponse validatePcfInstanceSyncResponse(String pcfApplicationName, String organization,
+      String space, CfCommandExecutionResponse cfCommandExecutionResponse) throws PcfAppNotFoundException {
+    CfInstanceSyncResponse cfInstanceSyncResponse =
+        (CfInstanceSyncResponse) cfCommandExecutionResponse.getPcfCommandResponse();
 
     // checks the status code and error messages.
-    if (CommandExecutionStatus.FAILURE == pcfCommandExecutionResponse.getCommandExecutionStatus()) {
+    if (CommandExecutionStatus.FAILURE == cfCommandExecutionResponse.getCommandExecutionStatus()) {
       log.warn("Failed to fetch PCF application details for Instance Sync, check delegate logs"
-          + pcfCommandExecutionResponse.getPcfCommandResponse().getOutput());
-      if (pcfCommandExecutionResponse.getErrorMessage().contains(pcfApplicationName + " does not exist")
-          || pcfCommandExecutionResponse.getErrorMessage().contains(organization + " does not exist")
-          || pcfCommandExecutionResponse.getErrorMessage().contains(space + " does not exist")) {
-        throw new PcfAppNotFoundException(pcfCommandExecutionResponse.getErrorMessage());
+          + cfCommandExecutionResponse.getPcfCommandResponse().getOutput());
+      if (cfCommandExecutionResponse.getErrorMessage().contains(pcfApplicationName + " does not exist")
+          || cfCommandExecutionResponse.getErrorMessage().contains(organization + " does not exist")
+          || cfCommandExecutionResponse.getErrorMessage().contains(space + " does not exist")) {
+        throw new PcfAppNotFoundException(cfCommandExecutionResponse.getErrorMessage());
       } else {
         String errMsg = new StringBuilder(128)
                             .append("Failed to fetch app details for PCF APP: ")
                             .append(pcfApplicationName)
                             .append(" with Error: ")
-                            .append(pcfInstanceSyncResponse.getOutput())
+                            .append(cfInstanceSyncResponse.getOutput())
                             .toString();
         throw new WingsException(ErrorCode.GENERAL_ERROR, errMsg).addParam("message", errMsg);
       }
     }
-    return pcfInstanceSyncResponse;
+    return cfInstanceSyncResponse;
   }
 
   @NotNull
-  private List<PcfInstanceInfo> getPcfInstanceInfoList(PcfInstanceSyncResponse pcfInstanceSyncResponse) {
-    return pcfInstanceSyncResponse.getInstanceIndices()
+  private List<PcfInstanceInfo> getPcfInstanceInfoList(CfInstanceSyncResponse cfInstanceSyncResponse) {
+    return cfInstanceSyncResponse.getInstanceIndices()
         .stream()
         .map(index
             -> PcfInstanceInfo.builder()
                    .instanceIndex(index)
-                   .pcfApplicationName(pcfInstanceSyncResponse.getName())
-                   .pcfApplicationGuid(pcfInstanceSyncResponse.getGuid())
-                   .organization(pcfInstanceSyncResponse.getOrganization())
-                   .space(pcfInstanceSyncResponse.getSpace())
-                   .id(pcfInstanceSyncResponse.getGuid() + ":" + index)
+                   .pcfApplicationName(cfInstanceSyncResponse.getName())
+                   .pcfApplicationGuid(cfInstanceSyncResponse.getGuid())
+                   .organization(cfInstanceSyncResponse.getOrganization())
+                   .space(cfInstanceSyncResponse.getSpace())
+                   .id(cfInstanceSyncResponse.getGuid() + ":" + index)
                    .build())
         .collect(Collectors.toList());
   }
 
   public List<String> listOrganizations(PcfConfig pcfConfig) {
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
-    PcfCommandExecutionResponse pcfCommandExecutionResponse;
+    CfCommandExecutionResponse cfCommandExecutionResponse;
     try {
-      pcfCommandExecutionResponse = delegateService.executeTask(
+      cfCommandExecutionResponse = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(pcfConfig.getAccountId())
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
@@ -222,8 +223,8 @@ public class PcfHelperService {
                   TaskData.builder()
                       .async(false)
                       .taskType(TaskType.PCF_COMMAND_TASK.name())
-                      .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
-                                                    .pcfConfig(pcfConfig)
+                      .parameters(new Object[] {CfInfraMappingDataRequest.builder()
+                                                    .pcfConfig(CfConfigToInternalMapper.toCfInternalConfig(pcfConfig))
                                                     .limitPcfThreads(featureFlagService.isEnabled(
                                                         LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
                                                     .ignorePcfConnectionContextCache(featureFlagService.isEnabled(
@@ -237,26 +238,26 @@ public class PcfHelperService {
                       .build())
               .build());
     } catch (InterruptedException e) {
-      pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
-                                        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                                        .errorMessage(ExceptionUtils.getMessage(e))
-                                        .build();
+      cfCommandExecutionResponse = CfCommandExecutionResponse.builder()
+                                       .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                                       .errorMessage(ExceptionUtils.getMessage(e))
+                                       .build();
     }
 
-    if (CommandExecutionStatus.SUCCESS == pcfCommandExecutionResponse.getCommandExecutionStatus()) {
-      return ((PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse()).getOrganizations();
+    if (CommandExecutionStatus.SUCCESS == cfCommandExecutionResponse.getCommandExecutionStatus()) {
+      return ((CfInfraMappingDataResponse) cfCommandExecutionResponse.getPcfCommandResponse()).getOrganizations();
     } else {
-      log.warn(pcfCommandExecutionResponse.getErrorMessage());
-      throw new InvalidRequestException(pcfCommandExecutionResponse.getErrorMessage());
+      log.warn(cfCommandExecutionResponse.getErrorMessage());
+      throw new InvalidRequestException(cfCommandExecutionResponse.getErrorMessage());
     }
   }
 
   public String createRoute(PcfConfig pcfConfig, String organization, String space, String host, String domain,
       String path, boolean tcpRoute, boolean useRandomPort, Integer port) {
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
-    PcfCommandExecutionResponse pcfCommandExecutionResponse;
+    CfCommandExecutionResponse cfCommandExecutionResponse;
     try {
-      pcfCommandExecutionResponse = delegateService.executeTask(
+      cfCommandExecutionResponse = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(pcfConfig.getAccountId())
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
@@ -264,8 +265,8 @@ public class PcfHelperService {
                   TaskData.builder()
                       .async(false)
                       .taskType(TaskType.PCF_COMMAND_TASK.name())
-                      .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
-                                                    .pcfConfig(pcfConfig)
+                      .parameters(new Object[] {CfInfraMappingDataRequest.builder()
+                                                    .pcfConfig(CfConfigToInternalMapper.toCfInternalConfig(pcfConfig))
                                                     .pcfCommandType(PcfCommandType.CREATE_ROUTE)
                                                     .organization(organization)
                                                     .space(space)
@@ -287,25 +288,25 @@ public class PcfHelperService {
                       .build())
               .build());
     } catch (InterruptedException e) {
-      pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
-                                        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                                        .errorMessage(ExceptionUtils.getMessage(e))
-                                        .build();
+      cfCommandExecutionResponse = CfCommandExecutionResponse.builder()
+                                       .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                                       .errorMessage(ExceptionUtils.getMessage(e))
+                                       .build();
     }
 
-    if (CommandExecutionStatus.SUCCESS == pcfCommandExecutionResponse.getCommandExecutionStatus()) {
-      return ((PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse()).getRouteMaps().get(0);
+    if (CommandExecutionStatus.SUCCESS == cfCommandExecutionResponse.getCommandExecutionStatus()) {
+      return ((CfInfraMappingDataResponse) cfCommandExecutionResponse.getPcfCommandResponse()).getRouteMaps().get(0);
     } else {
-      log.warn(pcfCommandExecutionResponse.getErrorMessage());
-      throw new InvalidRequestException(pcfCommandExecutionResponse.getErrorMessage());
+      log.warn(cfCommandExecutionResponse.getErrorMessage());
+      throw new InvalidRequestException(cfCommandExecutionResponse.getErrorMessage());
     }
   }
 
   public List<String> listSpaces(PcfConfig pcfConfig, String organization) {
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
-    PcfCommandExecutionResponse pcfCommandExecutionResponse;
+    CfCommandExecutionResponse cfCommandExecutionResponse;
     try {
-      pcfCommandExecutionResponse = delegateService.executeTask(
+      cfCommandExecutionResponse = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(pcfConfig.getAccountId())
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
@@ -313,8 +314,8 @@ public class PcfHelperService {
                   TaskData.builder()
                       .async(false)
                       .taskType(TaskType.PCF_COMMAND_TASK.name())
-                      .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
-                                                    .pcfConfig(pcfConfig)
+                      .parameters(new Object[] {CfInfraMappingDataRequest.builder()
+                                                    .pcfConfig(CfConfigToInternalMapper.toCfInternalConfig(pcfConfig))
                                                     .organization(organization)
                                                     .limitPcfThreads(featureFlagService.isEnabled(
                                                         LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
@@ -329,25 +330,25 @@ public class PcfHelperService {
                       .build())
               .build());
     } catch (InterruptedException e) {
-      pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
-                                        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                                        .errorMessage(ExceptionUtils.getMessage(e))
-                                        .build();
+      cfCommandExecutionResponse = CfCommandExecutionResponse.builder()
+                                       .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                                       .errorMessage(ExceptionUtils.getMessage(e))
+                                       .build();
     }
 
-    if (CommandExecutionStatus.SUCCESS == pcfCommandExecutionResponse.getCommandExecutionStatus()) {
-      return ((PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse()).getSpaces();
+    if (CommandExecutionStatus.SUCCESS == cfCommandExecutionResponse.getCommandExecutionStatus()) {
+      return ((CfInfraMappingDataResponse) cfCommandExecutionResponse.getPcfCommandResponse()).getSpaces();
     } else {
-      log.warn(pcfCommandExecutionResponse.getErrorMessage());
-      throw new InvalidRequestException(pcfCommandExecutionResponse.getErrorMessage());
+      log.warn(cfCommandExecutionResponse.getErrorMessage());
+      throw new InvalidRequestException(cfCommandExecutionResponse.getErrorMessage());
     }
   }
 
   public List<String> listRoutes(PcfConfig pcfConfig, String organization, String space) {
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
-    PcfCommandExecutionResponse pcfCommandExecutionResponse;
+    CfCommandExecutionResponse cfCommandExecutionResponse;
     try {
-      pcfCommandExecutionResponse = delegateService.executeTask(
+      cfCommandExecutionResponse = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(pcfConfig.getAccountId())
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
@@ -355,8 +356,8 @@ public class PcfHelperService {
                   TaskData.builder()
                       .async(false)
                       .taskType(TaskType.PCF_COMMAND_TASK.name())
-                      .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
-                                                    .pcfConfig(pcfConfig)
+                      .parameters(new Object[] {CfInfraMappingDataRequest.builder()
+                                                    .pcfConfig(CfConfigToInternalMapper.toCfInternalConfig(pcfConfig))
                                                     .organization(organization)
                                                     .space(space)
                                                     .limitPcfThreads(featureFlagService.isEnabled(
@@ -373,25 +374,25 @@ public class PcfHelperService {
                       .build())
               .build());
     } catch (InterruptedException e) {
-      pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
-                                        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                                        .errorMessage(ExceptionUtils.getMessage(e))
-                                        .build();
+      cfCommandExecutionResponse = CfCommandExecutionResponse.builder()
+                                       .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                                       .errorMessage(ExceptionUtils.getMessage(e))
+                                       .build();
     }
 
-    if (CommandExecutionStatus.SUCCESS == pcfCommandExecutionResponse.getCommandExecutionStatus()) {
-      return ((PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse()).getRouteMaps();
+    if (CommandExecutionStatus.SUCCESS == cfCommandExecutionResponse.getCommandExecutionStatus()) {
+      return ((CfInfraMappingDataResponse) cfCommandExecutionResponse.getPcfCommandResponse()).getRouteMaps();
     } else {
-      log.warn(pcfCommandExecutionResponse.getErrorMessage());
-      throw new InvalidRequestException(pcfCommandExecutionResponse.getErrorMessage());
+      log.warn(cfCommandExecutionResponse.getErrorMessage());
+      throw new InvalidRequestException(cfCommandExecutionResponse.getErrorMessage());
     }
   }
 
   public Integer getRunningInstanceCount(PcfConfig pcfConfig, String organization, String space, String appPrefix) {
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(pcfConfig, null, null);
-    PcfCommandExecutionResponse pcfCommandExecutionResponse;
+    CfCommandExecutionResponse cfCommandExecutionResponse;
     try {
-      pcfCommandExecutionResponse = delegateService.executeTask(
+      cfCommandExecutionResponse = delegateService.executeTask(
           DelegateTask.builder()
               .accountId(pcfConfig.getAccountId())
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
@@ -399,8 +400,8 @@ public class PcfHelperService {
                   TaskData.builder()
                       .async(false)
                       .taskType(TaskType.PCF_COMMAND_TASK.name())
-                      .parameters(new Object[] {PcfInfraMappingDataRequest.builder()
-                                                    .pcfConfig(pcfConfig)
+                      .parameters(new Object[] {CfInfraMappingDataRequest.builder()
+                                                    .pcfConfig(CfConfigToInternalMapper.toCfInternalConfig(pcfConfig))
                                                     .organization(organization)
                                                     .space(space)
                                                     .actionType(ActionType.RUNNING_COUNT)
@@ -417,26 +418,26 @@ public class PcfHelperService {
                       .build())
               .build());
     } catch (InterruptedException e) {
-      pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder()
-                                        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-                                        .errorMessage(ExceptionUtils.getMessage(e))
-                                        .build();
+      cfCommandExecutionResponse = CfCommandExecutionResponse.builder()
+                                       .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                                       .errorMessage(ExceptionUtils.getMessage(e))
+                                       .build();
     }
 
-    if (CommandExecutionStatus.SUCCESS == pcfCommandExecutionResponse.getCommandExecutionStatus()) {
-      PcfInfraMappingDataResponse pcfInfraMappingDataResponse =
-          (PcfInfraMappingDataResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
+    if (CommandExecutionStatus.SUCCESS == cfCommandExecutionResponse.getCommandExecutionStatus()) {
+      CfInfraMappingDataResponse pcfInfraMappingDataResponse =
+          (CfInfraMappingDataResponse) cfCommandExecutionResponse.getPcfCommandResponse();
       return pcfInfraMappingDataResponse.getRunningInstanceCount();
     } else {
-      log.warn(pcfCommandExecutionResponse.getErrorMessage());
-      throw new InvalidRequestException(pcfCommandExecutionResponse.getErrorMessage());
+      log.warn(cfCommandExecutionResponse.getErrorMessage());
+      throw new InvalidRequestException(cfCommandExecutionResponse.getErrorMessage());
     }
   }
 
-  public int getInstanceCount(PcfCommandExecutionResponse pcfCommandExecutionResponse) {
-    PcfInstanceSyncResponse pcfInstanceSyncResponse =
-        (PcfInstanceSyncResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
+  public int getInstanceCount(CfCommandExecutionResponse cfCommandExecutionResponse) {
+    CfInstanceSyncResponse cfInstanceSyncResponse =
+        (CfInstanceSyncResponse) cfCommandExecutionResponse.getPcfCommandResponse();
 
-    return emptyIfNull(pcfInstanceSyncResponse.getInstanceIndices()).size();
+    return emptyIfNull(cfInstanceSyncResponse.getInstanceIndices()).size();
   }
 }

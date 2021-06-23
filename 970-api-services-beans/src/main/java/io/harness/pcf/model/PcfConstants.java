@@ -6,6 +6,8 @@ import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(CDP)
 public interface PcfConstants {
+  char PATH_DELIMITER = '/';
+
   String REPOSITORY_DIR_PATH = "./repository";
   String PCF_ARTIFACT_DOWNLOAD_DIR_PATH = "./repository/pcfartifacts";
   String PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX = "PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX: ";
