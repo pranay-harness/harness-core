@@ -583,14 +583,20 @@ public class UserResource {
         authenticationManager.switchAccount(authenticationManager.extractToken(authorization, "Bearer"), accountId));
   }
 
+  @Data
+  public static class SwitchAccountRequest {
+    @NotBlank private String accountId;
+  }
+
   @POST
-  @Path("switch-account/{accountId}")
+  @Path("switch-account")
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> newSwitchAccount(
-      @HeaderParam(HttpHeaders.AUTHORIZATION) String authorization, @PathParam("accountId") String accountId) {
+  public RestResponse<Boolean> newSwitchAccount(@HeaderParam(HttpHeaders.AUTHORIZATION) String authorization,
+      @Valid @NotNull SwitchAccountRequest switchAccountRequest) {
     return new RestResponse<>(
-        authenticationManager.switchAccount(authenticationManager.extractToken(authorization, "Bearer"), accountId)
+        authenticationManager.switchAccount(
+            authenticationManager.extractToken(authorization, "Bearer"), switchAccountRequest.getAccountId())
         != null);
   }
 
