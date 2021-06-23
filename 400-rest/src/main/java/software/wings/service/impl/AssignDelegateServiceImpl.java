@@ -180,6 +180,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
 
     if (canAssign) {
       delegateSelectionLogsService.logCanAssign(batch, task.getAccountId(), delegateId);
+    } else{
+      //log here
     }
     return canAssign;
   }
@@ -782,7 +784,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     try {
       List<String> activeDelegates = retrieveActiveDelegates(delegateTask.getAccountId(), null);
 
-      log.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
+        log.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
 
       List<String> whitelistedDelegates = connectedWhitelistedDelegates(delegateTask);
       if (activeDelegates.isEmpty()) {
