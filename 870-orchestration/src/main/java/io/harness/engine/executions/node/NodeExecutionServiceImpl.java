@@ -238,7 +238,8 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     ops.set(NodeExecutionKeys.status, DISCONTINUING);
     Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
                       .addCriteria(where(NodeExecutionKeys.mode).in(ExecutionModeUtils.leafModes()))
-                      .addCriteria(where(NodeExecutionKeys.status).in(statuses));
+                      .addCriteria(where(NodeExecutionKeys.status).in(statuses))
+                      .addCriteria(where(NodeExecutionKeys.oldRetry).is(false));
     UpdateResult updateResult = mongoTemplate.updateMulti(query, ops, NodeExecution.class);
     if (!updateResult.wasAcknowledged()) {
       log.warn("No NodeExecutions could be marked as DISCONTINUING -  planExecutionId: {}", planExecutionId);

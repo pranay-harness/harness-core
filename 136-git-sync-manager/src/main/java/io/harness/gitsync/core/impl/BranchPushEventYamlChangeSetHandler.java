@@ -64,6 +64,8 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
       return YamlChangeSetStatus.SKIPPED;
     }
 
+    gitToHarnessProgressHelper.doPreRunChecks(yamlChangeSetDTO);
+
     YamlChangeSetStatus queueStatus =
         gitToHarnessProgressHelper.getQueueStatusIfEventInProgressOrAlreadyProcessed(yamlChangeSetDTO);
     if (queueStatus != null) {
@@ -137,6 +139,12 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
 
     List<GitFileChangeDTO> gitFileChangeDTOList =
         getAllFileContent(yamlChangeSetDTO, yamlGitConfigDTOList.get(0), prFilesTobeProcessed);
+
+    // TODO adding logs to debug an issue, remove after use
+    StringBuilder gitFileChangeDTOListAsString = new StringBuilder("diff files :: ");
+    gitFileChangeDTOList.forEach(
+        gitFileChangeDTO -> gitFileChangeDTOListAsString.append(gitFileChangeDTO.toString()).append(" :::: "));
+    log.info(gitFileChangeDTOListAsString.toString());
 
     // Mark step status done
     gitToHarnessProgressRecord = gitToHarnessProgressService.updateStepStatus(

@@ -22,6 +22,8 @@
   permissionKey: audit
 - identifier: USER
   permissionKey: user
+- identifier: SERVICEACCOUNT
+  permissionKey: serviceaccount
 - identifier: USERGROUP
   permissionKey: usergroup
 - identifier: ROLE

@@ -45,6 +45,11 @@ public class HttpStoreConfig
   }
 
   @Override
+  public ParameterField<String> getConnectorReference() {
+    return connectorRef;
+  }
+
+  @Override
   public io.harness.cdng.manifest.yaml.storeConfig.StoreConfig applyOverrides(StoreConfig overrideConfig) {
     HttpStoreConfig helmHttpStore = (HttpStoreConfig) overrideConfig;
     HttpStoreConfig resultantHelmHttpStore = this;

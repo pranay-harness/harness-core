@@ -21,7 +21,7 @@ public final class EventsFrameworkConstants {
   public static final String WEBHOOK_EVENTS_STREAM = "webhook_events_stream";
   public static final String GIT_PUSH_EVENT_STREAM = "git_push_event_stream";
   public static final String GIT_PR_EVENT_STREAM = "git_pr_event_stream";
-  public static final String GIT_CREATE_BRANCH_EVENT_STREAM = "git_create_branch_event_stream";
+  public static final String GIT_BRANCH_HOOK_EVENT_STREAM = "git_branch_hook_event_stream";
   public static final String USERMEMBERSHIP = "usermembership";
   // created for git sdk, dont use outside sdk.
   public static final String GIT_CONFIG_STREAM = "git_config_stream";
@@ -74,7 +74,7 @@ public final class EventsFrameworkConstants {
   public static final int WEBHOOK_EVENTS_STREAM_MAX_TOPIC_SIZE = 10000;
   public static final int GIT_PUSH_EVENT_STREAM_MAX_TOPIC_SIZE = 10000;
   public static final int GIT_PR_EVENT_STREAM_MAX_TOPIC_SIZE = 10000;
-  public static final int GIT_CREATE_BRANCH_EVENT_STREAM_MAX_TOPIC_SIZE = 10000;
+  public static final int GIT_BRANCH_HOOK_EVENT_STREAM_MAX_TOPIC_SIZE = 10000;
   public static final int GIT_CONFIG_STREAM_MAX_TOPIC_SIZE = 10000;
 
   public static final Duration DEFAULT_MAX_PROCESSING_TIME = Duration.ofSeconds(10);
@@ -82,7 +82,7 @@ public final class EventsFrameworkConstants {
   public static final Duration WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration GIT_PUSH_EVENT_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration GIT_PR_EVENT_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
-  public static final Duration GIT_CREATE_BRANCH_EVENT_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
+  public static final Duration GIT_BRANCH_HOOK_EVENT_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration FEATURE_FLAG_MAX_PROCESSING_TIME = Duration.ofMinutes(10);
   public static final Duration USERMEMBERSHIP_MAX_PROCESSING_TIME = Duration.ofMinutes(10);
   public static final Duration SETUP_USAGE_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
@@ -101,5 +101,5 @@ public final class EventsFrameworkConstants {
   public static final int WEBHOOK_EVENTS_STREAM_BATCH_SIZE = 50;
   public static final int GIT_PUSH_EVENT_STREAM_BATCH_SIZE = 50;
   public static final int GIT_PR_EVENT_STREAM_BATCH_SIZE = 50;
-  public static final int GIT_CREATE_BRANCH_EVENT_STREAM_BATCH_SIZE = 50;
+  public static final int GIT_BRANCH_HOOK_EVENT_STREAM_BATCH_SIZE = 50;
 }

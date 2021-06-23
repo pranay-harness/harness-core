@@ -43,6 +43,11 @@ public class S3StoreConfig
   }
 
   @Override
+  public ParameterField<String> getConnectorReference() {
+    return connectorRef;
+  }
+
+  @Override
   public io.harness.cdng.manifest.yaml.storeConfig.StoreConfig cloneInternal() {
     return S3StoreConfig.builder()
         .connectorRef(connectorRef)

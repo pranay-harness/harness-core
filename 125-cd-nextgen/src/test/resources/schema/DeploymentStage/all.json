@@ -1414,11 +1414,6 @@
     "Infrastructure": {
       "type": "object",
       "discriminator": "type",
-      "properties": {
-        "connectorRef": {
-          "$ref": "#/definitions/ParameterFieldString"
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "InfrastructureDef": {
@@ -1631,6 +1626,11 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "issueType",
+            "projectKey"
+          ],
           "properties": {
             "connectorRef": {
               "type": "string"
@@ -3175,7 +3175,9 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -3785,7 +3787,7 @@
         },
         "timeout": {
           "type": "string",
-          "pattern": "^(((\\d+[smhwd][\\s]?)+)|(<\\+input>.*))$"
+          "pattern": "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*))$"
         },
         "type": {
           "type": "string"
@@ -4225,11 +4227,6 @@
     "StoreConfig": {
       "type": "object",
       "discriminator": "type",
-      "properties": {
-        "connectorRef": {
-          "$ref": "#/definitions/ParameterFieldString"
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "StoreConfigWrapper": {

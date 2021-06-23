@@ -90,7 +90,8 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
                                                                   .setAccountId(accountId)
                                                                   .setCommitId(StringValue.of(commitId))
                                                                   .build();
-      log.info("Sending to microservice {}", entry.getKey());
+      // TODO log for debug purpose, remove after use
+      log.info("Sending to microservice {}, request : {}", entry.getKey(), gitToHarnessProcessRequest);
       GitToHarnessProcessingResponseDTO gitToHarnessProcessingResponseDTO = null;
       try {
         ProcessingResponse processingResponse = gitToHarnessServiceBlockingStub.process(gitToHarnessProcessRequest);

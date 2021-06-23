@@ -387,6 +387,7 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
         }
 
       } catch (Exception ex) {
+        log.error("Error while listing resource", ex);
         // Exception is thrown if the user does not have permissions on the entity
       }
     });

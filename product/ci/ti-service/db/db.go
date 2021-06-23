@@ -8,6 +8,9 @@ import (
 
 // Db defines the db interface to perform operations on tests
 type Db interface {
+	// Ping pings the database to see if it's available
+	Ping(ctx context.Context) error
+
 	// Write writes testcases to the underlying DB.
 	Write(ctx context.Context, accountID, orgId, projectId, pipelineId, buildId, stageId, stepId,
 		report, repo, sha string, tests ...*types.TestCase) error

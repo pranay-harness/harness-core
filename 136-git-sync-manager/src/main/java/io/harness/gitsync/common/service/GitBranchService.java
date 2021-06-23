@@ -8,6 +8,8 @@ import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.dtos.GitBranchListDTO;
 import io.harness.ng.beans.PageRequest;
 
+import com.mongodb.client.result.DeleteResult;
+
 @OwnedBy(DX)
 public interface GitBranchService {
   GitBranchListDTO listBranchesWithStatus(String accountIdentifier, String orgIdentifier, String projectIdentifier,
@@ -29,4 +31,6 @@ public interface GitBranchService {
   void checkBranchIsNotAlreadyShortlisted(String repoURL, String accountId, String branch);
 
   boolean isBranchExists(String accountIdentifier, String repoURL, String branch, BranchSyncStatus branchSyncStatus);
+
+  DeleteResult delete(String repoUrl, String branchName, String accountIdentifier);
 }

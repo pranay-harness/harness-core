@@ -88,6 +88,10 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskParameters;
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskResponse;
 import io.harness.delegate.task.executioncapability.CapabilityCheckDetails;
+import io.harness.delegate.task.pcf.CfCommandRequest;
+import io.harness.delegate.task.pcf.request.CfCommandTaskParameters;
+import io.harness.delegate.task.pcf.request.CfCommandTaskParameters.CfCommandTaskParametersBuilder;
+import io.harness.delegate.task.pcf.request.CfRunPluginCommandRequest;
 import io.harness.environment.SystemEnvironment;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.CriticalExpressionEvaluationException;
@@ -146,10 +150,6 @@ import software.wings.expression.NgSecretManagerFunctor;
 import software.wings.expression.SecretManagerFunctor;
 import software.wings.expression.SecretManagerMode;
 import software.wings.expression.SweepingOutputSecretFunctor;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters;
-import software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters.PcfCommandTaskParametersBuilder;
-import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.infra.InfraDownloadService;
@@ -204,8 +204,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander")
-@BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandRequest")
-@BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters")
 @OwnedBy(DEL)
 public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassic {
   private static final String ASYNC = "async";
@@ -945,10 +943,10 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         task.getData().setParameters(newParams.toArray());
         return;
       case PCF_COMMAND_TASK:
-        PcfCommandRequest commandRequest = (PcfCommandRequest) params[0];
-        if (!(commandRequest instanceof PcfRunPluginCommandRequest)) {
-          PcfCommandTaskParametersBuilder parametersBuilder =
-              PcfCommandTaskParameters.builder().pcfCommandRequest(commandRequest);
+        CfCommandRequest commandRequest = (CfCommandRequest) params[0];
+        if (!(commandRequest instanceof CfRunPluginCommandRequest)) {
+          CfCommandTaskParametersBuilder parametersBuilder =
+              CfCommandTaskParameters.builder().pcfCommandRequest(commandRequest);
           if (params.length > 1) {
             parametersBuilder.encryptedDataDetails((List<EncryptedDataDetail>) params[1]);
           }

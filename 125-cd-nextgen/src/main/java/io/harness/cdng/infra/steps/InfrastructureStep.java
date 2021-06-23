@@ -89,7 +89,7 @@ public class InfrastructureStep implements SyncExecutableWithRbac<Infrastructure
         new NGLogCallback(logStreamingStepClientFactory, ambiance, INFRASTRUCTURE_COMMAND_UNIT, true);
     ngManagerLogCallback.saveExecutionLog("Starting Infrastructure logs");
 
-    validateConnectorRef(infrastructure.getConnectorRef(), ambiance);
+    validateConnectorRef(infrastructure.getConnectorReference(), ambiance);
     validateInfrastructure(infrastructure);
     EnvironmentOutcome environmentOutcome = (EnvironmentOutcome) executionSweepingOutputResolver.resolve(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.ENVIRONMENT));

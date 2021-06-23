@@ -8,6 +8,7 @@ import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.KeyValuePair;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
@@ -26,6 +27,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -108,6 +110,45 @@ public class Http {
             }
           });
 
+  LoadingCache<HttpURLHeaderInfo, Integer> responseCodeForValidationWithHeaders =
+      CacheBuilder.newBuilder()
+          .maximumSize(1000)
+          .expireAfterWrite(5, TimeUnit.MINUTES)
+          .build(new CacheLoader<HttpURLHeaderInfo, Integer>() {
+            @Override
+            public Integer load(HttpURLHeaderInfo httpURLHeaderInfo) throws IOException {
+              log.info("Testing connectivity using headers");
+
+              // Create a trust manager that does not validate certificate chains
+              // Install the all-trusting trust manager
+              HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+              // Create all-trusting host name verifier
+              HostnameVerifier allHostsValid = (s, sslSession) -> true;
+              // Install the all-trusting host verifier
+              HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+              HttpURLConnection connection = getHttpsURLConnection(httpURLHeaderInfo.getUrl());
+              try {
+                // Changed to GET as some providers like artifactory SAAS is not
+                // accepting HEAD requests
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(15000);
+                connection.setReadTimeout(15000);
+
+                // set headers
+                for (KeyValuePair header : httpURLHeaderInfo.getHeaders()) {
+                  connection.setRequestProperty(header.getKey(), header.getValue());
+                }
+                int responseCode = connection.getResponseCode();
+                log.info("Returned code {}", responseCode);
+                return responseCode;
+              } finally {
+                if (connection != null) {
+                  connection.disconnect();
+                }
+              }
+            }
+          });
+
   LoadingCache<String, Integer> jenkinsResponseCodeForValidation =
       CacheBuilder.newBuilder()
           .maximumSize(100)
@@ -146,6 +187,18 @@ public class Http {
     try (UrlLogContext ignore = new UrlLogContext(url, OVERRIDE_ERROR)) {
       try {
         return checkResponseCode(responseCodeForValidation.get(url));
+      } catch (Exception e) {
+        log.info("Could not connect: {}", e.getMessage());
+      }
+    }
+    return false;
+  }
+
+  public static boolean connectableHttpUrlWithHeaders(String url, List<KeyValuePair> headers) {
+    try (UrlLogContext ignore = new UrlLogContext(url, OVERRIDE_ERROR)) {
+      try {
+        return checkResponseCode(
+            responseCodeForValidationWithHeaders.get(HttpURLHeaderInfo.builder().url(url).headers(headers).build()));
       } catch (Exception e) {
         log.info("Could not connect: {}", e.getMessage());
       }

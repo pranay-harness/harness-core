@@ -10,6 +10,7 @@ java_binary(
         "//120-ng-manager:module",
         "//121-access-control-migration:module",
         "//121-instance:module",
+        "//122-ng-authentication-settings:module",
         "//123-ng-core-user:module",
         "//125-cd-nextgen:module",
         "//136-git-sync-manager:module",

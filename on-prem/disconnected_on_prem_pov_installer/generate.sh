@@ -170,7 +170,7 @@ for goversion in v0.2 v0.3 v0.4; do
     curl -L -o "${GOTEMPLATE_MAC_DIR}go-template" "${GOTEMPLATE_MAC_URL}"
 done
 
-    for harnesspywinrm in v0.1-dev v0.2-dev v0.3-dev; do
+    for harnesspywinrm in v0.1-dev v0.2-dev v0.3-dev v0.4-dev; do
       echo "Adding harness-pywinrm $harnesspywinrm"
       HARNESSPYWINRM_LINUX_DIR="${IMAGES_DIR}/harness-pywinrm/linux/$harnesspywinrm/"
       HARNESSPYWINRM_MAC_DIR="${IMAGES_DIR}/harness-pywinrm/darwin/$harnesspywinrm/"

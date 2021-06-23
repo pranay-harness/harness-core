@@ -307,16 +307,13 @@ public abstract class RemoteStackdriverLogAppender<E> extends AppenderBase<E> {
   private Map<String, String> getLogLabels() {
     String delegateId = getDelegateId();
     if (isEmpty(logLabels) || !StringUtils.equals(delegateId, logLabels.get("delegateId"))) {
-      ImmutableMap.Builder<String, String> labelsBuilder =
-          ImmutableMap.<String, String>builder()
-              .put("source", localhostName)
-              .put("processId", processId)
-              .put("version",
-                  versionInfoManager.getVersionInfo().getBuildNo() + "-"
-                      + versionInfoManager.getVersionInfo().getPatch())
-              .put("app", getAppName())
-              .put("accountId", getAccountId())
-              .put("managerHost", getManagerHost());
+      ImmutableMap.Builder<String, String> labelsBuilder = ImmutableMap.<String, String>builder()
+                                                               .put("source", localhostName)
+                                                               .put("processId", processId)
+                                                               .put("version", versionInfoManager.getFullVersion())
+                                                               .put("app", getAppName())
+                                                               .put("accountId", getAccountId())
+                                                               .put("managerHost", getManagerHost());
       if (isNotBlank(delegateId)) {
         labelsBuilder.put("delegateId", delegateId);
       }

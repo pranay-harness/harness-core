@@ -7,6 +7,7 @@ import static java.time.Duration.ofMinutes;
 
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.exception.GeneralException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -24,10 +25,10 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -143,10 +144,10 @@ public class NGMigrationServiceImpl implements NGMigrationService {
         MigrationType migrationType = migrationDetail.getMigrationTypeName();
         try (AcquiredLock ignore = persistentLocker.acquireLock(
                  NGSchema.class, "Background-" + NG_SCHEMA_ID + microservice + migrationType, ofMinutes(120 + 1))) {
-          timeLimiter.<Boolean>callWithTimeout(() -> {
+          HTimeLimiter.callInterruptible(timeLimiter, Duration.ofHours(2), () -> {
             doMigration(true, currentVersion, maxVersion, migrations, migrationType, schemaClass, serviceName);
             return true;
-          }, 2, TimeUnit.HOURS, true);
+          });
         } catch (Exception ex) {
           log.warn("Migration work", ex);
         }

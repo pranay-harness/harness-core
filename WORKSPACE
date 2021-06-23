@@ -41,19 +41,6 @@ http_archive(
     ],
 )
 
-# Load and call Gazelle dependencies
-load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
-
-gazelle_dependencies()
-
-# Add a go repository
-go_repository(
-    name = "com_github_pkg_errors",
-    importpath = "github.com/pkg/errors",
-    sum = "h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=",
-    version = "v0.9.1",
-)
-
 http_archive(
     name = "rules_proto_grpc",
     sha256 = "5f0f2fc0199810c65a2de148a52ba0aff14d631d4e8202f41aff6a9d590a471b",
@@ -74,6 +61,26 @@ rules_proto_grpc_java_repos()
 load("@io_grpc_grpc_java//:repositories.bzl", "grpc_java_repositories")
 
 grpc_java_repositories()
+
+# Load and call Gazelle dependencies
+load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
+
+gazelle_dependencies()
+
+http_archive(
+    name = "com_github_query_builder_generator",
+    sha256 = "d35b6b5411f8ab4ddb40843dcf8b85d63a4ae1f86082d822759f7035355f9876",
+    strip_prefix = "query-builder-generator-0.1.20",
+    urls = ["https://github.com/wings-software/query-builder-generator/archive/refs/tags/v0.1.20.zip"],
+)
+
+# Add a go repository
+go_repository(
+    name = "com_github_pkg_errors",
+    importpath = "github.com/pkg/errors",
+    sum = "h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=",
+    version = "v0.9.1",
+)
 
 go_repository(
     name = "co_honnef_go_tools",
@@ -949,6 +956,13 @@ go_repository(
     importpath = "github.com/h2non/gock",
     sum = "h1:17gCehSo8ZOgEsFKpQgqHiR7VLyjxdAG3lkhVvO9QZU=",
     version = "v1.0.9",
+)
+
+go_repository(
+    name = "com_github_gertd_go_pluralize",
+    importpath = "github.com/gertd/go-pluralize",
+    sum = "h1:RgvJTJ5W7olOoAks97BOwOlekBFsLEyh00W48Z6ZEZY=",
+    version = "v0.1.7",
 )
 
 ###########################################################################################
@@ -3713,8 +3727,8 @@ go_repository(
 go_repository(
     name = "com_github_spf13_cobra",
     importpath = "github.com/spf13/cobra",
-    sum = "h1:6m/oheQuQ13N9ks4hubMG6BnvwOeaJrqSPLahSnczz8=",
-    version = "v1.0.0",
+    sum = "h1:xghbfqPkxzxP3C/f3n5DdpAbdKLj4ZE4BWQI362l53M=",
+    version = "v1.1.3",
 )
 
 go_repository(

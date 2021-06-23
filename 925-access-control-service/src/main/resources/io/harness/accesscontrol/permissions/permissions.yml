@@ -351,6 +351,24 @@ permissions:
     includeInAllRoles: true
     allowedScopeLevels:
       - account
+  - identifier: core_serviceaccount_view
+    name: View ServiceAccount details
+    status: ACTIVE
+    includeInAllRoles: true
+    allowedScopeLevels:
+      - account
+  - identifier: core_serviceaccount_edit
+    name: Create or Edit ServiceAccount
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
+  - identifier: core_serviceaccount_delete
+    name: Delete ServiceAccount
+    status: ACTIVE
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - account
   - identifier: core_authsetting_view
     name: View Auth setting
     status: ACTIVE

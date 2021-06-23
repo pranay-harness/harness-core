@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -140,6 +142,24 @@ func HandleIntelligenceInfo(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 		// Write the selected tests back
 		WriteJSON(w, resp, 200)
 		log.Infow("retrieved test intelligence info", "account_id", accountId, "time_taken", time.Since(st))
+	}
+}
+
+// HandlePing returns an http.HandlerFunc that pings
+// the backends to ensure smooth working of TI service.
+func HandlePing(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, _ := context.WithTimeout(r.Context(), 5*time.Second) // 5 second timeout for pings
+
+		if err := db.Ping(ctx); err != nil {
+			if err != nil {
+				log.Errorw("could not ping the data DB", zap.Error(err))
+				WriteInternalError(w, err)
+				return
+			}
+		}
+
+		io.WriteString(w, "OK")
 	}
 }
 

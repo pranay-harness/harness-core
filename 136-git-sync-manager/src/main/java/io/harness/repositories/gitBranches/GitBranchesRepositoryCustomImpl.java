@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.beans.GitBranch;
 
 import com.google.inject.Inject;
+import com.mongodb.client.result.DeleteResult;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -42,5 +43,10 @@ public class GitBranchesRepositoryCustomImpl implements GitBranchesRepositoryCus
   @Override
   public GitBranch findOne(Criteria criteria) {
     return mongoTemplate.findOne(query(criteria), GitBranch.class);
+  }
+
+  @Override
+  public DeleteResult delete(Criteria criteria) {
+    return mongoTemplate.remove(query(criteria), GitBranch.class);
   }
 }
