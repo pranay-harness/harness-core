@@ -40,6 +40,7 @@ import org.bson.Document;
 @Singleton
 public class OrchestrationAdjacencyListGenerator {
   @Inject private PmsOutcomeService pmsOutcomeService;
+  @Inject private GraphVertexConverter graphVertexConverter;
 
   public OrchestrationAdjacencyListInternal generateAdjacencyList(
       String startingNodeExId, List<NodeExecution> nodeExecutions, boolean isOutcomePresent) {
@@ -64,7 +65,7 @@ public class OrchestrationAdjacencyListGenerator {
     Map<String, EdgeListInternal> adjacencyList = adjacencyListInternal.getAdjacencyMap();
 
     String currentUuid = nodeExecution.getUuid();
-    graphVertexMap.put(currentUuid, GraphVertexConverter.convertFrom(nodeExecution));
+    graphVertexMap.put(currentUuid, graphVertexConverter.convertFrom(nodeExecution));
 
     // compute adjList
     String parentId = null;
@@ -234,7 +235,7 @@ public class OrchestrationAdjacencyListGenerator {
           outcomes = new LinkedHashMap<>();
         }
 
-        GraphVertex graphVertex = GraphVertexConverter.convertFrom(nodeExecution, outcomes);
+        GraphVertex graphVertex = graphVertexConverter.convertFrom(nodeExecution, outcomes);
 
         if (graphVertexMap.containsKey(graphVertex.getUuid())) {
           continue;
