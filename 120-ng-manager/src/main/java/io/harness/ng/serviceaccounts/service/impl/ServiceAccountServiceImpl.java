@@ -3,10 +3,6 @@ package io.harness.ng.serviceaccounts.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.accesscontrol.principals.Principal;
-import io.harness.accesscontrol.principals.PrincipalType;
-import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
-import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.events.ServiceAccountCreateEvent;
 import io.harness.ng.core.events.ServiceAccountDeleteEvent;
@@ -19,7 +15,6 @@ import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.ng.serviceaccounts.ServiceAccountRepository;
 import io.harness.serviceaccount.ServiceAccountDTO;
 
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hazelcast.util.Preconditions;
 import groovy.util.logging.Slf4j;
