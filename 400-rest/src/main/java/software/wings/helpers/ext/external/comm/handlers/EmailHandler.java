@@ -16,7 +16,6 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.EmailUtils;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -38,7 +37,7 @@ public class EmailHandler implements CollaborationHandler {
   @Inject private KryoSerializer kryoSerializer;
 
   @Inject @Transient private transient EncryptionService encryptionService;
-  private static final TimeLimiter timeLimiter = new SimpleTimeLimiter();
+  private static final TimeLimiter timeLimiter = HTimeLimiter.create();
 
   @Override
   public CollaborationProviderResponse handle(CollaborationProviderRequest request) {

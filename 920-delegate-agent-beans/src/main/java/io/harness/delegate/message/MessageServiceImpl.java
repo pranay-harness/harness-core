@@ -19,7 +19,6 @@ import io.harness.threading.Schedulable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import java.io.File;
@@ -66,7 +65,7 @@ public class MessageServiceImpl implements MessageService {
   private final MessengerType messengerType;
   private final String processId;
 
-  private final TimeLimiter timeLimiter = new SimpleTimeLimiter();
+  private final TimeLimiter timeLimiter = HTimeLimiter.create();
   private final Map<File, Long> messageTimestamps = new HashMap<>();
   private final Map<File, BlockingQueue<Message>> messageQueues = new HashMap<>();
   private final AtomicBoolean running = new AtomicBoolean(true);
