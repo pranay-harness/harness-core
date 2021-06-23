@@ -15,34 +15,19 @@ import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHE
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_BATCH_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_EVENT_TOPIC;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_FACILITATOR_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_FACILITATOR_LISTENER;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_INTERRUPT_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_INTERRUPT_LISTENER;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_ADVISE_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_ADVISE_LISTENER;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_RESUME_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_RESUME_LISTENER;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_START_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_START_LISTENER;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_ORCHESTRATION_EVENT_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_ORCHESTRATION_EVENT_LISTENER;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_PROGRESS_CONSUMER;
-import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_PROGRESS_LISTENER;
 
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
-import io.harness.ng.core.event.MessageListener;
 import io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants;
-import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventMessageListener;
-import io.harness.pms.sdk.execution.events.interrupts.InterruptEventMessageListener;
-import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventMessageListener;
-import io.harness.pms.sdk.execution.events.node.resume.NodeResumeEventMessageListener;
-import io.harness.pms.sdk.execution.events.node.start.NodeStartEventMessageListener;
-import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventMessageListener;
-import io.harness.pms.sdk.execution.events.progress.ProgressEventMessageListener;
 import io.harness.redis.RedisConfig;
 import io.harness.threading.ThreadPool;
 
@@ -149,32 +134,6 @@ public class PmsSdkEventsFrameworkModule extends AbstractModule {
           .toInstance(RedisConsumer.of(PIPELINE_NODE_RESUME_EVENT_TOPIC, serviceName, redisConfig,
               Duration.ofSeconds(10), PIPELINE_NODE_RESUME_BATCH_SIZE));
     }
-    bind(MessageListener.class)
-        .annotatedWith(Names.named(PT_INTERRUPT_LISTENER))
-        .to(InterruptEventMessageListener.class);
-
-    bind(MessageListener.class)
-        .annotatedWith(Names.named(PT_ORCHESTRATION_EVENT_LISTENER))
-        .to(OrchestrationEventMessageListener.class);
-
-    // facilitator listener
-    bind(MessageListener.class)
-        .annotatedWith(Names.named(PT_FACILITATOR_LISTENER))
-        .to(FacilitatorEventMessageListener.class);
-
-    bind(MessageListener.class)
-        .annotatedWith(Names.named(PT_NODE_START_LISTENER))
-        .to(NodeStartEventMessageListener.class);
-
-    bind(MessageListener.class).annotatedWith(Names.named(PT_PROGRESS_LISTENER)).to(ProgressEventMessageListener.class);
-
-    bind(MessageListener.class)
-        .annotatedWith(Names.named(PT_NODE_ADVISE_LISTENER))
-        .to(NodeAdviseEventMessageListener.class);
-
-    bind(MessageListener.class)
-        .annotatedWith(Names.named(PT_NODE_RESUME_LISTENER))
-        .to(NodeResumeEventMessageListener.class);
   }
 
   @Provides
