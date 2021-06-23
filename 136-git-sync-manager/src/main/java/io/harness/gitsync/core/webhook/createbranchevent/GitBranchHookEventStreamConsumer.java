@@ -2,8 +2,8 @@ package io.harness.gitsync.core.webhook.createbranchevent;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CREATE_BRANCH_EVENT_STREAM;
-import static io.harness.gitsync.common.WebhookEventConstants.GIT_CREATE_BRANCH_EVENT_CONSUMER;
+import static io.harness.eventsframework.EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM;
+import static io.harness.gitsync.common.WebhookEventConstants.GIT_BRANCH_HOOK_EVENT_CONSUMER;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
@@ -26,14 +26,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(DX)
 @Singleton
-public class GitCreateBranchEventStreamConsumer implements Runnable {
+public class GitBranchHookEventStreamConsumer implements Runnable {
   private static final int WAIT_TIME_IN_SECONDS = 10;
   private final Consumer redisConsumer;
   private final List<MessageListener> messageListenersList;
 
   @Inject
-  public GitCreateBranchEventStreamConsumer(@Named(GIT_CREATE_BRANCH_EVENT_STREAM) Consumer redisConsumer,
-      @Named(GIT_CREATE_BRANCH_EVENT_STREAM) MessageListener gitCreateBranchEventListener) {
+  public GitBranchHookEventStreamConsumer(@Named(GIT_BRANCH_HOOK_EVENT_STREAM) Consumer redisConsumer,
+      @Named(GIT_BRANCH_HOOK_EVENT_STREAM) MessageListener gitCreateBranchEventListener) {
     this.redisConsumer = redisConsumer;
     messageListenersList = new ArrayList<>();
     messageListenersList.add(gitCreateBranchEventListener);
@@ -41,7 +41,7 @@ public class GitCreateBranchEventStreamConsumer implements Runnable {
 
   @Override
   public void run() {
-    log.info("{} : Started the consumer", GIT_CREATE_BRANCH_EVENT_CONSUMER);
+    log.info("{} : Started the consumer", GIT_BRANCH_HOOK_EVENT_CONSUMER);
     // todo(abhinav): change to git sync manager when it seprates out.
     try {
       SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
@@ -52,7 +52,7 @@ public class GitCreateBranchEventStreamConsumer implements Runnable {
       SecurityContextBuilder.unsetCompleteContext();
       Thread.currentThread().interrupt();
     } catch (Exception ex) {
-      log.error("{} : consumer unexpectedly stopped", GIT_CREATE_BRANCH_EVENT_CONSUMER, ex);
+      log.error("{} : consumer unexpectedly stopped", GIT_BRANCH_HOOK_EVENT_CONSUMER, ex);
     } finally {
       SecurityContextBuilder.unsetCompleteContext();
     }
@@ -62,7 +62,7 @@ public class GitCreateBranchEventStreamConsumer implements Runnable {
     try {
       pollAndProcessMessages();
     } catch (EventsFrameworkDownException e) {
-      log.error("Events framework is down for " + GIT_CREATE_BRANCH_EVENT_CONSUMER + " consumer. Retrying again...", e);
+      log.error("Events framework is down for " + GIT_BRANCH_HOOK_EVENT_CONSUMER + " consumer. Retrying again...", e);
       TimeUnit.SECONDS.sleep(WAIT_TIME_IN_SECONDS);
     }
   }
@@ -87,7 +87,7 @@ public class GitCreateBranchEventStreamConsumer implements Runnable {
     } catch (Exception ex) {
       // This is not evicted from events framework so that it can be processed
       // by other consumer if the error is a runtime error
-      log.error(String.format("%s : Error occurred in processing message with id %s", GIT_CREATE_BRANCH_EVENT_CONSUMER,
+      log.error(String.format("%s : Error occurred in processing message with id %s", GIT_BRANCH_HOOK_EVENT_CONSUMER,
                     message.getId()),
           ex);
       return false;
