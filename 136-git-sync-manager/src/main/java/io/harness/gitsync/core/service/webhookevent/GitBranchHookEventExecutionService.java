@@ -5,6 +5,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.webhookpayloads.webhookdata.WebhookDTO;
 
 @OwnedBy(HarnessTeam.DX)
-public interface GitCreateBranchEventExecutionService {
+public interface GitBranchHookEventExecutionService {
   void processEvent(WebhookDTO webhookDTO);
 }
