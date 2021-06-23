@@ -56,7 +56,7 @@ type Config struct {
 		SSLEnabled    bool   `envconfig:"EVENTS_FRAMEWORK_REDIS_SSL_ENABLED"`
 		// Path to b64 encoded .pem file
 		CertPath string `envconfig:"EVENTS_FRAMEWORK_REDIS_SSL_CA_CERT_PATH"`
-		UseSentinel bool `envconfig:"EVENTS_FRAMEWORK_SENTINEL_MASTER"`
+		UseSentinel bool `envconfig:"EVENTS_FRAMEWORK_USE_SENTINEL"`
 		SentinelMaster string `envconfig:"EVENTS_FRAMEWORK_SENTINEL_MASTER"`
 		SentienlURLs string `envconfig:"EVENTS_FRAMEWORK_SENTINEL_URLS"`
 	}
