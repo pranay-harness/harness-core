@@ -148,14 +148,11 @@ public class OrchestrationEngine {
       PlanNodeProto node = nodeExecution.getNode();
       String stepParameters = node.getStepParameters();
       boolean skipUnresolvedExpressionsCheck = node.getSkipUnresolvedExpressionsCheck();
-      log.info("Starting to Resolve step parameters");
+      log.info("Starting to Resolve step parameters and inputs");
       Object resolvedStepParameters = stepParameters == null
           ? null
           : pmsEngineExpressionService.resolve(
               ambiance, NodeExecutionUtils.extractObject(stepParameters), skipUnresolvedExpressionsCheck);
-      log.info("Step Parameter Resolution complete");
-
-      log.info("Starting to Resolve step inputs");
       Object resolvedStepInputs = node.getStepInputs() == null
           ? null
           : pmsEngineExpressionService.resolve(
@@ -171,7 +168,7 @@ public class OrchestrationEngine {
       if (facilitationHelper.customFacilitatorPresent(node)) {
         facilitateEventPublisher.publishEvent(nodeExecution.getUuid());
       } else {
-        facilitationHelper.facilitateExecution(nodeExecution);
+        facilitationHelper.facilitateExecution(updatedNodeExecution);
       }
     } catch (Exception exception) {
       log.error("Exception Occurred in facilitateAndStartStep", exception);
