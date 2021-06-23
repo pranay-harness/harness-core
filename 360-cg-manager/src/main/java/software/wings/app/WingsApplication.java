@@ -396,6 +396,116 @@ public class WingsApplication extends Application<MainConfiguration> {
         20, 1000, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
 
     List<Module> modules = new ArrayList<>();
+    addModules(configuration, modules);
+
+    Injector injector = Guice.createInjector(modules);
+
+    initializeManagerSvc(injector, environment, configuration);
+    log.info("Starting app done");
+    log.info("Manager is running on JRE: {}", System.getProperty("java.version"));
+  }
+
+  public void initializeManagerSvc(Injector injector, Environment environment, MainConfiguration configuration) {
+    // Access all caches before coming out of maintenance
+    injector.getInstance(new Key<Map<String, Cache<?, ?>>>() {});
+
+    registerAtmosphereStreams(environment, injector);
+
+    initializeFeatureFlags(configuration, injector);
+
+    registerHealthChecks(environment, injector);
+
+    registerStores(configuration, injector);
+
+    registerResources(environment, injector);
+
+    registerManagedBeans(configuration, environment, injector);
+
+    registerQueueListeners(injector);
+
+    scheduleJobs(injector, configuration);
+
+    registerEventConsumers(injector);
+
+    registerObservers(injector);
+
+    registerInprocPerpetualTaskServiceClients(injector);
+
+    registerCronJobs(injector);
+
+    registerCorsFilter(configuration, environment);
+
+    registerAuditResponseFilter(environment, injector);
+
+    registerJerseyProviders(environment, injector);
+
+    registerCharsetResponseFilter(environment, injector);
+
+    // Authentication/Authorization filters
+    registerAuthFilters(configuration, environment, injector);
+
+    registerCorrelationFilter(environment, injector);
+
+    // Register collection iterators
+    if (configuration.isEnableIterators()) {
+      registerIterators(injector);
+    }
+    registerCVNGVerificationTaskIterator(injector);
+
+    environment.lifecycle().addServerLifecycleListener(server -> {
+      for (Connector connector : server.getConnectors()) {
+        if (connector instanceof ServerConnector) {
+          ServerConnector serverConnector = (ServerConnector) connector;
+          if (serverConnector.getName().equalsIgnoreCase("application")) {
+            configuration.setSslEnabled(
+                serverConnector.getDefaultConnectionFactory().getProtocol().equalsIgnoreCase("ssl"));
+            configuration.setApplicationPort(serverConnector.getLocalPort());
+            return;
+          }
+        }
+      }
+    });
+
+    harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
+
+    initMetrics();
+
+    initializeServiceSecretKeys(injector);
+
+    runMigrations(injector);
+
+    String deployMode = configuration.getDeployMode().name();
+
+    if (DeployMode.isOnPrem(deployMode)) {
+      LicenseService licenseService = injector.getInstance(LicenseService.class);
+      String encryptedLicenseInfoBase64String = System.getenv(LicenseService.LICENSE_INFO);
+      log.info("Encrypted license info read from environment {}", encryptedLicenseInfoBase64String);
+      if (isEmpty(encryptedLicenseInfoBase64String)) {
+        log.error("No license info is provided");
+      } else {
+        try {
+          log.info("Updating license info read from environment {}", encryptedLicenseInfoBase64String);
+          licenseService.updateAccountLicenseForOnPrem(encryptedLicenseInfoBase64String);
+          log.info("Updated license info read from environment {}", encryptedLicenseInfoBase64String);
+        } catch (WingsException ex) {
+          log.error("Error while updating license info", ex);
+        }
+      }
+    }
+
+    injector.getInstance(EventsModuleHelper.class).initialize();
+    log.info("Initializing gRPC server...");
+    ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
+    serviceManager.awaitHealthy();
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
+
+    registerDatadogPublisherIfEnabled(configuration);
+
+    log.info("Leaving startup maintenance mode");
+    MaintenanceController.resetForceMaintenance();
+  }
+
+  public void addModules(final MainConfiguration configuration, List<Module> modules) {
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -543,108 +653,6 @@ public class WingsApplication extends Application<MainConfiguration> {
         return configuration.getFeatureFlagConfig();
       }
     });
-    Injector injector = Guice.createInjector(modules);
-
-    // Access all caches before coming out of maintenance
-    injector.getInstance(new Key<Map<String, Cache<?, ?>>>() {});
-
-    registerAtmosphereStreams(environment, injector);
-
-    initializeFeatureFlags(configuration, injector);
-
-    registerHealthChecks(environment, injector);
-
-    registerStores(configuration, injector);
-
-    registerResources(environment, injector);
-
-    registerManagedBeans(configuration, environment, injector);
-
-    registerQueueListeners(injector);
-
-    scheduleJobs(injector, configuration);
-
-    registerEventConsumers(injector);
-
-    registerObservers(injector);
-
-    registerInprocPerpetualTaskServiceClients(injector);
-
-    registerCronJobs(injector);
-
-    registerCorsFilter(configuration, environment);
-
-    registerAuditResponseFilter(environment, injector);
-
-    registerJerseyProviders(environment, injector);
-
-    registerCharsetResponseFilter(environment, injector);
-
-    // Authentication/Authorization filters
-    registerAuthFilters(configuration, environment, injector);
-
-    registerCorrelationFilter(environment, injector);
-
-    // Register collection iterators
-    if (configuration.isEnableIterators()) {
-      registerIterators(injector);
-    }
-    registerCVNGVerificationTaskIterator(injector);
-
-    environment.lifecycle().addServerLifecycleListener(server -> {
-      for (Connector connector : server.getConnectors()) {
-        if (connector instanceof ServerConnector) {
-          ServerConnector serverConnector = (ServerConnector) connector;
-          if (serverConnector.getName().equalsIgnoreCase("application")) {
-            configuration.setSslEnabled(
-                serverConnector.getDefaultConnectionFactory().getProtocol().equalsIgnoreCase("ssl"));
-            configuration.setApplicationPort(serverConnector.getLocalPort());
-            return;
-          }
-        }
-      }
-    });
-
-    harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
-
-    initMetrics();
-
-    initializeServiceSecretKeys(injector);
-
-    runMigrations(injector);
-
-    String deployMode = configuration.getDeployMode().name();
-
-    if (DeployMode.isOnPrem(deployMode)) {
-      LicenseService licenseService = injector.getInstance(LicenseService.class);
-      String encryptedLicenseInfoBase64String = System.getenv(LicenseService.LICENSE_INFO);
-      log.info("Encrypted license info read from environment {}", encryptedLicenseInfoBase64String);
-      if (isEmpty(encryptedLicenseInfoBase64String)) {
-        log.error("No license info is provided");
-      } else {
-        try {
-          log.info("Updating license info read from environment {}", encryptedLicenseInfoBase64String);
-          licenseService.updateAccountLicenseForOnPrem(encryptedLicenseInfoBase64String);
-          log.info("Updated license info read from environment {}", encryptedLicenseInfoBase64String);
-        } catch (WingsException ex) {
-          log.error("Error while updating license info", ex);
-        }
-      }
-    }
-
-    injector.getInstance(EventsModuleHelper.class).initialize();
-    log.info("Initializing gRPC server...");
-    ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
-    serviceManager.awaitHealthy();
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
-
-    registerDatadogPublisherIfEnabled(configuration);
-
-    log.info("Leaving startup maintenance mode");
-    MaintenanceController.resetForceMaintenance();
-
-    log.info("Starting app done");
-    log.info("Manager is running on JRE: {}", System.getProperty("java.version"));
   }
 
   private void registerEventConsumers(final Injector injector) {
