@@ -7,6 +7,8 @@ java_library(
     srcs = glob(["src/main/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
+        "@maven//:io_netty_netty_all",
+    ] + [
         "//:lombok",
         "//970-api-services-beans:module",
         "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
