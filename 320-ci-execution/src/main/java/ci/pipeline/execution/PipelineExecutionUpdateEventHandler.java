@@ -70,7 +70,7 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
           DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                         .accountId(accountId)
                                                         .taskSetupAbstractions(abstractions)
-                                                        .executionTimeout(java.time.Duration.ofSeconds(120))
+                                                        .executionTimeout(java.time.Duration.ofSeconds(900))
                                                         .taskType("CI_CLEANUP")
                                                         .taskParameters(cik8CleanupTaskParams)
                                                         .taskDescription("CI cleanup pod task")
