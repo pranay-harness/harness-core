@@ -304,6 +304,9 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
 
     // Add git clone connector
     if (!liteEngineTaskStepInfo.isSkipGitClone()) {
+      if (liteEngineTaskStepInfo.getCiCodebase() == null) {
+        throw new CIStageExecutionException("Codebase is mandatory with enabled cloneCodebase flag");
+      }
       entityDetails.add(createEntityDetails(liteEngineTaskStepInfo.getCiCodebase().getConnectorRef(), accountIdentifier,
           projectIdentifier, orgIdentifier));
     }
