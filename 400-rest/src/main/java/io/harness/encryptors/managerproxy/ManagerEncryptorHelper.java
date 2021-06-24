@@ -58,7 +58,7 @@ public class ManagerEncryptorHelper {
       if (isNotBlank(owner)) {
         abstractions.put(OWNER, owner);
       }
-      if (isNotBlank(ngAccess.getOrgIdentifier()) || isNotBlank(ngAccess.getProjectIdentifier())) {
+      if (isNotBlank(ngAccess.getAccountIdentifier())) {
         abstractions.put(NG, "true");
       }
     }
