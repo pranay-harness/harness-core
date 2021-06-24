@@ -42,7 +42,11 @@ public class AddEnableIteratorsToTriggers implements Migration {
                                                                    .equal("SCHEDULED")
                                                                    .fetch())) {
       while (triggerHIterator.hasNext()) {
-        migrateTrigger(triggerHIterator.next());
+        try {
+          migrateTrigger(triggerHIterator.next());
+        } catch (Exception e) {
+          log.error(LOG_IDENTIFIER + "Failed to catch the migration", e);
+        }
         count++;
       }
     } catch (Exception e) {
@@ -58,7 +62,6 @@ public class AddEnableIteratorsToTriggers implements Migration {
       // Pause the current scheduler job
       jobScheduler.pauseJob(trigger.getUuid(), ScheduledTriggerJob.GROUP);
 
-      // Fetch the nextFireTime from Quartz
       trigger.setNextIterations(new ArrayList<>());
       List<Long> nextFireTime = trigger.recalculateNextIterations(Trigger.TriggerKeys.nextIterations, true, 0);
       if (!nextFireTime.isEmpty()) {
@@ -77,11 +80,11 @@ public class AddEnableIteratorsToTriggers implements Migration {
       log.info(
           LOG_IDENTIFIER + "Updated trigger with id {} for accountId {}", trigger.getUuid(), trigger.getAccountId());
     } catch (Exception e) {
-      // Resume the current scheduler job
-      jobScheduler.resumeJob(trigger.getUuid(), ScheduledTriggerJob.GROUP);
       log.error(LOG_IDENTIFIER + "Could not update trigger with id " + trigger.getUuid() + " for accountId "
               + trigger.getAccountId(),
           e);
+      // Resume the current scheduler job
+      jobScheduler.resumeJob(trigger.getUuid(), ScheduledTriggerJob.GROUP);
     }
   }
 }
