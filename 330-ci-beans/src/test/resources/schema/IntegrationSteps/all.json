@@ -773,6 +773,7 @@
           "required": [
             "args",
             "buildTool",
+            "connectorRef",
             "image",
             "language",
             "packages"
@@ -784,7 +785,7 @@
             "buildTool": {
               "type": "string"
             },
-            "connector": {
+            "connectorRef": {
               "type": "string"
             },
             "envVariables": {
