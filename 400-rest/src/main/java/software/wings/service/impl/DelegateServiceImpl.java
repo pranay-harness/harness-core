@@ -2081,13 +2081,19 @@ public class DelegateServiceImpl implements DelegateService {
       log.info("Delegate group: {} and all belonging delegates have been marked as deleted.", delegateGroupId);
     }
 
+    String orgIdentifier = delegateGroup.getOwner() != null
+        ? DelegateEntityOwnerHelper.extractOrgIdFromOwnerIdentifier(delegateGroup.getOwner().getIdentifier())
+        : null;
+
+    String projectIdentifier = delegateGroup.getOwner() != null
+        ? DelegateEntityOwnerHelper.extractProjectIdFromOwnerIdentifier(delegateGroup.getOwner().getIdentifier())
+        : null;
+
     outboxService.save(
         DelegateGroupDeleteEvent.builder()
             .accountIdentifier(accountId)
-            .orgIdentifier(
-                DelegateEntityOwnerHelper.extractOrgIdFromOwnerIdentifier(delegateGroup.getOwner().getIdentifier()))
-            .projectIdentifier(
-                DelegateEntityOwnerHelper.extractProjectIdFromOwnerIdentifier(delegateGroup.getOwner().getIdentifier()))
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
             .delegateGroupId(delegateGroupId)
             .delegateSetupDetails(DelegateSetupDetails.builder()
                                       .delegateConfigurationId(delegateGroup.getDelegateConfigurationId())
@@ -2095,10 +2101,8 @@ public class DelegateServiceImpl implements DelegateService {
                                       .k8sConfigDetails(delegateGroup.getK8sConfigDetails())
                                       .name(delegateGroup.getName())
                                       .size(delegateGroup.getSizeDetails().getSize())
-                                      .orgIdentifier(DelegateEntityOwnerHelper.extractOrgIdFromOwnerIdentifier(
-                                          delegateGroup.getOwner().getIdentifier()))
-                                      .projectIdentifier(DelegateEntityOwnerHelper.extractProjectIdFromOwnerIdentifier(
-                                          delegateGroup.getOwner().getIdentifier()))
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
                                       .build())
             .build());
 

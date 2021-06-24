@@ -603,6 +603,7 @@ shared_dependencies = [
     "@maven//:org_springframework_data_spring_data_commons",
     "@maven//:org_springframework_data_spring_data_mongodb",
     "@maven//:org_springframework_guice_spring_guice",
+    "@maven//:org_springframework_security_spring_security_crypto",
     "@maven//:org_springframework_spring_aop",
     "@maven//:org_springframework_spring_beans",
     "@maven//:org_springframework_spring_context",

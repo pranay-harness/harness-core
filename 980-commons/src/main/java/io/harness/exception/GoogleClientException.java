@@ -1,8 +1,12 @@
 package io.harness.exception;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 
+@OwnedBy(CDP)
 public class GoogleClientException extends WingsException {
   private static final String MESSAGE_KEY = "message";
 

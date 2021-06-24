@@ -538,6 +538,7 @@ public class K8sStepHelper {
         K8sGcpInfrastructureOutcome k8sGcpInfrastructure = (K8sGcpInfrastructureOutcome) infrastructure;
         ConnectorInfoDTO gcpConnectorDTO = getConnector(k8sGcpInfrastructure.getConnectorRef(), ambiance);
         KubernetesHelperService.validateNamespace(k8sGcpInfrastructure.getNamespace());
+        KubernetesHelperService.validateCluster(k8sGcpInfrastructure.getCluster());
 
         return GcpK8sInfraDelegateConfig.builder()
             .namespace(k8sGcpInfrastructure.getNamespace())

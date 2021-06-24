@@ -48,8 +48,8 @@ public class GitToHarnessProgressHelper {
   public void doPreRunChecks(YamlChangeSetDTO yamlChangeSetDTO) {
     GitToHarnessProgressDTO gitToHarnessProgressDTO =
         gitToHarnessProgressService.getByYamlChangeSetId(yamlChangeSetDTO.getChangesetId());
-    if (gitToHarnessProgressDTO != null) {
-      // Check if the event has been long running over than threshold duration
+    if (gitToHarnessProgressDTO != null && !gitToHarnessProgressDTO.getGitToHarnessProgressStatus().isSuccessStatus()) {
+      // Check if the event has been long running over than threshold duration without reaching completion
       // Mark it as failed if thats true, so that it can be performed again
       if (System.currentTimeMillis() - gitToHarnessProgressDTO.getLastUpdatedAt()
           >= GitToHarnessProgressConstants.longRunningEventResetDurationInMs) {
