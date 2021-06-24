@@ -64,6 +64,7 @@ BAZEL_MODULES="\
   //410-cg-rest:module \
   //420-delegate-agent:module \
   //420-delegate-service:module \
+  //425-verification-commons:module \
   //430-cv-nextgen-commons:module \
   //440-connector-nextgen:module \
   //445-cg-connectors:module \
@@ -337,6 +338,7 @@ build_bazel_module 400-rest
 build_bazel_module 410-cg-rest
 build_bazel_module 420-delegate-agent
 build_bazel_module 420-delegate-service
+build_bazel_module 425-verification-commons
 build_bazel_module 430-cv-nextgen-commons
 build_bazel_module 440-connector-nextgen
 build_bazel_module 445-cg-connectors
