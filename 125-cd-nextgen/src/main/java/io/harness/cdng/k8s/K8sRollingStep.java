@@ -20,7 +20,7 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
-import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollback;
+import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.CDP)
 @Slf4j
-public class K8sRollingStep extends TaskChainExecutableWithRollback implements K8sStepExecutor {
+public class K8sRollingStep extends TaskChainExecutableWithRollbackAndRbac implements K8sStepExecutor {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLING.getYamlType()).build();
   private final String K8S_ROLLING_DEPLOY_COMMAND_NAME = "Rolling Deploy";
@@ -50,12 +50,17 @@ public class K8sRollingStep extends TaskChainExecutableWithRollback implements K
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
 
   @Override
+  public void validateResources(Ambiance ambiance, StepElementParameters stepParameters) {
+    // Noop
+  }
+
+  @Override
   public Class<StepElementParameters> getStepParametersClass() {
     return StepElementParameters.class;
   }
 
   @Override
-  public TaskChainResponse startChainLink(
+  public TaskChainResponse startChainLinkAfterRbac(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     return k8sStepHelper.startChainLink(this, ambiance, stepElementParameters);
   }
