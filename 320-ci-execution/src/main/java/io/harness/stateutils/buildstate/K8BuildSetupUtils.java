@@ -429,6 +429,7 @@ public class K8BuildSetupUtils {
             .volumeToMountPath(volumeToMountPath)
             .privileged(containerDefinitionInfo.isPrivileged())
             .runAsUser(containerDefinitionInfo.getRunAsUser())
+            .imagePullPolicy(containerDefinitionInfo.getImagePullPolicy())
             .build();
     if (containerDefinitionInfo.getContainerType() != CIContainerType.SERVICE) {
       cik8ContainerParams.setWorkingDir(workDirPath);
