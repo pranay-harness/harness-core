@@ -15,6 +15,7 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.artifacts.ecr.EcrArtifactDelegateRequest;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.BaseNGAccess;
@@ -93,6 +94,23 @@ public class AwsResourceServiceHelper {
             .executionTimeout(java.time.Duration.ofSeconds(timeoutInSecs))
             .taskSetupAbstraction(SetupAbstractionKeys.orgIdentifier, ngAccess.getOrgIdentifier())
             .taskSetupAbstraction(SetupAbstractionKeys.projectIdentifier, ngAccess.getProjectIdentifier())
+            .build();
+    return delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+  }
+
+  public DelegateResponseData getResponseData(
+      BaseNGAccess ngAccess, EcrArtifactDelegateRequest ecrRequest, TaskParameters taskParameters, String taskType) {
+    final DelegateTaskRequest delegateTaskRequest =
+        DelegateTaskRequest.builder()
+            .accountId(ngAccess.getAccountIdentifier())
+            .taskType(taskType)
+            .taskParameters(taskParameters)
+            .executionTimeout(java.time.Duration.ofSeconds(timeoutInSecs))
+            .taskSetupAbstraction(SetupAbstractionKeys.orgIdentifier, ngAccess.getOrgIdentifier())
+            .taskSetupAbstraction(SetupAbstractionKeys.projectIdentifier, ngAccess.getProjectIdentifier())
+            .taskSetupAbstraction("ng", "true")
+            .taskSetupAbstraction("owner", ngAccess.getOrgIdentifier() + "/" + ngAccess.getProjectIdentifier())
+            .taskSelectors(ecrRequest.getAwsConnectorDTO().getDelegateSelectors())
             .build();
 
     return delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
