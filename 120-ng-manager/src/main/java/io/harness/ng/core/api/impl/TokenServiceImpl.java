@@ -69,6 +69,13 @@ public class TokenServiceImpl implements TokenService {
   }
 
   @Override
+  public TokenDTO getToken(String tokenId) {
+    Optional<Token> optionalToken = tokenRepository.findById(tokenId);
+    Preconditions.checkState(optionalToken.isPresent(), "No token present with id: " + tokenId);
+    return optionalToken.isPresent() ? TokenDTOMapper.getDTOFromToken(optionalToken.get()) : null;
+  }
+
+  @Override
   public String rotateToken(String tokenIdentifier, Instant scheduledExpireTime) {
     Optional<Token> optionalToken = tokenRepository.findByIdentifier(tokenIdentifier);
     Preconditions.checkState(optionalToken.isPresent(), "No token present with identifier: " + tokenIdentifier);

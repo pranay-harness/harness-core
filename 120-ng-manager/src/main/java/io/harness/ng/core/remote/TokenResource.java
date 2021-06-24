@@ -18,6 +18,7 @@ import java.time.Instant;
 import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -58,12 +59,11 @@ public class TokenResource {
     return ResponseDTO.newResponse(token);
   }
 
-  @DELETE
-  @Path("{identifier}")
-  @ApiOperation(value = "Delete token", nickname = "deleteToken")
-  public ResponseDTO<Boolean> deleteToken(@PathParam("identifier") String identifier) {
-    boolean isDeleted = tokenService.revokeToken(identifier);
-    return ResponseDTO.newResponse(isDeleted);
+  @GET
+  @Path("{tokenId}")
+  @ApiOperation(value = "Get token", nickname = "getToken")
+  public ResponseDTO<TokenDTO> getToken(@PathParam("tokenId") String tokenId) {
+    return ResponseDTO.newResponse(tokenService.getToken(tokenId));
   }
 
   @POST

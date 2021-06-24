@@ -23,9 +23,10 @@ import org.apache.commons.lang3.tuple.Pair;
 @Slf4j
 public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
   public static final String X_API_KEY = "X-Api-Key";
+  private
 
-  public NextGenAuthenticationFilter(Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate,
-      Map<String, JWTTokenHandler> serviceToJWTTokenHandlerMapping, Map<String, String> serviceToSecretMapping) {
+      public NextGenAuthenticationFilter(Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate,
+          Map<String, JWTTokenHandler> serviceToJWTTokenHandlerMapping, Map<String, String> serviceToSecretMapping) {
     super(predicate, serviceToJWTTokenHandlerMapping, serviceToSecretMapping);
   }
 
@@ -40,9 +41,7 @@ public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
     if (apiKeyOptional.isPresent()) {
       String apiKey = apiKeyOptional.get();
       log.info("Found an API key in request {}", apiKey);
-      // @Todo(Ujjawal): Try to find a principal for apikey
-      // found --> set the principal and return
-      // not found --> throw unauthorized
+
     } else {
       super.filter(containerRequestContext);
     }

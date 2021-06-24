@@ -13,4 +13,5 @@ public interface TokenService {
   boolean revokeToken(String tokenIdentifier);
   String rotateToken(String tokenIdentifier, Instant scheduledExpireTime);
   TokenDTO updateToken(TokenDTO tokenDTO);
+  TokenDTO getToken(String tokenId);
 }
