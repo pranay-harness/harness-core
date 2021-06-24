@@ -498,7 +498,7 @@ function setupClientUtils(){
             cp images/go-template/${platform}/$gotemplateversion/go-template ${STORAGE_DIR_LOCATION}/harness-download/snapshot-go-template/release/$gotemplateversion/bin/${platform}/amd64/
         done
 
-        for harnessPywinrmVersion in v0.1-dev v0.2-dev v0.3-dev; do
+        for harnessPywinrmVersion in v0.1-dev v0.2-dev v0.3-dev v0.4-dev; do
             mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/snapshot-harness-pywinrm/release/$harnessPywinrmVersion/bin/${platform}/amd64/
             cp images/harness-pywinrm/${platform}/$harnessPywinrmVersion/harness-pywinrm ${STORAGE_DIR_LOCATION}/harness-download/snapshot-harness-pywinrm/release/$harnessPywinrmVersion/bin/${platform}/amd64/
         done

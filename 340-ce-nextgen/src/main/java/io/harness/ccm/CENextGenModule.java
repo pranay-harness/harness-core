@@ -17,12 +17,13 @@ import io.harness.ccm.bigQuery.BigQueryServiceImpl;
 import io.harness.ccm.commons.beans.config.GcpConfig;
 import io.harness.ccm.eventframework.ConnectorEntityCRUDStreamListener;
 import io.harness.ccm.perpetualtask.K8sWatchTaskResourceClientModule;
-import io.harness.ccm.persistence.JooqExecuteListener;
 import io.harness.ccm.service.impl.CEYamlServiceImpl;
 import io.harness.ccm.service.intf.CEYamlService;
+import io.harness.ccm.views.service.CEReportScheduleService;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.ccm.views.service.ViewsBillingService;
+import io.harness.ccm.views.service.impl.CEReportScheduleServiceImpl;
 import io.harness.ccm.views.service.impl.CEViewServiceImpl;
 import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
 import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
@@ -48,6 +49,8 @@ import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.timescaledb.JooqModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
+import io.harness.timescaledb.metrics.HExecuteListener;
+import io.harness.timescaledb.metrics.QueryStatsPrinter;
 import io.harness.version.VersionModule;
 
 import com.google.common.collect.ImmutableMap;
@@ -119,7 +122,7 @@ public class CENextGenModule extends AbstractModule {
       @Singleton
       @Named("PSQLExecuteListener")
       ExecuteListener executeListener() {
-        return new JooqExecuteListener();
+        return HExecuteListener.getInstance();
       }
 
       @Provides
@@ -158,6 +161,9 @@ public class CENextGenModule extends AbstractModule {
     bind(ViewsBillingService.class).to(ViewsBillingServiceImpl.class);
     bind(CEViewService.class).to(CEViewServiceImpl.class);
     bind(ViewCustomFieldService.class).to(ViewCustomFieldServiceImpl.class);
+    bind(CEReportScheduleService.class).to(CEReportScheduleServiceImpl.class);
+    bind(QueryStatsPrinter.class).toInstance(HExecuteListener.getInstance());
+
     registerEventsFrameworkMessageListeners();
 
     bindRetryOnExceptionInterceptor();

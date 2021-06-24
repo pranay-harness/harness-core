@@ -78,7 +78,7 @@
                 }
               ]
             },
-            "remoteCacheImage": {
+            "remoteCacheRepo": {
               "type": "string"
             },
             "repo": {
@@ -555,7 +555,11 @@
           ],
           "properties": {
             "archiveFormat": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "Tar",
+                "Gzip"
+              ]
             },
             "bucket": {
               "type": "string"
@@ -609,7 +613,11 @@
           ],
           "properties": {
             "archiveFormat": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "Tar",
+                "Gzip"
+              ]
             },
             "bucket": {
               "type": "string"
@@ -674,6 +682,7 @@
           "type": "object",
           "required": [
             "command",
+            "connectorRef",
             "image"
           ],
           "properties": {
@@ -740,7 +749,11 @@
               ]
             },
             "shell": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "Sh",
+                "Bash"
+              ]
             }
           }
         }
@@ -845,7 +858,11 @@
           ],
           "properties": {
             "archiveFormat": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "Tar",
+                "Gzip"
+              ]
             },
             "bucket": {
               "type": "string"
@@ -913,7 +930,11 @@
           ],
           "properties": {
             "archiveFormat": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "Tar",
+                "Gzip"
+              ]
             },
             "bucket": {
               "type": "string"

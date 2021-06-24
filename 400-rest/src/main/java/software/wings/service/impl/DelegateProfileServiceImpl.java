@@ -67,7 +67,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @OwnedBy(DEL)
 public class DelegateProfileServiceImpl implements DelegateProfileService, AccountCrudObserver {
   public static final String CG_PRIMARY_PROFILE_NAME = "Primary";
-  public static final String NG_PRIMARY_PROFILE_NAME = "Primary Configuration";
+  public static final String NG_PRIMARY_PROFILE_NAME_TEMPLATE = "Primary %s Configuration";
   public static final String PRIMARY_PROFILE_DESCRIPTION = "The primary profile for the";
 
   @Inject private HPersistence persistence;
@@ -348,8 +348,13 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
   private String getProfileName(final DelegateEntityOwner owner, final boolean isNg) {
     if (isNg) {
-      final String nameSuffix = owner != null ? owner.getIdentifier() : "Account";
-      return String.format("%s for %s", NG_PRIMARY_PROFILE_NAME, nameSuffix);
+      if (DelegateEntityOwnerHelper.isAccount(owner)) {
+        return String.format(NG_PRIMARY_PROFILE_NAME_TEMPLATE, "Account");
+      } else if (DelegateEntityOwnerHelper.isOrganisation(owner)) {
+        return String.format(NG_PRIMARY_PROFILE_NAME_TEMPLATE, "Organization");
+      } else {
+        return String.format(NG_PRIMARY_PROFILE_NAME_TEMPLATE, "Project");
+      }
     } else {
       return CG_PRIMARY_PROFILE_NAME;
     }

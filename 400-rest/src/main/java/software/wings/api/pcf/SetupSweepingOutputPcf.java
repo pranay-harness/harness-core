@@ -3,12 +3,12 @@ package software.wings.api.pcf;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.beans.SweepingOutput;
+import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
+import io.harness.delegate.task.pcf.CfCommandRequest;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 
 import software.wings.api.pcf.InfoVariables.InfoVariablesBuilder;
-import software.wings.beans.ResizeStrategy;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
-import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
@@ -30,15 +30,15 @@ public class SetupSweepingOutputPcf implements SweepingOutput {
   private boolean useCurrentRunningInstanceCount;
   private Integer currentRunningInstanceCount;
   private ResizeStrategy resizeStrategy;
-  private PcfCommandRequest pcfCommandRequest;
+  private CfCommandRequest pcfCommandRequest;
   private String ManifestYaml;
-  private PcfAppSetupTimeDetails newPcfApplicationDetails;
+  private CfAppSetupTimeDetails newPcfApplicationDetails;
   private Integer totalPreviousInstanceCount;
   private List<String> tempRouteMap;
   private List<String> routeMaps;
   private Integer timeoutIntervalInMinutes;
-  private List<PcfAppSetupTimeDetails> appDetailsToBeDownsized;
-  private PcfAppSetupTimeDetails mostRecentInactiveAppVersionDetails;
+  private List<CfAppSetupTimeDetails> appDetailsToBeDownsized;
+  private CfAppSetupTimeDetails mostRecentInactiveAppVersionDetails;
   private boolean isStandardBlueGreenWorkflow;
   private boolean isDownsizeOldApps;
   private boolean isUseCfCli;
@@ -57,7 +57,7 @@ public class SetupSweepingOutputPcf implements SweepingOutput {
       infoVariablesBuilder.newAppRoutes(newPcfApplicationDetails.getUrls());
     }
 
-    PcfAppSetupTimeDetails oldAppDetails = getOldAppDetail(appDetailsToBeDownsized);
+    CfAppSetupTimeDetails oldAppDetails = getOldAppDetail(appDetailsToBeDownsized);
     if (oldAppDetails != null) {
       infoVariablesBuilder.oldAppName(oldAppDetails.getApplicationName());
       infoVariablesBuilder.oldAppGuid(oldAppDetails.getApplicationGuid());
@@ -76,7 +76,7 @@ public class SetupSweepingOutputPcf implements SweepingOutput {
     return infoVariablesBuilder.build();
   }
 
-  private PcfAppSetupTimeDetails getOldAppDetail(List<PcfAppSetupTimeDetails> appDetailsToBeDownsized) {
+  private CfAppSetupTimeDetails getOldAppDetail(List<CfAppSetupTimeDetails> appDetailsToBeDownsized) {
     if (isNotEmpty(appDetailsToBeDownsized)) {
       return appDetailsToBeDownsized.get(0);
     }

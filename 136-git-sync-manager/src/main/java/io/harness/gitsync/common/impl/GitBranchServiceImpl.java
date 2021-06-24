@@ -26,6 +26,7 @@ import io.harness.utils.PageUtils;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.mongodb.client.result.DeleteResult;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -191,5 +192,16 @@ public class GitBranchServiceImpl implements GitBranchService {
       return gitBranch.getBranchSyncStatus().equals(branchSyncStatus);
     }
     return false;
+  }
+
+  @Override
+  public DeleteResult delete(String repoUrl, String branchName, String accountIdentifier) {
+    final Criteria criteria = Criteria.where(GitBranchKeys.accountIdentifier)
+                                  .is(accountIdentifier)
+                                  .and(GitBranchKeys.repoURL)
+                                  .is(repoUrl)
+                                  .and(GitBranchKeys.branchName)
+                                  .is(branchName);
+    return gitBranchesRepository.delete(criteria);
   }
 }

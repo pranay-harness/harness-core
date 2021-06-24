@@ -2,6 +2,7 @@ package software.wings.sm.states.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.rule.OwnerRule.ADWAIT;
@@ -10,7 +11,6 @@ import static io.harness.rule.OwnerRule.TMACARI;
 
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -66,6 +66,10 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
+import io.harness.delegate.task.pcf.request.CfCommandRouteUpdateRequest;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
+import io.harness.delegate.task.pcf.response.CfDeployCommandResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.VariableResolverTracker;
@@ -100,11 +104,7 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
-import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
-import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
-import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
+import software.wings.helpers.ext.pcf.request.CfCommandSetupRequest;
 import software.wings.service.ServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -237,8 +237,8 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
           .uuid(serviceElement.getUuid())
           .name(PCF_SERVICE_NAME)
           .maxInstanceCount(10)
-          .pcfCommandRequest(PcfCommandSetupRequest.builder().space(SPACE).organization(ORG).build())
-          .newPcfApplicationDetails(PcfAppSetupTimeDetails.builder()
+          .pcfCommandRequest(CfCommandSetupRequest.builder().space(SPACE).organization(ORG).build())
+          .newPcfApplicationDetails(CfAppSetupTimeDetails.builder()
                                         .applicationName("APP_NAME_SERVICE_NAME_ENV_NAME__2")
                                         .applicationGuid("1")
                                         .urls(Arrays.asList("R1", "R2"))
@@ -247,7 +247,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
           .resizeStrategy(RESIZE_NEW_FIRST)
           .routeMaps(Arrays.asList("R1", "R2"))
           .tempRouteMap(Arrays.asList("R3"))
-          .appDetailsToBeDownsized(Arrays.asList(PcfAppSetupTimeDetails.builder()
+          .appDetailsToBeDownsized(Arrays.asList(CfAppSetupTimeDetails.builder()
                                                      .applicationName("APP_NAME_SERVICE_NAME_ENV_NAME__1")
                                                      .urls(Arrays.asList("R3"))
                                                      .build()))
@@ -370,17 +370,17 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     PcfRouteUpdateStateExecutionData stateExecutionData =
         (PcfRouteUpdateStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(stateExecutionData.getCommandName()).isEqualTo(PCF_MAP_ROUTE_COMMAND);
-    PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest =
-        (PcfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
+    CfCommandRouteUpdateRequest cfCommandRouteUpdateRequest =
+        (CfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
-    List<String> appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
+    List<String> appNames = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
     assertThat(appNames).hasSize(1);
     assertThat(appNames.get(0)).isEqualTo("APP_NAME_SERVICE_NAME_ENV_NAME__2");
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
-    List<String> routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
+    List<String> routes = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertThat(routes).hasSize(2);
     assertThat(routes.contains("R1")).isTrue();
     assertThat(routes.contains("R2")).isTrue();
@@ -389,15 +389,15 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    pcfCommandRouteUpdateRequest = (PcfCommandRouteUpdateRequest) delegateTask.getData().getParameters()[0];
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
-    appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    cfCommandRouteUpdateRequest = (CfCommandRouteUpdateRequest) delegateTask.getData().getParameters()[0];
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
+    appNames = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
     assertThat(appNames).hasSize(1);
     assertThat(appNames.get(0)).isEqualTo("APP_NAME_SERVICE_NAME_ENV_NAME__2");
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
-    routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
+    routes = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertThat(routes).hasSize(2);
     assertThat(routes.contains("R1")).isTrue();
     assertThat(routes.contains("R2")).isTrue();
@@ -436,17 +436,17 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     PcfRouteUpdateStateExecutionData stateExecutionData =
         (PcfRouteUpdateStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(stateExecutionData.getCommandName()).isEqualTo(PCF_MAP_ROUTE_COMMAND);
-    PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest =
-        (PcfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
+    CfCommandRouteUpdateRequest cfCommandRouteUpdateRequest =
+        (CfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
-    List<String> appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
+    List<String> appNames = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
     assertThat(appNames).hasSize(1);
     assertThat(appNames.get(0)).isEqualTo("APP_NAME_SERVICE_NAME_ENV_NAME__2");
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
-    List<String> routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
+    List<String> routes = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertThat(routes).hasSize(1);
     assertThat(routes.contains("R3")).isTrue();
 
@@ -454,14 +454,14 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
-    appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
+    appNames = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
     assertThat(appNames).hasSize(1);
     assertThat(appNames.get(0)).isEqualTo("APP_NAME_SERVICE_NAME_ENV_NAME__2");
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
-    routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
+    routes = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertThat(routes).hasSize(1);
     assertThat(routes.contains("R3")).isTrue();
   }
@@ -481,17 +481,17 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     PcfRouteUpdateStateExecutionData stateExecutionData =
         (PcfRouteUpdateStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(stateExecutionData.getCommandName()).isEqualTo(PCF_MAP_ROUTE_COMMAND);
-    PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest =
-        (PcfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
+    CfCommandRouteUpdateRequest cfCommandRouteUpdateRequest =
+        (CfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
-    List<String> appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
+    List<String> appNames = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
     assertThat(appNames).hasSize(1);
     assertThat(appNames.get(0)).isEqualTo("APP_NAME_SERVICE_NAME_ENV_NAME__1");
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
-    List<String> routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
+    List<String> routes = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertThat(routes).hasSize(2);
     assertThat(routes.contains("R1")).isTrue();
     assertThat(routes.contains("R2")).isTrue();
@@ -500,14 +500,14 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
-    appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
+    appNames = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
     assertThat(appNames).hasSize(1);
     assertThat(appNames.get(0)).isEqualTo("APP_NAME_SERVICE_NAME_ENV_NAME__1");
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
-    routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
+    routes = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertThat(routes).hasSize(2);
     assertThat(routes.contains("R1")).isTrue();
     assertThat(routes.contains("R2")).isTrue();
@@ -528,17 +528,17 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     PcfRouteUpdateStateExecutionData stateExecutionData =
         (PcfRouteUpdateStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(stateExecutionData.getCommandName()).isEqualTo(PCF_MAP_ROUTE_COMMAND);
-    PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest =
-        (PcfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
+    CfCommandRouteUpdateRequest cfCommandRouteUpdateRequest =
+        (CfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
-    List<String> appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
+    List<String> appNames = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
     assertThat(appNames).hasSize(1);
     assertThat(appNames.get(0)).isEqualTo("APP_NAME_SERVICE_NAME_ENV_NAME__1");
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
-    List<String> routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
+    List<String> routes = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertThat(routes).hasSize(1);
     assertThat(routes.contains("R3")).isTrue();
 
@@ -546,14 +546,14 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
-    appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
+    appNames = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
     assertThat(appNames).hasSize(1);
     assertThat(appNames.get(0)).isEqualTo("APP_NAME_SERVICE_NAME_ENV_NAME__1");
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
-    routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
+    routes = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertThat(routes).hasSize(1);
     assertThat(routes.contains("R3")).isTrue();
   }
@@ -570,27 +570,27 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     PcfRouteUpdateStateExecutionData stateExecutionData =
         (PcfRouteUpdateStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(stateExecutionData.getCommandName()).isEqualTo(PCF_BG_SWAP_ROUTE_COMMAND);
-    PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest =
-        (PcfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
+    CfCommandRouteUpdateRequest cfCommandRouteUpdateRequest =
+        (CfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicatiaonName()).isNotNull();
-    String appName = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicatiaonName();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicatiaonName()).isNotNull();
+    String appName = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicatiaonName();
     assertThat(appName).isEqualTo("APP_NAME_SERVICE_NAME_ENV_NAME__2");
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
-    List<String> routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
+    List<String> routes = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertThat(routes).hasSize(2);
     assertThat(routes.contains("R1")).isTrue();
     assertThat(routes.contains("R2")).isTrue();
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
-    List<String> appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
+    List<String> appNames = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
     assertThat(appNames).hasSize(1);
     assertThat(appNames.contains("APP_NAME_SERVICE_NAME_ENV_NAME__1")).isTrue();
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getTempRoutes()).isNotNull();
-    routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getTempRoutes();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getTempRoutes()).isNotNull();
+    routes = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getTempRoutes();
     assertThat(routes).hasSize(1);
     assertThat(routes.contains("R3")).isTrue();
 
@@ -598,25 +598,25 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    pcfCommandRouteUpdateRequest = (PcfCommandRouteUpdateRequest) delegateTask.getData().getParameters()[0];
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicatiaonName()).isNotNull();
-    appName = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicatiaonName();
+    cfCommandRouteUpdateRequest = (CfCommandRouteUpdateRequest) delegateTask.getData().getParameters()[0];
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicatiaonName()).isNotNull();
+    appName = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicatiaonName();
     assertThat(appName).isEqualTo("APP_NAME_SERVICE_NAME_ENV_NAME__2");
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
-    routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
+    routes = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
     assertThat(routes).hasSize(2);
     assertThat(routes.contains("R1")).isTrue();
     assertThat(routes.contains("R2")).isTrue();
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
-    appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames()).isNotNull();
+    appNames = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
     assertThat(appNames).hasSize(1);
     assertThat(appNames.contains("APP_NAME_SERVICE_NAME_ENV_NAME__1")).isTrue();
 
-    assertThat(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getTempRoutes()).isNotNull();
-    routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getTempRoutes();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getTempRoutes()).isNotNull();
+    routes = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getTempRoutes();
     assertThat(routes).hasSize(1);
     assertThat(routes.contains("R3")).isTrue();
   }
@@ -635,8 +635,7 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
   public void testExecute_pcfAPP_handleAsyncResponse() {
-    PcfCommandExecutionResponse response =
-        PcfCommandExecutionResponse.builder().commandExecutionStatus(SUCCESS).build();
+    CfCommandExecutionResponse response = CfCommandExecutionResponse.builder().commandExecutionStatus(SUCCESS).build();
     PcfRouteUpdateStateExecutionData executionData = PcfRouteUpdateStateExecutionData.builder().build();
 
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
@@ -665,10 +664,10 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     MapRouteState state = new MapRouteState("test", StateType.PCF_MAP_ROUTE.name());
     ActivityService mockActivityService = mock(ActivityService.class);
     on(state).set("activityService", mockActivityService);
-    PcfCommandExecutionResponse response = PcfCommandExecutionResponse.builder()
-                                               .commandExecutionStatus(SUCCESS)
-                                               .pcfCommandResponse(PcfDeployCommandResponse.builder().build())
-                                               .build();
+    CfCommandExecutionResponse response = CfCommandExecutionResponse.builder()
+                                              .commandExecutionStatus(SUCCESS)
+                                              .pcfCommandResponse(CfDeployCommandResponse.builder().build())
+                                              .build();
     PcfRouteUpdateStateExecutionData executionData = PcfRouteUpdateStateExecutionData.builder().build();
 
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);

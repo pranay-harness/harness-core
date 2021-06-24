@@ -1,13 +1,13 @@
 package io.harness.gitsync.core.webhook;
 
-import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CREATE_BRANCH_EVENT_STREAM;
-import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CREATE_BRANCH_EVENT_STREAM_MAX_PROCESSING_TIME;
+import static io.harness.eventsframework.EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM;
+import static io.harness.eventsframework.EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM_MAX_PROCESSING_TIME;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM_MAX_PROCESSING_TIME;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.gitsync.core.webhook.createbranchevent.GitCreateBranchEventStreamConsumer;
+import io.harness.gitsync.core.webhook.createbranchevent.GitBranchHookEventStreamConsumer;
 import io.harness.gitsync.core.webhook.pushevent.GitPushEventStreamConsumer;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -21,16 +21,16 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.DX)
 @Slf4j
 public class GitSyncEventConsumerService implements Managed {
-  @Inject private GitCreateBranchEventStreamConsumer gitCreateBranchEventStreamConsumer;
+  @Inject private GitBranchHookEventStreamConsumer gitCreateBranchEventStreamConsumer;
   @Inject private GitPushEventStreamConsumer gitPushEventStreamConsumer;
-  private ExecutorService gitCreateBranchEventConsumerService;
+  private ExecutorService gitBranchHookEventConsumerService;
   private ExecutorService gitPushEventConsumerService;
 
   @Override
   public void start() throws Exception {
-    gitCreateBranchEventConsumerService = Executors.newFixedThreadPool(
-        2, new ThreadFactoryBuilder().setNameFormat(GIT_CREATE_BRANCH_EVENT_STREAM).build());
-    gitCreateBranchEventConsumerService.execute(gitCreateBranchEventStreamConsumer);
+    gitBranchHookEventConsumerService =
+        Executors.newFixedThreadPool(2, new ThreadFactoryBuilder().setNameFormat(GIT_BRANCH_HOOK_EVENT_STREAM).build());
+    gitBranchHookEventConsumerService.execute(gitCreateBranchEventStreamConsumer);
 
     gitPushEventConsumerService =
         Executors.newFixedThreadPool(2, new ThreadFactoryBuilder().setNameFormat(GIT_PUSH_EVENT_STREAM).build());
@@ -39,9 +39,9 @@ public class GitSyncEventConsumerService implements Managed {
 
   @Override
   public void stop() throws Exception {
-    gitCreateBranchEventConsumerService.shutdown();
-    gitCreateBranchEventConsumerService.awaitTermination(
-        GIT_CREATE_BRANCH_EVENT_STREAM_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
+    gitBranchHookEventConsumerService.shutdown();
+    gitBranchHookEventConsumerService.awaitTermination(
+        GIT_BRANCH_HOOK_EVENT_STREAM_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
 
     gitPushEventConsumerService.shutdown();
     gitPushEventConsumerService.awaitTermination(

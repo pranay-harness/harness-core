@@ -8,6 +8,7 @@ import io.harness.accesscontrol.commons.events.EventsConfig;
 import io.harness.accesscontrol.commons.iterators.AccessControlIteratorsConfig;
 import io.harness.accesscontrol.commons.notifications.NotificationConfig;
 import io.harness.accesscontrol.preference.AccessControlPreferenceConfiguration;
+import io.harness.accesscontrol.principals.serviceaccounts.ServiceAccountClientConfiguration;
 import io.harness.accesscontrol.principals.usergroups.UserGroupClientConfiguration;
 import io.harness.accesscontrol.principals.users.UserClientConfiguration;
 import io.harness.accesscontrol.resources.ResourceGroupClientConfiguration;
@@ -48,6 +49,7 @@ public class AccessControlConfiguration extends Configuration {
   public static final String ROLES_PACKAGE = "io.harness.accesscontrol.roles";
   public static final String ROLE_ASSIGNMENTS_PACKAGE = "io.harness.accesscontrol.roleassignments.api";
   public static final String ACL_PACKAGE = "io.harness.accesscontrol.acl";
+  public static final String AGGREGATOR_PACKAGE = "io.harness.accesscontrol.aggregator.api";
   public static final String ACL_TEST_PACKAGE = "io.harness.accesscontrol.test";
   public static final String HEALTH_PACKAGE = "io.harness.accesscontrol.health";
 
@@ -73,6 +75,7 @@ public class AccessControlConfiguration extends Configuration {
   @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
   @JsonProperty("outboxPollConfig") private OutboxPollConfiguration outboxPollConfig;
   @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
+  @JsonProperty("serviceAccountClient") private ServiceAccountClientConfiguration serviceAccountClientConfiguration;
 
   public boolean isAuthEnabled() {
     return this.enableAuth;
@@ -86,8 +89,8 @@ public class AccessControlConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections(
-        PERMISSION_PACKAGE, ROLES_PACKAGE, ROLE_ASSIGNMENTS_PACKAGE, ACL_PACKAGE, ACL_TEST_PACKAGE, HEALTH_PACKAGE);
+    Reflections reflections = new Reflections(PERMISSION_PACKAGE, ROLES_PACKAGE, ROLE_ASSIGNMENTS_PACKAGE, ACL_PACKAGE,
+        AGGREGATOR_PACKAGE, ACL_TEST_PACKAGE, HEALTH_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 

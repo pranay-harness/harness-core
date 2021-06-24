@@ -248,7 +248,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   }
 
   private void saveWebhook(YamlGitConfigDTO gitSyncConfigDTO) {
-    if (isNewRepo(gitSyncConfigDTO.getRepo())) {
+    if (isNewRepoInProject(gitSyncConfigDTO)) {
       UpsertWebhookResponseDTO upsertWebhookResponseDTO = registerWebhook(gitSyncConfigDTO);
       log.info("Response of Upsert Webhook {}", upsertWebhookResponseDTO);
     }
@@ -270,8 +270,12 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
         .build();
   }
 
-  private boolean isNewRepo(String repo) {
-    return getByRepo(repo).isEmpty();
+  private boolean isNewRepoInProject(YamlGitConfigDTO gitSyncConfigDTO) {
+    final Optional<YamlGitConfig> yamlGitConfig =
+        yamlGitConfigRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifier(
+            gitSyncConfigDTO.getAccountIdentifier(), gitSyncConfigDTO.getOrganizationIdentifier(),
+            gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getIdentifier());
+    return !yamlGitConfig.isPresent();
   }
 
   private void sendEventForConfigChange(

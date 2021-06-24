@@ -4,6 +4,8 @@ import io.harness.timescaledb.JooqModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
+import io.harness.timescaledb.metrics.HExecuteListener;
+import io.harness.timescaledb.metrics.QueryStatsPrinter;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -11,11 +13,12 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.ExecuteListener;
-import org.jooq.impl.DefaultExecuteListener;
 
 @Slf4j
 public class BatchProcessingTimescaleModule extends AbstractModule {
   private final TimeScaleDBConfig configuration;
+  private static final long slowQuerySeconds = 3;
+  private static final long extremelySlowQuerySeconds = 10;
 
   public BatchProcessingTimescaleModule(TimeScaleDBConfig configuration) {
     this.configuration = configuration;
@@ -32,12 +35,13 @@ public class BatchProcessingTimescaleModule extends AbstractModule {
   @Singleton
   @Named("PSQLExecuteListener")
   ExecuteListener executeListener() {
-    return new DefaultExecuteListener();
+    return HExecuteListener.getInstance(slowQuerySeconds, extremelySlowQuerySeconds);
   }
 
   @Override
   protected void configure() {
     bind(TimeScaleDBService.class).toInstance(new TimeScaleDBServiceImpl(configuration));
     install(JooqModule.getInstance());
+    bind(QueryStatsPrinter.class).toInstance(HExecuteListener.getInstance(slowQuerySeconds, extremelySlowQuerySeconds));
   }
 }

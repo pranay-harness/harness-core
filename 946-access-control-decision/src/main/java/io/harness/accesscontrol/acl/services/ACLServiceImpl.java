@@ -181,11 +181,6 @@ public class ACLServiceImpl implements ACLService {
   }
 
   @Override
-  public void deleteAll(List<ACL> acls) {
-    aclDAO.deleteAll(acls);
-  }
-
-  @Override
   public long deleteByRoleAssignment(String roleAssignmentId) {
     return aclDAO.deleteByRoleAssignment(roleAssignmentId);
   }
