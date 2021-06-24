@@ -123,4 +123,12 @@ public class AmbianceUtils {
     Level level = obtainCurrentLevel(ambiance);
     return level == null || level.getGroup() == null ? null : level.getGroup();
   }
+
+  public static long getCurrentLevelStartTs(Ambiance ambiance) {
+    Level currLevel = obtainCurrentLevel(ambiance);
+    if (currLevel == null) {
+      throw new InvalidRequestException("Ambiance.levels is empty");
+    }
+    return currLevel.getStartTs();
+  }
 }

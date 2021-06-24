@@ -34,7 +34,6 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
-import io.harness.grpc.utils.HTimestamps;
 import io.harness.logging.AutoLogContext;
 import io.harness.observer.Subject;
 import io.harness.pms.contracts.advisers.AdviseType;
@@ -122,8 +121,7 @@ public class OrchestrationEngine {
                      prevNodeEndTs));
     }
 
-    long currNodeStartTs = System.currentTimeMillis();
-    Ambiance cloned = reBuildAmbiance(ambiance, node, uuid, currNodeStartTs);
+    Ambiance cloned = reBuildAmbiance(ambiance, node, uuid);
     NodeExecution nodeExecution =
         NodeExecution.builder()
             .uuid(uuid)
@@ -134,16 +132,16 @@ public class OrchestrationEngine {
             .parentId(previousNodeExecution == null ? null : previousNodeExecution.getParentId())
             .previousId(previousNodeExecution == null ? null : previousNodeExecution.getUuid())
             .unitProgresses(new ArrayList<>())
-            .startTs(currNodeStartTs)
+            .startTs(AmbianceUtils.getCurrentLevelStartTs(cloned))
             .build();
     nodeExecutionService.save(nodeExecution);
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(cloned).orchestrationEngine(this).build());
   }
 
-  private Ambiance reBuildAmbiance(Ambiance ambiance, PlanNodeProto node, String uuid, long currLevelStartTs) {
+  private Ambiance reBuildAmbiance(Ambiance ambiance, PlanNodeProto node, String uuid) {
     Ambiance cloned =
         AmbianceUtils.obtainCurrentRuntimeId(ambiance) == null ? ambiance : AmbianceUtils.cloneForFinish(ambiance);
-    cloned = cloned.toBuilder().addLevels(LevelUtils.buildLevelFromPlanNode(uuid, node, currLevelStartTs)).build();
+    cloned = cloned.toBuilder().addLevels(LevelUtils.buildLevelFromPlanNode(uuid, node)).build();
     return cloned;
   }
 
