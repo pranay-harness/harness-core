@@ -1317,6 +1317,7 @@ plain_artifacts = [
     "io.grpc:grpc-services:1.33.1",
     "io.grpc:grpc-stub:1.33.1",
     "io.gsonfire:gson-fire:1.8.3",
+    "io.harness.cv:data-collection-dsl:0.26-RELEASE",
     "io.harness:ff-java-server-sdk:1.0.0",
     "io.jsonwebtoken:jjwt:0.9.1",
     "io.kubernetes:client-java-api:9.0.2",
@@ -1844,6 +1845,7 @@ maven_install(
         "https://github.com/bkper/mvn-repo/raw/master/releases",
         "http://packages.confluent.io/maven",
         "https://harness.jfrog.io/harness/thirdparty-annonymous",
+        "https://harness.jfrog.io/harness/harness-public",
     ],
     version_conflict_policy = "pinned",
 )
@@ -1856,19 +1858,6 @@ http_jar(
     name = "jira_client",
     sha256 = "4e733673d5ecfbd0f81f6adef1703a1c3d8975bb091ce6af8dc6ec1604a56112",
     url = "https://harness.jfrog.io/artifactory/thirdparty-annonymous/net/rcarz/jira-client/0.9-SNAPSHOT/jira-client-0.9-20210122.053103-1.jar",
-)
-
-load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
-
-maven_install(
-    name = "maven_harness",
-    artifacts = [
-        "io.harness.cv:data-collection-dsl:0.25-RELEASE",
-    ],
-    repositories = [
-        "https://repo1.maven.org/maven2",
-        "https://%s:%s@harness.jfrog.io/artifactory/harness-internal" % (JFROG_USERNAME, JFROG_PASSWORD),
-    ],
 )
 
 maven_install(
@@ -1887,7 +1876,6 @@ maven_install(
         "https://jitpack.io",
         "https://jcenter.bintray.com",
         "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "https://harness.jfrog.io/harness/datacollection-dsl",
         "http://packages.confluent.io/maven",
     ],
     version_conflict_policy = "pinned",
@@ -1908,7 +1896,6 @@ maven_install(
         "https://jitpack.io",
         "https://jcenter.bintray.com",
         "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "https://harness.jfrog.io/harness/datacollection-dsl",
         "http://packages.confluent.io/maven",
     ],
     version_conflict_policy = "pinned",
@@ -1931,7 +1918,6 @@ maven_install(
     repositories = [
         "https://repo1.maven.org/maven2",
         "https://harness.jfrog.io/harness/thirdparty-annonymous",
-        "https://harness.jfrog.io/harness/datacollection-dsl",
     ],
 )
 
