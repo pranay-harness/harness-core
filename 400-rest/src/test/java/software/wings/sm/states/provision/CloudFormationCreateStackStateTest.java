@@ -402,7 +402,11 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHandleResponse() {
     CloudFormationRollbackInfo cloudFormationRollbackInfo =
-        CloudFormationRollbackInfo.builder().url(TEMPLATE_FILE_PATH).build();
+        CloudFormationRollbackInfo.builder()
+            .url(TEMPLATE_FILE_PATH)
+            .skipBasedOnStackStatus(true)
+            .stackStatusesToMarkAsSuccess(singletonList(UPDATE_ROLLBACK_COMPLETE.name()))
+            .build();
     ExistingStackInfo existingStackInfo = ExistingStackInfo.builder().oldStackBody("oldStackBody").build();
     Map<String, Object> cloudFormationOutputMap = new HashMap<>();
     cloudFormationOutputMap.put("key1", CloudFormationOutputInfoElement.builder().build());
@@ -428,6 +432,10 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
 
     List<CloudFormationElement> cloudFormationElementList = state.handleResponse(createStackResponse, mockContext);
     verifyResponse(cloudFormationElementList, true, UUID);
+    assertThat(((CloudFormationRollbackInfoElement) cloudFormationElementList.get(0)).isSkipBasedOnStackStatus())
+        .isTrue();
+    assertThat(((CloudFormationRollbackInfoElement) cloudFormationElementList.get(0)).getStackStatusesToMarkAsSuccess())
+        .containsExactly(UPDATE_ROLLBACK_COMPLETE.name());
 
     // no outputs
     createStackResponse = new CloudFormationCreateStackResponse(CommandExecutionStatus.SUCCESS, "output", null,
@@ -556,6 +564,8 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     // no template expressions
     state.setTemplateExpressions(null);
     state.setAwsConfigId("awsConfigId");
+    state.setSkipBasedOnStackStatus(true);
+    state.setStackStatusesToMarkAsSuccess(singletonList(UPDATE_ROLLBACK_COMPLETE.name()));
 
     Map<String, ResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
         CloudFormationCommandExecutionResponse.builder()
@@ -569,6 +579,10 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     executionResponse.getContextElements().forEach(
         contextElement -> cloudFormationElementList.add((CloudFormationElement) contextElement));
     verifyResponse(cloudFormationElementList, false, "awsConfigId");
+    assertThat(((CloudFormationRollbackInfoElement) cloudFormationElementList.get(0)).isSkipBasedOnStackStatus())
+        .isTrue();
+    assertThat(((CloudFormationRollbackInfoElement) cloudFormationElementList.get(0)).getStackStatusesToMarkAsSuccess())
+        .containsExactly(UPDATE_ROLLBACK_COMPLETE.name());
     verify(sweepingOutputService).save(any());
   }
 
