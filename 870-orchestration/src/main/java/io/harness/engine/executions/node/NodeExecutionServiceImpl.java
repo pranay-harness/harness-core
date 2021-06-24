@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
+import static io.harness.pms.PmsCommonConstants.AUTO_ABORT_PIPELINE_THROUGH_TRIGGER;
+import static io.harness.pms.contracts.execution.Status.ABORTED;
 import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
 import static io.harness.pms.contracts.execution.Status.ERRORED;
 import static io.harness.springdata.SpringDataMongoUtils.returnNewOptions;
@@ -26,16 +28,22 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
 import io.harness.execution.PlanExecutionMetadata;
+import io.harness.interrupts.InterruptEffect;
 import io.harness.observer.Subject;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent.Builder;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.triggers.TriggerPayload;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.serializer.ProtoUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.mongodb.client.result.UpdateResult;
@@ -44,8 +52,10 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -365,14 +375,62 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       triggerPayload = metadata.getTriggerPayload() != null ? metadata.getTriggerPayload() : triggerPayload;
     }
 
-    eventEmitter.emitEvent(OrchestrationEvent.newBuilder()
+    Builder eventBuilder = OrchestrationEvent.newBuilder()
                                .setAmbiance(nodeExecution.getAmbiance())
                                .setStatus(nodeExecution.getStatus())
                                .setStepParameters(ByteString.copyFromUtf8(emptyIfNull(stepParametersJson)))
                                .setEventType(orchestrationEventType)
                                .setServiceName(nodeExecution.getNode().getServiceName())
                                .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
-                               .setTriggerPayload(triggerPayload)
-                               .build());
+                               .setTriggerPayload(triggerPayload);
+
+    updateEventIfCausedByAutoAbortThroughTrigger(nodeExecution, orchestrationEventType, eventBuilder);
+    eventEmitter.emitEvent(eventBuilder.build());
+  }
+
+  /**
+   * This may seem very specialized logic for a particular case, but we want to keep events lighter as much as possible.
+   * So putting this data only in case needed, as there will be large no of NODE_EXECUTION_STATUS_UPDATE events.
+   * <p>
+   * This is special handling added for CI usecase, to skip update git prs in case of pipeline auto abort from trigger.
+   * NOTE: some refactoring is due, with which CI will start listenening to Stage level events only, then this wont be
+   * needed here. But, that may take some time.
+   */
+  @VisibleForTesting
+  void updateEventIfCausedByAutoAbortThroughTrigger(
+      NodeExecution nodeExecution, OrchestrationEventType orchestrationEventType, Builder eventBuilder) {
+    if (orchestrationEventType == OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE) {
+      Level level = AmbianceUtils.obtainCurrentLevel(nodeExecution.getAmbiance());
+      if (level != null && Objects.equals(level.getGroup(), StepOutcomeGroup.STAGE.name())
+          && nodeExecution.getStatus() == ABORTED) {
+        List<NodeExecution> allChildrenWithStatusInAborted = findAllChildrenWithStatusIn(
+            nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid(), EnumSet.of(ABORTED), false);
+        if (isEmpty(allChildrenWithStatusInAborted)) {
+          return;
+        }
+
+        List<NodeExecution> nodeExecutionsAbortedThroughTrigger =
+            allChildrenWithStatusInAborted.stream()
+                .filter(execution -> isAbortedThroughTrigger(execution))
+                .collect(Collectors.toList());
+        if (isNotEmpty(nodeExecutionsAbortedThroughTrigger)) {
+          eventBuilder.addTags(AUTO_ABORT_PIPELINE_THROUGH_TRIGGER);
+        }
+      }
+    }
+  }
+
+  private boolean isAbortedThroughTrigger(NodeExecution nodeExecution) {
+    return nodeExecution.getInterruptHistories()
+        .stream()
+        .filter(interruptEffect -> isIssuedByTrigger(interruptEffect))
+        .findAny()
+        .isPresent();
+  }
+
+  private boolean isIssuedByTrigger(InterruptEffect interruptEffect) {
+    InterruptConfig interruptConfig = interruptEffect.getInterruptConfig();
+    return interruptConfig.hasIssuedBy() && interruptConfig.getIssuedBy().hasTriggerIssuer()
+        && interruptConfig.getIssuedBy().getTriggerIssuer().getAbortPrevConcurrentExecution();
   }
 }
