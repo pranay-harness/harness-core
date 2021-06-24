@@ -188,7 +188,8 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
                                          .commandExecutionStatus(SUCCESS)
                                          .build();
 
-    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepElementParameters, () -> responseData);
+    StepResponse response =
+        k8sBGSwapServicesStep.handleTaskResultWithSecurityContext(ambiance, stepElementParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(SUCCEEDED);
     StepOutcome outcome = response.getStepOutcomes().stream().collect(Collectors.toList()).get(0);
     assertThat(outcome.getOutcome()).isInstanceOf(K8sBGSwapServicesOutcome.class);
@@ -207,7 +208,8 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
                                          .commandExecutionStatus(SUCCESS)
                                          .build();
 
-    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepElementParameters, () -> responseData);
+    StepResponse response =
+        k8sBGSwapServicesStep.handleTaskResultWithSecurityContext(ambiance, stepElementParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(SUCCEEDED);
     assertThat(response.getStepOutcomes()).isEmpty();
   }
@@ -222,7 +224,8 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
                                          .commandUnitsProgress(UnitProgressData.builder().build())
                                          .build();
 
-    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepElementParameters, () -> responseData);
+    StepResponse response =
+        k8sBGSwapServicesStep.handleTaskResultWithSecurityContext(ambiance, stepElementParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(FAILED);
     assertThat(response.getStepOutcomes()).isEmpty();
   }

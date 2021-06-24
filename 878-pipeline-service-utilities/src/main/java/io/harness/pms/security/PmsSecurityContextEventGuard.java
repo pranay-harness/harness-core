@@ -16,6 +16,7 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.rbac.PrincipalTypeProtoToPrincipalTypeMapper;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ApiKeyPrincipal;
+import io.harness.security.dto.Principal;
 import io.harness.security.dto.ServicePrincipal;
 import io.harness.security.dto.UserPrincipal;
 
@@ -23,7 +24,10 @@ import io.harness.security.dto.UserPrincipal;
 public class PmsSecurityContextEventGuard implements AutoCloseable {
   public PmsSecurityContextEventGuard(Ambiance ambiance) {
     if (ambiance != null) {
-      SecurityContextBuilder.setContext(getPrincipalFromAmbiance(ambiance));
+      io.harness.security.dto.Principal principal = getPrincipalFromAmbiance(ambiance);
+      if (principal != null) {
+        SecurityContextBuilder.setContext(principal);
+      }
     }
   }
 

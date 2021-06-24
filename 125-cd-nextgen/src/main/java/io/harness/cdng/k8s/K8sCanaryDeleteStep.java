@@ -101,8 +101,9 @@ public class K8sCanaryDeleteStep extends TaskExecutableWithRollbackAndRbac<K8sDe
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepElementParameters,
-      ThrowingSupplier<K8sDeployResponse> responseSupplier) throws Exception {
+  public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance,
+      StepElementParameters stepElementParameters, ThrowingSupplier<K8sDeployResponse> responseSupplier)
+      throws Exception {
     K8sDeployResponse k8sTaskExecutionResponse = responseSupplier.get();
     StepResponseBuilder responseBuilder =
         StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());

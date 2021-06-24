@@ -123,14 +123,14 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollbackAndRbac implem
   }
 
   @Override
-  public TaskChainResponse executeNextLink(Ambiance ambiance, StepElementParameters stepParameters,
+  public TaskChainResponse executeNextLinkWithSecurityContext(Ambiance ambiance, StepElementParameters stepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseSupplier)
       throws Exception {
     return k8sStepHelper.executeNextLink(this, ambiance, stepParameters, passThroughData, responseSupplier);
   }
 
   @Override
-  public StepResponse finalizeExecution(Ambiance ambiance, StepElementParameters stepParameters,
+  public StepResponse finalizeExecutionWithSecurityContext(Ambiance ambiance, StepElementParameters stepParameters,
       PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) {
     if (passThroughData instanceof GitFetchResponsePassThroughData) {
       return k8sStepHelper.handleGitTaskFailure((GitFetchResponsePassThroughData) passThroughData);
