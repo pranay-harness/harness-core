@@ -64,7 +64,7 @@ export JFROG_USERNAME=<username-here>
 export JFROG_PASSWORD=<password-here>
 ```
 ### Github setup
-
+A
 1. Create harness dedicated github account. Use your harness email.
 2. Make your email public as it is shown on the picture:
 NOTE: This account will be used mostly in harness private repos, you should not be concerned for being over espoused.
