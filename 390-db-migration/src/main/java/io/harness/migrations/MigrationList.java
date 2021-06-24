@@ -423,7 +423,8 @@ public class MigrationList {
         .add(Pair.of(356, CECloudAccountMigration.class))
         .add(Pair.of(357, SshAndWinRmAccountPermissionMigration.class))
         .add(Pair.of(358, BaseMigration.class))
-        .add(Pair.of(359, AddEnableIteratorsToTriggers.class))
+        .add(Pair.of(359, BaseMigration.class))
+        .add(Pair.of(360, AddEnableIteratorsToTriggers.class))
         .build();
   }
 }
