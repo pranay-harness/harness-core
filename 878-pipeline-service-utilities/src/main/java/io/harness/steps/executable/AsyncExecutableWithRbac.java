@@ -3,7 +3,6 @@ package io.harness.steps.executable;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.UnexpectedException;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;

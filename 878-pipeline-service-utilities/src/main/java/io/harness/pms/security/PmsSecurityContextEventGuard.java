@@ -16,7 +16,6 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.rbac.PrincipalTypeProtoToPrincipalTypeMapper;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ApiKeyPrincipal;
-import io.harness.security.dto.Principal;
 import io.harness.security.dto.ServicePrincipal;
 import io.harness.security.dto.UserPrincipal;
 
