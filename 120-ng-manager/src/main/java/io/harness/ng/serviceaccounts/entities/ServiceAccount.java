@@ -4,11 +4,13 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.data.validator.NGEntityName;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.NGOrgAccess;
 import io.harness.ng.core.NGProjectAccess;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 
@@ -19,8 +21,10 @@ import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
+import org.hibernate.validator.constraints.Email;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.springframework.data.annotation.CreatedDate;
@@ -61,11 +65,13 @@ public class ServiceAccount implements PersistentEntity, UuidAware, NGAccountAcc
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
 
-  String identifier;
-  String name;
+  @EntityIdentifier String identifier;
+  @NGEntityName String name;
+  @Email String email;
   @NotNull @Size(max = 1024) String description;
+  @NotNull @Singular @Size(max = 128) List<NGTag> tags;
 
-  @NotNull String accountIdentifier;
+  @EntityIdentifier String accountIdentifier;
   @EntityIdentifier(allowBlank = true) String orgIdentifier;
   @EntityIdentifier(allowBlank = true) String projectIdentifier;
 }
