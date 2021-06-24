@@ -30,7 +30,7 @@ public class LevelUtils {
                                      .setIdentifier(node.getIdentifier())
                                      .setRetryIndex(retryIndex)
                                      .setSkipExpressionChain(node.getSkipExpressionChain())
-                                     .setStartTs(HTimestamps.fromMillis(currLevelStartTs))
+                                     .setStartTs(currLevelStartTs)
                                      .setStepType(StepType.newBuilder().setType(node.getStepType().getType()).build());
     if (node.getGroup() != null) {
       levelBuilder.setGroup(node.getGroup());

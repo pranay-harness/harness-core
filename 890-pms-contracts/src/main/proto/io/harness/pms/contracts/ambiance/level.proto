@@ -15,6 +15,6 @@ message Level {
   string group = 5;
   int32 retryIndex = 6;
   bool skipExpressionChain = 7;
-  google.protobuf.Timestamp startTs = 8;
-  google.protobuf.Timestamp endTs = 9;
+  int64 startTs = 8;
+  int64 endTs = 9;
 }

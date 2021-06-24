@@ -119,7 +119,7 @@ public class OrchestrationEngine {
           -> ops.set(NodeExecutionKeys.nextId, uuid)
                  .set(NodeExecutionKeys.endTs, prevNodeEndTs)
                  .set(format(NodeExecutionKeys.lastLevelEndTs, AmbianceUtils.obtainCurrentLevelIndex(ambiance)),
-                     HTimestamps.fromMillis(prevNodeEndTs)));
+                     prevNodeEndTs));
     }
 
     long currNodeStartTs = System.currentTimeMillis();

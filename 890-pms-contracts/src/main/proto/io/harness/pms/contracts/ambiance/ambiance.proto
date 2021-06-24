@@ -15,5 +15,5 @@ message Ambiance {
   io.harness.pms.contracts.plan.ExecutionMetadata metadata = 4;
   int64 expressionFunctorToken = 5;
   string planId = 6;
-  google.protobuf.Timestamp startTs = 7;
+  int64 startTs = 7;
 }
