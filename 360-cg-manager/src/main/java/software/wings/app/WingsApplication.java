@@ -1,5 +1,7 @@
 package software.wings.app;
 
+import static com.google.common.collect.ImmutableMap.of;
+import static com.google.inject.matcher.Matchers.not;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
@@ -10,20 +12,57 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static io.harness.time.DurationUtils.durationTillDayTime;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
-
+import static java.time.Duration.ofHours;
+import static java.time.Duration.ofSeconds;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.VerificationConstants.CV_24X7_METRIC_LABELS;
 import static software.wings.common.VerificationConstants.CV_META_DATA;
 import static software.wings.common.VerificationConstants.VERIFICATION_DEPLOYMENTS;
 import static software.wings.common.VerificationConstants.VERIFICATION_METRIC_LABELS;
 
-import static com.google.common.collect.ImmutableMap.of;
-import static com.google.inject.matcher.Matchers.not;
-import static java.time.Duration.ofHours;
-import static java.time.Duration.ofSeconds;
-import static java.util.Arrays.asList;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.ServiceManager;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import com.google.inject.matcher.AbstractMatcher;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 
+import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.introspect.Annotated;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.jsontype.NamedType;
+import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
+import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
+import io.dropwizard.Application;
+import io.dropwizard.auth.AuthValueFactoryProvider;
+import io.dropwizard.bundles.assets.AssetsConfiguration;
+import io.dropwizard.bundles.assets.ConfiguredAssetsBundle;
+import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
+import io.dropwizard.configuration.SubstitutingSourceProvider;
+import io.dropwizard.jersey.errors.EarlyEofExceptionMapper;
+import io.dropwizard.lifecycle.Managed;
+import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
+import io.federecio.dropwizard.swagger.SwaggerBundle;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
+import io.harness.beans.FeatureName;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
 import io.harness.capability.service.CapabilityService;
@@ -143,8 +182,25 @@ import io.harness.workers.background.critical.iterator.WorkflowExecutionMonitorH
 import io.harness.workers.background.iterator.ArtifactCleanupHandler;
 import io.harness.workers.background.iterator.InstanceSyncHandler;
 import io.harness.workers.background.iterator.SettingAttributeValidateConnectivityHandler;
-
+import lombok.extern.slf4j.Slf4j;
+import org.atmosphere.cpr.AtmosphereServlet;
+import org.atmosphere.cpr.BroadcasterFactory;
+import org.atmosphere.cpr.MetaBroadcaster;
+import org.coursera.metrics.datadog.DatadogReporter;
+import org.coursera.metrics.datadog.transport.HttpTransport;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.servlets.CrossOriginFilter;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.server.model.Resource;
+import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.converters.TypeConverter;
+import org.reflections.Reflections;
+import org.springframework.core.convert.converter.Converter;
+import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
+import software.wings.beans.Account;
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.User;
@@ -229,46 +285,13 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.yaml.gitSync.GitChangeSetRunnable;
 import software.wings.yaml.gitSync.GitSyncEntitiesExpiryHandler;
 
-import com.codahale.metrics.MetricRegistry;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.introspect.Annotated;
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.fasterxml.jackson.databind.jsontype.NamedType;
-import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ServiceManager;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
-import com.google.inject.matcher.AbstractMatcher;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
-import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
-import io.dropwizard.Application;
-import io.dropwizard.auth.AuthValueFactoryProvider;
-import io.dropwizard.bundles.assets.AssetsConfiguration;
-import io.dropwizard.bundles.assets.ConfiguredAssetsBundle;
-import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
-import io.dropwizard.configuration.SubstitutingSourceProvider;
-import io.dropwizard.jersey.errors.EarlyEofExceptionMapper;
-import io.dropwizard.lifecycle.Managed;
-import io.dropwizard.setup.Bootstrap;
-import io.dropwizard.setup.Environment;
-import io.federecio.dropwizard.swagger.SwaggerBundle;
-import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -281,23 +304,6 @@ import javax.servlet.ServletRegistration;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.Path;
-import lombok.extern.slf4j.Slf4j;
-import org.atmosphere.cpr.AtmosphereServlet;
-import org.atmosphere.cpr.BroadcasterFactory;
-import org.atmosphere.cpr.MetaBroadcaster;
-import org.coursera.metrics.datadog.DatadogReporter;
-import org.coursera.metrics.datadog.transport.HttpTransport;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.servlets.CrossOriginFilter;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.server.model.Resource;
-import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.converters.TypeConverter;
-import org.reflections.Reflections;
-import org.springframework.core.convert.converter.Converter;
-import ru.vyarus.guice.validator.ValidationModule;
 
 /**
  * The main application - entry point for the entire Wings Application.
@@ -716,6 +722,28 @@ public class WingsApplication extends Application<MainConfiguration> {
   private void initializeFeatureFlags(MainConfiguration mainConfiguration, Injector injector) {
     injector.getInstance(FeatureFlagService.class)
         .initializeFeatureFlags(mainConfiguration.getDeployMode(), mainConfiguration.getFeatureNames());
+
+    // Required to Publish Feature Flag Events to Events Framework
+    if (DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
+      enableFeatureFlagsIndividuallyForOnPremAccount(injector, mainConfiguration.getFeatureNames());
+    }
+  }
+
+  private void enableFeatureFlagsIndividuallyForOnPremAccount(Injector injector, String featureNames) {
+    Optional<Account> onPremAccount = injector.getInstance(AccountService.class).getOnPremAccount();
+    if (!onPremAccount.isPresent()) {
+      return;
+    }
+
+    FeatureFlagService featureFlagService = injector.getInstance(FeatureFlagService.class);
+    List<String> enabled = isBlank(featureNames)
+        ? emptyList()
+        : Splitter.on(',').omitEmptyStrings().trimResults().splitToList(featureNames);
+    for (String name : Arrays.stream(FeatureName.values()).map(FeatureName::name).collect(toSet())) {
+      if (enabled.contains(name)) {
+        featureFlagService.enableAccount(FeatureName.valueOf(name), onPremAccount.get().getUuid());
+      }
+    }
   }
 
   private void registerHealthChecks(Environment environment, Injector injector) {
