@@ -50,6 +50,7 @@ public class NGManagerKmsEncryptor implements KmsEncryptor {
             .taskParameters(parameters)
             .executionTimeout(Duration.ofMillis(TaskData.DEFAULT_SYNC_CALL_TIMEOUT))
             .accountId(accountId)
+            .taskSetupAbstractions(managerEncryptorHelper.buildAbstractions(encryptionConfig))
             .build();
     DelegateResponseData delegateResponseData = delegateService.executeSyncTask(delegateTaskRequest);
     DelegateTaskUtils.validateDelegateTaskResponse(delegateResponseData);

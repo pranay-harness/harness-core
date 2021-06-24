@@ -92,6 +92,7 @@ public class NGManagerVaultEncryptor implements VaultEncryptor {
             .taskParameters(parameters)
             .executionTimeout(Duration.ofMillis(TaskData.DEFAULT_SYNC_CALL_TIMEOUT))
             .accountId(accountId)
+            .taskSetupAbstractions(managerEncryptorHelper.buildAbstractions(parameters.getEncryptionConfig()))
             .build();
     DelegateResponseData delegateResponseData = delegateService.executeSyncTask(delegateTaskRequest);
     DelegateTaskUtils.validateDelegateTaskResponse(delegateResponseData);
@@ -112,6 +113,7 @@ public class NGManagerVaultEncryptor implements VaultEncryptor {
             .taskParameters(parameters)
             .executionTimeout(Duration.ofMillis(TaskData.DEFAULT_SYNC_CALL_TIMEOUT))
             .accountId(accountId)
+            .taskSetupAbstractions(managerEncryptorHelper.buildAbstractions(parameters.getEncryptionConfig()))
             .build();
     DelegateResponseData delegateResponseData = delegateService.executeSyncTask(delegateTaskRequest);
     DelegateTaskUtils.validateDelegateTaskResponse(delegateResponseData);
