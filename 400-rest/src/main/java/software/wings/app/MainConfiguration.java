@@ -127,7 +127,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("ocVersion") private String ocVersion;
   @JsonProperty("scmVersion") private String scmVersion;
   @JsonProperty("trialRegistrationAllowed") private boolean trialRegistrationAllowed;
-  @JsonProperty("ngManagerAvailable") private boolean ngManagerAvailable;
+  @JsonProperty("eventsFrameworkAvailableInOnPrem") private boolean eventsFrameworkAvailableInOnPrem;
   @JsonProperty(value = "trialRegistrationAllowedForBugathon", defaultValue = "false")
   private boolean trialRegistrationAllowedForBugathon;
   @JsonProperty("blacklistedEmailDomainsAllowed") private boolean blacklistedEmailDomainsAllowed;

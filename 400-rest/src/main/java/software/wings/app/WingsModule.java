@@ -5,6 +5,20 @@ import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
+import com.google.common.base.Suppliers;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.inject.matcher.Matchers;
+import com.google.inject.multibindings.MapBinder;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
+
+import io.dropwizard.lifecycle.Managed;
 import io.harness.AccessControlClientModule;
 import io.harness.CgOrchestrationModule;
 import io.harness.SecretManagementCoreModule;
@@ -177,7 +191,11 @@ import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.version.VersionModule;
-
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 import software.wings.DataStorageMode;
 import software.wings.alerts.AlertModule;
 import software.wings.backgroundjobs.AccountBackgroundJobService;
@@ -715,19 +733,6 @@ import software.wings.utils.CdnStorageUrlGenerator;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
-import com.google.common.base.Suppliers;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
-import com.google.inject.assistedinject.FactoryModuleBuilder;
-import com.google.inject.matcher.Matchers;
-import com.google.inject.multibindings.MapBinder;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
-import io.dropwizard.lifecycle.Managed;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -740,11 +745,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Guice Module for initializing all beans.
@@ -861,7 +861,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
       protected void configure() {
         RedisConfig redisConfig = configuration.getEventsFrameworkConfiguration().getRedisConfig();
         String deployMode = System.getenv(DeployMode.DEPLOY_MODE);
-        if (DeployMode.isOnPrem(deployMode) || redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
+        if ((DeployMode.isOnPrem(deployMode) && !configuration.isEventsFrameworkAvailableInOnPrem())
+            || redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
               .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
