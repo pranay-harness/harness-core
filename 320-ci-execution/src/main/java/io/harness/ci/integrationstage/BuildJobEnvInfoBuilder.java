@@ -379,7 +379,8 @@ public class BuildJobEnvInfoBuilder {
         .secretVariables(getSecretVariables(integrationStage))
         .containerImageDetails(ContainerImageDetails.builder()
                                    .imageDetails(IntegrationStageUtils.getImageInfo(runTestsStepInfo.getImage()))
-                                   .connectorIdentifier(runTestsStepInfo.getConnector())
+                                   .connectorIdentifier(resolveStringParameter(
+                                       "connectorRef", "RunTest", identifier, runTestsStepInfo.getConnectorRef(), true))
                                    .build())
         .containerResourceParams(getStepContainerResource(runTestsStepInfo.getResources(), "RunTests", identifier))
         .ports(Collections.singletonList(port))
