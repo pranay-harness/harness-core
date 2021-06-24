@@ -42,13 +42,16 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
 
   @Override
   public void pushFromHarness(PushInfo request, StreamObserver<PushResponse> responseObserver) {
+    log.info("Grpc request received for pushFromHarness");
     harnessToGitHelperService.postPushOperation(request);
     responseObserver.onNext(PushResponse.newBuilder().build());
     responseObserver.onCompleted();
+    log.info("Grpc request received for pushFromHarness");
   }
 
   @Override
   public void getConnectorInfo(FileInfo request, StreamObserver<InfoForPush> responseObserver) {
+    log.info("Grpc request received for getConnectorInfo");
     final EntityDetail entityDetailDTO = entityDetailProtoToRestMapper.createEntityDetailDTO(request.getEntityDetail());
     final InfoForPush.Builder pushInfoBuilder = InfoForPush.newBuilder().setStatus(true);
     try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
@@ -73,6 +76,7 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
         pushInfoBuilder.setEncryptedDataDetails(BytesValue.of(encryptedDataDetails));
       }
     } catch (Exception e) {
+      log.info("Encountered exception while getting connector info", e);
       // Using exception Manager to get kryo serializable wings exception out of catched exception.
       final WingsException wingsException = exceptionManager.processException(e);
       final ByteString exceptionBytesString = ByteString.copyFrom(kryoSerializer.asBytes(wingsException));
@@ -81,6 +85,7 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
     }
     responseObserver.onNext(pushInfoBuilder.build());
     responseObserver.onCompleted();
+    log.info("Grpc request completed for getConnectorInfo");
   }
 
   private void setUserPrincipal(FileInfo request) {
@@ -96,15 +101,19 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
 
   @Override
   public void isGitSyncEnabledForScope(EntityScopeInfo request, StreamObserver<IsGitSyncEnabled> responseObserver) {
+    log.info("Grpc request received for isGitSyncEnabledForScope");
     final Boolean gitSyncEnabled = harnessToGitHelperService.isGitSyncEnabled(request);
     responseObserver.onNext(IsGitSyncEnabled.newBuilder().setEnabled(gitSyncEnabled).build());
     responseObserver.onCompleted();
+    log.info("Grpc request completed for isGitSyncEnabledForScope");
   }
 
   @Override
   public void getDefaultBranch(RepoDetails request, StreamObserver<BranchDetails> responseObserver) {
+    log.info("Grpc request received for getDefaultBranch");
     final BranchDetails branchDetails = harnessToGitHelperService.getBranchDetails(request);
     responseObserver.onNext(branchDetails);
     responseObserver.onCompleted();
+    log.info("Grpc request completed for getDefaultBranch");
   }
 }

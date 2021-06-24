@@ -14,12 +14,12 @@ public class PrincipalTypeProtoToPrincipalTypeMapper {
     switch (principalType) {
       case USER:
         return PrincipalType.USER;
-      case API_KEY:
-        return PrincipalType.API_KEY;
       case USER_GROUP:
         return PrincipalType.USER_GROUP;
       case SERVICE:
         return PrincipalType.SERVICE;
+      case API_KEY:
+        return PrincipalType.API_KEY;
       default:
         throw new InvalidRequestException("Unknown principal type found");
     }

@@ -39,7 +39,7 @@ public class ParameterFieldProcessor {
         newValue = engineExpressionEvaluator.evaluateExpression(field.getExpressionValue());
       }
 
-      if (newValue instanceof String && EngineExpressionEvaluator.hasVariables((String) newValue)) {
+      if (newValue instanceof String && EngineExpressionEvaluator.hasExpressions((String) newValue)) {
         String newExpression = (String) newValue;
         if (newExpression.equals(field.getExpressionValue())) {
           return ProcessorResult.builder().build();

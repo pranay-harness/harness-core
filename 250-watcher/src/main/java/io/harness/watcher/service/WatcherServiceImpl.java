@@ -81,6 +81,7 @@ import io.harness.managerclient.ManagerClientV2;
 import io.harness.managerclient.SafeHttpCall;
 import io.harness.network.Http;
 import io.harness.rest.RestResponse;
+import io.harness.security.SignVerifier;
 import io.harness.threading.Schedulable;
 import io.harness.utils.ProcessControl;
 import io.harness.version.VersionInfoManager;
@@ -119,7 +120,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -133,7 +133,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -168,7 +167,6 @@ public class WatcherServiceImpl implements WatcherService {
   private static final String DELEGATE_RESTART_SCRIPT = "DelegateRestartScript";
   private static final String NO_SPACE_LEFT_ON_DEVICE_ERROR = "No space left on device";
   private static final String FILE_HANDLES_LOGS_FOLDER = "file_handle_logs";
-  private static final String HARNESS_SIGNATURE_FILE_NAME = "META-INF/HARNESSJ.SF";
   private final String watcherJreVersion = System.getProperty("java.version");
   private long delegateRestartedToUpgradeJreAt;
   private boolean watcherRestartedToUpgradeJre;
@@ -1058,13 +1056,7 @@ public class WatcherServiceImpl implements WatcherService {
         log.info("Downloaded delegate jar version {} to the temporary location", version);
 
         try (JarFile delegateJar = new JarFile(downloadDestination)) {
-          // Check if jar is signed properly (This will pass if jar was not signed at all)
-          boolean verified = verify(delegateJar);
-
-          // Additional check to make sure that jar file was signed by Harness
-          JarEntry harnessSignatureFile = delegateJar.getJarEntry(HARNESS_SIGNATURE_FILE_NAME);
-
-          if (verified && harnessSignatureFile != null) {
+          if (SignVerifier.meticulouslyVerify(delegateJar)) {
             FileUtils.moveFile(downloadDestination, finalDestination);
             log.info("Moved delegate jar version {} to the final location", version);
           } else {
@@ -1083,27 +1075,6 @@ public class WatcherServiceImpl implements WatcherService {
     }
 
     log.info("Finished downloading delegate jar version {} in {} seconds", version, timer.elapsed(TimeUnit.SECONDS));
-  }
-
-  private boolean verify(JarFile jar) throws IOException {
-    // Since jarverifier is not available in JRE we will have to manually trigger the verification by reading
-    // some portion of each of the jar entries.
-    Enumeration<JarEntry> entries = jar.entries();
-    while (entries.hasMoreElements()) {
-      JarEntry entry = entries.nextElement();
-      byte[] buffer = new byte[2048];
-      try (InputStream is = jar.getInputStream(entry)) {
-        while ((is.read(buffer, 0, buffer.length)) != -1) {
-          // We just read. This will throw a SecurityException
-          // if a signature/digest check fails.
-          log.trace("Reading jar entries to trigger signing check...");
-        }
-      } catch (SecurityException se) {
-        log.error("Jar signing verification failed", se);
-        return false;
-      }
-    }
-    return true;
   }
 
   private void drainDelegateProcess(String delegateProcess) {

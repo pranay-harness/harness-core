@@ -79,13 +79,25 @@ public class SchemaFetcher {
     }
   }
 
+  public void invalidateCache(ModuleType moduleType) {
+    log.info("[PMS] Invalidating yaml schema cache for {}", moduleType.name());
+    schemaCache.invalidate(moduleType);
+    log.info("[PMS] Yaml schema cache was successfully invalidated for {}", moduleType.name());
+  }
+
+  public void invalidateAllCache() {
+    log.info("[PMS] Invalidating yaml schema cache");
+    schemaCache.invalidateAll();
+    log.info("[PMS] Yaml schema cache was successfully invalidated");
+  }
+
   private PartialSchemaDTO fetchSchemaWithRetry(ModuleType moduleType) {
     try {
       Call<ResponseDTO<PartialSchemaDTO>> call =
           obtainYamlSchemaClient(moduleType.name().toLowerCase()).get(null, null, null);
 
       RetryPolicy<Object> retryPolicy = getRetryPolicy(moduleType);
-      return Failsafe.with(retryPolicy).get(() -> SafeHttpCall.execute(call)).getData();
+      return Failsafe.with(retryPolicy).get(() -> SafeHttpCall.execute(call.clone())).getData();
     } catch (Exception e) {
       throw new YamlSchemaCacheException(
           format("[PMS] Unable to get %s schema information", moduleType.name()), e.getCause());

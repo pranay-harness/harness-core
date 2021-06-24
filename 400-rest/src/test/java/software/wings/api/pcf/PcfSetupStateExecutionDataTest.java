@@ -10,7 +10,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
-import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
+import software.wings.helpers.ext.pcf.request.CfCommandSetupRequest;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -35,7 +35,7 @@ public class PcfSetupStateExecutionDataTest extends CategoryTest {
 
     pcfSetupStateExecutionData.setMaxInstanceCount(2);
     pcfSetupStateExecutionData.setPcfCommandRequest(
-        PcfCommandSetupRequest.builder().organization(org).space(space).build());
+        CfCommandSetupRequest.builder().organization(org).space(space).build());
     stepExecutionSummary = pcfSetupStateExecutionData.getStepExecutionSummary();
     assertThat(stepExecutionSummary).isNotNull();
     assertThat(stepExecutionSummary.getMaxInstanceCount()).isEqualTo(2);

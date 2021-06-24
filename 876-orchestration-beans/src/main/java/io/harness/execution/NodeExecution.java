@@ -190,10 +190,11 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
                  .field(NodeExecutionKeys.oldRetry)
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("planExecutionId_mode_status_idx")
+                 .name("planExecutionId_mode_status_oldRetry_idx")
                  .field(NodeExecutionKeys.planExecutionId)
                  .field(NodeExecutionKeys.mode)
                  .field(NodeExecutionKeys.status)
+                 .field(NodeExecutionKeys.oldRetry)
                  .build())
         .add(CompoundMongoIndex.builder().name("previous_id_idx").field(NodeExecutionKeys.previousId).build())
         .build();

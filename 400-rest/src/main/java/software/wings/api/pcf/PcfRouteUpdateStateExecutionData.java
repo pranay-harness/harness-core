@@ -5,10 +5,10 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
+import io.harness.delegate.task.pcf.CfCommandRequest;
 
 import software.wings.api.ExecutionDataValue;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
-import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
 import software.wings.sm.StateExecutionData;
 
 import java.util.List;
@@ -29,9 +29,9 @@ public class PcfRouteUpdateStateExecutionData extends StateExecutionData impleme
   private String activityId;
   private String accountId;
   private String appId;
-  private PcfCommandRequest pcfCommandRequest;
+  private CfCommandRequest pcfCommandRequest;
   private String commandName;
-  private PcfRouteUpdateRequestConfigData pcfRouteUpdateRequestConfigData;
+  private CfRouteUpdateRequestConfigData pcfRouteUpdateRequestConfigData;
   private List<String> tags;
 
   @Override

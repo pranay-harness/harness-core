@@ -14,4 +14,5 @@ public class AccessControlIteratorsConfig {
   IteratorConfig resourceGroupIteratorConfig;
   IteratorConfig userGroupIteratorConfig;
   IteratorConfig userIteratorConfig;
+  IteratorConfig serviceAccountIteratorConfig;
 }

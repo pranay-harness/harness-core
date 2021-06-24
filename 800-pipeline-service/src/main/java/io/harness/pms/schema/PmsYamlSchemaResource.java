@@ -2,6 +2,7 @@ package io.harness.pms.schema;
 
 import static io.harness.EntityType.PIPELINES;
 import static io.harness.EntityType.TRIGGERS;
+import static io.harness.NGCommonEntityConstants.ACCOUNT_KEY;
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
 import static io.harness.NGCommonEntityConstants.ORG_KEY;
 import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
@@ -28,6 +29,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotSupportedException;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -53,7 +55,8 @@ public class PmsYamlSchemaResource implements YamlSchemaResource {
   @ApiOperation(value = "Get Yaml Schema", nickname = "getSchemaYaml")
   public ResponseDTO<JsonNode> getYamlSchema(@QueryParam("entityType") @NotNull EntityType entityType,
       @QueryParam(PROJECT_KEY) String projectIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
-      @QueryParam("scope") Scope scope, @QueryParam(IDENTIFIER_KEY) String identifier) {
+      @QueryParam("scope") Scope scope, @QueryParam(IDENTIFIER_KEY) String identifier,
+      @QueryParam(ACCOUNT_KEY) String accountIdentifier) {
     JsonNode schema = null;
     if (entityType == PIPELINES) {
       schema = pmsYamlSchemaService.getPipelineYamlSchema(projectIdentifier, orgIdentifier, scope);
@@ -64,5 +67,13 @@ public class PmsYamlSchemaResource implements YamlSchemaResource {
     }
 
     return ResponseDTO.newResponse(schema);
+  }
+
+  @POST
+  @Path("/invalidate-cache")
+  @ApiOperation(value = "Invalidate yaml schema cache", nickname = "invalidateYamlSchemaCache")
+  public ResponseDTO<Boolean> invalidateYamlSchemaCache() {
+    pmsYamlSchemaService.invalidateAllCache();
+    return ResponseDTO.newResponse(true);
   }
 }

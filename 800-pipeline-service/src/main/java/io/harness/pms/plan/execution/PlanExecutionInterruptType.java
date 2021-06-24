@@ -14,8 +14,10 @@ public enum PlanExecutionInterruptType {
   /**
    * Abort all state event.
    */
-  @JsonProperty("Abort")
-  ABORT("Abort execution of all nodes for the current workflow", InterruptType.ABORT_ALL, "Abort"),
+  @JsonProperty("AbortAll")
+  ABORTALL("Abort execution of all nodes for the current workflow", InterruptType.ABORT_ALL, "AbortAll"),
+
+  @JsonProperty("Abort") ABORT("Abort execution of given node for the current workflow", InterruptType.ABORT, "Abort"),
   /**
    * Pause all state event.
    */

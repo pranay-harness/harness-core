@@ -324,3 +324,8 @@ signupNotificationConfiguration:
       gcsFileName: "signup_confirmation.txt"
       templateId: "signup_confirmation"
   expireDurationInMinutes: 60
+
+cacheConfig:
+  cacheBackend: REDIS
+  cacheNamespace: ""
+  disabledCaches: [ ]
