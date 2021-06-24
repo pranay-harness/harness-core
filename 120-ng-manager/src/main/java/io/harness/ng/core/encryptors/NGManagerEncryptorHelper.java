@@ -11,8 +11,6 @@ import static software.wings.beans.TaskType.FETCH_SECRET;
 import static software.wings.beans.TaskType.VALIDATE_SECRET_MANAGER_CONFIGURATION;
 import static software.wings.beans.TaskType.VALIDATE_SECRET_REFERENCE;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.delegate.beans.DelegateResponseData;
