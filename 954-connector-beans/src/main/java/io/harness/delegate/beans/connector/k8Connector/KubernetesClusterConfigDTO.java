@@ -10,9 +10,13 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+
+import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 @Data
 @Builder
@@ -27,6 +31,9 @@ public class KubernetesClusterConfigDTO extends ConnectorConfigDTO implements De
     if (credential.getKubernetesCredentialType() == KubernetesCredentialType.MANUAL_CREDENTIALS) {
       KubernetesClusterDetailsDTO k8sManualCreds = (KubernetesClusterDetailsDTO) credential.getConfig();
       return Collections.singletonList(k8sManualCreds.getAuth().getCredentials());
+    }
+    else if (KubernetesCredentialType.INHERIT_FROM_DELEGATE.equals(credential.getKubernetesCredentialType()) && isEmpty(delegateSelectors)) {
+      throw new InvalidRequestException("Delegate Selector cannot be null for inherit from delegate credential type");
     }
     return null;
   }

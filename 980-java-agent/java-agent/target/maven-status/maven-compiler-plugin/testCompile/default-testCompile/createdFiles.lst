@@ -1,0 +1,16 @@
+harness/callgraph/util/log/FileTargetTest.class
+harness/callgraph/MockitoRule.class
+harness/callgraph/CallGraphTest.class
+harness/callgraph/util/log/LoggerTest.class
+harness/callgraph/util/SourceClassesMatcherTest$Foo.class
+harness/callgraph/util/config/ConfigUtils.class
+harness/callgraph/CallGraph2Test.class
+harness/callgraph/MockitoRule$1.class
+harness/callgraph/util/config/ConfigTest.class
+harness/callgraph/util/SourceClassesMatcherTest.class
+harness/callgraph/util/log/FileTargetTest$1.class
+harness/callgraph/helper/Console.class
+harness/callgraph/helper/TestUtils.class
+harness/callgraph/util/TestClassesMatcherTest.class
+harness/callgraph/util/log/ConsoleTargetTest.class
+harness/callgraph/util/TestClassesMatcherTest$Foo.class
