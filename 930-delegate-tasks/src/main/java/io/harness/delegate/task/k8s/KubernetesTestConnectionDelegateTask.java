@@ -1,5 +1,8 @@
 package io.harness.delegate.task.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -17,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
+@OwnedBy(CDP)
 public class KubernetesTestConnectionDelegateTask extends AbstractDelegateRunnableTask {
   @Inject private KubernetesValidationHandler kubernetesValidationHandler;
 
@@ -43,5 +47,10 @@ public class KubernetesTestConnectionDelegateTask extends AbstractDelegateRunnab
   @Override
   public KubernetesConnectionTaskResponse run(Object[] parameters) {
     throw new NotImplementedException("not implemented");
+  }
+
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
   }
 }

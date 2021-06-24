@@ -30,6 +30,7 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.core.timeout.Timeout;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.utils.JsonPipelineUtils;
 
@@ -227,13 +228,15 @@ public class CILiteEngineStepGroupUtils {
                               .build();
 
     String uuid = generateUuid();
-    StepElementConfig stepElementConfig = StepElementConfig.builder()
-                                              .identifier(GIT_CLONE_STEP_ID)
-                                              .name(GIT_CLONE_STEP_NAME)
-                                              .uuid(generateUuid())
-                                              .type("Plugin")
-                                              .stepSpecType(step)
-                                              .build();
+    StepElementConfig stepElementConfig =
+        StepElementConfig.builder()
+            .identifier(GIT_CLONE_STEP_ID)
+            .name(GIT_CLONE_STEP_NAME)
+            .timeout(ParameterField.createValueField(Timeout.builder().timeoutString("1h").build()))
+            .uuid(generateUuid())
+            .type("Plugin")
+            .stepSpecType(step)
+            .build();
 
     try {
       String jsonString = JsonPipelineUtils.writeJsonString(stepElementConfig);

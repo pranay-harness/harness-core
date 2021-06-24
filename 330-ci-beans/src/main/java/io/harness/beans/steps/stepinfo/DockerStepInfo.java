@@ -74,7 +74,7 @@ public class DockerStepInfo implements PluginCompatibleStep, WithConnectorRef {
   private ParameterField<Map<String, String>> buildArgs;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> optimize;
-  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> remoteCacheImage;
+  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> remoteCacheRepo;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "resources", "repo", "tags", "context",
@@ -83,7 +83,7 @@ public class DockerStepInfo implements PluginCompatibleStep, WithConnectorRef {
       ContainerResource resources, ParameterField<String> repo, ParameterField<List<String>> tags,
       ParameterField<String> context, ParameterField<String> dockerfile, ParameterField<String> target,
       ParameterField<Map<String, String>> labels, ParameterField<Map<String, String>> buildArgs,
-      ParameterField<Integer> runAsUser, ParameterField<Boolean> optimize, ParameterField<String> remoteCacheImage) {
+      ParameterField<Integer> runAsUser, ParameterField<Boolean> optimize, ParameterField<String> remoteCacheRepo) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -99,7 +99,7 @@ public class DockerStepInfo implements PluginCompatibleStep, WithConnectorRef {
     this.buildArgs = buildArgs;
     this.runAsUser = runAsUser;
     this.optimize = optimize;
-    this.remoteCacheImage = remoteCacheImage;
+    this.remoteCacheRepo = remoteCacheRepo;
   }
 
   @Override

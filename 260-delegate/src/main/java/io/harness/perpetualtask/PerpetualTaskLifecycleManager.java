@@ -4,6 +4,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.logging.AutoLogContext;
@@ -14,6 +15,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.protobuf.util.Durations;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -51,7 +53,7 @@ public class PerpetualTaskLifecycleManager {
 
   void startTask() {
     try {
-      timeLimiter.callWithTimeout(this::call, timeoutMillis, TimeUnit.MILLISECONDS, true);
+      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeoutMillis), this::call);
     } catch (UncheckedTimeoutException tex) {
       log.warn("Timed out starting task", tex);
     } catch (Exception ex) {

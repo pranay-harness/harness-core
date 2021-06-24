@@ -21,6 +21,7 @@ import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
+import io.harness.pms.yaml.ParameterField;
 
 import org.junit.Before;
 import org.mockito.ArgumentCaptor;
@@ -44,7 +45,10 @@ public abstract class AbstractK8sStepExecutorTestBase extends CategoryTest {
   public void prepare() {
     MockitoAnnotations.initMocks(this);
 
-    manifestOutcome = K8sManifestOutcome.builder().skipResourceVersioning(true).store(storeConfig).build();
+    manifestOutcome = K8sManifestOutcome.builder()
+                          .skipResourceVersioning(ParameterField.createValueField(true))
+                          .store(storeConfig)
+                          .build();
     doReturn(infraDelegateConfig).when(k8sStepHelper).getK8sInfraDelegateConfig(infrastructureOutcome, ambiance);
     doReturn(manifestDelegateConfig).when(k8sStepHelper).getManifestDelegateConfig(manifestOutcome, ambiance);
     doReturn(true).when(k8sStepHelper).getSkipResourceVersioning(manifestOutcome);

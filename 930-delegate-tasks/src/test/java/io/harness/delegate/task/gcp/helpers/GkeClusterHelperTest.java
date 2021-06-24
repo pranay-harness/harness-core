@@ -3,8 +3,10 @@ package io.harness.delegate.task.gcp.helpers;
 import static io.harness.delegate.task.gcp.helpers.GcpHelperService.LOCATION_DELIMITER;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.SATYAM;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -17,6 +19,7 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.rule.Owner;
@@ -228,6 +231,17 @@ public class GkeClusterHelperTest extends CategoryTest {
     assertThat(config.getMasterUrl()).isEqualTo("https://1.1.1.1/");
     assertThat(config.getUsername()).isEqualTo("master1".toCharArray());
     assertThat(config.getPassword()).isEqualTo("password1".toCharArray());
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionForInvalidClusterName() throws Exception {
+    when(clustersGet.execute()).thenReturn(CLUSTER_1);
+    assertThatThrownBy(() -> gkeClusterHelper.getCluster(null, true, null, "default"))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThatThrownBy(() -> gkeClusterHelper.getCluster(null, true, "foo", "default"))
+        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test

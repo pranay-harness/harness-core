@@ -1,5 +1,6 @@
 package io.harness.aggregator.consumers;
 
+import static io.harness.accesscontrol.principals.PrincipalType.SERVICE_ACCOUNT;
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.aggregator.ACLUtils.buildACL;
@@ -89,7 +90,7 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
       Optional<UserGroup> userGroup =
           userGroupService.get(roleAssignment.getPrincipalIdentifier(), roleAssignment.getScopeIdentifier());
       userGroup.ifPresent(group -> principals.addAll(group.getUsers()));
-    } else if (USER.equals(roleAssignment.getPrincipalType())) {
+    } else {
       principals.add(roleAssignment.getPrincipalIdentifier());
     }
 
@@ -101,8 +102,13 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
     for (String permission : role.get().getPermissions()) {
       for (String principalIdentifier : principals) {
         for (String resourceSelector : resourceSelectors) {
-          aclsToCreate.add(
-              buildACL(permission, Principal.of(USER, principalIdentifier), roleAssignment, resourceSelector));
+          if (SERVICE_ACCOUNT.equals(roleAssignment.getPrincipalType())) {
+            aclsToCreate.add(buildACL(
+                permission, Principal.of(SERVICE_ACCOUNT, principalIdentifier), roleAssignment, resourceSelector));
+          } else {
+            aclsToCreate.add(
+                buildACL(permission, Principal.of(USER, principalIdentifier), roleAssignment, resourceSelector));
+          }
         }
       }
     }

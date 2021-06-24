@@ -32,6 +32,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -66,10 +67,11 @@ public class RoleChangeConsumerImpl implements ChangeConsumer<RoleDBO> {
       return;
     }
 
-    Criteria criteria = Criteria.where(RoleAssignmentDBOKeys.roleIdentifier)
-                            .is(role.get().getIdentifier())
-                            .and(RoleAssignmentDBOKeys.scopeIdentifier)
-                            .is(role.get().getScopeIdentifier());
+    Criteria criteria = Criteria.where(RoleAssignmentDBOKeys.roleIdentifier).is(role.get().getIdentifier());
+    if (!StringUtils.isEmpty(role.get().getScopeIdentifier())) {
+      criteria.and(RoleAssignmentDBOKeys.scopeIdentifier).is(role.get().getScopeIdentifier());
+    }
+
     List<ReProcessRoleAssignmentOnRoleUpdateTask> tasksToExecute =
         roleAssignmentRepository.findAll(criteria, Pageable.unpaged())
             .stream()

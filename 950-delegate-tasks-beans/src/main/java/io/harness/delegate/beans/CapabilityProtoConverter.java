@@ -38,6 +38,8 @@ import io.harness.delegate.beans.executioncapability.SocketConnectivityExecution
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
 import io.harness.k8s.model.HelmVersion;
 
+import java.util.stream.Collectors;
+
 @OwnedBy(HarnessTeam.DEL)
 public class CapabilityProtoConverter {
   public static boolean shouldCompareResults(CapabilityParameters parameters) {
@@ -68,6 +70,7 @@ public class CapabilityProtoConverter {
 
   public static CapabilityParameters toProto(ExecutionCapability executionCapability) {
     CapabilityParameters.Builder builder = CapabilityParameters.newBuilder();
+
     switch (executionCapability.getCapabilityType()) {
       case AWS_REGION:
         AwsRegionCapability capability = (AwsRegionCapability) executionCapability;
@@ -87,10 +90,25 @@ public class CapabilityProtoConverter {
       case HTTP:
         HttpConnectionExecutionCapability httpConnectionExecutionCapability =
             (HttpConnectionExecutionCapability) executionCapability;
-        return builder
-            .setHttpConnectionParameters(
-                HttpConnectionParameters.newBuilder().setUrl(httpConnectionExecutionCapability.fetchCapabilityBasis()))
-            .build();
+        if (httpConnectionExecutionCapability.getHeaders() != null) {
+          return builder
+              .setHttpConnectionParameters(HttpConnectionParameters.newBuilder()
+                                               .setUrl(httpConnectionExecutionCapability.fetchConnectableUrl())
+                                               .addAllHeaders(httpConnectionExecutionCapability.getHeaders()
+                                                                  .stream()
+                                                                  .map(entry
+                                                                      -> HttpConnectionParameters.Header.newBuilder()
+                                                                             .setKey(entry.getKey())
+                                                                             .setValue(entry.getValue())
+                                                                             .build())
+                                                                  .collect(Collectors.toList())))
+              .build();
+        } else {
+          return builder
+              .setHttpConnectionParameters(HttpConnectionParameters.newBuilder().setUrl(
+                  httpConnectionExecutionCapability.fetchCapabilityBasis()))
+              .build();
+        }
       case LITE_ENGINE:
         LiteEngineConnectionCapability liteEngineConnectionCapability =
             (LiteEngineConnectionCapability) executionCapability;

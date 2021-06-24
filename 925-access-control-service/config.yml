@@ -103,6 +103,9 @@ iteratorsConfig:
   userIteratorConfig:
     enabled: ${USER_ITERATOR_ENABLED:-true}
     targetIntervalInSeconds: ${USER_ITERATOR_INTERVAL:-600}
+  serviceAccountIteratorConfig:
+    enabled: ${SERVICEACCOUNT_ITERATOR_ENABLED:-true}
+    targetIntervalInSeconds: ${SERVICEACCOUNT_ITERATOR_INTERVAL:-600}
 
 accessControlClient:
   enableAccessControl: ${ENABLE_ACCESS_CONTROL:-true}
@@ -182,3 +185,11 @@ outboxPollConfig:
   pollingIntervalInSeconds: ${OUTBOX_POLL_INTERVAL:-5}
   maximumRetryAttemptsForAnEvent: ${OUTBOX_MAX_RETRY_ATTEMPTS:-7}
   lockId: AccessControlService
+
+serviceAccountClient:
+  serviceAccountServiceConfig:
+    baseUrl: ${SERVICEACCOUNT_CLIENT_BASE_URL:-https://localhost:7090}
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+    enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
+  serviceAccountServiceSecret: ${SERVICEACCOUNT_CLIENT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}

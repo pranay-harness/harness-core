@@ -6,7 +6,6 @@ import static java.lang.Long.parseLong;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
-import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.AccountIdentifier;
@@ -20,7 +19,6 @@ import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionNode;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.encryption.Scope;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterPropertiesDTO;
@@ -54,7 +52,6 @@ import io.harness.pms.variables.VariableMergeServiceResponse;
 import io.harness.utils.PageUtils;
 import io.harness.yaml.schema.YamlSchemaResource;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import io.swagger.annotations.Api;
@@ -72,8 +69,6 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -377,22 +372,6 @@ public class PipelineResource implements YamlSchemaResource {
       @QueryParam("resolveExpressions") @DefaultValue("false") boolean resolveExpressions,
       @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
     return pmsExecutionService.getInputSetYaml(accountId, orgId, projectId, planExecutionId, false, resolveExpressions);
-  }
-
-  @GET
-  @Path("/yaml-schema")
-  @ApiOperation(value = "Get Yaml Schema", nickname = "getYamlSchema")
-  public ResponseDTO<JsonNode> getYamlSchema(@QueryParam("entityType") @NotNull EntityType entityType,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope) {
-    if (entityType != EntityType.PIPELINES) {
-      throw new NotSupportedException(String.format("Entity type %s is not supported", entityType.getYamlName()));
-    }
-    JsonNode schema = pmsYamlSchemaService.getPipelineYamlSchema(projectIdentifier, orgIdentifier, scope);
-    if (schema == null) {
-      throw new NotFoundException(String.format("No schema found for entity type %s ", entityType.getYamlName()));
-    }
-    return ResponseDTO.newResponse(schema);
   }
 
   @GET

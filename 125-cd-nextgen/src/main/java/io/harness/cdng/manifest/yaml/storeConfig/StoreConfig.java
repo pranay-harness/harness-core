@@ -18,5 +18,5 @@ import java.io.Serializable;
 public interface StoreConfig extends OverridesApplier<StoreConfig>, Serializable {
   @JsonIgnore String getKind();
   @JsonIgnore StoreConfig cloneInternal();
-  ParameterField<String> getConnectorRef();
+  @JsonIgnore ParameterField<String> getConnectorReference();
 }
