@@ -76,5 +76,10 @@ public class InfrastructureMapper {
         || isEmpty(ParameterFieldHelper.getParameterFieldValue(infrastructure.getReleaseName()))) {
       throw new InvalidArgumentsException(Pair.of("releaseName", "cannot be empty"));
     }
+
+    if (ParameterField.isNull(infrastructure.getCluster())
+        || isEmpty(ParameterFieldHelper.getParameterFieldValue(infrastructure.getCluster()))) {
+      throw new InvalidArgumentsException(Pair.of("cluster", "cannot be empty"));
+    }
   }
 }
