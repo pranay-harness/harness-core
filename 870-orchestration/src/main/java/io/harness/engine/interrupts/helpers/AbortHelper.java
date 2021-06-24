@@ -18,16 +18,20 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.logging.UnitProgress;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -74,10 +78,14 @@ public class AbortHelper {
 
   public void abortDiscontinuingNode(NodeExecution nodeExecution, String interruptId, InterruptConfig interruptConfig) {
     List<UnitProgress> unitProgresses = InterruptHelper.evaluateUnitProgresses(nodeExecution, FAILURE);
+
+    long nodeEndTs = System.currentTimeMillis();
+    Ambiance ambianceWithLevelEndTs = AmbianceUtils.updateCurrentLevelWithEndTs(nodeExecution.getAmbiance(), nodeEndTs);
     NodeExecution updatedNodeExecution =
         nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), Status.ABORTED, ops -> {
-          ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis());
+          ops.set(NodeExecutionKeys.endTs, nodeEndTs);
           ops.set(NodeExecutionKeys.unitProgresses, unitProgresses);
+          ops.set(NodeExecutionKeys.ambiance, ambianceWithLevelEndTs);
           ops.addToSet(NodeExecutionKeys.interruptHistories,
               InterruptEffect.builder()
                   .interruptId(interruptId)

@@ -15,6 +15,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +53,12 @@ public class AmbianceUtils {
   public static Ambiance updateCurrentLevel(Ambiance oldAmbiance, Level level) {
     Ambiance newAmbiance = cloneForFinish(oldAmbiance);
     return newAmbiance.toBuilder().addLevels(level).build();
+  }
+
+  public static Ambiance updateCurrentLevelWithEndTs(Ambiance oldAmbiance, long levelEndTs) {
+    Level lastLevelWithEndTs =
+        Objects.requireNonNull(obtainCurrentLevel(oldAmbiance)).toBuilder().setEndTs(levelEndTs).build();
+    return updateCurrentLevel(oldAmbiance, lastLevelWithEndTs);
   }
 
   @VisibleForTesting

@@ -8,8 +8,6 @@ import static io.harness.pms.contracts.execution.Status.ERRORED;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
-import static java.lang.String.format;
-
 import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -69,6 +67,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import lombok.Getter;
 import lombok.NonNull;
@@ -115,15 +114,13 @@ public class OrchestrationEngine {
     if (AmbianceUtils.obtainCurrentRuntimeId(ambiance) != null) {
       long prevNodeEndTs = System.currentTimeMillis();
 
-      Level lastLevelWithEndTs = AmbianceUtils.obtainCurrentLevel(ambiance).toBuilder().setEndTs(prevNodeEndTs).build();
-      Ambiance ambianceWithEndTs = AmbianceUtils.updateCurrentLevel(ambiance, lastLevelWithEndTs);
-      ambiance = ambianceWithEndTs;
-
+      Ambiance ambianceWithLevelEndTs = AmbianceUtils.updateCurrentLevelWithEndTs(ambiance, prevNodeEndTs);
+      ambiance = ambianceWithLevelEndTs;
       previousNodeExecution = nodeExecutionService.update(AmbianceUtils.obtainCurrentRuntimeId(ambiance),
           ops
           -> ops.set(NodeExecutionKeys.nextId, uuid)
                  .set(NodeExecutionKeys.endTs, prevNodeEndTs)
-                 .set(NodeExecutionKeys.ambiance, ambianceWithEndTs));
+                 .set(NodeExecutionKeys.ambiance, ambianceWithLevelEndTs));
     }
 
     Ambiance cloned = reBuildAmbiance(ambiance, node, uuid);
@@ -232,8 +229,14 @@ public class OrchestrationEngine {
   }
 
   public void concludeNodeExecution(NodeExecution nodeExecution, Status status, EnumSet<Status> overrideStatusSet) {
+    long nodeEndTs = System.currentTimeMillis();
+
+    Ambiance ambianceWithLevelEndTs = AmbianceUtils.updateCurrentLevelWithEndTs(nodeExecution.getAmbiance(), nodeEndTs);
     NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), status,
-        ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()), overrideStatusSet);
+        ops
+        -> ops.set(NodeExecutionKeys.endTs, nodeEndTs).set(NodeExecutionKeys.ambiance, ambianceWithLevelEndTs),
+        overrideStatusSet);
+
     if (updatedNodeExecution == null) {
       log.warn(
           "Cannot conclude node execution. Status update failed From :{}, To:{}", nodeExecution.getStatus(), status);
@@ -267,8 +270,12 @@ public class OrchestrationEngine {
   }
 
   public void endTransition(NodeExecution nodeExecution) {
-    nodeExecutionService.update(
-        nodeExecution.getUuid(), ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
+    long nodeEndTs = System.currentTimeMillis();
+
+    Ambiance ambianceWithLevelEndTs = AmbianceUtils.updateCurrentLevelWithEndTs(nodeExecution.getAmbiance(), nodeEndTs);
+    nodeExecutionService.update(nodeExecution.getUuid(),
+        ops -> ops.set(NodeExecutionKeys.endTs, nodeEndTs).set(NodeExecutionKeys.ambiance, ambianceWithLevelEndTs));
+
     if (isNotEmpty(nodeExecution.getNotifyId())) {
       PlanNodeProto planNode = nodeExecution.getNode();
       StepResponseNotifyData responseData = StepResponseNotifyData.builder()
