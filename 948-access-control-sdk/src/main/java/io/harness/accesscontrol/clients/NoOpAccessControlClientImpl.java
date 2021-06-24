@@ -5,6 +5,7 @@ import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.SecurityContextBuilder;
+import io.harness.security.dto.ServiceAccountPrincipal;
 import io.harness.security.dto.UserPrincipal;
 
 import java.util.List;
@@ -38,7 +39,10 @@ public class NoOpAccessControlClientImpl implements AccessControlClient {
     if (principal instanceof UserPrincipal) {
       return checkForAccess(Principal.of(PrincipalType.USER, principal.getName()), permissionCheckDTOList);
     }
-    throw new UnsupportedOperationException("Only <User> principal type is supported");
+    if (principal instanceof ServiceAccountPrincipal) {
+      return checkForAccess(Principal.of(PrincipalType.SERVICE_ACCOUNT, principal.getName()), permissionCheckDTOList);
+    }
+    throw new UnsupportedOperationException("Only <USER, SERVICE_ACCOUNT> principal type is supported");
   }
 
   @Override
