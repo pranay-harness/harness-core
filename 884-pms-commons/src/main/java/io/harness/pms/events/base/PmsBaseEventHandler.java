@@ -40,8 +40,6 @@ public abstract class PmsBaseEventHandler<T extends Message> {
 
   public void handleEvent(T event, Map<String, String> metadataMap, long createdAt) {
     try (PmsGitSyncBranchContextGuard ignore1 = gitSyncContext(event); AutoLogContext ignore2 = autoLogContext(event);
-         PmsSecurityContextEventGuard securityContextEventGuard =
-             new PmsSecurityContextEventGuard(extractAmbiance(event));
          ThreadAutoLogContext metricContext = new ThreadAutoLogContext(extractMetricContext(event))) {
       MonitoringInfo monitoringInfo =
           MonitoringInfo.builder().createdAt(createdAt).metricPrefix(getMetricPrefix(event)).build();

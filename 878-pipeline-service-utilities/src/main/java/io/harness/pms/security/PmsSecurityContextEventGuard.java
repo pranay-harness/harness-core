@@ -1,4 +1,4 @@
-package io.harness.pms.events.base;
+package io.harness.pms.security;
 
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 
@@ -21,7 +21,7 @@ import io.harness.security.dto.UserPrincipal;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PmsSecurityContextEventGuard implements AutoCloseable {
-  PmsSecurityContextEventGuard(Ambiance ambiance) {
+  public PmsSecurityContextEventGuard(Ambiance ambiance) {
     if (ambiance != null) {
       SecurityContextBuilder.setContext(getPrincipalFromAmbiance(ambiance));
     }
