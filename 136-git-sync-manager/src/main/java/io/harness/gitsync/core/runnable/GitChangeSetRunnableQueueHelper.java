@@ -67,9 +67,6 @@ public class GitChangeSetRunnableQueueHelper {
         selectedYamlChangeSet = changeSet.get();
       }
 
-      if (!isChangeSetEligibleForCurrentRun(selectedYamlChangeSet)) {
-        return null;
-      }
       // Not using comparator currently, can be added later.
       //      final List<YamlChangeSet> sortedChangeSets =
       //          changeSets.stream().sorted(new YamlChangeSetComparator()).collect(Collectors.toList());
@@ -78,6 +75,9 @@ public class GitChangeSetRunnableQueueHelper {
       //      }
 
       if (selectedYamlChangeSet != null) {
+        if (!isChangeSetEligibleForCurrentRun(selectedYamlChangeSet)) {
+          return null;
+        }
         final boolean updateStatus = ycsService.updateStatusAndCutoffTime(
             accountId, selectedYamlChangeSet.getChangesetId(), YamlChangeSetStatus.RUNNING);
         if (updateStatus) {
@@ -92,17 +92,15 @@ public class GitChangeSetRunnableQueueHelper {
   }
 
   private boolean isChangeSetEligibleForCurrentRun(YamlChangeSetDTO selectedYamlChangeSet) {
-    if (selectedYamlChangeSet != null) {
-      final long currentTimeMillis = System.currentTimeMillis();
-      if (selectedYamlChangeSet.getNextRunTime() > currentTimeMillis) {
-        // todo(abhinav): have better logging logic
-        // logging on random logic
-        if (currentTimeMillis % 50 == 0) {
-          log.info("Skipping changeset: [{}] since its next run time: [{}] is still ahead of current time: [{}]",
-              selectedYamlChangeSet.getChangesetId(), selectedYamlChangeSet.getNextRunTime(), currentTimeMillis);
-        }
-        return false;
+    final long currentTimeMillis = System.currentTimeMillis();
+    if (selectedYamlChangeSet.getNextRunTime() > currentTimeMillis) {
+      // todo(abhinav): have better logging logic
+      // logging on random logic
+      if (currentTimeMillis % 50 == 0) {
+        log.info("Skipping changeset: [{}] since its next run time: [{}] is still ahead of current time: [{}]",
+            selectedYamlChangeSet.getChangesetId(), selectedYamlChangeSet.getNextRunTime(), currentTimeMillis);
       }
+      return false;
     }
     return true;
   }
