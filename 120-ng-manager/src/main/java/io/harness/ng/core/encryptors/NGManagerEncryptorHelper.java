@@ -3,6 +3,7 @@ package io.harness.ng.core.encryptors;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.shared.tasks.NgSetupFields.NG;
 import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 
@@ -57,10 +58,10 @@ public class NGManagerEncryptorHelper {
       // Verify if its a Task from NG
       owner = taskSetupAbstractionHelper.getOwner(
           encryptionConfig.getAccountId(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
-      if (isNotBlank(ngAccess.getOrgIdentifier()) || isNotBlank(ngAccess.getProjectIdentifier())) {
+      if (isNotEmpty(owner)) {
         abstractions.put(OWNER, owner);
-        abstractions.put(NG, "true");
       }
+      abstractions.put(NG, "true");
     }
     return abstractions;
   }
