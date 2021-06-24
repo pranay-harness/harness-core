@@ -382,7 +382,7 @@ public class SegmentHandler implements EventHandler {
 
   public void reportTrackEvent(Account account, String event, String userId, Map<String, String> properties,
       Map<String, Boolean> integrations) throws URISyntaxException {
-    String identity;
+    String identity = null;
     User user = null;
     if (isNotEmpty(userId)) {
       user = userService.get(userId);
@@ -403,7 +403,9 @@ public class SegmentHandler implements EventHandler {
         user = userService.getUserFromCacheOrDB(userId);
       }
     } else {
-      identity = "system-" + account.getUuid();
+      if (account != null) {
+        identity = "system-" + account.getUuid();
+      }
     }
 
     if (properties == null) {

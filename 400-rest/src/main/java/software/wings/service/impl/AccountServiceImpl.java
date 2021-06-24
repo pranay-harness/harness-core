@@ -417,9 +417,12 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public boolean updateAccountStatus(String accountId, String accountStatus) {
     Account account = getFromCacheWithFallback(accountId);
-    LicenseInfo licenseInfo = account.getLicenseInfo();
-    licenseInfo.setAccountStatus(accountStatus);
-    return licenseService.updateAccountLicense(accountId, licenseInfo);
+    LicenseInfo licenseInfo = account != null ? account.getLicenseInfo() : null;
+    if (licenseInfo != null) {
+      licenseInfo.setAccountStatus(accountStatus);
+      return licenseService.updateAccountLicense(accountId, licenseInfo);
+    }
+    return false;
   }
 
   private void createDefaultAccountEntities(Account account, boolean shouldCreateSampleApp, boolean fromDataGen) {
@@ -555,6 +558,9 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public Account getFromCacheWithFallback(String accountId) {
+    if (isEmpty(accountId)) {
+      return null;
+    }
     Account account = dbCache.get(Account.class, accountId);
     if (account == null) {
       // Some false nulls have been observed. Verify by querying directly from db.
@@ -793,6 +799,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     LicenseInfo licenseInfo = account.getLicenseInfo();
+
     if (null == licenseInfo) {
       log.warn("License info not present for account. accountId={}", accountId);
       return Optional.empty();
