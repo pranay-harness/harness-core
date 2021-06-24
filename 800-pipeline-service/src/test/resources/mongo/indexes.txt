@@ -84,10 +84,7 @@ orchestrationEventLog {"name": "planExecutionId_createdAt", "background": true} 
 orchestrationEventLog {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 orchestrationEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 orchestrationEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
-outboxEvents {"name": "blocked_nextIteration_createdAt_outbox_Idx", "background": true} {"blocked": 1, "nextIteration": 1, "createdAt": 1}
-outboxEvents {"name": "createdAt_blocked_outbox_Idx", "background": true} {"createdAt": 1, "blocked": 1}
-outboxEvents {"name": "eventType_createdAt_outbox_Idx", "background": true} {"eventType": 1, "createdAt": 1}
-outboxEvents {"name": "resourceType_createdAt_outbox_Idx", "background": true} {"resource.type": 1, "createdAt": 1}
+outboxEvents {"name": "blocked_createdAt_nextUnblockAttemptAt_outbox_Idx", "background": true} {"blocked": 1, "createdAt": 1, "nextUnblockAttemptAt": 1}
 outcomeInstances {"name": "unique_levelRuntimeIdUniqueIdx", "unique": true} {"planExecutionId": 1, "levelRuntimeIdIdx": 1, "name": 1}
 outcomeInstances {"name": "unique_producedBySetupIdRuntimeIdIdx", "unique": true} {"planExecutionId": 1, "producedBy.setupId": 1, "producedBy.runtimeId": 1, "name": 1}
 outcomeInstances {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
