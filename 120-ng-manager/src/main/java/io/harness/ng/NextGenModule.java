@@ -10,6 +10,7 @@ import static io.harness.audit.ResourceTypeConstants.PROJECT;
 import static io.harness.audit.ResourceTypeConstants.SECRET;
 import static io.harness.audit.ResourceTypeConstants.SERVICE;
 import static io.harness.audit.ResourceTypeConstants.SERVICE_ACCOUNT;
+import static io.harness.audit.ResourceTypeConstants.TOKEN;
 import static io.harness.audit.ResourceTypeConstants.USER;
 import static io.harness.audit.ResourceTypeConstants.USER_GROUP;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
@@ -92,11 +93,13 @@ import io.harness.ng.core.api.ApiKeyService;
 import io.harness.ng.core.api.DelegateProfileManagerNgService;
 import io.harness.ng.core.api.NGModulesService;
 import io.harness.ng.core.api.NGSecretServiceV2;
+import io.harness.ng.core.api.TokenService;
 import io.harness.ng.core.api.UserGroupService;
 import io.harness.ng.core.api.impl.ApiKeyServiceImpl;
 import io.harness.ng.core.api.impl.DelegateProfileManagerNgServiceImpl;
 import io.harness.ng.core.api.impl.NGModulesServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceV2Impl;
+import io.harness.ng.core.api.impl.TokenServiceImpl;
 import io.harness.ng.core.api.impl.UserGroupServiceImpl;
 import io.harness.ng.core.entityactivity.event.EntityActivityCrudEventMessageListener;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
@@ -122,6 +125,7 @@ import io.harness.ng.core.outbox.ProjectEventHandler;
 import io.harness.ng.core.outbox.SecretEventHandler;
 import io.harness.ng.core.outbox.ServiceAccountEventHandler;
 import io.harness.ng.core.outbox.ServiceOutBoxEventHandler;
+import io.harness.ng.core.outbox.TokenEventHandler;
 import io.harness.ng.core.outbox.UserEventHandler;
 import io.harness.ng.core.outbox.UserGroupEventHandler;
 import io.harness.ng.core.schema.YamlBaseUrlService;
@@ -543,6 +547,7 @@ public class NextGenModule extends AbstractModule {
 
     bind(SourceCodeManagerService.class).to(SourceCodeManagerServiceImpl.class);
     bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);
+    bind(TokenService.class).to(TokenServiceImpl.class);
 
     MapBinder<SCMType, SourceCodeManagerMapper> sourceCodeManagerMapBinder =
         MapBinder.newMapBinder(binder(), SCMType.class, SourceCodeManagerMapper.class);
@@ -569,6 +574,7 @@ public class NextGenModule extends AbstractModule {
     outboxEventHandlerMapBinder.addBinding(SERVICE).to(ServiceOutBoxEventHandler.class);
     outboxEventHandlerMapBinder.addBinding(ENVIRONMENT).to(EnvironmentEventHandler.class);
     outboxEventHandlerMapBinder.addBinding(API_KEY).to(ApiKeyEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(TOKEN).to(TokenEventHandler.class);
   }
 
   private void registerEventsFrameworkMessageListeners() {

@@ -104,4 +104,15 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     apiKeys.forEach(apiKey -> apiKeyDTOS.add(ApiKeyDTOMapper.getDTOFromApiKey(apiKey)));
     return apiKeyDTOS;
   }
+
+  @Override
+  public ApiKey getApiKey(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      ApiKeyType apiKeyType, String parentIdentifier, String identifier) {
+    Optional<ApiKey> optionalApiKey =
+        apiKeyRepository
+            .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndIdentifier(
+                accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, identifier);
+    Preconditions.checkState(optionalApiKey.isPresent(), "Api key not present in scope for identifier: ", identifier);
+    return optionalApiKey.get();
+  }
 }
