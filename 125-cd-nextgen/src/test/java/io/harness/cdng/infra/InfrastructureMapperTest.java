@@ -114,5 +114,14 @@ public class InfrastructureMapperTest extends CategoryTest {
                                                 .build();
     assertThatThrownBy(() -> InfrastructureMapper.toOutcome(emptyReleaseName, EnvironmentOutcome.builder().build()))
         .isInstanceOf(InvalidArgumentsException.class);
+
+    K8sGcpInfrastructure emptyClusterName = K8sGcpInfrastructure.builder()
+                                                .connectorRef(ParameterField.createValueField("connectorId"))
+                                                .namespace(ParameterField.createValueField("namespace"))
+                                                .releaseName(ParameterField.createValueField("release"))
+                                                .cluster(ParameterField.createValueField(""))
+                                                .build();
+    assertThatThrownBy(() -> InfrastructureMapper.toOutcome(emptyClusterName, EnvironmentOutcome.builder().build()))
+        .isInstanceOf(InvalidArgumentsException.class);
   }
 }

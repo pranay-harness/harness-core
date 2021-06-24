@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HFakeTimeLimiter;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.task.ListNotifyResponseData;
@@ -54,7 +55,6 @@ import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -1964,7 +1964,7 @@ public class NexusServiceTest extends WingsBaseTest {
   public void shouldReturnCorrectErrorMessagesForGetGroupIdPaths() throws Exception {
     NexusTwoServiceImpl nexusTwoService = Mockito.mock(NexusTwoServiceImpl.class);
     Reflect.on(nexusService).set("nexusTwoService", nexusTwoService);
-    TimeLimiter timeLimiter = new FakeTimeLimiter();
+    TimeLimiter timeLimiter = new HFakeTimeLimiter();
     Reflect.on(nexusService).set("timeLimiter", timeLimiter);
 
     RuntimeException e = new RuntimeException(new TimeoutException());

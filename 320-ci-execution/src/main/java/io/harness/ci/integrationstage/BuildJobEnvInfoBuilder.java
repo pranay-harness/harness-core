@@ -33,6 +33,7 @@ import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
+import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoUtils;
@@ -348,6 +349,7 @@ public class BuildJobEnvInfoBuilder {
         .stepName(name)
         .privileged(privileged)
         .runAsUser(runAsUser)
+        .imagePullPolicy(RunTimeInputHandler.resolveImagePullPolicy(runStepInfo.getImagePullPolicy()))
         .build();
   }
 
@@ -377,13 +379,15 @@ public class BuildJobEnvInfoBuilder {
         .secretVariables(getSecretVariables(integrationStage))
         .containerImageDetails(ContainerImageDetails.builder()
                                    .imageDetails(IntegrationStageUtils.getImageInfo(runTestsStepInfo.getImage()))
-                                   .connectorIdentifier(runTestsStepInfo.getConnector())
+                                   .connectorIdentifier(resolveStringParameter(
+                                       "connectorRef", "RunTest", identifier, runTestsStepInfo.getConnectorRef(), true))
                                    .build())
         .containerResourceParams(getStepContainerResource(runTestsStepInfo.getResources(), "RunTests", identifier))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.TEST_INTELLIGENCE)
         .privileged(privileged)
         .runAsUser(runAsUser)
+        .imagePullPolicy(RunTimeInputHandler.resolveImagePullPolicy(runTestsStepInfo.getImagePullPolicy()))
         .build();
   }
 
@@ -431,6 +435,7 @@ public class BuildJobEnvInfoBuilder {
         .stepName(name)
         .privileged(privileged)
         .runAsUser(runAsUser)
+        .imagePullPolicy(RunTimeInputHandler.resolveImagePullPolicy(pluginStepInfo.getImagePullPolicy()))
         .build();
   }
 

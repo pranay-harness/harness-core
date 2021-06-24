@@ -1,13 +1,14 @@
 package io.harness.delegate.task.gcp.taskHandlers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCause;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.gcp.GcpValidationParams;
-import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
-import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.task.ConnectorValidationHandler;
 import io.harness.delegate.task.gcp.GcpRequestMapper;
@@ -31,6 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @NoArgsConstructor
 @Slf4j
+@OwnedBy(CDP)
 public class GcpValidationTaskHandler implements TaskHandler, ConnectorValidationHandler {
   @Inject private GcpClient gcpClient;
   @Inject private SecretDecryptionService secretDecryptionService;
@@ -45,8 +47,6 @@ public class GcpValidationTaskHandler implements TaskHandler, ConnectorValidatio
   public ConnectorValidationResult validate(
       ConnectorValidationParams connectorValidationParams, String accountIdentifier) {
     final GcpValidationParams gcpValidationParams = (GcpValidationParams) connectorValidationParams;
-    final GcpConnectorDTO connectorDTO = gcpValidationParams.getGcpConnectorDTO();
-    final GcpConnectorCredentialDTO credentialDTO = connectorDTO.getCredential();
 
     final GcpRequest gcpRequest = gcpRequestMapper.toGcpRequest(gcpValidationParams);
 
@@ -58,20 +58,15 @@ public class GcpValidationTaskHandler implements TaskHandler, ConnectorValidatio
 
   @VisibleForTesting
   GcpValidationTaskResponse validateInternal(GcpRequest gcpRequest, List<EncryptedDataDetail> encryptionDetails) {
-    try {
-      if (hasManualCredentials(gcpRequest)) {
-        return (GcpValidationTaskResponse) validateGcpServiceAccountKeyCredential(gcpRequest);
-      } else {
-        gcpClient.validateDefaultCredentials();
-        ConnectorValidationResult connectorValidationResult = ConnectorValidationResult.builder()
-                                                                  .status(ConnectivityStatus.SUCCESS)
-                                                                  .testedAt(System.currentTimeMillis())
-                                                                  .build();
-        return GcpValidationTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
-      }
-    } catch (Exception ex) {
-      log.error("Failed while validating credentials for GCP", ex);
-      return getFailedGcpResponse(ex);
+    if (hasManualCredentials(gcpRequest)) {
+      return (GcpValidationTaskResponse) validateGcpServiceAccountKeyCredential(gcpRequest);
+    } else {
+      gcpClient.validateDefaultCredentials();
+      ConnectorValidationResult connectorValidationResult = ConnectorValidationResult.builder()
+                                                                .status(ConnectivityStatus.SUCCESS)
+                                                                .testedAt(System.currentTimeMillis())
+                                                                .build();
+      return GcpValidationTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
     }
   }
 

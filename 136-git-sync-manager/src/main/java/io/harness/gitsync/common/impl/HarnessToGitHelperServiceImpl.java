@@ -126,7 +126,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     }
     final boolean executeOnDelegate = scmOrchestratorService.isExecuteOnDelegate(
         entityReference.getProjectIdentifier(), entityReference.getOrgIdentifier(), accountId);
-
+    log.info("Configuration for git push operation to execute on delegate {}", executeOnDelegate);
     if (executeOnDelegate) {
       final Pair<ScmConnector, List<EncryptedDataDetail>> connectorWithEncryptionDetails =
           getConnectorWithEncryptionDetails(accountId, yamlGitConfig, userPrincipal);
@@ -232,6 +232,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
 
   @Override
   public void postPushOperation(PushInfo pushInfo) {
+    log.info("Post push info {}", pushInfo);
     final EntityDetail entityDetailDTO =
         entityDetailRestToProtoMapper.createEntityDetailDTO(pushInfo.getEntityDetail());
     final EntityReference entityRef = entityDetailDTO.getEntityRef();

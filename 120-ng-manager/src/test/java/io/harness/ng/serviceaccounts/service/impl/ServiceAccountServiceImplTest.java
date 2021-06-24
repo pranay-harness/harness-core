@@ -13,7 +13,9 @@ import static org.mockito.Mockito.mock;
 import io.harness.NgManagerTestBase;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.ng.serviceaccounts.dto.ServiceAccountRequestDTO;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.AccountOrgProjectValidator;
 import io.harness.ng.serviceaccounts.entities.ServiceAccount;
 import io.harness.ng.serviceaccounts.service.api.ServiceAccountService;
 import io.harness.repositories.ng.serviceaccounts.ServiceAccountRepository;
@@ -22,6 +24,7 @@ import io.harness.serviceaccount.ServiceAccountDTO;
 
 import io.fabric8.utils.Lists;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -38,7 +41,8 @@ public class ServiceAccountServiceImplTest extends NgManagerTestBase {
   private String identifier;
   private String name;
   private String description;
-  private ServiceAccountRequestDTO serviceAccountRequestDTO;
+  private ServiceAccountDTO serviceAccountRequestDTO;
+  private AccountOrgProjectValidator accountOrgProjectValidator;
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -50,9 +54,21 @@ public class ServiceAccountServiceImplTest extends NgManagerTestBase {
     description = generateUuid();
     serviceAccountRepository = mock(ServiceAccountRepository.class);
     serviceAccountService = new ServiceAccountServiceImpl();
+    accountOrgProjectValidator = mock(AccountOrgProjectValidator.class);
 
-    serviceAccountRequestDTO = new ServiceAccountRequestDTO(identifier, name, description);
+    serviceAccountRequestDTO = ServiceAccountDTO.builder()
+                                   .identifier(identifier)
+                                   .name(name)
+                                   .email(name + "@harness.io")
+                                   .description(description)
+                                   .tags(new HashMap<>())
+                                   .accountIdentifier(accountIdentifier)
+                                   .orgIdentifier(orgIdentifier)
+                                   .projectIdentifier(projectIdentifier)
+                                   .build();
+
     FieldUtils.writeField(serviceAccountService, "serviceAccountRepository", serviceAccountRepository, true);
+    FieldUtils.writeField(serviceAccountService, "accountOrgProjectValidator", accountOrgProjectValidator, true);
   }
 
   @Test
@@ -67,8 +83,7 @@ public class ServiceAccountServiceImplTest extends NgManagerTestBase {
     assertThatThrownBy(()
                            -> serviceAccountService.createServiceAccount(
                                accountIdentifier, orgIdentifier, projectIdentifier, serviceAccountRequestDTO))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Duplicate service account with identifier " + identifier + " in scope");
+        .isInstanceOf(InvalidArgumentsException.class);
   }
 
   @Test
@@ -83,8 +98,7 @@ public class ServiceAccountServiceImplTest extends NgManagerTestBase {
     assertThatThrownBy(()
                            -> serviceAccountService.updateServiceAccount(accountIdentifier, orgIdentifier,
                                projectIdentifier, identifier, serviceAccountRequestDTO))
-        .isInstanceOf(NullPointerException.class)
-        .hasMessage("Service account with identifier: " + identifier + " doesn't exist");
+        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test

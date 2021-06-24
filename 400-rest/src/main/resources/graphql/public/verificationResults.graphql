@@ -1,0 +1,45 @@
+extend type Query {
+  verificationResults(filters: [VerificationResultFilter], limit: Int!, offset: Int): VerificationResultConnection
+    @dataFetcher(name: verificationResultConnection)
+}
+
+type VerificationResult {
+  id: String
+  appName: String
+  serviceName: String
+  envName: String
+  type: String
+  status: String
+  analyzed: Boolean
+  message: String
+  rollback: Boolean
+}
+
+type VerificationResultConnection {
+  pageInfo: PageInfo
+  nodes: [VerificationResult]
+}
+
+input VerificationResultFilter {
+  application: IdFilter
+  service: IdFilter
+  environment: IdFilter
+  executionStatus: ExecutionStatusFilter
+  rollback: Boolean
+  analyzed: Boolean
+}
+
+input ExecutionStatusFilter {
+  operator: EnumOperator
+  values: [ExecutionStatusType]
+}
+
+enum ExecutionStatusType {
+  ABORTED
+  ERROR
+  FAILED
+  RUNNING
+  SUCCESS
+  SKIPPE
+  EXPIRED
+}
