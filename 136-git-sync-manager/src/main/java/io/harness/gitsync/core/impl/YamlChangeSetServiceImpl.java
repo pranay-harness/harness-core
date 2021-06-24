@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.gitsync.common.beans.YamlChangeSet.MAX_RETRY_COUNT_EXCEEDED_CODE;
+import static io.harness.gitsync.common.beans.YamlChangeSetStatus.QUEUED;
 import static io.harness.gitsync.common.beans.YamlChangeSetStatus.SKIPPED;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -66,6 +67,8 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
         .eventMetadata(yamlChangeSet.getEventMetadata())
         .eventType(yamlChangeSet.getEventType())
         .queuedOn(System.currentTimeMillis())
+        .retryCount(0)
+        .cutOffTime(0L)
         .build();
   }
 
@@ -151,16 +154,18 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   @Override
-  public boolean updateStatusWithRetryCountIncrement(
-      String accountId, YamlChangeSetStatus currentStatus, YamlChangeSetStatus newStatus, String yamlChangeSetId) {
+  public boolean updateStatusWithRetryCountIncrement(String accountId, YamlChangeSetStatus currentStatus,
+      YamlChangeSetStatus newStatus, YamlChangeSetDTO yamlChangeSetDTO) {
     Update updateOps = new Update().set(YamlChangeSetKeys.status, newStatus);
     updateOps.inc(YamlChangeSetKeys.retryCount);
-
+    updateOps.set(YamlChangeSetKeys.nextRunTime,
+        YamlChangeSetBackOffHelper.getNextRunTime(
+            ((int) yamlChangeSetDTO.getRetryCount() + 1), System.currentTimeMillis()));
     Query query = new Query(new Criteria()
                                 .and(YamlChangeSetKeys.accountId)
                                 .is(accountId)
                                 .and(YamlChangeSetKeys.uuid)
-                                .is(yamlChangeSetId)
+                                .is(yamlChangeSetDTO.getChangesetId())
                                 .and(YamlChangeSetKeys.status)
                                 .is(currentStatus));
 
@@ -272,5 +277,17 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Override
   public List<YamlChangeSet> list(String queueKey, String accountId, YamlChangeSetStatus status) {
     return yamlChangeSetRepository.findByAccountIdAndQueueKeyAndStatus(accountId, queueKey, status.name());
+  }
+
+  @Override
+  public void markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(int maxRetryCount) {
+    Update update = new Update()
+                        .set(YamlChangeSetKeys.status, SKIPPED)
+                        .set(YamlChangeSetKeys.messageCode, MAX_RETRY_COUNT_EXCEEDED_CODE);
+    Query query = new Query().addCriteria(
+        new Criteria().and(YamlChangeSetKeys.status).is(QUEUED).and(YamlChangeSetKeys.retryCount).gt(maxRetryCount));
+    final UpdateResult status = yamlChangeSetRepository.update(query, update);
+    log.info(
+        "Updated the status of [{}] YamlChangeSets to Skipped. Max retry count exceeded", status.getModifiedCount());
   }
 }

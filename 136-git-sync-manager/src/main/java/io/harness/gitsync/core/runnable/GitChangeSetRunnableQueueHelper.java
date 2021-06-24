@@ -18,12 +18,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
 @OwnedBy(DX)
 public class GitChangeSetRunnableQueueHelper {
+  private static final AtomicLong lastTimestampForChangesetLogPrint = new AtomicLong(0);
+
   public YamlChangeSetDTO getQueuedChangeSetForWaitingQueueKey(String accountId, String queueKey,
       int maxRunningChangesetsForAccount, YamlChangeSetService ycsService, List<YamlChangeSetStatus> runningStatusList,
       PersistentLocker persistentLocker) {
@@ -32,14 +35,7 @@ public class GitChangeSetRunnableQueueHelper {
       return null;
     }
 
-    final YamlChangeSetDTO selectedChangeSet =
-        selectQueuedChangeSetWithPriority(accountId, queueKey, ycsService, persistentLocker, runningStatusList);
-
-    if (selectedChangeSet == null) {
-      log.info("No change set found in queued state");
-    }
-
-    return selectedChangeSet;
+    return selectQueuedChangeSetWithPriority(accountId, queueKey, ycsService, persistentLocker, runningStatusList);
   }
 
   private boolean accountQuotaMaxedOut(String accountId, int maxRunningChangesetsForAccount,
@@ -70,6 +66,10 @@ public class GitChangeSetRunnableQueueHelper {
       if (changeSet.isPresent()) {
         selectedYamlChangeSet = changeSet.get();
       }
+
+      if (!isChangeSetEligibleForCurrentRun(selectedYamlChangeSet)) {
+        return null;
+      }
       // Not using comparator currently, can be added later.
       //      final List<YamlChangeSet> sortedChangeSets =
       //          changeSets.stream().sorted(new YamlChangeSetComparator()).collect(Collectors.toList());
@@ -89,6 +89,22 @@ public class GitChangeSetRunnableQueueHelper {
       }
       return null;
     }
+  }
+
+  private boolean isChangeSetEligibleForCurrentRun(YamlChangeSetDTO selectedYamlChangeSet) {
+    if (selectedYamlChangeSet != null) {
+      final long currentTimeMillis = System.currentTimeMillis();
+      if (selectedYamlChangeSet.getNextRunTime() > currentTimeMillis) {
+        // todo(abhinav): have better logging logic
+        // logging on random logic
+        if (currentTimeMillis % 50 == 0) {
+          log.info("Skipping changeset: [{}] since its next run time: [{}] is still ahead of current time: [{}]",
+              selectedYamlChangeSet.getChangesetId(), selectedYamlChangeSet.getNextRunTime(), currentTimeMillis);
+        }
+        return false;
+      }
+    }
+    return true;
   }
 
   public class YamlChangeSetComparator implements Comparator<YamlChangeSet> {

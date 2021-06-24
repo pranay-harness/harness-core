@@ -50,6 +50,7 @@ public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAwar
   private String repoUrl;
   private String branch;
   @Default private Long cutOffTime = 0L;
+  @Default private Long nextRunTime = 0L;
 
   // Any special event metadata which has to go back from queue as is can be pushed in this interface.
   EventMetadata eventMetadata;
@@ -61,7 +62,7 @@ public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAwar
   public YamlChangeSet(String uuid, String accountId, String status, long queuedOn,
       GitWebhookRequestAttributes gitWebhookRequestAttributes, Integer retryCount, String queueKey,
       YamlChangeSetEventType eventType, String messageCode, String repoUrl, String branch, EventMetadata eventMetadata,
-      long createdAt, long lastUpdatedAt) {
+      long createdAt, long lastUpdatedAt, Long cutOffTime, Long nextRunTime) {
     this.uuid = uuid;
     this.accountId = accountId;
     this.status = status;
@@ -76,5 +77,7 @@ public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAwar
     this.eventMetadata = eventMetadata;
     this.createdAt = createdAt;
     this.lastUpdatedAt = lastUpdatedAt;
+    this.cutOffTime = cutOffTime;
+    this.nextRunTime = nextRunTime;
   }
 }

@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.gitsync.core.runnable.GitChangeSetRunnableContants.MAX_RETRIED_QUEUED_JOB_CHECK_INTERVAL;
+import static io.harness.gitsync.core.runnable.GitChangeSetRunnableContants.STUCK_RUNNING_JOB_CHECK_INTERVAL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static java.lang.String.format;
@@ -46,14 +48,11 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Singleton
 @OwnedBy(DX)
 public class GitChangeSetRunnable implements Runnable {
-  public static final int MAX_RUNNING_CHANGESETS_FOR_ACCOUNT = 5;
-  public static final int MAX_RETRY_FOR_CHANGESET = 3;
-  public static final List<YamlChangeSetStatus> terminalStatusList =
-      ImmutableList.of(YamlChangeSetStatus.FAILED, YamlChangeSetStatus.COMPLETED, YamlChangeSetStatus.SKIPPED);
   public static final List<YamlChangeSetStatus> runningStatusList = ImmutableList.of(YamlChangeSetStatus.RUNNING);
 
   private static final AtomicLong lastTimestampForStuckJobCheck = new AtomicLong(0);
   private static final AtomicLong lastTimestampForStatusLogPrint = new AtomicLong(0);
+  private static final AtomicLong lastTimestampForQueuedJobCheck = new AtomicLong(0);
 
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private GitChangeSetRunnableHelper gitChangeSetRunnableHelper;
@@ -72,6 +71,7 @@ public class GitChangeSetRunnable implements Runnable {
       }
 
       handleStuckChangeSets();
+      handleChangeSetWithMaxRetry();
 
       final List<YamlChangeSetDTO> yamlChangeSets = getYamlChangeSetsToProcess();
 
@@ -138,7 +138,8 @@ public class GitChangeSetRunnable implements Runnable {
 
   private boolean shouldPrintStatusLogs() {
     return lastTimestampForStatusLogPrint.get() == 0
-        || (System.currentTimeMillis() - lastTimestampForStatusLogPrint.get() > TimeUnit.MINUTES.toMillis(5));
+        || (System.currentTimeMillis() - lastTimestampForStatusLogPrint.get()
+            > TimeUnit.MINUTES.toMillis(GitChangeSetRunnableContants.STATUS_LOG_PRINT_INTERVAL));
   }
 
   private YamlChangeSetDTO getQueuedChangeSetForWaitingQueueKey(String accountId, String queueKey) {
@@ -148,9 +149,6 @@ public class GitChangeSetRunnable implements Runnable {
       final YamlChangeSetDTO yamlChangeSet =
           gitChangeSetRunnableQueueHelper.getQueuedChangeSetForWaitingQueueKey(accountId, queueKey,
               getMaxRunningChangesetsForAccount(), yamlChangeSetService, runningStatusList, persistentLocker);
-      if (yamlChangeSet == null) {
-        log.info("no changeset found to process");
-      }
       return yamlChangeSet;
     } catch (Exception ex) {
       log.error(
@@ -164,6 +162,20 @@ public class GitChangeSetRunnable implements Runnable {
     // TODO(abhinav): add maintainance logic
     //    return !getMaintenanceFilename() && configurationController.isPrimary();
     return true;
+  }
+
+  private void handleChangeSetWithMaxRetry() {
+    if (shouldPerformMaxRetriedJobCheck()) {
+      log.info("handling max retried queued change sets");
+      lastTimestampForQueuedJobCheck.set(System.currentTimeMillis());
+      skipChangeSetsWithMaxRetries();
+      log.info("Successfully handled max retried stuck queued change sets");
+    }
+  }
+
+  private void skipChangeSetsWithMaxRetries() {
+    yamlChangeSetService.markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(
+        GitChangeSetRunnableContants.MAX_RETRY_FOR_CHANGESET);
   }
 
   private void handleStuckChangeSets() {
@@ -188,7 +200,14 @@ public class GitChangeSetRunnable implements Runnable {
    */
   boolean shouldPerformStuckJobCheck() {
     return lastTimestampForStuckJobCheck.get() == 0
-        || (System.currentTimeMillis() - lastTimestampForStuckJobCheck.get() > TimeUnit.MINUTES.toMillis(30));
+        || (System.currentTimeMillis() - lastTimestampForStuckJobCheck.get()
+            > TimeUnit.MINUTES.toMillis(STUCK_RUNNING_JOB_CHECK_INTERVAL));
+  }
+
+  boolean shouldPerformMaxRetriedJobCheck() {
+    return lastTimestampForQueuedJobCheck.get() == 0
+        || (System.currentTimeMillis() - lastTimestampForQueuedJobCheck.get()
+            > TimeUnit.MINUTES.toMillis(MAX_RETRIED_QUEUED_JOB_CHECK_INTERVAL));
   }
 
   /**
@@ -221,7 +240,8 @@ public class GitChangeSetRunnable implements Runnable {
         accountId, YamlChangeSetStatus.QUEUED, runningStatusList, yamlChangeSetIds);
     log.info("Retrying stuck changesets: [{}]", yamlChangeSetIds);
 
-    yamlChangeSetService.markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(accountId, MAX_RETRY_FOR_CHANGESET);
+    yamlChangeSetService.markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(
+        accountId, GitChangeSetRunnableContants.MAX_RETRY_FOR_CHANGESET);
   }
 
   @NotNull
@@ -260,6 +280,6 @@ public class GitChangeSetRunnable implements Runnable {
 
   @VisibleForTesting
   int getMaxRunningChangesetsForAccount() {
-    return MAX_RUNNING_CHANGESETS_FOR_ACCOUNT;
+    return GitChangeSetRunnableContants.MAX_RUNNING_CHANGESETS_FOR_ACCOUNT;
   }
 }

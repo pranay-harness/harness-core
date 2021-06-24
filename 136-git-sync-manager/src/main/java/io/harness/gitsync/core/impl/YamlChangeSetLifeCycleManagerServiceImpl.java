@@ -60,8 +60,8 @@ public class YamlChangeSetLifeCycleManagerServiceImpl implements YamlChangeSetLi
     final boolean success =
         Failsafe.with(retryPolicy)
             .get(()
-                     -> yamlChangeSetService.updateStatusWithRetryCountIncrement(yamlChangeSet.getAccountId(), RUNNING,
-                         YamlChangeSetStatus.QUEUED, yamlChangeSet.getChangesetId()));
+                     -> yamlChangeSetService.updateStatusWithRetryCountIncrement(
+                         yamlChangeSet.getAccountId(), RUNNING, YamlChangeSetStatus.QUEUED, yamlChangeSet));
     log.info("Update status result: [{}] while updating status to QUEUED for changesetId [{}]",
         success ? "success" : "failure", yamlChangeSet.getChangesetId());
   }

@@ -13,6 +13,7 @@ import lombok.experimental.UtilityClass;
 public class YamlChangeSetMapper {
   YamlChangeSetDTO getYamlChangeSetDto(YamlChangeSet yamlChangeSet) {
     final int retryCount = yamlChangeSet.getRetryCount() != null ? yamlChangeSet.getRetryCount() : 0;
+    final long nextRunTime = yamlChangeSet.getNextRunTime() != null ? yamlChangeSet.getNextRunTime() : 0;
     return YamlChangeSetDTO.builder()
         .branch(yamlChangeSet.getBranch())
         .gitWebhookRequestAttributes(yamlChangeSet.getGitWebhookRequestAttributes())
@@ -23,6 +24,7 @@ public class YamlChangeSetMapper {
         .changesetId(yamlChangeSet.getUuid())
         .status(yamlChangeSet.getStatus())
         .retryCount(retryCount)
+        .nextRunTime(nextRunTime)
         .build();
   }
 }

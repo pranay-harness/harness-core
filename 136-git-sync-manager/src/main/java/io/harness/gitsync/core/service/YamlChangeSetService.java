@@ -44,7 +44,7 @@ public interface YamlChangeSetService {
   void markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(@NotNull String accountId, int maxRetryCount);
 
   boolean updateStatusWithRetryCountIncrement(@NotNull String accountId, @NotNull YamlChangeSetStatus currentStatus,
-      @NotNull YamlChangeSetStatus newStatus, @NotNull String yamlChangeSetId);
+      @NotNull YamlChangeSetStatus newStatus, @NotNull YamlChangeSetDTO yamlChangeSetDTO);
 
   boolean updateStatusAndIncrementRetryCountForYamlChangeSets(@NotNull String accountId,
       @NotNull YamlChangeSetStatus newStatus, List<YamlChangeSetStatus> currentStatus, List<String> yamlChangeSetIds);
@@ -60,4 +60,6 @@ public interface YamlChangeSetService {
   Set<ChangeSetGroupingKey> getChangesetGroupingKeys(Criteria criteria);
 
   List<YamlChangeSet> list(@NotNull String queueKey, @NotNull String accountId, @NotNull YamlChangeSetStatus status);
+
+  void markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(int maxRetryCount);
 }
