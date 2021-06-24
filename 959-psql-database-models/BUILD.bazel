@@ -9,6 +9,10 @@ shared_dependencies = [
     "//970-ng-commons:module",
     "@maven//:com_google_inject_guice",
     "@maven//:org_jooq_jooq",
+    "@maven//:org_springframework_data_spring_data_commons",
+    "@maven//:org_springframework_data_spring_data_mongodb",
+    "@maven//:org_springframework_guice_spring_guice",
+    "@maven//:org_springframework_spring_core",
 ]
 
 java_library(

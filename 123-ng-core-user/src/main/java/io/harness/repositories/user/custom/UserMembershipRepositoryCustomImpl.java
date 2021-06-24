@@ -14,9 +14,11 @@ import io.harness.beans.Scope.ScopeKeys;
 import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
+import io.harness.queryconverter.dto.CustomAggregationOperation;
 
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -109,10 +111,30 @@ public class UserMembershipRepositoryCustomImpl implements UserMembershipReposit
 
   @Override
   public Long getProjectCount(String userId, String accountIdentifier) {
+    String query = "{ $lookup: { "
+            + " 'from': 'projects', "
+            + " 'let': {  "
+            + "    accountId: '$scopes.accountIdentifier', "
+            + "    orgId:     '$scopes.orgIdentifier', "
+            + "    projectId: '$scopes.projectIdentifier' "
+            + " }, "
+            + " 'pipeline': [ "
+            + " { '$match': { '$expr': { "
+            + "   $and: [ "
+            + "        { $eq: ['$accountIdentifier', '$$accountId'] }, "
+            + "        { $eq: ['$orgIdentifier', '$$orgId'] }, "
+            + "        { $eq: ['$identifier', '$$projectId'] }, "
+            +"         { $eq: ['$deleted', false] }, "
+            + "   ] "
+            + " }}} "
+            + " ],"
+            + " 'as':'projectDetails' "
+            + " }} ";
     TypedAggregation<UserMembership> aggregation =
         newAggregation(UserMembership.class, match(where(UserMembershipKeys.userId).is(userId)),
             unwind(UserMembershipKeys.scopes), match(where("scopes.projectIdentifier").exists(true)),
-            match(where("scopes.accountIdentifier").is(accountIdentifier)), group().count().as("count"));
+            match(where("scopes.accountIdentifier").is(accountIdentifier)), new CustomAggregationOperation(query),match(where("projectDetails").exists(true)), match(where("projectDetails").ne(Collections.EMPTY_LIST)), group().count().as("count"));
+
 
     List<BasicDBObject> mappedResults = mongoTemplate.aggregate(aggregation, BasicDBObject.class).getMappedResults();
 
@@ -121,3 +143,5 @@ public class UserMembershipRepositoryCustomImpl implements UserMembershipReposit
         : 0L;
   }
 }
+
+

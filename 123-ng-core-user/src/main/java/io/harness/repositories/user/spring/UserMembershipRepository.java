@@ -25,7 +25,7 @@ public interface UserMembershipRepository
   @Aggregation(
       pipeline = {"{ $match : { userId : ?0 } }", "{ $unwind : { path : '$scopes' } }",
           "{ $match: {'scopes.projectIdentifier' : {$exists: true}, 'scopes.accountIdentifier': ?1}}",
-          "{ $lookup: { "
+              "{ $lookup: { "
               + " 'from': 'projects', "
               + " 'let': {  "
               + "    accountId: '$scopes.accountIdentifier', "
@@ -43,7 +43,7 @@ public interface UserMembershipRepository
               + " ], "
               + " 'as':'projectDetails' "
               + " }}",
-          "{$project: {'contents': {$arrayElemAt:[ '$projectDetails',0]}}},", "{$replaceRoot: {newRoot:'$contents'}}"})
+          "{$project: {'contents': {$arrayElemAt:[ '$projectDetails',0]}}},", "{$replaceRoot: {newRoot:'$contents'}}", "{ $match : { deleted : ?2 } }"})
   List<Project>
-  findProjectList(String userId, String accountId, Pageable pageable);
+  findProjectList(String userId, String accountId, boolean deleted, Pageable pageable);
 }
