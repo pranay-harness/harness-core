@@ -49,6 +49,11 @@ public class AmbianceUtils {
     return clonedBuilder.build();
   }
 
+  public static Ambiance updateCurrentLevel(Ambiance oldAmbiance, Level level) {
+    Ambiance newAmbiance = cloneForFinish(oldAmbiance);
+    return newAmbiance.toBuilder().addLevels(level).build();
+  }
+
   @VisibleForTesting
   static Ambiance deepCopy(Ambiance ambiance) throws InvalidProtocolBufferException {
     return Ambiance.parseFrom(ambiance.toByteString());

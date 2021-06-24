@@ -39,6 +39,7 @@ import io.harness.observer.Subject;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
@@ -113,12 +114,16 @@ public class OrchestrationEngine {
     NodeExecution previousNodeExecution = null;
     if (AmbianceUtils.obtainCurrentRuntimeId(ambiance) != null) {
       long prevNodeEndTs = System.currentTimeMillis();
+
+      Level lastLevelWithEndTs = AmbianceUtils.obtainCurrentLevel(ambiance).toBuilder().setEndTs(prevNodeEndTs).build();
+      Ambiance ambianceWithEndTs = AmbianceUtils.updateCurrentLevel(ambiance, lastLevelWithEndTs);
+      ambiance = ambianceWithEndTs;
+
       previousNodeExecution = nodeExecutionService.update(AmbianceUtils.obtainCurrentRuntimeId(ambiance),
           ops
           -> ops.set(NodeExecutionKeys.nextId, uuid)
                  .set(NodeExecutionKeys.endTs, prevNodeEndTs)
-                 .set(format(NodeExecutionKeys.lastLevelEndTs, AmbianceUtils.obtainCurrentLevelIndex(ambiance)),
-                     prevNodeEndTs));
+                 .set(NodeExecutionKeys.ambiance, ambianceWithEndTs));
     }
 
     Ambiance cloned = reBuildAmbiance(ambiance, node, uuid);
