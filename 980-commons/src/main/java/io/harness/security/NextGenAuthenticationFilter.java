@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.TokenDTO;
 import io.harness.remote.client.NGRestUtils;
@@ -53,7 +54,7 @@ public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
       String apiKey = apiKeyOptional.get();
       log.info("Found an API key in request {}", apiKey);
       String[] splitToken = apiKey.split(deliminator);
-      if (splitToken.length == 2) {
+      if (EmptyPredicate.isNotEmpty(splitToken) && splitToken.length == 2) {
         TokenDTO tokenDTO = NGRestUtils.getResponse(tokenClient.getToken(splitToken[0]));
         if (tokenDTO != null) {
           if (Instant.now().toEpochMilli() < tokenDTO.getValidTo()
