@@ -59,6 +59,14 @@ public class TokenResource {
     return ResponseDTO.newResponse(token);
   }
 
+  @DELETE
+  @Path("{identifier}")
+  @ApiOperation(value = "Delete token", nickname = "deleteToken")
+  public ResponseDTO<Boolean> deleteToken(@PathParam("identifier") String identifier) {
+    boolean isDeleted = tokenService.revokeToken(identifier);
+    return ResponseDTO.newResponse(isDeleted);
+  }
+
   @GET
   @Path("{tokenId}")
   @ApiOperation(value = "Get token", nickname = "getToken")
