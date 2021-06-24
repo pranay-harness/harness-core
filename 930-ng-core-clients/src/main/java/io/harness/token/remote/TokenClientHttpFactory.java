@@ -18,8 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
-public class TokenClientFactory extends AbstractHttpClientFactory implements Provider<TokenClient> {
-  public TokenClientFactory(ServiceHttpClientConfig ngManagerConfig, String serviceSecret,
+public class TokenClientHttpFactory extends AbstractHttpClientFactory implements Provider<TokenClient> {
+  public TokenClientHttpFactory(ServiceHttpClientConfig ngManagerConfig, String serviceSecret,
       ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId,
       ClientMode clientMode) {
     super(ngManagerConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId, false, clientMode);

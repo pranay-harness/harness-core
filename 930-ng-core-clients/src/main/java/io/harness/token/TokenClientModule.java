@@ -7,7 +7,7 @@ import io.harness.remote.client.ClientMode;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
-import io.harness.token.remote.TokenClientFactory;
+import io.harness.token.remote.TokenClientHttpFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -27,15 +27,15 @@ public class TokenClientModule extends AbstractModule {
 
   @Provides
   @Named("PRIVILEGED")
-  private TokenClientFactory privilegedTokenHttpClientFactory(KryoConverterFactory kryoConverterFactory) {
-    return new TokenClientFactory(ngManagerClientConfig, serviceSecret, new ServiceTokenGenerator(),
+  private TokenClientHttpFactory privilegedTokenHttpClientFactory(KryoConverterFactory kryoConverterFactory) {
+    return new TokenClientHttpFactory(ngManagerClientConfig, serviceSecret, new ServiceTokenGenerator(),
         kryoConverterFactory, clientId, ClientMode.PRIVILEGED);
   }
 
   @Provides
   @Named("NON_PRIVILEGED")
-  private TokenClientFactory nonPrivilegedTokenHttpClientFactory(KryoConverterFactory kryoConverterFactory) {
-    return new TokenClientFactory(ngManagerClientConfig, serviceSecret, new ServiceTokenGenerator(),
+  private TokenClientHttpFactory nonPrivilegedTokenHttpClientFactory(KryoConverterFactory kryoConverterFactory) {
+    return new TokenClientHttpFactory(ngManagerClientConfig, serviceSecret, new ServiceTokenGenerator(),
         kryoConverterFactory, clientId, ClientMode.NON_PRIVILEGED);
   }
 }
