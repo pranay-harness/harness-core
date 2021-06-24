@@ -59,11 +59,11 @@ public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
         if (tokenDTO != null) {
           if (Instant.now().toEpochMilli() < tokenDTO.getValidTo()
               && Instant.now().toEpochMilli() > tokenDTO.getValidFrom()) {
-            Principal principal = new ServiceAccountPrincipal(apiKey);
+            Principal principal = new ServiceAccountPrincipal(tokenDTO.getParentIdentifier());
             SecurityContextBuilder.setContext(principal);
             SourcePrincipalContextBuilder.setSourcePrincipal(principal);
           } else {
-            throw new InvalidRequestException("Incoming API token " + tokenDTO.getName() + " is expired");
+            throw new InvalidRequestException("Incoming API token " + tokenDTO.getName() + " has expired");
           }
         } else {
           throw new InvalidRequestException("Could not find the incoming API token in Harness");
