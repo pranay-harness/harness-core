@@ -13,6 +13,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.concurrent.HTimeLimiter;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesConfig;
@@ -107,7 +108,15 @@ public class GkeClusterHelper {
       char[] serviceAccountKeyFileContent, boolean useDelegate, String locationClusterName, String namespace) {
     Container gkeContainerService = gcpHelperService.getGkeContainerService(serviceAccountKeyFileContent, useDelegate);
     String projectId = getProjectIdFromCredentials(serviceAccountKeyFileContent, useDelegate);
+    if (EmptyPredicate.isEmpty(locationClusterName)) {
+      throw new InvalidRequestException("Cluster name is empty in Inframapping");
+    }
     String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
+    if (locationCluster.length < 2) {
+      throw new InvalidRequestException(String.format("Cluster name is not in proper format. "
+              + "Expected format is <Location/ClusterName> i.e us-central1-c/test-cluster. Cluster name: [%s]",
+          locationClusterName));
+    }
     String location = locationCluster[0];
     String clusterName = locationCluster[1];
     try {

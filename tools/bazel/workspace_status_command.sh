@@ -14,6 +14,15 @@ function getProperty () {
 
 echo "TIMESTAMP $(date +'%y%m%d-%H%M')"
 
+if [ "${BUILD_PURPOSE}" = "RELEASE" ]
+then
+  echo STABLE_SIGNER_KEY_STORE=${KEY_STORE}
+  echo STABLE_SIGNER_KEY_STORE_PASSWORD=${KEY_STORE_PASSWORD}
+else
+  echo STABLE_SIGNER_KEY_STORE `pwd`/project/signer/dummy_key_store.p12
+  echo STABLE_SIGNER_KEY_STORE_PASSWORD dummy_store
+fi
+
 if [ "${BUILD_PURPOSE}" = "DEVELOPMENT" -o "${BUILD_PURPOSE}" = "PR_CHECK" -o "${BUILD_PURPOSE}" = "CACHE" ]
 then
   echo "STABLE_GIT_BRANCH unknown-development-branch"

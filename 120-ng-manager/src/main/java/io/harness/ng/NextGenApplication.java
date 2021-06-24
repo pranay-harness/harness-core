@@ -57,6 +57,7 @@ import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
+import io.harness.ng.core.migration.ProjectMigrationProvider;
 import io.harness.ng.core.user.service.impl.UserMembershipMigrationService;
 import io.harness.ng.core.user.service.impl.UserProjectMigrationService;
 import io.harness.ng.migration.NGCoreMigrationProvider;
@@ -313,6 +314,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .microservice(Microservice.CORE)
         .migrationProviderList(new ArrayList<Class<? extends MigrationProvider>>() {
           { add(NGCoreMigrationProvider.class); } // Add all migration provider classes here
+          { add(ProjectMigrationProvider.class); }
         })
         .build();
   }

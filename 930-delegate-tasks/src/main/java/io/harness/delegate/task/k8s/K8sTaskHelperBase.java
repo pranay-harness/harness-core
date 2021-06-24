@@ -81,6 +81,9 @@ import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesValuesException;
+import io.harness.exception.NestedExceptionUtils;
+import io.harness.exception.UrlNotProvidedException;
+import io.harness.exception.UrlNotReachableException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.helm.HelmCliCommandType;
@@ -2091,17 +2094,18 @@ public class K8sTaskHelperBase {
   }
 
   public ConnectorValidationResult validate(
-      ConnectorConfigDTO connector, String accountIdentifier, List<EncryptedDataDetail> encryptionDetailList) {
-    ConnectivityStatus connectivityStatus = ConnectivityStatus.FAILURE;
+      ConnectorConfigDTO connector, List<EncryptedDataDetail> encryptionDetailList) {
     KubernetesConfig kubernetesConfig = getKubernetesConfig(connector, encryptionDetailList);
     try {
       kubernetesContainerService.validateMasterUrl(kubernetesConfig);
-      connectivityStatus = ConnectivityStatus.SUCCESS;
-    } catch (Exception ex) {
-      log.info("Exception while validating kubernetes credentials", ex);
-      return createConnectivityFailureValidationResult(ex);
+      return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
+    } catch (UrlNotProvidedException ex) {
+      throw NestedExceptionUtils.hintWithExplanationException(
+          K8sExceptionConstants.PROVIDE_MASTER_URL_HINT, K8sExceptionConstants.PROVIDE_MASTER_URL_EXPLANATION, ex);
+    } catch (UrlNotReachableException ex) {
+      throw NestedExceptionUtils.hintWithExplanationException(
+          K8sExceptionConstants.INCORRECT_MASTER_URL_HINT, K8sExceptionConstants.INCORRECT_MASTER_URL_EXPLANATION, ex);
     }
-    return ConnectorValidationResult.builder().status(connectivityStatus).build();
   }
 
   private KubernetesConfig getKubernetesConfig(
