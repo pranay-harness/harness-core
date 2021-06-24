@@ -8,6 +8,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
@@ -34,6 +36,7 @@ import io.harness.service.DelegateGrpcClientWrapper;
 
 import io.fabric8.utils.Lists;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +47,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class GcrResourceServiceImplTest extends CategoryTest {
   private static final String ACCOUNT_ID = "accountId";
   private static final String IMAGE_PATH = "imagePath";
@@ -66,7 +70,12 @@ public class GcrResourceServiceImplTest extends CategoryTest {
     ConnectorInfoDTO connectorInfoDTO =
         ConnectorInfoDTO.builder()
             .connectorType(ConnectorType.GCP)
-            .connectorConfig(GcpConnectorDTO.builder().credential(GcpConnectorCredentialDTO.builder().build()).build())
+            .connectorConfig(GcpConnectorDTO.builder()
+                                 .delegateSelectors(Collections.emptySet())
+                                 .credential(GcpConnectorCredentialDTO.builder().build())
+                                 .build())
+            .projectIdentifier("dummyProject")
+            .orgIdentifier("dummyOrg")
             .build();
     return ConnectorResponseDTO.builder().connector(connectorInfoDTO).build();
   }

@@ -115,6 +115,12 @@ import org.slf4j.LoggerFactory;
 public class KubernetesHelperService {
   @Inject private OidcTokenRetriever oidcTokenRetriever;
 
+  public static void validateCluster(String cluster) {
+    if (isBlank(cluster)) {
+      throw new InvalidArgumentsException(Pair.of("Cluster", "Cluster cannot be empty"));
+    }
+  }
+
   public static void validateNamespace(String namespace) {
     if (isBlank(namespace)) {
       throw new InvalidArgumentsException(Pair.of("Namespace", "Namespace cannot be empty"));

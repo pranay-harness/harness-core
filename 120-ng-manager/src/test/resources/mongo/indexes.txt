@@ -537,10 +537,7 @@ organizations {"name": "accountIdentifierDeletedHarnessManagedNameWithCollationI
 organizations {"name": "accountIdentifierDeletedIdentifierIdx", "background": true} {"accountIdentifier": 1, "deleted": 1, "identifier": 1}
 organizations {"name": "accountIdentifierIdentifierDeletedHarnessManagedNameWithCollationIdx", "background": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "identifier": 1, "deleted": 1, "harnessManaged": -1, "name": 1}
 organizations {"name": "unique_accountIdentifier_organizationIdentifier", "unique": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "identifier": 1}
-outboxEvents {"name": "blocked_nextIteration_createdAt_outbox_Idx", "background": true} {"blocked": 1, "nextIteration": 1, "createdAt": 1}
-outboxEvents {"name": "createdAt_blocked_outbox_Idx", "background": true} {"createdAt": 1, "blocked": 1}
-outboxEvents {"name": "eventType_createdAt_outbox_Idx", "background": true} {"eventType": 1, "createdAt": 1}
-outboxEvents {"name": "resourceType_createdAt_outbox_Idx", "background": true} {"resource.type": 1, "createdAt": 1}
+outboxEvents {"name": "blocked_createdAt_nextUnblockAttemptAt_outbox_Idx", "background": true} {"blocked": 1, "createdAt": 1, "nextUnblockAttemptAt": 1}
 pcfServiceSpecification {"name": "accountId_1", "background": true} {"accountId": 1}
 pcfServiceSpecification {"name": "appId_1", "background": true} {"appId": 1}
 pcfServiceSpecification {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -782,6 +779,9 @@ timeseriesTransactionThresholds {"name": "accountId_1", "background": true} {"ac
 timeseriesTransactionThresholds {"name": "appId_1", "background": true} {"appId": 1}
 timeseriesTransactionThresholds {"name": "createdAt_1", "background": true} {"createdAt": 1}
 timeseriesTransactionThresholds {"name": "timeseriesThresholdsQueryIndex", "background": true} {"appId": 1, "serviceId": 1, "stateType": 1, "groupName": 1, "transactionName": 1, "metricName": 1, "cvConfigId": 1, "thresholdType": 1}
+tokens {"name": "identifier_1", "background": true} {"identifier": 1}
+tokens {"name": "list_tokens_idx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "apiKeyType": 1, "parentIdentifier": 1, "apiKeyIdentifier": 1}
+tokens {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 triggerExecutions {"name": "accountId_1", "background": true} {"accountId": 1}
 triggerExecutions {"name": "appId_1", "background": true} {"appId": 1}
 triggerExecutions {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -912,8 +912,8 @@ yamlChangeSetNG {"name": "status_1", "background": true} {"status": 1}
 yamlGitConfig {"name": "appId_1", "background": true} {"appId": 1}
 yamlGitConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}
 yamlGitConfig {"name": "unique_locate", "unique": true} {"accountId": 1, "entityId": 1, "entityType": 1}
-yamlGitConfigs {"name": "accountId_orgId_projectId_gitConnectorId_repo_branch_unique_Index", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "gitConnectorRef": 1, "repo": 1, "branch": 1}
 yamlGitConfigs {"name": "accountId_orgId_projectId_identifier_unique_Index", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
+yamlGitConfigs {"name": "accountId_orgId_projectId_repo_unique_Index", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "repo": 1}
 yamlGitConfigs {"name": "repo_1", "background": true} {"repo": 1}
 yamlGitConfigs {"name": "repo_branch_index", "background": true} {"repo": 1, "branch": 1}
 yamlSuccessfulChange {"name": "unique_yaml_file_path", "unique": true} {"accountId": 1, "yamlFilePath": 1}

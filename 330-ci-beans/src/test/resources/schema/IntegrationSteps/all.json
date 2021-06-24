@@ -499,6 +499,14 @@
             "image": {
               "type": "string"
             },
+            "imagePullPolicy": {
+              "type": "string",
+              "enum": [
+                "Always",
+                "Never",
+                "IfNotPresent"
+              ]
+            },
             "privileged": {
               "oneOf": [
                 {
@@ -708,6 +716,14 @@
             "image": {
               "type": "string"
             },
+            "imagePullPolicy": {
+              "type": "string",
+              "enum": [
+                "Always",
+                "Never",
+                "IfNotPresent"
+              ]
+            },
             "outputVariables": {
               "oneOf": [
                 {
@@ -770,6 +786,7 @@
           "required": [
             "args",
             "buildTool",
+            "connectorRef",
             "image",
             "language",
             "packages"
@@ -781,7 +798,7 @@
             "buildTool": {
               "type": "string"
             },
-            "connector": {
+            "connectorRef": {
               "type": "string"
             },
             "envVariables": {
@@ -789,6 +806,14 @@
             },
             "image": {
               "type": "string"
+            },
+            "imagePullPolicy": {
+              "type": "string",
+              "enum": [
+                "Always",
+                "Never",
+                "IfNotPresent"
+              ]
             },
             "language": {
               "type": "string"

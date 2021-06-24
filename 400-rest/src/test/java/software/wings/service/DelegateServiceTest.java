@@ -61,6 +61,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -227,7 +228,6 @@ import org.junit.rules.ExpectedException;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 
 @OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
@@ -855,6 +855,37 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
     assertThat(persistence.get(Delegate.class, d2.getUuid())).isNull();
     verify(eventProducer).send(any());
+
+    // Account level delegates
+    delegateGroup = DelegateGroup.builder()
+                        .accountId(accountId)
+                        .name("groupname-acct")
+                        .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+                        .build();
+    persistence.save(delegateGroup);
+
+    d1 = createDelegateBuilder()
+             .accountId(accountId)
+             .delegateName("groupname-acct")
+             .delegateGroupId(delegateGroup.getUuid())
+             .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+             .build();
+    persistence.save(d1);
+    d2 = createDelegateBuilder()
+             .accountId(accountId)
+             .delegateName("groupname-acct")
+             .delegateGroupId(delegateGroup.getUuid())
+             .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+             .build();
+    persistence.save(d2);
+
+    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid(), false);
+
+    assertThat(persistence.get(DelegateGroup.class, delegateGroup.getUuid())).isNull();
+    assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
+    assertThat(persistence.get(Delegate.class, d2.getUuid())).isNull();
+    verify(eventProducer, times(2)).send(any());
+
     featureTestHelper.disableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
   }
 
@@ -1263,7 +1294,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
   public void shouldRegisterHeartbeatPolling() throws IllegalAccessException {
-    DelegateConnectionDao mockConnectionDao = Mockito.mock(DelegateConnectionDao.class);
+    DelegateConnectionDao mockConnectionDao = mock(DelegateConnectionDao.class);
     when(mockConnectionDao.findAndDeletePreviousConnections(anyString(), anyString(), anyString(), anyString()))
         .thenReturn(null);
     FieldUtils.writeField(delegateService, "delegateConnectionDao", mockConnectionDao, true);
@@ -1301,7 +1332,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
   public void shouldRegisterHeartbeatStreaming() throws IllegalAccessException {
-    DelegateConnectionDao mockConnectionDao = Mockito.mock(DelegateConnectionDao.class);
+    DelegateConnectionDao mockConnectionDao = mock(DelegateConnectionDao.class);
     when(mockConnectionDao.findAndDeletePreviousConnections(anyString(), anyString(), anyString(), anyString()))
         .thenReturn(null);
     FieldUtils.writeField(delegateService, "delegateConnectionDao", mockConnectionDao, true);
@@ -1338,7 +1369,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(Integer.MAX_VALUE);
     when(delegateProfileService.fetchCgPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
     delegateService.add(delegate);
-    DelegateConnectionDao mockConnectionDao = Mockito.mock(DelegateConnectionDao.class);
+    DelegateConnectionDao mockConnectionDao = mock(DelegateConnectionDao.class);
     FieldUtils.writeField(delegateService, "delegateConnectionDao", mockConnectionDao, true);
     when(broadcasterFactory.lookup(anyString(), eq(true))).thenReturn(broadcaster);
     String delegateConnectionId = generateTimeBasedUuid();
@@ -1384,7 +1415,7 @@ public class DelegateServiceTest extends WingsBaseTest {
       when(delegateProfileService.fetchCgPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
       delegateService.add(delegate);
 
-      DelegateConnectionDao mockConnectionDao = Mockito.mock(DelegateConnectionDao.class);
+      DelegateConnectionDao mockConnectionDao = mock(DelegateConnectionDao.class);
       FieldUtils.writeField(delegateService, "delegateConnectionDao", mockConnectionDao, true);
       String delegateConnectionId = generateTimeBasedUuid();
       Thread.sleep(2L);
@@ -1434,7 +1465,7 @@ public class DelegateServiceTest extends WingsBaseTest {
       when(delegateProfileService.fetchCgPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
       delegateService.add(delegate);
 
-      DelegateConnectionDao mockConnectionDao = Mockito.mock(DelegateConnectionDao.class);
+      DelegateConnectionDao mockConnectionDao = mock(DelegateConnectionDao.class);
       FieldUtils.writeField(delegateService, "delegateConnectionDao", mockConnectionDao, true);
       String delegateConnectionId = generateTimeBasedUuid();
       Thread.sleep(2L);

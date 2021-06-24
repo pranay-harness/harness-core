@@ -19,6 +19,7 @@ import io.harness.serializer.JsonUtils;
 
 import software.wings.beans.TaskType;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.google.api.client.auth.oauth2.TokenResponseException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.HttpTransport;
@@ -188,6 +189,9 @@ public class GcpHelperService {
       GoogleCredential.fromStream(
           IOUtils.toInputStream(String.valueOf(serviceAccountKeyFileContent), Charset.defaultCharset()));
     } catch (Exception e) {
+      if (e instanceof JsonParseException) {
+        throw new InvalidRequestException("Provided Service account key is not in JSON format ", USER);
+      }
       throw new InvalidRequestException("Invalid Google Cloud Platform credentials: " + e.getMessage(), e, USER);
     }
   }

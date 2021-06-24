@@ -1650,6 +1650,7 @@ plain_artifacts = [
     "org.springframework.guice:spring-guice:1.1.3.RELEASE",
     "org.springframework.kafka:spring-kafka:2.3.7.RELEASE",
     "org.springframework.retry:spring-retry:1.2.5.RELEASE",
+    "org.springframework.security:spring-security-crypto:5.3.5.RELEASE",
     "org.springframework:spring-aop:5.2.9.RELEASE",
     "org.springframework:spring-beans:5.2.9.RELEASE",
     "org.springframework:spring-context:5.2.9.RELEASE",

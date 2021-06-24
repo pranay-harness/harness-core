@@ -37,7 +37,7 @@ public class GcpHelperServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
-  public void testGetGoogleCredentialWithEmptyFile() throws IOException {
+  public void testGetGoogleCredentialWithEmptyFile() {
     GcpConfig gcpConfig = GcpConfig.builder().build();
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(()
@@ -93,7 +93,7 @@ public class GcpHelperServiceTest extends WingsBaseTest {
         .isThrownBy(()
                         -> gcpHelperService.getGoogleCredential(
                             gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors()))
-        .withMessageContaining("Invalid Google Cloud Platform credentials:");
+        .withMessageContaining("Provided Service account key is not in JSON format");
   }
 
   @Test
