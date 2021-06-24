@@ -7,6 +7,7 @@ import static io.harness.beans.common.SwaggerConstants.STRING_MAP_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.yaml.extended.ImagePullPolicy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
@@ -52,6 +53,8 @@ public class CIServiceInfo implements DependencySpecType {
   @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> image;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   private ContainerResource resources;
+  @ApiModelProperty(dataType = "io.harness.beans.yaml.extended.ImagePullPolicy")
+  private ParameterField<ImagePullPolicy> imagePullPolicy;
 
   @JsonIgnore
   public CIDependencyType getType() {

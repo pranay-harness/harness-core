@@ -499,6 +499,14 @@
             "image": {
               "type": "string"
             },
+            "imagePullPolicy": {
+              "type": "string",
+              "enum": [
+                "Always",
+                "Never",
+                "IfNotPresent"
+              ]
+            },
             "privileged": {
               "oneOf": [
                 {
@@ -699,6 +707,14 @@
             "image": {
               "type": "string"
             },
+            "imagePullPolicy": {
+              "type": "string",
+              "enum": [
+                "Always",
+                "Never",
+                "IfNotPresent"
+              ]
+            },
             "outputVariables": {
               "oneOf": [
                 {
@@ -776,6 +792,14 @@
             },
             "image": {
               "type": "string"
+            },
+            "imagePullPolicy": {
+              "type": "string",
+              "enum": [
+                "Always",
+                "Never",
+                "IfNotPresent"
+              ]
             },
             "language": {
               "type": "string"
