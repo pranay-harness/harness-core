@@ -997,7 +997,6 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     K8sTaskHelperBase spyHelper = spy(k8sTaskHelperBase);
     String helmPath = "/usr/bin/helm";
     List<String> valuesList = new ArrayList<>();
-    HelmCommandFlag helmCommandFlag = HelmCommandFlag.builder().valueMap(ImmutableMap.of(TEMPLATE, "--debug")).build();
     List<FileData> renderedFiles = new ArrayList<>();
 
     doReturn(renderedFiles)
