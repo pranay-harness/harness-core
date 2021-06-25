@@ -9,8 +9,8 @@ import io.harness.entities.infrastructureMapping.InfrastructureMapping;
 import io.harness.models.DeploymentEvent;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.repositories.infrastructuremapping.InfrastructureMappingRepository;
@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(HarnessTeam.DX)
-public class DeploymentEventListener implements AsyncOrchestrationEventHandler {
+public class DeploymentEventListener implements OrchestrationEventHandler {
   private OutcomeService outcomeService;
   private InstanceHandlerFactoryService instanceHandlerFactoryService;
   private InfrastructureMappingRepository infrastructureMappingRepository;
