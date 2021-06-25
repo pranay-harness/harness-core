@@ -262,15 +262,16 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   }
 
   private void saveGitCommit(PushInfo pushInfo, YamlGitConfigDTO yamlGitConfigDTO) {
-    gitCommitService.save(GitCommitDTO.builder()
-                              .commitId(pushInfo.getCommitId())
-                              .accountIdentifier(pushInfo.getAccountId())
-                              .branchName(pushInfo.getBranchName())
-                              .gitSyncDirection(GitSyncDirection.HARNESS_TO_GIT)
-                              .fileProcessingSummary(GitFileProcessingSummary.builder().successCount(1L).build())
-                              .repoURL(yamlGitConfigDTO.getRepo())
-                              .status(GitCommitProcessingStatus.COMPLETED)
-                              .build());
+    gitCommitService.upsertOnCommitIdAndRepoUrlAndGitSyncDirection(
+        GitCommitDTO.builder()
+            .commitId(pushInfo.getCommitId())
+            .accountIdentifier(pushInfo.getAccountId())
+            .branchName(pushInfo.getBranchName())
+            .gitSyncDirection(GitSyncDirection.HARNESS_TO_GIT)
+            .fileProcessingSummary(GitFileProcessingSummary.builder().successCount(1L).build())
+            .repoURL(yamlGitConfigDTO.getRepo())
+            .status(GitCommitProcessingStatus.COMPLETED)
+            .build());
   }
 
   private void shortListTheBranch(
