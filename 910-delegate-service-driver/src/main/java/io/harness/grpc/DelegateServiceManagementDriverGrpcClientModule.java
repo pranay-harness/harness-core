@@ -109,8 +109,8 @@ public class DelegateServiceManagementDriverGrpcClientModule extends ProviderMod
   @Provides
   @Singleton
   DelegateServicePingPongGrpc.DelegateServicePingPongBlockingStub delegateServicePingPongBlockingStub(
-      @Named("delegate-service-management-channel") Channel channel,
-      @Named("dspp-call-credentials") CallCredentials callCredentials) {
+          @Named("delegate-service-management-channel") Channel channel,
+          @Named("dspp-call-credentials") CallCredentials callCredentials) {
     return DelegateServicePingPongGrpc.newBlockingStub(channel);
   }
 
