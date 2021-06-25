@@ -40,7 +40,7 @@ public class NexusClientImpl {
   public Map<String, String> getRepositories(NexusRequest nexusConfig, String repositoryFormat) {
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(20L), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(20L), () -> {
         if (isNexusTwo) {
           if (RepositoryFormat.docker.name().equals(repositoryFormat)) {
             throw NestedExceptionUtils.hintWithExplanationException("Nexus 2.x does not support Docker artifacts",

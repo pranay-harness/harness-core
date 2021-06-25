@@ -1070,7 +1070,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         String profileId = profileParams == null ? "" : profileParams.getProfileId();
         long updated = profileParams == null || !resultExists ? 0L : profileParams.getProfileLastUpdatedAt();
         RestResponse<DelegateProfileParams> response =
-            HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+            HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
                 ()
                     -> delegateExecute(
                         delegateAgentManagerClient.checkForProfile(delegateId, accountId, profileId, updated)));
@@ -1191,7 +1191,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
     // MultipartBody.Part is used to send also the actual file name
     Part part = Part.createFormData("file", profileResult.getName(), requestFile);
-    HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+    HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
         ()
             -> delegateExecute(delegateAgentManagerClient.saveProfileResult(
                 delegateId, accountId, exitCode != 0, FileBucket.PROFILE_RESULTS, part)));
@@ -1269,7 +1269,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         log.info("Checking for upgrade");
         try {
           RestResponse<DelegateScripts> restResponse =
-              HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(1),
+              HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(1),
                   () -> delegateExecute(delegateAgentManagerClient.getDelegateScripts(accountId, version)));
           DelegateScripts delegateScripts = restResponse.getResource();
           if (delegateScripts.isDoUpgrade()) {
@@ -1314,7 +1314,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     if (pollingForTasks.get() && shouldContactManager()) {
       try {
         DelegateTaskEventsResponse taskEventsResponse =
-            HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+            HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
                 () -> delegateExecute(delegateAgentManagerClient.pollTaskEvents(delegateId, accountId)));
         if (shouldProcessDelegateTaskEvents(taskEventsResponse)) {
           boolean processTaskEventsAsync = taskEventsResponse.isProcessTaskEventsAsync();
@@ -1584,7 +1584,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
               .build();
 
       try {
-        HTimeLimiter.callInterruptible(
+        HTimeLimiter.callInterruptible21(
             timeLimiter, Duration.ofSeconds(15), () -> socket.fire(JsonUtils.asJson(delegateParams)));
         lastHeartbeatSentAt.set(clock.millis());
       } catch (UncheckedTimeoutException ex) {
@@ -1606,7 +1606,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       log.info("Sending keepAlive packet...");
       updateBuilderIfEcsDelegate(builder);
       try {
-        HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15), () -> {
+        HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15), () -> {
           DelegateParams delegateParams = builder.build().toBuilder().keepAlivePacket(true).build();
           return socket.fire(JsonUtils.asJson(delegateParams));
         });
@@ -1666,7 +1666,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       setSwitchStorage(receivedDelegateResponse.isUseCdn());
       updateJreVersion(receivedDelegateResponse.getJreVersion());
 
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
           ()
               -> delegateExecute(
                   delegateAgentManagerClient.doConnectionHeartbeat(delegateId, accountId, connectionHeartbeat)));
@@ -2225,7 +2225,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       Response<ResponseBody> response = null;
       try {
-        response = HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(30), () -> {
+        response = HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(30), () -> {
           Response<ResponseBody> resp = null;
           int retries = 3;
           while (retries-- > 0) {
@@ -2283,7 +2283,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
     if (taskFuture != null) {
       try {
-        HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(5), taskFuture::get);
+        HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(5), taskFuture::get);
       } catch (UncheckedTimeoutException e) {
         ignoredOnPurpose(e);
         log.error("Timed out getting task future");

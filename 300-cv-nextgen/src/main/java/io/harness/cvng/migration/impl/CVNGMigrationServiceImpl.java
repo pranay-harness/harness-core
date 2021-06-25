@@ -1,6 +1,6 @@
 package io.harness.cvng.migration.impl;
 
-import static io.harness.concurrent.HTimeLimiter.callInterruptible;
+import static io.harness.concurrent.HTimeLimiter.callInterruptible21;
 import static io.harness.cvng.migration.beans.CVNGSchema.CVNGMigrationStatus.PENDING;
 import static io.harness.cvng.migration.beans.CVNGSchema.SCHEMA_ID;
 
@@ -46,7 +46,7 @@ public class CVNGMigrationServiceImpl implements CVNGMigrationService {
     if (cvngSchema.getVersion() < maxBackgroundVersion) {
       executorService.submit(() -> {
         try {
-          callInterruptible(timeLimiter, Duration.ofHours(2), () -> {
+          callInterruptible21(timeLimiter, Duration.ofHours(2), () -> {
             log.info(
                 "[Migration] - Updating schema version from {} to {}", cvngSchema.getVersion(), maxBackgroundVersion);
             for (int i = cvngSchema.getVersion() + 1; i <= maxBackgroundVersion; i++) {

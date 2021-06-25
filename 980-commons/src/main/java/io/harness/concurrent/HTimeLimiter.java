@@ -29,13 +29,13 @@ public class HTimeLimiter {
   }
 
   @CanIgnoreReturnValue
-  public static <T> T callInterruptible(TimeLimiter timeLimiter, Duration duration, Callable<T> callable)
+  public static <T> T callInterruptible21(TimeLimiter timeLimiter, Duration duration, Callable<T> callable)
       throws Exception {
     return timeLimiter.callWithTimeout(callable, duration.toMillis(), TimeUnit.MILLISECONDS, true);
   }
 
   @CanIgnoreReturnValue
-  public static <T> T callUninterruptible(TimeLimiter timeLimiter, Duration duration, Callable<T> callable)
+  public static <T> T callUninterruptible21(TimeLimiter timeLimiter, Duration duration, Callable<T> callable)
       throws Exception {
     return timeLimiter.callWithTimeout(callable, duration.toMillis(), TimeUnit.MILLISECONDS, false);
   }

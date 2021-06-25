@@ -131,7 +131,7 @@ public class MessageServiceImpl implements MessageService {
       if (!channel.exists()) {
         FileUtils.touch(channel);
       }
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeout), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMillis(timeout), () -> {
         while (true) {
           LineIterator reader = FileUtils.lineIterator(channel);
           while (reader.hasNext()) {
@@ -241,7 +241,7 @@ public class MessageServiceImpl implements MessageService {
         log.error(ex.getMessage(), ex);
         throw ex;
       }
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeout), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMillis(timeout), () -> {
         Message message = null;
         while (message == null || !messageName.equals(message.getMessage())) {
           try {
@@ -272,11 +272,11 @@ public class MessageServiceImpl implements MessageService {
         log.error(ex.getMessage(), ex);
         throw ex;
       }
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeout), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMillis(timeout), () -> {
         List<Message> messages = new ArrayList<>();
         while (messages.isEmpty()) {
           try {
-            HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(minWaitTime), () -> {
+            HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMillis(minWaitTime), () -> {
               while (true) {
                 try {
                   Message message = queue.take();
@@ -515,7 +515,7 @@ public class MessageServiceImpl implements MessageService {
   }
 
   private Map<String, Object> getDataMap(File file) throws Exception {
-    return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(1), () -> {
+    return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(1), () -> {
       while (true) {
         Map<String, Object> data = null;
         if (file.exists()) {
