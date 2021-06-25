@@ -53,7 +53,7 @@ public class UsageMetricsEventPublisherImpl implements UsageMetricsEventPublishe
       data.put(Constants.INFRAMAPPING_ID.getKey(), instance.getInfrastructureMappingId());
       data.put(Constants.CLOUDPROVIDER_ID.getKey(), instance.getConnectorId());
       data.put(Constants.INSTANCE_TYPE.getKey(), instance.getInstanceType().name());
-      data.put(Constants.ARTIFACT_ID.getKey(), instance.getLastArtifactId());
+      data.put(Constants.ARTIFACT_ID.getKey(), instance.getPrimaryArtifact().getArtifactId());
       data.put(Constants.INSTANCECOUNT.getKey(), String.valueOf(size));
 
       dataPointList.add(DataPoint.newBuilder().putAllData(data).build());
