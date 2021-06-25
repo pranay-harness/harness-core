@@ -6,6 +6,7 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.gitsync.GitSdkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
@@ -73,6 +74,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("enableDashboardTimescale") private Boolean enableDashboardTimescale;
   @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
   @JsonProperty(value = "enableAudit") private boolean enableAudit;
+  @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
 
   private String managerServiceSecret;
   private String managerTarget;
