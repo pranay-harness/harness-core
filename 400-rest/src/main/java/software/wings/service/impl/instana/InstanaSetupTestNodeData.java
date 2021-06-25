@@ -24,7 +24,7 @@ public class InstanaSetupTestNodeData extends SetupTestNodeData {
       Instance instanceElement, String hostExpression, String workflowId, long fromTime, long toTime, String guid,
       InstanaInfraParams infraParams, InstanaApplicationParams applicationParams, List<InstanaTagFilter> tagFilters) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
-        StateType.INSTANA, fromTime, toTime);
+        StateType.INSTANA.name(), fromTime, toTime);
     this.infraParams = infraParams;
     this.applicationParams = applicationParams;
     this.tagFilters = tagFilters;

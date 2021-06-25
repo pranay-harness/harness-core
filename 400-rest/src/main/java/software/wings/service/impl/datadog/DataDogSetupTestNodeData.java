@@ -36,8 +36,8 @@ public class DataDogSetupTestNodeData extends SetupTestNodeData {
       String datadogServiceName, Map<String, String> dockerMetrics, Map<String, String> ecsMetrics,
       Map<String, Set<Metric>> customMetricsMap, StateType stateType, String metrics, String query,
       String hostNameField, Map<String, Set<Metric>> customMetrics, String deploymentType) {
-    super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid, stateType,
-        fromTime, toTime);
+    super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
+        stateType.name(), fromTime, toTime);
     this.datadogServiceName = datadogServiceName;
     this.dockerMetrics = dockerMetrics;
     this.ecsMetrics = ecsMetrics;

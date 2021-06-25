@@ -32,7 +32,7 @@ public class ElkSetupTestNodeData extends SetupTestNodeData {
       String indices, String messageField, String timeStampField, String timeStampFieldFormat, ElkQueryType queryType,
       String hostNameField, String guid) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
-        StateType.ELK, fromTime, toTime);
+        StateType.ELK.name(), fromTime, toTime);
     this.query = query;
     this.indices = indices;
     this.messageField = messageField;

@@ -10,6 +10,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.datadog.DataDogSetupTestNodeData;
+import software.wings.sm.StateType;
 import software.wings.sm.states.DatadogState;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -49,7 +50,7 @@ public class DatadogResource {
   public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
       @QueryParam("accountId") final String accountId, @QueryParam("serverConfigId") String serverConfigId,
       @Valid DataDogSetupTestNodeData dataDogSetupTestNodeData) {
-    return new RestResponse<>(verificationService.getDataForNode(
-        accountId, serverConfigId, dataDogSetupTestNodeData, dataDogSetupTestNodeData.getStateType()));
+    return new RestResponse<>(verificationService.getDataForNode(accountId, serverConfigId, dataDogSetupTestNodeData,
+        StateType.valueOf(dataDogSetupTestNodeData.getStateType())));
   }
 }

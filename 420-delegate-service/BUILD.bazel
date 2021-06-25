@@ -7,6 +7,8 @@ HarnessTeam = "DEL"
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
 ] + [
+    "//425-verification-commons:module",
+    "//430-cv-nextgen-commons:module",
     "//460-capability:module",
     "//470-alert:module",
     "//870-cg-orchestration:module",
@@ -65,7 +67,7 @@ java_library(
     srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        ":module",
+        "module",
         "//:lombok",
         "//420-delegate-service/src/test/java/resources",
         "//460-capability:module",

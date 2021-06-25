@@ -28,8 +28,8 @@ public class BugsnagSetupTestData extends SetupTestNodeData {
       Instance instanceElement, String hostExpression, String workflowId, String guid, StateType stateType,
       long fromTime, long toTime, String orgId, String projectId, String releaseStage, String query,
       boolean browserApplication) {
-    super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid, stateType,
-        fromTime, toTime);
+    super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
+        stateType.name(), fromTime, toTime);
     this.orgId = orgId;
     this.projectId = projectId;
     this.releaseStage = releaseStage;

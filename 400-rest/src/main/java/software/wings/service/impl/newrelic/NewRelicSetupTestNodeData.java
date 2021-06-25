@@ -24,7 +24,7 @@ public class NewRelicSetupTestNodeData extends SetupTestNodeData {
       Instance instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
       long newRelicAppId, String guid) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
-        StateType.NEW_RELIC, fromTime, toTime);
+        StateType.NEW_RELIC.name(), fromTime, toTime);
     this.newRelicAppId = newRelicAppId;
   }
 }
