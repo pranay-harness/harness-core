@@ -181,6 +181,7 @@ roles:
         - core_serviceaccount_view
         - core_serviceaccount_edit
         - core_serviceaccount_delete
+        - core_serviceaccount_manageapikey
       allowedScopeLevels:
         - account
       managed: true

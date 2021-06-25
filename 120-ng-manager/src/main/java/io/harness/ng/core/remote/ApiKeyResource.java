@@ -6,8 +6,13 @@ import static io.harness.NGCommonEntityConstants.ORG_KEY;
 import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
 import static io.harness.NGResourceFilterConstants.IDENTIFIERS;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.ng.accesscontrol.PlatformPermissions.MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION;
 
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.accesscontrol.PlatformResourceTypes;
 import io.harness.ng.core.api.ApiKeyService;
 import io.harness.ng.core.common.beans.ApiKeyType;
 import io.harness.ng.core.dto.ApiKeyDTO;
@@ -49,11 +54,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(PL)
 public class ApiKeyResource {
-  @Inject private ApiKeyService apiKeyService;
+  private final ApiKeyService apiKeyService;
+  private final AccessControlClient accessControlClient;
 
   @POST
   @ApiOperation(value = "Create api key", nickname = "createApiKey")
   public ResponseDTO<ApiKeyDTO> createApiKey(@Valid ApiKeyDTO apiKeyDTO) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(apiKeyDTO.getAccountIdentifier(),
+                                                  apiKeyDTO.getOrgIdentifier(), apiKeyDTO.getProjectIdentifier()),
+        Resource.of(PlatformResourceTypes.SERVICEACCOUNT, apiKeyDTO.getParentIdentifier()),
+        MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION);
     ApiKeyDTO apiKey = apiKeyService.createApiKey(apiKeyDTO);
     return ResponseDTO.newResponse(apiKey);
   }
@@ -62,6 +72,11 @@ public class ApiKeyResource {
   @Path("{identifier}")
   @ApiOperation(value = "Update api key", nickname = "updateApiKey")
   public ResponseDTO<ApiKeyDTO> updateApiKey(@Valid ApiKeyDTO apiKeyDTO, @PathParam("identifier") String identifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(apiKeyDTO.getAccountIdentifier(),
+                                                  apiKeyDTO.getOrgIdentifier(), apiKeyDTO.getProjectIdentifier()),
+        Resource.of(PlatformResourceTypes.SERVICEACCOUNT, apiKeyDTO.getParentIdentifier()),
+        MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION);
+
     ApiKeyDTO apiKey = apiKeyService.updateApiKey(apiKeyDTO);
     return ResponseDTO.newResponse(apiKey);
   }
@@ -73,6 +88,9 @@ public class ApiKeyResource {
       @Optional @QueryParam(ORG_KEY) String orgIdentifier, @Optional @QueryParam(PROJECT_KEY) String projectIdentifier,
       @QueryParam("apiKeyType") ApiKeyType apiKeyType, @QueryParam("parentIdentifier") String parentIdentifier,
       @PathParam(IDENTIFIER_KEY) String identifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(PlatformResourceTypes.SERVICEACCOUNT, parentIdentifier), MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION);
+
     boolean deleted = apiKeyService.deleteApiKey(
         accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, identifier);
     return ResponseDTO.newResponse(deleted);
@@ -84,6 +102,9 @@ public class ApiKeyResource {
       @Optional @QueryParam(ORG_KEY) String orgIdentifier, @Optional @QueryParam(PROJECT_KEY) String projectIdentifier,
       @QueryParam("apiKeyType") ApiKeyType apiKeyType, @QueryParam("parentIdentifier") String parentIdentifier,
       @Optional @QueryParam(IDENTIFIERS) List<String> identifiers) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(PlatformResourceTypes.SERVICEACCOUNT, parentIdentifier), MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION);
+
     List<ApiKeyDTO> apiKeyDTOs = apiKeyService.listApiKeys(
         accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, identifiers);
     return ResponseDTO.newResponse(apiKeyDTOs);
