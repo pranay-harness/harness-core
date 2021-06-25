@@ -38,6 +38,7 @@ import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.dto.SetupUsageDetailType;
 import io.harness.pms.rbac.InternalReferredEntityExtractor;
 import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
+import io.harness.remote.client.NGRestUtils;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;
@@ -55,13 +56,19 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 import retrofit2.Call;
 import retrofit2.Response;
 
+@RunWith(PowerMockRunner.class)
 @Slf4j
+@PrepareForTest({NGRestUtils.class})
 @OwnedBy(PIPELINE)
 public class PipelineSetupUsageHelperTest extends PipelineServiceTestBase {
   @Mock private IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
@@ -150,10 +157,11 @@ public class PipelineSetupUsageHelperTest extends PipelineServiceTestBase {
                                        .build())
                    .build());
       when(request.execute()).thenReturn(Response.success(ResponseDTO.newResponse(list)));
+      PowerMockito.mockStatic(NGRestUtils.class);
+      when(NGRestUtils.getResponseWithRetry(any(), any())).thenReturn(list);
     } catch (IOException ex) {
       log.info("Encountered exception ", ex);
     }
-
     List<EntityDetail> referencesOfPipeline = pipelineSetupUsageHelper.getReferencesOfPipeline(
         accountIdentifier, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml, null);
     assertThat(referencesOfPipeline.size()).isEqualTo(2);
