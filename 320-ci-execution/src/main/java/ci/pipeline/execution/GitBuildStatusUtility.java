@@ -228,7 +228,7 @@ public class GitBuildStatusUtility {
     if (status == Status.ABORTED || status == Status.FAILED || status == Status.EXPIRED) {
       return GITHUB_FAILED;
     }
-    if (status == Status.SUCCEEDED) {
+    if (status == Status.SUCCEEDED || status == Status.IGNORE_FAILED) {
       return GITHUB_SUCCESS;
     }
     if (status == Status.RUNNING) {
@@ -248,7 +248,7 @@ public class GitBuildStatusUtility {
     if (status == Status.ABORTED) {
       return GITLAB_CANCELED;
     }
-    if (status == Status.SUCCEEDED) {
+    if (status == Status.SUCCEEDED || status == Status.IGNORE_FAILED) {
       return GITLAB_SUCCESS;
     }
     if (status == Status.RUNNING) {
@@ -268,7 +268,7 @@ public class GitBuildStatusUtility {
     if (status == Status.ABORTED || status == Status.FAILED || status == Status.EXPIRED) {
       return BITBUCKET_FAILED;
     }
-    if (status == Status.SUCCEEDED) {
+    if (status == Status.SUCCEEDED || status == Status.IGNORE_FAILED) {
       return BITBUCKET_SUCCESS;
     }
     if (status == Status.RUNNING) {

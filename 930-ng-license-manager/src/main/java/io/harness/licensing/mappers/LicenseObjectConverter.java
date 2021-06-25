@@ -12,10 +12,10 @@ import java.util.Map;
 
 @OwnedBy(HarnessTeam.GTM)
 @Singleton
-public class LicenseObjectMapperImpl implements LicenseObjectMapper {
+public class LicenseObjectConverter {
   @Inject Map<ModuleType, LicenseObjectMapper> mapperMap;
-  @Override
-  public ModuleLicenseDTO toDTO(ModuleLicense moduleLicense) {
+
+  public <T extends ModuleLicenseDTO> T toDTO(ModuleLicense moduleLicense) {
     ModuleType moduleType = moduleLicense.getModuleType();
     ModuleLicenseDTO moduleLicenseDTO = mapperMap.get(moduleType).toDTO(moduleLicense);
     moduleLicenseDTO.setId(moduleLicense.getId());
@@ -23,16 +23,15 @@ public class LicenseObjectMapperImpl implements LicenseObjectMapper {
     moduleLicenseDTO.setModuleType(moduleLicense.getModuleType());
     moduleLicenseDTO.setEdition(moduleLicense.getEdition());
     moduleLicenseDTO.setLicenseType(moduleLicense.getLicenseType());
+    moduleLicenseDTO.setStatus(moduleLicense.getStatus());
     moduleLicenseDTO.setStartTime(moduleLicense.getStartTime());
     moduleLicenseDTO.setExpiryTime(moduleLicense.getExpiryTime());
-    moduleLicenseDTO.setStatus(moduleLicense.getStatus());
     moduleLicenseDTO.setCreatedAt(moduleLicense.getCreatedAt());
     moduleLicenseDTO.setLastModifiedAt(moduleLicense.getLastUpdatedAt());
-    return moduleLicenseDTO;
+    return (T) moduleLicenseDTO;
   }
 
-  @Override
-  public ModuleLicense toEntity(ModuleLicenseDTO moduleLicenseDTO) {
+  public <T extends ModuleLicense> T toEntity(ModuleLicenseDTO moduleLicenseDTO) {
     ModuleType moduleType = moduleLicenseDTO.getModuleType();
     ModuleLicense moduleLicense = mapperMap.get(moduleType).toEntity(moduleLicenseDTO);
     moduleLicense.setId(moduleLicenseDTO.getId());
@@ -40,9 +39,9 @@ public class LicenseObjectMapperImpl implements LicenseObjectMapper {
     moduleLicense.setModuleType(moduleLicenseDTO.getModuleType());
     moduleLicense.setEdition(moduleLicenseDTO.getEdition());
     moduleLicense.setLicenseType(moduleLicenseDTO.getLicenseType());
+    moduleLicense.setStatus(moduleLicenseDTO.getStatus());
     moduleLicense.setStartTime(moduleLicenseDTO.getStartTime());
     moduleLicense.setExpiryTime(moduleLicenseDTO.getExpiryTime());
-    moduleLicense.setStatus(moduleLicenseDTO.getStatus());
-    return moduleLicense;
+    return (T) moduleLicense;
   }
 }

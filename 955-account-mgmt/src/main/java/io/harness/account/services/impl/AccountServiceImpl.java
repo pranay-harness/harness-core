@@ -43,4 +43,9 @@ public class AccountServiceImpl implements AccountService {
     }
     return accountBaseUrl;
   }
+
+  @Override
+  public AccountDTO getAccount(String accountId) {
+    return RestClientUtils.getResponse(accountClient.getAccountDTO(accountId));
+  }
 }

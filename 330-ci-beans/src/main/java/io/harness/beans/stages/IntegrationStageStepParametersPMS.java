@@ -66,6 +66,9 @@ public class IntegrationStageStepParametersPMS implements SpecParameters, StepPa
     IntegrationStageConfig integrationStageConfig = (IntegrationStageConfig) stageElementConfig.getStageType();
 
     Infrastructure infrastructure = integrationStageConfig.getInfrastructure();
+    if (infrastructure == null) {
+      throw new CIStageExecutionException("Infrastructure is mandatory for execution");
+    }
     if (integrationStageConfig.getInfrastructure().getType() == Type.USE_FROM_STAGE) {
       UseFromStageInfraYaml useFromStageInfraYaml = (UseFromStageInfraYaml) integrationStageConfig.getInfrastructure();
       if (useFromStageInfraYaml.getUseFromStage() != null) {

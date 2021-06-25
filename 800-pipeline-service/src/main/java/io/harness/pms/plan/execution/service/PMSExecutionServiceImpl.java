@@ -216,20 +216,26 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   @Override
   public InterruptDTO registerInterrupt(
       PlanExecutionInterruptType executionInterruptType, String planExecutionId, String nodeExecutionId) {
-    InterruptPackage interruptPackage =
-        InterruptPackage.builder()
-            .interruptType(executionInterruptType.getExecutionInterruptType())
-            .planExecutionId(planExecutionId)
-            .nodeExecutionId(nodeExecutionId)
-            .interruptConfig(
-                InterruptConfig.newBuilder()
-                    .setIssuedBy(IssuedBy.newBuilder()
-                                     .setManualIssuer(ManualIssuer.newBuilder().build())
-                                     .setIssueTime(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
-                                     .build())
-                    .build())
-            .metadata(getMetadata(executionInterruptType))
+    InterruptConfig interruptConfig =
+        InterruptConfig.newBuilder()
+            .setIssuedBy(IssuedBy.newBuilder()
+                             .setManualIssuer(ManualIssuer.newBuilder().build())
+                             .setIssueTime(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
+                             .build())
             .build();
+    return registerInterrupt(executionInterruptType, planExecutionId, nodeExecutionId, interruptConfig);
+  }
+
+  @Override
+  public InterruptDTO registerInterrupt(PlanExecutionInterruptType executionInterruptType, String planExecutionId,
+      String nodeExecutionId, InterruptConfig interruptConfig) {
+    InterruptPackage interruptPackage = InterruptPackage.builder()
+                                            .interruptType(executionInterruptType.getExecutionInterruptType())
+                                            .planExecutionId(planExecutionId)
+                                            .nodeExecutionId(nodeExecutionId)
+                                            .interruptConfig(interruptConfig)
+                                            .metadata(getMetadata(executionInterruptType))
+                                            .build();
     Interrupt interrupt = orchestrationService.registerInterrupt(interruptPackage);
     return InterruptDTO.builder()
         .id(interrupt.getUuid())

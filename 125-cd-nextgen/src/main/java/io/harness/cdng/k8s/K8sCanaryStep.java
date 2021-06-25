@@ -22,7 +22,7 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
-import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollback;
+import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
@@ -41,7 +41,7 @@ import java.util.Collections;
 import java.util.List;
 
 @OwnedBy(CDP)
-public class K8sCanaryStep extends TaskChainExecutableWithRollback implements K8sStepExecutor {
+public class K8sCanaryStep extends TaskChainExecutableWithRollbackAndRbac implements K8sStepExecutor {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_CANARY.getYamlType()).build();
   private final String K8S_CANARY_DEPLOY_COMMAND_NAME = "Canary Deploy";
@@ -50,7 +50,12 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollback implements K8
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
 
   @Override
-  public TaskChainResponse startChainLink(
+  public void validateResources(Ambiance ambiance, StepElementParameters stepParameters) {
+    // Noop
+  }
+
+  @Override
+  public TaskChainResponse startChainLinkAfterRbac(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     K8sCanaryStepParameters k8sCanaryStepParameters = (K8sCanaryStepParameters) stepElementParameters.getSpec();
     validate(k8sCanaryStepParameters);
