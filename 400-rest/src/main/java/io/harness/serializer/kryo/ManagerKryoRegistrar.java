@@ -159,6 +159,7 @@ import software.wings.beans.AuthToken;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsElbConfig;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
@@ -1734,5 +1735,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(BuildSourceCallback.class, 40010);
     kryo.register(ArtifactCollectionCallback.class, 40011);
     kryo.register(ExecutionWaitCallback.class, 40012);
+    kryo.register(AzureContainerRegistry.class, 40013);
   }
 }

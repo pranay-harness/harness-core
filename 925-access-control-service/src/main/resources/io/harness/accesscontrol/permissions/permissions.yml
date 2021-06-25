@@ -369,6 +369,12 @@ permissions:
     includeInAllRoles: false
     allowedScopeLevels:
       - account
+  - identifier: core_serviceaccount_manageapikey
+    name: CRUD for API keys scoped under a particular Service Account
+    status: ACTIVE
+    includeInAllRoles: true
+    allowedScopeLevels:
+      - account
   - identifier: core_authsetting_view
     name: View Auth setting
     status: ACTIVE

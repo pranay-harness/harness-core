@@ -109,7 +109,7 @@ public class StatusUtils {
     switch (status) {
       case RUNNING:
         return EnumSet.of(QUEUED, ASYNC_WAITING, APPROVAL_WAITING, RESOURCE_WAITING, TASK_WAITING, TIMED_WAITING,
-            INTERVENTION_WAITING, PAUSED);
+            INTERVENTION_WAITING, PAUSED, PAUSING);
       case INTERVENTION_WAITING:
         return BROKE_STATUSES;
       case TIMED_WAITING:

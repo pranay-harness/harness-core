@@ -1144,6 +1144,9 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.ACR_VALIDATE_ARTIFACT_STREAM).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.ACR_GET_PLANS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.ACR_GET_ARTIFACT_PATHS).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.ACR_GET_REGISTRIES).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.ACR_GET_REGISTRY_NAMES).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.ACR_GET_REPOSITORIES).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.NEXUS_GET_JOBS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.NEXUS_GET_PLANS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.NEXUS_GET_ARTIFACT_PATHS).toInstance(ServiceImplDelegateTask.class);

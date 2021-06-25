@@ -59,7 +59,7 @@ public class PmsYamlSchemaResource implements YamlSchemaResource {
       @QueryParam(ACCOUNT_KEY) String accountIdentifier) {
     JsonNode schema = null;
     if (entityType == PIPELINES) {
-      schema = pmsYamlSchemaService.getPipelineYamlSchema(projectIdentifier, orgIdentifier, scope);
+      schema = pmsYamlSchemaService.getPipelineYamlSchema(accountIdentifier, projectIdentifier, orgIdentifier, scope);
     } else if (entityType == TRIGGERS) {
       schema = ngTriggerYamlSchemaService.getTriggerYamlSchema(projectIdentifier, orgIdentifier, identifier, scope);
     } else {

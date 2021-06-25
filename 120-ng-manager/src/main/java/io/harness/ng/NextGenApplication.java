@@ -49,6 +49,7 @@ import io.harness.migration.MigrationProvider;
 import io.harness.migration.NGMigrationSdkInitHelper;
 import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
+import io.harness.ng.accesscontrol.migrations.AccessControlMigrationJob;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
 import io.harness.ng.core.event.NGEventConsumerService;
@@ -61,7 +62,6 @@ import io.harness.ng.core.migration.ProjectMigrationProvider;
 import io.harness.ng.core.user.service.impl.UserMembershipMigrationService;
 import io.harness.ng.core.user.service.impl.UserProjectMigrationService;
 import io.harness.ng.migration.NGCoreMigrationProvider;
-import io.harness.ng.resourcegroup.migration.DefaultResourceGroupCreationService;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEventPollService;
@@ -291,8 +291,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerPmsSdkEvents(injector);
 
     intializeGitSync(injector, appConfig);
-    //  This is ordered below health registration so that kubernetes deployment readiness check passes under 10 minutes
-    blockingMigrations(injector, appConfig);
     registerManagedBeans(environment, injector);
 
     MaintenanceController.forceMaintenance(false);
@@ -317,13 +315,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           { add(ProjectMigrationProvider.class); }
         })
         .build();
-  }
-
-  private void blockingMigrations(Injector injector, NextGenConfiguration appConfig) {
-    //    This is is temporary one time blocking migration
-    if (appConfig.isEnableDefaultResourceGroupCreation()) {
-      injector.getInstance(DefaultResourceGroupCreationService.class).defaultResourceGroupCreationJob();
-    }
   }
 
   private GitSyncSdkConfiguration getGitSyncConfiguration(NextGenConfiguration config) {
@@ -448,6 +439,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
     environment.lifecycle().manage(injector.getInstance(UserProjectMigrationService.class));
+    environment.lifecycle().manage(injector.getInstance(AccessControlMigrationJob.class));
     createConsumerThreadsToListenToEvents(environment, injector);
   }
 

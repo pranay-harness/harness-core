@@ -77,6 +77,7 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
   private static String claimName = "pvc";
   private static String volume1 = "volume1";
   private static String secretName = "foo";
+  private static final int timeout = 100;
   private static Secret imgSecret = new SecretBuilder()
                                         .withNewMetadata()
                                         .withName(secretName)
@@ -183,7 +184,7 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
              eq(cik8BuildTaskParams.getCik8PodParams().getName()), eq(logStreamingTaskClient)))
         .thenReturn(watch);
     when(kubeCtlHandler.waitUntilPodIsReady(
-             kubernetesClient, cik8BuildTaskParams.getCik8PodParams().getName(), namespace))
+             kubernetesClient, cik8BuildTaskParams.getCik8PodParams().getName(), namespace, timeout))
         .thenReturn(PodStatus.builder().status(ERROR).build());
     doNothing().when(k8EventHandler).stopEventWatch(watch);
 
@@ -217,7 +218,7 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
              eq(cik8BuildTaskParams.getCik8PodParams().getName()), eq(logStreamingTaskClient)))
         .thenReturn(watch);
     when(kubeCtlHandler.waitUntilPodIsReady(
-             kubernetesClient, cik8BuildTaskParams.getCik8PodParams().getName(), namespace))
+             kubernetesClient, cik8BuildTaskParams.getCik8PodParams().getName(), namespace, timeout))
         .thenReturn(PodStatus.builder().status(ERROR).build());
     doNothing().when(k8EventHandler).stopEventWatch(watch);
 
@@ -262,7 +263,7 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
              eq(cik8BuildTaskParams.getCik8PodParams().getName()), eq(logStreamingTaskClient)))
         .thenReturn(watch);
     when(kubeCtlHandler.waitUntilPodIsReady(
-             kubernetesClient, cik8BuildTaskParams.getCik8PodParams().getName(), namespace))
+             kubernetesClient, cik8BuildTaskParams.getCik8PodParams().getName(), namespace, timeout))
         .thenReturn(PodStatus.builder().status(RUNNING).build());
     doNothing().when(k8EventHandler).stopEventWatch(watch);
 
@@ -312,7 +313,7 @@ public class CIK8BuildTaskHandlerTest extends CategoryTest {
              eq(cik8BuildTaskParams.getCik8PodParams().getName()), eq(logStreamingTaskClient)))
         .thenReturn(watch);
     when(kubeCtlHandler.waitUntilPodIsReady(
-             kubernetesClient, cik8BuildTaskParams.getCik8PodParams().getName(), namespace))
+             kubernetesClient, cik8BuildTaskParams.getCik8PodParams().getName(), namespace, timeout))
         .thenReturn(PodStatus.builder().status(RUNNING).build());
     doNothing().when(k8EventHandler).stopEventWatch(watch);
 

@@ -120,6 +120,8 @@ import io.harness.invites.NgInviteClientModule;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesContainerServiceImpl;
+import io.harness.licensing.remote.NgLicenseHttpClientModule;
+import io.harness.licensing.remote.admin.AdminLicenseHttpClientModule;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitCheckerFactoryImpl;
 import io.harness.limits.configuration.LimitConfigurationService;
@@ -843,7 +845,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(PersistentLockModule.getInstance());
     install(AlertModule.getInstance());
 
-    install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
+    install(new EventsFrameworkModule(
+        configuration.getEventsFrameworkConfiguration(), configuration.isEventsFrameworkAvailableInOnPrem()));
     install(FeatureFlagModule.getInstance());
 
     bind(MainConfiguration.class).toInstance(configuration);
@@ -1291,6 +1294,14 @@ public class WingsModule extends AbstractModule implements ServersModule {
     // ng-rbac dependencies
     install(AccessControlClientModule.getInstance(
         configuration.getAccessControlClientConfiguration(), DELEGATE_SERVICE.getServiceId()));
+
+    // ng-license dependencies
+    install(new NgLicenseHttpClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+
+    // admin ng-license dependencies
+    install(new AdminLicenseHttpClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
 
     install(CgOrchestrationModule.getInstance());
     // Orchestration Dependencies

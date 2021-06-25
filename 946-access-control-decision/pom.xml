@@ -39,6 +39,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>954-feature-flag-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>960-persistence</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

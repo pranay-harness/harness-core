@@ -15,6 +15,7 @@ import io.harness.exception.JsonSchemaException;
 import io.harness.exception.JsonSchemaValidationException;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.manage.ManagedExecutorService;
+import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.helpers.PmsFeatureFlagHelper;
 import io.harness.pms.merger.helpers.FQNUtils;
@@ -25,6 +26,8 @@ import io.harness.pms.pipeline.service.yamlschema.featureflag.FeatureFlagYamlSer
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.utils.CompletableFutures;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.project.remote.ProjectClient;
+import io.harness.remote.client.NGRestUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
@@ -36,9 +39,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Inject;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -46,6 +51,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
@@ -64,13 +70,14 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   private final ApprovalYamlSchemaService approvalYamlSchemaService;
   private final FeatureFlagYamlService featureFlagYamlService;
   private final SchemaFetcher schemaFetcher;
+  private final ProjectClient projectClient;
 
   @Inject
   public PMSYamlSchemaServiceImpl(YamlSchemaProvider yamlSchemaProvider, YamlSchemaGenerator yamlSchemaGenerator,
       YamlSchemaValidator yamlSchemaValidator, PmsSdkInstanceService pmsSdkInstanceService,
       PmsFeatureFlagHelper pmsFeatureFlagHelper, PmsYamlSchemaHelper pmsYamlSchemaHelper,
       ApprovalYamlSchemaService approvalYamlSchemaService, FeatureFlagYamlService featureFlagYamlService,
-      SchemaFetcher schemaFetcher) {
+      SchemaFetcher schemaFetcher, ProjectClient projectClient) {
     this.yamlSchemaProvider = yamlSchemaProvider;
     this.yamlSchemaGenerator = yamlSchemaGenerator;
     this.yamlSchemaValidator = yamlSchemaValidator;
@@ -80,12 +87,14 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     this.approvalYamlSchemaService = approvalYamlSchemaService;
     this.featureFlagYamlService = featureFlagYamlService;
     this.schemaFetcher = schemaFetcher;
+    this.projectClient = projectClient;
   }
 
   @Override
-  public JsonNode getPipelineYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
+  public JsonNode getPipelineYamlSchema(
+      String accountIdentifier, String projectIdentifier, String orgIdentifier, Scope scope) {
     try {
-      return getPipelineYamlSchemaInternal(projectIdentifier, orgIdentifier, scope);
+      return getPipelineYamlSchemaInternal(accountIdentifier, projectIdentifier, orgIdentifier, scope);
     } catch (Exception e) {
       log.error("[PMS] Failed to get pipeline yaml schema");
       throw new JsonSchemaException(e.getMessage());
@@ -93,9 +102,15 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
   }
 
   @Override
-  public void validateYamlSchema(String orgId, String projectId, String yaml) {
+  public void validateYamlSchema(String accountId, String orgId, String projectId, String yaml) {
+    if (pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.NG_SCHEMA_VALIDATION)) {
+      validateYamlSchemaInternal(accountId, orgId, projectId, yaml);
+    }
+  }
+
+  private void validateYamlSchemaInternal(String accountIdentifier, String orgId, String projectId, String yaml) {
     try {
-      JsonNode schema = getPipelineYamlSchema(projectId, orgId, Scope.PROJECT);
+      JsonNode schema = getPipelineYamlSchema(accountIdentifier, projectId, orgId, Scope.PROJECT);
       String schemaString = JsonPipelineUtils.writeJsonString(schema);
       Set<String> errors = yamlSchemaValidator.validate(yaml, schemaString);
       if (!errors.isEmpty()) {
@@ -104,13 +119,6 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     } catch (Exception ex) {
       log.error(ex.getMessage(), ex);
       throw new JsonSchemaValidationException(ex.getMessage(), ex);
-    }
-  }
-
-  @Override
-  public void validateYamlSchema(String accountId, String orgId, String projectId, String yaml) {
-    if (pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.NG_SCHEMA_VALIDATION)) {
-      validateYamlSchema(orgId, projectId, yaml);
     }
   }
 
@@ -129,7 +137,8 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     schemaFetcher.invalidateAllCache();
   }
 
-  private JsonNode getPipelineYamlSchemaInternal(String projectIdentifier, String orgIdentifier, Scope scope) {
+  private JsonNode getPipelineYamlSchemaInternal(
+      String accountIdentifier, String projectIdentifier, String orgIdentifier, Scope scope) {
     JsonNode pipelineSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.PIPELINES, orgIdentifier, projectIdentifier, scope);
 
@@ -144,15 +153,11 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
 
     PmsYamlSchemaHelper.flattenParallelElementConfig(pipelineDefinitions);
 
-    Set<String> instanceNames = pmsSdkInstanceService.getInstanceNames();
-    instanceNames.remove(ModuleType.PMS.name().toLowerCase());
-
-    // here for backward compatibility
-    instanceNames.remove("pmsInternal");
+    List<ModuleType> enabledModules = obtainEnabledModules(projectIdentifier, accountIdentifier, orgIdentifier);
 
     CompletableFutures<PartialSchemaDTO> completableFutures = new CompletableFutures<>(executor);
-    for (String instanceName : instanceNames) {
-      completableFutures.supplyAsync(() -> schemaFetcher.fetchSchema(ModuleType.fromString(instanceName)));
+    for (ModuleType enabledModule : enabledModules) {
+      completableFutures.supplyAsync(() -> schemaFetcher.fetchSchema(enabledModule));
     }
 
     try {
@@ -197,5 +202,36 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     yamlSchemaGenerator.modifyRefsNamespace(cdDefinitions, cdPartialSchemaDTO.getNamespace());
 
     partialSchemaDTOMap.remove(ModuleType.CV);
+  }
+
+  @SuppressWarnings("unchecked")
+  private List<ModuleType> obtainEnabledModules(
+      String projectIdentifier, String accountIdentifier, String orgIdentifier) {
+    try {
+      Optional<ProjectResponse> resp =
+          NGRestUtils.getResponse(projectClient.getProject(projectIdentifier, accountIdentifier, orgIdentifier));
+      if (!resp.isPresent()) {
+        log.warn(
+            "[PMS] Cannot obtain project details for projectIdentifier : {}, accountIdentifier: {}, orgIdentifier: {}",
+            projectIdentifier, accountIdentifier, orgIdentifier);
+        return new ArrayList<>();
+      }
+
+      List<ModuleType> projectModuleTypes = resp.get()
+                                                .getProject()
+                                                .getModules()
+                                                .stream()
+                                                .filter(moduleType -> !moduleType.isInternal())
+                                                .collect(Collectors.toList());
+      List<ModuleType> instanceModuleTypes =
+          pmsSdkInstanceService.getInstanceNames().stream().map(ModuleType::fromString).collect(Collectors.toList());
+
+      return (List<ModuleType>) CollectionUtils.intersection(projectModuleTypes, instanceModuleTypes);
+    } catch (Exception e) {
+      log.warn(
+          "[PMS] Cannot obtain enabled module details for projectIdentifier : {}, accountIdentifier: {}, orgIdentifier: {}",
+          projectIdentifier, accountIdentifier, orgIdentifier);
+      return new ArrayList<>();
+    }
   }
 }

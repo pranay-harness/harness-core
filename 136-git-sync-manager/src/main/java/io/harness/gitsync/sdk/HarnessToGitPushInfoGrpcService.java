@@ -44,11 +44,11 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
   @Override
   public void pushFromHarness(PushInfo request, StreamObserver<PushResponse> responseObserver) {
     try (MdcContextSetter ignore1 = new MdcContextSetter(request.getContextMapMap())) {
-      log.info("Grpc request received for pushFromHarness");
+      log.debug("Grpc request received for pushFromHarness");
       harnessToGitHelperService.postPushOperation(request);
       responseObserver.onNext(PushResponse.newBuilder().build());
       responseObserver.onCompleted();
-      log.info("Grpc request completed for pushFromHarness");
+      log.debug("Grpc request completed for pushFromHarness");
     }
   }
 
@@ -58,7 +58,7 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
     final InfoForPush.Builder pushInfoBuilder = InfoForPush.newBuilder().setStatus(true);
     try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard();
          MdcContextSetter ignore1 = new MdcContextSetter(request.getContextMapMap())) {
-      log.info("Grpc request received for getConnectorInfo");
+      log.debug("Grpc request received for getConnectorInfo");
       setUserPrincipal(request);
 
       InfoForGitPush infoForPush =
@@ -89,7 +89,7 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
     }
     responseObserver.onNext(pushInfoBuilder.build());
     responseObserver.onCompleted();
-    log.info("Grpc request completed for getConnectorInfo");
+    log.debug("Grpc request completed for getConnectorInfo");
   }
 
   private void setUserPrincipal(FileInfo request) {
@@ -105,21 +105,21 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
 
   @Override
   public void isGitSyncEnabledForScope(EntityScopeInfo request, StreamObserver<IsGitSyncEnabled> responseObserver) {
-    log.info("Grpc request received for isGitSyncEnabledForScope");
+    log.debug("Grpc request received for isGitSyncEnabledForScope");
     final Boolean gitSyncEnabled = harnessToGitHelperService.isGitSyncEnabled(request);
     responseObserver.onNext(IsGitSyncEnabled.newBuilder().setEnabled(gitSyncEnabled).build());
     responseObserver.onCompleted();
-    log.info("Grpc request completed for isGitSyncEnabledForScope");
+    log.debug("Grpc request completed for isGitSyncEnabledForScope");
   }
 
   @Override
   public void getDefaultBranch(RepoDetails request, StreamObserver<BranchDetails> responseObserver) {
     try (MdcContextSetter ignore1 = new MdcContextSetter(request.getContextMapMap())) {
-      log.info("Grpc request received for getDefaultBranch");
+      log.debug("Grpc request received for getDefaultBranch");
       final BranchDetails branchDetails = harnessToGitHelperService.getBranchDetails(request);
       responseObserver.onNext(branchDetails);
       responseObserver.onCompleted();
-      log.info("Grpc request completed for getDefaultBranch");
+      log.debug("Grpc request completed for getDefaultBranch");
     }
   }
 }

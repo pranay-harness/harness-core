@@ -43,12 +43,16 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -297,19 +301,25 @@ public class SignupServiceImpl implements SignupService {
     properties.put("email", userInfo.getEmail());
     properties.put("name", userInfo.getName());
     properties.put("id", userInfo.getUuid());
+    properties.put("startTime", String.valueOf(Instant.now().toEpochMilli()));
+    properties.put("accountId", accountDTO.getIdentifier());
     addUtmInfoToProperties(utmInfo, properties);
     telemetryReporter.sendIdentifyEvent(userInfo.getEmail(), properties,
         ImmutableMap.<Destination, Boolean>builder()
             .put(Destination.SALESFORCE, true)
             .put(Destination.MARKETO, true)
             .build());
-
-    telemetryReporter.sendTrackEvent(SUCCEED_EVENT_NAME, email, accountDTO.getIdentifier(), properties,
-        ImmutableMap.<Destination, Boolean>builder()
-            .put(Destination.SALESFORCE, true)
-            .put(Destination.MARKETO, true)
-            .build(),
-        Category.SIGN_UP);
+    // Wait 1 minute, to ensure identify is sent before track
+    ScheduledExecutorService tempExecutor = Executors.newSingleThreadScheduledExecutor();
+    tempExecutor.schedule(
+        ()
+            -> telemetryReporter.sendTrackEvent(SUCCEED_EVENT_NAME, email, accountDTO.getIdentifier(), properties,
+                ImmutableMap.<Destination, Boolean>builder()
+                    .put(Destination.SALESFORCE, true)
+                    .put(Destination.MARKETO, true)
+                    .build(),
+                Category.SIGN_UP),
+        1, TimeUnit.MINUTES);
     log.info("Signup telemetry sent");
   }
 

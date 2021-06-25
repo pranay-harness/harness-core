@@ -417,6 +417,9 @@
         "connectorRef": {
           "type": "string"
         },
+        "initTimeout": {
+          "type": "string"
+        },
         "labels": {
           "oneOf": [
             {

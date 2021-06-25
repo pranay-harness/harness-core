@@ -34,6 +34,8 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -740,6 +742,42 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     }
     Assert.notNull(delegateResponseData, "Delegate Response data should not be null!");
     return delegateResponseData.getTriggers();
+  }
+
+  @Override
+  public List<String> listAcrRepositories(String settingId, String subscriptionId, String registryName) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureConfig)) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute)
+        .listRepositories((AzureConfig) settingValue, encryptedDataDetails, subscriptionId, registryName);
+  }
+
+  @Override
+  public List<AzureContainerRegistry> listAzureContainerRegistries(String settingId, String subscriptionId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureConfig)) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute)
+        .listContainerRegistries((AzureConfig) settingValue, encryptedDataDetails, subscriptionId);
+  }
+
+  @Override
+  public List<String> listAzureContainerRegistryNames(String settingId, String subscriptionId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureConfig)) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute)
+        .listContainerRegistryNames((AzureConfig) settingValue, encryptedDataDetails, subscriptionId);
   }
 
   private boolean areDelegateSelectorsRequired(SettingAttribute settingAttribute) {

@@ -1597,4 +1597,13 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     entityId = state.generateEntityId(executionContext, "", infrastructureProvisioner, false);
     assertThat(entityId).isEqualTo(String.format("%s-%s", PROVISIONER_ID, "envId"));
   }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testValidation() {
+    assertThat(state.validateFields().size()).isNotEqualTo(0);
+    state.setProvisionerId("test provisioner");
+    assertThat(state.validateFields().size()).isEqualTo(0);
+  }
 }
