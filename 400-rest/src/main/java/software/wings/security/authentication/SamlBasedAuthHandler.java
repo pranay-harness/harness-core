@@ -122,7 +122,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
           }
 
           // if you have reached here, it means none of the SAML IDP metadata matched, try a brute force approach the
-          // 2nd time
+          // 2nd time 
           User user = getUserForIdpUrl(idpUrl, samlResponseString);
           if (user != null) {
             return user;
