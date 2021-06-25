@@ -3,6 +3,7 @@ package io.harness.core;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CastedField;
+import io.harness.beans.RecasterMap;
 import io.harness.exceptions.RecasterException;
 import io.harness.utils.RecastReflectionUtils;
 
@@ -108,6 +109,15 @@ public class RecastObjectCreator implements RecastObjectFactory {
   }
 
   @Override
+  public <T> T createInstance(Class<T> clazz, RecasterMap recasterMap) {
+    Class<T> c = RecastReflectionUtils.getClass(recasterMap);
+    if (c == null) {
+      c = clazz;
+    }
+    return createInstance(c);
+  }
+
+  @Override
   @SuppressWarnings("unchecked")
   public Object createInstance(final Recaster mapper, final CastedField cf, final Document document) {
     Class<?> c = RecastReflectionUtils.getClass(document);
@@ -118,6 +128,18 @@ public class RecastObjectCreator implements RecastObjectFactory {
       }
     }
     return createInstance(c, document);
+  }
+
+  @Override
+  public Object createInstance(Recaster recaster, CastedField cf, RecasterMap recasterMap) {
+    Class<?> c = RecastReflectionUtils.getClass(recasterMap);
+    if (c == null) {
+      c = cf.isSingleValue() ? cf.getType() : cf.getSubClass();
+      if (c.equals(Object.class)) {
+        c = cf.getType();
+      }
+    }
+    return createInstance(c, recasterMap);
   }
 
   @Override
@@ -164,9 +186,5 @@ public class RecastObjectCreator implements RecastObjectFactory {
         | InvocationTargetException exception) {
       throw new RecasterException("The class constructor fail", exception);
     }
-  }
-
-  private boolean isHarnessClass(String className) {
-    return className.startsWith("software.wings") || className.startsWith("io.harness");
   }
 }
