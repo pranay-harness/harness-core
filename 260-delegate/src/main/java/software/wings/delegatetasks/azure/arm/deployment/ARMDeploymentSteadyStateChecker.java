@@ -79,7 +79,7 @@ public class ARMDeploymentSteadyStateChecker {
         }
       };
 
-      HTimeLimiter.callInterruptible(
+      HTimeLimiter.callInterruptible21(
           timeLimiter, Duration.ofMinutes(context.getSteadyCheckTimeoutInMinutes()), objectCallable);
     } catch (UncheckedTimeoutException e) {
       String message = format("Timed out waiting for executing operation deployment - [%s], %n %s",
@@ -174,7 +174,7 @@ public class ARMDeploymentSteadyStateChecker {
         }
       };
 
-      HTimeLimiter.callInterruptible(
+      HTimeLimiter.callInterruptible21(
           timeLimiter, Duration.ofMinutes(context.getSteadyCheckTimeoutInMinutes()), objectCallable);
     } catch (UncheckedTimeoutException e) {
       String message = format("Timed out waiting for executing operation deployment - [%s], %n %s",

@@ -27,7 +27,6 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.concurrent.HFakeTimeLimiter;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.exception.ArtifactServerException;
 import io.harness.logging.LoggingInitializer;
@@ -43,6 +42,7 @@ import software.wings.utils.JsonUtils;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.FolderJob;
 import com.offbytwo.jenkins.model.Job;
@@ -86,7 +86,7 @@ public class JenkinsTest extends CategoryTest {
   @Before
   public void setupMocks() {
     LoggingInitializer.initializeLogging();
-    on(jenkins).set("timeLimiter", new HFakeTimeLimiter());
+    on(jenkins).set("timeLimiter", new FakeTimeLimiter());
   }
 
   /**

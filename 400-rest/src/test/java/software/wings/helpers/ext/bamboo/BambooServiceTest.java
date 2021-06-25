@@ -24,7 +24,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
-import io.harness.concurrent.HFakeTimeLimiter;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.task.ListNotifyResponseData;
@@ -47,6 +46,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.inject.Inject;
 import java.io.FileNotFoundException;
 import java.util.Collections;
@@ -79,7 +79,7 @@ public class BambooServiceTest extends WingsBaseTest {
                        .username("admin")
                        .password("admin".toCharArray())
                        .build();
-    on(bambooService).set("timeLimiter", new HFakeTimeLimiter());
+    on(bambooService).set("timeLimiter", new FakeTimeLimiter());
     on(bambooService).set("encryptionService", encryptionService);
     on(bambooService).set("artifactCollectionTaskHelper", artifactCollectionTaskHelper);
   }
