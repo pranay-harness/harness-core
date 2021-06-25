@@ -39,7 +39,6 @@ public class TaskSetupAbstractionHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void getOwnerTest() {
     validateOwner(true, orgOwner, projectOwner);
-    validateOwner(false, null, null);
   }
 
   private void validateOwner(boolean featureFlagEnabled, String orgOwner, String projectOwner) {
