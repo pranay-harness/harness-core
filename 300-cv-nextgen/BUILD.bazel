@@ -87,7 +87,7 @@ shared_dependencies = [
     "@maven//:org_reflections_reflections",
     "@maven//:org_slf4j_slf4j_api",
     "@maven//:ru_vyarus_guice_validator",
-    "@maven_harness//:io_harness_cv_data_collection_dsl",
+    "@maven//:io_harness_cv_data_collection_dsl",
 ]
 
 java_binary(

@@ -14,7 +14,7 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.plancreator.steps.common.StepElementParameters;
-import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollback;
+import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
@@ -30,7 +30,7 @@ import com.google.inject.Inject;
 import java.util.Optional;
 
 @OwnedBy(CDP)
-public class K8sScaleStep extends TaskExecutableWithRollback<K8sDeployResponse> {
+public class K8sScaleStep extends TaskExecutableWithRollbackAndRbac<K8sDeployResponse> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_SCALE.getYamlType()).build();
 
@@ -39,7 +39,12 @@ public class K8sScaleStep extends TaskExecutableWithRollback<K8sDeployResponse> 
   @Inject private K8sStepHelper k8sStepHelper;
 
   @Override
-  public TaskRequest obtainTask(
+  public void validateResources(Ambiance ambiance, StepElementParameters stepParameters) {
+    // Noop
+  }
+
+  @Override
+  public TaskRequest obtainTaskAfterRbac(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
