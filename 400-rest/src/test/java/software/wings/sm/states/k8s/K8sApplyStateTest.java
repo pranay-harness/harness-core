@@ -95,6 +95,7 @@ public class K8sApplyStateTest extends CategoryTest {
     context = new ExecutionContextImpl(stateExecutionInstance);
     k8sApplyState.setStateTimeoutInMinutes("10");
     k8sApplyState.setSkipDryRun(true);
+    k8sApplyState.setSkipRendering(true);
     k8sApplyState.setFilePaths(FILE_PATHS);
 
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
@@ -133,6 +134,7 @@ public class K8sApplyStateTest extends CategoryTest {
     assertThat(taskParams.getCommandName()).isEqualTo(K8S_APPLY_STATE);
     assertThat(taskParams.getTimeoutIntervalInMin()).isEqualTo(10);
     assertThat(taskParams.isSkipDryRun()).isTrue();
+    assertThat(taskParams.isSkipRendering()).isTrue();
     assertThat(taskParams.getFilePaths()).isEqualTo(FILE_PATHS);
   }
 
