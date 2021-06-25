@@ -847,7 +847,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(PersistentLockModule.getInstance());
     install(AlertModule.getInstance());
 
-    install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
+    install(new EventsFrameworkModule(
+        configuration.getEventsFrameworkConfiguration(), configuration.isEventsFrameworkAvailableInOnPrem()));
     install(FeatureFlagModule.getInstance());
 
     bind(MainConfiguration.class).toInstance(configuration);
