@@ -3,6 +3,9 @@ package io.harness.delegate.app;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
+import software.wings.service.impl.DelegateProfileManagerServiceImpl;
+import software.wings.service.intfc.DelegateProfileManagerService;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
@@ -39,7 +42,7 @@ public class DelegateServiceModule extends AbstractModule {
     //      }
     //    });
 
-    //    install(new DelegateServiceGrpcServerModule(config));
-    //    install(new DelegateServiceClassicGrpcServerModule(config));
+    install(new DelegateServiceGrpcServerModule(config));
+    install(new DelegateServiceClassicGrpcServerModule(config));
   }
 }

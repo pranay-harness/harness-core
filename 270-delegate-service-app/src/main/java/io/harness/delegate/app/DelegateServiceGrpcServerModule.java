@@ -1,6 +1,8 @@
 package io.harness.delegate.app;
 
 import io.harness.delegate.DelegateServiceGrpc;
+import io.harness.delegateprofile.DelegateProfileServiceGrpc;
+import io.harness.grpc.DelegateProfileServiceGrpcImpl;
 import io.harness.grpc.DelegateServiceGrpcImpl;
 import io.harness.grpc.auth.ServiceAuthServerInterceptor;
 import io.harness.grpc.auth.ServiceInfo;
@@ -15,6 +17,8 @@ import io.harness.security.KeySource;
 import io.harness.service.DelegateServicePingPongService;
 
 import software.wings.security.AccountKeySource;
+import software.wings.service.impl.DelegateProfileManagerServiceImpl;
+import software.wings.service.intfc.DelegateProfileManagerService;
 
 import com.google.common.util.concurrent.Service;
 import com.google.inject.AbstractModule;
@@ -52,12 +56,18 @@ public class DelegateServiceGrpcServerModule extends AbstractModule {
     bindableServiceMultibinder.addBinding().toProvider(() -> healthStatusManagerProvider.get().getHealthService());
     bindableServiceMultibinder.addBinding().to(DelegateServicePingPongService.class);
     bindableServiceMultibinder.addBinding().to(DelegateServiceGrpcImpl.class);
+    bindableServiceMultibinder.addBinding().to(DelegateProfileServiceGrpcImpl.class);
 
     MapBinder<String, ServiceInfo> stringServiceInfoMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ServiceInfo.class);
     stringServiceInfoMapBinder.addBinding(DelegateServiceGrpc.SERVICE_NAME)
         .toInstance(ServiceInfo.builder()
                         .id("delegate-service-management")
+                        .secret(delegateServiceConfig.getDelegateServiceSecret())
+                        .build());
+    stringServiceInfoMapBinder.addBinding(DelegateProfileServiceGrpc.SERVICE_NAME)
+        .toInstance(ServiceInfo.builder()
+                        .id("delegate-profile-service")
                         .secret(delegateServiceConfig.getDelegateServiceSecret())
                         .build());
     stringServiceInfoMapBinder.addBinding(DelegateServicePingPongGrpc.SERVICE_NAME)

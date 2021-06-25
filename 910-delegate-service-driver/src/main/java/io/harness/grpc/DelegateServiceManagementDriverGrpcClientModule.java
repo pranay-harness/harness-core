@@ -39,6 +39,7 @@ public class DelegateServiceManagementDriverGrpcClientModule extends ProviderMod
   protected void configure() {
     bind(DelegateServiceGrpcClient.class).in(Singleton.class);
     install(new DelegateServicePingPongModule());
+    bind(DelegateProfileServiceGrpcClient.class).in(Singleton.class);
   }
 
   @Named("delegate-service-management-channel")
@@ -102,15 +103,13 @@ public class DelegateServiceManagementDriverGrpcClientModule extends ProviderMod
     return new ServiceAuthCallCredentials(serviceSecret, new ServiceTokenGenerator(), "delegate-service-management");
   }
 
-
   @Provides
   @Singleton
   DelegateServicePingPongGrpc.DelegateServicePingPongBlockingStub delegateServicePingPongBlockingStub(
-          @Named("delegate-service-management-channel") Channel channel,
-          @Named("dspp-call-credentials") CallCredentials callCredentials) {
+      @Named("delegate-service-management-channel") Channel channel,
+      @Named("dspp-call-credentials") CallCredentials callCredentials) {
     return DelegateServicePingPongGrpc.newBlockingStub(channel);
   }
-
 
   @Named("dspp-call-credentials")
   @Provides
@@ -118,5 +117,4 @@ public class DelegateServiceManagementDriverGrpcClientModule extends ProviderMod
   CallCredentials dsppCallCredentials() {
     return new ServiceAuthCallCredentials(serviceSecret, new ServiceTokenGenerator(), "delegate-service-ping-pong");
   }
-
 }

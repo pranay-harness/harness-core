@@ -617,4 +617,3 @@ auditClientConfig:
 
 enableAudit: false
 
-delegateServiceConfig:
