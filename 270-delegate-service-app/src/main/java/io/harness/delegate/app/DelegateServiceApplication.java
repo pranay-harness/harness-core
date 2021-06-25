@@ -9,7 +9,10 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.DelegateTaskGrpc;
 import io.harness.delegate.beans.TaskData;
+import io.harness.grpc.DelegateServiceClassicGrpcClient;
+import io.harness.grpc.DelegateServiceClassicGrpcImpl;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -22,6 +25,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.command.GcbTaskParams;
 import software.wings.beans.command.GcbTaskParams.GcbTaskType;
 import software.wings.jersey.JsonViews;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -97,6 +101,21 @@ public class DelegateServiceApplication extends Application<DelegateServiceConfi
                           .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                           .build())
                 .build());
+        /*DelegateTask task = DelegateTask.builder()
+                .accountId("kmpySmUISimoRrJL6NL73w")
+                .data(TaskData.builder()
+                        .async(true)
+                        .taskType(GCB.name())
+                        .parameters(new Object[] {GcbTaskParams.builder()
+                                .gcpConfig(new GcpConfig())
+                                .encryptedDataDetails(null)
+                                .type(GcbTaskType.FETCH_TRIGGERS)
+                                .build()})
+                        .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                        .build())
+                .build();
+        DelegateService delegateService = injector.getInstance(DelegateService.class);
+        delegateService.queueTask(task);*/
       } catch (Exception e) {
         e.printStackTrace();
       }

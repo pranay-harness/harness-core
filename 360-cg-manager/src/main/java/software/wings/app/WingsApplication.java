@@ -487,11 +487,11 @@ public class WingsApplication extends Application<MainConfiguration> {
     }
 
     injector.getInstance(EventsModuleHelper.class).initialize();
-    log.info("Initializing gRPC server...");
+    /*log.info("Initializing gRPC server...");
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
     serviceManager.awaitHealthy();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
-    registerDatadogPublisherIfEnabled(configuration);
+*/    registerDatadogPublisherIfEnabled(configuration);
 
     log.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();

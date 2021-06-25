@@ -30,5 +30,6 @@ public class DelegateServiceModule extends AbstractModule {
     bind(DelegateInsightsService.class).to(DelegateInsightsServiceImpl.class);
     bind(DelegateCache.class).to(DelegateCacheImpl.class);
     bind(DelegateSetupService.class).to(DelegateSetupServiceImpl.class);
+
   }
 }

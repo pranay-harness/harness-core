@@ -10,6 +10,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import software.wings.service.impl.DelegateProfileManagerServiceImpl;
+import software.wings.service.intfc.DelegateProfileManagerService;
+
 import java.util.Map;
 import java.util.Set;
 
@@ -39,7 +42,7 @@ public class DelegateServiceModule extends AbstractModule {
     //      }
     //    });
 
-    //    install(new DelegateServiceGrpcServerModule(config));
-    //    install(new DelegateServiceClassicGrpcServerModule(config));
+       install(new DelegateServiceGrpcServerModule(config));
+       install(new DelegateServiceClassicGrpcServerModule(config));
   }
 }

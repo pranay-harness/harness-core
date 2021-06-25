@@ -13,6 +13,6 @@ managerTarget: localhost:9890
 managerAuthority: localhost
 queueFilePath: ../eventQueue
 grpcServiceEnabled: true
-grpcServiceConnectorPort: 8080
+grpcServiceConnectorPort: 14011
 logStreamingServiceBaseUrl: http://localhost:8079
 clientToolsDownloadDisabled: false

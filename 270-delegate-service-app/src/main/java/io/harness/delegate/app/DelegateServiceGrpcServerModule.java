@@ -1,6 +1,8 @@
 package io.harness.delegate.app;
 
 import io.harness.delegate.DelegateServiceGrpc;
+import io.harness.delegateprofile.DelegateProfileServiceGrpc;
+import io.harness.grpc.DelegateProfileServiceGrpcImpl;
 import io.harness.grpc.DelegateServiceGrpcImpl;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.auth.ServiceInfo;
@@ -31,6 +33,9 @@ import io.grpc.health.v1.HealthGrpc;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import io.grpc.reflection.v1alpha.ServerReflectionGrpc;
 import io.grpc.services.HealthStatusManager;
+import software.wings.service.impl.DelegateProfileManagerServiceImpl;
+import software.wings.service.intfc.DelegateProfileManagerService;
+
 import java.util.List;
 import java.util.Set;
 
@@ -52,6 +57,7 @@ public class DelegateServiceGrpcServerModule extends AbstractModule {
     bindableServiceMultibinder.addBinding().toProvider(() -> healthStatusManagerProvider.get().getHealthService());
     bindableServiceMultibinder.addBinding().to(DelegateServiceGrpcImpl.class);
     bindableServiceMultibinder.addBinding().to(DelegateServicePingPongService.class);
+    bindableServiceMultibinder.addBinding().to(DelegateProfileServiceGrpcImpl.class);
 
     MapBinder<String, ServiceInfo> stringServiceInfoMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ServiceInfo.class);
@@ -60,7 +66,12 @@ public class DelegateServiceGrpcServerModule extends AbstractModule {
                         .id("delegate-service-management")
                         .secret(delegateServiceConfig.getDelegateServiceSecret())
                         .build());
-    stringServiceInfoMapBinder.addBinding(DelegateServicePingPongGrpc.SERVICE_NAME)
+    stringServiceInfoMapBinder.addBinding(DelegateProfileServiceGrpc.SERVICE_NAME)
+            .toInstance(ServiceInfo.builder()
+                    .id("delegate-profile-service")
+                    .secret(delegateServiceConfig.getDelegateServiceSecret())
+                    .build());
+       stringServiceInfoMapBinder.addBinding(DelegateServicePingPongGrpc.SERVICE_NAME)
         .toInstance(ServiceInfo.builder()
                         .id("delegate-service-ping-pong")
                         .secret(delegateServiceConfig.getDelegateServiceSecret())

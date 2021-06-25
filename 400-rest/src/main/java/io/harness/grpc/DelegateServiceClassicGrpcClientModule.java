@@ -1,6 +1,12 @@
 package io.harness.grpc;
 
+import io.grpc.CallCredentials;
+import io.harness.delegate.DelegateServiceGrpc;
+import io.harness.delegate.DelegateTaskGrpc;
+import io.harness.delegateprofile.DelegateProfileServiceGrpc;
 import io.harness.govern.ProviderModule;
+import io.harness.grpc.auth.ServiceAuthCallCredentials;
+import io.harness.security.ServiceTokenGenerator;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
 
@@ -16,8 +22,10 @@ import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactor
 import javax.net.ssl.SSLException;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.function.BooleanSupplier;
+
 @Slf4j
-public class DelegateServiceClassicDriverGrpcClientModule extends ProviderModule {
+public class DelegateServiceClassicGrpcClientModule extends ProviderModule {
   private final String serviceSecret;
   private final String target;
   private final String authority;
@@ -26,9 +34,11 @@ public class DelegateServiceClassicDriverGrpcClientModule extends ProviderModule
   private final String KUBERNETES_ONPREM = "KUBERNETES_ONPREM";
 
   @Override
-  protected void configure() {}
+  protected void configure() {
+    //bind(DelegateServiceClassicGrpcClient.class).in(Singleton.class);
+  }
 
-  public DelegateServiceClassicDriverGrpcClientModule(String serviceSecret, String target, String authority) {
+  public DelegateServiceClassicGrpcClientModule(String serviceSecret, String target, String authority) {
     this.serviceSecret = serviceSecret;
     this.target = target;
     this.authority = authority;
@@ -79,4 +89,22 @@ public class DelegateServiceClassicDriverGrpcClientModule extends ProviderModule
     }
     return true;
   }
+
+  @Provides
+  @Singleton
+  DelegateTaskGrpc.DelegateTaskBlockingStub delegateTaskBlockingStub(@Named("delegate-service-classic-channel") Channel channel,
+                                                @Named("dsc-call-credentials") CallCredentials callCredentials) {
+    return DelegateTaskGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
+  }
+
+
+  @Named("dsc-call-credentials")
+  @Provides
+  @Singleton
+  CallCredentials dsCallCredentials() {
+    return new ServiceAuthCallCredentials(serviceSecret, new ServiceTokenGenerator(), "delegate-service-classic");
+  }
+
+
+
 }

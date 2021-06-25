@@ -115,7 +115,8 @@ import io.harness.governance.pipeline.service.evaluators.OnPipeline;
 import io.harness.governance.pipeline.service.evaluators.OnWorkflow;
 import io.harness.governance.pipeline.service.evaluators.PipelineStatusEvaluator;
 import io.harness.governance.pipeline.service.evaluators.WorkflowStatusEvaluator;
-import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
+import io.harness.grpc.DelegateServiceClassicGrpcClientModule;
+import io.harness.grpc.DelegateServiceManagementDriverGrpcClientModule;
 import io.harness.invites.NgInviteClientModule;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
@@ -839,10 +840,16 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(VersionModule.getInstance());
     install(TimeModule.getInstance());
     install(DelegateServiceDriverModule.getInstance(false));
-    install(new DelegateServiceDriverGrpcClientModule(configuration.getPortal().getJwtNextGenManagerSecret(),
+   /* install(new DelegateServiceDriverGrpcClientModule(configuration.getPortal().getJwtNextGenManagerSecret(),
         configuration.getGrpcDelegateServiceClientConfig().getTarget(),
         configuration.getGrpcDelegateServiceClientConfig().getAuthority(), false));
-    install(PersistentLockModule.getInstance());
+*/
+    install(new DelegateServiceManagementDriverGrpcClientModule(configuration.getPortal().getJwtNextGenManagerSecret(),
+            "localhost:14011", "localhost", false));
+
+    install(new DelegateServiceClassicGrpcClientModule(configuration.getPortal().getJwtNextGenManagerSecret(),
+            "localhost:15011", "localhost"));
+      install(PersistentLockModule.getInstance());
     install(AlertModule.getInstance());
 
     install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));

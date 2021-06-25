@@ -43,6 +43,7 @@ public class DelegateServiceManagementDriverGrpcClientModule extends ProviderMod
   @Override
   protected void configure() {
     bind(DelegateServiceGrpcClient.class).in(Singleton.class);
+    bind(DelegateProfileServiceGrpcClient.class).in(Singleton.class);
   }
 
   @Named("delegate-service-management-channel")
