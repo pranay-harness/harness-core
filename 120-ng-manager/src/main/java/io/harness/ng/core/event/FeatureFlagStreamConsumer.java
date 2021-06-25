@@ -34,13 +34,11 @@ public class FeatureFlagStreamConsumer implements Runnable {
   @Inject
   public FeatureFlagStreamConsumer(@Named(FEATURE_FLAG_STREAM) Consumer eventConsumer,
       @Named(ORGANIZATION_ENTITY + FEATURE_FLAG_STREAM) MessageListener organizationFeatureFlagStreamListener,
-      @Named(CONNECTOR_ENTITY + FEATURE_FLAG_STREAM) MessageListener connectorFeatureFlagStreamListener,
-      @Named("access_control_migration" + FEATURE_FLAG_STREAM) MessageListener accessControlMigrationHandler) {
+      @Named(CONNECTOR_ENTITY + FEATURE_FLAG_STREAM) MessageListener connectorFeatureFlagStreamListener) {
     this.eventConsumer = eventConsumer;
     messageListenersList = new ArrayList<>();
     messageListenersList.add(organizationFeatureFlagStreamListener);
     messageListenersList.add(connectorFeatureFlagStreamListener);
-    messageListenersList.add(accessControlMigrationHandler);
   }
 
   @Override
