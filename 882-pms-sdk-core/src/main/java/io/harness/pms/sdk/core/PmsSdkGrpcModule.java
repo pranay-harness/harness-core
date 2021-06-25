@@ -8,8 +8,6 @@ import io.harness.pms.contracts.plan.PmsServiceGrpc;
 import io.harness.pms.contracts.plan.PmsServiceGrpc.PmsServiceBlockingStub;
 import io.harness.pms.contracts.service.EngineExpressionProtoServiceGrpc;
 import io.harness.pms.contracts.service.EngineExpressionProtoServiceGrpc.EngineExpressionProtoServiceBlockingStub;
-import io.harness.pms.contracts.service.InterruptProtoServiceGrpc;
-import io.harness.pms.contracts.service.InterruptProtoServiceGrpc.InterruptProtoServiceBlockingStub;
 import io.harness.pms.contracts.service.OutcomeProtoServiceGrpc;
 import io.harness.pms.contracts.service.OutcomeProtoServiceGrpc.OutcomeProtoServiceBlockingStub;
 import io.harness.pms.contracts.service.PmsExecutionServiceGrpc;
@@ -150,12 +148,6 @@ public class PmsSdkGrpcModule extends AbstractModule {
   @Singleton
   public SweepingOutputServiceBlockingStub sweepingOutputGrpcClient() throws SSLException {
     return SweepingOutputServiceGrpc.newBlockingStub(getChannel());
-  }
-
-  @Provides
-  @Singleton
-  public InterruptProtoServiceBlockingStub interruptProtoGrpcClient() throws SSLException {
-    return InterruptProtoServiceGrpc.newBlockingStub(getChannel());
   }
 
   @Provides
