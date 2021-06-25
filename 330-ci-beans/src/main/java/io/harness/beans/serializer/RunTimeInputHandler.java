@@ -218,4 +218,29 @@ public class RunTimeInputHandler {
 
     return parameterField.getValue();
   }
+
+  public <T> List<T> resolveGenericListParameter(String fieldName, String stepType, String stepIdentifier,
+      ParameterField<List<T>> parameterField, boolean isMandatory) {
+    if (parameterField == null || parameterField.getValue() == null) {
+      if (isMandatory) {
+        throw new CIStageExecutionUserException(
+            format("Failed to resolve mandatory field %s in step type %s with identifier %s", fieldName, stepType,
+                stepIdentifier));
+      }
+    }
+
+    if (parameterField.isExpression()) {
+      if (isMandatory) {
+        throw new CIStageExecutionUserException(
+            format("Failed to resolve mandatory field %s in step type %s with identifier %s", fieldName, stepType,
+                stepIdentifier));
+      } else {
+        log.warn(format("Failed to resolve optional field %s in step type %s with identifier %s", fieldName, stepType,
+            stepIdentifier));
+        return new ArrayList<>();
+      }
+    }
+
+    return parameterField.getValue();
+  }
 }

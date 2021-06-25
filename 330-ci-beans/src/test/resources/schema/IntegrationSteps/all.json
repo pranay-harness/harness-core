@@ -394,6 +394,19 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "OutputNGVariable": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "ParameterField": {
       "type": "object",
       "properties": {
@@ -725,17 +738,10 @@
               ]
             },
             "outputVariables": {
-              "oneOf": [
-                {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                {
-                  "type": "string"
-                }
-              ]
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/OutputNGVariable"
+              }
             },
             "privileged": {
               "oneOf": [
