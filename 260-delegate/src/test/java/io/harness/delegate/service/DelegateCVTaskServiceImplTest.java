@@ -4,8 +4,6 @@ import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -16,12 +14,13 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.concurent.HTimeLimiterMocker;
+import io.harness.concurrent.HFakeTimeLimiter;
 import io.harness.managerclient.VerificationServiceClient;
 import io.harness.rule.Owner;
 
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 
-import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import java.io.IOException;
@@ -38,7 +37,7 @@ import retrofit2.Response;
 
 public class DelegateCVTaskServiceImplTest extends CategoryTest {
   @Mock private VerificationServiceClient verificationClient;
-  @InjectMocks private FakeTimeLimiter timeLimiter;
+  @InjectMocks private HFakeTimeLimiter timeLimiter;
   @InjectMocks DelegateCVTaskServiceImpl delegateCVTaskService;
   private DataCollectionTaskResult dataCollectionTaskResult;
   @Mock Call call;
@@ -81,8 +80,7 @@ public class DelegateCVTaskServiceImplTest extends CategoryTest {
   public void updateCVTaskStatus_failureAfterAllRetryExceededWithTimeoutException() throws Exception {
     TimeLimiter timeLimiter = mock(TimeLimiter.class);
     FieldUtils.writeField(delegateCVTaskService, "timeLimiter", timeLimiter, true);
-    when(timeLimiter.callWithTimeout(any(), anyLong(), any(), anyBoolean()))
-        .thenThrow(new UncheckedTimeoutException("timeout"));
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter).thenThrow(new UncheckedTimeoutException("timeout"));
     assertThatThrownBy(() -> delegateCVTaskService.updateCVTaskStatus(accountID, cvTaskId, dataCollectionTaskResult))
         .isInstanceOf(TimeoutException.class)
         .hasMessage("Timeout of 5 sec and 2 retries exceeded while updating CVTask status");

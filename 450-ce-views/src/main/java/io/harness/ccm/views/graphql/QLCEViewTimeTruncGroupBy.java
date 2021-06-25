@@ -1,5 +1,6 @@
 package io.harness.ccm.views.graphql;
 
+import io.leangen.graphql.annotations.GraphQLNonNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
@@ -9,5 +10,5 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QLCEViewTimeTruncGroupBy {
-  QLCEViewTimeGroupType resolution;
+  @GraphQLNonNull QLCEViewTimeGroupType resolution;
 }

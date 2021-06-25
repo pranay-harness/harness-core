@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.delegate.task.jira.JiraTaskNGParameters;
 import io.harness.jira.JiraInternalConfig;
+import io.harness.utils.FieldWithPlainTextOrSecretValueHelper;
 
 import lombok.experimental.UtilityClass;
 
@@ -16,7 +17,8 @@ public class JiraRequestResponseMapper {
     JiraConnectorDTO dto = parameters.getJiraConnectorDTO();
     return JiraInternalConfig.builder()
         .jiraUrl(dto.getJiraUrl())
-        .username(dto.getUsername())
+        .username(FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef(
+            dto.getUsername(), dto.getUsernameRef()))
         .password(new String(dto.getPasswordRef().getDecryptedValue()))
         .build();
   }

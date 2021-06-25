@@ -123,7 +123,7 @@ public class AwsKmsEncryptor implements KmsEncryptor {
         if (isNotEmpty(cachedEncryptedKey)) {
           return decryptInternalIfCached(data, cachedEncryptedKey, System.currentTimeMillis());
         } else {
-          // Use TimeLimiter.callWithTimeout only if the KMS plain text key is not cached.
+          // Use HTimeLimiter.callInterruptible only if the KMS plain text key is not cached.
           return HTimeLimiter.callInterruptible(
               timeLimiter, Duration.ofSeconds(DEFAULT_KMS_TIMEOUT), () -> decryptInternal(data, kmsConfig));
         }

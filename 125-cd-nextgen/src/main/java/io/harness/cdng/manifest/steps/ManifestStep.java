@@ -101,11 +101,11 @@ public class ManifestStep implements SyncExecutable<ManifestStepParameters> {
   }
 
   private void getConnector(ManifestAttributes manifestAttributes, Ambiance ambiance) {
-    if (ParameterField.isNull(manifestAttributes.getStoreConfig().getConnectorRef())) {
+    if (ParameterField.isNull(manifestAttributes.getStoreConfig().getConnectorReference())) {
       throw new InvalidRequestException(
           "Connector ref field not present in manifest with identifier " + manifestAttributes.getIdentifier());
     }
-    String connectorIdentifierRef = manifestAttributes.getStoreConfig().getConnectorRef().getValue();
+    String connectorIdentifierRef = manifestAttributes.getStoreConfig().getConnectorReference().getValue();
     NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
     IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(connectorIdentifierRef,
         ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());

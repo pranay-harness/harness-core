@@ -1,10 +1,15 @@
 package io.harness.core;
 
-import lombok.Data;
+import lombok.Builder;
+import lombok.Value;
 
-@Data
+@Value
+@Builder
 public class RecasterOptions {
-  private boolean ignoreFinalFields;
-  private boolean storeNulls;
-  private boolean storeEmpties;
+  boolean ignoreFinalFields;
+  boolean storeNulls;
+  boolean storeEmpties;
+
+  // to be removed when migration to map is finished
+  boolean workWithMaps;
 }

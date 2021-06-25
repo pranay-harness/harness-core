@@ -14,7 +14,6 @@ import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
 import io.harness.pms.contracts.commons.RepairActionCode;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
-import io.harness.pms.contracts.interrupts.InterruptEffectProto;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
@@ -23,7 +22,6 @@ import io.harness.serializer.KryoSerializer;
 import com.google.inject.Inject;
 import com.google.protobuf.Duration;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -48,6 +46,7 @@ public class ManualInterventionAdviserWithRollback implements Adviser {
                 .setRepairActionCode(
                     repairActionCode == null ? RepairActionCode.UNKNOWN : getReformedRepairActionCode(repairActionCode))
                 .putAllMetadata(getRollbackMetadataMap(repairActionCode))
+                .setFromStatus(advisingEvent.getToStatus())
                 .build())
         .setType(AdviseType.INTERVENTION_WAIT)
         .build();
@@ -67,13 +66,6 @@ public class ManualInterventionAdviserWithRollback implements Adviser {
           && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
     }
     return canAdvise;
-  }
-
-  private boolean checkIfPreviousAdviserExpired(List<InterruptEffectProto> interruptHistories) {
-    if (interruptHistories.size() == 0) {
-      return false;
-    }
-    return interruptHistories.get(interruptHistories.size() - 1).getInterruptConfig().getIssuedBy().hasTimeoutIssuer();
   }
 
   private ManualInterventionAdviserRollbackParameters extractParameters(AdvisingEvent advisingEvent) {

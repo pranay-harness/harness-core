@@ -135,14 +135,13 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
   }
 
   @Override
-  public boolean isBranchSyncAlreadyInProgressOrSynced(String repoURL, String branch) {
+  public GitToHarnessProgressDTO getBranchSyncStatus(String repoURL, String branch) {
     GitToHarnessProgress gitToHarnessProgress =
         gitToHarnessProgressRepository.findByRepoUrlAndBranchAndEventType(repoURL, branch, BRANCH_SYNC);
-    if (gitToHarnessProgress == null) {
-      return false;
+    if (gitToHarnessProgress != null) {
+      return GitToHarnessProgressMapper.writeDTO(gitToHarnessProgress);
     }
-    GitToHarnessProgressStatus gitToHarnessProgressStatus = gitToHarnessProgress.getGitToHarnessProgressStatus();
-    return !gitToHarnessProgressStatus.isFailureStatus();
+    return null;
   }
 
   @Override
@@ -150,6 +149,15 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
       String repoURL, String commitId, YamlChangeSetEventType eventType) {
     GitToHarnessProgress gitToHarnessProgress =
         gitToHarnessProgressRepository.findByRepoUrlAndCommitIdAndEventType(repoURL, commitId, eventType);
+    if (gitToHarnessProgress != null) {
+      return GitToHarnessProgressMapper.writeDTO(gitToHarnessProgress);
+    }
+    return null;
+  }
+
+  @Override
+  public GitToHarnessProgressDTO getByYamlChangeSetId(String yamlChangeSetId) {
+    GitToHarnessProgress gitToHarnessProgress = gitToHarnessProgressRepository.findByYamlChangeSetId(yamlChangeSetId);
     if (gitToHarnessProgress != null) {
       return GitToHarnessProgressMapper.writeDTO(gitToHarnessProgress);
     }

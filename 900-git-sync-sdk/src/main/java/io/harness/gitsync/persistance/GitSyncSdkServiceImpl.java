@@ -20,6 +20,7 @@ import com.google.inject.Singleton;
 import com.google.protobuf.StringValue;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -63,8 +64,10 @@ public class GitSyncSdkServiceImpl implements GitSyncSdkService {
         || gitBranchInfo.getYamlGitConfigId().equals(GitSyncConstants.DEFAULT)) {
       return true;
     }
-    final RepoDetails.Builder repoDetailsBuilder =
-        RepoDetails.newBuilder().setAccountId(accountId).setYamlGitConfigId(gitBranchInfo.getYamlGitConfigId());
+    final RepoDetails.Builder repoDetailsBuilder = RepoDetails.newBuilder()
+                                                       .setAccountId(accountId)
+                                                       .setYamlGitConfigId(gitBranchInfo.getYamlGitConfigId())
+                                                       .putAllContextMap(MDC.getCopyOfContextMap());
     if (!isEmpty(projectIdentifier)) {
       repoDetailsBuilder.setProjectIdentifier(StringValue.of(projectIdentifier));
     }

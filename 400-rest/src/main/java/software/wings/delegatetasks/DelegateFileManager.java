@@ -20,7 +20,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 @BreakDependencyOn("software.wings.beans.artifact.ArtifactStreamAttributes")
 public interface DelegateFileManager extends DelegateFileManagerBase {
-  // TODO: this method does not seem to belong here
   InputStream downloadArtifactByFileId(@NotNull FileBucket bucket, @NotEmpty String fileId, @NotEmpty String accountId)
       throws IOException, ExecutionException;
 

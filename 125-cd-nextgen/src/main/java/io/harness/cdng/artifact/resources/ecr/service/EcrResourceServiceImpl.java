@@ -128,8 +128,8 @@ public class EcrResourceServiceImpl implements EcrResourceService {
                                                         .attributes(ecrRequest)
                                                         .build();
 
-    DelegateResponseData responseData =
-        serviceHelper.getResponseData(ngAccess, artifactTaskParameters, NGTaskType.ECR_ARTIFACT_TASK_NG.name());
+    DelegateResponseData responseData = serviceHelper.getResponseData(
+        ngAccess, ecrRequest, artifactTaskParameters, NGTaskType.ECR_ARTIFACT_TASK_NG.name());
     return getTaskExecutionResponse(responseData, ifFailedMessage);
   }
 

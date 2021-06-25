@@ -54,6 +54,7 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
   private static final StepType DUMMY_STEP_TYPE = StepType.newBuilder().setType("DUMMY").build();
 
   @Mock private PmsOutcomeService pmsOutcomeService;
+  @Inject private GraphVertexConverter graphVertexConverter;
   @InjectMocks @Inject private OrchestrationAdjacencyListGenerator orchestrationAdjacencyListGenerator;
 
   @Before
@@ -490,7 +491,7 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
             .build();
 
     Map<String, GraphVertex> graphVertexMap = new HashMap<>();
-    graphVertexMap.put(dummyNode1.getUuid(), GraphVertexConverter.convertFrom(dummyNode1));
+    graphVertexMap.put(dummyNode1.getUuid(), graphVertexConverter.convertFrom(dummyNode1));
 
     Map<String, EdgeListInternal> adjacencyListMap = new HashMap<>();
     adjacencyListMap.put(dummyNode1.getUuid(),
@@ -593,9 +594,9 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
                                    .build();
 
     Map<String, GraphVertex> graphVertexMap = new HashMap<>();
-    graphVertexMap.put(sectionChainParentNode.getUuid(), GraphVertexConverter.convertFrom(sectionChainParentNode));
-    graphVertexMap.put(sectionChain1.getUuid(), GraphVertexConverter.convertFrom(sectionChain1));
-    graphVertexMap.put(dummyNode1.getUuid(), GraphVertexConverter.convertFrom(dummyNode1));
+    graphVertexMap.put(sectionChainParentNode.getUuid(), graphVertexConverter.convertFrom(sectionChainParentNode));
+    graphVertexMap.put(sectionChain1.getUuid(), graphVertexConverter.convertFrom(sectionChain1));
+    graphVertexMap.put(dummyNode1.getUuid(), graphVertexConverter.convertFrom(dummyNode1));
 
     Map<String, EdgeListInternal> adjacencyListMap = new HashMap<>();
     adjacencyListMap.put(sectionChainParentNode.getUuid(),
@@ -717,8 +718,8 @@ public class OrchestrationAdjacencyListDTOGeneratorTest extends OrchestrationVis
                                       .build();
 
     Map<String, GraphVertex> graphVertexMap = new HashMap<>();
-    graphVertexMap.put(fork.getUuid(), GraphVertexConverter.convertFrom(fork));
-    graphVertexMap.put(parallelNode1.getUuid(), GraphVertexConverter.convertFrom(parallelNode1));
+    graphVertexMap.put(fork.getUuid(), graphVertexConverter.convertFrom(fork));
+    graphVertexMap.put(parallelNode1.getUuid(), graphVertexConverter.convertFrom(parallelNode1));
 
     Map<String, EdgeListInternal> adjacencyListMap = new HashMap<>();
     adjacencyListMap.put(fork.getUuid(),

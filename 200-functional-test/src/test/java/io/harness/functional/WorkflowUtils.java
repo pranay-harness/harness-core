@@ -37,6 +37,7 @@ import static java.util.Arrays.asList;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
@@ -48,7 +49,6 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Workflow;

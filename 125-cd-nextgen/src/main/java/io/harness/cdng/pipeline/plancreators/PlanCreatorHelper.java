@@ -28,7 +28,7 @@ public class PlanCreatorHelper {
 
     String value = engineExpressionService.renderExpression(
         ambiance, format("<+%s.status>", rollbackNode.getDependentNodeIdentifier()), true);
-    return !EngineExpressionEvaluator.hasVariables(value);
+    return !EngineExpressionEvaluator.hasExpressions(value);
   }
 
   public static boolean isStepGroupWithRollbacks(@Nonnull ExecutionWrapper executionWrapper) {

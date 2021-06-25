@@ -39,7 +39,7 @@ public class ServiceAccountReconciliationIterator implements Handler<ServiceAcco
   public ServiceAccountReconciliationIterator(AccessControlIteratorsConfig iteratorsConfig,
       PersistenceIteratorFactory persistenceIteratorFactory, @Named("mongoTemplate") MongoTemplate mongoTemplate,
       HarnessServiceAccountService harnessServiceAccountService, ScopeService scopeService) {
-    this.iteratorConfig = iteratorsConfig.getUserGroupIteratorConfig();
+    this.iteratorConfig = iteratorsConfig.getServiceAccountIteratorConfig();
     this.persistenceIteratorFactory = persistenceIteratorFactory;
     this.mongoTemplate = mongoTemplate;
     this.harnessServiceAccountService = harnessServiceAccountService;

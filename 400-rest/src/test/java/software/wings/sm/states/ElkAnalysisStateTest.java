@@ -88,6 +88,8 @@ public class ElkAnalysisStateTest extends APMStateVerificationTestBase {
     FieldUtils.writeField(elkAnalysisState, "elkAnalysisService", elkAnalysisService, true);
     FieldUtils.writeField(elkAnalysisState, "accountService", accountService, true);
     FieldUtils.writeField(elkAnalysisState, "analysisService", analysisService, true);
+    FieldUtils.writeField(
+        elkAnalysisState, "workflowVerificationResultService", workflowVerificationResultService, true);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(activityLogger);
     when(executionContext.getAccountId()).thenReturn(accountId);
 
@@ -164,7 +166,7 @@ public class ElkAnalysisStateTest extends APMStateVerificationTestBase {
     String analysisResponseMsg =
         "As no previous version instances exist for comparison, analysis will be skipped. Check your setup if this is the first deployment or if the previous instances have been deleted or replaced.";
     ExecutionResponse response = spyState.execute(executionContext);
-    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SKIPPED);
     assertThat(response.getErrorMessage()).isEqualTo(analysisResponseMsg);
     verify(activityLogger, times(1)).info(eq(analysisResponseMsg));
     LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
@@ -193,7 +195,7 @@ public class ElkAnalysisStateTest extends APMStateVerificationTestBase {
         .getCVInstanceAPIResponse(any());
 
     ExecutionResponse response = spyState.execute(executionContext);
-    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SKIPPED);
     assertThat(response.getErrorMessage())
         .isEqualTo(
             "As no previous version instances exist for comparison, analysis will be skipped. Check your setup if this is the first deployment or if the previous instances have been deleted or replaced.");

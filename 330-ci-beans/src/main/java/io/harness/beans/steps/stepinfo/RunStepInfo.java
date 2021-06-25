@@ -13,6 +13,7 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.CIShellType;
+import io.harness.beans.yaml.extended.ImagePullPolicy;
 import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.filters.WithConnectorRef;
 import io.harness.pms.contracts.steps.StepType;
@@ -64,20 +65,23 @@ public class RunStepInfo implements CIStepInfo, WithConnectorRef {
   private ParameterField<Map<String, String>> envVariables;
   private UnitTestReport reports;
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> image;
-  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
+  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   private ContainerResource resources;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> privileged;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
-  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<CIShellType> shell;
+  @ApiModelProperty(dataType = "io.harness.beans.yaml.extended.CIShellType") private ParameterField<CIShellType> shell;
+  @ApiModelProperty(dataType = "io.harness.beans.yaml.extended.ImagePullPolicy")
+  private ParameterField<ImagePullPolicy> imagePullPolicy;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "retry", "command", "outputVariables", "reports", "envVariables",
-      "image", "connectorRef", "resources", "privileged", "runAsUser", "shell"})
+      "image", "connectorRef", "resources", "privileged", "runAsUser", "shell", "imagePullPolicy"})
   public RunStepInfo(String identifier, String name, Integer retry, ParameterField<String> command,
       ParameterField<List<String>> outputVariables, UnitTestReport reports,
       ParameterField<Map<String, String>> envVariables, ParameterField<String> image,
       ParameterField<String> connectorRef, ContainerResource resources, ParameterField<Boolean> privileged,
-      ParameterField<Integer> runAsUser, ParameterField<CIShellType> shell) {
+      ParameterField<Integer> runAsUser, ParameterField<CIShellType> shell,
+      ParameterField<ImagePullPolicy> imagePullPolicy) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -91,6 +95,7 @@ public class RunStepInfo implements CIStepInfo, WithConnectorRef {
     this.privileged = privileged;
     this.runAsUser = runAsUser;
     this.shell = shell;
+    this.imagePullPolicy = imagePullPolicy;
   }
 
   @Override

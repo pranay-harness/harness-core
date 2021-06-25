@@ -62,6 +62,9 @@ public class ChangeTracker {
       case "pms-harness":
         mongoClientUrl = mainConfiguration.getPmsMongo().getUri();
         break;
+      case "ng-harness":
+        mongoClientUrl = mainConfiguration.getNgMongo().getUri();
+        break;
       default:
         mongoClientUrl = mainConfiguration.getHarnessMongo().getUri();
         break;

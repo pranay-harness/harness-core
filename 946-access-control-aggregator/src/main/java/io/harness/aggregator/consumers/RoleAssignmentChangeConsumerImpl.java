@@ -90,8 +90,7 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
       Optional<UserGroup> userGroup =
           userGroupService.get(roleAssignment.getPrincipalIdentifier(), roleAssignment.getScopeIdentifier());
       userGroup.ifPresent(group -> principals.addAll(group.getUsers()));
-    } else if (USER.equals(roleAssignment.getPrincipalType())
-        || SERVICE_ACCOUNT.equals(roleAssignment.getPrincipalType())) {
+    } else {
       principals.add(roleAssignment.getPrincipalIdentifier());
     }
 

@@ -11,19 +11,7 @@ provisioner:
             command: Apply
             secretManagerRef:
             configFiles:
-              store:
-                type: Github
-                spec:
-                  connectorRef:
-                  gitFetchType: Branch
-                  branch:
-                  folderPath:
             varFiles:
-              - varFile:
-                  identifier: var_file_1
-                  type: Inline
-                  spec:
-                    content:
     - step:
         type: HarnessApproval
         name: Harness Approval
