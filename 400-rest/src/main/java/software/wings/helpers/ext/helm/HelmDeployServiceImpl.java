@@ -245,7 +245,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       HelmCommandRequest commandRequest, LogCallback executionLogCallback, long timeoutInMillis) throws Exception {
     List<ContainerInfo> containerInfos = new ArrayList<>();
     LogCallback finalExecutionLogCallback = executionLogCallback;
-    HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeoutInMillis),
+    HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMillis(timeoutInMillis),
         () -> containerInfos.addAll(fetchContainerInfo(commandRequest, finalExecutionLogCallback, new ArrayList<>())));
     return containerInfos;
   }
@@ -635,7 +635,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Override
   public HelmCommandResponse ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest) {
     try {
-      return HTimeLimiter.callInterruptible(
+      return HTimeLimiter.callInterruptible21(
           timeLimiter, Duration.ofMillis(DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS), () -> {
             HelmCliResponse cliResponse = helmClient.getClientAndServerVersion(helmCommandRequest);
             if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {

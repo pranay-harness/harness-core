@@ -146,7 +146,7 @@ public class GitBuildStatusUtility {
         .gitSCMType(gitSCMType)
         .connectorDetails(gitConnector)
         .userName(connectorUtils.fetchUserName(gitConnector))
-        .owner(gitClientHelper.getGitOwner(retrieveURL(gitConnector)))
+        .owner(gitClientHelper.getGitOwner(retrieveURL(gitConnector), isAccountLevelConnector))
         .repo(repoName)
         .identifier(buildStatusUpdateParameter.getIdentifier())
         .state(retrieveBuildStatusState(gitSCMType, status))

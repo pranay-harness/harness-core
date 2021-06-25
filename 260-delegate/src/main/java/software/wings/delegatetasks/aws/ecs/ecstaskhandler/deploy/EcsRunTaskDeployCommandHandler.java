@@ -271,7 +271,7 @@ public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
     final AwsConfig awsConfig =
         awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails, false);
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(timeout), () -> {
         while (true) {
           List<Task> tasks = ecsDeployCommandTaskHelper.getTasksFromTaskArn(
               awsConfig, clusterName, region, triggeredRunTaskArns, encryptedDataDetails, executionLogCallback);

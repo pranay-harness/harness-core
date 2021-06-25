@@ -1,5 +1,8 @@
 package io.harness.pms.merger.helpers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.merger.PipelineYamlConfig;
@@ -21,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PIPELINE)
 @UtilityClass
 public class FQNUtils {
   public Map<FQN, Object> getSubMap(Map<FQN, Object> fullMap, FQN baseFQN) {
@@ -353,6 +357,8 @@ public class FQNUtils {
         curr = getObjectFromArrayNode((ArrayNode) curr, node);
       } else if (node.getNodeType() == FQNNode.NodeType.PARALLEL) {
         prevWasParallel = true;
+      } else if (node.getNodeType() == FQNNode.NodeType.UUID) {
+        curr = getObjectFromArrayNode((ArrayNode) curr, node);
       }
     }
     return curr;
@@ -361,7 +367,8 @@ public class FQNUtils {
   private JsonNode getObjectFromArrayNode(ArrayNode curr, FQNNode node) {
     int size = curr.size();
     for (int i = 0; i < size; i++) {
-      JsonNode elem = curr.get(i).get(node.getKey());
+      JsonNode elem =
+          node.getNodeType() == FQNNode.NodeType.KEY_WITH_UUID ? curr.get(i).get(node.getKey()) : curr.get(i);
       String identifier = elem.get(node.getUuidKey()).asText();
       if (identifier.equals(node.getUuidValue())) {
         return elem;

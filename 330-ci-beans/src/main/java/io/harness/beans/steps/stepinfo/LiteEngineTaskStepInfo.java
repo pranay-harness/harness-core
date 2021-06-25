@@ -52,7 +52,7 @@ public class LiteEngineTaskStepInfo implements CIStepInfo, WithConnectorRef {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(CIStepInfoType.LITE_ENGINE_TASK.getDisplayName()).build();
 
-  @JsonIgnore @Builder.Default int timeout = DEFAULT_TIMEOUT;
+  @JsonIgnore int timeout = DEFAULT_TIMEOUT;
   @NotNull @EntityIdentifier private String identifier;
   private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
@@ -67,12 +67,13 @@ public class LiteEngineTaskStepInfo implements CIStepInfo, WithConnectorRef {
   @NotNull Infrastructure infrastructure;
 
   @Builder
-  @ConstructorProperties({"accountId", "identifier", "name", "retry", "buildJobEnvInfo", "steps",
+  @ConstructorProperties({"accountId", "timeout", "identifier", "name", "retry", "buildJobEnvInfo", "steps",
       "executionElementConfig", "usePVC", "ciCodebase", "skipGitClone", "infrastructure", "runAsUser"})
-  public LiteEngineTaskStepInfo(String accountId, String identifier, String name, Integer retry,
+  public LiteEngineTaskStepInfo(String accountId, int timeout, String identifier, String name, Integer retry,
       BuildJobEnvInfo buildJobEnvInfo, ExecutionElement steps, ExecutionElementConfig executionElementConfig,
       boolean usePVC, CodeBase ciCodebase, boolean skipGitClone, Infrastructure infrastructure) {
     this.accountId = accountId;
+    this.timeout = timeout;
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);

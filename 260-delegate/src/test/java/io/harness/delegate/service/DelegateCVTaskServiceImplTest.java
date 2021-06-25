@@ -15,12 +15,12 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.concurent.HTimeLimiterMocker;
-import io.harness.concurrent.HFakeTimeLimiter;
 import io.harness.managerclient.VerificationServiceClient;
 import io.harness.rule.Owner;
 
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 
+import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import java.io.IOException;
@@ -37,7 +37,7 @@ import retrofit2.Response;
 
 public class DelegateCVTaskServiceImplTest extends CategoryTest {
   @Mock private VerificationServiceClient verificationClient;
-  @InjectMocks private HFakeTimeLimiter timeLimiter;
+  @InjectMocks private FakeTimeLimiter timeLimiter;
   @InjectMocks DelegateCVTaskServiceImpl delegateCVTaskService;
   private DataCollectionTaskResult dataCollectionTaskResult;
   @Mock Call call;

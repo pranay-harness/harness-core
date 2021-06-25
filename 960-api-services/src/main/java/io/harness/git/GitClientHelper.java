@@ -103,7 +103,11 @@ public class GitClientHelper {
     }
   }
 
-  public static String getGitOwner(String url) {
+  public static String getGitOwner(String url, boolean isAccountLevelConnector) {
+    if (!url.endsWith("/") && isAccountLevelConnector) {
+      url += "/";
+    }
+
     Matcher m = GIT_URL.matcher(url);
     try {
       if (m.find()) {

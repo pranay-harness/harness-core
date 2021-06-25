@@ -194,22 +194,23 @@ public class GkeClusterHelper {
       String location, String operationLogMessage) {
     log.info(operationLogMessage + "...");
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(gcpHelperService.getTimeoutMins()), () -> {
-        while (true) {
-          String status =
-              gkeContainerService.projects()
-                  .locations()
-                  .operations()
-                  .get("projects/" + projectId + "/locations/" + location + "/operations/" + operation.getName())
-                  .execute()
-                  .getStatus();
-          if (!status.equals("RUNNING")) {
-            log.info(operationLogMessage + ": " + status);
-            return status;
-          }
-          sleep(ofSeconds(gcpHelperService.getSleepIntervalSecs()));
-        }
-      });
+      return HTimeLimiter.callInterruptible21(
+          timeLimiter, Duration.ofMinutes(gcpHelperService.getTimeoutMins()), () -> {
+            while (true) {
+              String status =
+                  gkeContainerService.projects()
+                      .locations()
+                      .operations()
+                      .get("projects/" + projectId + "/locations/" + location + "/operations/" + operation.getName())
+                      .execute()
+                      .getStatus();
+              if (!status.equals("RUNNING")) {
+                log.info(operationLogMessage + ": " + status);
+                return status;
+              }
+              sleep(ofSeconds(gcpHelperService.getSleepIntervalSecs()));
+            }
+          });
     } catch (UncheckedTimeoutException e) {
       log.error("Timed out checking operation status");
       return "UNKNOWN";

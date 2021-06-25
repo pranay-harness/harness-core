@@ -374,7 +374,7 @@ public class AuditServiceImpl implements AuditService {
     log.info("Start: Deleting audit records older than {} time", currentTimeMillis() - retentionMillis);
     try {
       log.info("Start: Deleting audit records older than {} days", days);
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(10), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(10), () -> {
         while (true) {
           List<AuditHeader> auditHeaders = wingsPersistence.createQuery(AuditHeader.class, excludeAuthority)
                                                .field(AuditHeaderKeys.createdAt)
