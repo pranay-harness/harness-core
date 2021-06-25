@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.common.beans.ApiKeyType;
 import io.harness.ng.core.dto.ApiKeyDTO;
+import io.harness.ng.core.entities.ApiKey;
 
 import java.util.List;
 
@@ -16,4 +17,6 @@ public interface ApiKeyService {
       String parentIdentifier, String identifier);
   List<ApiKeyDTO> listApiKeys(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       ApiKeyType apiKeyType, String parentIdentifier, List<String> identifiers);
+  ApiKey getApiKey(String accountIdentifier, String orgIdentifier, String projectIdentifier, ApiKeyType apiKeyType,
+      String parentIdentifier, String identifier);
 }

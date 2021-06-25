@@ -12,7 +12,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.AccountId;
 import io.harness.delegate.Capability;
+import io.harness.delegate.SubmitTaskRequest;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskLogAbstractions;
 import io.harness.delegate.TaskMode;
@@ -182,28 +184,27 @@ public class StepUtils {
         withLogs ? generateLogAbstractions(ambiance) : new LinkedHashMap<>();
     units = withLogs ? units : new ArrayList<>();
 
-    DelegateTaskRequest.Builder requestBuilder =
-        DelegateTaskRequest.newBuilder()
-            .setAccountId(accountId)
-            .setDetails(
-                TaskDetails.newBuilder()
-                    .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(taskParameters) == null
-                            ? new byte[] {}
-                            : kryoSerializer.asDeflatedBytes(taskParameters)))
-                    .setExecutionTimeout(Duration.newBuilder().setSeconds(taskData.getTimeout() / 1000).build())
-                    .setExpressionFunctorToken(ambiance.getExpressionFunctorToken())
-                    .setMode(taskData.isAsync() ? TaskMode.ASYNC : TaskMode.SYNC)
-                    .setParked(taskData.isParked())
-                    .setType(TaskType.newBuilder().setType(taskData.getTaskType()).build())
-                    .build())
-            .addAllUnits(CollectionUtils.emptyIfNull(units))
+    TaskDetails taskDetails =
+        TaskDetails.newBuilder()
+            .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(taskParameters) == null
+                    ? new byte[] {}
+                    : kryoSerializer.asDeflatedBytes(taskParameters)))
+            .setExecutionTimeout(Duration.newBuilder().setSeconds(taskData.getTimeout() / 1000).build())
+            .setExpressionFunctorToken(ambiance.getExpressionFunctorToken())
+            .setMode(taskData.isAsync() ? TaskMode.ASYNC : TaskMode.SYNC)
+            .setParked(taskData.isParked())
+            .setType(TaskType.newBuilder().setType(taskData.getTaskType()).build())
+            .build();
+
+    SubmitTaskRequest.Builder requestBuilder =
+        SubmitTaskRequest.newBuilder()
+            .setAccountId(AccountId.newBuilder().setId(accountId).build())
+            .setDetails(taskDetails)
             .addAllSelectors(CollectionUtils.emptyIfNull(selectors))
-            .addAllLogKeys(CollectionUtils.emptyIfNull(generateLogKeys(logAbstractionMap, units)))
             .setLogAbstractions(TaskLogAbstractions.newBuilder().putAllValues(logAbstractionMap).build())
             .setSetupAbstractions(
                 TaskSetupAbstractions.newBuilder().putAllValues(buildAbstractions(ambiance, taskScope)).build())
-            .setSelectionTrackingLogEnabled(true)
-            .setTaskName(taskName == null ? taskData.getTaskType() : taskName);
+            .setSelectionTrackingLogEnabled(true);
 
     if (isNotEmpty(capabilities)) {
       requestBuilder.addAllCapabilities(
@@ -217,10 +218,15 @@ public class StepUtils {
               .collect(toList()));
     }
 
-    return TaskRequest.newBuilder()
-        .setDelegateTaskRequest(requestBuilder.build())
-        .setTaskCategory(taskCategory)
-        .build();
+    DelegateTaskRequest delegateTaskRequest =
+        DelegateTaskRequest.newBuilder()
+            .addAllUnits(CollectionUtils.emptyIfNull(units))
+            .addAllLogKeys(CollectionUtils.emptyIfNull(generateLogKeys(logAbstractionMap, units)))
+            .setRequest(requestBuilder.build())
+            .setTaskName(taskName == null ? taskData.getTaskType() : taskName)
+            .build();
+
+    return TaskRequest.newBuilder().setDelegateTaskRequest(delegateTaskRequest).setTaskCategory(taskCategory).build();
   }
 
   public static TaskRequest prepareTaskRequest(
@@ -230,21 +236,25 @@ public class StepUtils {
 
   public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskDetails taskDetails, List<String> units,
       List<TaskSelector> selectors, String taskName, boolean withLogs) {
-    DelegateTaskRequest delegateTaskRequest =
-        DelegateTaskRequest.newBuilder()
-            .setAccountId(AmbianceUtils.getAccountId(ambiance))
+    SubmitTaskRequest submitTaskRequest =
+        SubmitTaskRequest.newBuilder()
+            .setAccountId(AccountId.newBuilder().setId(AmbianceUtils.getAccountId(ambiance)).build())
             .setDetails(taskDetails)
             .setSetupAbstractions(
                 TaskSetupAbstractions.newBuilder().putAllValues(buildAbstractions(ambiance, Scope.PROJECT)).build())
-            .addAllUnits(withLogs ? CollectionUtils.emptyIfNull(units) : Collections.emptyList())
-            .addAllLogKeys(
-                withLogs ? CollectionUtils.emptyIfNull(generateLogKeys(ambiance, units)) : Collections.emptyList())
             .addAllSelectors(CollectionUtils.emptyIfNull(selectors))
             .setLogAbstractions(TaskLogAbstractions.newBuilder()
                                     .putAllValues(withLogs ? generateLogAbstractions(ambiance) : Collections.emptyMap())
                                     .build())
-            .setTaskName(taskName == null ? taskDetails.getType().getType() : taskName)
             .setSelectionTrackingLogEnabled(true)
+            .build();
+    DelegateTaskRequest delegateTaskRequest =
+        DelegateTaskRequest.newBuilder()
+            .setRequest(submitTaskRequest)
+            .addAllUnits(withLogs ? CollectionUtils.emptyIfNull(units) : Collections.emptyList())
+            .addAllLogKeys(
+                withLogs ? CollectionUtils.emptyIfNull(generateLogKeys(ambiance, units)) : Collections.emptyList())
+            .setTaskName(taskName == null ? taskDetails.getType().getType() : taskName)
             .build();
     return TaskRequest.newBuilder()
         .setDelegateTaskRequest(delegateTaskRequest)

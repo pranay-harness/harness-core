@@ -10,4 +10,6 @@ public class SetupAbstractionKeys {
   public final String userId = "userId";
   public final String userName = "userName";
   public final String userEmail = "userEmail";
+  public final String ng = "ng";
+  public final String owner = "owner";
 }

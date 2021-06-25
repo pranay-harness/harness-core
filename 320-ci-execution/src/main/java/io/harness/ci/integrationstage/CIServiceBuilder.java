@@ -117,6 +117,7 @@ public class CIServiceBuilder {
         .stepName(service.getName())
         .privileged(privileged)
         .runAsUser(runAsUser)
+        .imagePullPolicy(RunTimeInputHandler.resolveImagePullPolicy(service.getImagePullPolicy()))
         .build();
   }
 
