@@ -1,4 +1,4 @@
-package io.harness.security;
+package io.harness.filter;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
@@ -9,10 +9,15 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.TokenDTO;
 import io.harness.remote.client.NGRestUtils;
+import io.harness.security.JWTAuthenticationFilter;
+import io.harness.security.JWTTokenHandler;
+import io.harness.security.SecurityContextBuilder;
+import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.Principal;
 import io.harness.security.dto.ServiceAccountPrincipal;
 import io.harness.token.remote.TokenClient;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Instant;
 import java.util.Map;
@@ -29,17 +34,15 @@ import org.apache.commons.lang3.tuple.Pair;
 @Singleton
 @Priority(AUTHENTICATION)
 @Slf4j
-public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
+public class ApiKeyAuthenticationFilter extends JWTAuthenticationFilter {
   public static final String X_API_KEY = "X-Api-Key";
   private static final String deliminator = ".";
 
-  private TokenClient tokenClient;
+  @Inject private TokenClient tokenClient;
 
-  public NextGenAuthenticationFilter(Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate,
-      Map<String, JWTTokenHandler> serviceToJWTTokenHandlerMapping, Map<String, String> serviceToSecretMapping,
-      TokenClient tokenClient) {
+  public ApiKeyAuthenticationFilter(Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate,
+      Map<String, JWTTokenHandler> serviceToJWTTokenHandlerMapping, Map<String, String> serviceToSecretMapping) {
     super(predicate, serviceToJWTTokenHandlerMapping, serviceToSecretMapping);
-    this.tokenClient = tokenClient;
   }
 
   @Override
