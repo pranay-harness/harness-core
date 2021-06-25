@@ -16,5 +16,5 @@ public class FeatureFlagDTO {
   private String uuid;
   private String name;
   private List<String> accounts;
-  private Boolean globallyEnabled;
+  private Boolean enabled;
 }
