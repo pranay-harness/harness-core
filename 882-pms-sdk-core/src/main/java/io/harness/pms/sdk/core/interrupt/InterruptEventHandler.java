@@ -10,6 +10,7 @@ import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.events.base.PmsBaseEventHandler;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.interrupt.publisher.SdkInterruptEventNotifyPublisher;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.executables.Abortable;
@@ -24,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class InterruptEventHandler extends PmsBaseEventHandler<InterruptEvent> {
-  @Inject private PMSInterruptService pmsInterruptService;
+  @Inject private SdkInterruptEventNotifyPublisher interruptEventNotifyPublisher;
   @Inject private StepRegistry stepRegistry;
 
   @Override
@@ -77,7 +78,7 @@ public class InterruptEventHandler extends PmsBaseEventHandler<InterruptEvent> {
             RecastOrchestrationUtils.fromDocumentJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
         ((Failable) step).handleFailureInterrupt(event.getAmbiance(), stepParameters, event.getMetadataMap());
       }
-      pmsInterruptService.handleFailure(event.getNotifyId());
+      interruptEventNotifyPublisher.publishEvent(event.getNotifyId(), event.getType());
     } catch (Exception ex) {
       throw new InvalidRequestException("Handling failure at sdk failed with exception - " + ex.getMessage()
           + " with interrupt event - " + event.getInterruptUuid());
@@ -92,14 +93,14 @@ public class InterruptEventHandler extends PmsBaseEventHandler<InterruptEvent> {
         StepParameters stepParameters =
             RecastOrchestrationUtils.fromDocumentJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
         ((Abortable) step).handleAbort(event.getAmbiance(), stepParameters, extractExecutableResponses(event));
-        pmsInterruptService.handleAbort(event.getNotifyId());
+        interruptEventNotifyPublisher.publishEvent(event.getNotifyId(), event.getType());
       } else {
-        pmsInterruptService.handleAbort(event.getNotifyId());
+        interruptEventNotifyPublisher.publishEvent(event.getNotifyId(), event.getType());
       }
     } catch (Exception ex) {
       log.error("Handling abort at sdk failed with interrupt event - {} ", event.getInterruptUuid(), ex);
       // Even if error send feedback
-      pmsInterruptService.handleAbort(event.getNotifyId());
+      interruptEventNotifyPublisher.publishEvent(event.getNotifyId(), event.getType());
     }
   }
 

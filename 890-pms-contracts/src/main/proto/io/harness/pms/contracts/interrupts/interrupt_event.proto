@@ -23,3 +23,8 @@ message InterruptEvent {
     io.harness.pms.contracts.execution.TaskChainExecutableResponse taskChain = 10;
   }
 }
+
+message InterruptEventNotifyProto {
+  string notifyId = 1;
+  InterruptType interruptType = 2;
+}
