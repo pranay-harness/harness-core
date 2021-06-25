@@ -7,12 +7,13 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
+	"syscall"
 	"time"
 
 	"github.com/ghodss/yaml"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/pkg/errors"
-	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/metrics"
 	"github.com/wings-software/portal/commons/go/lib/utils"
@@ -31,39 +32,49 @@ var (
 	newJunit = junit.New
 )
 
-func runCmd(ctx context.Context, cmd exec.Command, stepID string, commands []string, retryCount int32, startTime time.Time,
-	logMetrics bool, addonLogger *zap.SugaredLogger) error {
+func runCmd(ctx context.Context, stepID string, shell string, cmdArgs []string,
+	stdout, stderr io.Writer, envVars map[string]string,
+	retryCount int32, startTime time.Time, logMetrics bool,
+	addonLogger *zap.SugaredLogger) error {
+
+	cmd := exec.CommandContext(ctx, shell, cmdArgs...)
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
+	if len(envVars) != 0 {
+		for k, v := range envVars {
+			cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", k, v))
+		}
+	}
+
+	addonLogger.Infow("Starting to run command", "step_id", stepID, "commands", cmdArgs)
 	err := cmd.Start()
 	if err != nil {
 		addonLogger.Errorw(
 			"error encountered while executing the step",
 			"step_id", stepID,
 			"retry_count", retryCount,
-			"commands", commands,
+			"commands", cmdArgs,
 			"elapsed_time_ms", utils.TimeSince(startTime),
 			zap.Error(err))
 		return err
 	}
 
 	if logMetrics {
-		pid := cmd.Pid()
-		mlog(int32(pid), stepID, addonLogger)
+		if cmd.Process != nil {
+			pid := cmd.Process.Pid
+			mlog(int32(pid), stepID, addonLogger)
+		}
 	}
 
 	err = cmd.Wait()
-	if rusage, e := cmd.ProcessState().SysUsageUnit(); e == nil {
-		addonLogger.Infow(
-			"max RSS memory used by step",
-			"step_id", stepID,
-			"max_rss_memory_kb", rusage.Maxrss)
-	}
+	printCmdSysUsage(stepID, cmd, addonLogger)
 
 	if ctxErr := ctx.Err(); ctxErr == context.DeadlineExceeded {
 		addonLogger.Errorw(
 			"timeout while executing the step",
 			"step_id", stepID,
 			"retry_count", retryCount,
-			"commands", commands,
+			"commands", cmdArgs,
 			"elapsed_time_ms", utils.TimeSince(startTime),
 			zap.Error(ctxErr))
 		return ctxErr
@@ -74,12 +85,25 @@ func runCmd(ctx context.Context, cmd exec.Command, stepID string, commands []str
 			"error encountered while executing the step",
 			"step_id", stepID,
 			"retry_count", retryCount,
-			"commands", commands,
+			"commands", cmdArgs,
 			"elapsed_time_ms", utils.TimeSince(startTime),
 			zap.Error(err))
 		return err
 	}
 	return nil
+}
+
+func printCmdSysUsage(stepID string, cmd *exec.Cmd, logger *zap.SugaredLogger) {
+	if cmd.ProcessState == nil {
+		return
+	}
+
+	if rusage, ok := cmd.ProcessState.SysUsage().(*syscall.Rusage); ok {
+		logger.Infow(
+			"max RSS memory used by step",
+			"step_id", stepID,
+			"max_rss_memory_kb", rusage.Maxrss)
+	}
 }
 
 func collectCg(ctx context.Context, stepID, cgDir string, log *zap.SugaredLogger) error {

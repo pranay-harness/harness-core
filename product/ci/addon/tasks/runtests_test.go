@@ -6,14 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	mexec "github.com/wings-software/portal/commons/go/lib/exec"
+	"io"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	"github.com/wings-software/portal/commons/go/lib/utils"
@@ -587,9 +586,6 @@ func TestRun_Success(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	fs := filesystem.NewMockFileSystem(ctrl)
 
-	cmdFactory := mexec.NewMockCmdContextFactory(ctrl)
-	cmd := mexec.NewMockCommand(ctrl)
-
 	var buf bytes.Buffer
 
 	t1 := types.RunnableTest{Pkg: "pkg1", Class: "cls1", Method: "m1"}
@@ -611,17 +607,14 @@ instrPackages: p1, p2, p3`
 
 	diffFiles, _ := json.Marshal([]types.File{{Name: "abc.java", Status: types.FileModified}})
 
-	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, "sh", gomock.Any(), gomock.Any()).Return(cmd)
-	cmd.EXPECT().WithStdout(&buf).Return(cmd)
-	cmd.EXPECT().WithStderr(&buf).Return(cmd)
-	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
-
 	oldRunCmd := runCmdFn
 	defer func() {
 		runCmdFn = oldRunCmd
 	}()
-	runCmdFn = func(ctx context.Context, cmd exec.Command, stepID string, commands []string, retryCount int32, startTime time.Time,
-		logMetrics bool, addonLogger *zap.SugaredLogger) error {
+	runCmdFn = func(ctx context.Context, stepID string, shell string, cmdArgs []string,
+		stdout, stderr io.Writer, envVars map[string]string,
+		retryCount int32, startTime time.Time, logMetrics bool,
+		addonLogger *zap.SugaredLogger) error {
 		return nil
 	}
 
@@ -639,7 +632,6 @@ instrPackages: p1, p2, p3`
 		packages:             packages,
 		procWriter:           &buf,
 		numRetries:           1,
-		cmdContextFactory:    cmdFactory,
 		log:                  log.Sugar(),
 		addonLogger:          log.Sugar(),
 	}
@@ -688,9 +680,6 @@ func TestRun_Execution_Failure(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	fs := filesystem.NewMockFileSystem(ctrl)
 
-	cmdFactory := mexec.NewMockCmdContextFactory(ctrl)
-	cmd := mexec.NewMockCommand(ctrl)
-
 	var buf bytes.Buffer
 
 	t1 := types.RunnableTest{Pkg: "pkg1", Class: "cls1", Method: "m1"}
@@ -712,17 +701,15 @@ instrPackages: p1, p2, p3`
 
 	diffFiles, _ := json.Marshal([]types.File{{Name: "abc.java", Status: types.FileModified}})
 
-	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, "sh", gomock.Any(), gomock.Any()).Return(cmd)
-	cmd.EXPECT().WithStdout(&buf).Return(cmd)
-	cmd.EXPECT().WithStderr(&buf).Return(cmd)
-	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
 	expErr := errors.New("could not run command")
 	oldRunCmd := runCmdFn
 	defer func() {
 		runCmdFn = oldRunCmd
 	}()
-	runCmdFn = func(ctx context.Context, cmd exec.Command, stepID string, commands []string, retryCount int32, startTime time.Time,
-		logMetrics bool, addonLogger *zap.SugaredLogger) error {
+	runCmdFn = func(ctx context.Context, stepID string, shell string, cmdArgs []string,
+		stdout, stderr io.Writer, envVars map[string]string,
+		retryCount int32, startTime time.Time, logMetrics bool,
+		addonLogger *zap.SugaredLogger) error {
 		return expErr
 	}
 
@@ -740,7 +727,6 @@ instrPackages: p1, p2, p3`
 		packages:             packages,
 		procWriter:           &buf,
 		numRetries:           1,
-		cmdContextFactory:    cmdFactory,
 		log:                  log.Sugar(),
 		addonLogger:          log.Sugar(),
 	}
@@ -790,9 +776,6 @@ func TestRun_Execution_Cg_Failure(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	fs := filesystem.NewMockFileSystem(ctrl)
 
-	cmdFactory := mexec.NewMockCmdContextFactory(ctrl)
-	cmd := mexec.NewMockCommand(ctrl)
-
 	var buf bytes.Buffer
 
 	t1 := types.RunnableTest{Pkg: "pkg1", Class: "cls1", Method: "m1"}
@@ -814,17 +797,14 @@ instrPackages: p1, p2, p3`
 
 	diffFiles, _ := json.Marshal([]types.File{{Name: "abc.java", Status: types.FileModified}})
 
-	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, "sh", gomock.Any(), gomock.Any()).Return(cmd)
-	cmd.EXPECT().WithStdout(&buf).Return(cmd)
-	cmd.EXPECT().WithStderr(&buf).Return(cmd)
-	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
-
 	oldRunCmd := runCmdFn
 	defer func() {
 		runCmdFn = oldRunCmd
 	}()
-	runCmdFn = func(ctx context.Context, cmd exec.Command, stepID string, commands []string, retryCount int32, startTime time.Time,
-		logMetrics bool, addonLogger *zap.SugaredLogger) error {
+	runCmdFn = func(ctx context.Context, stepID string, shell string, cmdArgs []string,
+		stdout, stderr io.Writer, envVars map[string]string,
+		retryCount int32, startTime time.Time, logMetrics bool,
+		addonLogger *zap.SugaredLogger) error {
 		return nil
 	}
 
@@ -842,7 +822,6 @@ instrPackages: p1, p2, p3`
 		packages:             packages,
 		procWriter:           &buf,
 		numRetries:           1,
-		cmdContextFactory:    cmdFactory,
 		log:                  log.Sugar(),
 		addonLogger:          log.Sugar(),
 	}
@@ -888,9 +867,6 @@ func TestRun_Execution_Reports_Failure(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	fs := filesystem.NewMockFileSystem(ctrl)
 
-	cmdFactory := mexec.NewMockCmdContextFactory(ctrl)
-	cmd := mexec.NewMockCommand(ctrl)
-
 	var buf bytes.Buffer
 
 	t1 := types.RunnableTest{Pkg: "pkg1", Class: "cls1", Method: "m1"}
@@ -912,17 +888,14 @@ instrPackages: p1, p2, p3`
 
 	diffFiles, _ := json.Marshal([]types.File{})
 
-	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, "sh", gomock.Any(), gomock.Any()).Return(cmd)
-	cmd.EXPECT().WithStdout(&buf).Return(cmd)
-	cmd.EXPECT().WithStderr(&buf).Return(cmd)
-	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
-
 	oldRunCmd := runCmdFn
 	defer func() {
 		runCmdFn = oldRunCmd
 	}()
-	runCmdFn = func(ctx context.Context, cmd exec.Command, stepID string, commands []string, retryCount int32, startTime time.Time,
-		logMetrics bool, addonLogger *zap.SugaredLogger) error {
+	runCmdFn = func(ctx context.Context, stepID string, shell string, cmdArgs []string,
+		stdout, stderr io.Writer, envVars map[string]string,
+		retryCount int32, startTime time.Time, logMetrics bool,
+		addonLogger *zap.SugaredLogger) error {
 		return nil
 	}
 
@@ -940,7 +913,6 @@ instrPackages: p1, p2, p3`
 		packages:             packages,
 		procWriter:           &buf,
 		numRetries:           1,
-		cmdContextFactory:    cmdFactory,
 		log:                  log.Sugar(),
 		addonLogger:          log.Sugar(),
 	}

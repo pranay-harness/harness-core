@@ -167,10 +167,8 @@ func (r *runTask) execute(ctx context.Context, retryCount int32) (map[string]str
 	}
 
 	cmdArgs := []string{"-c", cmdToExecute}
-
-	cmd := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, r.getShell(), cmdArgs...).
-		WithStdout(r.procWriter).WithStderr(r.procWriter).WithEnvVarsMap(envVars)
-	err = runCmd(ctx, cmd, r.id, cmdArgs, retryCount, start, r.logMetrics, r.addonLogger)
+	err = runCmd(ctx, r.id, r.getShell(), cmdArgs, r.procWriter, r.procWriter, envVars,
+		retryCount, start, r.logMetrics, r.addonLogger)
 	if err != nil {
 		return nil, err
 	}

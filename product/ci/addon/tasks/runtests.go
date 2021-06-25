@@ -388,9 +388,8 @@ func (r *runTestsTask) execute(ctx context.Context, retryCount int32) error {
 	}
 	cmdArgs := []string{"-c", cmdToExecute}
 
-	cmd := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).
-		WithStdout(r.procWriter).WithStderr(r.procWriter).WithEnvVarsMap(nil)
-	err = runCmdFn(ctx, cmd, r.id, cmdArgs, retryCount, start, r.logMetrics, r.addonLogger)
+	err = runCmdFn(ctx, r.id, "sh", cmdArgs, r.procWriter, r.procWriter, nil,
+		retryCount, start, r.logMetrics, r.addonLogger)
 	if err != nil {
 		return err
 	}

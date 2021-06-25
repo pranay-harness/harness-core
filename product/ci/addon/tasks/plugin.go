@@ -140,9 +140,8 @@ func (t *pluginTask) execute(ctx context.Context, retryCount int32) (*pb.Artifac
 		return nil, err
 	}
 
-	cmd := t.cmdContextFactory.CmdContextWithSleep(ctx, pluginCmdExitWaitTime, commands[0], commands[1:]...).
-		WithStdout(t.procWriter).WithStderr(t.procWriter).WithEnvVarsMap(envVarsMap)
-	err = runCmd(ctx, cmd, t.id, commands, retryCount, start, t.logMetrics, t.addonLogger)
+	err = runCmd(ctx, t.id, commands[0], commands[1:], t.procWriter, t.procWriter, envVarsMap, retryCount, start,
+		t.logMetrics, t.addonLogger)
 	if err != nil {
 		return nil, err
 	}
