@@ -47,6 +47,7 @@ shared_dependencies = [
     "//960-continuous-features:module",
     "//960-ng-core-beans:module",
     "//960-notification-beans:module",
+    "//960-ng-license-beans:module",
     "//960-persistence:module",
     "//970-api-services-beans:module",
     "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
