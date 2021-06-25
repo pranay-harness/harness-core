@@ -29,6 +29,8 @@ public class CIK8BuildTaskParams
   @NotNull private ConnectorDetails k8sConnector;
   @Expression(ALLOW_SECRETS) @NotNull private CIK8PodParams<CIK8ContainerParams> cik8PodParams;
   @Expression(ALLOW_SECRETS) @NotNull private List<CIK8ServicePodParams> servicePodParams;
+  @NotNull
+  private int podMaxWaitUntilReadySecs; // Max time for pod to reach running state after its creation in seconds
   @Builder.Default private static final Type type = Type.GCP_K8;
 
   @Override

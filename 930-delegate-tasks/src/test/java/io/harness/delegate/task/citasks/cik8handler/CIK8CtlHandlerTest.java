@@ -139,6 +139,7 @@ public class CIK8CtlHandlerTest extends CategoryTest {
   private static final String dashShellStr = "sh";
   private static final String dashShellArg = "-c";
   private static final Integer timeoutSecs = 100;
+  private static final int podWaitTimeoutSecs = 100;
 
   private Pod getPendingPod(String runningState) {
     PodStatus podStatus = new PodStatus();
@@ -380,7 +381,7 @@ public class CIK8CtlHandlerTest extends CategoryTest {
     when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
     when(mockPodNamed.get()).thenThrow(new PodNotFoundException("not found"));
 
-    cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace);
+    cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace, podWaitTimeoutSecs);
   }
 
   @Test()
@@ -397,7 +398,8 @@ public class CIK8CtlHandlerTest extends CategoryTest {
     when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
     when(mockPodNamed.get()).thenReturn(pod);
 
-    assertEquals(RUNNING, cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace).getStatus());
+    assertEquals(
+        RUNNING, cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace, podWaitTimeoutSecs).getStatus());
   }
 
   @Test()
@@ -421,7 +423,8 @@ public class CIK8CtlHandlerTest extends CategoryTest {
     when(mockPodNonNamespacedOp.withName(podName)).thenReturn(mockPodNamed);
     when(mockPodNamed.get()).thenReturn(pod2);
 
-    assertEquals(RUNNING, cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace).getStatus());
+    assertEquals(
+        RUNNING, cik8CtlHandler.waitUntilPodIsReady(client, podName, namespace, podWaitTimeoutSecs).getStatus());
   }
 
   @Test()

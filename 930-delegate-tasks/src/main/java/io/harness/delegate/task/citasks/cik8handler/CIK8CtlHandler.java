@@ -160,13 +160,13 @@ public class CIK8CtlHandler {
   }
 
   // Waits for the pod to exit PENDING state and returns true if pod is in RUNNING state, else false.
-  public PodStatus waitUntilPodIsReady(KubernetesClient kubernetesClient, String podName, String namespace)
-      throws InterruptedException {
+  public PodStatus waitUntilPodIsReady(KubernetesClient kubernetesClient, String podName, String namespace,
+      int podMaxWaitUntilReadySecs) throws InterruptedException {
     int errorCounter = 0;
     Pod pod = null;
     Instant startTime = Instant.now();
     Instant currTime = startTime;
-    while (Duration.between(startTime, currTime).getSeconds() < CIConstants.POD_MAX_WAIT_UNTIL_READY_SECS) {
+    while (Duration.between(startTime, currTime).getSeconds() < podMaxWaitUntilReadySecs) {
       // Either pod is in pending phase where it is waiting for scheduling / creation of containers
       // or pod is waiting for containers to move to running state.
       if (pod != null && !isPodInPendingPhase(pod) && !isPodInWaitingState(pod) && isIpAssigned(pod)) {
