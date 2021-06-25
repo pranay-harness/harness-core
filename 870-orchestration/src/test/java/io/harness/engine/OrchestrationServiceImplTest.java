@@ -68,19 +68,19 @@ public class OrchestrationServiceImplTest extends OrchestrationTestBase {
                     .startingNodeId(DUMMY_NODE_1_ID)
                     .build();
     Map<String, String> setupAbstractions = ImmutableMap.of("accountId", ACCOUNT_ID, "appId", APP_ID);
-    ExecutionMetadata metadata = ExecutionMetadata.newBuilder().setExecutionUuid(PLAN_EXECUTION_ID).build();
+    ExecutionMetadata metadata = ExecutionMetadata.newBuilder().build();
 
     PlanExecution planExecution =
         orchestrationService.startExecution(plan, setupAbstractions, metadata, PlanExecutionMetadata.builder().build());
 
-    assertThat(planExecution.getUuid()).isEqualTo(PLAN_EXECUTION_ID);
+    assertThat(planExecution.getUuid()).isNotNull();
     assertThat(planExecution.getStatus()).isEqualTo(Status.RUNNING);
     ArgumentCaptor<Ambiance> ambianceCaptor = ArgumentCaptor.forClass(Ambiance.class);
     ArgumentCaptor<PlanNodeProto> nodeCaptor = ArgumentCaptor.forClass(PlanNodeProto.class);
     verify(orchestrationService, times(1)).submitToEngine(ambianceCaptor.capture(), nodeCaptor.capture());
 
     Ambiance ambiance = ambianceCaptor.getValue();
-    assertThat(ambiance.getPlanExecutionId()).isEqualTo(PLAN_EXECUTION_ID);
+    assertThat(ambiance.getPlanExecutionId()).isEqualTo(planExecution.getUuid());
     assertThat(ambiance.getPlanId()).isEqualTo(PLAN_ID);
     assertThat(ambiance.getSetupAbstractionsMap()).isEqualTo(setupAbstractions);
 

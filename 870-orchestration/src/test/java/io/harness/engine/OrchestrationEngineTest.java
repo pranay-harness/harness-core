@@ -23,7 +23,6 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
-import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.plan.TriggeredBy;
@@ -58,12 +57,6 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
       TriggeredBy.newBuilder().putExtraInfo("email", PRASHANT).setIdentifier(PRASHANT).setUuid(generateUuid()).build();
   private static final ExecutionTriggerInfo triggerInfo =
       ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(triggeredBy).build();
-
-  private static final ExecutionMetadata metadata = ExecutionMetadata.newBuilder()
-                                                        .setExecutionUuid(generateUuid())
-                                                        .setRunSequence(0)
-                                                        .setTriggerInfo(triggerInfo)
-                                                        .build();
 
   @Before
   public void setUp() {
