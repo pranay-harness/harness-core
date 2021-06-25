@@ -28,8 +28,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 @Configuration
-@EnableMongoRepositories(basePackages = {"io.harness.ng.accesscontrol.migrations.repositories",
-                             "io.harness.ng.accesscontrol.mockserver.repositories"},
+@EnableMongoRepositories(basePackages = {"io.harness.ng.accesscontrol.migrations.repositories"},
     includeFilters = @ComponentScan.Filter(HarnessRepo.class))
 @OwnedBy(HarnessTeam.PL)
 public class AccessControlMigrationPersistenceConfig extends AbstractMongoConfiguration {

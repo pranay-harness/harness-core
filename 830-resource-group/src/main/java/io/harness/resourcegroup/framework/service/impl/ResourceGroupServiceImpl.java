@@ -8,13 +8,14 @@ import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_P
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.lang.Boolean.TRUE;
+import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.Scope;
 import io.harness.beans.SortOrder;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -30,36 +31,49 @@ import io.harness.resourcegroup.framework.events.ResourceGroupUpdateEvent;
 import io.harness.resourcegroup.framework.remote.mapper.ResourceGroupMapper;
 import io.harness.resourcegroup.framework.repositories.spring.ResourceGroupRepository;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
+import io.harness.resourcegroup.model.DynamicResourceSelector;
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.model.ResourceGroup.ResourceGroupKeys;
+import io.harness.resourcegroup.model.ResourceSelector;
+import io.harness.resourcegroup.model.StaticResourceSelector;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
+import io.harness.utils.PaginationUtils;
+import io.harness.utils.ScopeUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 @OwnedBy(PL)
 public class ResourceGroupServiceImpl implements ResourceGroupService {
+  private static final String DEFAULT_COLOR = "#0063F7";
   ResourceGroupValidatorServiceImpl resourceGroupValidatorService;
   ResourceGroupRepository resourceGroupRepository;
   OutboxService outboxService;
   AccessControlAdminClient accessControlAdminClient;
   TransactionTemplate transactionTemplate;
+
+  private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
 
   @Inject
   public ResourceGroupServiceImpl(ResourceGroupValidatorServiceImpl resourceGroupValidatorService,
@@ -76,32 +90,37 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   @Override
   public ResourceGroupResponse create(ResourceGroupDTO resourceGroupDTO) {
     ResourceGroup resourceGroup = ResourceGroupMapper.fromDTO(resourceGroupDTO);
+    ResourceGroup createdResourceGroup;
     try {
-      ResourceGroup createdResourceGroup = create(resourceGroup);
-      return ResourceGroupMapper.toResponseWrapper(createdResourceGroup);
+      createdResourceGroup = create(resourceGroup);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
           String.format("A resource group with identifier %s already exists at the specified scope",
               resourceGroup.getIdentifier()),
           USER_SRE, ex);
     }
+    return ResourceGroupMapper.toResponseWrapper(createdResourceGroup);
   }
 
   @Override
-  public void createManagedResourceGroup(Scope scope) {
+  public ResourceGroupResponse createManagedResourceGroup(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, ResourceGroupDTO resourceGroupDTO) {
+    ResourceGroup resourceGroup = ResourceGroupMapper.fromDTO(resourceGroupDTO);
+    resourceGroup.setHarnessManaged(true);
+    ResourceGroup createdResourceGroup = null;
     try {
-      create(ResourceGroup.getHarnessManagedResourceGroup(scope));
+      createdResourceGroup = create(resourceGroup);
     } catch (DuplicateKeyException ex) {
-      // Ignore
+      log.error("Resource group with identifier {}/{} already present",
+          ScopeUtils.toString(accountIdentifier, orgIdentifier, projectIdentifier), resourceGroupDTO.getIdentifier());
     }
+    return ResourceGroupMapper.toResponseWrapper(createdResourceGroup);
   }
 
   private ResourceGroup create(ResourceGroup resourceGroup) {
-    boolean sanitized = resourceGroupValidatorService.sanitizeResourceSelectors(resourceGroup);
-    if (sanitized && resourceGroup.getResourceSelectors().isEmpty()) {
-      throw new InvalidRequestException("All selected resources are invalid");
-    }
-    return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
+    preprocessResourceGroup(resourceGroup);
+    resourceGroupValidatorService.validate(resourceGroup);
+    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
       ResourceGroup savedResourceGroup = resourceGroupRepository.save(resourceGroup);
       outboxService.save(new ResourceGroupCreateEvent(
           savedResourceGroup.getAccountIdentifier(), ResourceGroupMapper.toDTO(savedResourceGroup)));
@@ -110,7 +129,8 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   @Override
-  public Page<ResourceGroupResponse> list(Scope scope, PageRequest pageRequest, String searchTerm) {
+  public Page<ResourceGroupResponse> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      PageRequest pageRequest, String searchTerm) {
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder harnessManagedOrder =
           SortOrder.Builder.aSortOrder().withField(ResourceGroupKeys.harnessManaged, SortOrder.OrderType.DESC).build();
@@ -120,11 +140,13 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     }
     Pageable page = getPageRequest(pageRequest);
     Criteria criteria = Criteria.where(ResourceGroupKeys.accountIdentifier)
-                            .in(scope.getAccountIdentifier())
+                            .in(accountIdentifier)
                             .and(ResourceGroupKeys.orgIdentifier)
-                            .in(scope.getOrgIdentifier())
+                            .in(orgIdentifier)
                             .and(ResourceGroupKeys.projectIdentifier)
-                            .is(scope.getProjectIdentifier());
+                            .is(projectIdentifier)
+                            .and(ResourceGroupKeys.deleted)
+                            .is(false);
     if (Objects.nonNull(stripToNull(searchTerm))) {
       criteria.orOperator(Criteria.where(ResourceGroupKeys.name).regex(searchTerm, "i"),
           Criteria.where(ResourceGroupKeys.identifier).regex(searchTerm, "i"),
@@ -135,42 +157,57 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   @Override
-  public void delete(Scope scope, String identifier) {
-    Optional<ResourceGroup> resourceGroupOpt = getResourceGroup(scope, identifier);
-    if (!resourceGroupOpt.isPresent()) {
-      return;
+  public boolean delete(String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      boolean forceDeleteRoleAssignments) {
+    Optional<ResourceGroup> resourceGroupOpt =
+        getResourceGroup(identifier, accountIdentifier, orgIdentifier, projectIdentifier);
+    if (resourceGroupOpt.isPresent()) {
+      ResourceGroup resourceGroup = resourceGroupOpt.get();
+      RoleAssignmentFilterDTO roleAssignmentFilterDTO =
+          RoleAssignmentFilterDTO.builder()
+              .resourceGroupFilter(Collections.singleton(resourceGroup.getIdentifier()))
+              .build();
+      PageResponse<RoleAssignmentResponseDTO> pageResponse =
+          NGRestUtils.getResponse(accessControlAdminClient.getFilteredRoleAssignments(
+              accountIdentifier, orgIdentifier, projectIdentifier, 0, 10, roleAssignmentFilterDTO));
+      if (pageResponse.getPageItemCount() > 0) {
+        if (!forceDeleteRoleAssignments) {
+          throw new InvalidRequestException(
+              "There exists role assignments with this resource group. Please delete them first and then try again");
+        } else {
+          PaginationUtils.forEachElement(counter
+              -> NGRestUtils.getResponse(accessControlAdminClient.getFilteredRoleAssignments(
+                  accountIdentifier, orgIdentifier, projectIdentifier, 0, 20, roleAssignmentFilterDTO)),
+              roleAssignmentResponseDTO
+              -> NGRestUtils.getResponse(accessControlAdminClient.deleteRoleAssignment(
+                  roleAssignmentResponseDTO.getRoleAssignment().getIdentifier(), accountIdentifier, orgIdentifier,
+                  projectIdentifier)));
+        }
+      }
+      resourceGroup.setDeleted(true);
+      Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+        resourceGroupRepository.save(resourceGroup);
+        outboxService.save(new ResourceGroupDeleteEvent(accountIdentifier, ResourceGroupMapper.toDTO(resourceGroup)));
+        return true;
+      }));
     }
-
-    ResourceGroup resourceGroup = resourceGroupOpt.get();
-    RoleAssignmentFilterDTO roleAssignmentFilterDTO =
-        RoleAssignmentFilterDTO.builder()
-            .resourceGroupFilter(Collections.singleton(resourceGroup.getIdentifier()))
-            .build();
-    PageResponse<RoleAssignmentResponseDTO> pageResponse =
-        NGRestUtils.getResponse(accessControlAdminClient.getFilteredRoleAssignments(scope.getAccountIdentifier(),
-            scope.getOrgIdentifier(), scope.getProjectIdentifier(), 0, 10, roleAssignmentFilterDTO));
-    if (pageResponse.getPageItemCount() > 0) {
-      throw new InvalidRequestException(
-          "There exists role assignments with this resource group. Please delete them first and then try again");
-    }
-    Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
-      resourceGroupRepository.delete(resourceGroup);
-      outboxService.save(
-          new ResourceGroupDeleteEvent(scope.getAccountIdentifier(), ResourceGroupMapper.toDTO(resourceGroup)));
-      return true;
-    }));
+    return true;
   }
 
   @Override
   @SuppressWarnings("PMD")
-  public Optional<ResourceGroupResponse> get(Scope scope, String identifier) {
-    Optional<ResourceGroup> resourceGroupOpt = getResourceGroup(scope, identifier);
+  public Optional<ResourceGroupResponse> get(
+      String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    Optional<ResourceGroup> resourceGroupOpt =
+        getResourceGroup(identifier, accountIdentifier, orgIdentifier, projectIdentifier);
     return Optional.ofNullable(ResourceGroupMapper.toResponseWrapper(resourceGroupOpt.orElse(null)));
   }
 
-  private Optional<ResourceGroup> getResourceGroup(Scope scope, String identifier) {
-    return resourceGroupRepository.findOneByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
-        identifier, scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier());
+  private Optional<ResourceGroup> getResourceGroup(
+      String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return resourceGroupRepository
+        .findOneByIdentifierAndAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndDeleted(
+            identifier, accountIdentifier, orgIdentifier, projectIdentifier, false);
   }
 
   @Override
@@ -179,40 +216,79 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   @Override
-  public Optional<ResourceGroupResponse> update(ResourceGroupDTO resourceGroupDTO, boolean sanitizeResourceSelectors) {
-    Optional<ResourceGroup> resourceGroupOpt =
-        getResourceGroup(resourceGroupDTO.getScope(), resourceGroupDTO.getIdentifier());
+  public Optional<ResourceGroupResponse> update(ResourceGroupDTO resourceGroupDTO) {
+    ResourceGroup resourceGroup = ResourceGroupMapper.fromDTO(resourceGroupDTO);
+    Optional<ResourceGroup> resourceGroupOpt = getResourceGroup(resourceGroup.getIdentifier(),
+        resourceGroup.getAccountIdentifier(), resourceGroup.getOrgIdentifier(), resourceGroup.getProjectIdentifier());
     if (!resourceGroupOpt.isPresent()) {
-      throw new InvalidRequestException(
-          String.format("Resource group with Identifier [{%s}] in Scope {%s} does not exist",
-              resourceGroupDTO.getIdentifier(), resourceGroupDTO.getScope()));
-    }
-    ResourceGroup updatedResourceGroup = ResourceGroupMapper.fromDTO(resourceGroupDTO);
-    if (sanitizeResourceSelectors) {
-      resourceGroupValidatorService.sanitizeResourceSelectors(updatedResourceGroup);
+      throw new InvalidRequestException(String.format(
+          "Resource group with Identifier [{%s}] in Scope {%s} does not exists", resourceGroupDTO.getIdentifier(),
+          ScopeUtils.toString(resourceGroupDTO.getAccountIdentifier(), resourceGroupDTO.getOrgIdentifier(),
+              resourceGroupDTO.getProjectIdentifier())));
     }
     ResourceGroup savedResourceGroup = resourceGroupOpt.get();
     if (savedResourceGroup.getHarnessManaged().equals(TRUE)) {
       throw new InvalidRequestException("Can't update managed resource group");
     }
-
+    preprocessResourceGroup(resourceGroup);
+    resourceGroupValidatorService.validate(resourceGroup);
     ResourceGroupDTO oldResourceGroup =
         (ResourceGroupDTO) NGObjectMapperHelper.clone(ResourceGroupMapper.toDTO(savedResourceGroup));
+    savedResourceGroup.setName(resourceGroup.getName());
+    savedResourceGroup.setColor(resourceGroup.getColor());
+    savedResourceGroup.setTags(resourceGroup.getTags());
+    savedResourceGroup.setDescription(resourceGroup.getDescription());
+    savedResourceGroup.setFullScopeSelected(resourceGroup.getFullScopeSelected());
+    savedResourceGroup.setResourceSelectors(collectResourceSelectors(resourceGroup.getResourceSelectors()));
+    resourceGroup = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      ResourceGroup updatedResourceGroup = resourceGroupRepository.save(savedResourceGroup);
+      outboxService.save(new ResourceGroupUpdateEvent(savedResourceGroup.getAccountIdentifier(),
+          ResourceGroupMapper.toDTO(updatedResourceGroup), oldResourceGroup));
+      return updatedResourceGroup;
+    }));
+    return Optional.ofNullable(ResourceGroupMapper.toResponseWrapper(resourceGroup));
+  }
 
-    savedResourceGroup.setName(updatedResourceGroup.getName());
-    savedResourceGroup.setColor(updatedResourceGroup.getColor());
-    savedResourceGroup.setTags(updatedResourceGroup.getTags());
-    savedResourceGroup.setDescription(updatedResourceGroup.getDescription());
-    savedResourceGroup.setFullScopeSelected(updatedResourceGroup.getFullScopeSelected());
-    savedResourceGroup.setResourceSelectors(updatedResourceGroup.getResourceSelectors());
+  void preprocessResourceGroup(ResourceGroup resourceGroup) {
+    resourceGroup.setResourceSelectors(collectResourceSelectors(resourceGroup.getResourceSelectors()));
+    if (isBlank(resourceGroup.getColor())) {
+      resourceGroup.setColor(DEFAULT_COLOR);
+    }
+  }
 
-    updatedResourceGroup =
-        Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
-          ResourceGroup resourceGroup = resourceGroupRepository.save(savedResourceGroup);
-          outboxService.save(new ResourceGroupUpdateEvent(
-              savedResourceGroup.getAccountIdentifier(), ResourceGroupMapper.toDTO(resourceGroup), oldResourceGroup));
-          return resourceGroup;
-        }));
-    return Optional.ofNullable(ResourceGroupMapper.toResponseWrapper(updatedResourceGroup));
+  private static List<ResourceSelector> collectResourceSelectors(List<ResourceSelector> resourceSelectors) {
+    Map<String, List<String>> resources =
+        resourceSelectors.stream()
+            .filter(StaticResourceSelector.class ::isInstance)
+            .map(StaticResourceSelector.class ::cast)
+            .collect(toMap(StaticResourceSelector::getResourceType, StaticResourceSelector::getIdentifiers,
+                (oldResourceIds, newResourceIds) -> {
+                  oldResourceIds.addAll(newResourceIds);
+                  return oldResourceIds;
+                }));
+
+    List<ResourceSelector> condensedResourceSelectors = new ArrayList<>();
+    resources.forEach(
+        (k, v)
+            -> condensedResourceSelectors.add(StaticResourceSelector.builder().resourceType(k).identifiers(v).build()));
+    resourceSelectors.stream()
+        .filter(DynamicResourceSelector.class ::isInstance)
+        .map(DynamicResourceSelector.class ::cast)
+        .distinct()
+        .forEach(condensedResourceSelectors::add);
+    return condensedResourceSelectors;
+  }
+
+  public boolean restoreAll(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    Criteria criteria = Criteria.where(ResourceGroupKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(ResourceGroupKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .and(ResourceGroupKeys.projectIdentifier)
+                            .is(projectIdentifier)
+                            .and(ResourceGroupKeys.deleted)
+                            .is(true);
+    Update update = new Update().set(ResourceGroupKeys.deleted, false);
+    return resourceGroupRepository.update(criteria, update);
   }
 }

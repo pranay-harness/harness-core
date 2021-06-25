@@ -3,16 +3,12 @@ package software.wings.resources;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureFlag;
-import io.harness.beans.FeatureName;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rest.RestResponse;
-import io.harness.security.annotations.InternalApi;
 
 import software.wings.beans.User;
 import software.wings.security.UserThreadLocal;
@@ -24,7 +20,6 @@ import io.swagger.annotations.Api;
 import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 @Path("/feature-flag")
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
-@OwnedBy(HarnessTeam.PL)
 public class FeatureFlagResource {
   private final FeatureFlagService featureFlagService;
   private final HarnessUserGroupService harnessUserGroupService;
@@ -64,12 +58,5 @@ public class FeatureFlagResource {
               ResponseMessage.builder().message("User not allowed get list of feature flags ").build()))
           .build();
     }
-  }
-
-  @GET
-  @Path("{featureFlagName}")
-  @InternalApi
-  public RestResponse<FeatureFlag> getFeatureFlag(@PathParam("featureFlagName") String featureFlagName) {
-    return new RestResponse<>(featureFlagService.getFeatureFlag(FeatureName.valueOf(featureFlagName)).orElse(null));
   }
 }

@@ -13,13 +13,13 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.Scope;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
+import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.security.annotations.InternalApi;
@@ -64,7 +64,7 @@ public class HarnessResourceGroupResource {
 
   @GET
   @Path("{identifier}")
-  @ApiOperation(value = "Get a resource group by identifier", nickname = "getResourceGroup")
+  @ApiOperation(value = "Gets a resource group by identifier", nickname = "getResourceGroup")
   public ResponseDTO<ResourceGroupResponse> get(
       @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
@@ -73,12 +73,12 @@ public class HarnessResourceGroupResource {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(RESOURCE_GROUP, identifier), VIEW_RESOURCEGROUP_PERMISSION);
     Optional<ResourceGroupResponse> resourceGroupResponseOpt =
-        resourceGroupService.get(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), identifier);
+        resourceGroupService.get(identifier, accountIdentifier, orgIdentifier, projectIdentifier);
     return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
   }
 
   @GET
-  @ApiOperation(value = "Get list of resource groups", nickname = "getResourceGroupList")
+  @ApiOperation(value = "Get Resource Group list", nickname = "getResourceGroupList")
   public ResponseDTO<PageResponse<ResourceGroupResponse>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
@@ -86,12 +86,12 @@ public class HarnessResourceGroupResource {
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(RESOURCE_GROUP, null), VIEW_RESOURCEGROUP_PERMISSION);
-    return ResponseDTO.newResponse(getNGPageResponse(resourceGroupService.list(
-        Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), pageRequest, searchTerm)));
+    return ResponseDTO.newResponse(getNGPageResponse(
+        resourceGroupService.list(accountIdentifier, orgIdentifier, projectIdentifier, pageRequest, searchTerm)));
   }
 
   @POST
-  @ApiOperation(value = "Create a resource group", nickname = "createResourceGroup")
+  @ApiOperation(value = "Creates a resource group", nickname = "createResourceGroup")
   public ResponseDTO<ResourceGroupResponse> create(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
@@ -104,15 +104,17 @@ public class HarnessResourceGroupResource {
   }
 
   @POST
-  @Path("/createManaged")
+  @Path("/createInternal")
   @InternalApi
   @ApiOperation(
-      value = "Create default/harness managed resource group", nickname = "createManagedResourceGroup", hidden = true)
+      value = "create default/harneess managed resource group", nickname = "createResourceGroupInternal", hidden = true)
   public ResponseDTO<Boolean>
   createManagedResourceGroup(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
-    resourceGroupService.createManagedResourceGroup(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier));
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Valid ResourceGroupDTO resourceGroupDTO) {
+    resourceGroupService.createManagedResourceGroup(
+        accountIdentifier, orgIdentifier, projectIdentifier, resourceGroupDTO);
     return ResponseDTO.newResponse(true);
   }
 
@@ -128,13 +130,13 @@ public class HarnessResourceGroupResource {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(RESOURCE_GROUP, identifier), EDIT_RESOURCEGROUP_PERMISSION);
     Optional<ResourceGroupResponse> resourceGroupResponseOpt =
-        resourceGroupService.update(resourceGroupRequest.getResourceGroup(), true);
+        resourceGroupService.update(resourceGroupRequest.getResourceGroup());
     return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
   }
 
   @DELETE
   @Path("{identifier}")
-  @ApiOperation(value = "Delete a resource group", nickname = "deleteResourceGroup")
+  @ApiOperation(value = "Deletes a resource group", nickname = "deleteResourceGroup")
   @Produces("application/json")
   @Consumes()
   public ResponseDTO<Boolean> delete(@NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
@@ -143,7 +145,8 @@ public class HarnessResourceGroupResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(RESOURCE_GROUP, identifier), DELETE_RESOURCEGROUP_PERMISSION);
-    resourceGroupService.delete(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), identifier);
-    return ResponseDTO.newResponse(true);
+    boolean deleted =
+        resourceGroupService.delete(identifier, accountIdentifier, orgIdentifier, projectIdentifier, false);
+    return ResponseDTO.newResponse(deleted);
   }
 }

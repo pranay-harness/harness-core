@@ -70,12 +70,11 @@ public class AccountResourceImpl implements Resource {
 
   @Override
   public ResourceInfo getResourceInfoFromEvent(Message message) {
-    AccountEntityChangeDTO accountEntityChangeDTO;
+    AccountEntityChangeDTO accountEntityChangeDTO = null;
     try {
       accountEntityChangeDTO = AccountEntityChangeDTO.parseFrom(message.getMessage().getData());
     } catch (InvalidProtocolBufferException e) {
       log.error("Exception in unpacking AccountEntityChangeDTO for key {}", message.getId(), e);
-      return null;
     }
     if (Objects.isNull(accountEntityChangeDTO)) {
       return null;

@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -35,16 +36,16 @@ public class ResourceGroupAsyncReconciliationHandler implements MongoPersistence
 
   @Override
   public void handle(ResourceGroup resourceGroup) {
-    boolean updated = resourceGroupValidatorService.sanitizeResourceSelectors(resourceGroup);
-    if (updated) {
-      resourceGroupService.update(ResourceGroupMapper.toDTO(resourceGroup), false);
+    boolean areResourcesValid = resourceGroupValidatorService.validateAndFilterInvalidOnes(resourceGroup);
+    if (!areResourcesValid) {
+      resourceGroupService.update(ResourceGroupMapper.toDTO(resourceGroup));
     }
   }
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
-            .name("ResourceGroupReconciliationIterator")
+            .name("ResourceGroupAsyncReconciliation")
             .poolSize(3)
             .interval(ofMinutes(1))
             .build(),
@@ -52,9 +53,10 @@ public class ResourceGroupAsyncReconciliationHandler implements MongoPersistence
         MongoPersistenceIterator.<ResourceGroup, SpringFilterExpander>builder()
             .clazz(ResourceGroup.class)
             .fieldName(ResourceGroupKeys.nextIteration)
-            .targetInterval(ofHours(1))
-            .acceptableNoAlertDelay(ofHours(1))
+            .targetInterval(ofHours(2))
+            .acceptableNoAlertDelay(ofHours(2))
             .handler(this)
+            .filterExpander(query -> query.addCriteria(Criteria.where(ResourceGroupKeys.deleted).is(Boolean.FALSE)))
             .schedulingType(REGULAR)
             .persistenceProvider(new SpringPersistenceProvider<>(mongoTemplate))
             .redistribute(true));

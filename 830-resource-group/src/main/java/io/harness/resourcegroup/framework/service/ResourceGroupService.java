@@ -3,7 +3,6 @@ package io.harness.resourcegroup.framework.service;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.Scope;
 import io.harness.ng.beans.PageRequest;
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
@@ -18,15 +17,21 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public interface ResourceGroupService {
   ResourceGroupResponse create(ResourceGroupDTO resourceGroupDTO);
 
-  void createManagedResourceGroup(Scope scope);
+  ResourceGroupResponse createManagedResourceGroup(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, ResourceGroupDTO resourceGroupDTO);
 
-  Optional<ResourceGroupResponse> get(Scope scope, String identifier);
+  Optional<ResourceGroupResponse> get(
+      String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
-  Page<ResourceGroupResponse> list(Scope scope, PageRequest pageRequest, String searchTerm);
+  Page<ResourceGroupResponse> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      PageRequest pageRequest, String searchTerm);
 
   Page<ResourceGroup> list(Criteria criteria, Pageable pageable);
 
-  Optional<ResourceGroupResponse> update(ResourceGroupDTO resourceGroupDTO, boolean sanitizeResourceSelectors);
+  Optional<ResourceGroupResponse> update(ResourceGroupDTO resourceGroupDTO);
 
-  void delete(Scope scope, String identifier);
+  boolean delete(String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      boolean forceDeleteRoleAssignments);
+
+  boolean restoreAll(String accountIdentifier, String orgIdentifier, String projectIdentifier);
 }
