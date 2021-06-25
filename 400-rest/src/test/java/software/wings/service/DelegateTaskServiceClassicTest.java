@@ -826,6 +826,7 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
                                     .build();
     persistence.save(sampleMap);
 
+    // CG Task
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(ACCOUNT_ID)
                                     .delegateId(DELEGATE_ID)
@@ -842,6 +843,24 @@ public class DelegateTaskServiceClassicTest extends WingsBaseTest {
 
     assertThat(selectorsCapabilityList.get(0).getSelectorOrigin()).isEqualTo(TASK_CATEGORY_MAP);
     assertThat(selectorsCapabilityList.get(0).getSelectors()).isEqualTo(sampleMap.getSelectors());
+
+    // NG Task
+    DelegateTask delegateTaskNg = DelegateTask.builder()
+                                      .accountId(ACCOUNT_ID)
+                                      .delegateId(DELEGATE_ID)
+                                      .data(TaskData.builder().taskType(TaskType.HTTP.name()).build())
+                                      .setupAbstraction("ng", "true")
+                                      .build();
+
+    delegateTaskServiceClassic.convertToExecutionCapability(delegateTaskNg);
+
+    selectorsCapabilityList = delegateTaskNg.getExecutionCapabilities()
+                                  .stream()
+                                  .filter(c -> c instanceof SelectorCapability)
+                                  .map(c -> (SelectorCapability) c)
+                                  .collect(Collectors.toList());
+
+    assertThat(selectorsCapabilityList).isEmpty();
   }
 
   @Test
