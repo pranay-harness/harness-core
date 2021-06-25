@@ -86,16 +86,17 @@ public class DeploymentEventListener implements OrchestrationEventHandler {
 
     AbstractInstanceHandler abstractInstanceHandler = getInstanceHandler(ambiance);
 
-    DeploymentSummary deploymentSummary = DeploymentSummary.builder()
-                                              .accountIdentifier(AmbianceHelper.getAccountId(ambiance))
-                                              .orgIdentifier(AmbianceHelper.getOrgIdentifier(ambiance))
-                                              .projectIdentifier(AmbianceHelper.getProjectIdentifier(ambiance))
-                                              .infrastructureMapping(infrastructureMapping)
-                                              .infrastructureMappingId(infrastructureMapping.getId())
-                                              .pipelineExecutionId(ambiance.getPlanExecutionId())
-                                              .deploymentInfo(abstractInstanceHandler.getDeploymentInfo(ambiance))
-                                              .deployedAt(event.getNodeExecutionProto().getEndTs().getSeconds())
-                                              .build();
+    DeploymentSummary deploymentSummary =
+        DeploymentSummary.builder()
+            .accountIdentifier(AmbianceHelper.getAccountId(ambiance))
+            .orgIdentifier(AmbianceHelper.getOrgIdentifier(ambiance))
+            .projectIdentifier(AmbianceHelper.getProjectIdentifier(ambiance))
+            .infrastructureMapping(infrastructureMapping)
+            .infrastructureMappingId(infrastructureMapping.getId())
+            .pipelineExecutionId(ambiance.getPlanExecutionId())
+            .deploymentInfo(abstractInstanceHandler.getDeploymentInfo(ambiance))
+            //                                              .deployedAt(event.getNodeExecutionProto().getEndTs().getSeconds())
+            .build();
 
     // TODO fetch rollback info and set into deployment event
 
