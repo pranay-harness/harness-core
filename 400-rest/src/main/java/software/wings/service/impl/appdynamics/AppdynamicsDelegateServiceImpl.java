@@ -24,7 +24,6 @@ import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.Ve
 import software.wings.service.impl.appdynamics.AppdynamicsMetric.AppdynamicsMetricType;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
-import software.wings.service.intfc.security.EncryptionService;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -58,7 +57,6 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   public static final String BT_PERFORMANCE_PATH_PREFIX = "Business Transaction Performance|Business Transactions|";
   public static final String EXTERNAL_CALLS = "External Calls";
   public static final String INDIVIDUAL_NODES = "Individual Nodes";
-  @Inject private EncryptionService encryptionService;
   @Inject private SecretDecryptionService secretDecryptionService;
 
   @Inject private DataCollectionExecutorService dataCollectionService;
@@ -418,7 +416,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
   private String getHeaderWithCredentials(
       AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    encryptionService.decrypt(appDynamicsConfig, encryptionDetails, false);
+    secretDecryptionService.decrypt(appDynamicsConfig, encryptionDetails, false);
     return "Basic "
         + Base64.encodeBase64String(
             String

@@ -97,7 +97,7 @@ public class StackDriverServiceImpl implements StackDriverService {
       hostName = mlServiceUtils.getHostName(setupTestNodeData);
     }
 
-    if (setupTestNodeData.getStateType() == STACK_DRIVER) {
+    if (STACK_DRIVER.name().equals(setupTestNodeData.getStateType())) {
       validateMetricDefinitions(setupTestNodeData.getMetricDefinitions());
     }
 
@@ -111,7 +111,7 @@ public class StackDriverServiceImpl implements StackDriverService {
                                             .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
 
-      if (StateType.STACK_DRIVER_LOG == setupTestNodeData.getStateType()) {
+      if (StateType.STACK_DRIVER_LOG.name().equals(setupTestNodeData.getStateType())) {
         return delegateProxyFactory.get(StackDriverDelegateService.class, syncTaskContext)
             .getLogWithDataForNode(StackdriverLogGcpConfigTaskParams.builder()
                                        .gcpConfig((GcpConfig) settingAttribute.getValue())

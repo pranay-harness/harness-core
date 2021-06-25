@@ -33,7 +33,7 @@ public class CloudWatchSetupTestNodeData extends SetupTestNodeData {
       List<CloudWatchMetric> ec2Metrics, String guid, Map<String, List<CloudWatchMetric>> ecsMetrics,
       Map<String, List<CloudWatchMetric>> lambdaFunctionsMetrics) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
-        StateType.CLOUD_WATCH, fromTime, toTime);
+        StateType.CLOUD_WATCH.name(), fromTime, toTime);
     this.region = region;
     this.hostName = hostName;
     this.loadBalancerMetricsByLBName = loadBalancerMetricsByLBName;

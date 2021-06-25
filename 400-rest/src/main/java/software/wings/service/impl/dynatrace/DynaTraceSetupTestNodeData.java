@@ -25,7 +25,7 @@ public class DynaTraceSetupTestNodeData extends SetupTestNodeData {
       Instance instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
       String serviceMethods, String guid, String serviceEntityId) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
-        StateType.DYNA_TRACE, fromTime, toTime);
+        StateType.DYNA_TRACE.name(), fromTime, toTime);
     this.serviceMethods = serviceMethods;
     this.serviceEntityId = serviceEntityId;
   }

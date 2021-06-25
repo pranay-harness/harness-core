@@ -46,7 +46,7 @@ public class StackDriverSetupTestNodeData extends SetupTestNodeData {
       String query, String hostnameField, String messageField, boolean isLogConfiguration,
       List<StackDriverMetricDefinition> metricDefinitions) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
-        StateType.STACK_DRIVER, fromTime, toTime);
+        StateType.STACK_DRIVER.name(), fromTime, toTime);
     this.loadBalancerMetrics = loadBalancerMetrics;
     this.podMetrics = podMetrics;
     this.query = query;

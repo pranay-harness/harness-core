@@ -27,7 +27,7 @@ public class PrometheusSetupTestNodeData extends SetupTestNodeData {
       Instance instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
       List<TimeSeries> timeSeriesToAnalyze, String guid) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
-        StateType.PROMETHEUS, fromTime, toTime);
+        StateType.PROMETHEUS.name(), fromTime, toTime);
     this.timeSeriesToAnalyze = timeSeriesToAnalyze;
   }
 }

@@ -4,8 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.deployment.InstanceDetails;
 
-import software.wings.sm.StateType;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.concurrent.TimeUnit;
@@ -30,13 +28,13 @@ public class SetupTestNodeData {
   private String hostExpression;
   private String workflowId;
   private String guid;
-  private StateType stateType;
+  private String stateType;
   private long toTime = System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1);
   private long fromTime = toTime - TimeUnit.MINUTES.toMillis(20) / TimeUnit.SECONDS.toMillis(1);
 
   public SetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
-      Instance instanceElement, String hostExpression, String workflowId, String guid, StateType stateType,
-      long fromTime, long toTime) {
+      Instance instanceElement, String hostExpression, String workflowId, String guid, String stateType, long fromTime,
+      long toTime) {
     this.appId = appId;
     this.settingId = settingId;
     this.instanceName = instanceName;
@@ -44,7 +42,7 @@ public class SetupTestNodeData {
     this.instanceElement = instanceElement;
     this.hostExpression = hostExpression;
     this.workflowId = workflowId;
-    this.guid = isEmpty(guid) ? stateType.name() + workflowId + settingId : guid;
+    this.guid = isEmpty(guid) ? stateType + workflowId + settingId : guid;
     this.stateType = stateType;
     this.toTime = toTime;
     this.fromTime = fromTime;

@@ -27,7 +27,7 @@ public class SplunkSetupTestNodeData extends SetupTestNodeData {
       Instance instanceElement, String hostExpression, String workflowId, long fromTime, long toTime, String query,
       String hostNameField, String guid, boolean isAdvancedQuery) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
-        StateType.SPLUNKV2, fromTime, toTime);
+        StateType.SPLUNKV2.name(), fromTime, toTime);
     this.query = query;
     this.hostNameField = hostNameField;
     this.isAdvancedQuery = isAdvancedQuery;

@@ -25,7 +25,7 @@ public class SumoLogicSetupTestNodedata extends SetupTestNodeData {
       Instance instanceElement, String hostExpression, String workflowId, long fromTime, long toTime, String query,
       String hostNameField, String guid) {
     super(appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, guid,
-        StateType.SUMO, fromTime, toTime);
+        StateType.SUMO.name(), fromTime, toTime);
     this.query = query;
     this.hostNameField = hostNameField;
   }
