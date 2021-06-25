@@ -12,6 +12,8 @@ if [ "${PLATFORM}" == "jenkins" ]; then
   fi
 fi
 
+BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --announce_rc"
+
 BAZEL_DIRS=${HOME}/.bazel-dirs
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --experimental_convenience_symlinks=normal --symlink_prefix=${BAZEL_DIRS}/"
 
@@ -21,8 +23,8 @@ fi
 
 # Enable caching by default. Turn it off by exporting CACHE_TEST_RESULTS=no
 # to generate full call-graph for Test Intelligence
-if [[ -z "${CACHE_TEST_RESULTS}" ]]; then
-  export CACHE_TEST_RESULTS=yes
+if [[ ! -z "${CACHE_TEST_RESULTS}" ]]; then
+  export CACHE_TEST_RESULTS_ARG=--cache_test_results=${CACHE_TEST_RESULTS}
 fi
 
 bazel ${bazelrc} build ${BAZEL_ARGUMENTS}  //:resource
@@ -31,7 +33,7 @@ cat ${BAZEL_DIRS}/out/volatile-status.txt
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]; then
   bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... \
-  && bazel ${bazelrc} test --cache_test_results=${CACHE_TEST_RESULTS} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${BAZEL_ARGUMENTS} -- \
+  && bazel ${bazelrc} test ${CACHE_TEST_RESULTS_ARG} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${BAZEL_ARGUMENTS} -- \
   //... -//product/... -//commons/... -//200-functional-test/... -//190-deployment-functional-tests/...
   exit $?
 fi
@@ -64,6 +66,7 @@ BAZEL_MODULES="\
   //410-cg-rest:module \
   //420-delegate-agent:module \
   //420-delegate-service:module \
+  //425-verification-commons:module \
   //430-cv-nextgen-commons:module \
   //440-connector-nextgen:module \
   //445-cg-connectors:module \
@@ -337,6 +340,7 @@ build_bazel_module 400-rest
 build_bazel_module 410-cg-rest
 build_bazel_module 420-delegate-agent
 build_bazel_module 420-delegate-service
+build_bazel_module 425-verification-commons
 build_bazel_module 430-cv-nextgen-commons
 build_bazel_module 440-connector-nextgen
 build_bazel_module 445-cg-connectors

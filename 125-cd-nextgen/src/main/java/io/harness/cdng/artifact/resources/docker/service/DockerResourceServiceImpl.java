@@ -3,6 +3,8 @@ package io.harness.cdng.artifact.resources.docker.service;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerBuildDetailsDTO;
@@ -51,6 +53,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
 public class DockerResourceServiceImpl implements DockerResourceService {
   private final ConnectorService connectorService;
   private final SecretManagerClientService secretManagerClientService;
@@ -203,7 +206,10 @@ public class DockerResourceServiceImpl implements DockerResourceService {
             .taskParameters(artifactTaskParameters)
             .executionTimeout(java.time.Duration.ofSeconds(timeoutInSecs))
             .taskSetupAbstraction("orgIdentifier", ngAccess.getOrgIdentifier())
+            .taskSetupAbstraction("ng", "true")
+            .taskSetupAbstraction("owner", ngAccess.getOrgIdentifier() + "/" + ngAccess.getProjectIdentifier())
             .taskSetupAbstraction("projectIdentifier", ngAccess.getProjectIdentifier())
+            .taskSelectors(delegateRequest.getDockerConnectorDTO().getDelegateSelectors())
             .build();
     return delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
   }

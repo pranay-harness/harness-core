@@ -603,6 +603,7 @@ shared_dependencies = [
     "@maven//:org_springframework_data_spring_data_commons",
     "@maven//:org_springframework_data_spring_data_mongodb",
     "@maven//:org_springframework_guice_spring_guice",
+    "@maven//:org_springframework_security_spring_security_crypto",
     "@maven//:org_springframework_spring_aop",
     "@maven//:org_springframework_spring_beans",
     "@maven//:org_springframework_spring_context",
@@ -627,7 +628,7 @@ shared_dependencies = [
     "@maven//:xml_resolver_xml_resolver",
     "@maven//:xpp3_xpp3",
     "@maven//:io_harness_ff_java_server_sdk",
-    "@maven_harness//:io_harness_cv_data_collection_dsl",
+    "@maven//:io_harness_cv_data_collection_dsl",
 ]
 
 java_binary(

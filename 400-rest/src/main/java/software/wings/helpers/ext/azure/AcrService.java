@@ -13,7 +13,7 @@ import java.util.List;
 
 @OwnedBy(CDC)
 public interface AcrService {
-  List<String> listRegistries(AzureConfig config, List<EncryptedDataDetail> encryptionDetails, String subscriptionId);
+  List<String> listRegistries(AzureConfig config, String subscriptionId);
 
   List<BuildDetails> getBuilds(AzureConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds);

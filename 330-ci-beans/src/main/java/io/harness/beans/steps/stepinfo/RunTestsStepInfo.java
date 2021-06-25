@@ -10,6 +10,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
+import io.harness.beans.yaml.extended.ImagePullPolicy;
 import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
@@ -60,7 +61,7 @@ public class RunTestsStepInfo implements CIStepInfo {
   private boolean runOnlySelectedTests;
 
   @NotNull private String image;
-  private String connector;
+  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   private ContainerResource resources;
   private ParameterField<List<String>> outputVariables;
   private ParameterField<Map<String, String>> envVariables;
@@ -68,17 +69,20 @@ public class RunTestsStepInfo implements CIStepInfo {
   @ApiModelProperty(dataType = STRING_CLASSPATH) private io.harness.pms.yaml.ParameterField<String> postCommand;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> privileged;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
+  @ApiModelProperty(dataType = "io.harness.beans.yaml.extended.ImagePullPolicy")
+  private ParameterField<ImagePullPolicy> imagePullPolicy;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "args", "language", "buildTool", "image", "connector",
+  @ConstructorProperties({"identifier", "name", "retry", "args", "language", "buildTool", "image", "connectorRef",
       "resources", "reports", "testAnnotations", "packages", "runOnlySelectedTests", "preCommand", "postCommand",
-      "outputVariables", "envVariables", "privileged", "runAsUser"})
+      "outputVariables", "envVariables", "privileged", "runAsUser", "imagePullPolicy"})
   public RunTestsStepInfo(String identifier, String name, Integer retry, String args, String language, String buildTool,
-      String image, String connector, ContainerResource resources, UnitTestReport reports, String testAnnotations,
-      String packages, boolean runOnlySelectedTests, io.harness.pms.yaml.ParameterField<String> preCommand,
-      io.harness.pms.yaml.ParameterField<String> postCommand, ParameterField<List<String>> outputVariables,
-      ParameterField<Map<String, String>> envVariables, ParameterField<Boolean> privileged,
-      ParameterField<Integer> runAsUser) {
+      String image, ParameterField<String> connectorRef, ContainerResource resources, UnitTestReport reports,
+      String testAnnotations, String packages, boolean runOnlySelectedTests,
+      io.harness.pms.yaml.ParameterField<String> preCommand, io.harness.pms.yaml.ParameterField<String> postCommand,
+      ParameterField<List<String>> outputVariables, ParameterField<Map<String, String>> envVariables,
+      ParameterField<Boolean> privileged, ParameterField<Integer> runAsUser,
+      ParameterField<ImagePullPolicy> imagePullPolicy) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -86,7 +90,7 @@ public class RunTestsStepInfo implements CIStepInfo {
     this.language = language;
     this.buildTool = buildTool;
     this.image = image;
-    this.connector = connector;
+    this.connectorRef = connectorRef;
     this.resources = resources;
     this.reports = reports;
     this.testAnnotations = testAnnotations;
@@ -98,6 +102,7 @@ public class RunTestsStepInfo implements CIStepInfo {
     this.envVariables = envVariables;
     this.privileged = privileged;
     this.runAsUser = runAsUser;
+    this.imagePullPolicy = imagePullPolicy;
   }
 
   @Override

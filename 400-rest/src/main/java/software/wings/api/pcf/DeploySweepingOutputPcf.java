@@ -1,6 +1,7 @@
 package software.wings.api.pcf;
 
 import io.harness.beans.SweepingOutput;
+import io.harness.delegate.beans.pcf.CfServiceData;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
@@ -16,7 +17,7 @@ public class DeploySweepingOutputPcf implements SweepingOutput {
   private String uuid;
   private String name;
   private String commandName;
-  private List<PcfServiceData> instanceData;
+  private List<CfServiceData> instanceData;
 
   @Override
   public String getType() {

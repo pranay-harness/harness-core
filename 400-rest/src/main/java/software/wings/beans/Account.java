@@ -161,7 +161,7 @@ public class Account extends Base implements PersistentRegularIterable {
   /**
    * Default mechanism is USER_PASSWORD
    */
-  @JsonIgnore private AuthenticationMechanism authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
+  private AuthenticationMechanism authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
 
   public Map<String, String> getDefaults() {
     return defaults;

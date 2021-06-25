@@ -7,7 +7,7 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-use crate::java_class::{class_dependencies, external_class, populate_internal_info, JavaClass, UNKNOWN_LOCATION};
+use crate::java_class::{class_dependencies, external_class, JavaClass, populate_internal_info, UNKNOWN_LOCATION};
 use crate::repo::GIT_REPO_ROOT_DIR;
 use crate::team::SHARED_BETWEEN_TEAMS;
 
@@ -87,10 +87,10 @@ pub fn modules() -> HashMap<String, JavaModule> {
     let modules = module_rules.iter().map(|(k, _)| k.clone()).collect::<HashSet<String>>();
 
     let data_collection_dsl = populate_from_external(
-        "https/harness-internal-read%40harness.jfrog.io/artifactory/harness-internal",
+        "https/harness.jfrog.io/harness/harness-public",
         "io/harness/cv",
         "data-collection-dsl",
-        "0.25-RELEASE",
+        "0.26-RELEASE",
         Some("CV".to_string()),
     );
 
@@ -299,9 +299,21 @@ lazy_static! {
     .unwrap()
     .trim()
     .to_string();
+
     static ref BAZEL_OUTPUT_BASE_DIR: String = String::from_utf8(
         Command::new("bazel")
             .args(&["info", "output_base"])
+            .output()
+            .unwrap()
+            .stdout
+    )
+    .unwrap()
+    .trim()
+    .to_string();
+
+    static ref BAZEL_BIN_BASE_DIR: String = String::from_utf8(
+        Command::new("bazel")
+            .args(&["info", "bazel-bin"])
             .output()
             .unwrap()
             .stdout
@@ -390,8 +402,8 @@ fn populate_from_external(
     team: Option<String>,
 ) -> JavaModule {
     let jar = format!(
-        "{}/external/maven_harness/v1/{}/{}/{}/{}/{}-{}.jar",
-        BAZEL_OUTPUT_BASE_DIR.as_str(),
+        "{}/external/maven/v1/{}/{}/{}/{}/{}-{}.jar",
+        BAZEL_BIN_BASE_DIR.as_str(),
         artifactory,
         package,
         name,

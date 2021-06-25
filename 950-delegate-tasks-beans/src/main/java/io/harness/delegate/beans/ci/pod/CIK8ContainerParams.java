@@ -17,10 +17,10 @@ public class CIK8ContainerParams extends ContainerParams {
       List<Integer> ports, Map<String, String> envVars, Map<String, String> envVarsWithSecretRef,
       Map<String, SecretVarParams> secretEnvVars, Map<String, SecretVolumeParams> secretVolumes, String imageSecret,
       Map<String, String> volumeToMountPath, ContainerResourceParams containerResourceParams,
-      ContainerSecrets containerSecrets, Integer runAsUser, boolean privileged) {
+      ContainerSecrets containerSecrets, Integer runAsUser, boolean privileged, String imagePullPolicy) {
     super(name, imageDetailsWithConnector, commands, args, workingDir, ports, envVars, envVarsWithSecretRef,
         secretEnvVars, secretVolumes, imageSecret, volumeToMountPath, containerResourceParams, containerSecrets,
-        runAsUser, privileged);
+        runAsUser, privileged, imagePullPolicy);
     this.containerType = containerType;
   }
 

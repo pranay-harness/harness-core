@@ -67,7 +67,8 @@ public class SaveCacheGCSStepInfo implements PluginCompatibleStep, WithConnector
   @ApiModelProperty(dataType = STRING_LIST_CLASSPATH)
   private ParameterField<List<String>> sourcePaths;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> override;
-  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<ArchiveFormat> archiveFormat;
+  @ApiModelProperty(dataType = "io.harness.beans.yaml.extended.ArchiveFormat")
+  private ParameterField<ArchiveFormat> archiveFormat;
   @YamlSchemaTypes({string}) @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   @Builder

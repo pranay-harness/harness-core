@@ -64,4 +64,9 @@ public class GcpTask extends AbstractDelegateRunnableTask {
             "Invalid request type [" + gcpTaskParameters.getGcpTaskType() + "]", WingsException.USER);
     }
   }
+
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
+  }
 }
