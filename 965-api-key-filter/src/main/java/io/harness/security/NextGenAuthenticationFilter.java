@@ -15,6 +15,7 @@ import io.harness.token.remote.TokenClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
@@ -34,7 +35,7 @@ public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
   public static final String X_API_KEY = "X-Api-Key";
   private static final String deliminator = ".";
 
-  @Inject private TokenClient tokenClient;
+  @Inject @Named("PRIVILEGED") private TokenClient tokenClient;
 
   public NextGenAuthenticationFilter(Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate,
       Map<String, JWTTokenHandler> serviceToJWTTokenHandlerMapping, Map<String, String> serviceToSecretMapping) {
