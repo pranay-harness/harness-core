@@ -37,8 +37,9 @@ public class SidecarArtifact implements Visitable {
   @ApiModelProperty(hidden = true)
   private String uuid;
 
-  @EntityIdentifier String identifier;
+  @NotNull @EntityIdentifier String identifier;
   @NotNull @JsonProperty("type") ArtifactSourceType sourceType;
+  @NotNull
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   ArtifactConfig spec;

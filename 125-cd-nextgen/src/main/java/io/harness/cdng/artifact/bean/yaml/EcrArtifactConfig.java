@@ -10,11 +10,13 @@ import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.validation.OneOfField;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Arrays;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -31,19 +33,20 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(ECR_NAME)
 @TypeAlias("ecrArtifactConfig")
 @OwnedBy(CDC)
+@OneOfField(fields = {"tag", "tagRegex"})
 public class EcrArtifactConfig implements ArtifactConfig {
   /**
    * AWS connector to connect to Google Container Registry.
    */
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> connectorRef;
+  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> connectorRef;
   /**
    * Region in which the artifact source is located.
    */
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> region;
+  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> region;
   /**
    * Images in repos need to be referenced via a path.
    */
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> imagePath;
+  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> imagePath;
   /**
    * Tag refers to exact tag number.
    */
