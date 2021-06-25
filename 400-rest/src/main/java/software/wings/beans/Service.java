@@ -121,6 +121,7 @@ public class Service
 
   private String deploymentTypeTemplateId;
   private transient String customDeploymentName;
+  private Boolean artifactFromManifest;
 
   @Builder
   public Service(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,

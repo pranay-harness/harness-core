@@ -320,7 +320,7 @@ public class AzureVMSSSwitchRouteTaskHandler extends AzureVMSSTaskHandler {
         Collectors.toMap(HasName::name, VirtualMachineScaleSetVM::instanceId));
 
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeoutIntervalInMin), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(timeoutIntervalInMin), () -> {
         nameToInstanceId.keySet().forEach(vmName -> {
           logCallback.saveExecutionLog(
               format("Updating virtual machine instance: [%s] for the scale set: [%s]", vmName, vmss.name()));

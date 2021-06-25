@@ -64,7 +64,7 @@ public class DelegateStackdriverLogAppender extends RemoteStackdriverLogAppender
     }
 
     try {
-      RestResponse<AccessTokenBean> response = HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+      RestResponse<AccessTokenBean> response = HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
           () -> execute(delegateAgentManagerClient.getLoggingToken(getAccountId())));
       if (response != null) {
         return response.getResource();

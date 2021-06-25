@@ -10,6 +10,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheModule;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
 import io.harness.engine.OrchestrationEngine;
@@ -240,6 +241,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     modules.add(PipelineServiceModule.getInstance(appConfig));
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(NGMigrationSdkModule.getInstance());
+    CacheModule cacheModule = new CacheModule(appConfig.getCacheConfig());
+    modules.add(cacheModule);
     if (appConfig.isShouldDeployWithGitSync()) {
       GitSyncSdkConfiguration gitSyncSdkConfiguration = getGitSyncConfiguration(appConfig);
       modules.add(new AbstractGitSyncSdkModule() {

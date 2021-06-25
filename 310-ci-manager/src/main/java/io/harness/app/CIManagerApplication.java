@@ -11,6 +11,7 @@ import io.harness.AuthorizationServiceHeader;
 import io.harness.ModuleType;
 import io.harness.PipelineServiceUtilityModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheModule;
 import io.harness.ci.app.InspectCommand;
 import io.harness.ci.plan.creator.CIModuleInfoProvider;
 import io.harness.ci.plan.creator.CIPipelineServiceInfoProvider;
@@ -240,6 +241,8 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     modules.add(new CIPersistenceModule());
     addGuiceValidationModule(modules);
     modules.add(new CIManagerServiceModule(configuration));
+    modules.add(new CacheModule(configuration.getCacheConfig()));
+
     modules.add(YamlSdkModule.getInstance());
 
     // Pipeline Service Modules

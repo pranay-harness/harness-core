@@ -81,7 +81,7 @@ public class GcpKmsEncryptor implements KmsEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(DEFAULT_GCP_KMS_TIMEOUT),
+        return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(DEFAULT_GCP_KMS_TIMEOUT),
             () -> encryptInternal(accountId, value, gcpKmsConfig));
       } catch (Exception e) {
         failedAttempts++;
@@ -145,7 +145,7 @@ public class GcpKmsEncryptor implements KmsEncryptor {
           return decryptInternalIfCached(encryptedData, cachedEncryptedKey, System.currentTimeMillis());
         } else {
           // Use HTimeLimiter.callInterruptible only if the KMS plain text key is not cached.
-          return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(DEFAULT_GCP_KMS_TIMEOUT),
+          return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(DEFAULT_GCP_KMS_TIMEOUT),
               () -> decryptInternal(encryptedData, gcpKmsConfig));
         }
       } catch (Exception e) {

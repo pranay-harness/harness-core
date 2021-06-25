@@ -296,7 +296,7 @@ public class K8sTaskHelperBase {
 
   public List<K8sPod> getPodDetailsWithLabels(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
       Map<String, String> labels, long timeoutinMillis) throws Exception {
-    return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeoutinMillis),
+    return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMillis(timeoutinMillis),
         ()
             -> kubernetesContainerService.getRunningPodsWithLabels(kubernetesConfig, namespace, labels)
                    .stream()
@@ -357,7 +357,7 @@ public class K8sTaskHelperBase {
 
   private <T> T waitForLoadBalancerService(String name, Callable<T> getLoadBalancerService, int timeoutInSeconds) {
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(timeoutInSeconds), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(timeoutInSeconds), () -> {
         while (true) {
           T result = getLoadBalancerService.call();
           if (result != null) {
@@ -1731,7 +1731,7 @@ public class K8sTaskHelperBase {
       for (KubernetesResource kubernetesResource : resources) {
         String steadyCondition = kubernetesResource.getMetadataAnnotationValue(HarnessAnnotations.steadyStateCondition);
         currentSteadyCondition = steadyCondition;
-        success = HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeoutInMillis),
+        success = HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMillis(timeoutInMillis),
             ()
                 -> doStatusCheckForCustomResources(client, kubernetesResource.getResourceId(), steadyCondition,
                     k8sDelegateTaskParams, executionLogCallback));

@@ -161,7 +161,7 @@ public class GitClientHelperTest extends CategoryTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void testGetOwnerFromHTTPURL() {
-    final String repoName = GitClientHelper.getGitOwner("https://github.com/wings-software/portal.git");
+    final String repoName = GitClientHelper.getGitOwner("https://github.com/wings-software/portal.git", false);
     assertThat(repoName).isEqualTo("wings-software");
   }
 
@@ -186,7 +186,31 @@ public class GitClientHelperTest extends CategoryTest {
   @Owner(developers = HARSH)
   @Category(UnitTests.class)
   public void testGetOwnerFromSSHURL() {
-    final String repoName = GitClientHelper.getGitOwner("git@github.com:wings-software/portal.git");
+    final String repoName = GitClientHelper.getGitOwner("git@github.com:wings-software/portal.git", false);
+    assertThat(repoName).isEqualTo("wings-software");
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testGetOwnerFromSSHAccountURL() {
+    final String repoName = GitClientHelper.getGitOwner("git@github.com:wings-software", true);
+    assertThat(repoName).isEqualTo("wings-software");
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testGetOwnerFromAccountURL() {
+    final String repoName = GitClientHelper.getGitOwner("https://github.com/wings-software", true);
+    assertThat(repoName).isEqualTo("wings-software");
+  }
+
+  @Test
+  @Owner(developers = HARSH)
+  @Category(UnitTests.class)
+  public void testGetOwnerFromAccountURLWithSlash() {
+    final String repoName = GitClientHelper.getGitOwner("https://github.com/wings-software/", true);
     assertThat(repoName).isEqualTo("wings-software");
   }
 

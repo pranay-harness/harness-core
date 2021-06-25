@@ -1,7 +1,7 @@
 package io.harness.pms.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
+import static io.harness.remote.client.NGRestUtils.getResponseWithRetry;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
@@ -85,10 +85,11 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
     }
 
     List<EntitySetupUsageDTO> allReferredUsages =
-        execute(entitySetupUsageClient.listAllReferredUsages(PAGE, SIZE, accountIdentifier,
-            FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-                accountIdentifier, orgIdentifier, projectIdentifier, pipelineId),
-            entityType, null));
+        getResponseWithRetry(entitySetupUsageClient.listAllReferredUsages(PAGE, SIZE, accountIdentifier,
+                                 FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+                                     accountIdentifier, orgIdentifier, projectIdentifier, pipelineId),
+                                 entityType, null),
+            "Could not extract setup usage of pipeline with id " + pipelineId + " after {} attempts.");
     List<EntityDetail> entityDetails = new ArrayList<>();
     for (EntitySetupUsageDTO referredUsage : allReferredUsages) {
       IdentifierRef ref = (IdentifierRef) referredUsage.getReferredEntity().getEntityRef();

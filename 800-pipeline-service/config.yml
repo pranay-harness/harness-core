@@ -191,3 +191,8 @@ auditClientConfig:
   readTimeOutSeconds: 15
 
 enableAudit: false
+
+cacheConfig:
+  cacheBackend: REDIS
+  cacheNamespace: ""
+  disabledCaches: [ ]

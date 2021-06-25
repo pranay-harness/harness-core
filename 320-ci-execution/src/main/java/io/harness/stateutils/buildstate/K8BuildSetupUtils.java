@@ -33,6 +33,7 @@ import static io.harness.common.CIExecutionConstants.ORG_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.PATH_SEPARATOR;
 import static io.harness.common.CIExecutionConstants.PIPELINE_EXECUTION_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.PIPELINE_ID_ATTR;
+import static io.harness.common.CIExecutionConstants.POD_MAX_WAIT_UNTIL_READY_SECS;
 import static io.harness.common.CIExecutionConstants.PROJECT_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.STAGE_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
@@ -112,12 +113,14 @@ import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.stateutils.buildstate.providers.InternalContainerParamsProvider;
 import io.harness.tiserviceclient.TIServiceUtils;
 import io.harness.util.GithubApiFunctor;
 import io.harness.util.GithubApiTokenEvaluator;
 import io.harness.util.LiteEngineSecretEvaluator;
 import io.harness.utils.IdentifierRefHelper;
+import io.harness.yaml.core.timeout.Timeout;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -192,7 +195,22 @@ public class K8BuildSetupUtils {
             annotations, labels, stageRunAsUser, serviceAccountName);
 
     log.info("Created pod params for pod name [{}]", podSetupInfo.getName());
-    return CIK8BuildTaskParams.builder().k8sConnector(k8sConnector).cik8PodParams(podParams).build();
+    return CIK8BuildTaskParams.builder()
+        .k8sConnector(k8sConnector)
+        .cik8PodParams(podParams)
+        .podMaxWaitUntilReadySecs(getPodWaitUntilReadTimeout(k8sDirectInfraYaml))
+        .build();
+  }
+
+  private int getPodWaitUntilReadTimeout(K8sDirectInfraYaml k8sDirectInfraYaml) {
+    ParameterField<String> timeout = k8sDirectInfraYaml.getSpec().getInitTimeout();
+
+    int podWaitUntilReadyTimeout = POD_MAX_WAIT_UNTIL_READY_SECS;
+    if (timeout != null && timeout.fetchFinalValue() != null) {
+      long timeoutInMillis = Timeout.fromString((String) timeout.fetchFinalValue()).getTimeoutInMillis();
+      podWaitUntilReadyTimeout = (int) (timeoutInMillis / 1000);
+    }
+    return podWaitUntilReadyTimeout;
   }
 
   public List<ContainerDefinitionInfo> getCIk8BuildServiceContainers(LiteEngineTaskStepInfo liteEngineTaskStepInfo) {

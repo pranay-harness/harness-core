@@ -2,7 +2,6 @@ package io.harness.ng.core.impl;
 
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
-import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_NAME;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.accesscontrol.PlatformPermissions.INVITE_PERMISSION_IDENTIFIER;
@@ -39,7 +38,6 @@ import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.repositories.core.spring.OrganizationRepository;
-import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.security.SourcePrincipalContextBuilder;
@@ -54,14 +52,12 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -74,15 +70,12 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Slf4j
 public class OrganizationServiceImpl implements OrganizationService {
   private static final String ORG_ADMIN_ROLE = "_organization_admin";
-  private static final String RESOURCE_GROUP_DESCRIPTION =
-      "All the resources in this organization are included in this resource group.";
   private final OrganizationRepository organizationRepository;
   private final OutboxService outboxService;
   private final TransactionTemplate transactionTemplate;
   private final ResourceGroupClient resourceGroupClient;
   private final NgUserService ngUserService;
   private final AccessControlClient accessControlClient;
-  private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
 
   @Inject
   public OrganizationServiceImpl(OrganizationRepository organizationRepository, OutboxService outboxService,
@@ -180,29 +173,15 @@ public class OrganizationServiceImpl implements OrganizationService {
       if (resourceGroupResponse != null) {
         return;
       }
-      ResourceGroupDTO resourceGroupDTO = getResourceGroupDTO(scope);
       NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(
-          scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), resourceGroupDTO));
+          scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()));
     } catch (Exception e) {
       log.error("Couldn't create default resource group for [{}]", ScopeUtils.toString(scope));
     }
   }
 
-  private ResourceGroupDTO getResourceGroupDTO(Scope scope) {
-    return ResourceGroupDTO.builder()
-        .accountIdentifier(scope.getAccountIdentifier())
-        .orgIdentifier(scope.getOrgIdentifier())
-        .projectIdentifier(scope.getProjectIdentifier())
-        .name(DEFAULT_RESOURCE_GROUP_NAME)
-        .identifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
-        .description(RESOURCE_GROUP_DESCRIPTION)
-        .resourceSelectors(Collections.emptyList())
-        .fullScopeSelected(true)
-        .build();
-  }
-
   private Organization saveOrganization(Organization organization) {
-    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+    return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
       Organization savedOrganization = organizationRepository.save(organization);
       outboxService.save(
           new OrganizationCreateEvent(organization.getAccountIdentifier(), OrganizationMapper.writeDto(organization)));
@@ -235,7 +214,7 @@ public class OrganizationServiceImpl implements OrganizationService {
         organization.setVersion(existingOrganization.getVersion());
       }
       validate(organization);
-      return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
         Organization updatedOrganization = organizationRepository.save(organization);
         log.info(String.format("Organization with identifier %s was successfully updated", identifier));
         outboxService.save(new OrganizationUpdateEvent(organization.getAccountIdentifier(),
@@ -288,7 +267,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
   @Override
   public boolean delete(String accountIdentifier, String organizationIdentifier, Long version) {
-    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+    return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
       Organization organization = organizationRepository.delete(accountIdentifier, organizationIdentifier, version);
       boolean delete = organization != null;
       if (delete) {
@@ -303,7 +282,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
   @Override
   public boolean restore(String accountIdentifier, String identifier) {
-    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+    return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
       Organization organization = organizationRepository.restore(accountIdentifier, identifier);
       boolean success = organization != null;
       if (success) {

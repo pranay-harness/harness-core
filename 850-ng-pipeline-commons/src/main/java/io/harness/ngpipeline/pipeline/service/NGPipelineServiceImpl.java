@@ -1,13 +1,15 @@
 package io.harness.ngpipeline.pipeline.service;
 
 import static io.harness.exception.WingsException.USER_SRE;
-import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
+import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.EntityType;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
@@ -45,6 +47,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 @Slf4j
 public class NGPipelineServiceImpl implements NGPipelineService {
@@ -224,7 +227,7 @@ public class NGPipelineServiceImpl implements NGPipelineService {
                                                     .referredEntity(entity)
                                                     .referredByEntity(referredByEntity)
                                                     .build();
-      execute(entitySetupUsageClient.save(entitySetupUsageDTO));
+      getResponse(entitySetupUsageClient.save(entitySetupUsageDTO));
     }
   }
 
@@ -249,12 +252,12 @@ public class NGPipelineServiceImpl implements NGPipelineService {
                                                     .referredEntity(entity)
                                                     .referredByEntity(referredByEntity)
                                                     .build();
-      execute(entitySetupUsageClient.save(entitySetupUsageDTO));
+      getResponse(entitySetupUsageClient.save(entitySetupUsageDTO));
     }
 
     // removes entities present in the old version but not in the update
     for (EntityDetail entity : entitiesToRemove) {
-      execute(
+      getResponse(
           entitySetupUsageClient.delete(ngPipelineEntity.getAccountId(), entity.getEntityRef().getFullyQualifiedName(),
               entity.getType(), referredByEntity.getEntityRef().getFullyQualifiedName(), referredByEntity.getType()));
     }

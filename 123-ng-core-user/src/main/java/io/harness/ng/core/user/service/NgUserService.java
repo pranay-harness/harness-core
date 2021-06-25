@@ -59,7 +59,7 @@ public interface NgUserService {
 
   void addUserToScope(String user, Scope scope, String roleIdentifier, UserMembershipUpdateSource source);
 
-  void addUserToScope(UserInfo user, Scope scope, boolean postCreation, UserMembershipUpdateSource source);
+  void addUserToScope(String userId, Scope scope, boolean postCreation, UserMembershipUpdateSource source);
 
   void addUserToScope(
       String userId, Scope scope, List<RoleAssignmentDTO> roleAssignmentDTOs, UserMembershipUpdateSource source);

@@ -612,6 +612,10 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "imagePath"
+          ],
           "properties": {
             "connectorRef": {
               "type": "string"
@@ -654,6 +658,11 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "imagePath",
+            "region"
+          ],
           "properties": {
             "connectorRef": {
               "type": "string"
@@ -671,6 +680,20 @@
               "type": "string"
             }
           }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "tagRegex"
+              ]
+            },
+            {
+              "required": [
+                "tag"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -848,6 +871,11 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "imagePath",
+            "registryHostname"
+          ],
           "properties": {
             "connectorRef": {
               "type": "string"
@@ -868,6 +896,20 @@
               "type": "string"
             }
           }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "tagRegex"
+              ]
+            },
+            {
+              "required": [
+                "tag"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -3272,6 +3314,20 @@
             },
             {
               "required": [
+                "serviceDefinition"
+              ]
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "useFromStage"
+              ]
+            },
+            {
+              "required": [
                 "service"
               ]
             },
@@ -3294,8 +3350,7 @@
         "type": {
           "type": "string",
           "enum": [
-            "Kubernetes",
-            "NativeHelm"
+            "Kubernetes"
           ]
         }
       },
@@ -3500,6 +3555,10 @@
     },
     "ShellScriptSourceWrapper": {
       "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
       "properties": {
         "type": {
           "type": "string"
@@ -3613,6 +3672,8 @@
     "SidecarArtifact": {
       "type": "object",
       "required": [
+        "identifier",
+        "spec",
         "type"
       ],
       "properties": {

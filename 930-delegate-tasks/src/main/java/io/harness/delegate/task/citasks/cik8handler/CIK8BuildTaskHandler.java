@@ -124,7 +124,8 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
         cik8JavaClientHandler.createOrReplacePodWithRetries(kubernetesConfig, pod, namespace);
         Watch<V1Event> watch =
             k8EventHandler.startAsyncPodEventWatch(kubernetesConfig, namespace, podName, logStreamingTaskClient);
-        PodStatus podStatus = kubeCtlHandler.waitUntilPodIsReady(kubernetesClient, podName, namespace);
+        PodStatus podStatus = kubeCtlHandler.waitUntilPodIsReady(
+            kubernetesClient, podName, namespace, cik8BuildTaskParams.getPodMaxWaitUntilReadySecs());
         if (watch != null) {
           k8EventHandler.stopEventWatch(watch);
         }

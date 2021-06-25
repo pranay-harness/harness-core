@@ -53,7 +53,7 @@ public class PerpetualTaskLifecycleManager {
 
   void startTask() {
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeoutMillis), this::call);
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMillis(timeoutMillis), this::call);
     } catch (UncheckedTimeoutException tex) {
       log.warn("Timed out starting task", tex);
     } catch (Exception ex) {

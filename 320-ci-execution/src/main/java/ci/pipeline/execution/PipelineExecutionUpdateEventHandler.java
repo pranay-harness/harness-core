@@ -1,5 +1,7 @@
 package ci.pipeline.execution;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.pms.PmsCommonConstants.AUTO_ABORT_PIPELINE_THROUGH_TRIGGER;
 import static io.harness.pms.execution.utils.StatusUtils.isFinalStatus;
 import static io.harness.steps.StepUtils.buildAbstractions;
 
@@ -48,7 +50,11 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
       if (gitBuildStatusUtility.shouldSendStatus(level.getGroup())) {
         log.info("Received event with status {} to update git status for stage {}, planExecutionId {}", status,
             level.getIdentifier(), ambiance.getPlanExecutionId());
-        gitBuildStatusUtility.sendStatusToGit(status, event.getResolvedStepParameters(), ambiance, accountId);
+        if (isAutoAbortThroughTrigger(event)) {
+          log.info("Skipping updating Git status as execution was Auto aborted by trigger due to newer execution");
+        } else {
+          gitBuildStatusUtility.sendStatusToGit(status, event.getResolvedStepParameters(), ambiance, accountId);
+        }
       }
     } catch (Exception ex) {
       log.error("Failed to send git status update task for node {}, planExecutionId {}", level.getRuntimeId(),
@@ -83,6 +89,21 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
     } catch (Exception ex) {
       log.error("Failed to send cleanup call for node {}", level.getRuntimeId(), ex);
     }
+  }
+
+  // When trigger has "Auto Abort Prev Executions" ebanled, it will abort prev running execution and start a new one.
+  // e.g. pull_request  event for same PR
+  private boolean isAutoAbortThroughTrigger(OrchestrationEvent event) {
+    if (isEmpty(event.getTags())) {
+      return false;
+    }
+
+    boolean isAutoAbort = false;
+    if (event.getTags().contains(AUTO_ABORT_PIPELINE_THROUGH_TRIGGER)) {
+      isAutoAbort = true;
+    }
+
+    return isAutoAbort;
   }
 
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {

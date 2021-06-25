@@ -111,3 +111,8 @@ pmsGrpcClientConfig:
 shouldConfigureWithPMS: false
 
 portalUrl: https://localhost:8181/
+
+cacheConfig:
+  cacheBackend: NOOP
+  cacheNamespace: ""
+  disabledCaches: [ ]

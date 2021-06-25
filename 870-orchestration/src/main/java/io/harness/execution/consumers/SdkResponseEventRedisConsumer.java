@@ -9,6 +9,7 @@ import io.harness.pms.events.base.PmsAbstractRedisConsumer;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import javax.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -16,7 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 public class SdkResponseEventRedisConsumer extends PmsAbstractRedisConsumer<SdkResponseEventMessageListener> {
   @Inject
   public SdkResponseEventRedisConsumer(@Named(SDK_RESPONSE_EVENT_CONSUMER) Consumer redisConsumer,
-      SdkResponseEventMessageListener sdkResponseMessageListener) {
-    super(redisConsumer, sdkResponseMessageListener);
+      SdkResponseEventMessageListener sdkResponseMessageListener,
+      @Named("pmsEventsCache") Cache<String, Integer> eventsCache) {
+    super(redisConsumer, sdkResponseMessageListener, eventsCache);
   }
 }

@@ -1,6 +1,6 @@
 package io.harness.watcher.service;
 
-import static io.harness.concurrent.HTimeLimiter.callInterruptible;
+import static io.harness.concurrent.HTimeLimiter.callInterruptible21;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.DelegateConfiguration.Action.SELF_DESTRUCT;
@@ -895,7 +895,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void checkAccountStatus() {
     try {
-      RestResponse<String> restResponse = callInterruptible(timeLimiter, ofSeconds(5),
+      RestResponse<String> restResponse = callInterruptible21(timeLimiter, ofSeconds(5),
           () -> SafeHttpCall.execute(managerClient.getAccountStatus(watcherConfiguration.getAccountId())));
 
       if (restResponse == null) {
@@ -923,7 +923,7 @@ public class WatcherServiceImpl implements WatcherService {
   public List<String> findExpectedDelegateVersions() {
     try {
       if (multiVersion) {
-        RestResponse<DelegateConfiguration> restResponse = callInterruptible(timeLimiter, ofSeconds(30),
+        RestResponse<DelegateConfiguration> restResponse = callInterruptible21(timeLimiter, ofSeconds(30),
             () -> SafeHttpCall.execute(managerClient.getDelegateConfiguration(watcherConfiguration.getAccountId())));
 
         if (restResponse == null) {
@@ -969,10 +969,10 @@ public class WatcherServiceImpl implements WatcherService {
 
     RestResponse<DelegateScripts> restResponse = null;
     if (isBlank(delegateSize)) {
-      restResponse = callInterruptible(timeLimiter, ofMinutes(1),
+      restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           () -> SafeHttpCall.execute(managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version)));
     } else {
-      restResponse = callInterruptible(timeLimiter, ofMinutes(1),
+      restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
               -> SafeHttpCall.execute(
                   managerClient.getDelegateScriptsNg(watcherConfiguration.getAccountId(), version, delegateSize)));
@@ -1024,7 +1024,7 @@ public class WatcherServiceImpl implements WatcherService {
       return;
     }
 
-    RestResponse<String> restResponse = callInterruptible(timeLimiter, ofSeconds(30),
+    RestResponse<String> restResponse = callInterruptible21(timeLimiter, ofSeconds(30),
         ()
             -> SafeHttpCall.execute(
                 managerClient.getDelegateDownloadUrl(minorVersion, watcherConfiguration.getAccountId())));

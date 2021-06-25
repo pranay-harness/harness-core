@@ -44,7 +44,7 @@ public class DelegateCVTaskServiceImpl implements DelegateCVTaskService {
                                                     event.getAttemptCount(), event.getFailure()));
       Failsafe.with(retryPolicy)
           .run(()
-                   -> HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(TIMEOUT_DURATION_SEC),
+                   -> HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(TIMEOUT_DURATION_SEC),
                        ()
                            -> execute(
                                verificationClient.updateCVTaskStatus(accountId, cvTaskId, dataCollectionTaskResult))));

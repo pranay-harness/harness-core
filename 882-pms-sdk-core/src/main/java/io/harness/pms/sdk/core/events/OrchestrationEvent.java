@@ -16,6 +16,7 @@ import io.harness.queue.Queuable;
 import io.harness.queue.WithMonitoring;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -51,6 +52,7 @@ public class OrchestrationEvent extends Queuable implements WithMonitoring {
   @Setter @NonFinal @Version Long version;
   @Getter @Setter @NonFinal boolean monitoringEnabled;
   TriggerPayload triggerPayload;
+  List<String> tags;
 
   public AutoLogContext autoLogContext() {
     Map<String, String> logContext = AmbianceUtils.logContextMap(ambiance);

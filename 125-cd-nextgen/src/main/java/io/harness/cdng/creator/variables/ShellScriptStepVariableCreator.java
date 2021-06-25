@@ -3,6 +3,7 @@ package io.harness.cdng.creator.variables;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.pms.contracts.plan.YamlOutputProperties;
 import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.sdk.core.pipeline.variables.GenericStepVariableCreator;
 import io.harness.pms.sdk.core.pipeline.variables.VariableCreatorHelper;
@@ -24,7 +25,8 @@ public class ShellScriptStepVariableCreator extends GenericStepVariableCreator {
   }
 
   @Override
-  protected void addVariablesInComplexObject(Map<String, YamlProperties> yamlPropertiesMap, YamlNode yamlNode) {
+  protected void addVariablesInComplexObject(Map<String, YamlProperties> yamlPropertiesMap,
+      Map<String, YamlOutputProperties> yamlOutputPropertiesMap, YamlNode yamlNode) {
     List<String> complexFields = new ArrayList<>();
     complexFields.add(YamlTypes.SOURCE);
     complexFields.add(YamlTypes.EXECUTION_TARGET);

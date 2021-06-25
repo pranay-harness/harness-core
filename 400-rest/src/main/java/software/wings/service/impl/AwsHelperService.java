@@ -1081,7 +1081,7 @@ public class AwsHelperService {
       String region, String autoScalingGroupName, Integer desiredCount,
       ManagerExecutionLogCallback executionLogCallback, Integer autoScalingSteadyStateTimeout) {
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(autoScalingSteadyStateTimeout), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(autoScalingSteadyStateTimeout), () -> {
         AmazonAutoScalingClient amazonAutoScalingClient =
             getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
         Set<String> completedActivities = new HashSet<>();
