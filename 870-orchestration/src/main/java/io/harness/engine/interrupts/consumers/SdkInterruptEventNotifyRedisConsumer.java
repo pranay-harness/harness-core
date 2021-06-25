@@ -9,6 +9,7 @@ import io.harness.pms.events.base.PmsAbstractRedisConsumer;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import javax.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -17,7 +18,8 @@ public class SdkInterruptEventNotifyRedisConsumer
     extends PmsAbstractRedisConsumer<SdkInterruptEventNotifyMessageListener> {
   @Inject
   public SdkInterruptEventNotifyRedisConsumer(@Named(SDK_INTERRUPT_EVENT_NOTIFY_CONSUMER) Consumer redisConsumer,
-      SdkInterruptEventNotifyMessageListener messageListener) {
-    super(redisConsumer, messageListener);
+      SdkInterruptEventNotifyMessageListener messageListener,
+      @Named("pmsEventsCache") Cache<String, Integer> eventsCache) {
+    super(redisConsumer, messageListener, eventsCache);
   }
 }
