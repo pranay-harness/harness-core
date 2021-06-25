@@ -145,7 +145,7 @@ public class PipelineResourceTest extends CategoryTest {
   public void testCreatePipelineWithSchemaErrors() {
     doThrow(JsonSchemaValidationException.class)
         .when(pmsYamlSchemaService)
-        .validateYamlSchema(ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
+        .validateYamlSchema(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
 
     assertThatThrownBy(() -> pipelineResource.createPipeline(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, yaml))
         .isInstanceOf(JsonSchemaValidationException.class);
@@ -211,7 +211,7 @@ public class PipelineResourceTest extends CategoryTest {
   public void testUpdatePipelineWithSchemaErrors() {
     doThrow(JsonSchemaValidationException.class)
         .when(pmsYamlSchemaService)
-        .validateYamlSchema(ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
+        .validateYamlSchema(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, yaml);
 
     assertThatThrownBy(()
                            -> pipelineResource.updatePipeline(
