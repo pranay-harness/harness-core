@@ -33,16 +33,16 @@ public class PmsSdkCoreEventsFrameworkModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    RedisConfig redisConfig = this.eventsFrameworkConfiguration.getRedisConfig();
-    if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
-      bind(Producer.class)
-          .annotatedWith(Names.named(SDK_RESPONSE_EVENT_PRODUCER))
-          .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
-    } else {
-      bind(Producer.class)
-          .annotatedWith(Names.named(SDK_RESPONSE_EVENT_PRODUCER))
-          .toInstance(RedisProducer.of(PIPELINE_SDK_RESPONSE_EVENT_TOPIC, redisConfig,
-              EventsFrameworkConstants.PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE, serviceName));
-    }
+    //    RedisConfig redisConfig = this.eventsFrameworkConfiguration.getRedisConfig();
+    //    if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
+    //      bind(Producer.class)
+    //          .annotatedWith(Names.named(SDK_RESPONSE_EVENT_PRODUCER))
+    //          .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+    //    } else {
+    //      bind(Producer.class)
+    //          .annotatedWith(Names.named(SDK_RESPONSE_EVENT_PRODUCER))
+    //          .toInstance(RedisProducer.of(PIPELINE_SDK_RESPONSE_EVENT_TOPIC, redisConfig,
+    //              EventsFrameworkConstants.PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE, serviceName));
+    //    }
   }
 }

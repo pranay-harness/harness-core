@@ -38,11 +38,16 @@ public final class EventsFrameworkConstants {
   public static final int PIPELINE_ORCHESTRATION_EVENT_MAX_TOPIC_SIZE = 5000;
 
   public static final String PIPELINE_SDK_RESPONSE_EVENT_TOPIC = "pipeline_sdk_response";
+  public static final int PIPELINE_SDK_RESPONSE_BATCH_SIZE = 10;
   public static final int PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE = 5000;
 
   public static final String PIPELINE_INTERRUPT_TOPIC = "pipeline_interrupt";
   public static final int PIPELINE_INTERRUPT_BATCH_SIZE = 10;
   public static final int PIPELINE_INTERRUPT_EVENT_MAX_TOPIC_SIZE = 1000;
+
+  public static final String PIPELINE_SDK_INTERRUPT_TOPIC = "pipeline_sdk_interrupt";
+  public static final int PIPELINE_SDK_INTERRUPT_BATCH_SIZE = 10;
+  public static final int PIPELINE_SDK_INTERRUPT_EVENT_MAX_TOPIC_SIZE = 1000;
 
   public static final String PIPELINE_FACILITATOR_EVENT_TOPIC = "pipeline_node_facilitation";
   public static final int PIPELINE_FACILITATOR_EVENT_BATCH_SIZE = 10;

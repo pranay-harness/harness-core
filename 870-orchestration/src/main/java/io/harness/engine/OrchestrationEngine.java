@@ -182,7 +182,10 @@ public class OrchestrationEngine {
   private ExecutionCheck performPreFacilitationChecks(NodeExecution nodeExecution) {
     // Ignore facilitation checks if node is retried
     if (!nodeExecution.getRetryIds().isEmpty()) {
-      return ExecutionCheck.builder().proceed(true).reason("Node is retried.").build();
+      return ExecutionCheck.builder()
+          .proceed(true)
+          .reason("Node is retried - " + nodeExecution.getRetryIds().size() + " times.")
+          .build();
     }
     RunPreFacilitationChecker rChecker = injector.getInstance(RunPreFacilitationChecker.class);
     SkipPreFacilitationChecker sChecker = injector.getInstance(SkipPreFacilitationChecker.class);
