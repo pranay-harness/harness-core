@@ -8,7 +8,6 @@ import io.harness.ng.core.dto.secrets.SecretRequestWrapper;
 import io.harness.serializer.morphia.InvitesMorphiaRegistrar;
 import io.harness.serializer.morphia.MockRoleAssignmentMorphiaRegistrar;
 import io.harness.serializer.morphia.NGMorphiaRegistrars;
-import io.harness.serializer.morphia.NgAccessControlMigrationMorphiaRegistrar;
 import io.harness.serializer.morphia.NgUserGroupMorphiaRegistrar;
 import io.harness.serializer.morphia.NgUserMembershipMorphiaRegistrar;
 import io.harness.serializer.morphia.NgUserProfileMorphiaRegistrars;
@@ -41,7 +40,6 @@ public class NextGenRegistrars {
           .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
           .addAll(CDNGRegistrars.morphiaRegistrars)
           .add(NgUserGroupMorphiaRegistrar.class)
-          .add(NgAccessControlMigrationMorphiaRegistrar.class)
           .add(NgUserMembershipMorphiaRegistrar.class)
           .add(NgUserProfileMorphiaRegistrars.class)
           .add(WebhookMorphiaRegistrars.class)
