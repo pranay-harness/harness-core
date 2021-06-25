@@ -1,5 +1,10 @@
 package io.harness.pms.events.base;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(PIPELINE)
 public enum PmsEventCategory {
   INTERRUPT_EVENT,
   ORCHESTRATION_EVENT,

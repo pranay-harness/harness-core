@@ -26,6 +26,7 @@ import io.harness.pms.sdk.core.PmsSdkCoreConfig;
 import io.harness.redis.RedisConfig;
 import io.harness.utils.RetryUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -40,7 +41,6 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
@@ -48,7 +48,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 public class PipelineSdkEventSender {
   private static final RetryPolicy<Object> retryPolicy = RetryUtils.getRetryPolicy("Error Getting Producer..Retrying",
       "Failed to obtain producer", Collections.singletonList(ExecutionException.class), Duration.ofMillis(10), 3, log);
-  @Inject private MongoTemplate mongoTemplate;
   @Inject private PmsSdkCoreConfig pmsSdkCoreConfig;
 
   private final LoadingCache<PmsEventCategory, Producer> producerCache =
@@ -80,6 +79,7 @@ public class PipelineSdkEventSender {
     return messageId;
   }
 
+  @VisibleForTesting
   Producer obtainProducer(PmsEventCategory eventCategory) {
     Producer producer = Failsafe.with(retryPolicy).get(() -> producerCache.get(eventCategory));
     if (producer == null) {
@@ -88,6 +88,7 @@ public class PipelineSdkEventSender {
     return producer;
   }
 
+  @VisibleForTesting
   Producer createProducer(PmsEventCategory pmsEventCategory) {
     switch (pmsEventCategory) {
       case SDK_RESPONSE_EVENT:

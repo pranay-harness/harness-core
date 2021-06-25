@@ -2,6 +2,8 @@ package io.harness.pms.sdk.core.interrupt;
 
 import static io.harness.govern.Switch.noop;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.interrupts.InterruptEvent;
@@ -24,6 +26,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class InterruptEventHandler extends PmsBaseEventHandler<InterruptEvent> {
   @Inject private SdkInterruptEventNotifyPublisher interruptEventNotifyPublisher;
   @Inject private StepRegistry stepRegistry;

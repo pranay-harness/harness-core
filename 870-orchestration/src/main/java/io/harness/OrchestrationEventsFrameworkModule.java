@@ -8,6 +8,8 @@ import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_SDK_I
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_SDK_RESPONSE_BATCH_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_SDK_RESPONSE_EVENT_TOPIC;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
@@ -19,6 +21,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import java.time.Duration;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class OrchestrationEventsFrameworkModule extends AbstractModule {
   private final EventsFrameworkConfiguration eventsFrameworkConfiguration;
 
