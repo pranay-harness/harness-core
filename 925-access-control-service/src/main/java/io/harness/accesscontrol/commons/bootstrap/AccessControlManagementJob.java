@@ -22,7 +22,7 @@ public class AccessControlManagementJob {
   private final PermissionsManagementJob permissionsManagementJob;
   private final RolesManagementJob rolesManagementJob;
   private final PersistentLocker persistentLocker;
-  private final static String ACCESS_CONTROL_CONFIG_MANAGEMENT_LOCK = "ACCESS_CONTROL_CONFIG_MANAGEMENT_LOCK";
+  private static final String ACCESS_CONTROL_CONFIG_MANAGEMENT_LOCK = "ACCESS_CONTROL_CONFIG_MANAGEMENT_LOCK";
 
   @Inject
   public AccessControlManagementJob(ResourceTypeManagementJob resourceTypeManagementJob,
