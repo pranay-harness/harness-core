@@ -20,4 +20,5 @@ message OrchestrationEvent {
   io.harness.pms.contracts.execution.Status status = 6;
   string serviceName = 7;
   triggers.TriggerPayload triggerPayload = 8;
+  repeated string tags = 9;
 }

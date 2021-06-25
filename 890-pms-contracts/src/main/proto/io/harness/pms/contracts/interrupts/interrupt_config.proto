@@ -25,6 +25,7 @@ message IssuedBy {
     ManualIssuer manualIssuer = 3;
     AdviserIssuer adviserIssuer = 4;
     TimeoutIssuer timeoutIssuer = 5;
+    TriggerIssuer triggerIssuer = 6;
   }
 }
 
@@ -39,4 +40,9 @@ message AdviserIssuer {
 
 message TimeoutIssuer {
   string timeoutInstanceId = 1;
+}
+
+message TriggerIssuer {
+  string triggerRef = 1;
+  bool abortPrevConcurrentExecution = 2;
 }

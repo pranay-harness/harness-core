@@ -9,12 +9,15 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.helpers.ext.azure.AcrService;
+import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.AcrBuildService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.ArtifactType;
 
 import com.google.common.collect.Lists;
@@ -24,11 +27,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Singleton
+@Slf4j
 public class AcrBuildServiceImpl implements AcrBuildService {
   @Inject private AcrService acrService;
+  @Inject private AzureHelperService azureHelperService;
+  @Inject private EncryptionService encryptionService;
 
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
@@ -47,7 +54,32 @@ public class AcrBuildServiceImpl implements AcrBuildService {
   @Override
   public List<String> getArtifactPaths(
       String subscriptionId, String groupId, AzureConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    return acrService.listRegistries(config, encryptionDetails, subscriptionId);
+    return listContainerRegistryNames(config, encryptionDetails, subscriptionId);
+  }
+
+  @Override
+  public List<AzureContainerRegistry> listContainerRegistries(
+      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
+    log.info("[ACR Build Service] List registries for subscriptionId {}", subscriptionId);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
+    return azureHelperService.listContainerRegistries(azureConfig, subscriptionId);
+  }
+
+  @Override
+  public List<String> listContainerRegistryNames(
+      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
+    log.info("[ACR Build Service] List registry names for subscriptionId {}", subscriptionId);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
+    return acrService.listRegistries(azureConfig, subscriptionId);
+  }
+
+  @Override
+  public List<String> listRepositories(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
+      String subscriptionId, String registryName) {
+    log.info("[ACR Build Service] List Repositories with subscriptionId {} & registry name {}", subscriptionId,
+        registryName);
+    encryptionService.decrypt(azureConfig, encryptionDetails, false);
+    return azureHelperService.listRepositories(azureConfig, subscriptionId, registryName);
   }
 
   @Override
@@ -77,6 +109,7 @@ public class AcrBuildServiceImpl implements AcrBuildService {
   @Override
   public boolean validateArtifactSource(AzureConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
+    encryptionService.decrypt(config, encryptionDetails, false);
     return acrService.verifyImageName(config, encryptionDetails, artifactStreamAttributes);
   }
 

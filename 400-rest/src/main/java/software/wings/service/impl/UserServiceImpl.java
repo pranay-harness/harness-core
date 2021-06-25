@@ -2056,9 +2056,10 @@ public class UserServiceImpl implements UserService {
       Map<String, String> templateModel = getTemplateModel(user.getName(), resetPasswordUrl);
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
+      String templateName = isNGRequest ? "ng_reset_password" : "reset_password";
       EmailData emailData = EmailData.builder()
                                 .to(toList)
-                                .templateName("reset_password")
+                                .templateName(templateName)
                                 .templateModel(templateModel)
                                 .accountId(getPrimaryAccount(user).getUuid())
                                 .build();

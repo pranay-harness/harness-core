@@ -6,6 +6,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.transformers.RecastTransformer;
 
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 import org.bson.Document;
 import org.reflections.Reflections;
@@ -65,5 +67,13 @@ public class Recast {
 
   public Document toDocument(final Object entity) {
     return recaster.toDocument(entity);
+  }
+
+  public <T> T fromMap(final Map<String, Object> map, final Class<T> entityClazz) {
+    return recaster.fromMap(map, entityClazz);
+  }
+
+  public Map<String, Object> toMap(final Object entity) {
+    return new LinkedHashMap<>(recaster.toMap(entity));
   }
 }

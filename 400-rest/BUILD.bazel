@@ -10,6 +10,7 @@ shared_dependencies = [
 ] + [
     "//:lombok",
     "//420-delegate-service:module",
+    "//425-verification-commons:module",
     "//430-cv-nextgen-commons:module",
     "//450-ce-views:module",
     "//460-capability:module",
@@ -46,6 +47,7 @@ shared_dependencies = [
     "//960-continuous-features:module",
     "//960-ng-core-beans:module",
     "//960-notification-beans:module",
+    "//960-ng-license-beans:module",
     "//960-persistence:module",
     "//970-api-services-beans:module",
     "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
@@ -665,7 +667,7 @@ shared_dependencies = [
     "@maven//:xml_resolver_xml_resolver",
     "@maven//:xpp3_xpp3",
     "@maven//:io_harness_ff_java_server_sdk",
-    "@maven_harness//:io_harness_cv_data_collection_dsl",
+    "@maven//:io_harness_cv_data_collection_dsl",
 ]
 
 java_library(

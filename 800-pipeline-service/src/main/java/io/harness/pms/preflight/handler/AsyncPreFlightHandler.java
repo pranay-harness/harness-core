@@ -59,8 +59,8 @@ public class AsyncPreFlightHandler implements Runnable {
       List<ConnectorCheckResponse> connectorCheckResponses =
           preflightService.updateConnectorCheckResponses(entity.getAccountIdentifier(), entity.getOrgIdentifier(),
               entity.getProjectIdentifier(), entity.getUuid(), fqnToObjectMapMergedYaml, connectorUsages);
-      preflightService.updateStatus(
-          entity.getUuid(), PreflightCommonUtils.getOverallStatus(connectorCheckResponses), null);
+      preflightService.updateStatus(entity.getUuid(),
+          PreflightCommonUtils.getOverallStatus(connectorCheckResponses, entity.getPipelineInputResponse()), null);
     } catch (EventsFrameworkDownException e) {
       log.error("Error occurred while handling preflight check. Event Framework Down", e);
       preflightService.updateStatus(

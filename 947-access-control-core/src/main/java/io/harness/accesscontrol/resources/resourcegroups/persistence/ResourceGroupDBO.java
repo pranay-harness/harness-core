@@ -42,7 +42,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @ToString
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @FieldNameConstants(innerTypeName = "ResourceGroupDBOKeys")
 @Entity(value = "resourcegroups", noClassnameStored = true)
 @Document("resourcegroups")
@@ -50,18 +50,20 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @StoreIn(ACCESS_CONTROL)
 public class ResourceGroupDBO implements PersistentRegularIterable, AccessControlEntity {
   @Setter @Id @org.mongodb.morphia.annotations.Id String id;
-  @NotEmpty final String scopeIdentifier;
-  @NotEmpty final String identifier;
-  @NotEmpty final String name;
-  @NotNull final Set<String> resourceSelectors;
-  @NotNull @Builder.Default final Boolean fullScopeSelected = Boolean.FALSE;
-  @NotNull @Builder.Default final Boolean managed = Boolean.FALSE;
+  @EqualsAndHashCode.Include @NotEmpty final String scopeIdentifier;
+  @EqualsAndHashCode.Include @NotEmpty final String identifier;
+  @EqualsAndHashCode.Include @NotEmpty final String name;
+  @EqualsAndHashCode.Include @NotNull final Set<String> resourceSelectors;
+  @EqualsAndHashCode.Include @NotNull @Builder.Default final Boolean fullScopeSelected = Boolean.FALSE;
+  @EqualsAndHashCode.Include @NotNull @Builder.Default final Boolean managed = Boolean.FALSE;
 
   @Setter @CreatedDate Long createdAt;
   @Setter @LastModifiedDate Long lastModifiedAt;
   @Setter @CreatedBy EmbeddedUser createdBy;
   @Setter @LastModifiedBy EmbeddedUser lastUpdatedBy;
   @Setter @Version Long version;
+
+  @FdIndex @Setter Long nextReconciliationIterationAt;
 
   public boolean isFullScopeSelected() {
     return fullScopeSelected != null && fullScopeSelected;
@@ -70,8 +72,6 @@ public class ResourceGroupDBO implements PersistentRegularIterable, AccessContro
   public boolean isManaged() {
     return managed != null && managed;
   }
-
-  @FdIndex @Setter Long nextReconciliationIterationAt;
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

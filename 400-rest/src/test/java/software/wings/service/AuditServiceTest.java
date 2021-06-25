@@ -20,6 +20,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HFakeTimeLimiter;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -40,7 +41,6 @@ import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FileService;
 import software.wings.utils.WingsTestConstants;
 
-import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -69,7 +69,7 @@ public class AuditServiceTest extends WingsBaseTest {
 
   @Before
   public void setupMocks() {
-    on(auditService).set("timeLimiter", new FakeTimeLimiter());
+    on(auditService).set("timeLimiter", new HFakeTimeLimiter());
 
     Account account = anAccount()
                           .withUuid(accountId)

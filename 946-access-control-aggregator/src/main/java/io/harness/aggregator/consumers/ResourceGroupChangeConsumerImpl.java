@@ -58,6 +58,10 @@ public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceG
 
   @Override
   public void consumeUpdateEvent(String id, ResourceGroupDBO updatedResourceGroup) {
+    if (updatedResourceGroup.getResourceSelectors() == null && updatedResourceGroup.getFullScopeSelected() == null) {
+      return;
+    }
+
     Optional<ResourceGroupDBO> resourceGroup = resourceGroupRepository.findById(id);
     if (!resourceGroup.isPresent()) {
       return;

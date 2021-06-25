@@ -31,14 +31,18 @@ public class UserGroupDaoImpl implements UserGroupDao {
   @Override
   public UserGroup upsert(UserGroup userGroupUpdate) {
     UserGroupDBO userGroupDBOUpdate = toDBO(userGroupUpdate);
-    Optional<UserGroupDBO> userGroupDBO = userGroupRepository.findByIdentifierAndScopeIdentifier(
+    Optional<UserGroupDBO> userGroupDBOOpt = userGroupRepository.findByIdentifierAndScopeIdentifier(
         userGroupDBOUpdate.getIdentifier(), userGroupDBOUpdate.getScopeIdentifier());
-    if (userGroupDBO.isPresent()) {
-      userGroupDBOUpdate.setId(userGroupDBO.get().getId());
-      userGroupDBOUpdate.setVersion(userGroupDBO.get().getVersion());
-      userGroupDBOUpdate.setCreatedAt(userGroupDBO.get().getCreatedAt());
-      userGroupDBOUpdate.setLastModifiedAt(userGroupDBO.get().getCreatedAt());
-      userGroupDBOUpdate.setNextReconciliationIterationAt(userGroupDBO.get().getNextReconciliationIterationAt());
+    if (userGroupDBOOpt.isPresent()) {
+      UserGroupDBO userGroupDBO = userGroupDBOOpt.get();
+      if (userGroupDBO.equals(userGroupDBOUpdate)) {
+        return fromDBO(userGroupDBO);
+      }
+      userGroupDBOUpdate.setId(userGroupDBO.getId());
+      userGroupDBOUpdate.setVersion(userGroupDBO.getVersion());
+      userGroupDBOUpdate.setCreatedAt(userGroupDBO.getCreatedAt());
+      userGroupDBOUpdate.setLastModifiedAt(userGroupDBO.getCreatedAt());
+      userGroupDBOUpdate.setNextReconciliationIterationAt(userGroupDBO.getNextReconciliationIterationAt());
     }
     return fromDBO(userGroupRepository.save(userGroupDBOUpdate));
   }

@@ -358,6 +358,10 @@ public class CastedField {
     return document.get(field.getName());
   }
 
+  public Object getRecastedMapValue(final RecasterMap recasterMap) {
+    return recasterMap.get(field.getName());
+  }
+
   public String getNameToStore() {
     return field.getName();
   }

@@ -111,19 +111,25 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
   @Override
   public GitToHarnessProgressDTO initProgress(YamlChangeSetDTO yamlChangeSetDTO, YamlChangeSetEventType eventType,
       GitToHarnessProcessingStepType stepType, String commitId) {
-    GitToHarnessProgressDTO gitToHarnessProgress = GitToHarnessProgressDTO.builder()
-                                                       .accountIdentifier(yamlChangeSetDTO.getAccountId())
-                                                       .yamlChangeSetId(yamlChangeSetDTO.getChangesetId())
-                                                       .repoUrl(yamlChangeSetDTO.getRepoUrl())
-                                                       .branch(yamlChangeSetDTO.getBranch())
-                                                       .eventType(eventType)
-                                                       .stepType(stepType)
-                                                       .stepStatus(GitToHarnessProcessingStepStatus.TO_DO)
-                                                       .stepStartingTime(System.currentTimeMillis())
-                                                       .commitId(commitId)
-                                                       .gitToHarnessProgressStatus(GitToHarnessProgressStatus.TO_DO)
-                                                       .build();
-    return save(gitToHarnessProgress);
+    GitToHarnessProgress gitToHarnessProgress =
+        gitToHarnessProgressRepository.findByYamlChangeSetId(yamlChangeSetDTO.getChangesetId());
+    if (gitToHarnessProgress != null) {
+      return GitToHarnessProgressMapper.writeDTO(gitToHarnessProgress);
+    }
+    GitToHarnessProgressDTO gitToHarnessProgressToBeSaved =
+        GitToHarnessProgressDTO.builder()
+            .accountIdentifier(yamlChangeSetDTO.getAccountId())
+            .yamlChangeSetId(yamlChangeSetDTO.getChangesetId())
+            .repoUrl(yamlChangeSetDTO.getRepoUrl())
+            .branch(yamlChangeSetDTO.getBranch())
+            .eventType(eventType)
+            .stepType(stepType)
+            .stepStatus(GitToHarnessProcessingStepStatus.TO_DO)
+            .stepStartingTime(System.currentTimeMillis())
+            .commitId(commitId)
+            .gitToHarnessProgressStatus(GitToHarnessProgressStatus.TO_DO)
+            .build();
+    return save(gitToHarnessProgressToBeSaved);
   }
 
   @Override
