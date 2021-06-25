@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.GTM;
 import static io.harness.rule.OwnerRule.NATHAN;
 import static io.harness.rule.OwnerRule.ZHUO;
 import static io.harness.signup.services.impl.SignupServiceImpl.FAILED_EVENT_NAME;
-import static io.harness.signup.services.impl.SignupServiceImpl.SUCCEED_EVENT_NAME;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -113,9 +112,6 @@ public class SignupServiceImplTest extends CategoryTest {
     UserInfo returnedUser = signupServiceImpl.signup(signupDTO, null);
 
     verify(reCaptchaVerifier, times(1)).verifyInvisibleCaptcha(anyString());
-    verify(telemetryReporter, times(1))
-        .sendTrackEvent(
-            eq(SUCCEED_EVENT_NAME), eq(EMAIL), eq(ACCOUNT_ID), any(), any(), eq(io.harness.telemetry.Category.SIGN_UP));
     verify(telemetryReporter, times(1)).sendIdentifyEvent(eq(EMAIL), any(), any());
     verify(executorService, times(1));
     assertThat(returnedUser.getEmail()).isEqualTo(newUser.getEmail());
@@ -144,9 +140,6 @@ public class SignupServiceImplTest extends CategoryTest {
 
     UserInfo returnedUser = signupServiceImpl.oAuthSignup(oAuthSignupDTO);
 
-    verify(telemetryReporter, times(1))
-        .sendTrackEvent(
-            eq(SUCCEED_EVENT_NAME), eq(EMAIL), eq(ACCOUNT_ID), any(), any(), eq(io.harness.telemetry.Category.SIGN_UP));
     verify(telemetryReporter, times(1)).sendIdentifyEvent(eq(EMAIL), any(), any());
     verify(executorService, times(1));
     assertThat(returnedUser.getEmail()).isEqualTo(newUser.getEmail());

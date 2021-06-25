@@ -497,7 +497,6 @@ mlExperiments {"name": "createdAt_1", "background": true} {"createdAt": 1}
 mlExperiments {"name": "unique_experiment", "unique": true} {"ml_analysis_type": 1, "experimentName": 1}
 mockRoleAssignments {"name": "uniqueMockRoleAssignment", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "roleAssignment.roleIdentifier": 1, "roleAssignment.resourceGroupIdentifier": 1, "roleAssignment.resourceGroupIdentifier.identifier": 1, "roleAssignment.resourceGroupIdentifier.type": 1}
 moduleLicenses {"name": "accountIdentifier_moduleLicense_query_index", "background": true} {"accountIdentifier": 1}
-moduleLicenses {"name": "unique_accountIdentifier_modulytype_index", "unique": true} {"accountIdentifier": 1, "moduleType": 1}
 newRelicMetricAnalysisRecords {"name": "accountId_1", "background": true} {"accountId": 1}
 newRelicMetricAnalysisRecords {"name": "appId_1", "background": true} {"appId": 1}
 newRelicMetricAnalysisRecords {"name": "createdAt_1", "background": true} {"createdAt": 1}

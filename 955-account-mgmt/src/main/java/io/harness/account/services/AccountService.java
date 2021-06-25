@@ -13,4 +13,5 @@ public interface AccountService {
   AccountDTO createAccount(SignupDTO dto) throws WingsException;
   Boolean updateDefaultExperienceIfApplicable(String accountId, DefaultExperience defaultExperience);
   String getBaseUrl(String accountId, String defaultUrl);
+  AccountDTO getAccount(String accountId);
 }
