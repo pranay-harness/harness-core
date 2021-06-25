@@ -16,4 +16,6 @@ public interface PMSYamlSchemaService {
   void validateYamlSchema(String accountId, String orgId, String projectId, String yaml);
 
   void validateUniqueFqn(String yaml) throws IOException;
+
+  void invalidateAllCache();
 }

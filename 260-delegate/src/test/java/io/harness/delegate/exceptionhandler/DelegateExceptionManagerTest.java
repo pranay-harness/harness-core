@@ -10,6 +10,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.GeneralException;
@@ -24,6 +26,7 @@ import io.harness.rule.Owner;
 
 import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
 import com.google.inject.Inject;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -184,6 +187,26 @@ public class DelegateExceptionManagerTest extends DelegateTestBase {
     assertThat(errorNotifyResponseData.getException() instanceof GeneralException).isTrue();
     assertThat(errorNotifyResponseData.getException().getMessage().equals(errorMessage)).isTrue();
     assertThat(errorNotifyResponseData.getException().getCause()).isNull();
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testNPEWithNoMessage() {
+    NullPointerException exception = new NullPointerException();
+    List<ResponseMessage> errorMessageList = exceptionManager.buildResponseFromException(exception);
+    assertThat(errorMessageList).isNotNull();
+    assertThat(errorMessageList.get(0).getCode().equals(ErrorCode.GENERAL_ERROR)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testUnhandledExceptionWithNoMessage() {
+    RuntimeException exception = new RuntimeException();
+    List<ResponseMessage> errorMessageList = exceptionManager.buildResponseFromException(exception);
+    assertThat(errorMessageList).isNotNull();
+    assertThat(errorMessageList.get(0).getCode().equals(ErrorCode.GENERAL_ERROR)).isTrue();
   }
 
   @Test

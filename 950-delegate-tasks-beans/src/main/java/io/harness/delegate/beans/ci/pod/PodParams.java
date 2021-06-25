@@ -23,6 +23,7 @@ public abstract class PodParams<T extends ContainerParams> implements NestedAnno
   private List<PVCParams> pvcParamList;
   private List<HostAliasParams> hostAliasParamsList;
   private Integer runAsUser;
+  private String serviceAccountName;
 
   public abstract PodParams.Type getType();
 

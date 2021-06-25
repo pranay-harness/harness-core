@@ -17,8 +17,8 @@ import java.util.List;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class TriggerExpressionEvaluator extends EngineExpressionEvaluator {
-  private final Ambiance ambiance;
   private final String payload;
+  private final TriggerPayload triggerPayload;
 
   public TriggerExpressionEvaluator(
       ParseWebhookResponse parseWebhookResponse, List<HeaderConfig> headerConfigs, String payload) {
@@ -38,14 +38,13 @@ public class TriggerExpressionEvaluator extends EngineExpressionEvaluator {
         }
       }
     }
-    this.ambiance = Ambiance.newBuilder()
-                        .setMetadata(ExecutionMetadata.newBuilder().setTriggerPayload(builder.build()).build())
-                        .build();
+    this.triggerPayload = builder.build();
+    Ambiance.newBuilder().setMetadata(ExecutionMetadata.newBuilder().build()).build();
     this.payload = payload;
   }
   @Override
   protected void initialize() {
-    addToContext(SetupAbstractionKeys.trigger, new TriggerPayloadFunctor(ambiance, payload));
+    addToContext(SetupAbstractionKeys.trigger, new TriggerPayloadFunctor(payload, triggerPayload));
     addToContext(SetupAbstractionKeys.eventPayload, new PayloadFunctor(payload));
   }
 }

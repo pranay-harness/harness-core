@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.manifest.ManifestStoreType;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 import io.harness.filters.ConnectorRefExtractorHelper;
 import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
@@ -29,7 +30,8 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(ManifestStoreType.S3)
 @SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("s3Store")
-public class S3StoreConfig implements StoreConfig, Visitable, WithConnectorRef {
+public class S3StoreConfig
+    implements io.harness.cdng.manifest.yaml.storeConfig.StoreConfig, Visitable, WithConnectorRef {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> connectorRef;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> bucketName;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> region;
@@ -41,7 +43,7 @@ public class S3StoreConfig implements StoreConfig, Visitable, WithConnectorRef {
   }
 
   @Override
-  public StoreConfig cloneInternal() {
+  public io.harness.cdng.manifest.yaml.storeConfig.StoreConfig cloneInternal() {
     return S3StoreConfig.builder()
         .connectorRef(connectorRef)
         .bucketName(bucketName)
@@ -51,7 +53,7 @@ public class S3StoreConfig implements StoreConfig, Visitable, WithConnectorRef {
   }
 
   @Override
-  public StoreConfig applyOverrides(StoreConfig overrideConfig) {
+  public io.harness.cdng.manifest.yaml.storeConfig.StoreConfig applyOverrides(StoreConfig overrideConfig) {
     S3StoreConfig s3StoreConfig = (S3StoreConfig) overrideConfig;
     S3StoreConfig resultantS3Store = this;
     if (!ParameterField.isNull(s3StoreConfig.getConnectorRef())) {

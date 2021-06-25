@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -111,6 +112,12 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
   @Override
   public Connector save(Connector objectToSave, ConnectorDTO connectorDTO, ChangeType changeType) {
     return gitAwarePersistence.save(objectToSave, NGYamlUtils.getYamlString(connectorDTO), changeType, Connector.class);
+  }
+
+  @Override
+  public Connector save(Connector objectToSave, ConnectorDTO connectorDTO, ChangeType changeType, Supplier functor) {
+    return gitAwarePersistence.save(
+        objectToSave, NGYamlUtils.getYamlString(connectorDTO), changeType, Connector.class, functor);
   }
 
   @Override

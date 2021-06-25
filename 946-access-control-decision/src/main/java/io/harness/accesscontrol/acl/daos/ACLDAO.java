@@ -11,11 +11,9 @@ import java.util.List;
 
 @OwnedBy(PL)
 public interface ACLDAO {
-  List<ACL> get(Principal principal, List<PermissionCheckDTO> permissionsRequired);
+  List<Boolean> checkForAccess(Principal principal, List<PermissionCheckDTO> permissionsRequired);
 
   long saveAll(List<ACL> acls);
-
-  void deleteAll(List<ACL> acls);
 
   long deleteByRoleAssignment(String roleAssignmentId);
 

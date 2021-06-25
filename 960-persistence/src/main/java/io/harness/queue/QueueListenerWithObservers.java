@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.observer.Subject;
 
+import java.util.HashMap;
 import lombok.Getter;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -16,11 +17,14 @@ public abstract class QueueListenerWithObservers<T extends Queuable> extends Que
 
   @Override
   public void onMessage(T message) {
-    eventListenerObserverSubject.fireInform(EventListenerObxxxxxxxx:onListenerStart, message);
+    eventListenerObserverSubject.fireInform((eventListenerObserver1, message2)
+                                                -> eventListenerObserver1.onListenerStart(message2, new HashMap<>()),
+        message);
     try {
       onMessageInternal(message);
     } finally {
-      eventListenerObserverSubject.fireInform(EventListenerObxxxxxxxx:onListenerEnd, message);
+      eventListenerObserverSubject.fireInform(
+          (eventListenerObserver, message1) -> eventListenerObserver.onListenerEnd(message1, new HashMap<>()), message);
     }
   }
 

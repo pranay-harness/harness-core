@@ -63,7 +63,7 @@ func HandleSummary(adb db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		st := time.Now()
-		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, reportParam)
+		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, reportParam, stepIdParam, stageIdParam)
 		if err != nil {
 			WriteInternalError(w, err)
 			return
@@ -75,10 +75,12 @@ func HandleSummary(adb db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 		pipelineId := r.FormValue(pipelineIdParam)
 		buildId := r.FormValue(buildIdParam)
 		report := r.FormValue(reportParam)
+		stageId := r.FormValue(stageIdParam)
+		stepId := r.FormValue(stepIdParam)
 
 		var resp types.SummaryResponse
 
-		resp, err = adb.Summary(ctx, accountId, orgId, projectId, pipelineId, buildId, report)
+		resp, err = adb.Summary(ctx, accountId, orgId, projectId, pipelineId, buildId, stepId, stageId, report)
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: cannot get summary from DB", "account_id", accountId, "org_id", orgId,
@@ -97,7 +99,7 @@ func HandleTestCases(adb db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		st := time.Now()
-		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, suiteNameParam, reportParam)
+		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, stepIdParam, stageIdParam, suiteNameParam, reportParam)
 		if err != nil {
 			WriteInternalError(w, err)
 			return
@@ -115,6 +117,8 @@ func HandleTestCases(adb db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 		pageIndex := r.FormValue(pageIndexParam)
 		order := r.FormValue(orderParam)
 		report := r.FormValue(reportParam)
+		stageId := r.FormValue(stageIdParam)
+		stepId := r.FormValue(stepIdParam)
 
 		if pageSize == "" {
 			pageSize = "10"
@@ -137,7 +141,7 @@ func HandleTestCases(adb db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 		}
 
 		resp, err := adb.GetTestCases(ctx, accountId, orgId, projectId, pipelineId,
-			buildId, report, suite, sort, status, order, pageSize, strconv.Itoa(pi*ps))
+			buildId, stepId, stageId, report, suite, sort, status, order, pageSize, strconv.Itoa(pi*ps))
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: cannot get test cases from DB", "account_id", accountId, "org_id", orgId,
@@ -156,7 +160,7 @@ func HandleTestSuites(adb db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		st := time.Now()
-		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, reportParam)
+		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, reportParam, stepIdParam, stageIdParam)
 		if err != nil {
 			WriteInternalError(w, err)
 			return
@@ -173,6 +177,8 @@ func HandleTestSuites(adb db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 		pageIndex := r.FormValue(pageIndexParam)
 		order := r.FormValue(orderParam)
 		report := r.FormValue(reportParam)
+		stageId := r.FormValue(stageIdParam)
+		stepId := r.FormValue(stepIdParam)
 
 		if pageSize == "" {
 			pageSize = defaultPageSize
@@ -195,7 +201,7 @@ func HandleTestSuites(adb db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 		}
 
 		resp, err := adb.GetTestSuites(ctx, accountId, orgId, projectId, pipelineId,
-			buildId, report, sort, status, order, pageSize, strconv.Itoa(pi*ps))
+			buildId, stepId, stageId, report, sort, status, order, pageSize, strconv.Itoa(pi*ps))
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: cannot get test suite information from DB", "account_id", accountId, "org_id", orgId,

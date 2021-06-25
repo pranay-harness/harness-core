@@ -1,8 +1,11 @@
 package software.wings.helpers.ext.artifactory;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.artifactory.ArtifactoryClientImpl.getArtifactoryClient;
+import static io.harness.artifactory.ArtifactoryClientImpl.getBaseUrl;
+import static io.harness.artifactory.ArtifactoryClientImpl.handleAndRethrow;
+import static io.harness.artifactory.ArtifactoryClientImpl.handleErrorResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
@@ -26,8 +29,6 @@ import io.harness.artifactory.ArtifactoryConfigRequest;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ArtifactoryServerException;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
 import io.harness.network.Http;
 
@@ -37,10 +38,8 @@ import software.wings.common.AlphanumComparator;
 import software.wings.common.BuildDetailsComparatorAscending;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryType;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.InputStream;
@@ -56,13 +55,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpHost;
-import org.apache.http.client.HttpResponseException;
 import org.jfrog.artifactory.client.Artifactory;
 import org.jfrog.artifactory.client.ArtifactoryClientBuilder;
 import org.jfrog.artifactory.client.ArtifactoryRequest;
@@ -91,16 +88,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   @Override
   public Map<String, String> getRepositories(ArtifactoryConfigRequest artifactoryConfig) {
     return getRepositories(artifactoryConfig, Collections.singletonList(docker));
-  }
-
-  @Override
-  public Map<String, String> getRepositories(ArtifactoryConfigRequest artifactoryConfig, ArtifactType artifactType) {
-    switch (artifactType) {
-      case DOCKER:
-        return getRepositories(artifactoryConfig);
-      default:
-        return getRepositories(artifactoryConfig, "");
-    }
   }
 
   @Override
@@ -564,39 +551,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     return null;
   }
 
-  /**
-   * Get Artifactory Client
-   *
-   * @param artifactoryConfig
-   * @return Artifactory returns artifactory client
-   */
-
-  @VisibleForTesting
-  Artifactory getArtifactoryClient(ArtifactoryConfigRequest artifactoryConfig) {
-    ArtifactoryClientBuilder builder = ArtifactoryClientBuilder.create();
-    try {
-      builder.setUrl(getBaseUrl(artifactoryConfig));
-      if (artifactoryConfig.isHasCredentials()) {
-        if (isEmpty(artifactoryConfig.getPassword())) {
-          throw new ArtifactoryServerException(
-              "Password is a required field along with Username", ErrorCode.INVALID_ARTIFACT_SERVER, USER);
-        }
-        builder.setUsername(artifactoryConfig.getUsername());
-        builder.setPassword(new String(artifactoryConfig.getPassword()));
-      } else {
-        log.info("Username is not set for artifactory config {} . Will use anonymous access.",
-            artifactoryConfig.getArtifactoryUrl());
-      }
-
-      checkIfUseProxyAndAppendConfig(builder, artifactoryConfig);
-      builder.setSocketTimeout(30000);
-      builder.setConnectionTimeout(30000);
-    } catch (Exception ex) {
-      handleAndRethrow(ex, USER);
-    }
-    return builder.build();
-  }
-
   protected void checkIfUseProxyAndAppendConfig(
       ArtifactoryClientBuilder builder, ArtifactoryConfigRequest artifactoryConfig) {
     HttpHost httpProxyHost = Http.getHttpProxyHost(artifactoryConfig.getArtifactoryUrl());
@@ -604,27 +558,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       builder.setProxy(new ProxyConfig(httpProxyHost.getHostName(), httpProxyHost.getPort(), Http.getProxyScheme(),
           Http.getProxyUserName(), Http.getProxyPassword()));
     }
-  }
-
-  private String getBaseUrl(ArtifactoryConfigRequest artifactoryConfig) {
-    return artifactoryConfig.getArtifactoryUrl().endsWith("/") ? artifactoryConfig.getArtifactoryUrl()
-                                                               : artifactoryConfig.getArtifactoryUrl() + "/";
-  }
-
-  private void handleAndRethrow(Exception e, EnumSet<ReportTarget> reportTargets) {
-    if (e instanceof HttpResponseException) {
-      throw new ArtifactoryServerException(e.getMessage(), ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets);
-    }
-    if (e instanceof SocketTimeoutException) {
-      String serverMayNotBeRunningMessaage = e.getMessage() + "."
-          + "SocketTimeout: Artifactory server may not be running";
-      throw new ArtifactoryServerException(
-          serverMayNotBeRunningMessaage, ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets);
-    }
-    if (e instanceof WingsException) {
-      throw(WingsException) e;
-    }
-    throw new ArtifactoryServerException(ExceptionUtils.getMessage(e), ARTIFACT_SERVER_ERROR, reportTargets, e);
   }
 
   @Override
@@ -654,45 +587,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     return 0L;
   }
 
-  @Override
-  public boolean isRunning(ArtifactoryConfigRequest artifactoryConfig) {
-    log.info("Validating artifactory server");
-    Artifactory artifactory = getArtifactoryClient(artifactoryConfig);
-    ArtifactoryRequest repositoryRequest =
-        new ArtifactoryRequestImpl().apiUrl("api/repositories/").method(GET).responseType(JSON);
-    try {
-      ArtifactoryResponse artifactoryResponse = artifactory.restCall(repositoryRequest);
-      handleErrorResponse(artifactoryResponse);
-      log.info("Validating artifactory server success");
-    } catch (RuntimeException e) {
-      log.error("Runtime exception occurred while validating artifactory", e);
-      handleAndRethrow(e, USER);
-    } catch (SocketTimeoutException e) {
-      log.error("Exception occurred while validating artifactory", e);
-      return true;
-    } catch (Exception e) {
-      log.error("Exception occurred while validating artifactory", e);
-      handleAndRethrow(e, USER);
-    }
-    return true;
-  }
-
-  private void handleErrorResponse(ArtifactoryResponse artifactoryResponse) throws java.io.IOException {
-    if (!artifactoryResponse.isSuccessResponse()) {
-      if (artifactoryResponse.getStatusLine().getStatusCode() == 407) {
-        throw new InvalidRequestException(artifactoryResponse.getStatusLine().getReasonPhrase());
-      }
-      ArtifactoryErrorResponse errorResponse = artifactoryResponse.parseBody(ArtifactoryErrorResponse.class);
-      String errorMessage =
-          "Request to server failed with status code: " + artifactoryResponse.getStatusLine().getStatusCode();
-      if (isNotEmpty(errorResponse.getErrors())) {
-        errorMessage +=
-            " with message - " + errorResponse.getErrors().stream().map(ArtifactoryError::getMessage).findFirst().get();
-      }
-      throw new ArtifactoryServerException(errorMessage, ErrorCode.INVALID_ARTIFACT_SERVER, USER);
-    }
-  }
-
   private List<BuildDetails> getBuildDetails(ArtifactoryConfigRequest artifactoryConfig, Artifactory artifactory,
       String repositoryName, String artifactPath, int maxVersions) {
     List<String> artifactPaths = getFilePathsForAnonymousUser(artifactory, repositoryName, artifactPath, maxVersions);
@@ -706,16 +600,5 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                        "Build# " + constructBuildNumber(artifactPath, path.substring(path.indexOf('/') + 1)))
                    .build())
         .collect(toList());
-  }
-
-  @Data
-  public static class ArtifactoryErrorResponse {
-    List<ArtifactoryError> errors;
-  }
-
-  @Data
-  public static class ArtifactoryError {
-    String message;
-    int status;
   }
 }

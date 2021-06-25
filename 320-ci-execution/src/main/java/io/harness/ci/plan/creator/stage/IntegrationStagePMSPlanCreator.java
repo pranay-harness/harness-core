@@ -27,7 +27,6 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
-import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.contracts.steps.StepType;
@@ -175,7 +174,6 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
   private BuildStatusUpdateParameter obtainBuildStatusUpdateParameter(
       PlanCreationContext ctx, StageElementConfig stageElementConfig) {
     PlanCreationContextValue planCreationContextValue = ctx.getGlobalContext().get("metadata");
-    ExecutionMetadata executionMetadata = planCreationContextValue.getMetadata();
 
     CodeBase codeBase = getCICodebase(ctx);
 
@@ -185,7 +183,7 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
     }
 
     ExecutionSource executionSource = IntegrationStageUtils.buildExecutionSource(
-        executionMetadata, stageElementConfig.getIdentifier(), codeBase.getBuild());
+        planCreationContextValue, stageElementConfig.getIdentifier(), codeBase.getBuild());
 
     if (executionSource != null && executionSource.getType() == ExecutionSource.Type.WEBHOOK) {
       String sha = retrieveLastCommitSha((WebhookExecutionSource) executionSource);

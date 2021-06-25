@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
-import io.harness.gitsync.common.beans.GitToHarnessProgress;
 import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
 
 import java.util.List;
@@ -22,5 +21,5 @@ public class GitToHarnessProcessMsvcStepRequest {
   YamlGitConfigDTO yamlGitConfigDTO;
   List<GitFileChangeDTO> gitFileChangeDTOList;
   List<GitDiffResultFileDTO> gitDiffResultFileDTOList;
-  GitToHarnessProgress progressRecord;
+  GitToHarnessProgressDTO progressRecord;
 }

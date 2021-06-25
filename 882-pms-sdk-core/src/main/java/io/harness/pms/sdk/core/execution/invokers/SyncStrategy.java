@@ -5,10 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutableResponse;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.SyncExecutableResponse;
-import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
@@ -31,17 +29,15 @@ public class SyncStrategy implements ExecuteStrategy {
 
   @Override
   public void start(InvokerPackage invokerPackage) {
-    NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
-    Ambiance ambiance = nodeExecution.getAmbiance();
-    SyncExecutable syncExecutable = extractStep(nodeExecution);
-    StepResponse stepResponse =
-        syncExecutable.executeSync(ambiance, sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution),
-            invokerPackage.getInputPackage(), invokerPackage.getPassThroughData());
-    sdkNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.NO_OP,
+    Ambiance ambiance = invokerPackage.getAmbiance();
+    SyncExecutable syncExecutable = extractStep(ambiance);
+    StepResponse stepResponse = syncExecutable.executeSync(ambiance, invokerPackage.getStepParameters(),
+        invokerPackage.getInputPackage(), invokerPackage.getPassThroughData());
+    sdkNodeExecutionService.addExecutableResponse(AmbianceUtils.obtainCurrentRuntimeId(ambiance), Status.NO_OP,
         ExecutableResponse.newBuilder()
             .setSync(SyncExecutableResponse.newBuilder()
-                         .addAllLogKeys(syncExecutable.getLogKeys(nodeExecution.getAmbiance()))
-                         .addAllUnits(syncExecutable.getCommandUnits(nodeExecution.getAmbiance()))
+                         .addAllLogKeys(syncExecutable.getLogKeys(ambiance))
+                         .addAllUnits(syncExecutable.getCommandUnits(ambiance))
                          .build())
             .build(),
         new ArrayList<>());
@@ -50,8 +46,7 @@ public class SyncStrategy implements ExecuteStrategy {
   }
 
   @Override
-  public SyncExecutable extractStep(NodeExecutionProto nodeExecution) {
-    PlanNodeProto node = nodeExecution.getNode();
-    return (SyncExecutable) stepRegistry.obtain(node.getStepType());
+  public SyncExecutable extractStep(Ambiance ambiance) {
+    return (SyncExecutable) stepRegistry.obtain(AmbianceUtils.getCurrentStepType(ambiance));
   }
 }

@@ -1,27 +1,34 @@
 package io.harness.pms.sdk;
 
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_FACILITATOR_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_INTERRUPT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_ADVISE_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_RESUME_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_START_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_EVENT_TOPIC;
+
 import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.eventsframework.EventsFrameworkConfiguration;
+import io.harness.exception.InvalidRequestException;
 import io.harness.metrics.jobs.RecordMetricsJob;
 import io.harness.metrics.service.api.MetricService;
-import io.harness.monitoring.MonitoringEventObserver;
 import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.plan.InitializeSdkRequest;
 import io.harness.pms.contracts.plan.PmsServiceGrpc;
+import io.harness.pms.contracts.plan.Redis;
 import io.harness.pms.contracts.plan.SdkModuleInfo;
 import io.harness.pms.contracts.plan.Types;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.execution.events.node.NodeExecutionEventListener;
-import io.harness.pms.sdk.core.execution.events.orchestration.SdkOrchestrationEventListener;
-import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
+import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
-import io.harness.pms.utils.PmsConstants;
-import io.harness.queue.QueueListenerController;
+import io.harness.redis.RedisConfig;
 
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Injector;
@@ -83,15 +90,8 @@ public class PmsSdkInitHelper {
           injector.getInstance(Key.get(ServiceManager.class, Names.named("pmsSDKServiceManager"))).startAsync();
       serviceManager.awaitHealthy();
       Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
-
-      PipelineServiceInfoProvider pipelineServiceInfoProvider = config.getPipelineServiceInfoProviderClass() == null
-          ? null
-          : injector.getInstance(config.getPipelineServiceInfoProviderClass());
-      registerSdk(pipelineServiceInfoProvider, config.getModuleType(), injector, config.getInterruptConsumerConfig(),
-          config.getOrchestrationEventConsumerConfig());
+      registerSdk(injector, config);
     }
-    registerQueueListeners(injector);
-    registerObserversForEvents(injector);
   }
 
   private static void initializeMetrics(Injector injector) {
@@ -99,43 +99,12 @@ public class PmsSdkInitHelper {
     injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
   }
 
-  private static void registerObserversForEvents(Injector injector) {
-    NodeExecutionEventListener nodeExecutionEventListener = injector.getInstance(NodeExecutionEventListener.class);
-    nodeExecutionEventListener.getEventListenerObserverSubject().register(
-        injector.getInstance(Key.get(MonitoringEventObserver.class)));
-    SdkOrchestrationEventListener sdkOrchestrationEventListener =
-        injector.getInstance(SdkOrchestrationEventListener.class);
-    sdkOrchestrationEventListener.getEventListenerObserverSubject().register(
-        injector.getInstance(Key.get(MonitoringEventObserver.class)));
-  }
-
-  private static void registerQueueListeners(Injector injector) {
-    QueueListenerController queueListenerController = injector.getInstance(Key.get(QueueListenerController.class));
-    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 3);
-    queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 2);
-    queueListenerController.register(injector.getInstance(InterruptEventListener.class), 1);
-  }
-
-  private static void registerSdk(PipelineServiceInfoProvider pipelineServiceInfoProvider, ModuleType moduleType,
-      Injector injector, ConsumerConfig interruptConsumerConfig, ConsumerConfig orchestrationEventConsumerConfig) {
+  private static void registerSdk(Injector injector, PmsSdkConfiguration sdkConfiguration) {
     try {
-      StepRegistry stepRegistry = injector.getInstance(StepRegistry.class);
-      Map<StepType, Step> registry = stepRegistry.getRegistry();
-      List<StepType> stepTypes = registry == null ? Collections.emptyList() : new ArrayList<>(registry.keySet());
-      String serviceName = moduleType == null ? PmsConstants.INTERNAL_SERVICE_NAME : moduleType.name().toLowerCase();
-      String displayName = moduleType == null ? PmsConstants.INTERNAL_SERVICE_NAME : moduleType.getDisplayName();
       PmsServiceGrpc.PmsServiceBlockingStub pmsClient =
           injector.getInstance(PmsServiceGrpc.PmsServiceBlockingStub.class);
-      pmsClient.initializeSdk(
-          InitializeSdkRequest.newBuilder()
-              .setName(serviceName)
-              .putAllSupportedTypes(PmsSdkInitHelper.calculateSupportedTypes(pipelineServiceInfoProvider))
-              .addAllSupportedSteps(pipelineServiceInfoProvider.getStepInfo())
-              .addAllSupportedStepTypes(stepTypes)
-              .setInterruptConsumerConfig(interruptConsumerConfig)
-              .setOrchestrationEventConsumerConfig(orchestrationEventConsumerConfig)
-              .setSdkModuleInfo(SdkModuleInfo.newBuilder().setDisplayName(displayName).build())
-              .build());
+      pmsClient.initializeSdk(buildInitializeSdkRequest(injector, sdkConfiguration));
+      log.info("Sdk Initialized for module {} Successfully", sdkConfiguration.getModuleType());
     } catch (StatusRuntimeException ex) {
       log.error("Sdk Initialization failed with StatusRuntimeException Status: {}", ex.getStatus());
       throw ex;
@@ -143,5 +112,74 @@ public class PmsSdkInitHelper {
       log.error("Sdk Initialization failed with Status: {}", ex.getMessage());
       throw ex;
     }
+  }
+
+  private static InitializeSdkRequest buildInitializeSdkRequest(
+      Injector injector, PmsSdkConfiguration sdkConfiguration) {
+    PipelineServiceInfoProvider infoProvider = injector.getInstance(PipelineServiceInfoProvider.class);
+    ModuleType moduleType = sdkConfiguration.getModuleType();
+    EventsFrameworkConfiguration eventsConfig = sdkConfiguration.getEventsFrameworkConfiguration();
+    return InitializeSdkRequest.newBuilder()
+        .setName(sdkConfiguration.getServiceName())
+        .putAllSupportedTypes(PmsSdkInitHelper.calculateSupportedTypes(infoProvider))
+        .addAllSupportedSteps(infoProvider.getStepInfo())
+        .addAllSupportedStepTypes(calculateStepTypes(injector))
+        .setSdkModuleInfo(SdkModuleInfo.newBuilder().setDisplayName(moduleType.getDisplayName()).build())
+        .setInterruptConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.INTERRUPT_EVENT))
+        .setOrchestrationEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.ORCHESTRATION_EVENT))
+        .setFacilitatorEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.FACILITATOR_EVENT))
+        .setNodeStartEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_START))
+        .setProgressEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.PROGRESS_EVENT))
+        .setNodeAdviseEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_ADVISE))
+        .setNodeResumeEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_RESUME))
+        .build();
+  }
+
+  /**
+   * Absorbing all of this logic inside the SDK. This felt like an overkill for now.
+   * Things internally work exactly the same way. This makes the sdk initialization easier.
+   *
+   * If we feel the need (which i do not think) we would in near future we can expose this mechanism back
+   *
+   */
+  private static ConsumerConfig buildConsumerConfig(
+      EventsFrameworkConfiguration eventsConfig, PmsEventCategory eventCategory) {
+    RedisConfig redisConfig = eventsConfig.getRedisConfig();
+    if (redisConfig != null) {
+      return ConsumerConfig.newBuilder().setRedis(buildConsumerRedisConfig(eventCategory)).build();
+    }
+    throw new UnsupportedOperationException("Only Redis is Supported as Back End");
+  }
+
+  /**
+   * In future if events framework build support for Kafka or any other event backbone we just need
+   * to add some logic here to init with a diff config
+   *
+   */
+  private static Redis buildConsumerRedisConfig(PmsEventCategory eventCategory) {
+    switch (eventCategory) {
+      case INTERRUPT_EVENT:
+        return Redis.newBuilder().setTopicName(PIPELINE_INTERRUPT_TOPIC).build();
+      case ORCHESTRATION_EVENT:
+        return Redis.newBuilder().setTopicName(PIPELINE_ORCHESTRATION_EVENT_TOPIC).build();
+      case FACILITATOR_EVENT:
+        return Redis.newBuilder().setTopicName(PIPELINE_FACILITATOR_EVENT_TOPIC).build();
+      case NODE_START:
+        return Redis.newBuilder().setTopicName(PIPELINE_NODE_START_EVENT_TOPIC).build();
+      case PROGRESS_EVENT:
+        return Redis.newBuilder().setTopicName(PIPELINE_PROGRESS_EVENT_TOPIC).build();
+      case NODE_ADVISE:
+        return Redis.newBuilder().setTopicName(PIPELINE_NODE_ADVISE_EVENT_TOPIC).build();
+      case NODE_RESUME:
+        return Redis.newBuilder().setTopicName(PIPELINE_NODE_RESUME_EVENT_TOPIC).build();
+      default:
+        throw new InvalidRequestException("Not a valid Event Category");
+    }
+  }
+
+  private static List<StepType> calculateStepTypes(Injector injector) {
+    StepRegistry stepRegistry = injector.getInstance(StepRegistry.class);
+    Map<StepType, Step> registry = stepRegistry.getRegistry();
+    return registry == null ? Collections.emptyList() : new ArrayList<>(registry.keySet());
   }
 }

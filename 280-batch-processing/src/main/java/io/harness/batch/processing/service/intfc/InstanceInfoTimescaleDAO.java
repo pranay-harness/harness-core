@@ -2,9 +2,11 @@ package io.harness.batch.processing.service.intfc;
 
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceInfo;
+import io.harness.ccm.commons.beans.JobConstants;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec;
 
+import java.time.Instant;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
@@ -26,4 +28,10 @@ public interface InstanceInfoTimescaleDAO {
   void updateNodeStopEvent(@NotNull List<InstanceEvent> instanceEventList);
 
   void updateNodeLifecycleEvent(@NotNull String accountId, @NotNull List<Lifecycle> lifecycleList);
+
+  void stopInactiveNodesAtTime(@NotNull JobConstants jobConstants, @NotNull String clusterId,
+      @NotNull Instant syncEventTimestamp, @NotNull List<String> activeNodeUidsList);
+
+  void stopInactivePodsAtTime(@NotNull JobConstants jobConstants, @NotNull String clusterId,
+      @NotNull Instant syncEventTimestamp, @NotNull List<String> activePodUidsList);
 }

@@ -7,6 +7,7 @@ import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.GCR_NAM
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.Arrays;
 
 public enum ArtifactSourceType {
   @JsonProperty(DOCKER_REGISTRY_NAME) DOCKER_REGISTRY(DOCKER_REGISTRY_NAME),
@@ -34,6 +35,7 @@ public enum ArtifactSourceType {
         return sourceType;
       }
     }
-    throw new IllegalArgumentException("Invalid value: " + displayName);
+    throw new IllegalArgumentException(String.format(
+        "Invalid value:%s, the expected values are: %s", displayName, Arrays.toString(ArtifactSourceType.values())));
   }
 }

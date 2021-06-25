@@ -21,10 +21,6 @@ public class AuditClientModule extends AbstractModule {
   private final String clientId;
   private final boolean enableAuditClient;
 
-  public AuditClientModule(ServiceHttpClientConfig projectManagerClientConfig, String serviceSecret, String clientId) {
-    this(projectManagerClientConfig, serviceSecret, clientId, true);
-  }
-
   public AuditClientModule(ServiceHttpClientConfig projectManagerClientConfig, String serviceSecret, String clientId,
       boolean enableAuditClient) {
     this.auditClientConfig = projectManagerClientConfig;

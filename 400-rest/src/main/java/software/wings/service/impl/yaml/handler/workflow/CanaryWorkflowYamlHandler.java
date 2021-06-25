@@ -2,7 +2,9 @@ package software.wings.service.impl.yaml.handler.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder;
 import software.wings.beans.Workflow;
@@ -17,6 +19,7 @@ import com.google.inject.Singleton;
  */
 @OwnedBy(CDC)
 @Singleton
+@TargetModule(HarnessModule._870_CG_YAML)
 public class CanaryWorkflowYamlHandler extends WorkflowYamlHandler<CanaryWorkflowYaml> {
   @Override
   protected void setOrchestrationWorkflow(WorkflowInfo workflowInfo, WorkflowBuilder workflow) {
@@ -28,6 +31,7 @@ public class CanaryWorkflowYamlHandler extends WorkflowYamlHandler<CanaryWorkflo
             .withNotificationRules(workflowInfo.getNotificationRules())
             .withPostDeploymentSteps(workflowInfo.getPostDeploymentSteps())
             .withPreDeploymentSteps(workflowInfo.getPreDeploymentSteps())
+            .withRollbackProvisioners(workflowInfo.getRollbackProvisioners())
             .withRollbackWorkflowPhaseIdMap(workflowInfo.getRollbackPhaseMap())
             .withUserVariables(workflowInfo.getUserVariables())
             .withWorkflowPhases(workflowInfo.getPhaseList());

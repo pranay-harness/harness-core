@@ -1,0 +1,20 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/artifactory-500/api/repositories/"
+  },
+  "response": {
+    "status": 500,
+    "jsonBody": {
+      "errors": [
+        {
+          "status": 500,
+          "message": "Artifactory failed to initialize: check Artifactory logs for errors."
+        }
+      ]
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

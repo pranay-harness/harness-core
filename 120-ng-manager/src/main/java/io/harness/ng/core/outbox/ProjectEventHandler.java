@@ -19,7 +19,6 @@ import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.ng.core.OrgScope;
 import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.dto.ProjectRequest;
 import io.harness.ng.core.events.ProjectCreateEvent;
@@ -72,16 +71,8 @@ public class ProjectEventHandler implements OutboxEventHandler {
 
   private boolean handleProjectCreateEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-    String accountIdentifier;
-    String orgIdentifier;
-    // TODO {karan} remove this if condition in a few days
-    if ("org".equals(outboxEvent.getResourceScope().getScope())) {
-      accountIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getAccountIdentifier();
-      orgIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getOrgIdentifier();
-    } else {
-      accountIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getAccountIdentifier();
-      orgIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getOrgIdentifier();
-    }
+    String accountIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getAccountIdentifier();
+    String orgIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getOrgIdentifier();
     boolean publishedToRedis = publishEvent(accountIdentifier, orgIdentifier, outboxEvent.getResource().getIdentifier(),
         EventsFrameworkMetadataConstants.CREATE_ACTION);
     ProjectCreateEvent projectCreateEvent =
@@ -101,15 +92,8 @@ public class ProjectEventHandler implements OutboxEventHandler {
 
   private boolean handleProjectUpdateEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-    String accountIdentifier;
-    String orgIdentifier;
-    if ("org".equals(outboxEvent.getResourceScope().getScope())) {
-      accountIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getAccountIdentifier();
-      orgIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getOrgIdentifier();
-    } else {
-      accountIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getAccountIdentifier();
-      orgIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getOrgIdentifier();
-    }
+    String accountIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getAccountIdentifier();
+    String orgIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getOrgIdentifier();
     boolean publishedToRedis = publishEvent(accountIdentifier, orgIdentifier, outboxEvent.getResource().getIdentifier(),
         EventsFrameworkMetadataConstants.UPDATE_ACTION);
     ProjectUpdateEvent projectUpdateEvent =
@@ -130,15 +114,8 @@ public class ProjectEventHandler implements OutboxEventHandler {
 
   private boolean handleProjectDeleteEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-    String accountIdentifier;
-    String orgIdentifier;
-    if ("org".equals(outboxEvent.getResourceScope().getScope())) {
-      accountIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getAccountIdentifier();
-      orgIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getOrgIdentifier();
-    } else {
-      accountIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getAccountIdentifier();
-      orgIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getOrgIdentifier();
-    }
+    String accountIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getAccountIdentifier();
+    String orgIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getOrgIdentifier();
     boolean publishedToRedis = publishEvent(accountIdentifier, orgIdentifier, outboxEvent.getResource().getIdentifier(),
         EventsFrameworkMetadataConstants.DELETE_ACTION);
     ProjectDeleteEvent projectDeleteEvent =
@@ -158,15 +135,8 @@ public class ProjectEventHandler implements OutboxEventHandler {
 
   private boolean handleProjectRestoreEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
-    String accountIdentifier;
-    String orgIdentifier;
-    if ("org".equals(outboxEvent.getResourceScope().getScope())) {
-      accountIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getAccountIdentifier();
-      orgIdentifier = ((OrgScope) outboxEvent.getResourceScope()).getOrgIdentifier();
-    } else {
-      accountIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getAccountIdentifier();
-      orgIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getOrgIdentifier();
-    }
+    String accountIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getAccountIdentifier();
+    String orgIdentifier = ((ProjectScope) outboxEvent.getResourceScope()).getOrgIdentifier();
     boolean publishedToRedis = publishEvent(accountIdentifier, orgIdentifier, outboxEvent.getResource().getIdentifier(),
         EventsFrameworkMetadataConstants.RESTORE_ACTION);
     ProjectRestoreEvent projectRestoreEvent =

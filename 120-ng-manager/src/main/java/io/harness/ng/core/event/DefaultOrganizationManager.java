@@ -59,8 +59,4 @@ public class DefaultOrganizationManager {
         Scope.builder().accountIdentifier(org.getAccountIdentifier()).orgIdentifier(org.getIdentifier()).build();
     admins.forEach(admin -> ngUserService.addUserToScope(admin, scope, ORGANIZATION_ADMIN, SYSTEM));
   }
-
-  public boolean deleteDefaultOrganization(String accountIdentifier) {
-    return organizationService.delete(accountIdentifier, DEFAULT_ORG_IDENTIFIER, null);
-  }
 }

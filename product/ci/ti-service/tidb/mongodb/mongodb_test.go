@@ -101,7 +101,7 @@ func TestMongoDb_UploadPartialCgForRelations(t *testing.T) {
 	}
 	db.UploadPartialCg(ctx, &cg,
 		getVCSInfo(),
-		"acct",
+		"acc",
 		"org",
 		"proj",
 		"target",
@@ -159,12 +159,45 @@ func Test_GetTestsToRun_Unsupported_File(t *testing.T) {
 
 	chFiles := []types.File{{Name: "a.xml", Status: types.FileModified}}
 
-	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{Files: chFiles, TargetBranch: "branch", Repo: "repo"})
+	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{Files: chFiles, TargetBranch: "branch", Repo: "repo"}, "acct")
 	assert.Nil(t, err)
 	assert.Equal(t, resp.SelectAll, true)
 	assert.Equal(t, resp.TotalTests, 4)
 	assert.Equal(t, resp.SelectedTests, 4)
 	assert.Equal(t, resp.SrcCodeTests, 4)
+}
+
+// CG stored with different account and query with different account
+func Test_GetTestsToRun_DifferentAccount(t *testing.T) {
+	ctx := context.Background()
+	dropNodes(ctx)
+	dropRelations(ctx)
+	defer dropNodes(ctx)     // drop nodes after the test is completed as well
+	defer dropRelations(ctx) // drop relations after the test is completed as well
+
+	// Insert sources and tests
+	n1 := NewNode(1, "pkg1", "m1", "param", "cls1", "source",
+		getVCSInfo(), "acct", "org", "proj")
+	n2 := NewNode(2, "pkg1", "m2", "param", "cls1", "test",
+		getVCSInfo(), "acct", "org", "proj")
+	n3 := NewNode(2, "pkg2", "m1", "param", "cls1", "test",
+		getVCSInfo(), "acct", "org", "proj")
+	n4 := NewNode(2, "pkg2", "m2", "param", "cls1", "test",
+		getVCSInfo(), "acct", "org", "proj")
+	n5 := NewNode(2, "pkg2", "m1", "param", "cls2", "test",
+		getVCSInfo(), "acct", "org", "proj")
+
+	n := []interface{}{n1, n2, n3, n4, n5}
+	db.Database.Collection("nodes").InsertMany(ctx, n)
+
+	chFiles := []types.File{{Name: "a.xml", Status: types.FileModified}}
+
+	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{Files: chFiles, TargetBranch: "branch", Repo: "repo"}, "diffAct")
+	assert.Nil(t, err)
+	assert.Equal(t, resp.SelectAll, true)
+	assert.Equal(t, resp.TotalTests, 0) // Nothing got returned
+	assert.Equal(t, resp.SelectedTests, 0)
+	assert.Equal(t, resp.SrcCodeTests, 0)
 }
 
 /* Test which passes modified, updated, deleted files and ti config
@@ -237,7 +270,7 @@ func Test_GetTestsToRun_TiConfig_Added_Deleted(t *testing.T) {
 	ticonfig := types.TiConfig{}
 	ticonfig.Config.Ignore = []string{"**/*.xml", "**/*.jsp"}
 
-	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{TiConfig: ticonfig, Files: chFiles, TargetBranch: "branch", Repo: "repo"})
+	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{TiConfig: ticonfig, Files: chFiles, TargetBranch: "branch", Repo: "repo"}, "acct")
 	assert.Nil(t, err)
 	assert.Equal(t, resp.SelectAll, false)
 	assert.Equal(t, resp.TotalTests, 7)
@@ -280,7 +313,7 @@ func Test_GetTestsToRun_WithNewTests(t *testing.T) {
 	ticonfig := types.TiConfig{}
 	ticonfig.Config.Ignore = []string{"**/*.xml", "**/*.jsp"}
 
-	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{TiConfig: ticonfig, Files: chFiles, TargetBranch: "branch", Repo: "repo"})
+	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{TiConfig: ticonfig, Files: chFiles, TargetBranch: "branch", Repo: "repo"}, "acct")
 	assert.Nil(t, err)
 	assert.Equal(t, resp.SelectAll, false)
 	assert.Equal(t, resp.TotalTests, 1)    // new tests will get factored after CG

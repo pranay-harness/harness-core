@@ -10,6 +10,7 @@ import io.harness.pms.contracts.execution.AsyncExecutableMode;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.steps.StepSpecTypeConstants;
@@ -30,8 +31,8 @@ public class HarnessApprovalStep extends AsyncExecutableWithRollback {
   @Inject private ApprovalNotificationHandler approvalNotificationHandler;
 
   @Override
-  public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, StepElementParameters stepParameters, StepInputPackage inputPackage) {
+  public AsyncExecutableResponse executeAsync(Ambiance ambiance, StepElementParameters stepParameters,
+      StepInputPackage inputPackage, PassThroughData passThroughData) {
     HarnessApprovalInstance approvalInstance = HarnessApprovalInstance.fromStepParameters(ambiance, stepParameters);
     approvalInstance = (HarnessApprovalInstance) approvalInstanceService.save(approvalInstance);
     approvalNotificationHandler.sendNotification(approvalInstance, ambiance);

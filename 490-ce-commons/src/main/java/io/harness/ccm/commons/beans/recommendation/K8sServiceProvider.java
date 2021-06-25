@@ -7,14 +7,15 @@ import io.harness.ccm.commons.beans.billing.InstanceCategory;
 import io.harness.ccm.commons.constants.CloudProvider;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
-@Value
+@Data
 @Builder
 @OwnedBy(CE)
 public class K8sServiceProvider {
   String region;
   String instanceFamily;
+  int nodeCount;
   CloudProvider cloudProvider;
   InstanceCategory instanceCategory;
 }

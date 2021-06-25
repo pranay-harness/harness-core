@@ -143,12 +143,16 @@ public class SSHVaultServiceImpl extends BaseVaultServiceImpl implements SSHVaul
 
     while (true) {
       try {
-        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                              .accountId(sshVaultConfig.getAccountId())
-                                              .timeout(Duration.ofSeconds(10).toMillis())
-                                              .appId(GLOBAL_APP_ID)
-                                              .correlationId(sshVaultConfig.getUuid())
-                                              .build();
+        SyncTaskContext syncTaskContext =
+            SyncTaskContext.builder()
+                .accountId(sshVaultConfig.getAccountId())
+                .timeout(Duration.ofSeconds(10).toMillis())
+                .appId(GLOBAL_APP_ID)
+                .correlationId(sshVaultConfig.getUuid())
+                .orgIdentifier(sshVaultConfig.getProjectIdentifier())
+                .projectIdentifier(sshVaultConfig.getProjectIdentifier())
+                .ngTask(isNgTask(sshVaultConfig.getOrgIdentifier(), sshVaultConfig.getProjectIdentifier()))
+                .build();
 
         return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
             .validateSSHVault(sshVaultConfig);
@@ -223,7 +227,7 @@ public class SSHVaultServiceImpl extends BaseVaultServiceImpl implements SSHVaul
     }
 
     if (credentialChanged) {
-      updateVaultCredentials(savedVaultConfig, sshVaultConfig.getAuthToken(), sshVaultConfig.getSecretId(), VAULT_SSH);
+      updateVaultCredentials(savedVaultConfig, sshVaultConfig, VAULT_SSH);
     }
 
     savedVaultConfig.setName(sshVaultConfig.getName());

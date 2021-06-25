@@ -74,6 +74,16 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>945-ng-audit-client</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>955-outbox-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>910-delegate-service-driver</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>

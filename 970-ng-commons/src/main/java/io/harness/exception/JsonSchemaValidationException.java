@@ -14,4 +14,9 @@ public class JsonSchemaValidationException extends WingsException {
     super(message, null, SCHEMA_VALIDATION_FAILED, Level.ERROR, null, null);
     super.param(MESSAGE_ARG, message);
   }
+
+  public JsonSchemaValidationException(String message, Throwable cause) {
+    super(message, cause, SCHEMA_VALIDATION_FAILED, Level.ERROR, null, null);
+    super.param(MESSAGE_ARG, message);
+  }
 }

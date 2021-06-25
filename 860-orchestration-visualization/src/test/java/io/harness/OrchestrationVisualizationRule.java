@@ -20,6 +20,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.rule.InjectorRuleMixin;
@@ -49,6 +50,7 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Named;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
@@ -113,6 +115,13 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
             .addAll(OrchestrationVisualizationModuleRegistrars.springConverters)
             .build();
       }
+
+      @Provides
+      @Named("disableDeserialization")
+      @Singleton
+      public boolean getSerializationForDelegate() {
+        return false;
+      }
     });
 
     modules.add(mongoTypeModule(annotations));
@@ -157,7 +166,8 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
                                             .serviceName("ORCHESTRATION_VISUALIZATION_TEST")
                                             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                             .build()));
-    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder().build();
+    PmsSdkConfiguration sdkConfig =
+        PmsSdkConfiguration.builder().moduleType(ModuleType.PMS).deploymentMode(SdkDeployMode.LOCAL).build();
     modules.add(PmsSdkModule.getInstance(sdkConfig));
     modules.add(OrchestrationVisualizationModule.getInstance());
     return modules;

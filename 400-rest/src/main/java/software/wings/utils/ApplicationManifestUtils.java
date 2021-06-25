@@ -25,6 +25,8 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.helm.HelmCommandFlag;
@@ -99,6 +101,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 
 @Singleton
+@OwnedBy(HarnessTeam.CDP)
 public class ApplicationManifestUtils {
   @Inject private AppService appService;
   @Inject private ApplicationManifestService applicationManifestService;
@@ -144,7 +147,7 @@ public class ApplicationManifestUtils {
       appManifestMap.put(K8sValuesLocation.Environment, applicationManifest);
     }
 
-    // Need service manifest for opensift deployments in case if any of the params overrides is reusing script from
+    // Need service manifest for openshift deployments in case if any of the params overrides is reusing script from
     // service manifest
     if (featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, context.getAccountId()) && isNotEmpty(appManifestMap)
         && OC_PARAMS == appManifestKind) {
@@ -491,6 +494,13 @@ public class ApplicationManifestUtils {
     return applicationManifest != null && StoreType.HelmChartRepo == applicationManifest.getStoreType()
         && applicationManifest.getHelmChartConfig() != null
         && isNotBlank(applicationManifest.getHelmChartConfig().getChartName());
+  }
+
+  public boolean isCustomManifest(ExecutionContext context) {
+    ApplicationManifest applicationManifest = getApplicationManifestForService(context);
+    return applicationManifest != null
+        && (CUSTOM == applicationManifest.getStoreType()
+            || CUSTOM_OPENSHIFT_TEMPLATE == applicationManifest.getStoreType());
   }
 
   public boolean isKustomizeSource(ExecutionContext context) {

@@ -17,6 +17,8 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
+import static java.util.Collections.singletonList;
+
 import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.api.ContainerServiceElement;
@@ -96,7 +98,7 @@ public class PcfStateTestHelper {
         .displayName(STATE_NAME)
         .addContextElement(workflowStandardParams)
         .addContextElement(phaseElement)
-        .addStateExecutionData(PcfSetupStateExecutionData.builder().build());
+        .addStateExecutionData(PcfSetupStateExecutionData.builder().tags(singletonList("tag1")).build());
   }
 
   public PcfInfrastructureMapping getPcfInfrastructureMapping(List<String> route, List<String> tempRoute) {

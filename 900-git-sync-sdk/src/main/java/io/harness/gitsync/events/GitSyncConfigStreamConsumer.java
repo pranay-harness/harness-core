@@ -42,15 +42,19 @@ public class GitSyncConfigStreamConsumer implements Runnable {
   @Override
   public void run() {
     log.info("Started the consumer for git sync config stream");
-    SecurityContextBuilder.setContext(new ServicePrincipal(authorizationServiceHeader.getServiceId()));
     try {
+      SecurityContextBuilder.setContext(new ServicePrincipal(authorizationServiceHeader.getServiceId()));
       while (!Thread.currentThread().isInterrupted()) {
         readEventsFrameworkMessages();
       }
+    } catch (InterruptedException ex) {
+      SecurityContextBuilder.unsetCompleteContext();
+      Thread.currentThread().interrupt();
     } catch (Exception ex) {
       log.error("git sync config stream consumer unexpectedly stopped", ex);
+    } finally {
+      SecurityContextBuilder.unsetCompleteContext();
     }
-    SecurityContextBuilder.unsetCompleteContext();
   }
 
   private void readEventsFrameworkMessages() throws InterruptedException {

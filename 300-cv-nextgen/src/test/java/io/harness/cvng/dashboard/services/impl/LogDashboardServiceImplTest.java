@@ -81,7 +81,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
     when(mockVerificationTaskService.getServiceGuardVerificationTaskId(anyString(), anyString()))
         .thenAnswer(invocation -> invocation.getArgumentAt(1, String.class));
 
-    when(mockVerificationTaskService.create(anyString(), anyString()))
+    when(mockVerificationTaskService.create(anyString(), anyString(), any()))
         .thenAnswer(invocation -> invocation.getArgumentAt(1, String.class));
   }
 

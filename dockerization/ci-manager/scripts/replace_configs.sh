@@ -202,6 +202,10 @@ if [[ "" != "$ENABLE_DASHBOARD_TIMESCALE" ]]; then
   yq write -i $CONFIG_FILE enableDashboardTimescale $ENABLE_DASHBOARD_TIMESCALE
 fi
 
+if [[ "" != "$MANAGER_SECRET" ]]; then
+  yq write -i $CONFIG_FILE managerServiceSecret "$MANAGER_SECRET"
+fi
+
 if [[ "" != "$MONGO_INDEX_MANAGER_MODE" ]]; then
   yq write -i $CONFIG_FILE cimanager-mongo.indexManagerMode "$MONGO_INDEX_MANAGER_MODE"
 fi
@@ -238,5 +242,3 @@ replace_key_value eventsFramework.redis.password $EVENTS_FRAMEWORK_REDIS_PASSWOR
 replace_key_value eventsFramework.redis.sslConfig.enabled $EVENTS_FRAMEWORK_REDIS_SSL_ENABLED
 replace_key_value eventsFramework.redis.sslConfig.CATrustStorePath $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PATH
 replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PASSWORD
-
-replace_key_value useRedisForSdkResponseEvents "$USE_REDIS_FOR_SDK_RESPONSE_EVENTS"

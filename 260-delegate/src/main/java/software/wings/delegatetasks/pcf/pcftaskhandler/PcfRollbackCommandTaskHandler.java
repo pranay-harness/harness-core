@@ -17,6 +17,8 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
@@ -56,6 +58,7 @@ import org.cloudfoundry.operations.applications.ApplicationDetail;
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(HarnessTeam.CDP)
 public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
   @Override
   public PcfCommandExecutionResponse executeTaskInternal(PcfCommandRequest pcfCommandRequest,
@@ -99,6 +102,9 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
                       : commandRollbackRequest.getTimeoutIntervalInMin())
               .cfHomeDirPath(workingDirectory.getAbsolutePath())
               .useCFCLI(commandRollbackRequest.isUseCfCLI())
+              .cfCliPath(pcfCommandTaskHelper.getCfCliPathOnDelegate(
+                  pcfCommandRequest.isUseCfCLI(), pcfCommandRequest.getCfCliVersion()))
+              .cfCliVersion(pcfCommandRequest.getCfCliVersion())
               .limitPcfThreads(commandRollbackRequest.isLimitPcfThreads())
               .ignorePcfConnectionContextCache(commandRollbackRequest.isIgnorePcfConnectionContextCache())
               .build();

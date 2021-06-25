@@ -23,11 +23,22 @@ public class StatusUtilsTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testCalculateStatusSucceeded() {
+    List<Status> statuses = Arrays.asList(
+        Status.SUCCEEDED, Status.SKIPPED, Status.SUCCEEDED, Status.SUSPENDED, Status.SKIPPED, Status.SKIPPED);
+
+    Status status = StatusUtils.calculateStatus(statuses, "PLAN_EXECUTION_ID");
+    assertThat(status).isEqualTo(Status.SUCCEEDED);
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testCalculateStatusIgnoreFailed() {
     List<Status> statuses = Arrays.asList(Status.SUCCEEDED, Status.SKIPPED, Status.IGNORE_FAILED, Status.SUCCEEDED,
         Status.SUSPENDED, Status.SKIPPED, Status.SKIPPED);
 
     Status status = StatusUtils.calculateStatus(statuses, "PLAN_EXECUTION_ID");
-    assertThat(status).isEqualTo(Status.SUCCEEDED);
+    assertThat(status).isEqualTo(Status.IGNORE_FAILED);
   }
 
   @Test

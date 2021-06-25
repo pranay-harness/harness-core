@@ -43,6 +43,7 @@ import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerRegistryProviderType;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
+import io.harness.delegate.beans.connector.dynatrace.DynatraceConnectorDTO;
 import io.harness.delegate.beans.connector.gcpccm.GcpCloudCostConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
@@ -103,7 +104,6 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthentica
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSyncConfig;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessType;
@@ -152,7 +152,6 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(GitConnectionType.class, 19068);
     kryo.register(GitHTTPAuthenticationDTO.class, 19064);
     kryo.register(GitSSHAuthenticationDTO.class, 19065);
-    kryo.register(GitSyncConfig.class, 19069);
     kryo.register(KubernetesAuthCredentialDTO.class, 19058);
     kryo.register(KubernetesAuthDTO.class, 19050);
     kryo.register(KubernetesAuthType.class, 19051);
@@ -276,5 +275,6 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureKeyVaultConnectorDTO.class, 19670);
     kryo.register(CEFeatures.class, 19671);
     kryo.register(SumoLogicConnectorDTO.class, 19672);
+    kryo.register(DynatraceConnectorDTO.class, 19673);
   }
 }

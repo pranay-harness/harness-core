@@ -32,4 +32,6 @@ public interface PlanExecutionService extends NodeStatusUpdateObserver {
   Status calculateStatus(String planExecutionId);
 
   PlanExecution updateCalculatedStatus(String planExecutionId);
+
+  Status calculateStatusExcluding(String planExecutionId, String excludedNodeExecutionId);
 }

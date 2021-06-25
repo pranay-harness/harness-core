@@ -43,7 +43,9 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class ArgoCDTask extends AbstractDelegateRunnableTask {
   @Inject private ArgoCdService argoCdService;
   @Inject private DelegateLogService logService;
@@ -78,6 +80,7 @@ public class ArgoCDTask extends AbstractDelegateRunnableTask {
               .clusterResourceTree(clusterResourceTreeDTO)
               .build();
         } catch (Exception e) {
+          log.error("Exception", e);
           return ResourceTreeResponse.builder()
               .executionStatus(CommandExecutionStatus.FAILURE)
               .errorMessage(e.getMessage())

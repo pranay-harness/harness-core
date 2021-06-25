@@ -7,9 +7,11 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateProfile.DelegateProfileBuilder;
 import static io.harness.delegate.beans.DelegateProfile.builder;
 import static io.harness.delegate.beans.DelegateType.ECS;
+import static io.harness.delegate.beans.DelegateType.SHELL_SCRIPT;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
 import static io.harness.obfuscate.Obfuscator.obfuscate;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -21,8 +23,10 @@ import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.PUNEET;
+import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
+import static io.harness.rule.OwnerRule.XIN;
 
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -85,6 +89,7 @@ import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateGroup;
 import io.harness.delegate.beans.DelegateGroupStatus;
 import io.harness.delegate.beans.DelegateInstanceStatus;
@@ -111,11 +116,14 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.delegate.utils.DelegateEntityOwnerHelper;
+import io.harness.eventsframework.api.Producer;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.network.LocalhostUtils;
 import io.harness.observer.Subject;
+import io.harness.outbox.api.OutboxService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -205,6 +213,7 @@ import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
@@ -231,6 +240,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   private static final String PRIMARY_PROFILE_NAME = "primary";
   private static final String TOKEN_NAME = "TOKEN_NAME";
   private static final String TOKEN_VALUE = "TOKEN_VALUE";
+  private static final String LOCATION = "LOCATION";
+  private static final String ANOTHER_LOCATION = "ANOTHER_LOCATION";
 
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private AccountService accountService;
@@ -256,12 +267,14 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
   @Mock private DelegateInsightsService delegateInsightsService;
   @Mock private DelegateTokenService delegateTokenService;
+  @Mock private Producer eventProducer;
+  @Mock private OutboxService outboxService;
 
   @Inject private FeatureTestHelper featureTestHelper;
   @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private KryoSerializer kryoSerializer;
 
-  private int port = LocalhostUtils.findFreePort();
+  private final int port = LocalhostUtils.findFreePort();
   @Rule public WireMockRule wireMockRule = new WireMockRule(port);
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -275,10 +288,10 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Inject private HPersistence persistence;
 
-  private final Subject<DelegateProfileObserver> delegateProfileSubject = mock(Subject.class);
-  private final Subject<DelegateTaskRetryObserver> retryObserverSubject = mock(Subject.class);
-  private final Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject = mock(Subject.class);
-  private final Subject<DelegateObserver> subject = mock(Subject.class);
+  @Mock private Subject<DelegateProfileObserver> delegateProfileSubject;
+  @Mock private Subject<DelegateTaskRetryObserver> retryObserverSubject;
+  @Mock private Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject;
+  @Mock private Subject<DelegateObserver> subject;
 
   private final Account account =
       anAccount().withLicenseInfo(LicenseInfo.builder().accountStatus(AccountStatus.ACTIVE).build()).build();
@@ -735,7 +748,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                    .ng(true)
                                                    .primary(true)
                                                    .build();
-    when(delegateProfileService.fetchNgPrimaryProfile(ngDelegateWithoutProfile.getAccountId()))
+    when(delegateProfileService.fetchNgPrimaryProfile(ngDelegateWithoutProfile.getAccountId(), null))
         .thenReturn(ngPrimaryDelegateProfile);
 
     ngDelegateWithoutProfile = delegateService.add(ngDelegateWithoutProfile);
@@ -809,19 +822,29 @@ public class DelegateServiceTest extends WingsBaseTest {
     featureTestHelper.enableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
     String accountId = generateUuid();
 
-    DelegateGroup delegateGroup = DelegateGroup.builder().accountId(accountId).name("groupname").build();
+    DelegateGroup delegateGroup =
+        DelegateGroup.builder()
+            .accountId(accountId)
+            .name("groupname")
+            .owner(DelegateEntityOwner.builder().identifier(generateUuid() + "/" + generateUuid()).build())
+            .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+            .build();
     persistence.save(delegateGroup);
 
     Delegate d1 = createDelegateBuilder()
                       .accountId(accountId)
                       .delegateName("groupname")
                       .delegateGroupId(delegateGroup.getUuid())
+                      .owner(DelegateEntityOwner.builder().identifier(generateUuid() + "/" + generateUuid()).build())
+                      .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
                       .build();
     persistence.save(d1);
     Delegate d2 = createDelegateBuilder()
                       .accountId(accountId)
                       .delegateName("groupname")
                       .delegateGroupId(delegateGroup.getUuid())
+                      .owner(DelegateEntityOwner.builder().identifier(generateUuid() + "/" + generateUuid()).build())
+                      .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
                       .build();
     persistence.save(d2);
 
@@ -830,6 +853,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(persistence.get(DelegateGroup.class, delegateGroup.getUuid())).isNull();
     assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
     assertThat(persistence.get(Delegate.class, d2.getUuid())).isNull();
+    verify(eventProducer).send(any());
     featureTestHelper.disableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
   }
 
@@ -839,7 +863,13 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldForceDeleteDelegateGroup() {
     String accountId = generateUuid();
 
-    DelegateGroup delegateGroup = DelegateGroup.builder().accountId(accountId).name("groupname").build();
+    DelegateGroup delegateGroup =
+        DelegateGroup.builder()
+            .accountId(accountId)
+            .name("groupname")
+            .owner(DelegateEntityOwner.builder().identifier(generateUuid() + "/" + generateUuid()).build())
+            .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+            .build();
     persistence.save(delegateGroup);
 
     Delegate d1 = createDelegateBuilder()
@@ -868,19 +898,28 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldMarkDelegateGroupAsDeleted() {
     String accountId = generateUuid();
 
-    DelegateGroup delegateGroup = DelegateGroup.builder().accountId(accountId).name("groupname2").build();
+    DelegateGroup delegateGroup =
+        DelegateGroup.builder()
+            .accountId(accountId)
+            .name("groupname2")
+            .owner(DelegateEntityOwner.builder().identifier(generateUuid() + "/" + generateUuid()).build())
+            .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+            .build();
     persistence.save(delegateGroup);
 
     Delegate d1 = createDelegateBuilder()
                       .accountId(accountId)
                       .delegateName("groupname2")
                       .delegateGroupId(delegateGroup.getUuid())
+                      .owner(DelegateEntityOwner.builder().identifier(generateUuid() + "/" + generateUuid()).build())
+                      .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
                       .build();
     persistence.save(d1);
     Delegate d2 = createDelegateBuilder()
                       .accountId(accountId)
                       .delegateName("groupname2")
                       .delegateGroupId(delegateGroup.getUuid())
+                      .owner(DelegateEntityOwner.builder().identifier(generateUuid() + "/" + generateUuid()).build())
                       .build();
     persistence.save(d2);
 
@@ -957,7 +996,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .build();
 
     DelegateProfile profile = createDelegateProfileBuilder().accountId(accountId).primary(true).build();
-    when(delegateProfileService.fetchNgPrimaryProfile(accountId)).thenReturn(profile);
+    when(delegateProfileService.fetchNgPrimaryProfile(accountId, null)).thenReturn(profile);
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     DelegateRegisterResponse registerResponse = delegateService.register(params);
@@ -983,12 +1022,14 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldRegisterDelegateParamsWithOrgId() {
-    String accountId = generateUuid();
+    final String accountId = generateUuid();
+    final String orgId = "orgId";
+    final DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, StringUtils.EMPTY);
 
     DelegateParams params = DelegateParams.builder()
                                 .accountId(accountId)
                                 .sessionIdentifier("sessionId")
-                                .orgIdentifier("orgId")
+                                .orgIdentifier(orgId)
                                 .hostName(HOST_NAME)
                                 .description(DESCRIPTION)
                                 .delegateType(DOCKER_DELEGATE)
@@ -1002,26 +1043,29 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .build();
 
     DelegateProfile profile = createDelegateProfileBuilder().accountId(accountId).primary(true).build();
-    when(delegateProfileService.fetchNgPrimaryProfile(accountId)).thenReturn(profile);
+    when(delegateProfileService.fetchNgPrimaryProfile(accountId, owner)).thenReturn(profile);
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     DelegateRegisterResponse registerResponse = delegateService.register(params);
     Delegate delegateFromDb = delegateCache.get(accountId, registerResponse.getDelegateId(), true);
 
-    assertThat(delegateFromDb.getOwner().getIdentifier()).isEqualTo("orgId");
+    assertThat(delegateFromDb.getOwner().getIdentifier()).isEqualTo(orgId);
   }
 
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldRegisterDelegateParamsWithProjectId() {
-    String accountId = generateUuid();
+    final String accountId = generateUuid();
+    final String orgId = "orgId";
+    final String projectId = "projectId";
+    final DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
 
     DelegateParams params = DelegateParams.builder()
                                 .accountId(accountId)
                                 .sessionIdentifier("sessionId")
-                                .orgIdentifier("orgId")
-                                .projectIdentifier("projectId")
+                                .orgIdentifier(orgId)
+                                .projectIdentifier(projectId)
                                 .hostName(HOST_NAME)
                                 .description(DESCRIPTION)
                                 .delegateType(DOCKER_DELEGATE)
@@ -1035,7 +1079,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .build();
 
     DelegateProfile profile = createDelegateProfileBuilder().accountId(accountId).primary(true).build();
-    when(delegateProfileService.fetchNgPrimaryProfile(accountId)).thenReturn(profile);
+    when(delegateProfileService.fetchNgPrimaryProfile(accountId, owner)).thenReturn(profile);
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     DelegateRegisterResponse registerResponse = delegateService.register(params);
@@ -1271,7 +1315,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
-  public void shouldRegisterHeartbeatSendSelfDestruct() throws IllegalAccessException, InterruptedException {
+  public void shouldRegisterHeartbeatEcsDelegateNotSendSelfDestruct()
+      throws IllegalAccessException, InterruptedException {
     Delegate delegate = createDelegateBuilder()
                             .accountId(ACCOUNT_ID)
                             .uuid(DELEGATE_ID)
@@ -1305,17 +1350,68 @@ public class DelegateServiceTest extends WingsBaseTest {
         .thenReturn(newerExistingConnection);
     delegateService.registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, heartbeat, ConnectionMode.STREAMING);
     verify(mockConnectionDao).findAndDeletePreviousConnections(ACCOUNT_ID, DELEGATE_ID, delegateConnectionId, VERSION);
-    verify(mockConnectionDao).replaceWithNewerConnection(delegateConnectionId, newerExistingConnection);
-    verify(broadcaster).broadcast(SELF_DESTRUCT + DELEGATE_ID + "-" + delegateConnectionId);
+    verify(mockConnectionDao, never()).replaceWithNewerConnection(delegateConnectionId, newerExistingConnection);
+    verify(broadcaster, never()).broadcast(SELF_DESTRUCT + DELEGATE_ID + "-" + delegateConnectionId);
     FieldUtils.writeField(delegateService, "delegateConnectionDao", delegateConnectionDao, true);
+  }
+
+  @Test
+  @Owner(developers = XIN)
+  @Category(UnitTests.class)
+  public void shouldRegisterHeartbeatShellScriptDelegateSelfDestruct()
+      throws IllegalAccessException, InterruptedException {
+    try {
+      thrown.expect(DuplicateDelegateException.class);
+      Delegate delegate = createDelegateBuilder()
+                              .accountId(ACCOUNT_ID)
+                              .uuid(DELEGATE_ID)
+                              .hostName(HOST_NAME)
+                              .description(DESCRIPTION)
+                              .delegateType(SHELL_SCRIPT)
+                              .ip("127.0.0.1")
+                              .delegateGroupName(DELEGATE_GROUP_NAME)
+                              .version(VERSION)
+                              .proxy(false)
+                              .polllingModeEnabled(false)
+                              .sampleDelegate(false)
+                              .build();
+      DelegateProfile primaryDelegateProfile =
+          createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
+
+      delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
+      when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(Integer.MAX_VALUE);
+      when(delegateProfileService.fetchCgPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+      delegateService.add(delegate);
+
+      DelegateConnectionDao mockConnectionDao = Mockito.mock(DelegateConnectionDao.class);
+      FieldUtils.writeField(delegateService, "delegateConnectionDao", mockConnectionDao, true);
+      String delegateConnectionId = generateTimeBasedUuid();
+      Thread.sleep(2L);
+      String newerDelegateConnectionId = generateTimeBasedUuid();
+      DelegateConnection newerExistingConnection =
+          DelegateConnection.builder().uuid(newerDelegateConnectionId).location(LOCATION).build();
+      when(mockConnectionDao.findAndDeletePreviousConnections(ACCOUNT_ID, DELEGATE_ID, delegateConnectionId, VERSION))
+          .thenReturn(newerExistingConnection);
+      DelegateConnectionHeartbeat heartbeat = DelegateConnectionHeartbeat.builder()
+                                                  .version(VERSION)
+                                                  .delegateConnectionId(delegateConnectionId)
+                                                  .location(ANOTHER_LOCATION)
+                                                  .build();
+
+      delegateService.registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, heartbeat, ConnectionMode.POLLING);
+      verify(mockConnectionDao)
+          .findAndDeletePreviousConnections(ACCOUNT_ID, DELEGATE_ID, delegateConnectionId, VERSION);
+      verify(mockConnectionDao).replaceWithNewerConnection(delegateConnectionId, newerExistingConnection);
+    } finally {
+      FieldUtils.writeField(delegateService, "delegateConnectionDao", delegateConnectionDao, true);
+    }
   }
 
   @Test
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
-  public void shouldRegisterHeartbeatThrowException() throws IllegalAccessException, InterruptedException {
+  public void registerHeartbeatNotSelfDestruct() throws IllegalAccessException, InterruptedException {
     try {
-      thrown.expect(DuplicateDelegateException.class);
       Delegate delegate = createDelegateBuilder()
                               .accountId(ACCOUNT_ID)
                               .uuid(DELEGATE_ID)
@@ -1343,19 +1439,19 @@ public class DelegateServiceTest extends WingsBaseTest {
       Thread.sleep(2L);
       String newerDelegateConnectionId = generateTimeBasedUuid();
       DelegateConnection newerExistingConnection =
-          DelegateConnection.builder().uuid(newerDelegateConnectionId).location("/location1").build();
+          DelegateConnection.builder().uuid(newerDelegateConnectionId).location(LOCATION).build();
       when(mockConnectionDao.findAndDeletePreviousConnections(ACCOUNT_ID, DELEGATE_ID, delegateConnectionId, VERSION))
           .thenReturn(newerExistingConnection);
       DelegateConnectionHeartbeat heartbeat = DelegateConnectionHeartbeat.builder()
                                                   .version(VERSION)
                                                   .delegateConnectionId(delegateConnectionId)
-                                                  .location("/location2")
+                                                  .location(ANOTHER_LOCATION)
                                                   .build();
 
       delegateService.registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, heartbeat, ConnectionMode.POLLING);
       verify(mockConnectionDao)
           .findAndDeletePreviousConnections(ACCOUNT_ID, DELEGATE_ID, delegateConnectionId, VERSION);
-      verify(mockConnectionDao).replaceWithNewerConnection(delegateConnectionId, newerExistingConnection);
+      verify(mockConnectionDao, never()).replaceWithNewerConnection(delegateConnectionId, newerExistingConnection);
     } finally {
       FieldUtils.writeField(delegateService, "delegateConnectionDao", delegateConnectionDao, true);
     }
@@ -2040,8 +2136,14 @@ public class DelegateServiceTest extends WingsBaseTest {
             .k8sConfigDetails(K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_ADMIN).build())
             .build();
 
-    persistence.save(
-        DelegateGroup.builder().accountId(ACCOUNT_ID).name("harness-delegate").uuid("delegateGroupId1").build());
+    persistence.save(DelegateGroup.builder()
+                         .accountId(ACCOUNT_ID)
+                         .name("harness-delegate")
+                         .uuid("delegateGroupId1")
+                         .ng(true)
+                         .owner(DelegateEntityOwnerHelper.buildOwner(
+                             setupDetails.getOrgIdentifier(), setupDetails.getProjectIdentifier()))
+                         .build());
 
     File gzipFile = delegateService.generateKubernetesYaml(ACCOUNT_ID, setupDetails, "https://localhost:9090",
         "https://localhost:7070", MediaType.MULTIPART_FORM_DATA_TYPE);
@@ -2084,8 +2186,14 @@ public class DelegateServiceTest extends WingsBaseTest {
             .k8sConfigDetails(K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_VIEWER).build())
             .build();
 
-    persistence.save(
-        DelegateGroup.builder().accountId(ACCOUNT_ID).name("harness-delegate").uuid("delegateGroupId1").build());
+    persistence.save(DelegateGroup.builder()
+                         .accountId(ACCOUNT_ID)
+                         .name("harness-delegate")
+                         .uuid("delegateGroupId1")
+                         .ng(true)
+                         .owner(DelegateEntityOwnerHelper.buildOwner(
+                             setupDetails.getOrgIdentifier(), setupDetails.getProjectIdentifier()))
+                         .build());
 
     File gzipFile = delegateService.generateKubernetesYaml(ACCOUNT_ID, setupDetails, "https://localhost:9090",
         "https://localhost:7070", MediaType.MULTIPART_FORM_DATA_TYPE);
@@ -2130,8 +2238,14 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                                   .build())
                                             .build();
 
-    persistence.save(
-        DelegateGroup.builder().accountId(ACCOUNT_ID).name("harness-delegate").uuid("delegateGroupId1").build());
+    persistence.save(DelegateGroup.builder()
+                         .accountId(ACCOUNT_ID)
+                         .name("harness-delegate")
+                         .uuid("delegateGroupId1")
+                         .ng(true)
+                         .owner(DelegateEntityOwnerHelper.buildOwner(
+                             setupDetails.getOrgIdentifier(), setupDetails.getProjectIdentifier()))
+                         .build());
 
     File gzipFile = delegateService.generateKubernetesYaml(ACCOUNT_ID, setupDetails, "https://localhost:9090",
         "https://localhost:7070", MediaType.MULTIPART_FORM_DATA_TYPE);
@@ -2171,8 +2285,12 @@ public class DelegateServiceTest extends WingsBaseTest {
             .k8sConfigDetails(K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_ADMIN).build())
             .build();
 
-    persistence.save(
-        DelegateGroup.builder().accountId(ACCOUNT_ID).name("harness-delegate").uuid("delegateGroupId1").build());
+    persistence.save(DelegateGroup.builder()
+                         .accountId(ACCOUNT_ID)
+                         .name("harness-delegate")
+                         .uuid("delegateGroupId1")
+                         .ng(true)
+                         .build());
 
     File gzipFile = delegateService.generateKubernetesYaml(ACCOUNT_ID, setupDetails, "https://localhost:9090",
         "https://localhost:7070", MediaType.MULTIPART_FORM_DATA_TYPE);
@@ -2471,6 +2589,109 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldGetAllDelegateSelectorsUpTheHierarchy() {
+    String accountId = generateUuid();
+    String orgId = generateUuid();
+    String projectId = generateUuid();
+
+    DelegateGroup acctGroup = DelegateGroup.builder().name("acctGrp").accountId(accountId).ng(true).build();
+    DelegateGroup orgGroup = DelegateGroup.builder()
+                                 .name("orgGrp")
+                                 .accountId(accountId)
+                                 .ng(true)
+                                 .owner(DelegateEntityOwnerHelper.buildOwner(orgId, null))
+                                 .build();
+    DelegateGroup projectGroup = DelegateGroup.builder()
+                                     .name("projectGrp")
+                                     .accountId(accountId)
+                                     .ng(true)
+                                     .owner(DelegateEntityOwnerHelper.buildOwner(orgId, projectId))
+                                     .build();
+
+    persistence.saveBatch(Arrays.asList(acctGroup, orgGroup, projectGroup));
+
+    DelegateProfile delegateProfile =
+        DelegateProfile.builder().uuid(generateUuid()).accountId(accountId).name(generateUuid()).build();
+    persistence.save(delegateProfile);
+
+    Delegate cgDelegate = Delegate.builder()
+                              .accountId(accountId)
+                              .ip("127.0.0.1")
+                              .hostName("c.g")
+                              .delegateName("testDelegateNameCg")
+                              .version(VERSION)
+                              .status(DelegateInstanceStatus.ENABLED)
+                              .lastHeartBeat(System.currentTimeMillis())
+                              .delegateProfileId(delegateProfile.getUuid())
+                              .tags(ImmutableList.of("cg"))
+                              .build();
+    persistence.save(cgDelegate);
+
+    Delegate acctDelegate = Delegate.builder()
+                                .accountId(accountId)
+                                .ip("127.0.0.1")
+                                .hostName("a.c.c.t")
+                                .delegateName("acctGrp")
+                                .version(VERSION)
+                                .status(DelegateInstanceStatus.ENABLED)
+                                .lastHeartBeat(System.currentTimeMillis())
+                                .delegateProfileId(delegateProfile.getUuid())
+                                .tags(ImmutableList.of("acct"))
+                                .ng(true)
+                                .delegateGroupId(acctGroup.getUuid())
+                                .build();
+    persistence.save(acctDelegate);
+
+    Delegate orgDelegate = Delegate.builder()
+                               .accountId(accountId)
+                               .ip("127.0.0.1")
+                               .hostName("o.r.g")
+                               .delegateName("orgGrp")
+                               .version(VERSION)
+                               .status(DelegateInstanceStatus.ENABLED)
+                               .lastHeartBeat(System.currentTimeMillis())
+                               .delegateProfileId(delegateProfile.getUuid())
+                               .tags(ImmutableList.of("org"))
+                               .ng(true)
+                               .delegateGroupId(orgGroup.getUuid())
+                               .owner(DelegateEntityOwner.builder().identifier(orgId).build())
+                               .build();
+    persistence.save(orgDelegate);
+
+    Delegate projectDelegate = Delegate.builder()
+                                   .accountId(accountId)
+                                   .ip("127.0.0.1")
+                                   .hostName("p.r.o.j.e.c.t")
+                                   .delegateName("projectGrp")
+                                   .version(VERSION)
+                                   .status(DelegateInstanceStatus.ENABLED)
+                                   .lastHeartBeat(System.currentTimeMillis())
+                                   .delegateProfileId(delegateProfile.getUuid())
+                                   .tags(ImmutableList.of("project"))
+                                   .ng(true)
+                                   .delegateGroupId(projectGroup.getUuid())
+                                   .owner(DelegateEntityOwner.builder().identifier(orgId + "/" + projectId).build())
+                                   .build();
+    persistence.save(projectDelegate);
+
+    Set<String> tags = delegateService.getAllDelegateSelectorsUpTheHierarchy(accountId, null, null);
+    assertThat(tags.size()).isEqualTo(3);
+    assertThat(tags).containsExactlyInAnyOrder("acctgrp", "acct", delegateProfile.getName().toLowerCase());
+
+    tags = delegateService.getAllDelegateSelectorsUpTheHierarchy(accountId, orgId, null);
+    assertThat(tags.size()).isEqualTo(5);
+    assertThat(tags).containsExactlyInAnyOrder(
+        "acctgrp", "orggrp", "acct", "org", delegateProfile.getName().toLowerCase());
+
+    tags = delegateService.getAllDelegateSelectorsUpTheHierarchy(accountId, orgId, projectId);
+    assertThat(tags.size()).isEqualTo(7);
+    assertThat(tags).containsExactlyInAnyOrder(
+        "acctgrp", "orggrp", "projectgrp", "acct", "org", "project", delegateProfile.getName().toLowerCase());
+  }
+
+  @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldGetAllDelegateSelectors() {
@@ -2508,6 +2729,60 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(tags.size()).isEqualTo(7);
     assertThat(tags).containsExactlyInAnyOrder("abc", "def", "testdelegatename1", "testdelegatename2", "a.b.c", "d.e.f",
         delegateProfile.getName().toLowerCase());
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void shouldGetCGDelegate_whenNgFieldNotSetOrFalse() {
+    DelegateProfile delegateProfile =
+        DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name(generateUuid()).build();
+    persistence.save(delegateProfile);
+
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .ip("127.0.0.1")
+                            .hostName("a.b.c")
+                            .delegateName("testDelegateName1")
+                            .version(VERSION)
+                            .status(DelegateInstanceStatus.ENABLED)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .delegateProfileId(delegateProfile.getUuid())
+                            .ng(false)
+                            .build();
+    persistence.save(delegate);
+
+    Set<String> tags = delegateService.getAllDelegateSelectors(ACCOUNT_ID);
+    assertThat(tags).isNotEmpty();
+    persistence.update(persistence.createQuery(Delegate.class, excludeAuthority),
+        persistence.createUpdateOperations(Delegate.class).unset(DelegateKeys.ng));
+    tags = delegateService.getAllDelegateSelectors(ACCOUNT_ID);
+    assertThat(tags).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void shouldGetCGDelegate_whenNgFieldTrue() {
+    DelegateProfile delegateProfile =
+        DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name(generateUuid()).build();
+    persistence.save(delegateProfile);
+
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .ip("127.0.0.1")
+                            .hostName("a.b.c")
+                            .delegateName("testDelegateName1")
+                            .version(VERSION)
+                            .status(DelegateInstanceStatus.ENABLED)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .delegateProfileId(delegateProfile.getUuid())
+                            .ng(true)
+                            .build();
+    persistence.save(delegate);
+
+    Set<String> tags = delegateService.getAllDelegateSelectors(ACCOUNT_ID);
+    assertThat(tags).isEmpty();
   }
 
   @Test

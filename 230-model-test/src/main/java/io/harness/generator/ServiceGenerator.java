@@ -12,6 +12,7 @@ import static software.wings.api.DeploymentType.AZURE_WEBAPP;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.Service.ServiceBuilder;
 import static software.wings.beans.Service.builder;
+import static software.wings.beans.appmanifest.StoreType.CUSTOM;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.generator.ApplicationGenerator.Applications;
@@ -20,6 +21,7 @@ import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator.Settings;
 import io.harness.generator.artifactstream.ArtifactStreamManager;
 import io.harness.generator.artifactstream.ArtifactStreamManager.ArtifactStreams;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.manifest.CustomSourceConfig;
 
 import software.wings.api.DeploymentType;
@@ -65,6 +67,11 @@ public class ServiceGenerator {
   private static final String CHARTMUSEUM_CHART_NAME = "chartmuseum";
   private static final String BASE_PATH = "helm/charts";
   private static final String K8S_CUSTOM_SCRIPT_PATH = "k8s-manifests/custom/custom-manifest-script.sh";
+  private static final String HELM_CUSTOM_SCRIPT_PATH = "k8s-manifests/custom/helm-custom-manifest-script.sh";
+  private static final String HELM_CUSTOM_SCRIPT_PATH_VALUE_OVERRIDE =
+      "k8s-manifests/custom/helm-custom-manifest-no-value-script.sh";
+  private static final String HELM_CUSTOM_SCRIPT_PATH_MULTIPLE_VALUE_OVERRIDE =
+      "k8s-manifests/custom/helm-custom-manifest-multiple-value-script.sh";
   private static final String K8S_CUSTOM_SCRIPT_NO_VALUES_PATH = "k8s-manifests/custom/no-values-manifest-script.sh";
   private static final String OPENSHIFT_CUSTOM_SCRIPT_PATH = "k8s-manifests/custom/custom-openshift-manifest-script.sh";
   private static final String K8S_CUSTOM_MANIFEST_PATH = "${serviceVariable.manifestPath}/";
@@ -100,6 +107,9 @@ public class ServiceGenerator {
     CUSTOM_MANIFEST_OPENSHIFT_TEST,
     CUSTOM_MANIFEST_OPENSHIFT_TEST_ABSOLUTE_PATH_TEST,
     CUSTOM_MANFIEST_OPENSHIFT_PARAMS_OVERRIDES,
+    CUSTOM_MANIFEST_HELM_S3,
+    CUSTOM_MANIFEST_HELM_VALUE_OVERRIDE,
+    CUSTOM_MANIFEST_HELM_MULTIPLE_OVERRIDE,
     MULTI_ARTIFACT_FUNCTIONAL_TEST,
     MULTI_ARTIFACT_K8S_V2_TEST,
     NAS_FUNCTIONAL_TEST,
@@ -148,6 +158,15 @@ public class ServiceGenerator {
       case CUSTOM_MANFIEST_OPENSHIFT_PARAMS_OVERRIDES:
         return ensureCustomManifestOpenshiftParamsOverrideTest(
             seed, owners, "Test Openshift Params Override", "${serviceVariable.manifestPath}/template.yaml");
+      case CUSTOM_MANIFEST_HELM_S3:
+        return ensureCustomManifestHelmS3Service(
+            seed, owners, "Test Helm Custom Manifest", K8S_CUSTOM_MANIFEST_PATH, HELM_CUSTOM_SCRIPT_PATH);
+      case CUSTOM_MANIFEST_HELM_VALUE_OVERRIDE:
+        return ensureCustomManifestHelmValuesOverrides(seed, owners, "Test Helm Custom Manifest Value Override",
+            K8S_CUSTOM_MANIFEST_PATH, HELM_CUSTOM_SCRIPT_PATH_VALUE_OVERRIDE);
+      case CUSTOM_MANIFEST_HELM_MULTIPLE_OVERRIDE:
+        return ensureCustomManifestHelmMultipleOverride(seed, owners, "Test Helm Custom Manifest Multiple Override",
+            K8S_CUSTOM_MANIFEST_PATH, HELM_CUSTOM_SCRIPT_PATH_MULTIPLE_VALUE_OVERRIDE);
       case MULTI_ARTIFACT_FUNCTIONAL_TEST:
         return ensureMultiArtifactFunctionalTest(seed, owners, "MA-FunctionalTest Service");
       case MULTI_ARTIFACT_K8S_V2_TEST:
@@ -195,19 +214,7 @@ public class ServiceGenerator {
   }
 
   private Service ensureHelmS3Service(Seed seed, Owners owners) {
-    Application application = owners.obtainApplication(
-        () -> applicationGenerator.ensurePredefined(seed, owners, Applications.FUNCTIONAL_TEST));
-
-    Service service = Service.builder()
-                          .name(HELM_S3_SERVICE_NAME)
-                          .deploymentType(DeploymentType.HELM)
-                          .appId(application.getUuid())
-                          .artifactType(ArtifactType.DOCKER)
-                          .build();
-    ensureService(service);
-    service = ensureService(seed, owners, service);
-    owners.add(service);
-
+    Service service = ensureBasicHelmS3Service(seed, owners, HELM_S3_SERVICE_NAME);
     addApplicationManifestToService(seed, owners, service);
     return service;
   }
@@ -417,22 +424,92 @@ public class ServiceGenerator {
     ensureServiceVariableForService(service, "multipleOverridesPath",
         "${serviceVariable.overridesPath}/params1, ${serviceVariable.overridesPath}/params2");
     ensureCustomApplicationManifest(
-        service, "", "${serviceVariable.multipleOverridesPath}", StoreType.CUSTOM, AppManifestKind.OC_PARAMS);
+        service, "", "${serviceVariable.multipleOverridesPath}", CUSTOM, AppManifestKind.OC_PARAMS);
     return service;
   }
 
   public Service ensureCustomManifestK8sTest(
       Randomizer.Seed seed, Owners owners, String name, String manifestPath, String scriptResource) {
-    return ensureCustomManifestK8sV2Test(seed, owners, name, manifestPath, scriptResource, StoreType.CUSTOM);
+    return ensureCustomManifestK8sV2Test(seed, owners, name, manifestPath, scriptResource, CUSTOM);
+  }
+
+  public Service ensureCustomManifestHelmS3Service(
+      Seed seed, Owners owners, String name, String manifestPath, String scriptResource) {
+    Service service = ensureBasicHelmS3Service(seed, owners, name);
+
+    ensureCustomApplicationManifest(service, scriptResource, manifestPath, CUSTOM, AppManifestKind.K8S_MANIFEST);
+    ensureServiceVariableForService(service, "manifestPath", "test-chart");
+    ensureServiceVariableForService(service, "overridesPath1", "overrides/values1.yaml");
+    ensureServiceVariableForService(service, "overridesPath2", "overrides/values2.yaml");
+    secretGenerator.ensureSecretText(owners, "custom-manifest-fn-test-secret", "custom-manifest-fn-test-value");
+    ArtifactStream artifactStream =
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
+    service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
+
+    return service;
+  }
+
+  public Service ensureCustomManifestHelmValuesOverrides(
+      Seed seed, Owners owners, String name, String manifestPath, String scriptResource) {
+    Service service = ensureBasicHelmS3Service(seed, owners, name);
+
+    ensureServiceVariableForService(service, "manifestPath", "test-chart-without-value");
+    ensureServiceVariableForService(service, "overridesPath1", "overrides/values1.yaml");
+    ensureServiceVariableForService(service, "overrideDir", "overrides");
+
+    ensureCustomApplicationManifest(service, scriptResource, manifestPath, CUSTOM, AppManifestKind.K8S_MANIFEST);
+    ensureCustomApplicationManifest(service, "", "${serviceVariable.overridesPath1}", CUSTOM, AppManifestKind.VALUES);
+
+    return service;
+  }
+
+  public Service ensureCustomManifestHelmMultipleOverride(
+      Seed seed, Owners owners, String name, String manifestPath, String scriptResource) {
+    Service service = ensureBasicHelmS3Service(seed, owners, name);
+
+    ensureServiceVariableForService(service, "manifestPath", "test-chart-multiple-override");
+    ensureServiceVariableForService(service, "overridesPath1", "multipleOverrides/values1.yaml");
+    ensureServiceVariableForService(service, "overridesPath2", "multipleOverrides/values2.yaml");
+    ensureServiceVariableForService(
+        service, "multipleOverridePaths", "multipleOverrides/values2.yaml,multipleOverrides/values1.yaml");
+    ensureServiceVariableForService(service, "overrideDir", "multipleOverrides");
+
+    ensureCustomApplicationManifest(service, scriptResource, manifestPath, CUSTOM, AppManifestKind.K8S_MANIFEST);
+    ensureCustomApplicationManifest(
+        service, "", "${serviceVariable.multipleOverridePaths}", CUSTOM, AppManifestKind.VALUES);
+
+    secretGenerator.ensureSecretText(owners, "custom-manifest-fn-test-secret", "custom-manifest-fn-test-value");
+    ArtifactStream artifactStream =
+        artifactStreamManager.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_DOCKER);
+    service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
+
+    return service;
+  }
+
+  private Service ensureBasicHelmS3Service(Seed seed, Owners owners, String name) {
+    Application application = owners.obtainApplication(
+        () -> applicationGenerator.ensurePredefined(seed, owners, Applications.FUNCTIONAL_TEST));
+
+    Service service = Service.builder()
+                          .name(name)
+                          .deploymentType(DeploymentType.HELM)
+                          .appId(application.getUuid())
+                          .artifactType(ArtifactType.DOCKER)
+                          .helmVersion(HelmVersion.V3)
+                          .build();
+    ensureService(service);
+    service = ensureService(seed, owners, service);
+    owners.add(service);
+    return service;
   }
 
   public Service ensureCustomManifestK8sValuesOverridesTest(Randomizer.Seed seed, Owners owners, String name) {
-    Service service = ensureCustomManifestK8sV2Test(
-        seed, owners, name, K8S_CUSTOM_MANIFEST_PATH, K8S_CUSTOM_SCRIPT_PATH, StoreType.CUSTOM);
+    Service service =
+        ensureCustomManifestK8sV2Test(seed, owners, name, K8S_CUSTOM_MANIFEST_PATH, K8S_CUSTOM_SCRIPT_PATH, CUSTOM);
     ensureServiceVariableForService(service, "multipleOverridesPath",
         "${serviceVariable.overridesPath}/values1.yaml, ${serviceVariable.overridesPath}/values2.yaml");
     ensureCustomApplicationManifest(
-        service, "", "${serviceVariable.multipleOverridesPath}", StoreType.CUSTOM, AppManifestKind.VALUES);
+        service, "", "${serviceVariable.multipleOverridesPath}", CUSTOM, AppManifestKind.VALUES);
     return service;
   }
 

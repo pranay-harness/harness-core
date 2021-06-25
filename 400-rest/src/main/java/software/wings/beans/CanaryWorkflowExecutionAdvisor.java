@@ -251,7 +251,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       }
 
       if (phaseSubWorkflow == null && executionInterrupts != null
-          && executionInterrupts.stream().anyMatch(ex -> ex.getExecutionInterruptType() == ROLLBACK)) {
+          && executionInterrupts.stream().anyMatch(ex -> ex.getExecutionInterruptType() == ROLLBACK)
+          && !rollbackProvisioners) {
         return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.END_EXECUTION).build();
       }
 
@@ -431,6 +432,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           return anExecutionEventAdvice().withSkipState(true).withSkipExpression(assertionExpression).build();
         }
       } catch (Exception ex) {
+        log.error("Error while evaluating assertion expression", ex);
         return anExecutionEventAdvice()
             .withSkipState(true)
             .withSkipExpression(assertionExpression)

@@ -109,6 +109,8 @@ public class TerraformDestroyTaskHandler extends TerraformAbstractTaskHandler {
       String stateFileId = terraformBaseHelper.uploadTfStateFile(
           taskParameters.getAccountId(), delegateId, taskId, taskParameters.getEntityId(), tfStateFile);
 
+      logCallback.saveExecutionLog("\nDone \n", INFO, CommandExecutionStatus.SUCCESS);
+
       return TerraformTaskNGResponse.builder()
           .commitIdForConfigFilesMap(commitIdToFetchedFilesMap)
           .encryptedTfPlan(taskParameters.getEncryptedTfPlan())

@@ -373,6 +373,22 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
     FileUtils.copyInputStreamToFile(new ByteArrayInputStream(decryptedTerraformPlan), tfPlanFile);
   }
 
+  public EncryptedRecordData encryptPlan(byte[] content, String planName, EncryptionConfig encryptionConfig) {
+    return (EncryptedRecordData) encryptDecryptHelper.encryptContent(content, planName, encryptionConfig);
+  }
+
+  @NotNull
+  public String getPlanName(TerraformCommand command) {
+    switch (command) {
+      case APPLY:
+        return TERRAFORM_PLAN_FILE_OUTPUT_NAME;
+      case DESTROY:
+        return TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME;
+      default:
+        throw new IllegalArgumentException("Invalid Terraform Command : " + command.toString());
+    }
+  }
+
   @NonNull
   public String resolveBaseDir(String accountId, String provisionerId) {
     return TF_BASE_DIR.replace("${ACCOUNT_ID}", accountId).replace("${ENTITY_ID}", provisionerId);

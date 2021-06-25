@@ -28,6 +28,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotSupportedException;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -64,5 +65,13 @@ public class PmsYamlSchemaResource implements YamlSchemaResource {
     }
 
     return ResponseDTO.newResponse(schema);
+  }
+
+  @POST
+  @Path("/invalidate-cache")
+  @ApiOperation(value = "Invalidate yaml schema cache", nickname = "invalidateYamlSchemaCache")
+  public ResponseDTO<Boolean> invalidateYamlSchemaCache() {
+    pmsYamlSchemaService.invalidateAllCache();
+    return ResponseDTO.newResponse(true);
   }
 }

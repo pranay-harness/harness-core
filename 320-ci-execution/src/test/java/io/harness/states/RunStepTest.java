@@ -154,7 +154,7 @@ public class RunStepTest extends CIExecutionTestBase {
         .thenReturn(UnitStep.newBuilder().build());
 
     AsyncExecutableResponse asyncExecutableResponse =
-        runStep.executeAsync(ambiance, stepElementParameters, stepInputPackage);
+        runStep.executeAsync(ambiance, stepElementParameters, stepInputPackage, null);
     assertThat(asyncExecutableResponse)
         .isEqualTo(AsyncExecutableResponse.newBuilder()
                        .addCallbackIds(callbackId)

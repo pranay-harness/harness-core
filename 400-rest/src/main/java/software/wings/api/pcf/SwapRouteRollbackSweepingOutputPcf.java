@@ -5,6 +5,7 @@ import io.harness.beans.SweepingOutput;
 import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 
@@ -16,6 +17,7 @@ public class SwapRouteRollbackSweepingOutputPcf implements SweepingOutput {
   private String uuid;
   private String name;
   private PcfRouteUpdateRequestConfigData pcfRouteUpdateRequestConfigData;
+  private List<String> tags;
 
   @Override
   public String getType() {

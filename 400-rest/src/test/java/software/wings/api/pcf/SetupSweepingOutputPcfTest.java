@@ -42,6 +42,7 @@ public class SetupSweepingOutputPcfTest extends CategoryTest {
                                                      .applicationGuid("g1")
                                                      .initialInstanceCount(1)
                                                      .build())
+            .tags(Collections.singletonList("delegate1"))
             .build();
 
     InfoVariables appPcfVariables = setupSweepingOutputPcf.fetchPcfVariableInfo();

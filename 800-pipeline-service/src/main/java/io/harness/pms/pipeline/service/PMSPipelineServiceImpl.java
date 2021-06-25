@@ -14,6 +14,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.InvalidYamlException;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.observer.Subject;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
@@ -27,10 +28,12 @@ import io.harness.pms.pipeline.observer.PipelineActionObserver;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.variables.VariableCreatorMergeService;
 import io.harness.pms.variables.VariableMergeServiceResponse;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.grpc.StatusRuntimeException;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
@@ -71,10 +74,17 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       throw new DuplicateFieldException(format(DUP_KEY_EXP_FORMAT_STRING, pipelineEntity.getIdentifier(),
                                             pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()),
           USER_SRE, ex);
-    } catch (IOException | EventsFrameworkDownException exception) {
-      throw new InvalidRequestException(String.format(
-          "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
-          pipelineEntity.getIdentifier()));
+    } catch (EventsFrameworkDownException ex) {
+      log.error("Events framework is down for Pipeline Service.", ex);
+      throw new InvalidRequestException("Error connecting to systems upstream", ex);
+
+    } catch (IOException ex) {
+      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+
+    } catch (StatusRuntimeException e) {
+      log.error(e.toString());
+      throw new InvalidRequestException("Pipeline could not be created." + e.getMessage());
     }
   }
 
@@ -122,11 +132,17 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
             pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
       }
       return updatedResult;
-    } catch (IOException e) {
+    } catch (EventsFrameworkDownException ex) {
+      log.error("Events framework is down for Pipeline Service.", ex);
+      throw new InvalidRequestException("Error connecting to systems upstream", ex);
+
+    } catch (IOException ex) {
+      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+
+    } catch (StatusRuntimeException e) {
       log.error(e.toString());
-      throw new InvalidRequestException(String.format(
-          "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
-          pipelineEntity.getIdentifier()));
+      throw new InvalidRequestException("Pipeline could not be created." + e.getMessage());
     }
   }
 

@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.stackdriver.StackdriverLogDefinition;
 import io.harness.cvng.core.beans.DSConfig.CVConfigUpdateResult;
 import io.harness.cvng.core.beans.StackdriverLogDSConfig.StackdriverLogConfiguration;
 import io.harness.cvng.core.entities.StackdriverLogCVConfig;

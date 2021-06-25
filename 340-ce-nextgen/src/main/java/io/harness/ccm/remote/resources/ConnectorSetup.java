@@ -36,7 +36,7 @@ public class ConnectorSetup {
   @Path("/azureappclientid")
   @ApiOperation(value = "Get Azure application client Id", nickname = "azureappclientid")
   public ResponseDTO<String> getAzureAppClientId() {
-    return ResponseDTO.newResponse(configuration.getAzureConfig().getAzureAppClientId());
+    return ResponseDTO.newResponse(configuration.getCeAzureSetupConfig().getAzureAppClientId());
   }
 
   @GET

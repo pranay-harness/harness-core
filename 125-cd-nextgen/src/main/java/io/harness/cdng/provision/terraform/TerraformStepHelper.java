@@ -1,6 +1,6 @@
 package io.harness.cdng.provision.terraform;
 
-import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
+import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.provision.TerraformConstants.TF_DESTROY_NAME_PREFIX;
 import static io.harness.provision.TerraformConstants.TF_NAME_PREFIX;
 import static io.harness.validation.Validator.notEmptyCheck;
@@ -19,11 +19,12 @@ import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
 import io.harness.cdng.manifest.yaml.GitStoreConfigDTO;
 import io.harness.cdng.manifest.yaml.GithubStore;
-import io.harness.cdng.manifest.yaml.StoreConfig;
-import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
 import io.harness.cdng.provision.terraform.TerraformConfig.TerraformConfigBuilder;
 import io.harness.cdng.provision.terraform.TerraformConfig.TerraformConfigKeys;
 import io.harness.cdng.provision.terraform.TerraformInheritOutput.TerraformInheritOutputBuilder;
+import io.harness.common.ParameterFieldHelper;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
 import io.harness.data.structure.EmptyPredicate;
@@ -44,7 +45,6 @@ import io.harness.mappers.SecretManagerConfigMapper;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ngpipeline.common.AmbianceHelper;
-import io.harness.ngpipeline.common.ParameterFieldHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
@@ -63,6 +63,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -88,7 +89,7 @@ public class TerraformStepHelper {
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
   @Inject private FileServiceClientFactory fileService;
-  @Inject private SecretManagerClientService secretManagerClientService;
+  @Named("PRIVILEGED") @Inject private SecretManagerClientService secretManagerClientService;
 
   public String generateFullIdentifier(String provisionerIdentifier, Ambiance ambiance) {
     return String.format("%s/%s/%s/%s", AmbianceHelper.getAccountId(ambiance),

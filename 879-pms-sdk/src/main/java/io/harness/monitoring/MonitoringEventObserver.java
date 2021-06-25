@@ -9,6 +9,7 @@ import io.harness.queue.EventListenerObserver;
 import io.harness.queue.WithMonitoring;
 
 import com.google.inject.Inject;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -22,22 +23,23 @@ public class MonitoringEventObserver<T> implements EventListenerObserver<T>, Asy
   @Inject MetricService metricService;
 
   @Override
-  public void onListenerEnd(T message) {
-    if (WithMonitoring.class.isAssignableFrom(message.getClass())) {
-      WithMonitoring monitoring = (WithMonitoring) message;
-      try (ThreadAutoLogContext autoLogContext = monitoring.metricContext()) {
-        metricService.recordMetric(String.format(LISTENER_END_METRIC, monitoring.getMetricPrefix()),
-            System.currentTimeMillis() - monitoring.getCreatedAt());
-      }
-    }
+  public void onListenerEnd(T message, Map<String, String> metadataMap) {
+    sendMetric(message, LISTENER_END_METRIC);
   }
 
   @Override
-  public void onListenerStart(T message) {
+  public void onListenerStart(T message, Map<String, String> metadataMap) {
+    sendMetric(message, LISTENER_START_METRIC);
+  }
+
+  private void sendMetric(T message, String metricName) {
     if (WithMonitoring.class.isAssignableFrom(message.getClass())) {
       WithMonitoring monitoring = (WithMonitoring) message;
+      if (!monitoring.isMonitoringEnabled()) {
+        return;
+      }
       try (ThreadAutoLogContext autoLogContext = monitoring.metricContext()) {
-        metricService.recordMetric(String.format(LISTENER_START_METRIC, monitoring.getMetricPrefix()),
+        metricService.recordMetric(String.format(metricName, monitoring.getMetricPrefix()),
             System.currentTimeMillis() - monitoring.getCreatedAt());
       }
     }

@@ -31,6 +31,7 @@ public class MultiServiceOrchestrationWorkflow extends CanaryOrchestrationWorkfl
     return aMultiServiceOrchestrationWorkflow()
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())
+        .withRollbackProvisioners(getRollbackProvisioners())
         .withWorkflowPhaseIds(getWorkflowPhaseIds())
         .withWorkflowPhases(getWorkflowPhases())
         .withWorkflowPhaseIdMap(getWorkflowPhaseIdMap())
@@ -61,6 +62,7 @@ public class MultiServiceOrchestrationWorkflow extends CanaryOrchestrationWorkfl
     private List<Variable> userVariables = new ArrayList<>();
     private List<Variable> derivedVariables = new ArrayList<>();
     private Set<EntityType> requiredEntityTypes;
+    private PhaseStep rollbackProvisioners;
 
     private MultiServiceOrchestrationWorkflowBuilder() {}
     public static MultiServiceOrchestrationWorkflowBuilder aMultiServiceOrchestrationWorkflow() {
@@ -74,6 +76,11 @@ public class MultiServiceOrchestrationWorkflow extends CanaryOrchestrationWorkfl
 
     public MultiServiceOrchestrationWorkflowBuilder withPreDeploymentSteps(PhaseStep preDeploymentSteps) {
       this.preDeploymentSteps = preDeploymentSteps;
+      return this;
+    }
+
+    public MultiServiceOrchestrationWorkflowBuilder withRollbackProvisioners(PhaseStep rollbackProvisioners) {
+      this.rollbackProvisioners = rollbackProvisioners;
       return this;
     }
 
@@ -160,6 +167,7 @@ public class MultiServiceOrchestrationWorkflow extends CanaryOrchestrationWorkfl
       multiServiceOrchestrationWorkflow.setDerivedVariables(derivedVariables);
       multiServiceOrchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
       multiServiceOrchestrationWorkflow.setConcurrencyStrategy(concurrencyStrategy);
+      multiServiceOrchestrationWorkflow.setRollbackProvisioners(rollbackProvisioners);
       return multiServiceOrchestrationWorkflow;
     }
   }

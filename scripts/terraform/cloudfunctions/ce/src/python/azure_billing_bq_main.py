@@ -58,15 +58,15 @@ def main(event, context):
             jsonData["tenant_id"] = ps[2]
 
     monthfolder = ps[-1]  # last folder in path
-    reportYear = monthfolder.split("-")[0][:4]
-    reportMonth = monthfolder.split("-")[0][4:6]
+    jsonData["reportYear"] = monthfolder.split("-")[0][:4]
+    jsonData["reportMonth"] = monthfolder.split("-")[0][4:6]
 
     connector_id = ps[1]  # second from beginning is connector id in mongo
 
     accountIdBQ = re.sub('[^0-9a-z]', '_', jsonData.get("accountId").lower())
     jsonData["datasetName"] = "BillingReport_%s" % (accountIdBQ)
 
-    jsonData["tableSuffix"] = "%s_%s_%s" % (reportYear, reportMonth, connector_id)
+    jsonData["tableSuffix"] = "%s_%s_%s" % (jsonData["reportYear"], jsonData["reportMonth"], connector_id)
     jsonData["tableName"] = f"azureBilling_{jsonData['tableSuffix']}"
     jsonData["tableId"] = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], jsonData["tableName"])
 
@@ -80,14 +80,15 @@ def main(event, context):
 
     if not if_tbl_exists(client, unifiedTableRef):
         print_("%s table does not exists, creating table..." % unifiedTableRef)
-        createTable(client, unifiedTableTableName)
+        createTable(client, unifiedTableRef)
     else:
+        # Disable this call when the pipeline has executed once for each customer
         alter_unified_table(jsonData)
         print_("%s table exists" % unifiedTableTableName)
 
     if not if_tbl_exists(client, preAggragatedTableRef):
         print_("%s table does not exists, creating table..." % preAggragatedTableRef)
-        createTable(client, preAggregatedTableTableName)
+        createTable(client, preAggragatedTableRef)
     else:
         alter_preagg_table(jsonData)
         print_("%s table exists" % preAggregatedTableTableName)
@@ -263,7 +264,7 @@ def setAvailableColumns(jsonData):
 def ingest_data_into_preagg(jsonData, azure_column_mapping):
     ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
     tableName = "%s.%s" % (ds, "preAggregated")
-    year, month, _ = jsonData["tableSuffix"].split('_')
+    year, month = jsonData["reportYear"], jsonData["reportMonth"]
     date_start = "%s-%s-01" % (year, month)
     date_end = "%s-%s-%s" % (year, month, monthrange(int(year), int(month))[1])
     print_("Loading into %s preAggregated table..." % tableName)
@@ -300,10 +301,10 @@ def ingest_data_into_preagg(jsonData, azure_column_mapping):
 
 
 def ingest_data_into_unified(jsonData, azure_column_mapping):
-    create_bq_udf()
+    # create_bq_udf() # Enable this only when needed.
     ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
     tableName = "%s.%s" % (ds, "unifiedTable")
-    year, month, _ = jsonData["tableSuffix"].split('_')
+    year, month = jsonData["reportYear"], jsonData["reportMonth"]
     date_start = "%s-%s-01" % (year, month)
     date_end = "%s-%s-%s" % (year, month, monthrange(int(year), int(month))[1])
     print_("Loading into %s table..." % tableName)
@@ -313,7 +314,8 @@ def ingest_data_into_unified(jsonData, azure_column_mapping):
                         azureMeterName,
                         azureInstanceId, region, azureResourceGroup,
                         azureSubscriptionGuid, azureServiceName,
-                        cloudProvider, labels, azureResource, azureVMProviderId, azureTenantId
+                        cloudProvider, labels, azureResource, azureVMProviderId, azureTenantId,
+                        azureResourceRate
                     """
     select_columns = """MeterCategory AS product, TIMESTAMP(%s) as startTime, %s*%s AS cost,
                         MeterCategory as azureMeterCategory,MeterSubcategory as azureMeterSubcategory,MeterId as azureMeterId,
@@ -328,7 +330,8 @@ def ingest_data_into_unified(jsonData, azure_column_mapping):
                             IF(REGEXP_CONTAINS(%s, r'virtualMachines'),
                                 LOWER(CONCAT('azure://', %s)),
                                 null)),
-                        '%s' as azureTenantId
+                        '%s' as azureTenantId,
+                        %s AS azureResourceRate
                      """ % (azure_column_mapping["startTime"],
                             azure_column_mapping["cost"], get_cost_markup_factor(jsonData),
                             azure_column_mapping["azureInstanceId"],
@@ -338,7 +341,7 @@ def ingest_data_into_unified(jsonData, azure_column_mapping):
                             azure_column_mapping["azureInstanceId"], azure_column_mapping["azureInstanceId"],
                             azure_column_mapping["azureInstanceId"],
                             azure_column_mapping["azureInstanceId"], azure_column_mapping["azureInstanceId"],
-                            jsonData["tenant_id"])
+                            jsonData["tenant_id"], azure_column_mapping["azureResourceRate"])
 
     # Amend query as per columns availability
     for additionalColumn in ["AccountName", "Frequency", "PublisherType", "ServiceTier", "ResourceType",
@@ -402,9 +405,11 @@ def create_bq_udf():
                 return output;
                 \""";
     """ % PROJECTID
-
-    query_job = client.query(query)
-    query_job.result()
+    try:
+        query_job = client.query(query)
+        query_job.result()
+    except Exception as e:
+        print_(e)
 
 
 def alter_preagg_table(jsonData):
@@ -429,30 +434,11 @@ def alter_preagg_table(jsonData):
 def alter_unified_table(jsonData):
     print_("Altering unifiedTable Table")
     ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
-    query = "ALTER TABLE `%s.unifiedTable` ADD COLUMN IF NOT EXISTS azureMeterCategory STRING, \
-        ADD COLUMN IF NOT EXISTS azureMeterSubcategory STRING, \
-        ADD COLUMN IF NOT EXISTS azureMeterId STRING, \
-        ADD COLUMN IF NOT EXISTS azureMeterName STRING, \
-        ADD COLUMN IF NOT EXISTS azureResourceType STRING, \
-        ADD COLUMN IF NOT EXISTS azureServiceTier STRING, \
-        ADD COLUMN IF NOT EXISTS azureInstanceId STRING, \
-        ADD COLUMN IF NOT EXISTS azureResourceGroup STRING, \
-        ADD COLUMN IF NOT EXISTS azureSubscriptionGuid STRING, \
-        ADD COLUMN IF NOT EXISTS azureAccountName STRING, \
-        ADD COLUMN IF NOT EXISTS azureFrequency STRING, \
-        ADD COLUMN IF NOT EXISTS azurePublisherType STRING, \
-        ADD COLUMN IF NOT EXISTS azureSubscriptionName STRING, \
-        ADD COLUMN IF NOT EXISTS azureReservationId STRING, \
-        ADD COLUMN IF NOT EXISTS azureReservationName STRING, \
-        ADD COLUMN IF NOT EXISTS azurePublisherName STRING, \
-        ADD COLUMN IF NOT EXISTS azureServiceName STRING, \
-        ADD COLUMN IF NOT EXISTS azureVMProviderId STRING, \
-        ADD COLUMN IF NOT EXISTS azureResource STRING, \
-        ADD COLUMN IF NOT EXISTS azureTenantId STRING, \
-        ADD COLUMN IF NOT EXISTS azureCustomerName STRING, \
-        ADD COLUMN IF NOT EXISTS azureBillingCurrency STRING;" % ds
+    query = "ALTER TABLE `%s.unifiedTable` \
+        ADD COLUMN IF NOT EXISTS azureResourceRate FLOAT64;" % ds
 
     try:
+        print_(query)
         query_job = client.query(query)
         query_job.result()
     except Exception as e:

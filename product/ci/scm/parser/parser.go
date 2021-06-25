@@ -80,6 +80,19 @@ func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 				Comment: comment,
 			},
 		}, nil
+
+	case *scm.BranchHook:
+		branch, branchHookErr := converter.ConvertBranchHook(event)
+		if branchHookErr != nil {
+			return nil, branchHookErr
+		}
+		log.Infow("Successfully parsed pr webhook", "elapsed_time_ms", utils.TimeSince(start))
+		return &pb.ParseWebhookResponse{
+			Hook: &pb.ParseWebhookResponse_Branch{
+				Branch: branch,
+			},
+		}, nil
+
 	default:
 		log.Errorw(
 			"Unsupported webhook event",

@@ -2,6 +2,7 @@ package software.wings.delegatetasks.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.delegate.task.helm.CustomManifestFetchTaskHelper.unzipManifestFiles;
 import static io.harness.delegate.task.helm.HelmTaskHelperBase.RESOURCE_DIR_BASE;
 import static io.harness.delegate.task.helm.HelmTaskHelperBase.getChartDirectory;
 import static io.harness.exception.WingsException.USER;
@@ -24,6 +25,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.chartmuseum.ChartMuseumServer;
+import io.harness.delegate.beans.DelegateFileManagerBase;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
@@ -55,6 +58,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -66,6 +70,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import java.util.zip.ZipInputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -84,6 +89,7 @@ public class HelmTaskHelper {
   @Inject private EncryptionService encryptionService;
   @Inject private ChartMuseumClient chartMuseumClient;
   @Inject private HelmTaskHelperBase helmTaskHelperBase;
+  @Inject private DelegateFileManagerBase delegateFileManagerBase;
 
   private void fetchChartFiles(HelmChartConfigParams helmChartConfigParams, String destinationDirectory,
       long timeoutInMillis, HelmCommandFlag helmCommandFlag) throws Exception {
@@ -137,6 +143,16 @@ public class HelmTaskHelper {
     }
 
     fetchChartFiles(helmChartConfigParams, workingDirectory, timeoutInMillis, helmCommandFlag);
+  }
+
+  public void downloadAndUnzipCustomSourceManifestFiles(
+      String workingDirectory, String zippedManifestFileId, String accountId) throws IOException {
+    InputStream inputStream =
+        delegateFileManagerBase.downloadByFileId(FileBucket.CUSTOM_MANIFEST, zippedManifestFileId, accountId);
+    ZipInputStream zipInputStream = new ZipInputStream(inputStream);
+
+    File destDir = new File(workingDirectory);
+    unzipManifestFiles(destDir, zipInputStream);
   }
 
   public String getValuesYamlFromChart(HelmChartConfigParams helmChartConfigParams, long timeoutInMillis,

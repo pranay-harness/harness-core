@@ -21,6 +21,7 @@ public class ContainerDefinitionInfo {
   @NotEmpty private ContainerImageDetails containerImageDetails;
   @NotEmpty private CIContainerType containerType;
   @NotEmpty private ContainerResourceParams containerResourceParams;
+  private boolean isHarnessManagedImage;
   private String stepIdentifier;
   private String stepName;
   private List<String> commands;
@@ -28,6 +29,7 @@ public class ContainerDefinitionInfo {
   private List<String> args;
   private List<Integer> ports;
   Map<String, String> envVars;
+  Map<String, String> envVarsWithSecretRef;
   List<SecretNGVariable> secretVariables;
   private boolean privileged;
   private Integer runAsUser;

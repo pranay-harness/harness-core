@@ -10,6 +10,7 @@ import io.harness.metrics.ThreadAutoLogContext;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.queue.Queuable;
 import io.harness.queue.WithMonitoring;
@@ -48,6 +49,8 @@ public class OrchestrationEvent extends Queuable implements WithMonitoring {
   @NotNull OrchestrationEventType eventType;
   @Getter @Setter @NonFinal @CreatedDate Long createdAt;
   @Setter @NonFinal @Version Long version;
+  @Getter @Setter @NonFinal boolean monitoringEnabled;
+  TriggerPayload triggerPayload;
 
   public AutoLogContext autoLogContext() {
     Map<String, String> logContext = AmbianceUtils.logContextMap(ambiance);

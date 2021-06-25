@@ -5,6 +5,7 @@ import static io.harness.common.CICommonPodConstants.CONTAINER_NAME;
 import static io.harness.common.CICommonPodConstants.REL_STDERR_FILE_PATH;
 import static io.harness.common.CICommonPodConstants.REL_STDOUT_FILE_PATH;
 import static io.harness.common.CIExecutionConstants.STEP_MOUNT_PATH;
+import static io.harness.steps.StepUtils.buildAbstractions;
 
 import static java.util.stream.Collectors.toList;
 
@@ -19,6 +20,7 @@ import io.harness.delegate.beans.ci.K8ExecuteCommandTaskParams;
 import io.harness.delegate.beans.ci.ShellScriptType;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.encryption.Scope;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
@@ -37,6 +39,7 @@ import io.harness.stateutils.buildstate.ConnectorUtils;
 import com.google.inject.Inject;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -92,9 +95,10 @@ public class BuildStep implements SyncExecutable<BuildStepInfo> {
                                                                   .k8ExecCommandParams(k8ExecCommandParams)
                                                                   .build();
 
+      Map<String, String> abstractions = buildAbstractions(ambiance, Scope.PROJECT);
       DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                     .accountId(ngAccess.getAccountIdentifier())
-                                                    .taskSetupAbstractions(ambiance.getSetupAbstractionsMap())
+                                                    .taskSetupAbstractions(abstractions)
                                                     .executionTimeout(Duration.ofSeconds(buildStepInfo.getTimeout()))
                                                     .taskType(TASK_TYPE)
                                                     .taskParameters(k8ExecuteCommandTaskParams)

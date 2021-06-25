@@ -24,8 +24,6 @@ public class GitEntityUpdateInfoDTO {
   @QueryParam(GitSyncApiConstants.FOLDER_PATH) String folderPath;
   @QueryParam(GitSyncApiConstants.FILE_PATH_KEY) String filePath;
   @QueryParam(GitSyncApiConstants.COMMIT_MSG_KEY) String commitMsg;
-  @QueryParam(GitSyncApiConstants.CREATE_PR_KEY) boolean createPr;
   @QueryParam(GitSyncApiConstants.LAST_OBJECT_ID_KEY) String lastObjectId; // required in case of update file
-  @QueryParam(GitSyncApiConstants.TARGET_BRANCH_FOR_PR) String targetBranchForPr;
   @QueryParam(GitSyncApiConstants.BASE_BRANCH) String baseBranch;
 }

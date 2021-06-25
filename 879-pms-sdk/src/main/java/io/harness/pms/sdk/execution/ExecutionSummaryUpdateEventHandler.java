@@ -39,6 +39,11 @@ public class ExecutionSummaryUpdateEventHandler implements OrchestrationEventHan
       log.info("Starting ExecutionSummaryUpdateEvent handler orchestration event of type [{}] for status [{}]",
           orchestrationEvent.getEventType(), orchestrationEvent.getStatus());
     }
+    if (executionSummaryModuleInfoProvider == null
+        || !executionSummaryModuleInfoProvider.shouldRun(orchestrationEvent)) {
+      log.info("Ignoring ExecutionSummaryUpdate handler because the module info won't update for this step");
+      return;
+    }
     Ambiance ambiance = orchestrationEvent.getAmbiance();
     Level level = AmbianceUtils.obtainCurrentLevel(ambiance);
     ExecutionSummaryUpdateRequest.Builder executionSummaryUpdateRequest =

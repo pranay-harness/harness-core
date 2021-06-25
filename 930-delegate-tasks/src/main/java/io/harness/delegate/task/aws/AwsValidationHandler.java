@@ -36,8 +36,10 @@ public class AwsValidationHandler implements ConnectorValidationHandler {
     final List<EncryptedDataDetail> encryptedDataDetails = awsValidationParams.getEncryptedDataDetails();
     final List<DecryptableEntity> decryptableEntityList = connectorDTO.getDecryptableEntities();
 
-    for (DecryptableEntity entity : decryptableEntityList) {
-      decryptionService.decrypt(entity, encryptedDataDetails);
+    if (decryptableEntityList != null) {
+      for (DecryptableEntity entity : decryptableEntityList) {
+        decryptionService.decrypt(entity, encryptedDataDetails);
+      }
     }
 
     AwsConfig awsConfig = ngConfigMapper.mapAwsConfigWithDecryption(

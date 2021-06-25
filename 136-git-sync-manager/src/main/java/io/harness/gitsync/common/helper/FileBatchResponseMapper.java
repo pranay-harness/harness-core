@@ -18,20 +18,21 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 @OwnedBy(HarnessTeam.DX)
 public class FileBatchResponseMapper {
-  public List<GitFileChangeDTO> createGitFileChangeList(FileBatchContentResponse fileBatchContentResponse) {
+  public List<GitFileChangeDTO> createGitFileChangeList(
+      FileBatchContentResponse fileBatchContentResponse, String commitId) {
     if (fileBatchContentResponse == null || isEmpty(fileBatchContentResponse.getFileContentsList())) {
       return Collections.emptyList();
     }
     return fileBatchContentResponse.getFileContentsList()
         .stream()
-        .map(fileResponse -> mapToGitFileChange(fileResponse))
+        .map(fileResponse -> mapToGitFileChange(fileResponse, commitId))
         .collect(toList());
   }
 
-  private static GitFileChangeDTO mapToGitFileChange(FileContent fileResponse) {
+  private static GitFileChangeDTO mapToGitFileChange(FileContent fileResponse, String commitId) {
     return GitFileChangeDTO.builder()
         .changeSetId(generateUuid())
-        .commitId(fileResponse.getCommitId())
+        .commitId(commitId)
         .content(fileResponse.getContent())
         .error(fileResponse.getError())
         .objectId(fileResponse.getBlobId())

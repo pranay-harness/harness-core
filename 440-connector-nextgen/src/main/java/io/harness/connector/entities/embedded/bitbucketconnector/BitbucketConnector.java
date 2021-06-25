@@ -22,6 +22,7 @@ import org.springframework.data.annotation.TypeAlias;
 public class BitbucketConnector extends Connector {
   GitConnectionType connectionType;
   String url;
+  String validationRepo;
   GitAuthType authType;
   BitbucketAuthentication authenticationDetails;
   boolean hasApiAccess;

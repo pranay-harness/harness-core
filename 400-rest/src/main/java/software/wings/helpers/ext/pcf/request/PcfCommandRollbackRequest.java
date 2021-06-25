@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.pcf.model.CfCliVersion;
 
 import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
@@ -39,10 +40,10 @@ public class PcfCommandRollbackRequest extends PcfCommandRequest {
       List<String> tempRouteMaps, Integer timeoutIntervalInMin, List<PcfAppSetupTimeDetails> appsToBeDownSized,
       PcfAppSetupTimeDetails newApplicationDetails, boolean isStandardBlueGreenWorkflow, boolean useCfCLI,
       boolean useAppAutoscalar, boolean enforceSslValidation, boolean limitPcfThreads,
-      boolean ignorePcfConnectionContextCache) {
+      boolean ignorePcfConnectionContextCache, CfCliVersion cfCliVersion) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCfCLI, enforceSslValidation, useAppAutoscalar, limitPcfThreads,
-        ignorePcfConnectionContextCache);
+        ignorePcfConnectionContextCache, cfCliVersion);
     this.instanceData = instanceData;
     this.resizeStrategy = resizeStrategy;
     this.routeMaps = routeMaps;

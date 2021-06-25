@@ -23,6 +23,7 @@ import org.springframework.data.annotation.TypeAlias;
 public class GithubConnector extends Connector {
   GitConnectionType connectionType;
   String url;
+  String validationRepo;
   GitAuthType authType;
   GithubAuthentication authenticationDetails;
   boolean hasApiAccess;

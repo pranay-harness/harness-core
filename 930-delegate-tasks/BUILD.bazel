@@ -76,6 +76,7 @@ java_library(
         "@maven//:org_powermock_powermock_api_mockito",
         "@maven//:org_powermock_powermock_core",
         "@maven//:org_powermock_powermock_module_junit4",
+        "@maven//:pl_pragmatists_JUnitParams",
     ],
 )
 

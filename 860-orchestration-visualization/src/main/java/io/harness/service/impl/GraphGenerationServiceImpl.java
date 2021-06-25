@@ -17,6 +17,7 @@ import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.dto.converter.OrchestrationGraphDTOConverter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.event.GraphNodeUpdateObserver;
 import io.harness.event.GraphStatusUpdateHelper;
 import io.harness.event.PlanExecutionStatusUpdateEventHandler;
 import io.harness.exception.InvalidRequestException;
@@ -24,6 +25,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.generator.OrchestrationAdjacencyListGenerator;
 import io.harness.iterator.PersistenceIteratorFactory;
+import io.harness.observer.Subject;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 import io.harness.service.GraphGenerationService;
@@ -35,6 +37,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
@@ -52,6 +55,11 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Inject private GraphStatusUpdateHelper graphStatusUpdateHelper;
   @Inject private PlanExecutionStatusUpdateEventHandler planExecutionStatusUpdateEventHandler;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
+  @Getter private final Subject<GraphNodeUpdateObserver> graphNodeUpdateObserverSubject = new Subject<>();
+
+  public Subject<GraphNodeUpdateObserver> getGraphNodeUpdateObserverSubject() {
+    return graphNodeUpdateObserverSubject;
+  }
 
   @Override
   public void updateGraph(String planExecutionId) {

@@ -88,15 +88,19 @@ public class GitInfoPopulatorForConnector {
       if (fqnConnectorMap.containsKey(fqn)) {
         ConnectorResponseDTO connectorResponseDTO = fqnConnectorMap.get(fqn);
         EntityGitDetails gitDetails = connectorResponseDTO.getGitDetails();
-        String repo = gitDetails.getRepoIdentifier();
-        String branch = gitDetails.getBranch();
-        Boolean isDefault = true;
-        if (repo.equals(referredEntityRepo)) {
-          isDefault = isReferredByBranchDefault;
+        if (gitDetails != null && gitDetails.getRepoIdentifier() != null) {
+          String repo = gitDetails.getRepoIdentifier();
+          String branch = gitDetails.getBranch();
+          boolean isDefault = true;
+          if (referredEntityRepo.equals(repo)) {
+            isDefault = isReferredByBranchDefault;
+          }
+          entityReference.setRepoIdentifier(repo);
+          entityReference.setBranch(branch);
+          entityReference.setIsDefault(isDefault);
+        } else {
+          entityReference.setIsDefault(true);
         }
-        entityReference.setRepoIdentifier(repo);
-        entityReference.setBranch(branch);
-        entityReference.setIsDefault(isDefault);
       }
     }
   }
@@ -105,7 +109,7 @@ public class GitInfoPopulatorForConnector {
       String accountId, String orgId, String projectId, List<String> connectorIdentifiers, String repo, String branch) {
     List<ConnectorResponseDTO> connectorResponseDTOS = new ArrayList<>();
     final GitEntityInfo newBranch =
-        GitEntityInfo.builder().branch(branch).yamlGitConfigId(repo).findDefaultFromOtherBranches(true).build();
+        GitEntityInfo.builder().branch(branch).yamlGitConfigId(repo).findDefaultFromOtherRepos(true).build();
     try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
       GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(newBranch).build());
       Page<ConnectorResponseDTO> connectorPage = null;

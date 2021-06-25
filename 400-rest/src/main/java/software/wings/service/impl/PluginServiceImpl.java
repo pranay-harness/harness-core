@@ -334,7 +334,7 @@ public class PluginServiceImpl implements PluginService {
             .withSettingClass(PcfConfig.class)
             .withAccountId(accountId)
             .withIsEnabled(true)
-            .withDisplayName("Pivotal Cloud Foundry")
+            .withDisplayName("Tanzu Application Services")
             .withType("PCF")
             .withPluginCategories(asList(CloudProvider))
             .withUiSchema(readUiSchema("PCF"))

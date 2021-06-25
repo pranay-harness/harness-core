@@ -423,7 +423,7 @@ public class NodeAndPodDetailsDataFetcher
       InstanceData entry = instanceIdToInstanceData.getOrDefault(instanceIdWithCluster, DEFAULT_INSTANCE_DATA);
       QLNodeAndPodDetailsTableRow costDataEntry = instanceIdToCostData.get(instanceIdWithCluster);
       QLNodeAndPodDetailsTableRowBuilder builder = QLNodeAndPodDetailsTableRow.builder();
-      builder.name(costDataEntry.getName())
+      builder.name(entry.getInstanceName())
           .id(costDataEntry.getClusterId() + BillingStatsDefaultKeys.TOKEN + costDataEntry.getId())
           .nodeId(costDataEntry.getId())
           .clusterName(costDataEntry.getClusterName())

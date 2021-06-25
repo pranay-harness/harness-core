@@ -13,12 +13,14 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
+import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
+import io.harness.execution.PlanExecutionMetadata;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
@@ -34,6 +36,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PausedStepStatusUpdateTest extends OrchestrationTestBase {
   @Inject PausedStepStatusUpdate stepStatusUpdate;
+  @Inject PlanExecutionMetadataService planExecutionMetadataService;
   @Inject MongoTemplate mongoTemplate;
   @Inject Injector injector;
 
@@ -71,6 +74,10 @@ public class PausedStepStatusUpdateTest extends OrchestrationTestBase {
     String child2Id = generateUuid() + "child2Node";
     String child3Id = generateUuid() + "child3Node";
     PlanExecution planExecution = PlanExecution.builder().uuid(planExecutionId).status(Status.RUNNING).build();
+    PlanExecutionMetadata planExecutionMetadata =
+        PlanExecutionMetadata.builder().planExecutionId(planExecutionId).build();
+    planExecutionMetadataService.save(planExecutionMetadata);
+
     Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(planExecutionId).build();
     PlanNodeProto planNode = PlanNodeProto.newBuilder().build();
 
@@ -174,6 +181,10 @@ public class PausedStepStatusUpdateTest extends OrchestrationTestBase {
     String child3Id = generateUuid() + "child3Node";
     String fork2Id = generateUuid() + "fork2Node";
     String child4Id = generateUuid() + "child4Node";
+
+    PlanExecutionMetadata planExecutionMetadata =
+        PlanExecutionMetadata.builder().planExecutionId(planExecutionId).build();
+    planExecutionMetadataService.save(planExecutionMetadata);
     PlanExecution planExecution = PlanExecution.builder().uuid(planExecutionId).status(Status.RUNNING).build();
     Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(planExecutionId).build();
     PlanNodeProto planNode = PlanNodeProto.newBuilder().build();

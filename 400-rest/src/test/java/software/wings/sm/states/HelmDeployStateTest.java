@@ -2,12 +2,14 @@ package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.RIHAZ;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -19,6 +21,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
+import static software.wings.beans.appmanifest.StoreType.CUSTOM;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.ServiceOverride;
@@ -50,7 +53,9 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
@@ -94,6 +99,9 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.task.helm.HelmChartInfo;
+import io.harness.delegate.task.manifests.request.CustomManifestFetchConfig;
+import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
+import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidRequestException;
@@ -103,6 +111,8 @@ import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.manifest.CustomSourceConfig;
+import io.harness.manifest.CustomSourceFile;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.tasks.ResponseData;
@@ -1765,7 +1775,7 @@ public class HelmDeployStateTest extends CategoryTest {
   @Test
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
-  public void testsaveInstanceInfoToSweepingOutputDontSkipVerification() {
+  public void testSaveInstanceInfoToSweepingOutputDontSkipVerification() {
     on(helmDeployState).set("sweepingOutputService", sweepingOutputService);
     helmDeployState.saveInstanceInfoToSweepingOutput(context, asList(anInstanceElement().dockerId("dockerId").build()),
         asList(InstanceDetails.builder().hostName("hostName").newInstance(true).build(),
@@ -1781,7 +1791,7 @@ public class HelmDeployStateTest extends CategoryTest {
   @Test
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
-  public void testsaveInstanceInfoToSweepingOutputSkipVerification() {
+  public void testSaveInstanceInfoToSweepingOutputSkipVerification() {
     on(helmDeployState).set("sweepingOutputService", sweepingOutputService);
     helmDeployState.saveInstanceInfoToSweepingOutput(context, asList(anInstanceElement().dockerId("dockerId").build()),
         asList(InstanceDetails.builder().hostName("hostName").newInstance(false).build(),
@@ -1792,5 +1802,164 @@ public class HelmDeployStateTest extends CategoryTest {
 
     InstanceInfoVariables instanceInfoVariables = (InstanceInfoVariables) argumentCaptor.getValue().getValue();
     assertThat(instanceInfoVariables.isSkipVerification()).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testExecuteCustomManifestFetchTask() throws InterruptedException {
+    CustomManifestValuesFetchParams mockParams =
+        CustomManifestValuesFetchParams.builder()
+            .fetchFilesList(singletonList(CustomManifestFetchConfig.builder().key("value").build()))
+            .build();
+    CustomSourceConfig customSourceConfig = CustomSourceConfig.builder()
+                                                .script("test script")
+                                                .delegateSelectors(singletonList("delegate1"))
+                                                .path("path/manifest")
+                                                .build();
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = ImmutableMap.of(K8sValuesLocation.Service,
+        ApplicationManifest.builder().customSourceConfig(customSourceConfig).storeType(CUSTOM).build());
+    DirectKubernetesInfrastructureMapping infrastructureMapping =
+        DirectKubernetesInfrastructureMapping.builder().build();
+    infrastructureMapping.setUuid(INFRA_MAPPING_ID);
+    String serviceTemplateId = "serviceTemplateId";
+
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.CUSTOM_MANIFEST, null);
+    doReturn(true).when(applicationManifestUtils).isCustomManifest(context);
+    doReturn(singleton("rendered-delegate1"))
+        .when(k8sStateHelper)
+        .getRenderedAndTrimmedSelectors(context, customSourceConfig.getDelegateSelectors());
+    doReturn(infrastructureMapping).when(k8sStateHelper).fetchContainerInfrastructureMapping(context);
+    doReturn(Activity.builder().uuid(ACTIVITY_ID).build()).when(activityService).save(any(Activity.class));
+    doReturn(appManifestMap).when(applicationManifestUtils).getApplicationManifests(context, AppManifestKind.VALUES);
+    doReturn(mockParams).when(applicationManifestUtils).createCustomManifestValuesFetchParams(context, appManifestMap);
+    doReturn(serviceTemplateId).when(serviceTemplateHelper).fetchServiceTemplateId(infrastructureMapping);
+
+    helmDeployState.executeInternal(context);
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(1)).queueTask(captor.capture());
+    DelegateTask queuedTask = captor.getValue();
+    assertThat(queuedTask.isSelectionLogsTrackingEnabled())
+        .isEqualTo(helmDeployState.isSelectionLogsTrackingForTasksEnabled());
+    assertThat(queuedTask.getSetupAbstractions().get(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD))
+        .isEqualTo(serviceTemplateId);
+    assertThat(queuedTask.getData()).isNotNull();
+    assertThat(queuedTask.getData().getParameters()).isNotEmpty();
+
+    CustomManifestValuesFetchParams parameter =
+        (CustomManifestValuesFetchParams) queuedTask.getData().getParameters()[0];
+    assertThat(parameter.getDelegateSelectors()).contains("rendered-delegate1");
+    assertThat(parameter.getCommandUnitName()).isEqualTo("Fetch Files");
+    assertThat(parameter.getFetchFilesList()).hasSize(1);
+    assertThat(parameter.getFetchFilesList().get(0).getKey()).isEqualTo("value");
+    assertThat(parameter.getCustomManifestSource().getScript()).isEqualTo("test script");
+    assertThat(parameter.getCustomManifestSource().getFilePaths()).contains("path/manifest");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testExecuteCustomManifestFetchTaskFfOffFail() throws InterruptedException {
+    doReturn(false).when(featureFlagService).isEnabled(FeatureName.CUSTOM_MANIFEST, null);
+    doReturn(true).when(applicationManifestUtils).isCustomManifest(context);
+    assertThatThrownBy(() -> helmDeployState.executeInternal(context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Custom manifest can not be used with feature flag off");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testExecuteCustomManifestFetchTaskNoScriptFail() throws InterruptedException {
+    CustomSourceConfig customSourceConfig = CustomSourceConfig.builder().build();
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = ImmutableMap.of(K8sValuesLocation.Service,
+        ApplicationManifest.builder().customSourceConfig(customSourceConfig).storeType(CUSTOM).build());
+
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.CUSTOM_MANIFEST, null);
+    doReturn(true).when(applicationManifestUtils).isCustomManifest(context);
+    doReturn(appManifestMap).when(applicationManifestUtils).getApplicationManifests(context, AppManifestKind.VALUES);
+
+    assertThatThrownBy(() -> helmDeployState.executeInternal(context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Script can not be null for custom manifest source");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForCustomManifestFetchTask() throws InterruptedException {
+    HelmDeployState spyDeployState = spy(helmDeployState);
+
+    HelmDeployStateExecutionData stateExecutionData = (HelmDeployStateExecutionData) context.getStateExecutionData();
+    stateExecutionData.setCurrentTaskType(TaskType.CUSTOM_MANIFEST_FETCH_TASK);
+    ApplicationManifest appManifest =
+        ApplicationManifest.builder()
+            .pollForChanges(true)
+            .storeType(CUSTOM)
+            .customSourceConfig(CustomSourceConfig.builder().path("path").script("test script").build())
+            .build();
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = singletonMap(K8sValuesLocation.Service, appManifest);
+    CustomManifestValuesFetchResponse successfulFetchResponse =
+        CustomManifestValuesFetchResponse.builder()
+            .zippedManifestFileId("fileId")
+            .valuesFilesContentMap(singletonMap("ServiceOverride", singletonList(CustomSourceFile.builder().build())))
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+            .build();
+    stateExecutionData.setAppManifestMap(appManifestMap);
+    Map<String, ResponseData> responseDataMap = ImmutableMap.of(ACTIVITY_ID, successfulFetchResponse);
+    Map<K8sValuesLocation, Collection<String>> valuesMap =
+        singletonMap(K8sValuesLocation.ServiceOverride, singletonList("values"));
+
+    doReturn(appManifestMap)
+        .when(applicationManifestUtils)
+        .getOverrideApplicationManifests(context, AppManifestKind.VALUES);
+    doReturn(appManifest)
+        .when(applicationManifestService)
+        .getAppManifest(app.getUuid(), null, serviceElement.getUuid(), AppManifestKind.K8S_MANIFEST);
+    doReturn(DirectKubernetesInfrastructureMapping.builder().build())
+        .when(k8sStateHelper)
+        .fetchContainerInfrastructureMapping(context);
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.CUSTOM_MANIFEST, null);
+    doReturn(valuesMap)
+        .when(applicationManifestUtils)
+        .getValuesFilesFromCustomFetchValuesResponse(context, appManifestMap, successfulFetchResponse);
+    ArgumentCaptor<DelegateTask> delegateTaskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    doReturn("taskId").when(delegateService).queueTask(delegateTaskCaptor.capture());
+    doReturn(false).when(applicationManifestUtils).isValuesInGit(appManifestMap);
+
+    spyDeployState.handleAsyncResponse(context, responseDataMap);
+
+    verify(spyDeployState, times(1))
+        .executeHelmTask(any(ExecutionContext.class), anyString(), eq(appManifestMap), anyMap());
+    assertThat(stateExecutionData.getValuesFiles()).isEqualTo(valuesMap);
+    assertThat(stateExecutionData.getZippedManifestFileId()).isEqualTo("fileId");
+    HelmCommandRequest helmCommandRequest =
+        (HelmCommandRequest) delegateTaskCaptor.getValue().getData().getParameters()[0];
+    assertThat(delegateTaskCaptor.getValue().getData().getTaskType()).isEqualTo(TaskType.HELM_COMMAND_TASK.name());
+    assertThat(helmCommandRequest.getRepoConfig().getCustomManifestSource().getFilePaths())
+        .isEqualTo(singletonList("path"));
+    assertThat(helmCommandRequest.getRepoConfig().getCustomManifestSource().getScript()).isEqualTo("test script");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseCustomManifestFetchTaskFail() throws InterruptedException {
+    HelmDeployState spyDeployState = spy(helmDeployState);
+    CustomManifestValuesFetchResponse failedValuesFetchResponse =
+        CustomManifestValuesFetchResponse.builder().commandExecutionStatus(FAILURE).build();
+    Map<String, ResponseData> responseDataMap = new HashMap<>();
+    responseDataMap.put(ACTIVITY_ID, failedValuesFetchResponse);
+    HelmDeployStateExecutionData stateExecutionData = (HelmDeployStateExecutionData) context.getStateExecutionData();
+    stateExecutionData.setCurrentTaskType(TaskType.CUSTOM_MANIFEST_FETCH_TASK);
+    stateExecutionData.setActivityId(ACTIVITY_ID);
+
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.CUSTOM_MANIFEST, null);
+
+    ExecutionResponse executionResponse = spyDeployState.handleAsyncResponse(context, responseDataMap);
+
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    verify(activityService, times(1)).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
   }
 }

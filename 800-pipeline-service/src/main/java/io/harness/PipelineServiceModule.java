@@ -4,13 +4,14 @@ import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PIPELINE_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
-import io.harness.account.AccountClientModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
+import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -39,6 +40,10 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.organization.OrganizationClientModule;
+import io.harness.outbox.OutboxPollConfiguration;
+import io.harness.outbox.OutboxSDKConstants;
+import io.harness.outbox.TransactionOutboxModule;
+import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
@@ -50,11 +55,13 @@ import io.harness.pms.approval.notification.ApprovalNotificationHandlerImpl;
 import io.harness.pms.barriers.service.PMSBarrierService;
 import io.harness.pms.barriers.service.PMSBarrierServiceImpl;
 import io.harness.pms.event.entitycrud.PipelineEntityCRUDStreamListener;
+import io.harness.pms.event.featureflag.PipelineServiceFeatureFlagListener;
 import io.harness.pms.event.webhookevent.WebhookEventStreamListener;
 import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
 import io.harness.pms.jira.JiraStepHelperServiceImpl;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetServiceImpl;
+import io.harness.pms.outbox.PipelineOutboxEventHandler;
 import io.harness.pms.pipeline.mappers.PipelineFilterPropertiesMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
@@ -62,6 +69,10 @@ import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.pipeline.service.PMSYamlSchemaServiceImpl;
 import io.harness.pms.pipeline.service.PipelineDashboardService;
 import io.harness.pms.pipeline.service.PipelineDashboardServiceImpl;
+import io.harness.pms.pipeline.service.yamlschema.approval.ApprovalYamlSchemaService;
+import io.harness.pms.pipeline.service.yamlschema.approval.ApprovalYamlSchemaServiceImpl;
+import io.harness.pms.pipeline.service.yamlschema.featureflag.FeatureFlagYamlService;
+import io.harness.pms.pipeline.service.yamlschema.featureflag.FeatureFlagYamlServiceImpl;
 import io.harness.pms.plan.creation.NodeTypeLookupService;
 import io.harness.pms.plan.creation.NodeTypeLookupServiceImpl;
 import io.harness.pms.plan.execution.mapper.PipelineExecutionFilterPropertiesMapper;
@@ -162,19 +173,21 @@ public class PipelineServiceModule extends AbstractModule {
             .expressionEvaluatorProvider(new PMSExpressionEvaluatorProvider())
             .withPMS(false)
             .isPipelineService(true)
-            .corePoolSize(10)
+            .corePoolSize(20)
             .maxPoolSize(100)
             .idleTimeInSecs(500L)
             .eventsFrameworkConfiguration(configuration.getEventsFrameworkConfiguration())
-            .useRedisForInterrupts(configuration.getUseRedisForInterrupts())
-            .useRedisForEvents(configuration.getUseRedisForOrchestrationEvents())
+            .accountClientId(PIPELINE_SERVICE.getServiceId())
+            .accountServiceHttpClientConfig(configuration.getManagerClientConfig())
+            .accountServiceSecret(configuration.getManagerServiceSecret())
+            .useFeatureFlagService(true)
             .build()));
     install(OrchestrationStepsModule.getInstance(configuration.getOrchestrationStepConfig()));
     install(OrchestrationVisualizationModule.getInstance());
     install(PrimaryVersionManagerModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
-        configuration.getManagerTarget(), configuration.getManagerAuthority()));
+        configuration.getManagerTarget(), configuration.getManagerAuthority(), true));
     install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), MANAGER.getServiceId(), ClientMode.PRIVILEGED));
     install(new SecretNGManagerClientModule(configuration.getNgManagerServiceHttpClientConfig(),
@@ -197,15 +210,18 @@ public class PipelineServiceModule extends AbstractModule {
         PIPELINE_SERVICE.getServiceId()));
     install(new UserGroupClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
-    install(new AccountClientModule(configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(),
-        PIPELINE_SERVICE.getServiceId()));
     install(new DelegateSelectionLogHttpClientModule(configuration.getManagerClientConfig(),
         configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
-    install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
+    install(new PipelineServiceEventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
     install(new EntitySetupUsageClientModule(this.configuration.getNgManagerServiceHttpClientConfig(),
         this.configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new LogStreamingModule(configuration.getLogStreamingServiceConfig().getBaseUrl()));
+    install(
+        new AuditClientModule(this.configuration.getAuditClientConfig(), this.configuration.getManagerServiceSecret(),
+            PIPELINE_SERVICE.getServiceId(), this.configuration.isEnableAudit()));
+    install(new TransactionOutboxModule());
 
+    bind(OutboxEventHandler.class).to(PipelineOutboxEventHandler.class);
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
     bind(PreflightService.class).to(PreflightServiceImpl.class);
@@ -214,6 +230,8 @@ public class PipelineServiceModule extends AbstractModule {
     bind(PMSExecutionService.class).to(PMSExecutionServiceImpl.class);
     bind(PMSYamlSchemaService.class).to(PMSYamlSchemaServiceImpl.class);
     bind(ApprovalNotificationHandler.class).to(ApprovalNotificationHandlerImpl.class);
+    bind(ApprovalYamlSchemaService.class).to(ApprovalYamlSchemaServiceImpl.class).in(Singleton.class);
+    bind(FeatureFlagYamlService.class).to(FeatureFlagYamlServiceImpl.class).in(Singleton.class);
 
     bind(NodeTypeLookupService.class).to(NodeTypeLookupServiceImpl.class);
 
@@ -268,8 +286,10 @@ public class PipelineServiceModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(PIPELINE_ENTITY + ENTITY_CRUD))
         .to(PipelineEntityCRUDStreamListener.class);
-
     bind(MessageListener.class).annotatedWith(Names.named(WEBHOOK_EVENTS_STREAM)).to(WebhookEventStreamListener.class);
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(PIPELINE_ENTITY + FEATURE_FLAG_STREAM))
+        .to(PipelineServiceFeatureFlagListener.class);
   }
 
   @Provides
@@ -393,8 +413,22 @@ public class PipelineServiceModule extends AbstractModule {
 
   @Provides
   @Singleton
+  public ObjectMapper getYamlSchemaObjectMapperWithoutNamed() {
+    return Jackson.newObjectMapper();
+  }
+
+  @Provides
+  @Singleton
   public LogStreamingServiceConfiguration getLogStreamingServiceConfiguration() {
     return configuration.getLogStreamingServiceConfig();
+  }
+
+  @Provides
+  @Singleton
+  public OutboxPollConfiguration getOutboxPollConfiguration() {
+    OutboxPollConfiguration outboxPollConfiguration = OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
+    outboxPollConfiguration.setLockId(PIPELINE_SERVICE.getServiceId());
+    return outboxPollConfiguration;
   }
 
   @Provides

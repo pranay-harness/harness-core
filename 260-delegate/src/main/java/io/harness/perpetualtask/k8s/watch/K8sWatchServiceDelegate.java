@@ -11,7 +11,6 @@ import io.harness.perpetualtask.k8s.utils.K8sClusterHelper;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
-import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -90,15 +89,10 @@ public class K8sWatchServiceDelegate {
     return watchMap.keySet();
   }
 
-  public String create(K8sWatchTaskParams params) {
+  public String create(K8sWatchTaskParams params, KubernetesConfig kubernetesConfig) {
     String watchId = params.getClusterId();
     watchMap.computeIfAbsent(watchId, id -> {
       log.info("Creating watch with id: {}", id);
-
-      K8sClusterConfig k8sClusterConfig =
-          (K8sClusterConfig) kryoSerializer.asObject(params.getK8SClusterConfig().toByteArray());
-      KubernetesConfig kubernetesConfig =
-          containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig, false);
 
       ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
       DefaultK8sMetricsClient k8sMetricsClient = new DefaultK8sMetricsClient(apiClient);

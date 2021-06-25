@@ -94,7 +94,7 @@ def get_csv_paths(jsonData):
     blobs = client_gcs.list_blobs(jsonData["bucket"])
     unique_cur_paths = set()
     for blob in blobs:
-        # Should be a valid CSV file.
+        # Should be a valid CSV file. Add all exclusions here
         if blob.name.endswith("DefaultRule-AllBlobs.csv"):
             continue
         if blob.name.endswith(".csv") or blob.name.endswith(".csv.gz"):

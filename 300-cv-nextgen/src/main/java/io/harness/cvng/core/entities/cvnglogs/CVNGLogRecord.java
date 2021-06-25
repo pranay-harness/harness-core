@@ -1,9 +1,11 @@
 package io.harness.cvng.core.entities.cvnglogs;
 
 import io.harness.cvng.beans.cvnglog.CVNGLogDTO;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.persistence.CreatedAtAware;
 
 import java.util.Comparator;
+import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,4 +23,6 @@ public abstract class CVNGLogRecord implements CreatedAtAware {
       return c2.compareTo(c1);
     }
   }
+
+  public abstract void recordsMetrics(MetricService metricService, Map<String, String> tags);
 }

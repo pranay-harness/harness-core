@@ -19,6 +19,7 @@ import io.harness.connector.utils.KubernetesConnectorTestHelper;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.encryption.Scope;
 import io.harness.git.model.ChangeType;
+import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -34,6 +35,7 @@ import org.junit.experimental.categories.Category;
 public class ConnectorStatisticsHelperTest extends ConnectorsTestBase {
   @Inject ConnectorRepository connectorRepository;
   @Inject ConnectorStatisticsHelper connectorStatisticsHelper;
+  @Inject OutboxService outboxService;
   private static final String accountIdentifier = "accountIdentifier";
   private static final String orgIdentifier = "orgIdentifier";
   private static final String projectIdentifier = "projectIdentifier";

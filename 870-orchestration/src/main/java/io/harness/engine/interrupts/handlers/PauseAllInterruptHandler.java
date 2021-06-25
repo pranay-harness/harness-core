@@ -18,7 +18,7 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptUtils;
-import io.harness.engine.resume.EngineResumeAllCallback;
+import io.harness.engine.pms.resume.EngineResumeAllCallback;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;

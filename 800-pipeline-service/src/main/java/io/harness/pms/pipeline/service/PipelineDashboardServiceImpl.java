@@ -37,8 +37,8 @@ public class PipelineDashboardServiceImpl implements PipelineDashboardService {
   private String tableName_default = "pipeline_execution_summary_ci";
   private String CI_TableName = "pipeline_execution_summary_ci";
   private String CD_TableName = "pipeline_execution_summary_cd";
-  private List<String> failedList =
-      Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(), ExecutionStatus.EXPIRED.name());
+  private List<String> failedList = Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(),
+      ExecutionStatus.EXPIRED.name(), ExecutionStatus.IGNOREFAILED.name(), ExecutionStatus.ERRORED.name());
 
   private static final int MAX_RETRY_COUNT = 5;
 

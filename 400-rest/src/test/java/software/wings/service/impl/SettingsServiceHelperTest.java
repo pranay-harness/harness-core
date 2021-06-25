@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.RAGHU;
 
@@ -20,6 +21,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
+import io.harness.helper.SettingValueHelper;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.rule.Owner;
 
@@ -233,12 +235,12 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetAllEncryptedSecrets() {
     // Not an EncryptableSetting.
-    List<String> encryptedSecrets = SettingServiceHelper.getAllEncryptedSecrets(null);
+    List<String> encryptedSecrets = SettingValueHelper.getAllEncryptedSecrets(null);
     assertThat(encryptedSecrets).isNotNull();
     assertThat(encryptedSecrets).isEmpty();
 
     // Does not contain any @Encrypted annotation.
-    encryptedSecrets = SettingServiceHelper.getAllEncryptedSecrets(GCSHelmRepoConfig.builder().build());
+    encryptedSecrets = SettingValueHelper.getAllEncryptedSecrets(GCSHelmRepoConfig.builder().build());
     assertThat(encryptedSecrets).isNotNull();
     assertThat(encryptedSecrets).isEmpty();
 
@@ -251,7 +253,7 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
                                                           .encryptedOidcPassword(password)
                                                           .encryptedOidcClientId(clientId)
                                                           .build();
-    encryptedSecrets = SettingServiceHelper.getAllEncryptedSecrets(kubernetesClusterConfig);
+    encryptedSecrets = SettingValueHelper.getAllEncryptedSecrets(kubernetesClusterConfig);
     assertThat(encryptedSecrets).isNotNull();
     assertThat(encryptedSecrets).contains(secret, password, clientId);
   }
@@ -387,15 +389,27 @@ public class SettingsServiceHelperTest extends WingsBaseTest {
                               .encryptedPassword(RANDOM)
                               .build();
 
-    assertThat(SettingServiceHelper.getAllEncryptedFields(pcfConfig).stream().map(Field::getName))
+    assertThat(SettingValueHelper.getAllEncryptedFields(pcfConfig).stream().map(Field::getName))
         .containsExactlyInAnyOrder("password");
 
     // Both fields stores encrypted value
     pcfConfig =
         PcfConfig.builder().useEncryptedUsername(true).encryptedUsername(RANDOM).encryptedPassword(RANDOM).build();
 
-    assertThat(SettingServiceHelper.getAllEncryptedFields(pcfConfig).stream().map(Field::getName))
+    assertThat(SettingValueHelper.getAllEncryptedFields(pcfConfig).stream().map(Field::getName))
         .containsExactlyInAnyOrder("username", "password");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void setResetTransientFields() {
+    GitConfig config = null;
+    settingServiceHelper.resetTransientFields(config);
+
+    config = GitConfig.builder().sshSettingAttribute(new SettingAttribute()).build();
+    settingServiceHelper.resetTransientFields(config);
+    assertThat(config.getSshSettingAttribute()).isNull();
   }
 
   private SettingAttribute prepareSettingAttributeWithoutSecrets() {
