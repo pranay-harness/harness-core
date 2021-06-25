@@ -106,8 +106,9 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                                       .build();
 
     return transactionUtils.performTransaction(() -> {
-      planExecutionMetadataService.save(planExecutionMetadata);
-      return planExecutionService.save(planExecution);
+      PlanExecution execution = planExecutionService.save(planExecution);
+      planExecutionMetadataService.save(planExecutionMetadata.withPlanExecutionId(execution.getUuid()));
+      return planExecution;
     });
   }
 

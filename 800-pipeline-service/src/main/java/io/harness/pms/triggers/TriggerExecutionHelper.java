@@ -1,7 +1,6 @@
 package io.harness.pms.triggers;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.ngtriggers.Constants.EVENT_CORRELATION_ID;
 import static io.harness.ngtriggers.Constants.GIT_USER;
@@ -96,16 +95,14 @@ public class TriggerExecutionHelper {
 
       String runtimeInputYaml = triggerDetails.getNgTriggerConfigV2().getInputYaml();
 
-      final String executionId = generateUuid();
       ExecutionMetadata.Builder executionMetaDataBuilder =
           ExecutionMetadata.newBuilder()
-              .setExecutionUuid(executionId)
               .setTriggerInfo(triggerInfo)
               .setRunSequence(pipelineEntityToExecute.get().getRunSequence())
               .setPipelineIdentifier(pipelineEntityToExecute.get().getIdentifier());
 
       PlanExecutionMetadata.Builder planExecutionMetadataBuilder =
-          PlanExecutionMetadata.builder().planExecutionId(executionId).triggerJsonPayload(payload);
+          PlanExecutionMetadata.builder().triggerJsonPayload(payload);
 
       String pipelineYaml;
       if (isBlank(runtimeInputYaml)) {

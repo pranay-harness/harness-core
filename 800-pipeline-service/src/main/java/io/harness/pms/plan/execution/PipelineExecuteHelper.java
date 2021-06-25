@@ -63,7 +63,6 @@ public class PipelineExecuteHelper {
     final String executionId = generateUuid();
     String pipelineYaml;
     ExecutionMetadata.Builder executionMetadataBuilder = ExecutionMetadata.newBuilder()
-                                                             .setExecutionUuid(executionId)
                                                              .setTriggerInfo(triggerInfo)
                                                              .setModuleType(moduleType)
                                                              .setRunSequence(pipelineEntity.get().getRunSequence());
@@ -105,7 +104,6 @@ public class PipelineExecuteHelper {
 
     final String executionId = generateUuid();
     ExecutionMetadata.Builder executionMetadataBuilder = ExecutionMetadata.newBuilder()
-                                                             .setExecutionUuid(executionId)
                                                              .setTriggerInfo(triggerInfo)
                                                              .setModuleType(moduleType)
                                                              .setRunSequence(pipelineEntity.get().getRunSequence());

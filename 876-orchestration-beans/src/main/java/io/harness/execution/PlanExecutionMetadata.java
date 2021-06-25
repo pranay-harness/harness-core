@@ -20,6 +20,7 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.Wither;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
@@ -38,7 +39,8 @@ public class PlanExecutionMetadata implements PersistentEntity, UuidAware {
 
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
 
-  private String planExecutionId;
+  // TODO : @Wither is for now this will be removed when this is changed to be an internal model
+  @Wither private String planExecutionId;
 
   private String inputSetYaml;
   private String yaml;
