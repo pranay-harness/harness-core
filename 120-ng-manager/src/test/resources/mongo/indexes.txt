@@ -3,7 +3,6 @@
 !!!custom_delegateSyncTaskResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 !!!custom_delegateTaskProgressResponses {"name": "processAfter_1", "background": true} {"processAfter": 1}
 !!!custom_delegateTaskProgressResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-accessControlMigrations {"name": "accountId_1", "background": true} {"accountId": 1}
 accounts {"name": "accountBackgroundJobCheckIteration_1", "background": true} {"accountBackgroundJobCheckIteration": 1}
 accounts {"name": "accountDeletionIteration_1", "background": true} {"accountDeletionIteration": 1}
 accounts {"name": "accountName_1", "unique": true} {"accountName": 1}
@@ -20,6 +19,7 @@ accounts {"name": "serviceGuardDataAnalysisIteration_1", "background": true} {"s
 accounts {"name": "serviceGuardDataCollectionIteration_1", "background": true} {"serviceGuardDataCollectionIteration": 1}
 accounts {"name": "usageMetricsTaskIteration_1", "background": true} {"usageMetricsTaskIteration": 1}
 accounts {"name": "workflowDataCollectionIteration_1", "background": true} {"workflowDataCollectionIteration": 1}
+aclMigrations {"name": "accountIdentifierOrgIdentifierProjectIdentifierIdx", "unique": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
 activities {"name": "accountId_1", "background": true} {"accountId": 1}
 activities {"name": "appId_1", "background": true} {"appId": 1}
 activities {"name": "app_status_createdAt", "background": true} {"appId": 1, "serviceInstanceId": 1, "status": 1, "createdAt": -1}
@@ -535,6 +535,7 @@ orchestrationEventQueue {"name": "next4", "background": true} {"topic": 1, "earl
 organizations {"name": "accountIdentifierDeletedHarnessManagedNameWithCollationIdx", "background": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "deleted": 1, "harnessManaged": -1, "name": 1}
 organizations {"name": "accountIdentifierDeletedIdentifierIdx", "background": true} {"accountIdentifier": 1, "deleted": 1, "identifier": 1}
 organizations {"name": "accountIdentifierIdentifierDeletedHarnessManagedNameWithCollationIdx", "background": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "identifier": 1, "deleted": 1, "harnessManaged": -1, "name": 1}
+organizations {"name": "identifier_1", "background": true} {"identifier": 1}
 organizations {"name": "unique_accountIdentifier_organizationIdentifier", "unique": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "identifier": 1}
 outboxEvents {"name": "blocked_createdAt_nextUnblockAttemptAt_outbox_Idx", "background": true} {"blocked": 1, "createdAt": 1, "nextUnblockAttemptAt": 1}
 pcfServiceSpecification {"name": "accountId_1", "background": true} {"accountId": 1}

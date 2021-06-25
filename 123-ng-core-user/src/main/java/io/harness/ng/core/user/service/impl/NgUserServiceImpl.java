@@ -242,11 +242,6 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
-  public void addUserToScope(UserInfo user, Scope scope, boolean postCreation, UserMembershipUpdateSource source) {
-    addUserToScope(user.getUuid(), scope, postCreation, source);
-  }
-
-  @Override
   public void addUserToScope(String userId, Scope scope, String roleIdentifier, UserMembershipUpdateSource source) {
     List<RoleAssignmentDTO> roleAssignmentDTOs = new ArrayList<>(1);
     if (!StringUtils.isBlank(roleIdentifier)) {
@@ -298,7 +293,8 @@ public class NgUserServiceImpl implements NgUserService {
         && DEFAULT_RESOURCE_GROUP_IDENTIFIER.equals(roleAssignmentDTO.getResourceGroupIdentifier());
   }
 
-  private void addUserToScope(
+  @Override
+  public void addUserToScope(
       String userId, Scope scope, boolean addUserToParentScope, UserMembershipUpdateSource source) {
     ensureUserMembership(userId);
     addUserToScopeInternal(userId, source, scope, getDefaultRoleIdentifier(scope));

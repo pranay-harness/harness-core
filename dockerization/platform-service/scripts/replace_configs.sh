@@ -76,6 +76,10 @@ if [[ "" != "$SMTP_HOST" ]]; then
   yq write -i $CONFIG_FILE notificationServiceConfig.smtp.host "$SMTP_HOST"
 fi
 
+if [[ "" != "$SMTP_PORT" ]]; then
+  yq write -i $CONFIG_FILE notificationServiceConfig.smtp.port "$SMTP_PORT"
+fi
+
 if [[ "" != "$SMTP_USERNAME" ]]; then
   yq write -i $CONFIG_FILE notificationServiceConfig.smtp.username "$SMTP_USERNAME"
 fi

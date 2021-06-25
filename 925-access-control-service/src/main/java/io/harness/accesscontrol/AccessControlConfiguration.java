@@ -7,13 +7,13 @@ import io.harness.DecisionModuleConfiguration;
 import io.harness.accesscontrol.commons.events.EventsConfig;
 import io.harness.accesscontrol.commons.iterators.AccessControlIteratorsConfig;
 import io.harness.accesscontrol.commons.notifications.NotificationConfig;
-import io.harness.accesscontrol.preference.AccessControlPreferenceConfiguration;
 import io.harness.accesscontrol.principals.serviceaccounts.ServiceAccountClientConfiguration;
 import io.harness.accesscontrol.principals.usergroups.UserGroupClientConfiguration;
 import io.harness.accesscontrol.principals.users.UserClientConfiguration;
 import io.harness.accesscontrol.resources.ResourceGroupClientConfiguration;
 import io.harness.aggregator.AggregatorConfiguration;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ff.FeatureFlagClientConfiguration;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoConfig;
 import io.harness.outbox.OutboxPollConfiguration;
@@ -49,8 +49,8 @@ public class AccessControlConfiguration extends Configuration {
   public static final String ROLES_PACKAGE = "io.harness.accesscontrol.roles";
   public static final String ROLE_ASSIGNMENTS_PACKAGE = "io.harness.accesscontrol.roleassignments.api";
   public static final String ACL_PACKAGE = "io.harness.accesscontrol.acl";
+  public static final String ACCESSCONTROL_PREFERENCE_PACKAGE = "io.harness.accesscontrol.preference";
   public static final String AGGREGATOR_PACKAGE = "io.harness.accesscontrol.aggregator.api";
-  public static final String ACL_TEST_PACKAGE = "io.harness.accesscontrol.test";
   public static final String HEALTH_PACKAGE = "io.harness.accesscontrol.health";
 
   @JsonProperty("mongo") private MongoConfig mongoConfig;
@@ -65,14 +65,13 @@ public class AccessControlConfiguration extends Configuration {
   @JsonProperty("notificationConfig") private NotificationConfig notificationConfig;
   @JsonProperty("decisionModuleConfig") private DecisionModuleConfiguration decisionModuleConfiguration;
   @JsonProperty("aggregatorModuleConfig") private AggregatorConfiguration aggregatorConfiguration;
-  @JsonProperty("accessControlPreferenceConfig")
-  private AccessControlPreferenceConfiguration accessControlPreferenceConfiguration;
   @JsonProperty("enableAuth") @Getter(AccessLevel.NONE) private boolean enableAuth;
   @JsonProperty("defaultServiceSecret") private String defaultServiceSecret;
   @JsonProperty("jwtAuthSecret") private String jwtAuthSecret;
   @JsonProperty("identityServiceSecret") private String identityServiceSecret;
   @JsonProperty("enableAudit") private boolean enableAudit;
   @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
+  @JsonProperty("featureFlagClientConfiguration") private FeatureFlagClientConfiguration featureFlagClientConfiguration;
   @JsonProperty("outboxPollConfig") private OutboxPollConfiguration outboxPollConfig;
   @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
   @JsonProperty("serviceAccountClient") private ServiceAccountClientConfiguration serviceAccountClientConfiguration;
@@ -90,7 +89,7 @@ public class AccessControlConfiguration extends Configuration {
 
   public static Collection<Class<?>> getResourceClasses() {
     Reflections reflections = new Reflections(PERMISSION_PACKAGE, ROLES_PACKAGE, ROLE_ASSIGNMENTS_PACKAGE, ACL_PACKAGE,
-        AGGREGATOR_PACKAGE, ACL_TEST_PACKAGE, HEALTH_PACKAGE);
+        ACCESSCONTROL_PREFERENCE_PACKAGE, AGGREGATOR_PACKAGE, HEALTH_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 

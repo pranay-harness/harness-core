@@ -3,7 +3,6 @@ package io.harness.ng.core.impl;
 import static io.harness.NGCommonEntityConstants.MONGODB_ID;
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
-import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_NAME;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -53,7 +52,6 @@ import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.repositories.core.spring.ProjectRepository;
-import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.security.SourcePrincipalContextBuilder;
@@ -70,7 +68,6 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -81,7 +78,6 @@ import java.util.Set;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
-import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -100,8 +96,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Slf4j
 public class ProjectServiceImpl implements ProjectService {
   private static final String PROJECT_ADMIN_ROLE = "_project_admin";
-  private static final String RESOURCE_GROUP_DESCRIPTION =
-      "All the resources in this project are included in this resource group.";
   private final ProjectRepository projectRepository;
   private final OrganizationService organizationService;
   private final OutboxService outboxService;
@@ -109,7 +103,6 @@ public class ProjectServiceImpl implements ProjectService {
   private final NgUserService ngUserService;
   private final ResourceGroupClient resourceGroupClient;
   private final AccessControlClient accessControlClient;
-  private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
 
   @Inject
   public ProjectServiceImpl(ProjectRepository projectRepository, OrganizationService organizationService,
@@ -136,11 +129,12 @@ public class ProjectServiceImpl implements ProjectService {
     project.setAccountIdentifier(accountIdentifier);
     try {
       validate(project);
-      Project createdProject = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-        Project savedProject = projectRepository.save(project);
-        outboxService.save(new ProjectCreateEvent(project.getAccountIdentifier(), ProjectMapper.writeDTO(project)));
-        return savedProject;
-      }));
+      Project createdProject =
+          Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
+            Project savedProject = projectRepository.save(project);
+            outboxService.save(new ProjectCreateEvent(project.getAccountIdentifier(), ProjectMapper.writeDTO(project)));
+            return savedProject;
+          }));
       setupProject(Scope.of(accountIdentifier, orgIdentifier, projectDTO.getIdentifier()));
       log.info(String.format("Project with identifier %s and orgIdentifier %s was successfully created",
           project.getIdentifier(), projectDTO.getOrgIdentifier()));
@@ -212,25 +206,11 @@ public class ProjectServiceImpl implements ProjectService {
       if (resourceGroupResponse != null) {
         return;
       }
-      ResourceGroupDTO resourceGroupDTO = getResourceGroupDTO(scope);
       NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(
-          scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), resourceGroupDTO));
+          scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()));
     } catch (Exception e) {
       log.error("Couldn't create default resource group for [{}]", ScopeUtils.toString(scope));
     }
-  }
-
-  private ResourceGroupDTO getResourceGroupDTO(Scope scope) {
-    return ResourceGroupDTO.builder()
-        .accountIdentifier(scope.getAccountIdentifier())
-        .orgIdentifier(scope.getOrgIdentifier())
-        .projectIdentifier(scope.getProjectIdentifier())
-        .name(DEFAULT_RESOURCE_GROUP_NAME)
-        .identifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
-        .description(RESOURCE_GROUP_DESCRIPTION)
-        .resourceSelectors(Collections.emptyList())
-        .fullScopeSelected(true)
-        .build();
   }
 
   @Override
@@ -261,7 +241,7 @@ public class ProjectServiceImpl implements ProjectService {
       List<ModuleType> moduleTypeList = verifyModulesNotRemoved(existingProject.getModules(), project.getModules());
       project.setModules(moduleTypeList);
       validate(project);
-      return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
         Project updatedProject = projectRepository.save(project);
         log.info(String.format(
             "Project with identifier %s and orgIdentifier %s was successfully updated", identifier, orgIdentifier));
@@ -331,7 +311,7 @@ public class ProjectServiceImpl implements ProjectService {
   @DefaultOrganization
   public boolean delete(String accountIdentifier, @OrgIdentifier String orgIdentifier,
       @ProjectIdentifier String projectIdentifier, Long version) {
-    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+    return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
       Project deletedProject = projectRepository.delete(accountIdentifier, orgIdentifier, projectIdentifier, version);
       boolean delete = deletedProject != null;
 
@@ -352,7 +332,7 @@ public class ProjectServiceImpl implements ProjectService {
   @Override
   public boolean restore(String accountIdentifier, String orgIdentifier, String identifier) {
     validateParentOrgExists(accountIdentifier, orgIdentifier);
-    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+    return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
       Project restoredProject = projectRepository.restore(accountIdentifier, orgIdentifier, identifier);
       boolean success = restoredProject != null;
       if (success) {
