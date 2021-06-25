@@ -138,8 +138,8 @@ public class GitBuildStatusUtility {
 
     GitSCMType gitSCMType = retrieveSCMType(gitConnector);
     return CIBuildStatusPushParameters.builder()
-        .detailsUrl(getBuildDetailsUrl(
-            ngAccess, ambiance.getMetadata().getPipelineIdentifier(), ambiance.getMetadata().getExecutionUuid()))
+        .detailsUrl(
+            getBuildDetailsUrl(ngAccess, ambiance.getMetadata().getPipelineIdentifier(), ambiance.getPlanExecutionId()))
         .desc(generateDesc(
             buildStatusUpdateParameter.getIdentifier(), buildStatusUpdateParameter.getName(), status.name()))
         .sha(buildStatusUpdateParameter.getSha())

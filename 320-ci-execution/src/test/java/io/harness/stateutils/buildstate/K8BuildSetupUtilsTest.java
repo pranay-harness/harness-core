@@ -144,13 +144,13 @@ public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
     setupAbstractions.put("accountId", "account");
     setupAbstractions.put("projectIdentifier", "project");
     setupAbstractions.put("orgIdentifier", "org");
-    ExecutionMetadata executionMetadata = ExecutionMetadata.newBuilder()
-                                              .setExecutionUuid(generateUuid())
-                                              .setRunSequence(buildID)
-                                              .setPipelineIdentifier("pipeline")
-                                              .build();
-    Ambiance ambiance =
-        Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).setMetadata(executionMetadata).build();
+    ExecutionMetadata executionMetadata =
+        ExecutionMetadata.newBuilder().setRunSequence(buildID).setPipelineIdentifier("pipeline").build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .putAllSetupAbstractions(setupAbstractions)
+                            .setPlanExecutionId(generateUuid())
+                            .setMetadata(executionMetadata)
+                            .build();
 
     NGAccess ngAccess =
         BaseNGAccess.builder().accountIdentifier(accountID).orgIdentifier(orgID).projectIdentifier(projectID).build();

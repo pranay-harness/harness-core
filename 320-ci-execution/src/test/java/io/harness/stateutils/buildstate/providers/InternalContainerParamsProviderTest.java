@@ -55,13 +55,13 @@ public class InternalContainerParamsProviderTest extends CIExecutionTestBase {
     setupAbstractions.put("accountId", "account");
     setupAbstractions.put("projectIdentifier", "project");
     setupAbstractions.put("orgIdentifier", "org");
-    ExecutionMetadata executionMetadata = ExecutionMetadata.newBuilder()
-                                              .setExecutionUuid(generateUuid())
-                                              .setRunSequence(buildID)
-                                              .setPipelineIdentifier("pipeline")
-                                              .build();
-    Ambiance ambiance =
-        Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).setMetadata(executionMetadata).build();
+    ExecutionMetadata executionMetadata =
+        ExecutionMetadata.newBuilder().setRunSequence(buildID).setPipelineIdentifier("pipeline").build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .putAllSetupAbstractions(setupAbstractions)
+                            .setMetadata(executionMetadata)
+                            .setPlanExecutionId(generateUuid())
+                            .build();
     K8PodDetails k8PodDetails = K8PodDetails.builder().stageID("stage").build();
 
     ConnectorDetails connectorDetails = ConnectorDetails.builder().build();

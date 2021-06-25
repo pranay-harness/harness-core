@@ -1,5 +1,7 @@
 package io.harness.engine;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.algorithm.HashGenerator;
@@ -95,7 +97,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   private PlanExecution createPlanExecution(@Valid Plan plan, Map<String, String> setupAbstractions,
       ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata) {
     PlanExecution planExecution = PlanExecution.builder()
-                                      .uuid(metadata.getExecutionUuid())
+                                      .uuid(generateUuid())
                                       .planId(plan.getUuid())
                                       .setupAbstractions(setupAbstractions)
                                       .status(Status.RUNNING)
