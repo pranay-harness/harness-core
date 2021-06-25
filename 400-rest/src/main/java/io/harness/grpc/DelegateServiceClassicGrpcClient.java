@@ -11,6 +11,7 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.serializer.KryoSerializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
