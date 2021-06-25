@@ -222,6 +222,8 @@ aeriform("//879-pms-sdk:tests")
 
 aeriform("//882-pms-sdk-core:module")
 
+aeriform("//882-pms-sdk-core:supporter-test")
+
 aeriform("//882-pms-sdk-core:tests")
 
 aeriform("//884-pms-commons:module")
@@ -338,8 +340,6 @@ aeriform("//950-log-client:module")
 
 aeriform("//950-log-client:tests")
 
-aeriform("//951-ng-audit-commons:module")
-
 aeriform("//950-ng-authentication-service:module")
 
 aeriform("//950-ng-core:module")
@@ -367,6 +367,8 @@ aeriform("//950-wait-engine:tests")
 aeriform("//950-walktree-visitor:module")
 
 aeriform("//950-walktree-visitor:tests")
+
+aeriform("//951-ng-audit-commons:module")
 
 aeriform("//952-scm-java-client:module")
 

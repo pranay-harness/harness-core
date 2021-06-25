@@ -25,7 +25,9 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.GeneralException;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
@@ -54,6 +56,10 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("30m")).build();
 
+    when(executionSweepingOutputService.resolveOptional(
+             ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME)))
+        .thenReturn(OptionalSweepingOutput.builder().found(false).build());
+
     K8sRollingDeployRequest request = executeTask(stepElementParameters, K8sRollingDeployRequest.class);
     assertThat(request.isSkipDryRun()).isTrue();
     assertThat(request.getTimeoutIntervalInMin()).isEqualTo(30);
@@ -62,6 +68,31 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(request.getTaskType()).isEqualTo(K8sTaskType.DEPLOYMENT_ROLLING);
     assertThat(request.getAccountId()).isEqualTo(accountId);
     assertThat(request.isSkipResourceVersioning()).isTrue();
+    assertThat(request.isInCanaryWorkflow()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testExecuteK8sTaskInCanaryWorkflow() {
+    K8sRollingStepParameters stepParameters = new K8sRollingStepParameters();
+    stepParameters.setSkipDryRun(ParameterField.createValueField(true));
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("30m")).build();
+
+    when(executionSweepingOutputService.resolveOptional(
+             ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME)))
+        .thenReturn(OptionalSweepingOutput.builder().found(true).build());
+
+    K8sRollingDeployRequest request = executeTask(stepElementParameters, K8sRollingDeployRequest.class);
+    assertThat(request.isSkipDryRun()).isTrue();
+    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(30);
+    assertThat(request.getK8sInfraDelegateConfig()).isEqualTo(infraDelegateConfig);
+    assertThat(request.getManifestDelegateConfig()).isEqualTo(manifestDelegateConfig);
+    assertThat(request.getTaskType()).isEqualTo(K8sTaskType.DEPLOYMENT_ROLLING);
+    assertThat(request.getAccountId()).isEqualTo(accountId);
+    assertThat(request.isSkipResourceVersioning()).isTrue();
+    assertThat(request.isInCanaryWorkflow()).isTrue();
   }
 
   @Test
@@ -72,6 +103,10 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
     stepParameters.setSkipDryRun(ParameterField.ofNull());
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.ofNull()).build();
+
+    when(executionSweepingOutputService.resolveOptional(
+             ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME)))
+        .thenReturn(OptionalSweepingOutput.builder().found(false).build());
 
     K8sRollingDeployRequest request = executeTask(stepElementParameters, K8sRollingDeployRequest.class);
     assertThat(request.isSkipDryRun()).isFalse();
