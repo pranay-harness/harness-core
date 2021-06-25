@@ -159,7 +159,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
     Update updateOps = new Update().set(YamlChangeSetKeys.status, newStatus);
     updateOps.inc(YamlChangeSetKeys.retryCount);
     updateOps.set(YamlChangeSetKeys.nextRunTime,
-        YamlChangeSetBackOffHelper.getNextRunTime((yamlChangeSetDTO.getRetryCount() + 1), System.currentTimeMillis()));
+        YamlChangeSetBackOffHelper.getNextRunTime(yamlChangeSetDTO.getRetryCount() + 1, System.currentTimeMillis()));
     Query query = new Query(new Criteria()
                                 .and(YamlChangeSetKeys.accountId)
                                 .is(accountId)

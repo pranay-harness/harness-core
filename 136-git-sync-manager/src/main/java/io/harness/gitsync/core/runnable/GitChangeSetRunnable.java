@@ -146,10 +146,8 @@ public class GitChangeSetRunnable implements Runnable {
     try (
         AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
         AutoLogContext ignore2 = YamlProcessingLogContext.builder().changeSetQueueKey(queueKey).build(OVERRIDE_ERROR)) {
-      final YamlChangeSetDTO yamlChangeSet =
-          gitChangeSetRunnableQueueHelper.getQueuedChangeSetForWaitingQueueKey(accountId, queueKey,
-              getMaxRunningChangesetsForAccount(), yamlChangeSetService, runningStatusList, persistentLocker);
-      return yamlChangeSet;
+      return gitChangeSetRunnableQueueHelper.getQueuedChangeSetForWaitingQueueKey(accountId, queueKey,
+          getMaxRunningChangesetsForAccount(), yamlChangeSetService, runningStatusList, persistentLocker);
     } catch (Exception ex) {
       log.error(
           format("error while finding changeset to process for accountId=[%s], queueKey=[%s]", accountId, queueKey),
