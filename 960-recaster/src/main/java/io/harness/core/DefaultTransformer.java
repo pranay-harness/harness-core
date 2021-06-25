@@ -14,11 +14,13 @@ import io.harness.transformers.simplevalue.FloatRecastTransformer;
 import io.harness.transformers.simplevalue.InstantRecastTransformer;
 import io.harness.transformers.simplevalue.IntegerRecastTransformer;
 import io.harness.transformers.simplevalue.IterableRecastTransformer;
+import io.harness.transformers.simplevalue.IterableV2RecastTransformer;
 import io.harness.transformers.simplevalue.LocalDateRecastTransformer;
 import io.harness.transformers.simplevalue.LocalDateTimeRecastTransformer;
 import io.harness.transformers.simplevalue.LocalTimeRecastTransformer;
 import io.harness.transformers.simplevalue.LongRecastTransformer;
 import io.harness.transformers.simplevalue.MapRecastTransformer;
+import io.harness.transformers.simplevalue.MapV2RecastTransformer;
 import io.harness.transformers.simplevalue.StringRecastTransformer;
 
 public class DefaultTransformer extends Transformer {
@@ -32,7 +34,6 @@ public class DefaultTransformer extends Transformer {
     addTransformer(new ByteRecastTransformer());
     addTransformer(new ClassRecastTransformer());
     addTransformer(new EnumRecastTransformer());
-    addTransformer(new IterableRecastTransformer());
     addTransformer(new StringRecastTransformer());
     addTransformer(new LongRecastTransformer());
     addTransformer(new IntegerRecastTransformer());
@@ -46,7 +47,13 @@ public class DefaultTransformer extends Transformer {
     addTransformer(new LocalTimeRecastTransformer());
     addTransformer(new InstantRecastTransformer());
 
-    addTransformer(new MapRecastTransformer());
+    if (recaster.getOptions().isWorkWithMaps()) {
+      addTransformer(new MapV2RecastTransformer());
+      addTransformer(new IterableV2RecastTransformer());
+    } else {
+      addTransformer(new MapRecastTransformer());
+      addTransformer(new IterableRecastTransformer());
+    }
   }
 
   @Override
