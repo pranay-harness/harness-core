@@ -99,6 +99,37 @@ public class PlanExecutionResource {
   }
 
   @POST
+  @Path("/rerun/{originalExecutionId}/{identifier}")
+  @ApiOperation(
+      value = "Re Execute a pipeline with inputSet pipeline yaml", nickname = "rePostPipelineExecuteWithInputSetYaml")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_EXECUTE)
+  public ResponseDTO<PlanExecutionResponseDto>
+  rerunPipelineWithInputSetPipelineYaml(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) String moduleType,
+      @NotNull @PathParam("originalExecutionId") String originalExecutionId,
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
+      @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
+      @ApiParam(hidden = true) String inputSetPipelineYaml) {
+    try {
+      PlanExecutionResponseDto planExecutionResponseDto =
+          pipelineExecuteHelper.rerunPipelineWithInputSetPipelineYaml(accountId, orgIdentifier, projectIdentifier,
+              pipelineIdentifier, moduleType, originalExecutionId, inputSetPipelineYaml,
+              ExecutionTriggerInfo.newBuilder()
+                  .setTriggerType(MANUAL)
+                  .setTriggeredBy(triggeredByHelper.getFromSecurityContext())
+                  .build());
+      return ResponseDTO.newResponse(planExecutionResponseDto);
+    } catch (IOException ex) {
+      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+    }
+  }
+
+  @POST
   @Path("/{identifier}/inputSetList")
   @ApiOperation(
       value = "Execute a pipeline with input set references list", nickname = "postPipelineExecuteWithInputSetList")
@@ -121,6 +152,38 @@ public class PlanExecutionResource {
       PlanExecutionResponseDto planExecutionResponseDto =
           pipelineExecuteHelper.runPipelineWithInputSetReferencesList(accountId, orgIdentifier, projectIdentifier,
               pipelineIdentifier, moduleType, mergeInputSetRequestDTO.getInputSetReferences(),
+              gitEntityBasicInfo.getBranch(), gitEntityBasicInfo.getYamlGitConfigId(), triggerInfo);
+      return ResponseDTO.newResponse(planExecutionResponseDto);
+    } catch (IOException ex) {
+      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+    }
+  }
+
+  @POST
+  @Path("rerun/{originalExecutionId}/{identifier}/inputSetList")
+  @ApiOperation(
+      value = "Execute a pipeline with input set references list", nickname = "rePostPipelineExecuteWithInputSetList")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_EXECUTE)
+  public ResponseDTO<PlanExecutionResponseDto>
+  rerunPipelineWithInputSetIdentifierList(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) String moduleType,
+      @NotNull @PathParam("originalExecutionId") String originalExecutionId,
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
+      @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
+      @NotNull @Valid MergeInputSetRequestDTOPMS mergeInputSetRequestDTO) {
+    try {
+      ExecutionTriggerInfo triggerInfo = ExecutionTriggerInfo.newBuilder()
+                                             .setTriggerType(MANUAL)
+                                             .setTriggeredBy(triggeredByHelper.getFromSecurityContext())
+                                             .build();
+      PlanExecutionResponseDto planExecutionResponseDto =
+          pipelineExecuteHelper.rerunPipelineWithInputSetReferencesList(accountId, orgIdentifier, projectIdentifier,
+              pipelineIdentifier, moduleType, originalExecutionId, mergeInputSetRequestDTO.getInputSetReferences(),
               gitEntityBasicInfo.getBranch(), gitEntityBasicInfo.getYamlGitConfigId(), triggerInfo);
       return ResponseDTO.newResponse(planExecutionResponseDto);
     } catch (IOException ex) {
