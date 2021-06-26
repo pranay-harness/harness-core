@@ -84,6 +84,7 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
+import io.harness.ng.core.account.DefaultExperience;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.invites.InviteOperationResponse;
@@ -2840,6 +2841,7 @@ public class UserServiceImpl implements UserService {
   private Account setupAccount(Account account, boolean shouldCreateSampleApp) {
     // HAR-8645: Always set default appId for account creation to pass validation
     account.setAppId(GLOBAL_APP_ID);
+    account.setDefaultExperience(DefaultExperience.CG);
     Account savedAccount = accountService.save(account, false, shouldCreateSampleApp);
     log.info("New account created with accountId {} and licenseType {}", account.getUuid(),
         account.getLicenseInfo().getAccountType());
