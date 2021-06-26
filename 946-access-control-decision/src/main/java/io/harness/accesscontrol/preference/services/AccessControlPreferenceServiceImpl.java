@@ -23,7 +23,7 @@ public class AccessControlPreferenceServiceImpl implements AccessControlPreferen
   private final ScheduledExecutorService executorService;
   private static final String ENFORCE_NG_ACCESS_CONTROL = "ENFORCE_NG_ACCESS_CONTROL";
   private final AccessControlPreferenceDAO accessControlPreferenceDAO;
-  private boolean globallyEnabled;
+  private volatile boolean globallyEnabled;
   private final FeatureFlagsClient featureFlagClient;
 
   @Inject
@@ -41,7 +41,7 @@ public class AccessControlPreferenceServiceImpl implements AccessControlPreferen
     try {
       FeatureFlagDTO featureFlagDTO =
           RestClientUtils.getResponse(featureFlagClient.getFeatureFlagName(ENFORCE_NG_ACCESS_CONTROL));
-      this.globallyEnabled = Optional.ofNullable(featureFlagDTO).map(FeatureFlagDTO::getGloballyEnabled).orElse(false);
+      this.globallyEnabled = Optional.ofNullable(featureFlagDTO).map(FeatureFlagDTO::getEnabled).orElse(false);
       log.info("Successfully synced the value of NG_ACCESS_CONTROL_ENFORCED flag");
     } catch (Exception exception) {
       log.error("Failed to sync value of NG_ACCESS_CONTROL_ENFORCED flag with error", exception);

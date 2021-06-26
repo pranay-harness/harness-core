@@ -10,7 +10,7 @@ import io.harness.accesscontrol.commons.notifications.NotificationConfig;
 import io.harness.accesscontrol.principals.serviceaccounts.ServiceAccountClientConfiguration;
 import io.harness.accesscontrol.principals.usergroups.UserGroupClientConfiguration;
 import io.harness.accesscontrol.principals.users.UserClientConfiguration;
-import io.harness.accesscontrol.resources.ResourceGroupClientConfiguration;
+import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupClientConfiguration;
 import io.harness.aggregator.AggregatorConfiguration;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ff.FeatureFlagClientConfiguration;
