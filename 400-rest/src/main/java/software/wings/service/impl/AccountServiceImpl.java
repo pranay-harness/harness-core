@@ -525,6 +525,7 @@ public class AccountServiceImpl implements AccountService {
     accountDetails.setCluster(mainConfiguration.getDeploymentClusterName());
     accountDetails.setLicenseInfo(account.getLicenseInfo());
     accountDetails.setCeLicenseInfo(account.getCeLicenseInfo());
+    accountDetails.setDefaultExperience(account.getDefaultExperience());
     return accountDetails;
   }
 
