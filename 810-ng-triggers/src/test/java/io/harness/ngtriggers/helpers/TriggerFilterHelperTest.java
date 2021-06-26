@@ -18,6 +18,7 @@ import io.harness.ngtriggers.beans.scm.WebhookPayloadData.WebhookPayloadDataBuil
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.AccountTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.EventActionTriggerFilter;
+import io.harness.ngtriggers.eventmapper.filters.impl.FilepathTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.GitWebhookTriggerRepoFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.GithubIssueCommentTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.HeaderTriggerFilter;
@@ -45,6 +46,7 @@ import org.mockito.MockitoAnnotations;
 @OwnedBy(PIPELINE)
 public class TriggerFilterHelperTest extends CategoryTest {
   @Mock GitWebhookTriggerRepoFilter gitWebhookTriggerRepoFilter;
+  @Mock FilepathTriggerFilter filepathTriggerFilter;
   @Mock AccountTriggerFilter accountTriggerFilter;
   @Mock SourceRepoTypeTriggerFilter sourceRepoTypeTriggerFilter;
   @Mock EventActionTriggerFilter eventActionTriggerFilter;
@@ -75,7 +77,7 @@ public class TriggerFilterHelperTest extends CategoryTest {
 
     TriggerFilter[] triggerFiltersDefaultGit = new TriggerFilter[] {accountTriggerFilter, sourceRepoTypeTriggerFilter,
         eventActionTriggerFilter, payloadConditionsTriggerFilter, headerTriggerFilter, jexlConditionsTriggerFilter,
-        gitWebhookTriggerRepoFilter};
+        gitWebhookTriggerRepoFilter, filepathTriggerFilter};
 
     webhookTriggerFilters = triggerFilterStore.getWebhookTriggerFilters(
         webhookPayloadDataBuilder.parseWebhookResponse(ParseWebhookResponse.newBuilder().build())
@@ -112,7 +114,7 @@ public class TriggerFilterHelperTest extends CategoryTest {
     assertThat(webhookTriggerFilters).isNotNull();
     assertThat(webhookTriggerFilters)
         .containsExactlyInAnyOrder(accountTriggerFilter, sourceRepoTypeTriggerFilter, eventActionTriggerFilter,
-            gitWebhookTriggerRepoFilter, headerTriggerFilter, githubIssueCommentTriggerFilter);
+            gitWebhookTriggerRepoFilter, headerTriggerFilter, githubIssueCommentTriggerFilter, filepathTriggerFilter);
   }
 
   @Test

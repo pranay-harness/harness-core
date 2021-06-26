@@ -335,6 +335,8 @@ import io.harness.delegate.task.scm.ScmGitWebhookTaskParams;
 import io.harness.delegate.task.scm.ScmGitWebhookTaskResponseData;
 import io.harness.delegate.task.scm.ScmPRTaskParams;
 import io.harness.delegate.task.scm.ScmPRTaskResponseData;
+import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskParams;
+import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskResponse;
 import io.harness.delegate.task.scm.ScmPushTaskParams;
 import io.harness.delegate.task.scm.ScmPushTaskResponseData;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
@@ -863,5 +865,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CfInstanceSyncRequest.class, 543420);
     kryo.register(CfRunPluginCommandRequest.class, 543421);
     kryo.register(CfCommandExecutionResponse.class, 543422);
+    kryo.register(ScmPathFilterEvaluationTaskParams.class, 543423);
+    kryo.register(ScmPathFilterEvaluationTaskResponse.class, 543424);
   }
 }
