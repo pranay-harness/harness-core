@@ -8,7 +8,7 @@ Portal Project Dev environment setup instructions
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 ```
 
-2. Download and Install Java 8
+2. Download and Idfdfnstall Java 8
 
 NOTE: Brew will download and install latest version of OpenJDK/JRE, its recommended to install OpenJDK/JRE_1.8.0_242 to be in sync with version everyone is using in the team.
 
