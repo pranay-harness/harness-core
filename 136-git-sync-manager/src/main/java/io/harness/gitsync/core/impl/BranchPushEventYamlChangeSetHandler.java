@@ -198,6 +198,13 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
             yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
             yamlGitConfigDTO.getAccountIdentifier());
 
+    // TODO remove debug logs later on
+    StringBuilder gitDiffResultFileList =
+        new StringBuilder(String.format("Compare Commits Response from %s to %s :: ", initialCommitId, finalCommitId));
+    gitDiffResultFileListDTO.getPrFileList().forEach(
+        prFile -> gitDiffResultFileList.append(prFile.toString()).append(" :::: "));
+    log.info(gitDiffResultFileList.toString());
+
     return gitDiffResultFileListDTO.getPrFileList();
   }
 
