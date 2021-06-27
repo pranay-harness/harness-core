@@ -57,6 +57,7 @@ import io.harness.migrations.all.CleanupSyncStatusForDeletedEntities;
 import io.harness.migrations.all.ConvertHttpHeadersStringTypeToList;
 import io.harness.migrations.all.CreateNgPrimaryProfileForExistingAccounts;
 import io.harness.migrations.all.CreatePrimiryProfileForAllAccounts;
+import io.harness.migrations.all.DefaultExperienceMigration;
 import io.harness.migrations.all.DelegateNgDetailsToDelegateGroupMigration;
 import io.harness.migrations.all.DelegateTokenMigration;
 import io.harness.migrations.all.DelegatesWithoutGroupMigration;
@@ -329,6 +330,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(195, DelegateTokenMigration.class))
         .add(Pair.of(196, ExecuteWorkflowRollbackActionMigration.class))
         .add(Pair.of(197, DelegateNgDetailsToDelegateGroupMigration.class))
+        .add(Pair.of(198, DefaultExperienceMigration.class))
         .build();
   }
 }
