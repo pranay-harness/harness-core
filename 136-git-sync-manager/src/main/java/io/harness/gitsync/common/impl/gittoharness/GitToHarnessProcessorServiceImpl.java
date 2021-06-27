@@ -61,7 +61,6 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
   GitToHarnessProgressService gitToHarnessProgressService;
   GitCommitService gitCommitService;
   YamlGitConfigService yamlGitConfigService;
-  GitChangeSetMapper gitChangeSetMapper;
 
   @Override
   public GitToHarnessProgressStatus processFiles(String accountId,
@@ -69,7 +68,7 @@ public class GitToHarnessProcessorServiceImpl implements GitToHarnessProcessorSe
       String gitToHarnessProgressRecordId, String changeSetId) {
     final List<YamlGitConfigDTO> yamlGitConfigs = yamlGitConfigService.getByRepo(repoUrl);
     List<ChangeSetWithYamlStatusDTO> changeSetsWithYamlStatus =
-        gitChangeSetMapper.toChangeSetList(fileContentsList, accountId, yamlGitConfigs, changeSetId, branchName);
+        GitChangeSetMapper.toChangeSetList(fileContentsList, accountId, yamlGitConfigs, changeSetId);
     final List<ChangeSet> invalidChangeSets = markSkippedFiles(changeSetsWithYamlStatus);
     Map<EntityType, List<ChangeSet>> mapOfEntityTypeAndContent =
         createMapOfEntityTypeAndFileContent(changeSetsWithYamlStatus);
