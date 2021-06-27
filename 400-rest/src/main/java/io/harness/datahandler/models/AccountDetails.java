@@ -20,6 +20,7 @@ public class AccountDetails {
   private String accountName;
   private String companyName;
   private String cluster;
+  private boolean createdFromNG;
   private DefaultExperience defaultExperience;
   private LicenseInfo licenseInfo;
   private CeLicenseInfo ceLicenseInfo;
