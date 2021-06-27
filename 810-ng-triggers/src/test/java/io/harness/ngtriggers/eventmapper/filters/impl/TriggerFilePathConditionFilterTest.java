@@ -6,15 +6,36 @@ import static io.harness.ngtriggers.conditionchecker.ConditionOperator.EQUALS;
 import static io.harness.ngtriggers.conditionchecker.ConditionOperator.REGEX;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
+import static software.wings.beans.TaskType.SCM_PATH_FILTER_EVALUATION_TASK;
+
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DelegateTaskRequest;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskParams;
+import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskResponse;
+import io.harness.ng.core.NGAccess;
+import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
+import io.harness.ngtriggers.beans.entity.metadata.GitMetadata;
+import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
+import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.source.WebhookTriggerType;
 import io.harness.ngtriggers.beans.source.webhook.v2.TriggerEventDataCondition;
@@ -24,10 +45,13 @@ import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.utils.TaskExecutionUtils;
 import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
+import io.harness.product.ci.scm.proto.PullRequest;
 import io.harness.product.ci.scm.proto.PullRequestHook;
 import io.harness.product.ci.scm.proto.PushHook;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.BinaryResponseData;
 import io.harness.utils.ConnectorUtils;
 
 import com.google.inject.Inject;
@@ -38,6 +62,7 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -128,6 +153,142 @@ public class TriggerFilePathConditionFilterTest extends CategoryTest {
                                .build())
             .build());
     assertThat(filter.pathFilterEvaluationNotNeeded(filterRequestData)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testInitiateDeleteTaskAndEvaluateForPR() {
+    // Init Data
+    TriggerDetails triggerDetails = generateTriggerDetails();
+
+    GithubConnectorDTO githubConnectorDTO = GithubConnectorDTO.builder().build();
+    List<EncryptedDataDetail> encryptedDataDetails = emptyList();
+    TriggerEventDataCondition pathCondition =
+        TriggerEventDataCondition.builder().key(CHANGED_FILES).operator(EQUALS).value("test").build();
+    ParseWebhookResponse parseWebhookResponse =
+        ParseWebhookResponse.newBuilder()
+            .setPr(PullRequestHook.newBuilder().setPr(PullRequest.newBuilder().setNumber(2).build()).build())
+            .build();
+    WebhookPayloadData webhookPayloadData =
+        WebhookPayloadData.builder().parseWebhookResponse(parseWebhookResponse).build();
+    FilterRequestData filterRequestData =
+        FilterRequestData.builder().accountId("acc").webhookPayloadData(webhookPayloadData).build();
+
+    // Mock apis
+    doReturn(ConnectorDetails.builder()
+                 .connectorConfig(githubConnectorDTO)
+                 .encryptedDataDetails(encryptedDataDetails)
+                 .build())
+        .when(connectorUtils)
+        .getConnectorDetails(any(NGAccess.class), eq("account.conn"));
+
+    byte[] data = new byte[0];
+    when(taskExecutionUtils.executeSyncTask(any(DelegateTaskRequest.class)))
+        .thenReturn(BinaryResponseData.builder().data(data).build());
+    doReturn(ScmPathFilterEvaluationTaskResponse.builder().matched(true).build())
+        .when(kryoSerializer)
+        .asInflatedObject(data);
+
+    ArgumentCaptor<DelegateTaskRequest> argumentCaptor = ArgumentCaptor.forClass(DelegateTaskRequest.class);
+    assertThat(filter.initiateDeleteTaskAndEvaluate(filterRequestData, triggerDetails, pathCondition)).isTrue();
+    verify(taskExecutionUtils, times(1)).executeSyncTask(argumentCaptor.capture());
+
+    // Assert Delegate Task request object generated
+    DelegateTaskRequest delegateTaskRequest = argumentCaptor.getValue();
+    assertThat(delegateTaskRequest.getAccountId()).isEqualTo("acc");
+    assertThat(delegateTaskRequest.getTaskType()).isEqualTo(SCM_PATH_FILTER_EVALUATION_TASK.toString());
+
+    assertThat(delegateTaskRequest.getTaskParameters()).isNotNull();
+
+    TaskParameters taskParameters = delegateTaskRequest.getTaskParameters();
+    assertThat(ScmPathFilterEvaluationTaskParams.class.isAssignableFrom(taskParameters.getClass()));
+    ScmPathFilterEvaluationTaskParams params = (ScmPathFilterEvaluationTaskParams) taskParameters;
+    assertThat(params.getScmConnector()).isEqualTo(githubConnectorDTO);
+    assertThat(params.getEncryptedDataDetails()).isEqualTo(encryptedDataDetails);
+    assertThat(params.getPrNumber()).isEqualTo(2);
+    assertThat(params.getOperator()).isEqualTo(EQUALS.getValue());
+    assertThat(params.getStandard()).isEqualTo("test");
+
+    // DelegateTask returns Error
+    doReturn(ErrorNotifyResponseData.builder().errorMessage("error").build())
+        .when(kryoSerializer)
+        .asInflatedObject(data);
+    assertThat(filter.initiateDeleteTaskAndEvaluate(filterRequestData, triggerDetails, pathCondition)).isFalse();
+  }
+
+  private TriggerDetails generateTriggerDetails() {
+    NGTriggerEntity ngTriggerEntity =
+        NGTriggerEntity.builder()
+            .identifier("id")
+            .accountId("acc")
+            .orgIdentifier("org")
+            .projectIdentifier("proj")
+            .metadata(NGTriggerMetadata.builder()
+                          .webhook(WebhookMetadata.builder()
+                                       .git(GitMetadata.builder().connectorIdentifier("account.conn").build())
+                                       .build())
+                          .build())
+            .build();
+    return TriggerDetails.builder().ngTriggerEntity(ngTriggerEntity).build();
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testInitiateDeleteTaskAndEvaluateForPush() {
+    // Init Data
+    TriggerDetails triggerDetails = generateTriggerDetails();
+
+    GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder().build();
+    List<EncryptedDataDetail> encryptedDataDetails = emptyList();
+    TriggerEventDataCondition pathCondition =
+        TriggerEventDataCondition.builder().key(CHANGED_FILES).operator(EQUALS).value("test").build();
+    ParseWebhookResponse parseWebhookResponse =
+        ParseWebhookResponse.newBuilder()
+            .setPush(PushHook.newBuilder().setBefore("before").setAfter("after").setRef("ref").build())
+            .build();
+    WebhookPayloadData webhookPayloadData =
+        WebhookPayloadData.builder().parseWebhookResponse(parseWebhookResponse).build();
+    FilterRequestData filterRequestData =
+        FilterRequestData.builder().accountId("acc").webhookPayloadData(webhookPayloadData).build();
+
+    // Mock apis
+    doReturn(ConnectorDetails.builder()
+                 .connectorConfig(gitlabConnectorDTO)
+                 .encryptedDataDetails(encryptedDataDetails)
+                 .build())
+        .when(connectorUtils)
+        .getConnectorDetails(any(NGAccess.class), eq("account.conn"));
+
+    byte[] data = new byte[0];
+    when(taskExecutionUtils.executeSyncTask(any(DelegateTaskRequest.class)))
+        .thenReturn(BinaryResponseData.builder().data(data).build());
+    doReturn(ScmPathFilterEvaluationTaskResponse.builder().matched(true).build())
+        .when(kryoSerializer)
+        .asInflatedObject(data);
+
+    ArgumentCaptor<DelegateTaskRequest> argumentCaptor = ArgumentCaptor.forClass(DelegateTaskRequest.class);
+    assertThat(filter.initiateDeleteTaskAndEvaluate(filterRequestData, triggerDetails, pathCondition)).isTrue();
+    verify(taskExecutionUtils, times(1)).executeSyncTask(argumentCaptor.capture());
+
+    // Assert Delegate Task request object generated
+    DelegateTaskRequest delegateTaskRequest = argumentCaptor.getValue();
+    assertThat(delegateTaskRequest.getAccountId()).isEqualTo("acc");
+    assertThat(delegateTaskRequest.getTaskType()).isEqualTo(SCM_PATH_FILTER_EVALUATION_TASK.toString());
+
+    assertThat(delegateTaskRequest.getTaskParameters()).isNotNull();
+
+    TaskParameters taskParameters = delegateTaskRequest.getTaskParameters();
+    assertThat(ScmPathFilterEvaluationTaskParams.class.isAssignableFrom(taskParameters.getClass()));
+    ScmPathFilterEvaluationTaskParams params = (ScmPathFilterEvaluationTaskParams) taskParameters;
+    assertThat(params.getScmConnector()).isEqualTo(gitlabConnectorDTO);
+    assertThat(params.getEncryptedDataDetails()).isEqualTo(encryptedDataDetails);
+    assertThat(params.getPreviousCommit()).isEqualTo("before");
+    assertThat(params.getLatestCommit()).isEqualTo("after");
+    assertThat(params.getBranch()).isEqualTo("ref");
+    assertThat(params.getOperator()).isEqualTo(EQUALS.getValue());
+    assertThat(params.getStandard()).isEqualTo("test");
   }
 
   @Test
