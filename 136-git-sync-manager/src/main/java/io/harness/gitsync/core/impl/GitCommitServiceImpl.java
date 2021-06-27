@@ -133,11 +133,18 @@ public class GitCommitServiceImpl implements GitCommitService {
   }
 
   private boolean isFileProcessingSummaryEmpty(GitFileProcessingSummary gitFileProcessingSummary) {
-    if (gitFileProcessingSummary.getFailureCount() == 0 && gitFileProcessingSummary.getQueuedCount() == 0
-        && gitFileProcessingSummary.getSkippedCount() == 0 && gitFileProcessingSummary.getSuccessCount() == 0
-        && gitFileProcessingSummary.getTotalCount() == 0) {
+    if (isValueEmpty(gitFileProcessingSummary.getFailureCount())
+        && isValueEmpty(gitFileProcessingSummary.getQueuedCount())
+        && isValueEmpty(gitFileProcessingSummary.getSkippedCount())
+        && isValueEmpty(gitFileProcessingSummary.getSuccessCount())
+        && isValueEmpty(gitFileProcessingSummary.getTotalCount())) {
       return true;
     }
+
     return false;
+  }
+
+  private boolean isValueEmpty(Long value) {
+    return value == null || value == 0;
   }
 }
