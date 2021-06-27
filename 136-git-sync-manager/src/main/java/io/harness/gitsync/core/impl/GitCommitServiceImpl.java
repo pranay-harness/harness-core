@@ -98,6 +98,7 @@ public class GitCommitServiceImpl implements GitCommitService {
                             .is(gitCommitDTO.getGitSyncDirection());
     Update update = update(GitCommitKeys.status, gitCommitDTO.getStatus())
                         .set(GitCommitKeys.fileProcessingSummary, gitCommitDTO.getFileProcessingSummary());
+    // TODO added explicitly createdAt for timebeing until annotation issue isn't resolved
     update.setOnInsert(GitCommitKeys.repoURL, gitCommitDTO.getRepoURL())
         .set(GitCommitKeys.commitId, gitCommitDTO.getCommitId())
         .set(GitCommitKeys.accountIdentifier, gitCommitDTO.getAccountIdentifier())
@@ -105,7 +106,8 @@ public class GitCommitServiceImpl implements GitCommitService {
         .set(GitCommitKeys.commitMessage, gitCommitDTO.getCommitMessage())
         .set(GitCommitKeys.gitSyncDirection, gitCommitDTO.getGitSyncDirection())
         .set(GitCommitKeys.fileProcessingSummary, gitCommitDTO.getFileProcessingSummary())
-        .set(GitCommitKeys.failureReason, gitCommitDTO.getFailureReason());
+        .set(GitCommitKeys.failureReason, gitCommitDTO.getFailureReason())
+        .set(GitCommitKeys.createdAt, System.currentTimeMillis());
 
     return mongoTemplate.upsert(new Query(criteria), update, GitCommit.class);
   }
