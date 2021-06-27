@@ -8,6 +8,7 @@ import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.beans.DelegateTask.Status.runningStatuses;
 import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
+import static io.harness.beans.shared.tasks.NgSetupFields.NG;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.SizeFunction.size;
@@ -335,7 +336,10 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       selectorCapabilities.add(selectorCapability);
     }
 
-    if (task.getData() != null && task.getData().getTaskType() != null) {
+    boolean isTaskNg =
+        !isEmpty(task.getSetupAbstractions()) && Boolean.parseBoolean(task.getSetupAbstractions().get(NG));
+
+    if (!isTaskNg && task.getData() != null && task.getData().getTaskType() != null) {
       TaskGroup taskGroup = TaskType.valueOf(task.getData().getTaskType()).getTaskGroup();
       TaskSelectorMap mapFromTaskType = taskSelectorMapService.get(task.getAccountId(), taskGroup);
       if (mapFromTaskType != null && isNotEmpty(mapFromTaskType.getSelectors())) {

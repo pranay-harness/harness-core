@@ -9,6 +9,7 @@ import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.AccountTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.EventActionTriggerFilter;
+import io.harness.ngtriggers.eventmapper.filters.impl.FilepathTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.GitWebhookTriggerRepoFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.GithubIssueCommentTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.HeaderTriggerFilter;
@@ -36,6 +37,7 @@ public class TriggerFilterStore {
   private final GithubIssueCommentTriggerFilter githubIssueCommentTriggerFilter;
   private final HeaderTriggerFilter headerTriggerFilter;
   private final JexlConditionsTriggerFilter jexlConditionsTriggerFilter;
+  private final FilepathTriggerFilter filepathTriggerFilter;
 
   public List<TriggerFilter> getWebhookTriggerFilters(WebhookPayloadData webhookPayloadData) {
     if (CUSTOM.name().equals(webhookPayloadData.getOriginalEvent().getSourceRepoType())) {
@@ -58,11 +60,12 @@ public class TriggerFilterStore {
 
   List<TriggerFilter> getWebhookGitTriggerFiltersDefaultList() {
     return Arrays.asList(accountTriggerFilter, sourceRepoTypeTriggerFilter, eventActionTriggerFilter,
-        payloadConditionsTriggerFilter, headerTriggerFilter, jexlConditionsTriggerFilter, gitWebhookTriggerRepoFilter);
+        payloadConditionsTriggerFilter, headerTriggerFilter, jexlConditionsTriggerFilter, gitWebhookTriggerRepoFilter,
+        filepathTriggerFilter);
   }
 
   List<TriggerFilter> getTriggerFiltersGithubIssueCommentList() {
     return Arrays.asList(accountTriggerFilter, sourceRepoTypeTriggerFilter, eventActionTriggerFilter,
-        headerTriggerFilter, gitWebhookTriggerRepoFilter, githubIssueCommentTriggerFilter);
+        headerTriggerFilter, gitWebhookTriggerRepoFilter, githubIssueCommentTriggerFilter, filepathTriggerFilter);
   }
 }

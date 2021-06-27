@@ -194,7 +194,7 @@ public class BambooServiceImpl implements BambooService {
   private Map<String, String> getPlanKeys(
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, int maxResults) {
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(110), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(110), () -> {
         BambooRestClient bambooRestClient = getBambooClient(bambooConfig, encryptionDetails);
         log.info("Retrieving plan keys for bamboo server {}", bambooConfig);
         log.info("Fetching plans starting at index: [0] from bamboo server {}", bambooConfig.getBambooUrl());
@@ -278,7 +278,7 @@ public class BambooServiceImpl implements BambooService {
   public List<BuildDetails> getBuilds(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails,
       String planKey, List<String> artifactPaths, int maxNumberOfBuilds) {
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(20), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(20), () -> {
         List<BuildDetails> buildDetailsList = new ArrayList<>();
         Call<JsonNode> request =
             getBambooClient(bambooConfig, encryptionDetails)
@@ -330,7 +330,7 @@ public class BambooServiceImpl implements BambooService {
   public List<String> getArtifactPath(
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey) {
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(20), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(20), () -> {
         List<String> artifactPaths = new ArrayList<>();
         BuildDetails lastSuccessfulBuild = getLastSuccessfulBuild(bambooConfig, encryptionDetails, planKey);
         if (lastSuccessfulBuild != null) {

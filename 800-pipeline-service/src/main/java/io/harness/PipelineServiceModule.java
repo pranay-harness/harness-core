@@ -12,6 +12,7 @@ import static io.harness.lock.DistributedLockImplementation.MONGO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.audit.client.remote.AuditClientModule;
+import io.harness.cache.HarnessCacheManager;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -107,6 +108,7 @@ import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
+import io.harness.version.VersionInfoManager;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
@@ -133,6 +135,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import javax.cache.Cache;
+import javax.cache.expiry.AccessedExpiryPolicy;
+import javax.cache.expiry.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.reflections.Reflections;
@@ -444,5 +449,14 @@ public class PipelineServiceModule extends AbstractModule {
   public ExecutorService pipelineExecutorService() {
     return ThreadPool.create(
         5, 10, 10, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("PipelineExecutorService-%d").build());
+  }
+
+  @Provides
+  @Singleton
+  @Named("pmsEventsCache")
+  public Cache<String, Integer> sdkEventsCache(
+      HarnessCacheManager harnessCacheManager, VersionInfoManager versionInfoManager) {
+    return harnessCacheManager.getCache("pmsEventsCache", String.class, Integer.class,
+        AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES), versionInfoManager.getVersionInfo().getBuildNo());
   }
 }

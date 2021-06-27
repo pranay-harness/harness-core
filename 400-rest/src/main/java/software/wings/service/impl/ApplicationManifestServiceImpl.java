@@ -39,6 +39,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.observer.Subject;
@@ -111,6 +112,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -125,6 +127,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   private static final String BASE_PATH = "basePath";
   private static final String REPOSITORY_NAME = "repositoryName";
   private static final String BUCKET_NAME = "bucketName";
+  public static final String VARIABLE_EXPRESSIONS_ERROR = "Variable expressions are not allowed in app manifest name";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
@@ -593,6 +596,19 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
 
     ApplicationManifest oldAppManifest = isCreate ? null : getById(appId, applicationManifest.getUuid());
+    // TODO: this block of code to be removed when app manifest UI changes hit prod
+    if (applicationManifest.getStoreType() == StoreType.HelmChartRepo
+        && applicationManifest.getHelmChartConfig() != null
+        && Boolean.TRUE.equals(applicationManifest.getPollForChanges())) {
+      String chartName = applicationManifest.getHelmChartConfig().getChartName();
+      String serviceName =
+          serviceResourceService.getName(applicationManifest.getAppId(), applicationManifest.getServiceId());
+      applicationManifest.setName(StringUtils.join(serviceName, "_", chartName));
+      if (ExpressionEvaluator.containsVariablePattern(chartName)) {
+        applicationManifest.setValidationMessage(VARIABLE_EXPRESSIONS_ERROR);
+      }
+    }
+
     ApplicationManifest savedApplicationManifest =
         wingsPersistence.saveAndGet(ApplicationManifest.class, applicationManifest);
 

@@ -26,6 +26,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.marketplace.gcp.GcpMarketPlaceApiHandler;
+import io.harness.ng.core.account.DefaultExperience;
 import io.harness.rest.RestResponse;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.security.annotations.LearningEngineAuth;
@@ -286,6 +287,16 @@ public class AccountResource {
     return response;
   }
 
+  @PUT
+  @Path("{accountId}/defaultExperience")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  public RestResponse<Void> updateDefaultExperience(
+      @PathParam("accountId") @NotEmpty String accountId, Account account) {
+    return new RestResponse<>(accountService.setDefaultExperience(accountId, account.getDefaultExperience()));
+  }
+
   @GET
   @Path("delegate/active")
   @Timed
@@ -331,6 +342,9 @@ public class AccountResource {
     RestResponse<Account> response = accountPermissionUtils.checkIfHarnessUser("User not allowed to create account");
     if (response == null) {
       account.setAppId(GLOBAL_APP_ID);
+      if (account.getDefaultExperience() == null) {
+        account.setDefaultExperience(DefaultExperience.CG);
+      }
       response = new RestResponse<>(accountService.save(account, false));
     }
     return response;

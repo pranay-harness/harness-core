@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.contracts.plan.YamlOutputProperties;
 import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.sdk.core.variables.ChildrenVariableCreator;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationContext;
@@ -44,16 +45,22 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
     YamlNode node = config.getNode();
     String stepUUID = node.getUuid();
     Map<String, YamlProperties> yamlPropertiesMap = new LinkedHashMap<>();
+    Map<String, YamlOutputProperties> yamlOutputPropertiesMap = new LinkedHashMap<>();
+
     yamlPropertiesMap.put(stepUUID,
         YamlProperties.newBuilder()
             .setLocalName(YAMLFieldNameConstants.STEP)
             .setFqn(YamlUtils.getFullyQualifiedName(node))
             .build());
-    addVariablesForStep(yamlPropertiesMap, node);
-    return VariableCreationResponse.builder().yamlProperties(yamlPropertiesMap).build();
+    addVariablesForStep(yamlPropertiesMap, yamlOutputPropertiesMap, node);
+    return VariableCreationResponse.builder()
+        .yamlOutputProperties(yamlOutputPropertiesMap)
+        .yamlProperties(yamlPropertiesMap)
+        .build();
   }
 
-  private void addVariablesForStep(Map<String, YamlProperties> yamlPropertiesMap, YamlNode yamlNode) {
+  private void addVariablesForStep(Map<String, YamlProperties> yamlPropertiesMap,
+      Map<String, YamlOutputProperties> yamlOutputPropertiesMap, YamlNode yamlNode) {
     YamlField nameField = yamlNode.getField(YAMLFieldNameConstants.NAME);
     if (nameField != null) {
       addFieldToPropertiesMapUnderStep(nameField, yamlPropertiesMap);
@@ -70,11 +77,12 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
 
     YamlField specField = yamlNode.getField(YAMLFieldNameConstants.SPEC);
     if (specField != null) {
-      addVariablesInComplexObject(yamlPropertiesMap, specField.getNode());
+      addVariablesInComplexObject(yamlPropertiesMap, yamlOutputPropertiesMap, specField.getNode());
     }
   }
 
-  protected void addVariablesInComplexObject(Map<String, YamlProperties> yamlPropertiesMap, YamlNode yamlNode) {
+  protected void addVariablesInComplexObject(Map<String, YamlProperties> yamlPropertiesMap,
+      Map<String, YamlOutputProperties> yamlOutputPropertiesMap, YamlNode yamlNode) {
     List<String> extraFields = new ArrayList<>();
     extraFields.add(YAMLFieldNameConstants.UUID);
     extraFields.add(YAMLFieldNameConstants.IDENTIFIER);
@@ -82,10 +90,10 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
     List<YamlField> fields = yamlNode.fields();
     fields.forEach(field -> {
       if (field.getNode().isObject()) {
-        addVariablesInComplexObject(yamlPropertiesMap, field.getNode());
+        addVariablesInComplexObject(yamlPropertiesMap, yamlOutputPropertiesMap, field.getNode());
       } else if (field.getNode().isArray()) {
         List<YamlNode> innerFields = field.getNode().asArray();
-        innerFields.forEach(f -> addVariablesInComplexObject(yamlPropertiesMap, f));
+        innerFields.forEach(f -> addVariablesInComplexObject(yamlPropertiesMap, yamlOutputPropertiesMap, f));
       } else if (!extraFields.contains(field.getName())) {
         addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
       }

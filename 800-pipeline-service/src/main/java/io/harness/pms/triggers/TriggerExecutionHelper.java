@@ -47,6 +47,7 @@ import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.plan.execution.PipelineExecuteHelper;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.product.ci.scm.proto.PullRequest;
 import io.harness.product.ci.scm.proto.PullRequestHook;
 import io.harness.product.ci.scm.proto.PushHook;
@@ -122,6 +123,8 @@ public class TriggerExecutionHelper {
         }
       }
       planExecutionMetadataBuilder.yaml(pipelineYaml);
+      planExecutionMetadataBuilder.processedYaml(YamlUtils.injectUuid(pipelineYaml));
+      planExecutionMetadataBuilder.triggerPayload(triggerPayload);
 
       pmsYamlSchemaService.validateYamlSchema(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
           ngTriggerEntity.getProjectIdentifier(), pipelineYaml);
@@ -130,8 +133,8 @@ public class TriggerExecutionHelper {
           ExecutionPrincipalInfo.newBuilder().setShouldValidateRbac(false).build());
 
       PlanExecution planExecution = pipelineExecuteHelper.startExecution(ngTriggerEntity.getAccountId(),
-          ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), pipelineYaml,
-          executionMetaDataBuilder.build(), planExecutionMetadataBuilder, triggerPayload);
+          ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), executionMetaDataBuilder.build(),
+          planExecutionMetadataBuilder.build());
       // check if abort prev execution needed.
       requestPipelineExecutionAbortForSameExecTagIfNeeded(triggerDetails, planExecution, executionTagForGitEvent);
       return planExecution;

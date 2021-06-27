@@ -20,6 +20,7 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.Wither;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
@@ -43,8 +44,9 @@ public class PlanExecutionMetadata implements PersistentEntity, UuidAware {
   private String inputSetYaml;
   private String yaml;
   private String processedYaml;
-  private String triggerJsonPayload;
-  private TriggerPayload triggerPayload;
+
+  @Wither private String triggerJsonPayload;
+  @Wither private TriggerPayload triggerPayload;
 
   @Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
 

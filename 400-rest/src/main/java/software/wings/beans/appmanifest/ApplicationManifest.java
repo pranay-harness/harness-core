@@ -58,6 +58,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
   @FdIndex private String accountId;
   private String serviceId;
   private String envId;
+  private String name;
   private AppManifestKind kind;
   @NonNull private StoreType storeType;
   private GitFileConfig gitFileConfig;
@@ -73,6 +74,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
   private String perpetualTaskId;
   private int failedAttempts;
   private Boolean skipVersioningForAllK8sObjects;
+  private String validationMessage;
 
   public ApplicationManifest cloneInternal() {
     ApplicationManifest manifest = ApplicationManifest.builder()

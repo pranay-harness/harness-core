@@ -54,7 +54,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.concurent.HTimeLimiterMocker;
-import io.harness.concurrent.HFakeTimeLimiter;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
@@ -113,6 +112,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.HelmTestConstants;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import java.io.File;
@@ -163,7 +163,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
   private HelmDeployServiceImpl spyHelmDeployService = spy(new HelmDeployServiceImpl());
 
-  private TimeLimiter timeLimiter = new HFakeTimeLimiter();
+  private TimeLimiter timeLimiter = new FakeTimeLimiter();
   private HelmInstallCommandRequest helmInstallCommandRequest;
   private HelmInstallCommandResponse helmInstallCommandResponse;
   private HelmCliResponse helmCliReleaseHistoryResponse;

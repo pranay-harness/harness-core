@@ -11,6 +11,7 @@ import io.harness.gitsync.common.beans.BranchSyncMetadata;
 import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepType;
+import io.harness.gitsync.common.beans.GitToHarnessProgressStatus;
 import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.beans.YamlChangeSetStatus;
 import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepResponse;
@@ -97,8 +98,12 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
     } catch (Exception ex) {
       log.error("Error encountered while syncing the branch [{}]", branch, ex);
       gitBranchService.updateBranchSyncStatus(yamlChangeSetDTO.getAccountId(), repoURL, branch, SYNCED);
+      // TODO adding it here for safer side as of now. Ideally should be part of step service to mark it
       gitToHarnessProgressService.updateStepStatus(
           gitToHarnessProgressRecord.getUuid(), GitToHarnessProcessingStepStatus.ERROR);
+      // Update the g2h status to ERROR
+      gitToHarnessProgressService.updateProgressStatus(
+          gitToHarnessProgressRecord.getUuid(), GitToHarnessProgressStatus.ERROR);
       return YamlChangeSetStatus.FAILED_WITH_RETRY;
     }
   }

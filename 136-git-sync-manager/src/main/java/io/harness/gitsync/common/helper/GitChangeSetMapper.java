@@ -10,46 +10,57 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.common.EntityReference;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.ChangeSet;
 import io.harness.gitsync.YamlGitConfigInfo;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
 import io.harness.gitsync.common.dtos.ChangeSetWithYamlStatusDTO;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
+import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
+import io.harness.gitsync.common.service.GitEntityService;
+import io.harness.ng.core.EntityDetail;
+import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
+import io.harness.ng.core.entitydetail.EntityDetailRestToProtoMapper;
 import io.harness.ng.core.event.EntityToEntityProtoHelper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.protobuf.StringValue;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(DX)
-@UtilityClass
+@Singleton
 @Slf4j
 public class GitChangeSetMapper {
   private ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+  @Inject GitEntityService gitEntityService;
+  @Inject EntityDetailRestToProtoMapper entityDetailRestToProtoMapper;
+  @Inject EntityDetailProtoToRestMapper entityDetailProtoToRestMapper;
 
   public List<ChangeSetWithYamlStatusDTO> toChangeSetList(List<GitToHarnessFileProcessingRequest> fileContentsList,
-      String accountId, List<YamlGitConfigDTO> yamlGitConfigDTOs, String changesetId) {
+      String accountId, List<YamlGitConfigDTO> yamlGitConfigDTOs, String changesetId, String branchName) {
     return emptyIfNull(fileContentsList)
         .stream()
         .map(fileProcessingRequest
             -> mapToChangeSet(fileProcessingRequest.getFileDetails(), accountId, fileProcessingRequest.getChangeType(),
-                yamlGitConfigDTOs, changesetId))
+                yamlGitConfigDTOs, changesetId, branchName))
         .filter(Objects::nonNull)
         .collect(toList());
   }
 
   private ChangeSetWithYamlStatusDTO mapToChangeSet(GitFileChangeDTO fileContent, String accountId,
-      ChangeType changeType, List<YamlGitConfigDTO> yamlGitConfigDTOs, String changesetId) {
+      ChangeType changeType, List<YamlGitConfigDTO> yamlGitConfigDTOs, String changesetId, String branchName) {
     ChangeSet.Builder builder = ChangeSet.newBuilder()
                                     .setAccountId(accountId)
                                     .setChangeType(ChangeTypeMapper.toProto(changeType))
@@ -59,36 +70,60 @@ public class GitChangeSetMapper {
     if (isNotBlank(fileContent.getObjectId())) {
       builder.setObjectId(StringValue.of(fileContent.getObjectId()));
     }
-    EntityType entityType = null;
-    try {
-      entityType = GitSyncUtils.getEntityTypeFromYaml(fileContent.getContent());
-    } catch (Exception ex) {
-      log.error("Unknown entity type encountered in file {}", fileContent.getPath(), ex);
-      return ChangeSetWithYamlStatusDTO.builder()
-          .changeSet(builder.build())
-          .yamlInputErrorType(ChangeSetWithYamlStatusDTO.YamlInputErrorType.INVALID_ENTITY_TYPE)
-          .build();
+    EntityReference entityReference = null;
+    if (changeType == ChangeType.DELETE) {
+      final EntityDetailProtoDTO entityDetailDTO = getEntityDetailFromGitEntitiesCollection(
+          accountId, fileContent.getPath(), yamlGitConfigDTOs.get(0).getRepo(), branchName, builder);
+      builder.setEntityRefForDeletion(entityDetailDTO);
+      builder.setEntityType(entityDetailDTO.getType());
+      entityReference = entityDetailProtoToRestMapper.createEntityDetailDTO(entityDetailDTO).getEntityRef();
+    } else {
+      try {
+        EntityType entityType = GitSyncUtils.getEntityTypeFromYaml(fileContent.getContent());
+        builder.setEntityType(EntityToEntityProtoHelper.getEntityTypeFromProto(entityType));
+      } catch (Exception ex) {
+        log.error("Unknown entity type encountered in file {}", fileContent.getPath(), ex);
+        return ChangeSetWithYamlStatusDTO.builder()
+            .changeSet(builder.build())
+            .yamlInputErrorType(ChangeSetWithYamlStatusDTO.YamlInputErrorType.INVALID_ENTITY_TYPE)
+            .build();
+      }
     }
 
-    builder.setEntityType(EntityToEntityProtoHelper.getEntityTypeFromProto(entityType));
-    return setYamlGitConfigInfoInChangeset(fileContent, accountId, yamlGitConfigDTOs, builder);
+    return setYamlGitConfigInfoInChangeset(
+        fileContent, accountId, yamlGitConfigDTOs, builder, changeType, entityReference);
+  }
+
+  private EntityDetailProtoDTO getEntityDetailFromGitEntitiesCollection(
+      String accountId, String path, String repo, String branchName, ChangeSet.Builder builder) {
+    GitSyncEntityDTO gitSyncEntityDTO = gitEntityService.get(accountId, path, repo, branchName);
+    final EntityReference entityReference = gitSyncEntityDTO.getEntityReference();
+    final EntityDetail entityDetail =
+        EntityDetail.builder().entityRef(entityReference).type(gitSyncEntityDTO.getEntityType()).build();
+    return entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail);
   }
 
   private ChangeSetWithYamlStatusDTO setYamlGitConfigInfoInChangeset(GitFileChangeDTO fileContent, String accountId,
-      List<YamlGitConfigDTO> yamlGitConfigDTOs, ChangeSet.Builder builder) {
+      List<YamlGitConfigDTO> yamlGitConfigDTOs, ChangeSet.Builder builder, ChangeType changeType,
+      EntityReference entityReference) {
     String orgIdentifier;
     String projectIdentifier;
-    try {
-      final JsonNode jsonNode = convertYamlToJsonNode(fileContent.getContent());
-      projectIdentifier = getKeyInNode(jsonNode, NGCommonEntityConstants.PROJECT_KEY);
-      orgIdentifier = getKeyInNode(jsonNode, NGCommonEntityConstants.ORG_KEY);
-    } catch (Exception e) {
-      log.error(
-          "Ill formed yaml found. Filepath: [{}], Content[{}]", fileContent.getPath(), fileContent.getContent(), e);
-      return ChangeSetWithYamlStatusDTO.builder()
-          .changeSet(builder.build())
-          .yamlInputErrorType(ChangeSetWithYamlStatusDTO.YamlInputErrorType.PROJECT_ORG_IDENTIFIER_MISSING)
-          .build();
+    if (changeType == ChangeType.DELETE) {
+      orgIdentifier = entityReference.getOrgIdentifier();
+      projectIdentifier = entityReference.getProjectIdentifier();
+    } else {
+      try {
+        final JsonNode jsonNode = convertYamlToJsonNode(fileContent.getContent());
+        projectIdentifier = getKeyInNode(jsonNode, NGCommonEntityConstants.PROJECT_KEY);
+        orgIdentifier = getKeyInNode(jsonNode, NGCommonEntityConstants.ORG_KEY);
+      } catch (Exception e) {
+        log.error(
+            "Ill formed yaml found. Filepath: [{}], Content[{}]", fileContent.getPath(), fileContent.getContent(), e);
+        return ChangeSetWithYamlStatusDTO.builder()
+            .changeSet(builder.build())
+            .yamlInputErrorType(ChangeSetWithYamlStatusDTO.YamlInputErrorType.PROJECT_ORG_IDENTIFIER_MISSING)
+            .build();
+      }
     }
 
     final Optional<YamlGitConfigDTO> yamlGitConfigDTO =

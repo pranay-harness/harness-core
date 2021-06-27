@@ -251,7 +251,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   public HasMetadata getController(KubernetesConfig kubernetesConfig, String name, String namespace) {
     try {
       Callable<HasMetadata> controller = getControllerInternal(kubernetesConfig, name, namespace);
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(2), controller);
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(2), controller);
     } catch (WingsException e) {
       throw e;
     } catch (UncheckedTimeoutException e) {
@@ -1531,7 +1531,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           sleep(ofSeconds(5));
         }
       };
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(serviceSteadyStateTimeout), callable);
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(serviceSteadyStateTimeout), callable);
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for pods to stop";
       log.error(msg, e);
@@ -1662,7 +1662,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           }
         }
       };
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(waitMinutes), callable);
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(waitMinutes), callable);
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for pods to be ready";
       log.error(msg, e);
