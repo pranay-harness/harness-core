@@ -44,7 +44,6 @@ import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
 import io.harness.ngtriggers.expressions.TriggerExpressionEvaluator;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
-import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.utils.TaskExecutionUtils;
 import io.harness.ngtriggers.utils.WebhookTriggerFilterUtils;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
@@ -75,7 +74,6 @@ import lombok.extern.slf4j.Slf4j;
 public class FilepathTriggerFilter implements TriggerFilter {
   private TaskExecutionUtils taskExecutionUtils;
   private NGTriggerElementMapper ngTriggerElementMapper;
-  private final NGTriggerService ngTriggerService;
   private KryoSerializer kryoSerializer;
   private ConnectorUtils connectorUtils;
 
@@ -177,11 +175,11 @@ public class FilepathTriggerFilter implements TriggerFilter {
     }
   }
 
-  private boolean evaluateFromPushPayload(
-      FilterRequestData filterRequestData, TriggerEventDataCondition pathCondition) {
+  @VisibleForTesting
+  boolean evaluateFromPushPayload(FilterRequestData filterRequestData, TriggerEventDataCondition pathCondition) {
     Set<String> payloadFiles = getFilesFromPushPayload(filterRequestData);
 
-    boolean eligible = true;
+    boolean eligible = false;
     for (String pathFetched : payloadFiles) {
       if (ConditionEvaluator.evaluate(pathFetched, pathCondition.getValue(), pathCondition.getOperator().getValue())) {
         eligible = true;
@@ -289,6 +287,7 @@ public class FilepathTriggerFilter implements TriggerFilter {
   // Github, gitlab docs say, payload would contains details about 20 commits.
   // So if there more than or equal to 20 commits, there is a chance, few commits were truncated.
   // So, we go to delegate task.
+  @VisibleForTesting
   boolean shouldEvaluateOnDelegate(FilterRequestData filterRequestData) {
     if (filterRequestData.getWebhookPayloadData().getParseWebhookResponse().hasPr()) {
       return true;
@@ -311,6 +310,7 @@ public class FilepathTriggerFilter implements TriggerFilter {
     }
   }
 
+  @VisibleForTesting
   Set<String> getFilesFromPushPayload(FilterRequestData filterRequestData) {
     Set<String> pushPayloadFiles = new HashSet<>();
     TriggerExpressionEvaluator triggerExpressionEvaluator =
