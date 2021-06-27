@@ -287,6 +287,16 @@ public class AccountResource {
     return response;
   }
 
+  @PUT
+  @Path("{accountId}/defaultExperience")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
+  public RestResponse<Void> updateDefaultExperience(
+      @PathParam("accountId") @NotEmpty String accountId, Account account) {
+    return new RestResponse<>(accountService.setDefaultExperience(accountId, account.getDefaultExperience()));
+  }
+
   @GET
   @Path("delegate/active")
   @Timed

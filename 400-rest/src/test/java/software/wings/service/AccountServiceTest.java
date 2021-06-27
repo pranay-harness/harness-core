@@ -204,6 +204,7 @@ public class AccountServiceTest extends WingsBaseTest {
                                    .withAccountName(HARNESS_NAME)
                                    .withAccountKey("ACCOUNT_KEY")
                                    .withDefaultExperience(DefaultExperience.NG)
+                                   .withCreatedFromNG(false)
                                    .withLicenseInfo(getLicenseInfo(AccountStatus.ACTIVE, accountType))
                                    .build(),
         false);
@@ -238,6 +239,7 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(details.getCluster()).isEqualTo(CLUSTER_NAME);
     assertThat(details.getAccountName()).isEqualTo(HARNESS_NAME);
     assertThat(details.getDefaultExperience()).isEqualTo(DefaultExperience.NG);
+    assertThat(details.isCreatedFromNG()).isEqualTo(false);
     assertThat(details.getLicenseInfo().getAccountType()).isEqualTo(AccountType.PAID);
   }
 
@@ -486,6 +488,22 @@ public class AccountServiceTest extends WingsBaseTest {
                           .build();
     wingsPersistence.save(account);
     account.setCompanyName(HARNESS_NAME);
+    accountService.update(account);
+    assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void shouldUpdateDefaultExperience() {
+    Account account = anAccount()
+                          .withCompanyName("Wings")
+                          .withAccountName("Wings")
+                          .withWhitelistedDomains(Collections.singleton("mike@harness.io"))
+                          .withDefaultExperience(DefaultExperience.CG)
+                          .build();
+    wingsPersistence.save(account);
+    account.setDefaultExperience(DefaultExperience.NG);
     accountService.update(account);
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
   }
