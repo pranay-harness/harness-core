@@ -13,7 +13,6 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.Map;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -22,7 +21,7 @@ public class InterruptEventNotifyHandler extends PmsBaseEventHandler<InterruptEv
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Override
-  protected @NonNull Map<String, String> extraLogProperties(InterruptEventNotifyProto event) {
+  protected Map<String, String> extraLogProperties(InterruptEventNotifyProto event) {
     return ImmutableMap.<String, String>builder()
         .put("interruptType", event.getInterruptType().name())
         .put("notifyId", event.getNotifyId())
