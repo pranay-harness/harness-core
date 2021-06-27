@@ -483,7 +483,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       CloudFormationCommandExecutionResponseBuilder builder, Stack stack, ExistingStackInfo existingStackInfo,
       CloudFormationCreateStackRequest request) {
     CloudFormationCreateStackResponse cloudFormationCreateStackResponse =
-        ((CloudFormationCreateStackResponse) builder.build().getCommandResponse());
+        (CloudFormationCreateStackResponse) builder.build().getCommandResponse();
     if (cloudFormationCreateStackResponse == null) {
       cloudFormationCreateStackResponse = createCloudFormationCreateStackResponse(stack, existingStackInfo, request);
     } else {

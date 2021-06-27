@@ -24,6 +24,7 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
+import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse.CloudFormationCommandExecutionResponseBuilder;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.aws.delegate.AwsCFHelperServiceDelegate;
 import software.wings.service.intfc.security.EncryptionService;
@@ -86,8 +87,7 @@ public abstract class CloudFormationCommandTaskHandler {
 
   protected CloudFormationCommandExecutionResponse deleteStack(String stackId, String stackName,
       CloudFormationCommandRequest request, ExecutionLogCallback executionLogCallback) {
-    CloudFormationCommandExecutionResponse.CloudFormationCommandExecutionResponseBuilder builder =
-        CloudFormationCommandExecutionResponse.builder();
+    CloudFormationCommandExecutionResponseBuilder builder = CloudFormationCommandExecutionResponse.builder();
     Stack stack = null;
     try {
       long stackEventsTs = System.currentTimeMillis();
