@@ -300,29 +300,33 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   }
 
   private List<String> getOrganizations(String accountIdentifier) {
-    List<String> orgs = organizationService
-                            .list(Criteria.where(OrganizationKeys.accountIdentifier)
-                                      .is(accountIdentifier)
-                                      .and(OrganizationKeys.deleted)
-                                      .ne(true))
-                            .stream()
-                            .map(Organization::getIdentifier)
-                            .collect(Collectors.toList());
+    List<String> orgs =
+        organizationService
+            .list(Criteria.where(OrganizationKeys.accountIdentifier)
+                      .is(accountIdentifier)
+                      .and(OrganizationKeys.deleted)
+                      .ne(true))
+            .stream()
+            .map(Organization::getIdentifier)
+            .collect(Collectors.toCollection(ArrayList::new)); // this has been done explicitly so that shuffle does not
+                                                               // throw UnsupportedOperationException
     Collections.shuffle(orgs);
     return orgs;
   }
 
   private List<String> getProjects(String accountIdentifier, String orgIdentifier) {
-    List<String> projects = projectService
-                                .list(Criteria.where(ProjectKeys.accountIdentifier)
-                                          .is(accountIdentifier)
-                                          .and(ProjectKeys.deleted)
-                                          .ne(true)
-                                          .and(ProjectKeys.orgIdentifier)
-                                          .is(orgIdentifier))
-                                .stream()
-                                .map(Project::getIdentifier)
-                                .collect(Collectors.toList());
+    List<String> projects =
+        projectService
+            .list(Criteria.where(ProjectKeys.accountIdentifier)
+                      .is(accountIdentifier)
+                      .and(ProjectKeys.deleted)
+                      .ne(true)
+                      .and(ProjectKeys.orgIdentifier)
+                      .is(orgIdentifier))
+            .stream()
+            .map(Project::getIdentifier)
+            .collect(Collectors.toCollection(ArrayList::new)); // this has been done explicitly so that shuffle does not
+                                                               // throw UnsupportedOperationException
     Collections.shuffle(projects);
     return projects;
   }
