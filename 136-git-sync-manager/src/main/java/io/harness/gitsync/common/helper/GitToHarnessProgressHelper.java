@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.GitToHarnessProgressConstants;
 import io.harness.gitsync.common.beans.GitToHarnessProgressStatus;
+import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.beans.YamlChangeSetStatus;
 import io.harness.gitsync.common.dtos.GitToHarnessProgressDTO;
 import io.harness.gitsync.common.service.GitToHarnessProgressService;
@@ -23,12 +24,15 @@ public class GitToHarnessProgressHelper {
   private GitToHarnessProgressService gitToHarnessProgressService;
 
   public YamlChangeSetStatus getQueueStatusIfEventInProgressOrAlreadyProcessed(YamlChangeSetDTO yamlChangeSetDTO) {
-    // TODO
-    //  currently processing on basis of yamlChangeSetId, relying that queue will make sure that
-    //  no 2 events of same repo-commitid-eventType are processed together
-    //  Should handle it properly later and remove this dependency
-    GitToHarnessProgressDTO gitToHarnessProgressDTO =
-        gitToHarnessProgressService.getByYamlChangeSetId(yamlChangeSetDTO.getChangesetId());
+    GitToHarnessProgressDTO gitToHarnessProgressDTO = null;
+    if (yamlChangeSetDTO.getEventType() == YamlChangeSetEventType.BRANCH_PUSH) {
+      gitToHarnessProgressDTO =
+          gitToHarnessProgressService.getByRepoUrlAndCommitIdAndEventType(yamlChangeSetDTO.getRepoUrl(),
+              yamlChangeSetDTO.getGitWebhookRequestAttributes().getHeadCommitId(), yamlChangeSetDTO.getEventType());
+    } else if (yamlChangeSetDTO.getEventType() == YamlChangeSetEventType.BRANCH_SYNC) {
+      gitToHarnessProgressDTO =
+          gitToHarnessProgressService.getBranchSyncStatus(yamlChangeSetDTO.getRepoUrl(), yamlChangeSetDTO.getBranch());
+    }
     if (gitToHarnessProgressDTO != null) {
       if (gitToHarnessProgressDTO.getGitToHarnessProgressStatus().isInProcess()) {
         return YamlChangeSetStatus.RUNNING;
