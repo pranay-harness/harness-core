@@ -327,6 +327,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
               stack.getStackStatusReason());
           executionLogCallback.saveExecutionLog(errorMsg, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
           builder.errorMessage(errorMsg).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+          builder.commandResponse(
+              CloudFormationCreateStackResponse.builder().stackStatus(stack.getStackStatus()).build());
           printStackResources(createRequest, stack, executionLogCallback);
           return;
         }
@@ -334,6 +336,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           errorMsg = format("# Creation of stack: %s failed, Rollback complete", stack.getStackName());
           executionLogCallback.saveExecutionLog(errorMsg);
           builder.errorMessage(errorMsg).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+          builder.commandResponse(
+              CloudFormationCreateStackResponse.builder().stackStatus(stack.getStackStatus()).build());
           printStackResources(createRequest, stack, executionLogCallback);
           return;
         }
@@ -342,6 +346,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
               stack.getStackStatus(), stack.getStackStatusReason());
           executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
           builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+          builder.commandResponse(
+              CloudFormationCreateStackResponse.builder().stackStatus(stack.getStackStatus()).build());
           printStackResources(createRequest, stack, executionLogCallback);
           return;
         }
