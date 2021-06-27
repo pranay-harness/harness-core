@@ -12,6 +12,7 @@ import io.harness.gitsync.core.beans.GitCommit.GitCommitKeys;
 import io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus;
 import io.harness.gitsync.core.dtos.GitCommitDTO;
 import io.harness.gitsync.core.service.GitCommitService;
+import io.harness.gitsync.gitfileactivity.beans.GitFileProcessingSummary;
 import io.harness.repositories.gitCommit.GitCommitRepository;
 
 import com.google.inject.Inject;
@@ -90,6 +91,11 @@ public class GitCommitServiceImpl implements GitCommitService {
 
   @Override
   public UpdateResult upsertOnCommitIdAndRepoUrlAndGitSyncDirection(GitCommitDTO gitCommitDTO) {
+    if (isFileProcessingSummaryEmpty(gitCommitDTO.getFileProcessingSummary())) {
+      log.info("Ignoring gitCommit upsert : {} as file processing summary is empty", gitCommitDTO);
+      return UpdateResult.unacknowledged();
+    }
+
     Criteria criteria = Criteria.where(GitCommitKeys.commitId)
                             .is(gitCommitDTO.getCommitId())
                             .and(GitCommitKeys.repoURL)
@@ -126,5 +132,21 @@ public class GitCommitServiceImpl implements GitCommitService {
         .repoURL(gitCommitDTO.getRepoURL())
         .status(gitCommitDTO.getStatus())
         .build();
+  }
+
+  private boolean isFileProcessingSummaryEmpty(GitFileProcessingSummary gitFileProcessingSummary) {
+    if (isValueEmpty(gitFileProcessingSummary.getFailureCount())
+        && isValueEmpty(gitFileProcessingSummary.getQueuedCount())
+        && isValueEmpty(gitFileProcessingSummary.getSkippedCount())
+        && isValueEmpty(gitFileProcessingSummary.getSuccessCount())
+        && isValueEmpty(gitFileProcessingSummary.getTotalCount())) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private boolean isValueEmpty(Long value) {
+    return value == null || value == 0;
   }
 }
