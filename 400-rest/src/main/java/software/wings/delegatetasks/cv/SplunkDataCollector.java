@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.cv;
 
-import static software.wings.common.VerificationConstants.URL_STRING;
+import static software.wings.delegatetasks.cv.CVConstants.URL_STRING;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;

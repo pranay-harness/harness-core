@@ -11,10 +11,12 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//425-verification-commons:module",
         "//430-cv-nextgen-commons:module",
         "//890-sm-core:module",
         "//910-delegate-task-grpc-service:module",
         "//920-delegate-agent-beans:module",
+        "//920-delegate-service-beans:module",
         "//930-delegate-tasks:module",
         "//950-delegate-tasks-beans:module",
         "//950-log-client:module",

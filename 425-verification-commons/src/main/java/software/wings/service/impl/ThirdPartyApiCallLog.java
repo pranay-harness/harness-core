@@ -12,6 +12,7 @@ import static io.harness.persistence.GoogleDataStoreAware.readString;
 import static java.lang.System.currentTimeMillis;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.ThirdPartyApiCallLogDetails;
 import io.harness.exception.WingsException;

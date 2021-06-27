@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 public class VerificationConstants {
   public static final long ML_RECORDS_TTL_MONTHS = 6;
   public static final long CV_TASK_TTL_MONTHS = 1;
-  public static final int MAX_RETRIES = 2;
   /*
     New Relic constants
      */
@@ -93,7 +92,6 @@ public class VerificationConstants {
   public static final String DD_K8s_HOST_NAME = "pod_name";
   public static final String DD_HOST_NAME_EXPRESSION = "${host_identifier}";
   public static final String IS_EXPERIMENTAL = "isExperimental";
-  public static final String URL_STRING = "Url";
   public static final String BODY_STRING = "Body";
   public static final String CONNECTOR = ":";
   public static final String VERIFICATION_HOST_PLACEHOLDER = "${host}";
@@ -160,7 +158,6 @@ public class VerificationConstants {
       "learning_engine_service_guard_feedback_task_queued_time_in_seconds",
       "learning_engine_service_guard_feedback_task_queued_count"));
   public static final String CV_META_DATA = "cv_meta_data";
-  public static final int RATE_LIMIT_STATUS = 429;
 
   public static final Set<String> VERIFICATION_SERVICE_METRICS =
       LEARNING_ENGINE_TASKS_METRIC_LIST; // Only LE task metrics are published now.

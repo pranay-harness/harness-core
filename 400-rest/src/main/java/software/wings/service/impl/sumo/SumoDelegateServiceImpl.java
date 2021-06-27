@@ -4,9 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
-import static software.wings.common.VerificationConstants.RATE_LIMIT_STATUS;
-import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.delegatetasks.SumoDataCollectionTask.DEFAULT_TIME_ZONE;
+import static software.wings.delegatetasks.cv.CVConstants.RATE_LIMIT_STATUS;
+import static software.wings.delegatetasks.cv.CVConstants.URL_STRING;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import io.harness.network.Http;

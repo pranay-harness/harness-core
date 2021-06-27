@@ -77,7 +77,7 @@ public class AbstractDataCollectionTaskTest extends CategoryTest {
     FieldUtils.writeField(abstractDataCollectionTask, "cvTaskService", cvTaskService, true);
     FieldUtils.writeField(abstractDataCollectionTask, "requestExecutor", requestExecutor, true);
     when(requestExecutor.executeRequest(any(), any(), any())).thenReturn(mock(Object.class));
-    CVConstants.RETRY_SLEEP_DURATION = Duration.ofMillis(1); // to run retry based test faster.
+    FieldUtils.writeDeclaredStaticField(CVConstants.class, "RETRY_SLEEP_DURATION", Duration.ofMillis(1));
   }
   @Test
   @Owner(developers = KAMAL)

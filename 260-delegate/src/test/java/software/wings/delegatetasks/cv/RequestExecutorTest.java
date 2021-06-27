@@ -57,7 +57,7 @@ public class RequestExecutorTest extends CategoryTest {
     initMocks(this);
     requestExecutor = new RequestExecutor();
     FieldUtils.writeField(requestExecutor, "delegateLogService", delegateLogService, true);
-    CVConstants.RETRY_SLEEP_DURATION = Duration.ofMillis(1); // to run retry based test faster.
+    FieldUtils.writeDeclaredStaticField(CVConstants.class, "RETRY_SLEEP_DURATION", Duration.ofMillis(1));
   }
   @Test
   @Owner(developers = KAMAL)

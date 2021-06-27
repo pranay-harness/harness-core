@@ -1,6 +1,6 @@
 package software.wings.service.impl.bugsnag;
 
-import static software.wings.common.VerificationConstants.URL_STRING;
+import static software.wings.delegatetasks.cv.CVConstants.URL_STRING;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import io.harness.exception.WingsException;

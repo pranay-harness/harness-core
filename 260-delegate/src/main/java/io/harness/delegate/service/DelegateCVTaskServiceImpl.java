@@ -2,7 +2,7 @@ package io.harness.delegate.service;
 
 import static io.harness.network.SafeHttpCall.execute;
 
-import static software.wings.common.VerificationConstants.MAX_RETRIES;
+import static software.wings.delegatetasks.cv.CVConstants.MAX_RETRIES;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
