@@ -40,6 +40,8 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -203,11 +205,14 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
       return;
     }
 
+    mockRoleAssignments.stream()
+        .map(roleAssignment -> roleAssignment.getRoleAssignment().getPrincipal().getIdentifier())
+        .distinct()
+        .forEach(roleAssignment -> upsertUserMembership(scope, roleAssignment));
+
     List<RoleAssignmentDTO> managedRoleAssignments = new ArrayList<>();
     List<RoleAssignmentDTO> nonManagedRoleAssignments = new ArrayList<>();
     mockRoleAssignments.forEach(mockRoleAssignment -> {
-      upsertUserMembership(scope, mockRoleAssignment.getRoleAssignment().getPrincipal().getIdentifier());
-
       if (Boolean.TRUE.equals(mockRoleAssignment.getRoleAssignment().isManaged())) {
         managedRoleAssignments.add(mockRoleAssignment.getRoleAssignment());
       } else {
@@ -232,8 +237,8 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   }
 
   private void assignAdminAndViewerRoleToCGUsers(Scope scope) {
-    List<String> currentGenUsers =
-        getUsers(scope.getAccountIdentifier()).stream().map(UserInfo::getUuid).collect(Collectors.toList());
+    Set<String> currentGenUsers =
+        getUsers(scope.getAccountIdentifier()).stream().map(UserInfo::getUuid).collect(Collectors.toSet());
     if (currentGenUsers.isEmpty()) {
       return;
     }
@@ -281,7 +286,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
     }
   }
 
-  private List<RoleAssignmentDTO> buildRoleAssignments(List<String> userIds, String roleIdentifier) {
+  private List<RoleAssignmentDTO> buildRoleAssignments(Collection<String> userIds, String roleIdentifier) {
     return userIds.stream()
         .map(userId
             -> RoleAssignmentDTO.builder()
@@ -295,27 +300,31 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   }
 
   private List<String> getOrganizations(String accountIdentifier) {
-    return organizationService
-        .list(Criteria.where(OrganizationKeys.accountIdentifier)
-                  .is(accountIdentifier)
-                  .and(OrganizationKeys.deleted)
-                  .ne(true))
-        .stream()
-        .map(Organization::getIdentifier)
-        .collect(Collectors.toList());
+    List<String> orgs = organizationService
+                            .list(Criteria.where(OrganizationKeys.accountIdentifier)
+                                      .is(accountIdentifier)
+                                      .and(OrganizationKeys.deleted)
+                                      .ne(true))
+                            .stream()
+                            .map(Organization::getIdentifier)
+                            .collect(Collectors.toList());
+    Collections.shuffle(orgs);
+    return orgs;
   }
 
   private List<String> getProjects(String accountIdentifier, String orgIdentifier) {
-    return projectService
-        .list(Criteria.where(ProjectKeys.accountIdentifier)
-                  .is(accountIdentifier)
-                  .and(ProjectKeys.deleted)
-                  .ne(true)
-                  .and(ProjectKeys.orgIdentifier)
-                  .is(orgIdentifier))
-        .stream()
-        .map(Project::getIdentifier)
-        .collect(Collectors.toList());
+    List<String> projects = projectService
+                                .list(Criteria.where(ProjectKeys.accountIdentifier)
+                                          .is(accountIdentifier)
+                                          .and(ProjectKeys.deleted)
+                                          .ne(true)
+                                          .and(ProjectKeys.orgIdentifier)
+                                          .is(orgIdentifier))
+                                .stream()
+                                .map(Project::getIdentifier)
+                                .collect(Collectors.toList());
+    Collections.shuffle(projects);
+    return projects;
   }
 
   private List<RoleAssignmentResponseDTO> getMockRoleAssignments(Scope scope) {
