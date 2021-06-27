@@ -190,7 +190,8 @@ public class FilepathTriggerFilter implements TriggerFilter {
     return eligible;
   }
 
-  private boolean initiateDeleteTaskAndEvaluate(
+  @VisibleForTesting
+  boolean initiateDeleteTaskAndEvaluate(
       FilterRequestData filterRequestData, TriggerDetails triggerDetails, TriggerEventDataCondition pathCondition) {
     ScmPathFilterEvaluationTaskResponse scmPathFilterEvaluationTaskResponse =
         performScmPathFilterEvaluation(triggerDetails.getNgTriggerEntity(), filterRequestData, pathCondition);
@@ -277,7 +278,7 @@ public class FilepathTriggerFilter implements TriggerFilter {
         }
       }
     } catch (Exception e) {
-      log.error(getTriggerSkipMessage(ngTriggerEntity) + ". Filed in executing delegate task");
+      log.error(getTriggerSkipMessage(ngTriggerEntity) + ". Filed in executing delegate task", e);
       return null;
     }
 
