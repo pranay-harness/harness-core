@@ -7,7 +7,6 @@ HarnessTeam = "DEL"
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
 ] + [
-    "//420-delegate-service/src/main/qbg:queries",
     "//460-capability:module",
     "//470-alert:module",
     "//870-cg-orchestration:module",
@@ -56,7 +55,7 @@ shared_dependencies = [
 
 java_library(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob(["src/main/**/*.java"]) + ["//420-delegate-service/src/main/qbg:queries"],
     visibility = ["//visibility:public"],
     deps = shared_dependencies,
 )
@@ -67,7 +66,7 @@ java_library(
     srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "module",
+        ":module",
         "//:lombok",
         "//420-delegate-service/src/test/java/resources",
         "//460-capability:module",
