@@ -12,6 +12,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import io.dropwizard.lifecycle.Managed;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -47,7 +48,7 @@ public class AccessControlMigrationJob implements Managed {
   }
 
   private void run() {
-    List<String> accountsToMigrate = getAccountsToMigrate();
+    List<String> accountsToMigrate = new ArrayList<>(getAccountsToMigrate());
     Collections.shuffle(accountsToMigrate);
     for (String accountId : accountsToMigrate) {
       try {
