@@ -111,7 +111,6 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
   @Override
   public GitToHarnessProgressDTO initProgress(YamlChangeSetDTO yamlChangeSetDTO, YamlChangeSetEventType eventType,
       GitToHarnessProcessingStepType stepType, String commitId) {
-    // TODO change it to upsert query
     GitToHarnessProgress gitToHarnessProgress =
         gitToHarnessProgressRepository.findByYamlChangeSetId(yamlChangeSetDTO.getChangesetId());
     if (gitToHarnessProgress != null) {

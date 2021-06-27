@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.common.EntityReference;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -29,6 +28,5 @@ public class GitSyncEntityDTO {
   private String folderPath;
   private String entityGitPath;
   private RepoProviders repoProviderType;
-  private EntityReference entityReference;
   @JsonIgnore String accountId;
 }
