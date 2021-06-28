@@ -101,12 +101,12 @@ public class DelegateServiceGrpcServerModule extends AbstractModule {
         getProvider(Key.get(new TypeLiteral<Set<ServerInterceptor>>() {}));
     ;
 
-    Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class);
+   /* Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class);
     List<Connector> connectors = delegateServiceConfig.getGrpcServerConfig().getConnectors();
     connectors.forEach(connector
         -> serviceBinder.addBinding().toProvider(
             ()
                 -> new GrpcServer(connector, bindableServicesProvider.get(), serverInterceptorsProvider.get(),
-                    healthStatusManagerProvider.get())));
+                    healthStatusManagerProvider.get())));*/
   }
 }

@@ -16,17 +16,7 @@ import io.harness.capability.SmtpParameters;
 import io.harness.capability.SocketConnectivityParameters;
 import io.harness.capability.SystemEnvParameters;
 import io.harness.capability.TestingCapability;
-import io.harness.delegate.beans.DelegateMetaInfo;
-import io.harness.delegate.beans.DelegateStringProgressData;
-import io.harness.delegate.beans.DelegateStringResponseData;
-import io.harness.delegate.beans.DelegateTaskDetails;
-import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
-import io.harness.delegate.beans.DelegateTaskPackage;
-import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.ErrorNotifyResponseData;
-import io.harness.delegate.beans.RemoteMethodReturnValueData;
-import io.harness.delegate.beans.SecretDetail;
-import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.*;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.beans.artifactory.ArtifactoryTaskParams;
 import io.harness.delegate.beans.artifactory.ArtifactoryTaskResponse;
@@ -423,7 +413,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
   public void register(Kryo kryo) {
     kryo.register(AlwaysFalseValidationCapability.class, 19036);
     kryo.register(AppDynamicsConnectionTaskParams.class, 19107);
-    kryo.register(AppDynamicsConnectionTaskResponse.class, 19108);
+    kryo.register(AppDynamicsConnectionTaskResponse.class, 19108  );
     kryo.register(ArtifactFileMetadata.class, 19034);
     kryo.register(AwsElbListener.class, 5600);
     kryo.register(AwsElbListenerRuleData.class, 19035);
@@ -451,6 +441,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(DelegateTaskNotifyResponseData.class, 5373);
     kryo.register(DelegateTaskPackage.class, 7150);
     kryo.register(DelegateTaskResponse.class, 5006);
+    kryo.register(DelegateTaskRank.class, 5068);
     kryo.register(DelegateTaskResponse.ResponseCode.class, 5520);
     kryo.register(DirectK8sInfraDelegateConfig.class, 19102);
     kryo.register(ErrorNotifyResponseData.class, 5213);

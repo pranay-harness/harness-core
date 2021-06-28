@@ -238,22 +238,9 @@ timescaledb:
   deploymentDataMigrationQueryBatchSize: 100
   isHealthCheckNeeded: false
 
-grpcServerConfig:
-  connectors:
-    - port: 9890
-      secure: true
-      keyFilePath: key.pem
-      certFilePath: cert.pem
-    - port: 9889
 
 #Currently this should be pointing to the managers (71 - rest) grpc server from the grpcServerConfig property until delegate service becomes standalone service
-grpcDelegateServiceClientConfig:
-  target: localhost:9890
-  authority: localhost
 
-grpcClientConfig:
-  target: localhost:9980
-  authority: localhost
 
 #This will be used only by OnPrem delegates for grpc communication
 grpcOnpremDelegateClientConfig:
@@ -617,3 +604,15 @@ auditClientConfig:
 
 enableAudit: false
 
+
+#Delegate Service specific configs
+#delegateServiceUrl: https://localhost:9080/
+
+grpcDelegateServiceManagementClientConfig:
+  target: localhost:14011
+  authority: localhost
+
+
+grpcDelegateServiceClassicClientConfig:
+  target: localhost:15011
+  authority: localhost

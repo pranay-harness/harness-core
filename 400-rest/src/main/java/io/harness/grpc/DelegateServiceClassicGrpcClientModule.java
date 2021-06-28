@@ -35,7 +35,7 @@ public class DelegateServiceClassicGrpcClientModule extends ProviderModule {
 
   @Override
   protected void configure() {
-    //bind(DelegateServiceClassicGrpcClient.class).in(Singleton.class);
+    bind(DelegateServiceClassicGrpcClient.class).in(Singleton.class);
   }
 
   public DelegateServiceClassicGrpcClientModule(String serviceSecret, String target, String authority) {

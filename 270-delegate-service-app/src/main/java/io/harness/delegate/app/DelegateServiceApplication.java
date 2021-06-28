@@ -3,17 +3,25 @@ package io.harness.delegate.app;
 import static io.harness.annotations.dev.HarnessModule._420_DELEGATE_SERVICE;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.beans.TaskGroup.GCB;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
+import com.google.protobuf.util.Durations;
+import com.google.protobuf.util.Timestamps;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.DelegateTaskGrpc;
+import io.harness.beans.DelegateTaskRequest;
+import io.harness.common.NGTaskType;
+import io.harness.delegate.*;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
 import io.harness.grpc.DelegateServiceClassicGrpcClient;
 import io.harness.grpc.DelegateServiceClassicGrpcImpl;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
+import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 
@@ -51,8 +59,12 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -75,13 +87,13 @@ public class DelegateServiceApplication extends Application<DelegateServiceConfi
         mapper.readValue(new File("/Users/jennyjames/dev3/portal/360-cg-manager/config_delegate_svc.yml"),
             MainConfiguration.class);
     List<Module> modules = new ArrayList<>();
-    //modules.add(new DelegateServiceModule(delegateServiceConfig));
+    modules.add(new DelegateServiceModule(delegateServiceConfig));
     WingsApplication wingsApplication = new WingsApplication();
     wingsApplication.addModules(configuration, environment, modules);
     Injector injector = Guice.createInjector(modules);
     wingsApplication.initializeManagerSvc(injector, environment, configuration);
     //    registerAtmosphereStreams(environment, injector);
-    //    initializegRPCServer(injector);
+      initializegRPCServer(injector);
 
     Thread thread = new Thread(() -> {
       try {
@@ -89,7 +101,7 @@ public class DelegateServiceApplication extends Application<DelegateServiceConfi
         DelegateTaskServiceClassic delegateTaskServiceClassic = injector.getInstance(DelegateTaskServiceClassic.class);
         delegateTaskServiceClassic.executeTask(
             DelegateTask.builder()
-                .accountId("kmpySmUISimoRrJL6NL73w")
+                .accountId("kmpySmUISimoRrJL6NL73w").uuid("12345")
                 .data(TaskData.builder()
                           .async(true)
                           .taskType(GCB.name())
@@ -101,8 +113,11 @@ public class DelegateServiceApplication extends Application<DelegateServiceConfi
                           .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                           .build())
                 .build());
-        /*DelegateTask task = DelegateTask.builder()
+
+/*
+        DelegateTask task = DelegateTask.builder()
                 .accountId("kmpySmUISimoRrJL6NL73w")
+                .uuid("12345")
                 .data(TaskData.builder()
                         .async(true)
                         .taskType(GCB.name())

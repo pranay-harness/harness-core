@@ -41,12 +41,12 @@ public class GrpcServiceConfigurationModule extends AbstractModule {
   protected void configure() {
     bind(DelegateTokenAuthenticator.class).to(DelegateTokenAuthenticatorImpl.class).in(Singleton.class);
     Multibinder<BindableService> bindableServiceMultibinder = Multibinder.newSetBinder(binder(), BindableService.class);
-    bindableServiceMultibinder.addBinding().to(DelegateServiceGrpcImpl.class);
+    /*bindableServiceMultibinder.addBinding().to(DelegateServiceGrpcImpl.class);
     bindableServiceMultibinder.addBinding().to(DelegateProfileServiceGrpcImpl.class);
     bindableServiceMultibinder.addBinding().to(PerpetualTaskServiceGrpc.class);
-    bindableServiceMultibinder.addBinding().to(PingPongService.class);
+    bindableServiceMultibinder.addBinding().to(PingPongService.class)*/;
 
-    Multibinder<ServerInterceptor> serverInterceptorMultibinder =
+   /* Multibinder<ServerInterceptor> serverInterceptorMultibinder =
         Multibinder.newSetBinder(binder(), ServerInterceptor.class);
     serverInterceptorMultibinder.addBinding().to(DelegateAuthServerInterceptor.class);
 
@@ -65,11 +65,11 @@ public class GrpcServiceConfigurationModule extends AbstractModule {
         getProvider(Key.get(new TypeLiteral<Set<GrpcExceptionMapper>>() {}));
 
     serverInterceptorMultibinder.addBinding().toProvider(
-        () -> new GrpcServerExceptionHandler(grpcExceptionMappersProvider));
+        () -> new GrpcServerExceptionHandler(grpcExceptionMappersProvider));*/
 
-    install(new GrpcServerModule(grpcServerConfig.getConnectors(),
+   /* install(new GrpcServerModule(grpcServerConfig.getConnectors(),
         getProvider(Key.get(new TypeLiteral<Set<BindableService>>() {})),
-        getProvider(Key.get(new TypeLiteral<Set<ServerInterceptor>>() {}))));
+        getProvider(Key.get(new TypeLiteral<Set<ServerInterceptor>>() {}))));*/
   }
 
   @Provides

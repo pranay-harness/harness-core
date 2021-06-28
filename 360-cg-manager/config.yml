@@ -616,3 +616,12 @@ auditClientConfig:
   readTimeOutSeconds: 15
 
 enableAudit: false
+
+grpcDelegateServiceManagementClientConfig:
+  target: localhost:14011
+  authority: localhost
+
+
+grpcDelegateServiceClassicClientConfig:
+  target: localhost:15011
+  authority: localhost

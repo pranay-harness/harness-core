@@ -21,6 +21,7 @@ public class DelegateServiceClassicGrpcClient {
   private final DelegateTaskGrpc.DelegateTaskBlockingStub delegateTaskBlockingStub;
   private final KryoSerializer kryoSerializer;
 
+  @Inject
   public DelegateServiceClassicGrpcClient(
       DelegateTaskGrpc.DelegateTaskBlockingStub blockingStub, KryoSerializer kryoSerializer) {
     this.delegateTaskBlockingStub = blockingStub;
@@ -28,6 +29,7 @@ public class DelegateServiceClassicGrpcClient {
   }
 
   public String queueTask(DelegateTask task) {
+    log.info("starting DelegateServiceClassicGrpcClient queueTask " + task.getUuid());
     ByteString.copyFrom(kryoSerializer.asDeflatedBytes(task));
     DelegateClassicTaskRequest delegateClassicTaskRequest =
         DelegateClassicTaskRequest.newBuilder()

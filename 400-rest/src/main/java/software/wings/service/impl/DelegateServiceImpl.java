@@ -129,6 +129,8 @@ import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.ff.FeatureFlagService;
 import io.harness.globalcontex.DelegateTokenGlobalContextData;
+import io.harness.grpc.DelegateServiceClassicGrpcClient;
+import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -356,6 +358,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private AuditHelper auditHelper;
   @Inject private DelegateTokenService delegateTokenService;
   @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
+  @Inject private DelegateServiceClassicGrpcClient delegateServiceClassicGrpcClient;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
@@ -3465,7 +3468,8 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public String queueTask(DelegateTask task) {
-    return delegateTaskServiceClassic.queueTask(task);
+    return delegateServiceClassicGrpcClient.queueTask(task);
+    //return delegateTaskServiceClassic.queueTask(task);
   }
 
   @Override

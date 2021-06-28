@@ -1,6 +1,7 @@
 package io.harness.delegate.app;
 
 import io.harness.delegate.DelegateServiceGrpc;
+import io.harness.delegate.DelegateTaskGrpc;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc;
 import io.harness.grpc.DelegateServiceClassicGrpcClient;
 import io.harness.grpc.DelegateServiceClassicGrpcImpl;
@@ -64,7 +65,7 @@ public class DelegateServiceClassicGrpcServerModule extends AbstractModule {
     MapBinder<String, ServiceInfo> stringServiceInfoMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ServiceInfo.class);
 
-    stringServiceInfoMapBinder.addBinding(DelegateServiceGrpc.SERVICE_NAME)
+    stringServiceInfoMapBinder.addBinding(DelegateTaskGrpc.SERVICE_NAME)
             .toInstance(ServiceInfo.builder()
                     .id("delegate-service-classic")
                     .secret(delegateServiceConfig.getDelegateServiceSecret())
