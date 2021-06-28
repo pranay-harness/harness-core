@@ -7,7 +7,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.entities.instance.Instance;
 import io.harness.models.BuildsByEnvironment;
 import io.harness.models.EnvBuildInstanceCount;
-import io.harness.models.InstancesByBuild;
+import io.harness.models.InstancesByBuildId;
+import io.harness.models.constants.InstanceSyncConstants;
 import io.harness.models.dashboard.InstanceCountDetails;
 import io.harness.models.dashboard.InstanceCountDetailsByService;
 import io.harness.ng.core.environment.beans.EnvironmentType;
@@ -110,6 +111,35 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
     return envBuildInstanceCounts;
   }
 
+  /**
+   * API to fetch all active instances for given account+org+project+service+env and list of buildIds at a given time
+   * @param accountIdentifier
+   * @param orgIdentifier
+   * @param projectIdentifier
+   * @param serviceId
+   * @param envId
+   * @param buildIds
+   * @param timestampInMs
+   * @return List of buildId and instances
+   */
+  @Override
+  public List<InstancesByBuildId> getActiveInstancesByServiceIdEnvIdAndBuildIds(String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String serviceId, String envId, List<String> buildIds,
+      long timestampInMs) {
+    AggregationResults<InstancesByBuildId> buildIdAndInstancesAggregationResults =
+        instanceRepository.getActiveInstancesByServiceIdEnvIdAndBuildIds(accountIdentifier, orgIdentifier,
+            projectIdentifier, serviceId, envId, buildIds, timestampInMs, InstanceSyncConstants.INSTANCE_LIMIT);
+    List<InstancesByBuildId> buildIdAndInstancesList = new ArrayList<>();
+
+    buildIdAndInstancesAggregationResults.getMappedResults().forEach(buildIdAndInstances -> {
+      String buildId = buildIdAndInstances.getBuildId();
+      List<Instance> instances = buildIdAndInstances.getInstances();
+      buildIdAndInstancesList.add(new InstancesByBuildId(buildId, instances));
+    });
+
+    return buildIdAndInstancesList;
+  }
+
   // ----------------------------- PRIVATE METHODS -----------------------------
 
   private InstanceCountDetails prepareInstanceCountDetailsResponse(
@@ -138,9 +168,9 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
       Map<String, Map<String, List<Instance>>> instanceGroupMap) {
     List<BuildsByEnvironment> buildsByEnvironment = new ArrayList<>();
     for (String envId : instanceGroupMap.keySet()) {
-      List<InstancesByBuild> instancesByBuilds = new ArrayList<>();
+      List<InstancesByBuildId> instancesByBuilds = new ArrayList<>();
       for (String buildId : instanceGroupMap.get(envId).keySet()) {
-        instancesByBuilds.add(new InstancesByBuild(buildId, instanceGroupMap.get(envId).get(buildId)));
+        instancesByBuilds.add(new InstancesByBuildId(buildId, instanceGroupMap.get(envId).get(buildId)));
       }
       buildsByEnvironment.add(new BuildsByEnvironment(envId, instancesByBuilds));
     }
