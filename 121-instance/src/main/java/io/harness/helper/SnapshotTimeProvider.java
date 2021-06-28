@@ -9,7 +9,6 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
  * Given the last sync time, it provides next times since then for which to collect stats.
- * See test for behaviour.
  */
 @ParametersAreNonnullByDefault
 public class SnapshotTimeProvider {
