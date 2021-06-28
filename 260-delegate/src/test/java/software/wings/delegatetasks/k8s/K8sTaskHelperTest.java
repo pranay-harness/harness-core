@@ -78,6 +78,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
@@ -1958,6 +1959,24 @@ public class K8sTaskHelperTest extends CategoryTest {
   public void testShouldGetReleaseHistoryConfigMapIfNotFoundInSecretK8sClient() {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
     Mockito.when(mockKubernetesContainerService.fetchReleaseHistoryFromSecrets(any(), any())).thenReturn(null);
+    Mockito.when(mockKubernetesContainerService.fetchReleaseHistoryFromConfigMap(any(), any())).thenReturn("configmap");
+    String releaseHistory = spyHelperBase.getReleaseHistoryData(kubernetesConfig, "release");
+    ArgumentCaptor<String> releaseArgumentCaptor = ArgumentCaptor.forClass(String.class);
+    verify(mockKubernetesContainerService, times(1)).fetchReleaseHistoryFromSecrets(any(), anyString());
+    verify(mockKubernetesContainerService, times(1))
+        .fetchReleaseHistoryFromConfigMap(any(), releaseArgumentCaptor.capture());
+
+    assertThat(releaseArgumentCaptor.getValue()).isEqualTo("release");
+    assertThat(releaseHistory).isEqualTo("configmap");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testShouldGetReleaseHistoryConfigMapIfInvalidRequestExceptionThrown() {
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
+    Mockito.when(mockKubernetesContainerService.fetchReleaseHistoryFromSecrets(any(), any()))
+        .thenThrow(new InvalidRequestException(""));
     Mockito.when(mockKubernetesContainerService.fetchReleaseHistoryFromConfigMap(any(), any())).thenReturn("configmap");
     String releaseHistory = spyHelperBase.getReleaseHistoryData(kubernetesConfig, "release");
     ArgumentCaptor<String> releaseArgumentCaptor = ArgumentCaptor.forClass(String.class);

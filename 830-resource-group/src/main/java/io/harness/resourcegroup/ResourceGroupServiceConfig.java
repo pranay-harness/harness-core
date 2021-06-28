@@ -25,7 +25,8 @@ public class ResourceGroupServiceConfig {
   @JsonProperty("resourceClients") ResourceClientConfigs resourceClientConfigs;
   @JsonProperty("redis") RedisConfig redisConfig;
   @JsonProperty("accessControlAdminClient") AccessControlAdminClientConfiguration accessControlAdminClientConfiguration;
-  @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
-  @JsonProperty(value = "enableAudit") private boolean enableAudit;
-  @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
+  @JsonProperty("auditClientConfig") ServiceHttpClientConfig auditClientConfig;
+  @JsonProperty(value = "enableAudit") boolean enableAudit;
+  @JsonProperty("distributedLockImplementation") DistributedLockImplementation distributedLockImplementation;
+  @JsonProperty("exportMetricsToStackDriver") boolean exportMetricsToStackDriver;
 }

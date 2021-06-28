@@ -45,6 +45,8 @@ import io.harness.health.HealthService;
 import io.harness.logstreaming.LogStreamingModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.metrics.jobs.RecordMetricsJob;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.migration.MigrationProvider;
 import io.harness.migration.NGMigrationSdkInitHelper;
 import io.harness.migration.NGMigrationSdkModule;
@@ -289,6 +291,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerMigrations(injector);
     registerQueueListeners(injector);
     registerPmsSdkEvents(injector);
+    initializeMonitoring(appConfig, injector);
 
     intializeGitSync(injector, appConfig);
     registerManagedBeans(environment, injector);
@@ -315,6 +318,13 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           { add(ProjectMigrationProvider.class); }
         })
         .build();
+  }
+
+  private void initializeMonitoring(NextGenConfiguration appConfig, Injector injector) {
+    if (appConfig.isExportMetricsToStackDriver()) {
+      injector.getInstance(MetricService.class).initializeMetrics();
+      injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
+    }
   }
 
   private GitSyncSdkConfiguration getGitSyncConfiguration(NextGenConfiguration config) {

@@ -275,7 +275,7 @@ public class DefaultLicenseServiceImpl implements LicenseService {
     properties.put("reason", cause);
     properties.put("module", moduleType);
     properties.put("licenseType", licenseType);
-    properties.put("licenseEdition", edition);
+    properties.put("plan", edition);
     telemetryReporter.sendTrackEvent(FAILED_OPERATION, properties, null, Category.SIGN_UP);
   }
 

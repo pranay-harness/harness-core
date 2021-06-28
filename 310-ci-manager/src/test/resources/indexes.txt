@@ -60,6 +60,7 @@ notifyResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds
 orchestrationEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 orchestrationEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 outboxEvents {"name": "blocked_createdAt_nextUnblockAttemptAt_outbox_Idx", "background": true} {"blocked": 1, "createdAt": 1, "nextUnblockAttemptAt": 1}
+outboxEvents {"name": "eventType_blocked_outbox_Idx", "background": true} {"eventType": 1, "blocked": 1}
 pipelineExecutionSummary {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 podDetails {"name": "accountId_1", "background": true} {"accountId": 1}
 primaryVersion {"name": "createdAt_1", "background": true} {"createdAt": 1}
