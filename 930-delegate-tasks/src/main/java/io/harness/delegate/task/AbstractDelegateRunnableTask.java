@@ -28,6 +28,7 @@ import io.harness.globalcontex.ErrorHandlingGlobalContextData;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.manage.GlobalContextManager;
+import io.harness.network.Http;
 
 import com.google.inject.Inject;
 import java.util.EnumSet;
@@ -38,6 +39,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
 
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
@@ -177,5 +179,9 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
 
   public void setDelegateHostname(String delegateHostname) {
     this.delegateHostname = delegateHostname;
+  }
+
+  public static OkHttpClient getUnsafeHttpClient(String baseUrl) {
+    return Http.getUnsafeOkHttpClient(baseUrl, 15, 60);
   }
 }

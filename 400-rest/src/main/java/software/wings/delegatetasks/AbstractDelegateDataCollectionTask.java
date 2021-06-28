@@ -64,10 +64,6 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
     super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
   }
 
-  public static OkHttpClient getUnsafeHttpClient(String baseUrl) {
-    return Http.getUnsafeOkHttpClient(baseUrl, 15, 60);
-  }
-
   private void waitForCompletion() {
     synchronized (lockObject) {
       while (!completed.get()) {
