@@ -156,6 +156,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   }
 
   private void evictApiKeyAndRebuildCache(String apiKey, String accountId, boolean rebuild) {
+    log.info("Evicting cache for api key [{}], accountId: [{}]", apiKey, accountId);
     boolean apiKeyPresent = apiKeyCache.remove(apiKey);
     boolean apiKeyPresentInPermissions = apiKeyPermissionInfoCache.remove(apiKey);
     boolean apiKeyPresentInRestrictions = apiKeyRestrictionInfoCache.remove(apiKey);
@@ -437,6 +438,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   @Override
   public void evictAndRebuildPermissionsAndRestrictions(String accountId, boolean rebuild) {
+    log.info("Evicting the permissions for the accountId [{}] with option rebuild [{}]", accountId, rebuild);
     final List<ApiKeyEntry> apiKeyEntryList = emptyIfNull(
         wingsPersistence.createQuery(ApiKeyEntry.class).filter(ApiKeyEntryKeys.accountId, accountId).asList());
     apiKeyEntryList.forEach(apiKeyEntry -> apiKeyEntry.setDecryptedKey(decryptKey(apiKeyEntry)));
