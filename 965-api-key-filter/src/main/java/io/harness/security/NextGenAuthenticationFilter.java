@@ -15,7 +15,6 @@ import io.harness.token.remote.TokenClient;
 
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -25,7 +24,6 @@ import javax.ws.rs.container.ResourceInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @OwnedBy(PL)
 @Singleton

@@ -1,5 +1,6 @@
 package io.harness.platform.resourcegroup;
 
+import static io.harness.AuthorizationServiceHeader.AUDIT_SERVICE;
 import static io.harness.AuthorizationServiceHeader.RESOUCE_GROUP_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
@@ -36,6 +37,7 @@ import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.serializer.morphia.ResourceGroupSerializer;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
+import io.harness.token.TokenClientModule;
 import io.harness.version.VersionModule;
 
 import com.google.common.collect.ImmutableMap;
@@ -117,6 +119,8 @@ public class ResourceGroupServiceModule extends AbstractModule {
     install(AccessControlClientModule.getInstance(
         this.appConfig.getAccessControlClientConfig(), RESOUCE_GROUP_SERVICE.getServiceId()));
     install(new TransactionOutboxModule());
+    install(new TokenClientModule(this.appConfig.getServiceHttpClientConfig(),
+        this.appConfig.getPlatformSecrets().getNgManagerServiceSecret(), RESOUCE_GROUP_SERVICE.getServiceId()));
   }
 
   @Provides

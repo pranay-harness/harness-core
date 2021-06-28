@@ -2,6 +2,7 @@ package io.harness.ccm;
 
 import static io.harness.AuthorizationServiceHeader.CE_NEXT_GEN;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
+import static io.harness.AuthorizationServiceHeader.NOTIFICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
@@ -51,6 +52,7 @@ import io.harness.timescaledb.JooqModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.metrics.HExecuteListener;
 import io.harness.timescaledb.metrics.QueryStatsPrinter;
+import io.harness.token.TokenClientModule;
 import io.harness.version.VersionModule;
 
 import com.google.common.collect.ImmutableMap;
@@ -143,10 +145,13 @@ public class CENextGenModule extends AbstractModule {
         return new NoopUserProvider();
       }
     });
-    install(new ConnectorResourceClientModule(
-        configuration.getNgManagerClientConfig(), configuration.getNgManagerServiceSecret(), MANAGER.getServiceId()));
+    install(new ConnectorResourceClientModule(configuration.getNgManagerClientConfig(),
+        configuration.getNgManagerServiceSecret(), CE_NEXT_GEN.getServiceId()));
     install(new K8sWatchTaskResourceClientModule(
         configuration.getManagerClientConfig(), configuration.getNgManagerServiceSecret(), CE_NEXT_GEN.getServiceId()));
+    install(new TokenClientModule(configuration.getNgManagerClientConfig(), configuration.getNgManagerServiceSecret(),
+        CE_NEXT_GEN.getServiceId()));
+
     install(VersionModule.getInstance());
     install(PrimaryVersionManagerModule.getInstance());
     install(new ValidationModule(getValidatorFactory()));

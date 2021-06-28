@@ -1,6 +1,7 @@
 package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
+import static io.harness.AuthorizationServiceHeader.NOTIFICATION_SERVICE;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
@@ -105,6 +106,7 @@ import io.harness.time.TimeModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
+import io.harness.token.TokenClientModule;
 import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.yaml.YamlSdkModule;
@@ -220,6 +222,8 @@ public class PipelineServiceModule extends AbstractModule {
         new AuditClientModule(this.configuration.getAuditClientConfig(), this.configuration.getManagerServiceSecret(),
             PIPELINE_SERVICE.getServiceId(), this.configuration.isEnableAudit()));
     install(new TransactionOutboxModule());
+    install(new TokenClientModule(this.configuration.getNgManagerServiceHttpClientConfig(),
+        this.configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
 
     bind(OutboxEventHandler.class).to(PipelineOutboxEventHandler.class);
     bind(HPersistence.class).to(MongoPersistence.class);

@@ -1,6 +1,8 @@
 package io.harness.platform.notification;
 
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.AuthorizationServiceHeader.NOTIFICATION_SERVICE;
+import static io.harness.AuthorizationServiceHeader.RESOUCE_GROUP_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.notification.constant.NotificationServiceConstants.MAILSERVICE;
 import static io.harness.notification.constant.NotificationServiceConstants.MSTEAMSSERVICE;
@@ -52,6 +54,7 @@ import io.harness.serializer.NotificationRegistrars;
 import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.threading.ExecutorModule;
+import io.harness.token.TokenClientModule;
 import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.version.VersionModule;
@@ -196,6 +199,8 @@ public class NotificationServiceModule extends AbstractModule {
     bind(NotificationService.class).to(NotificationServiceImpl.class);
     bind(NotificationTemplateService.class).to(NotificationTemplateServiceImpl.class);
     bindMessageConsumer();
+    install(new TokenClientModule(this.appConfig.getServiceHttpClientConfig(),
+        this.appConfig.getPlatformSecrets().getNgManagerServiceSecret(), NOTIFICATION_SERVICE.getServiceId()));
   }
 
   @Provides

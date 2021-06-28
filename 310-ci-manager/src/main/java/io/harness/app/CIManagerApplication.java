@@ -1,5 +1,6 @@
 package io.harness.app;
 
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
@@ -65,6 +66,8 @@ import io.harness.serializer.YamlBeansModuleRegistrars;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.token.TokenClientModule;
+import io.harness.token.remote.TokenClient;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -253,7 +256,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     registerWaitEnginePublishers(injector);
     registerManagedBeans(environment, injector);
     registerHealthCheck(environment, injector);
-    registerAuthFilters(configuration, environment);
+    registerAuthFilters(configuration, environment, injector);
     registerCorrelationFilter(environment, injector);
     registerStores(configuration, injector);
     registerYamlSdk(injector);
@@ -397,7 +400,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         NG_ORCHESTRATION, payload -> publisher.send(singletonList(NG_ORCHESTRATION), payload));
   }
 
-  private void registerAuthFilters(CIManagerConfiguration configuration, Environment environment) {
+  private void registerAuthFilters(CIManagerConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.isEnableAuth()) {
       Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
           -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
@@ -408,7 +411,8 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
           AuthorizationServiceHeader.IDENTITY_SERVICE.getServiceId(), configuration.getJwtIdentityServiceSecret());
       serviceToSecretMapping.put(
           AuthorizationServiceHeader.DEFAULT.getServiceId(), configuration.getNgManagerServiceSecret());
-      environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
+      environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping,
+          injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
     }
   }
 

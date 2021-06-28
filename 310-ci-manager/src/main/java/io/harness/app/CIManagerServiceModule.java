@@ -1,6 +1,7 @@
 package io.harness.app;
 
 import static io.harness.AuthorizationServiceHeader.CI_MANAGER;
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 
 import io.harness.AccessControlClientModule;
 import io.harness.CIExecutionServiceModule;
@@ -41,6 +42,7 @@ import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.tiserviceclient.TIServiceClientModule;
+import io.harness.token.TokenClientModule;
 import io.harness.yaml.core.StepSpecType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -173,6 +175,9 @@ public class CIManagerServiceModule extends AbstractModule {
     install(DelegateServiceDriverModule.getInstance(false));
     install(new DelegateServiceDriverGrpcClientModule(ciManagerConfiguration.getManagerServiceSecret(),
         ciManagerConfiguration.getManagerTarget(), ciManagerConfiguration.getManagerAuthority(), true));
+
+    install(new TokenClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
+        ciManagerConfiguration.getNgManagerServiceSecret(), CI_MANAGER.getServiceId()));
 
     install(new AbstractManagerGrpcClientModule() {
       @Override

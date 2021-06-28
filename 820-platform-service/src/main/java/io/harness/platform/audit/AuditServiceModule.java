@@ -1,6 +1,7 @@
 package io.harness.platform.audit;
 
 import static io.harness.AuthorizationServiceHeader.AUDIT_SERVICE;
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.AccessControlClientModule;
@@ -27,6 +28,7 @@ import io.harness.serializer.NGAuditServiceRegistrars;
 import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.springdata.HTransactionTemplate;
 import io.harness.threading.ExecutorModule;
+import io.harness.token.TokenClientModule;
 import io.harness.version.VersionModule;
 
 import com.google.common.collect.ImmutableMap;
@@ -110,6 +112,8 @@ public class AuditServiceModule extends AbstractModule {
     bind(AuditSettingsService.class).to(AuditSettingsServiceImpl.class);
     install(
         AccessControlClientModule.getInstance(appConfig.getAccessControlClientConfig(), AUDIT_SERVICE.getServiceId()));
+    install(new TokenClientModule(this.appConfig.getServiceHttpClientConfig(),
+        this.appConfig.getPlatformSecrets().getNgManagerServiceSecret(), AUDIT_SERVICE.getServiceId()));
   }
 
   @Provides
