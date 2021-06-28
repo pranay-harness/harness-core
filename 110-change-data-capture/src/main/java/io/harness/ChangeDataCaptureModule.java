@@ -2,13 +2,9 @@ package io.harness;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.entities.AccountEntity;
 import io.harness.entities.CDCEntity;
 import io.harness.entities.CECloudAccountCDCEntity;
-import io.harness.entities.OrganizationEntity;
-import io.harness.entities.PipelineCDCEntity;
 import io.harness.entities.PipelineExecutionSummaryEntityCDCEntity;
-import io.harness.entities.ProjectEntity;
 import io.harness.persistence.HPersistence;
 import io.harness.threading.ExecutorModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
@@ -68,10 +64,10 @@ public class ChangeDataCaptureModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), new TypeLiteral<CDCEntity<?>>() {});
     cdcEntityMultibinder.addBinding().to(CECloudAccountCDCEntity.class);
     cdcEntityMultibinder.addBinding().to(PipelineExecutionSummaryEntityCDCEntity.class);
-    cdcEntityMultibinder.addBinding().to(ProjectEntity.class);
-    cdcEntityMultibinder.addBinding().to(OrganizationEntity.class);
-    cdcEntityMultibinder.addBinding().to(AccountEntity.class);
-    cdcEntityMultibinder.addBinding().to(PipelineCDCEntity.class);
+    //    cdcEntityMultibinder.addBinding().to(ProjectEntity.class);
+    //    cdcEntityMultibinder.addBinding().to(OrganizationEntity.class);
+    //    cdcEntityMultibinder.addBinding().to(AccountEntity.class);
+    //    cdcEntityMultibinder.addBinding().to(PipelineCDCEntity.class);
   }
 
   @Provides
