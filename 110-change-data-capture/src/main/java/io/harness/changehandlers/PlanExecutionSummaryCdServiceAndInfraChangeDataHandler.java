@@ -405,7 +405,7 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
       updateQueryBuilder.append(insertSQL(tableName, columnValueMappingForSet));
     }
     // On conflict condition
-    updateQueryBuilder.append(" ON CONFLICT (id) Do ");
+    updateQueryBuilder.append(" ON CONFLICT (id,service_startts) Do ");
 
     if (!columnValueMappingForSet.isEmpty()) {
       Set<Map.Entry<String, String>> setOfEntries = columnValueMappingForSet.entrySet();
