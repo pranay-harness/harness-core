@@ -312,12 +312,15 @@ public class OrchestrationEngine {
         return;
       }
       if (nodeExecution.getStatus() != RUNNING) {
+        log.info("Marking the nodeExecution with id {} as RUNNING", nodeExecutionId);
         nodeExecution = Preconditions.checkNotNull(
             nodeExecutionService.updateStatusWithOps(nodeExecutionId, RUNNING, null, EnumSet.noneOf(Status.class)));
+      } else {
+        log.warn("NodeExecution with id {} is already in Running status", nodeExecutionId);
       }
       resumeHelper.resume(nodeExecution, response, asyncError);
     } catch (Exception exception) {
-      log.error("Exception Occurred in resume", exception);
+      log.error("Exception Occurred in handling resume with nodeExecutionId {}", nodeExecutionId, exception);
       handleError(ambiance, exception);
     }
   }
@@ -325,6 +328,7 @@ public class OrchestrationEngine {
   public void handleAdvise(String nodeExecutionId, AdviserResponse adviserResponse) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     if (adviserResponse.getType() == AdviseType.UNKNOWN) {
+      log.warn("Got null advise for node execution with id {}", nodeExecutionId);
       endNodeExecutionHelper.endNodeForNullAdvise(nodeExecution);
       return;
     }
