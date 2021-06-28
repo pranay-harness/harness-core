@@ -51,6 +51,6 @@ public class TimeRangeProvider {
 
     String label = month.getDisplayName(TextStyle.FULL, Locale.CANADA) + " " + year.getValue();
     return new TimeRange(label, startOfMonth.toInstant(zone).toEpochMilli(), endOfMonth.toInstant(zone).toEpochMilli(),
-        zone.getId(), false, null);
+        zone.getId(), false, null, null, null, false);
   }
 }

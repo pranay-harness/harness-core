@@ -63,6 +63,9 @@ public class TimeRangeBasedFreezeConfig extends GovernanceFreezeConfig {
       log.warn("Time range is null for deployment freeze window: " + getUuid());
       return false;
     }
+    if (timeRange.getFreezeOccurrence() != null) {
+      return timeRange.isInRange();
+    }
     return currentTime <= getTimeRange().getTo() && currentTime >= getTimeRange().getFrom();
   }
 
