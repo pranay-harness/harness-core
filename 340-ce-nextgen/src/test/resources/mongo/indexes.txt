@@ -8,6 +8,7 @@ ceCluster {"name": "no_dup", "unique": true} {"accountId": 1, "infraAccountId": 
 ceExceptionRecord {"name": "accountId_clusterId_createdAt", "background": true} {"accountId": 1, "clusterId": 1, "createdAt": 1}
 ceMetadataRecord {"name": "accountId", "unique": true} {"accountId": 1}
 ceReportSchedule {"name": "account_enabled_type", "background": true} {"accountId": 1, "enabled": 1, "name": 1, "viewsId": 1}
+clusterRecords {"name": "accountId_k8sBaseConnectorRefIdentifier", "unique": true} {"accountId": 1, "k8sBaseConnectorRefIdentifier": 1}
 instanceData {"name": "accountId_clusterId_instanceId_instanceState", "background": true} {"accountId": 1, "clusterId": 1, "instanceId": 1, "instanceState": 1}
 instanceData {"name": "accountId_clusterId_instanceName_usageStartTime", "background": true} {"accountId": 1, "clusterId": 1, "instanceName": 1, "usageStartTime": -1}
 instanceData {"name": "accountId_clusterId_instanceState_usageStartTime", "background": true} {"accountId": 1, "clusterId": 1, "instanceState": 1, "usageStartTime": 1}
