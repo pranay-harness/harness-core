@@ -13,7 +13,6 @@ import io.harness.security.dto.Principal;
 import io.harness.security.dto.ServiceAccountPrincipal;
 import io.harness.token.remote.TokenClient;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Instant;
@@ -33,13 +32,15 @@ import org.apache.commons.lang3.tuple.Pair;
 @Slf4j
 public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
   public static final String X_API_KEY = "X-Api-Key";
-  private static final String deliminator = ".";
+  private static final String delimiter = "\\.";
 
-  @Inject @Named("PRIVILEGED") private TokenClient tokenClient;
+  private TokenClient tokenClient;
 
   public NextGenAuthenticationFilter(Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate,
-      Map<String, JWTTokenHandler> serviceToJWTTokenHandlerMapping, Map<String, String> serviceToSecretMapping) {
+      Map<String, JWTTokenHandler> serviceToJWTTokenHandlerMapping, Map<String, String> serviceToSecretMapping,
+      @Named("PRIVILEGED") TokenClient tokenClient) {
     super(predicate, serviceToJWTTokenHandlerMapping, serviceToSecretMapping);
+    this.tokenClient = tokenClient;
   }
 
   @Override
@@ -53,8 +54,8 @@ public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
     if (apiKeyOptional.isPresent()) {
       String apiKey = apiKeyOptional.get();
       log.info("Found an API key in request {}", apiKey);
-      String[] splitToken = apiKey.split(deliminator);
-      if (EmptyPredicate.isNotEmpty(splitToken) && splitToken.length == 2) {
+      String[] splitToken = apiKey.split(delimiter);
+      if (EmptyPredicate.isNotEmpty(splitToken)) {
         TokenDTO tokenDTO = NGRestUtils.getResponse(tokenClient.getToken(splitToken[0]));
         if (tokenDTO != null) {
           if (Instant.now().toEpochMilli() < tokenDTO.getValidTo()
@@ -69,7 +70,7 @@ public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
           throw new InvalidRequestException("Could not find the incoming API token in Harness");
         }
       } else {
-        throw new InvalidRequestException("Invalid incoming API token");
+        throw new InvalidRequestException("Invalid API token");
       }
     } else {
       super.filter(containerRequestContext);

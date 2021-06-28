@@ -47,30 +47,26 @@ public class TokenResource {
   @POST
   @ApiOperation(value = "Create token", nickname = "createToken")
   public ResponseDTO<String> createToken(@Valid TokenDTO tokenDTO) {
-    String token = tokenService.createToken(tokenDTO);
-    return ResponseDTO.newResponse(token);
+    return ResponseDTO.newResponse(tokenService.createToken(tokenDTO));
   }
 
   @PUT
   @Path("{identifier}")
   @ApiOperation(value = "Update token", nickname = "updateToken")
   public ResponseDTO<TokenDTO> updateToken(@PathParam("identifier") String identifier, @Valid TokenDTO tokenDTO) {
-    TokenDTO token = tokenService.updateToken(tokenDTO);
-    return ResponseDTO.newResponse(token);
+    return ResponseDTO.newResponse(tokenService.updateToken(tokenDTO));
   }
 
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete token", nickname = "deleteToken")
   public ResponseDTO<Boolean> deleteToken(@PathParam("identifier") String identifier) {
-    boolean isDeleted = tokenService.revokeToken(identifier);
-    return ResponseDTO.newResponse(isDeleted);
+    return ResponseDTO.newResponse(tokenService.revokeToken(identifier));
   }
 
   @GET
-  @Path("{tokenId}")
   @ApiOperation(value = "Get token", nickname = "getToken")
-  public ResponseDTO<TokenDTO> getToken(@PathParam("tokenId") String tokenId) {
+  public ResponseDTO<TokenDTO> getToken(@QueryParam("tokenId") String tokenId) {
     return ResponseDTO.newResponse(tokenService.getToken(tokenId));
   }
 
@@ -79,7 +75,6 @@ public class TokenResource {
   @ApiOperation(value = "Rotate token", nickname = "rotateToken")
   public ResponseDTO<String> rotateToken(
       @PathParam("identifier") String identifier, @QueryParam("rotateTimestamp") Long rotateTimestamp) {
-    String token = tokenService.rotateToken(identifier, Instant.ofEpochMilli(rotateTimestamp));
-    return ResponseDTO.newResponse(token);
+    return ResponseDTO.newResponse(tokenService.rotateToken(identifier, Instant.ofEpochMilli(rotateTimestamp)));
   }
 }

@@ -71,8 +71,7 @@ public class TokenServiceImpl implements TokenService {
   @Override
   public TokenDTO getToken(String tokenId) {
     Optional<Token> optionalToken = tokenRepository.findById(tokenId);
-    Preconditions.checkState(optionalToken.isPresent(), "No token present with id: " + tokenId);
-    return optionalToken.isPresent() ? TokenDTOMapper.getDTOFromToken(optionalToken.get()) : null;
+    return optionalToken.map(TokenDTOMapper::getDTOFromToken).orElse(null);
   }
 
   @Override

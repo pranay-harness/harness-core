@@ -117,6 +117,7 @@ import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PipelineServiceUtilAdviserRegistrar;
 import io.harness.serializer.PrimaryVersionManagerRegistrars;
+import io.harness.token.TokenClientModule;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.ProgressUpdateService;
@@ -328,6 +329,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new CVNextGenCommonsServiceModule());
     modules.add(new NotificationClientModule(configuration.getNotificationClientConfiguration()));
     modules.add(new CvPersistenceModule());
+    modules.add(new TokenClientModule(configuration.getManagerClientConfig(),
+        configuration.getNgManagerServiceConfig().getManagerServiceSecret(), "NextGenManager"));
     YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
                                                     .requireSchemaInit(true)
                                                     .requireSnippetInit(false)
