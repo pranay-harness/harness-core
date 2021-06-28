@@ -30,13 +30,13 @@ public class HealthSourceServiceImpl implements HealthSourceService {
   @Override
   public void create(String accountId, String orgIdentifier, String projectIdentifier, String environmentRef,
       String serviceRef, Set<HealthSource> healthSources) {
-    healthSources.forEach(healthSourceInfo -> {
-      CVConfigUpdateResult cvConfigUpdateResult = healthSourceInfo.getSpec().getCVConfigUpdateResult(accountId,
-          orgIdentifier, projectIdentifier, environmentRef, serviceRef, healthSourceInfo.getIdentifier(),
-          healthSourceInfo.getName(), Collections.emptyList());
+    healthSources.forEach(healthSource -> {
+      CVConfigUpdateResult cvConfigUpdateResult =
+          healthSource.getSpec().getCVConfigUpdateResult(accountId, orgIdentifier, projectIdentifier, environmentRef,
+              serviceRef, healthSource.getIdentifier(), healthSource.getName(), Collections.emptyList());
       cvConfigService.save(cvConfigUpdateResult.getAdded());
       monitoringSourcePerpetualTaskService.createTask(accountId, orgIdentifier, projectIdentifier,
-          healthSourceInfo.getSpec().getConnectorRef(), healthSourceInfo.getIdentifier());
+          healthSource.getSpec().getConnectorRef(), healthSource.getIdentifier());
     });
   }
 
@@ -61,6 +61,27 @@ public class HealthSourceServiceImpl implements HealthSourceService {
     identifiers.forEach(
         identifier -> healthSources.add(transformCVConfigs(accountId, orgIdentifier, projectIdentifier, identifier)));
     return healthSources;
+  }
+
+  @Override
+  public void delete(String accountId, String orgIdentifier, String projectIdentifier, List<String> identifiers) {
+    identifiers.forEach(
+        identifier -> cvConfigService.deleteByIdentifier(accountId, orgIdentifier, projectIdentifier, identifier));
+  }
+
+  @Override
+  public void update(String accountId, String orgIdentifier, String projectIdentifier, String environmentRef,
+      String serviceRef, Set<HealthSource> healthSources) {
+    healthSources.forEach(healthSource -> {
+      List<CVConfig> saved =
+          cvConfigService.list(accountId, orgIdentifier, projectIdentifier, healthSource.getIdentifier());
+      CVConfigUpdateResult cvConfigUpdateResult =
+          healthSource.getSpec().getCVConfigUpdateResult(accountId, orgIdentifier, projectIdentifier, environmentRef,
+              serviceRef, healthSource.getIdentifier(), healthSource.getName(), saved);
+      cvConfigUpdateResult.getDeleted().forEach(cvConfig -> cvConfigService.delete(cvConfig.getUuid()));
+      cvConfigService.update(cvConfigUpdateResult.getUpdated());
+      cvConfigService.save(cvConfigUpdateResult.getAdded());
+    });
   }
 
   private HealthSource transformCVConfigs(
