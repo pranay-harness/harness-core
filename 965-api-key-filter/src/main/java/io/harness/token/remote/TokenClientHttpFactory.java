@@ -6,7 +6,6 @@ import io.harness.remote.client.AbstractHttpClientFactory;
 import io.harness.remote.client.ClientMode;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
-import io.harness.serializer.kryo.KryoConverterFactory;
 
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
@@ -20,9 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PL)
 public class TokenClientHttpFactory extends AbstractHttpClientFactory implements Provider<TokenClient> {
   public TokenClientHttpFactory(ServiceHttpClientConfig ngManagerConfig, String serviceSecret,
-      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId,
-      ClientMode clientMode) {
-    super(ngManagerConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId, false, clientMode);
+      ServiceTokenGenerator tokenGenerator, String clientId, ClientMode clientMode) {
+    super(ngManagerConfig, serviceSecret, tokenGenerator, null, clientId, false, clientMode);
     log.info("TokenClientFactory ngManagerConfig: {}", ngManagerConfig);
   }
 
