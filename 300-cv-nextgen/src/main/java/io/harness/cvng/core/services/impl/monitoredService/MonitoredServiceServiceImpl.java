@@ -1,24 +1,33 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Sources;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListDTO;
 import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.entities.MonitoredService.MonitoredServiceKeys;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
+import io.harness.utils.PageUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.mongodb.DuplicateKeyException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 public class MonitoredServiceServiceImpl implements MonitoredServiceService {
@@ -145,6 +154,14 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         .build();
   }
 
+  @Override
+  public MonitoredServiceDTO get(String accountId, String orgIdentifier, String projectIdentifier,
+      String serviceIdentifier, String envIdentifier) {
+    MonitoredService monitoredService =
+        getMonitoredService(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
+    return get(accountId, orgIdentifier, projectIdentifier, monitoredService.getIdentifier());
+  }
+
   private MonitoredService getMonitoredService(
       String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
     return hPersistence.createQuery(MonitoredService.class)
@@ -155,14 +172,20 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         .get();
   }
 
+  private MonitoredService getMonitoredService(
+      String accountId, String orgIdentifier, String projectIdentifier, String serviceRef, String envRef) {
+    return hPersistence.createQuery(MonitoredService.class)
+        .filter(MonitoredServiceKeys.accountId, accountId)
+        .filter(MonitoredServiceKeys.orgIdentifier, orgIdentifier)
+        .filter(MonitoredServiceKeys.projectIdentifier, projectIdentifier)
+        .filter(MonitoredServiceKeys.serviceIdentifier, serviceRef)
+        .filter(MonitoredServiceKeys.environmentIdentifier, envRef)
+        .get();
+  }
+
   private void checkIfAlreadyPresent(String accountId, MonitoredServiceDTO monitoredServiceDTO) {
-    MonitoredService monitoredServiceEntity =
-        hPersistence.createQuery(MonitoredService.class)
-            .filter(MonitoredServiceKeys.accountId, accountId)
-            .filter(MonitoredServiceKeys.orgIdentifier, monitoredServiceDTO.getOrgIdentifier())
-            .filter(MonitoredServiceKeys.projectIdentifier, monitoredServiceDTO.getProjectIdentifier())
-            .filter(MonitoredServiceKeys.identifier, monitoredServiceDTO.getIdentifier())
-            .get();
+    MonitoredService monitoredServiceEntity = getMonitoredService(accountId, monitoredServiceDTO.getOrgIdentifier(),
+        monitoredServiceDTO.getProjectIdentifier(), monitoredServiceDTO.getIdentifier());
     if (monitoredServiceEntity != null) {
       throw new DuplicateFieldException(String.format(
           "Monitored Source Entity  with identifier %s and orgIdentifier %s and projectIdentifier %s is already present",
@@ -212,6 +235,30 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   }
 
   @Override
+  public PageResponse<MonitoredServiceListDTO> list(String accountId, String orgIdentifier, String projectIdentifier,
+      String environmentIdentifier, Integer offset, Integer pageSize, String filter) {
+    List<MonitoredServiceListDTO> monitoredServiceListDTOS = new ArrayList<>();
+    Query<MonitoredService> monitoredServicesQuery =
+        hPersistence.createQuery(MonitoredService.class)
+            .filter(MonitoredServiceKeys.accountId, accountId)
+            .filter(MonitoredServiceKeys.orgIdentifier, orgIdentifier)
+            .filter(MonitoredServiceKeys.projectIdentifier, projectIdentifier);
+    if (environmentIdentifier != null) {
+      monitoredServicesQuery.filter(MonitoredServiceKeys.environmentIdentifier, environmentIdentifier);
+    }
+    List<MonitoredService> monitoredServices = monitoredServicesQuery.asList();
+    if (monitoredServices != null) {
+      monitoredServiceListDTOS =
+          monitoredServices.stream()
+              .filter(monitoredService
+                  -> isEmpty(filter) || monitoredService.getName().toLowerCase().contains(filter.trim().toLowerCase()))
+              .map(monitoredService -> toMonitorServiceListDTO(monitoredService))
+              .collect(Collectors.toList());
+    }
+    return PageUtils.offsetAndLimit(monitoredServiceListDTOS, offset, pageSize);
+  }
+
+  @Override
   public void deleteByProjectIdentifier(
       Class<MonitoredService> clazz, String accountId, String orgIdentifier, String projectIdentifier) {
     List<MonitoredService> monitoredServices = hPersistence.createQuery(MonitoredService.class)
@@ -252,5 +299,47 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         }
       });
     }
+  }
+
+  @Override
+  public List<String> listEnvironments(String accountId, String orgIdentifier, String projectIdentifier) {
+    return hPersistence.createQuery(MonitoredService.class)
+        .filter(MonitoredServiceKeys.accountId, accountId)
+        .filter(MonitoredServiceKeys.orgIdentifier, orgIdentifier)
+        .filter(MonitoredServiceKeys.projectIdentifier, projectIdentifier)
+        .asList()
+        .stream()
+        .map(monitoredService -> monitoredService.getEnvironmentIdentifier())
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public MonitoredServiceDTO createDefault(String accountId, String orgIdentifier, String projectIdentifier,
+      String environmentIdentifier, String serviceIdentifier) {
+    MonitoredServiceDTO monitoredServiceDTO = MonitoredServiceDTO.builder()
+                                                  .name(serviceIdentifier + environmentIdentifier)
+                                                  .identifier(serviceIdentifier + environmentIdentifier)
+                                                  .orgIdentifier(orgIdentifier)
+                                                  .projectIdentifier(projectIdentifier)
+                                                  .serviceRef(serviceIdentifier)
+                                                  .environmentRef(environmentIdentifier)
+                                                  .description("Default Monitored Service")
+                                                  .sources(Sources.builder().build())
+                                                  .build();
+    try {
+      saveMonitoredServiceEntity(accountId, monitoredServiceDTO);
+    } catch (DuplicateKeyException e) {
+      monitoredServiceDTO.setIdentifier(monitoredServiceDTO.getIdentifier() + "_" + generateUuid().substring(0, 7));
+      saveMonitoredServiceEntity(accountId, monitoredServiceDTO);
+    }
+    return monitoredServiceDTO;
+  }
+
+  private MonitoredServiceListDTO toMonitorServiceListDTO(MonitoredService monitoredService) {
+    return MonitoredServiceListDTO.builder()
+        .identifier(monitoredService.getIdentifier())
+        .serviceRef(monitoredService.getServiceIdentifier())
+        .environmentRef(monitoredService.getEnvironmentIdentifier())
+        .build();
   }
 }
