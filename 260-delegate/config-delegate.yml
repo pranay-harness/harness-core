@@ -9,7 +9,7 @@ localDiskPath: /tmp
 doUpgrade: false
 pollForTasks: false
 description: description here
-managerTarget: localhost:9890
+managerTarget: localhost:15011
 managerAuthority: localhost
 queueFilePath: ../eventQueue
 grpcServiceEnabled: true
