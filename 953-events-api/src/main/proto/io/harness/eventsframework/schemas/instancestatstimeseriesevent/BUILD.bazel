@@ -5,7 +5,7 @@ load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 proto_library(
     name = "953_events_api_proto",
     srcs = [
-        "create_timeseries_batch_event_info.proto"
+        "create_timeseries_batch_event_info.proto",
     ],
     visibility = ["//visibility:public"],
 )
