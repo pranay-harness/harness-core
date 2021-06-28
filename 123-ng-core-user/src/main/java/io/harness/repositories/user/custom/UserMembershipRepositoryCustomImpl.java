@@ -112,8 +112,7 @@ public class UserMembershipRepositoryCustomImpl implements UserMembershipReposit
     TypedAggregation<UserMembership> aggregation =
         newAggregation(UserMembership.class, match(where(UserMembershipKeys.userId).is(userId)),
             unwind(UserMembershipKeys.scopes), match(where("scopes.projectIdentifier").exists(true)),
-            match(where("scopes.accountIdentifier").is(accountIdentifier)),
-            group().count().as("count"));
+            match(where("scopes.accountIdentifier").is(accountIdentifier)), group().count().as("count"));
 
     List<BasicDBObject> mappedResults = mongoTemplate.aggregate(aggregation, BasicDBObject.class).getMappedResults();
 

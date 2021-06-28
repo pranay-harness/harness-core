@@ -22,28 +22,28 @@ public interface UserMembershipRepository
 
   Long deleteUserMembershipByUserId(String userId);
 
-  @Aggregation(pipeline = {"{ $match : { userId : ?0 } }", "{ $unwind : { path : '$scopes' } }",
-                   "{ $match: {'scopes.projectIdentifier' : {$exists: true}, 'scopes.accountIdentifier': ?1}}",
-                   "{ $lookup: { "
-                       + " 'from': 'projects', "
-                       + " 'let': {  "
-                       + "    accountId: '$scopes.accountIdentifier', "
-                       + "    orgId:     '$scopes.orgIdentifier', "
-                       + "    projectId: '$scopes.projectIdentifier' "
-                       + " }, "
-                       + " 'pipeline': [ "
-                       + " { '$match': { '$expr': { "
-                       + "   $and: [ "
-                       + "        { $eq: ['$accountIdentifier', '$$accountId'] }, "
-                       + "        { $eq: ['$orgIdentifier', '$$orgId'] }, "
-                       + "        { $eq: ['$identifier', '$$projectId'] }, "
-                       + "   ] "
-                       + " }}} "
-                       + " ], "
-                       + " 'as':'projectDetails' "
-                       + " }}",
-                   "{$project: {'contents': {$arrayElemAt:[ '$projectDetails',0]}}},",
-                   "{$replaceRoot: {newRoot:'$contents'}}"})
+  @Aggregation(
+      pipeline = {"{ $match : { userId : ?0 } }", "{ $unwind : { path : '$scopes' } }",
+          "{ $match: {'scopes.projectIdentifier' : {$exists: true}, 'scopes.accountIdentifier': ?1}}",
+          "{ $lookup: { "
+              + " 'from': 'projects', "
+              + " 'let': {  "
+              + "    accountId: '$scopes.accountIdentifier', "
+              + "    orgId:     '$scopes.orgIdentifier', "
+              + "    projectId: '$scopes.projectIdentifier' "
+              + " }, "
+              + " 'pipeline': [ "
+              + " { '$match': { '$expr': { "
+              + "   $and: [ "
+              + "        { $eq: ['$accountIdentifier', '$$accountId'] }, "
+              + "        { $eq: ['$orgIdentifier', '$$orgId'] }, "
+              + "        { $eq: ['$identifier', '$$projectId'] }, "
+              + "   ] "
+              + " }}} "
+              + " ], "
+              + " 'as':'projectDetails' "
+              + " }}",
+          "{$project: {'contents': {$arrayElemAt:[ '$projectDetails',0]}}},", "{$replaceRoot: {newRoot:'$contents'}}"})
   List<Project>
   findProjectList(String userId, String accountId, Pageable pageable);
 }
