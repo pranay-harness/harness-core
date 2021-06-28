@@ -15,6 +15,7 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -72,4 +73,11 @@ public final class MonitoredService
   List<String> healthSourceIdentifiers;
   private long lastUpdatedAt;
   private long createdAt;
+
+  public List<String> getHealthSourceIdentifiers() {
+    if (healthSourceIdentifiers == null) {
+      return new ArrayList<>();
+    }
+    return healthSourceIdentifiers;
+  }
 }

@@ -11,4 +11,7 @@ public interface HealthSourceService {
   void checkIfAlreadyPresent(
       String accountId, String orgIdentifier, String projectIdentifier, Set<HealthSource> healthSources);
   Set<HealthSource> get(String accountId, String orgIdentifier, String projectIdentifier, List<String> identifiers);
+  void delete(String accountId, String orgIdentifier, String projectIdentifier, List<String> identifiers);
+  void update(String accountId, String orgIdentifier, String projectIdentifier, String environmentRef,
+      String serviceRef, Set<HealthSource> healthSource);
 }
