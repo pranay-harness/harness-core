@@ -2,6 +2,8 @@ package io.harness.delegate.task.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType.USER_PASSWORD;
+import static io.harness.delegate.beans.connector.k8Connector.KubernetesConnectorTestHelper.inClusterDelegateK8sConfig;
+import static io.harness.delegate.beans.connector.k8Connector.KubernetesConnectorTestHelper.manualK8sConfig;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 import static io.harness.helm.HelmConstants.HELM_RELEASE_LABEL;
 import static io.harness.helm.HelmSubCommandType.TEMPLATE;
@@ -17,6 +19,7 @@ import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.TATHAGAT;
+import static io.harness.rule.OwnerRule.UTSAV;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
@@ -118,6 +121,8 @@ import io.kubernetes.client.openapi.models.V1PodStatusBuilder;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServiceBuilder;
 import io.kubernetes.client.openapi.models.V1ServicePortBuilder;
+import io.kubernetes.client.openapi.models.V1TokenReviewStatus;
+import io.kubernetes.client.openapi.models.V1TokenReviewStatusBuilder;
 import io.kubernetes.client.util.Yaml;
 import java.io.IOException;
 import java.net.URL;
@@ -1213,6 +1218,48 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
       assertThat(he.getMessage()).contains("master URL");
       assertThat(he.getCause()).isInstanceOf(ExplanationException.class);
     }
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testFetchTokenReviewStatus_InClusterDelegate() throws Exception {
+    final String username = "system:serviceaccount:harness-delegate:default";
+
+    doReturn(KubernetesConfig.builder().build())
+        .when(mockK8sYamlToDelegateDTOMapper)
+        .createKubernetesConfigFromClusterConfig(eq(inClusterDelegateK8sConfig()));
+
+    when(mockKubernetesContainerService.fetchTokenReviewStatus(any()))
+        .thenReturn(new V1TokenReviewStatusBuilder().withNewUser().withUsername(username).endUser().build());
+
+    V1TokenReviewStatus v1TokenReviewStatus =
+        k8sTaskHelperBase.fetchTokenReviewStatus(inClusterDelegateK8sConfig(), null);
+
+    assertThat(v1TokenReviewStatus).isNotNull();
+    assertThat(v1TokenReviewStatus.getUser()).isNotNull();
+    assertThat(v1TokenReviewStatus.getUser().getUsername()).isEqualTo(username);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testFetchTokenReviewStatus_ManualCredential() throws Exception {
+    final String username = "system:serviceaccount:harness-delegate:default";
+
+    doReturn(KubernetesConfig.builder().build())
+        .when(mockK8sYamlToDelegateDTOMapper)
+        .createKubernetesConfigFromClusterConfig(eq(manualK8sConfig()));
+
+    when(mockKubernetesContainerService.fetchTokenReviewStatus(any()))
+        .thenReturn(new V1TokenReviewStatusBuilder().withNewUser().withUsername(username).endUser().build());
+
+    V1TokenReviewStatus v1TokenReviewStatus = k8sTaskHelperBase.fetchTokenReviewStatus(
+        manualK8sConfig(), ImmutableList.of(EncryptedDataDetail.builder().build()));
+
+    assertThat(v1TokenReviewStatus).isNotNull();
+    assertThat(v1TokenReviewStatus.getUser()).isNotNull();
+    assertThat(v1TokenReviewStatus.getUser().getUsername()).isEqualTo(username);
   }
 
   private Object[] badUrlExceptions() {
