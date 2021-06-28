@@ -24,7 +24,6 @@ public class OrchestrationLogPublisher
     implements NodeUpdateObserver, NodeStatusUpdateObserver, PlanStatusUpdateObserver {
   @Inject private OrchestrationEventLogRepository orchestrationEventLogRepository;
   @Inject private GraphGenerationService graphGenerationService;
-  @Inject @Named("OrchestrationVisualizationExecutorService") private ExecutorService executorService;
 
   @Override
   public void onNodeStatusUpdate(NodeUpdateInfo nodeUpdateInfo) {
@@ -54,6 +53,6 @@ public class OrchestrationLogPublisher
             .planExecutionId(planExecutionId)
             .validUntil(Date.from(OffsetDateTime.now().plus(Duration.ofDays(14)).toInstant()))
             .build());
-    executorService.submit(() -> graphGenerationService.updateGraph(planExecutionId));
+    graphGenerationService.updateGraph(planExecutionId);
   }
 }
