@@ -48,14 +48,17 @@ public abstract class PmsBaseEventHandler<T extends Message> {
     try (PmsGitSyncBranchContextGuard ignore1 = gitSyncContext(event); AutoLogContext ignore2 = autoLogContext(event)) {
       ThreadAutoLogContext metricContext =
           new ThreadAutoLogContext(extractMetricContext(event), OverrideBehavior.OVERRIDE_NESTS);
+      GlobalContextManager.upsertGlobalContextRecord(
+          MonitoringContext.builder()
+              .isMonitoringEnabled(
+                  Objects.equals(metadataMap.getOrDefault(PIPELINE_MONITORING_ENABLED, "false"), "true"))
+              .build());
       MonitoringInfo monitoringInfo = MonitoringInfo.builder()
                                           .createdAt(createdAt)
                                           .metricPrefix(getMetricPrefix(event))
                                           .metricContext(metricContext)
+                                          .accountId(AmbianceUtils.getAccountId(extractAmbiance(event)))
                                           .build();
-      boolean isMonitoringEnabled = Objects.equals(metadataMap.get(PIPELINE_MONITORING_ENABLED), "true");
-      GlobalContextManager.upsertGlobalContextRecord(
-          MonitoringContext.builder().isMonitoringEnabled(isMonitoringEnabled).build());
       eventMonitoringService.sendMetric(LISTENER_START_METRIC, monitoringInfo, metadataMap);
       handleEventWithContext(event);
       eventMonitoringService.sendMetric(LISTENER_END_METRIC, monitoringInfo, metadataMap);

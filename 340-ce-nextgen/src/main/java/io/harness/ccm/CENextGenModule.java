@@ -53,6 +53,7 @@ import io.harness.timescaledb.metrics.HExecuteListener;
 import io.harness.timescaledb.metrics.QueryStatsPrinter;
 import io.harness.version.VersionModule;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -61,6 +62,7 @@ import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.validation.Validation;
@@ -68,6 +70,7 @@ import javax.validation.ValidatorFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.jooq.ExecuteListener;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @OwnedBy(CE)
@@ -107,6 +110,14 @@ public class CENextGenModule extends AbstractModule {
 
       @Provides
       @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+            .addAll(CENextGenModuleRegistrars.springConverters)
+            .build();
+      }
+
+      @Provides
+      @Singleton
       MongoConfig eventsMongoConfig() {
         return configuration.getEventsMongoConfig();
       }
@@ -136,6 +147,7 @@ public class CENextGenModule extends AbstractModule {
     // Bind Services
     bind(CEYamlService.class).to(CEYamlServiceImpl.class);
 
+    install(new CENextGenPersistenceModule());
     install(ExecutorModule.getInstance());
     install(new AbstractMongoModule() {
       @Override

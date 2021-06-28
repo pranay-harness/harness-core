@@ -5,8 +5,10 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.remote.NGObjectMapperHelper.configureNGObjectMapper;
 
 import io.harness.AuthorizationServiceHeader;
+import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.eventframework.CENGEventConsumerService;
+import io.harness.ccm.migration.CENGCoreMigrationProvider;
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
@@ -16,6 +18,10 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.migration.MigrationProvider;
+import io.harness.migration.NGMigrationSdkInitHelper;
+import io.harness.migration.NGMigrationSdkModule;
+import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
@@ -33,6 +39,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.ConfigurationSourceProvider;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -42,8 +49,10 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -110,23 +119,28 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
         20, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     log.info("Starting CE NextGen Application ...");
     MaintenanceController.forceMaintenance(true);
-    Injector injector = Guice.createInjector(
-        new CENextGenModule(configuration), new MetricRegistryModule(metricRegistry), new AbstractCfModule() {
-          @Override
-          public CfClientConfig cfClientConfig() {
-            return configuration.getCfClientConfig();
-          }
+    List<Module> modules = new ArrayList<>();
+    modules.add(new CENextGenModule(configuration));
+    modules.add(new MetricRegistryModule(metricRegistry));
+    modules.add(NGMigrationSdkModule.getInstance());
 
-          @Override
-          public CfMigrationConfig cfMigrationConfig() {
-            return CfMigrationConfig.builder().build();
-          }
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return configuration.getCfClientConfig();
+      }
 
-          @Override
-          public FeatureFlagConfig featureFlagConfig() {
-            return configuration.getFeatureFlagConfig();
-          }
-        });
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return CfMigrationConfig.builder().build();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return configuration.getFeatureFlagConfig();
+      }
+    });
+    Injector injector = Guice.createInjector(modules);
 
     // create collection and indexes
     injector.getInstance(HPersistence.class);
@@ -140,6 +154,7 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
     registerExceptionMappers(environment.jersey());
     registerCorrelationFilter(environment, injector);
     registerScheduledJobs(injector);
+    registerMigrations(injector);
     MaintenanceController.forceMaintenance(false);
     createConsumerThreadsToListenToEvents(environment, injector);
   }
@@ -208,5 +223,19 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
 
   private void createConsumerThreadsToListenToEvents(Environment environment, Injector injector) {
     environment.lifecycle().manage(injector.getInstance(CENGEventConsumerService.class));
+  }
+
+  private void registerMigrations(Injector injector) {
+    NGMigrationConfiguration config = getMigrationSdkConfiguration();
+    NGMigrationSdkInitHelper.initialize(injector, config);
+  }
+
+  private NGMigrationConfiguration getMigrationSdkConfiguration() {
+    return NGMigrationConfiguration.builder()
+        .microservice(Microservice.CE) // this is only for locking purpose
+        .migrationProviderList(new ArrayList<Class<? extends MigrationProvider>>() {
+          { add(CENGCoreMigrationProvider.class); } // Add all migration provider classes here
+        })
+        .build();
   }
 }

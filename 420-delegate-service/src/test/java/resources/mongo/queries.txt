@@ -1,3 +1,5 @@
+collection(DelegateGroup)
+    .filter(accountId = <+>, uuid = <+>)
 collection(DelegateTask)
     .filter(accountId = <+>, uuid = <+>)
 collection(DelegateTask)

@@ -73,6 +73,7 @@ import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.logstreaming.NGLogStreamingClientFactory;
 import io.harness.manage.ManagedScheduledExecutorService;
+import io.harness.metrics.service.api.MetricsPublisher;
 import io.harness.modules.ModulesClientModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
@@ -135,6 +136,8 @@ import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.user.service.impl.NgUserServiceImpl;
 import io.harness.ng.core.user.service.impl.UserEntityCrudStreamListener;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
+import io.harness.ng.feedback.services.FeedbackService;
+import io.harness.ng.feedback.services.impls.FeedbackServiceImpl;
 import io.harness.ng.serviceaccounts.service.api.ServiceAccountService;
 import io.harness.ng.serviceaccounts.service.impl.ServiceAccountServiceImpl;
 import io.harness.ng.userprofile.commons.SCMType;
@@ -157,6 +160,7 @@ import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
+import io.harness.outbox.monitor.OutboxMetricsPublisher;
 import io.harness.packages.HarnessPackages;
 import io.harness.persistence.UserProvider;
 import io.harness.pipeline.PipelineRemoteClientModule;
@@ -316,6 +320,13 @@ public class NextGenModule extends AbstractModule {
   @Singleton
   public OutboxPollConfiguration getOutboxPollConfiguration() {
     return appConfig.getOutboxPollConfig();
+  }
+
+  @Provides
+  @Singleton
+  @Named("serviceIdForOutboxMetrics")
+  public String getServiceIdForOutboxMetrics() {
+    return NG_MANAGER.getServiceId();
   }
 
   @Provides
@@ -548,6 +559,7 @@ public class NextGenModule extends AbstractModule {
     bind(SourceCodeManagerService.class).to(SourceCodeManagerServiceImpl.class);
     bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);
     bind(TokenService.class).to(TokenServiceImpl.class);
+    bind(FeedbackService.class).to(FeedbackServiceImpl.class);
 
     MapBinder<SCMType, SourceCodeManagerMapper> sourceCodeManagerMapBinder =
         MapBinder.newMapBinder(binder(), SCMType.class, SourceCodeManagerMapper.class);
@@ -558,6 +570,13 @@ public class NextGenModule extends AbstractModule {
     sourceCodeManagerMapBinder.addBinding(SCMType.AZURE_DEV_OPS).to(AzureDevOpsSCMMapper.class);
 
     registerEventsFrameworkMessageListeners();
+
+    if (appConfig.isExportMetricsToStackDriver()) {
+      // install(new MetricsModule());
+      bind(MetricsPublisher.class).to(OutboxMetricsPublisher.class).in(Scopes.SINGLETON);
+    } else {
+      log.info("No configuration provided for Stack Driver, metrics will not be recorded");
+    }
   }
 
   private void registerOutboxEventHandlers() {

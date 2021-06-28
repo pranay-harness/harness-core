@@ -17,15 +17,19 @@ import lombok.extern.slf4j.Slf4j;
 public class EventMonitoringServiceImpl implements EventMonitoringService {
   @Inject MetricService metricService;
 
-  // Todo: Introduce sampling
   public <T extends Message> void sendMetric(
       String metricName, MonitoringInfo monitoringInfo, Map<String, String> metadataMap) {
     try {
-      if (!Objects.equals(metadataMap.get(PIPELINE_MONITORING_ENABLED), "true")) {
+      if (!Objects.equals(metadataMap.getOrDefault(PIPELINE_MONITORING_ENABLED, "false"), "true")) {
         return;
       }
-      metricService.recordMetric(String.format(metricName, monitoringInfo.getMetricPrefix()),
-          System.currentTimeMillis() - monitoringInfo.getCreatedAt());
+      long currentTimeMillis = System.currentTimeMillis();
+      if (currentTimeMillis % 1000 == 5 || (currentTimeMillis - monitoringInfo.getCreatedAt() > 5000)) {
+        log.info("Sampling the query....");
+        metricService.recordMetric(String.format(metricName, monitoringInfo.getMetricPrefix()),
+            System.currentTimeMillis() - monitoringInfo.getCreatedAt());
+      }
+
     } catch (Exception ex) {
       // Ignore the error
     }

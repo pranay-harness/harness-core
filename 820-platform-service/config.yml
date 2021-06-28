@@ -153,4 +153,6 @@ resourceGroupServiceConfig:
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
 
+  exportMetricsToStackDriver: false
+
   distributedLockImplementation: ${DISTRIBUTED_LOCK_IMPLEMENTATION:-MONGO}
