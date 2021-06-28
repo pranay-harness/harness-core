@@ -4,6 +4,10 @@ CONFIG_FILE=/opt/harness/config.yml
 # Remove the TLS connector (as ingress terminates TLS)
 yq delete -i $CONFIG_FILE connectors[0]
 
+if [[ "" != "$NG_HARNESS_MONGO_URI" ]]; then
+  yq write -i $CONFIG_FILE ng-harness.uri "$NG_HARNESS_MONGO_URI"
+fi
+
 if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE harness-mongo.uri "$MONGO_URI"
 fi
