@@ -53,6 +53,8 @@ public class ManagerRegistrars {
           .add(DelegateServiceKryoRegister.class)
           .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
           .addAll(OutboxEventRegistrars.kryoRegistrars)
+          .addAll(VerificationCommonsRegistrars.kryoRegistrars)
+
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

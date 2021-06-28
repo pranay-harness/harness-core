@@ -5,6 +5,7 @@ import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_B
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
+import io.harness.cache.CacheConfig;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.ff.FeatureFlagConfig;
@@ -58,6 +59,7 @@ public class VerificationServiceConfiguration extends Configuration implements A
   @JsonProperty("dataStorageMode") private DataStorageMode dataStorageMode;
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
   @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
+  @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
 
   /**
    * Instantiates a new Main configuration.

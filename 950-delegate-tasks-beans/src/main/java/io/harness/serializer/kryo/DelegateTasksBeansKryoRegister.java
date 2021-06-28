@@ -398,6 +398,7 @@ import io.harness.secretmanagerclient.ValueType;
 import io.harness.serializer.KryoRegistrar;
 
 import software.wings.beans.TaskType;
+import software.wings.metrics.MetricType;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsBusinessTransaction;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
@@ -423,6 +424,7 @@ import org.json.JSONObject;
 public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
+    kryo.register(MetricType.class, 5313);
     kryo.register(AlwaysFalseValidationCapability.class, 19036);
     kryo.register(AppDynamicsConnectionTaskParams.class, 19107);
     kryo.register(AppDynamicsConnectionTaskResponse.class, 19108);

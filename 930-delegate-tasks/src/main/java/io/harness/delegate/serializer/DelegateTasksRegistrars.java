@@ -1,5 +1,6 @@
 package io.harness.delegate.serializer;
 
+import io.harness.delegate.serializer.kryo.DelegateTasksKryoRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.ApiServicesRegistrars;
 import io.harness.serializer.DelegateTasksBeansRegistrars;
@@ -15,6 +16,7 @@ public class DelegateTasksRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(ApiServicesRegistrars.kryoRegistrars)
           .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
+          .add(DelegateTasksKryoRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
