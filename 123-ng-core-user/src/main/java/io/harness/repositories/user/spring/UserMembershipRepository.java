@@ -43,7 +43,7 @@ public interface UserMembershipRepository
                        + " 'as':'projectDetails' "
                        + " }}",
                    "{$project: {'contents': {$arrayElemAt:[ '$projectDetails',0]}}},",
-                   "{$replaceRoot: {newRoot:'$contents'}}", "{ $match : { deleted : ?2 } }"})
+                   "{$replaceRoot: {newRoot:'$contents'}}"})
   List<Project>
-  findProjectList(String userId, String accountId, boolean deleted, Pageable pageable);
+  findProjectList(String userId, String accountId, Pageable pageable);
 }

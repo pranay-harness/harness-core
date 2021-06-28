@@ -15,11 +15,7 @@ import static io.harness.audit.ResourceTypeConstants.USER_GROUP;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.SECRET_ENTITY;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.*;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import static java.lang.Boolean.TRUE;
@@ -102,15 +98,7 @@ import io.harness.ng.core.entityactivity.event.EntityActivityCrudEventMessageLis
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
 import io.harness.ng.core.entitysetupusage.event.SetupUsageChangeEventMessageListener;
 import io.harness.ng.core.entitysetupusage.event.SetupUsageChangeEventMessageProcessor;
-import io.harness.ng.core.event.ConnectorEntityCRUDStreamListener;
-import io.harness.ng.core.event.ConnectorFeatureFlagStreamListener;
-import io.harness.ng.core.event.MessageListener;
-import io.harness.ng.core.event.MessageProcessor;
-import io.harness.ng.core.event.OrganizationEntityCRUDStreamListener;
-import io.harness.ng.core.event.OrganizationFeatureFlagStreamListener;
-import io.harness.ng.core.event.ProjectEntityCRUDStreamListener;
-import io.harness.ng.core.event.SecretEntityCRUDStreamListener;
-import io.harness.ng.core.event.UserMembershipStreamListener;
+import io.harness.ng.core.event.*;
 import io.harness.ng.core.impl.OrganizationServiceImpl;
 import io.harness.ng.core.impl.ProjectServiceImpl;
 import io.harness.ng.core.outbox.ApiKeyEventHandler;
@@ -584,6 +572,9 @@ public class NextGenModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(SECRET_ENTITY + ENTITY_CRUD))
         .to(SecretEntityCRUDStreamListener.class);
+    bind(MessageListener.class)
+            .annotatedWith(Names.named(USER_PROJECT_ENTITY + ENTITY_CRUD))
+            .to(UserProjectEntityCRUDStreamListener.class);
 
     bind(MessageListener.class)
         .annotatedWith(Names.named(ORGANIZATION_ENTITY + FEATURE_FLAG_STREAM))
