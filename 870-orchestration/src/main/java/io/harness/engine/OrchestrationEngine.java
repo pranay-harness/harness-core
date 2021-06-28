@@ -169,9 +169,9 @@ public class OrchestrationEngine {
           }));
 
       if (facilitationHelper.customFacilitatorPresent(node)) {
-        facilitateEventPublisher.publishEvent(nodeExecution.getUuid());
+        facilitateEventPublisher.publishEvent(updatedNodeExecution.getUuid());
       } else {
-        facilitationHelper.facilitateExecution(nodeExecution);
+        facilitationHelper.facilitateExecution(updatedNodeExecution);
       }
     } catch (Exception exception) {
       log.error("Exception Occurred in facilitateAndStartStep", exception);
