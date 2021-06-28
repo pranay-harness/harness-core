@@ -11,7 +11,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 @OwnedBy(HarnessTeam.DX)
-public class InstancesByBuild {
+public class InstancesByBuildId {
   private String buildId;
   private List<Instance> instances;
 }
