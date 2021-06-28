@@ -1,5 +1,7 @@
 package io.harness.cvng.core.beans.monitoredService;
 
+import io.harness.gitsync.beans.YamlDTO;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Collections;
 import java.util.Set;
@@ -14,7 +16,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MonitoredServiceDTO {
+public class MonitoredServiceDTO implements YamlDTO {
   @NotNull String orgIdentifier;
   @NotNull String projectIdentifier;
   @NotNull String identifier;

@@ -49,16 +49,16 @@ public final class MonitoredService
                  .field(MonitoredServiceKeys.orgIdentifier)
                  .field(MonitoredServiceKeys.projectIdentifier)
                  .field(MonitoredServiceKeys.identifier)
-                 .build(),
-            CompoundMongoIndex.builder()
-                .name("unique_service_environment_idx")
-                .unique(true)
-                .field(MonitoredServiceKeys.accountId)
-                .field(MonitoredServiceKeys.orgIdentifier)
-                .field(MonitoredServiceKeys.projectIdentifier)
-                .field(MonitoredServiceKeys.serviceIdentifier)
-                .field(MonitoredServiceKeys.environmentIdentifier)
-                .build())
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_service_environment_idx")
+                 .unique(true)
+                 .field(MonitoredServiceKeys.accountId)
+                 .field(MonitoredServiceKeys.orgIdentifier)
+                 .field(MonitoredServiceKeys.projectIdentifier)
+                 .field(MonitoredServiceKeys.serviceIdentifier)
+                 .field(MonitoredServiceKeys.environmentIdentifier)
+                 .build())
         .build();
   }
   @Id private String uuid;
