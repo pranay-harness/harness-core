@@ -5,8 +5,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionServiceImpl;
-import io.harness.pms.sdk.core.interrupt.publisher.RedisSdkInterruptEventNotifyPublisher;
-import io.harness.pms.sdk.core.interrupt.publisher.SdkInterruptEventNotifyPublisher;
+import io.harness.pms.sdk.core.interrupt.publisher.RedisSdkInterruptResponsePublisher;
+import io.harness.pms.sdk.core.interrupt.publisher.SdkInterruptResponsePublisher;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeGrpcServiceImpl;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingGrpcOutputService;
@@ -50,8 +50,11 @@ public class PmsSdkCoreModule extends AbstractModule {
     bind(OutcomeService.class).to(OutcomeGrpcServiceImpl.class).in(Singleton.class);
     bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingGrpcOutputService.class).in(Singleton.class);
     bind(SdkNodeExecutionService.class).to(SdkNodeExecutionServiceImpl.class).in(Singleton.class);
+
+    install(
+        PmsSdkCoreEventsFrameworkModule.getInstance(config.getEventsFrameworkConfiguration(), config.getServiceName()));
     bind(SdkResponseEventPublisher.class).to(RedisSdkResponseEventPublisher.class);
-    bind(SdkInterruptEventNotifyPublisher.class).to(RedisSdkInterruptEventNotifyPublisher.class);
+    bind(SdkInterruptResponsePublisher.class).to(RedisSdkInterruptResponsePublisher.class);
   }
 
   @Provides
@@ -67,11 +70,5 @@ public class PmsSdkCoreModule extends AbstractModule {
   public ExecutorService sdkExecutorService() {
     return ThreadPool.create(5, 20, 30L, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("PmsSdkOrchestrationEventListener-%d").build());
-  }
-
-  @Provides
-  @Singleton
-  public PmsSdkCoreConfig pmsSdkCoreConfig() {
-    return config;
   }
 }

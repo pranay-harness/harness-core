@@ -12,7 +12,7 @@ import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.events.base.PmsBaseEventHandler;
 import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.sdk.core.interrupt.publisher.SdkInterruptEventNotifyPublisher;
+import io.harness.pms.sdk.core.interrupt.publisher.SdkInterruptResponsePublisher;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.executables.Abortable;
@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
 public class InterruptEventHandler extends PmsBaseEventHandler<InterruptEvent> {
-  @Inject private SdkInterruptEventNotifyPublisher interruptEventNotifyPublisher;
+  @Inject private SdkInterruptResponsePublisher interruptEventNotifyPublisher;
   @Inject private StepRegistry stepRegistry;
 
   @Override

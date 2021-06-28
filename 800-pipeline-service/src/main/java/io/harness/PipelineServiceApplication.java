@@ -22,7 +22,7 @@ import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
 import io.harness.engine.interrupts.OrchestrationEndInterruptHandler;
-import io.harness.engine.interrupts.consumers.SdkInterruptEventNotifyRedisConsumer;
+import io.harness.engine.interrupts.consumers.InterruptResponseRedisConsumer;
 import io.harness.event.OrchestrationEndGraphHandler;
 import io.harness.event.OrchestrationLogPublisher;
 import io.harness.event.OrchestrationStartEventHandler;
@@ -534,7 +534,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 2);
     pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 2);
     pipelineEventConsumerController.register(injector.getInstance(SdkResponseEventRedisConsumer.class), 3);
-    pipelineEventConsumerController.register(injector.getInstance(SdkInterruptEventNotifyRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(InterruptResponseRedisConsumer.class), 1);
   }
 
   private void registerCorsFilter(PipelineServiceConfiguration appConfig, Environment environment) {

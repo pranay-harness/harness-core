@@ -1,6 +1,6 @@
 package io.harness.engine.interrupts.consumers;
 
-import static io.harness.OrchestrationEventsFrameworkConstants.SDK_INTERRUPT_EVENT_NOTIFY_CONSUMER;
+import static io.harness.OrchestrationEventsFrameworkConstants.SDK_INTERRUPT_RESPONSE_CONSUMER;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -14,12 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(PIPELINE)
-public class SdkInterruptEventNotifyRedisConsumer
-    extends PmsAbstractRedisConsumer<SdkInterruptEventNotifyMessageListener> {
+public class InterruptResponseRedisConsumer extends PmsAbstractRedisConsumer<InterruptResponseMessageListener> {
   @Inject
-  public SdkInterruptEventNotifyRedisConsumer(@Named(SDK_INTERRUPT_EVENT_NOTIFY_CONSUMER) Consumer redisConsumer,
-      SdkInterruptEventNotifyMessageListener messageListener,
-      @Named("pmsEventsCache") Cache<String, Integer> eventsCache) {
+  public InterruptResponseRedisConsumer(@Named(SDK_INTERRUPT_RESPONSE_CONSUMER) Consumer redisConsumer,
+      InterruptResponseMessageListener messageListener, @Named("pmsEventsCache") Cache<String, Integer> eventsCache) {
     super(redisConsumer, messageListener, eventsCache);
   }
 }

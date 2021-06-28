@@ -6,6 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.interrupts.InterruptType;
 
 @OwnedBy(PIPELINE)
-public interface SdkInterruptEventNotifyPublisher {
+public interface SdkInterruptResponsePublisher {
   void publishEvent(String notifyId, InterruptType interruptType);
 }

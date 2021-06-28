@@ -24,7 +24,7 @@ message InterruptEvent {
   }
 }
 
-message InterruptEventNotifyProto {
+message InterruptEventResponseProto {
   string notifyId = 1;
   InterruptType interruptType = 2;
 }

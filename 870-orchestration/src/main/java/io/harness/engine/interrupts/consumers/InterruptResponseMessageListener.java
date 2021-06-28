@@ -5,7 +5,7 @@ import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.consumer.Message;
-import io.harness.pms.contracts.interrupts.InterruptEventNotifyProto;
+import io.harness.pms.contracts.interrupts.InterruptEventResponseProto;
 import io.harness.pms.events.base.PmsAbstractMessageListener;
 
 import com.google.inject.Inject;
@@ -17,12 +17,12 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 @Singleton
-public class SdkInterruptEventNotifyMessageListener
-    extends PmsAbstractMessageListener<InterruptEventNotifyProto, InterruptEventNotifyHandler> {
+public class InterruptResponseMessageListener
+    extends PmsAbstractMessageListener<InterruptEventResponseProto, InterruptResponseHandler> {
   @Inject
-  public SdkInterruptEventNotifyMessageListener(@Named(SDK_SERVICE_NAME) String serviceName,
-      InterruptEventNotifyHandler handler, @Named("EngineExecutorService") ExecutorService executorService) {
-    super(serviceName, InterruptEventNotifyProto.class, handler, executorService);
+  public InterruptResponseMessageListener(@Named(SDK_SERVICE_NAME) String serviceName, InterruptResponseHandler handler,
+      @Named("EngineExecutorService") ExecutorService executorService) {
+    super(serviceName, InterruptEventResponseProto.class, handler, executorService);
   }
 
   @Override
