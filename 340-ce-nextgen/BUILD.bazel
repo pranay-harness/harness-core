@@ -19,6 +19,7 @@ shared_dependencies = [
     "//970-ng-commons:module",
     "//980-commons:module",
     "@maven//:com_google_inject_guice",
+    "@maven//:com_squareup_retrofit2_retrofit",
     "@maven//:io_swagger_swagger_annotations",
     "@maven//:javax_ws_rs_javax_ws_rs_api",
     "@maven//:io_dropwizard_dropwizard_core",
