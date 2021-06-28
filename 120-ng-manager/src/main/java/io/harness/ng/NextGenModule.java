@@ -135,6 +135,8 @@ import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.user.service.impl.NgUserServiceImpl;
 import io.harness.ng.core.user.service.impl.UserEntityCrudStreamListener;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
+import io.harness.ng.feedback.services.FeedbackService;
+import io.harness.ng.feedback.services.impls.FeedbackServiceImpl;
 import io.harness.ng.serviceaccounts.service.api.ServiceAccountService;
 import io.harness.ng.serviceaccounts.service.impl.ServiceAccountServiceImpl;
 import io.harness.ng.userprofile.commons.SCMType;
@@ -548,6 +550,7 @@ public class NextGenModule extends AbstractModule {
     bind(SourceCodeManagerService.class).to(SourceCodeManagerServiceImpl.class);
     bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);
     bind(TokenService.class).to(TokenServiceImpl.class);
+    bind(FeedbackService.class).to(FeedbackServiceImpl.class);
 
     MapBinder<SCMType, SourceCodeManagerMapper> sourceCodeManagerMapBinder =
         MapBinder.newMapBinder(binder(), SCMType.class, SourceCodeManagerMapper.class);
