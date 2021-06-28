@@ -15,9 +15,9 @@ import lombok.Data;
 public class TokenDTO {
   private String identifier;
   @NotNull private String name;
-  private long validFrom;
-  private long validTo;
-  private long scheduledExpireTime;
+  private Long validFrom;
+  private Long validTo;
+  private Long scheduledExpireTime;
   private boolean valid;
 
   @NotNull private String accountIdentifier;

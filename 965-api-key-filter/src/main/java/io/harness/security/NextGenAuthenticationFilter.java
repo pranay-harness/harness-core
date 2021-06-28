@@ -25,6 +25,7 @@ import javax.ws.rs.container.ResourceInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @OwnedBy(PL)
 @Singleton
@@ -58,8 +59,7 @@ public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
       if (EmptyPredicate.isNotEmpty(splitToken)) {
         TokenDTO tokenDTO = NGRestUtils.getResponse(tokenClient.getToken(splitToken[0]));
         if (tokenDTO != null) {
-          if (Instant.now().toEpochMilli() < tokenDTO.getValidTo()
-              && Instant.now().toEpochMilli() > tokenDTO.getValidFrom()) {
+          if (tokenDTO.isValid()) {
             Principal principal = new ServiceAccountPrincipal(tokenDTO.getParentIdentifier());
             SecurityContextBuilder.setContext(principal);
             SourcePrincipalContextBuilder.setSourcePrincipal(principal);
@@ -67,7 +67,7 @@ public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
             throw new InvalidRequestException("Incoming API token " + tokenDTO.getName() + " has expired");
           }
         } else {
-          throw new InvalidRequestException("Could not find the incoming API token in Harness");
+          throw new InvalidRequestException("Could not find the API token in Harness");
         }
       } else {
         throw new InvalidRequestException("Invalid API token");

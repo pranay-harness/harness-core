@@ -24,12 +24,12 @@ public class TokenDTOMapper {
                                     .accountIdentifier(dto.getAccountIdentifier())
                                     .orgIdentifier(dto.getOrgIdentifier())
                                     .projectIdentifier(dto.getProjectIdentifier());
-    Instant validFrom = dto.getValidFrom() == 0L ? Instant.ofEpochMilli(dto.getValidFrom()) : Instant.now();
+    Instant validFrom = dto.getValidFrom() != null ? Instant.ofEpochMilli(dto.getValidFrom()) : Instant.now();
     Instant validTo =
-        dto.getValidTo() == 0L ? Instant.ofEpochMilli(dto.getValidTo()) : validFrom.plusMillis(defaultTimeout);
+        dto.getValidTo() != null ? Instant.ofEpochMilli(dto.getValidTo()) : validFrom.plusMillis(defaultTimeout);
     tokenBuilder.validFrom(validFrom);
     tokenBuilder.validTo(validTo);
-    if (dto.getScheduledExpireTime() == 0L) {
+    if (dto.getScheduledExpireTime() != null) {
       tokenBuilder.scheduledExpireTime(Instant.ofEpochMilli(dto.getScheduledExpireTime()));
     }
     Token token = tokenBuilder.build();
