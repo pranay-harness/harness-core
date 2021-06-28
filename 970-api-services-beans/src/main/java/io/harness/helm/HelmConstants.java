@@ -47,7 +47,7 @@ public final class HelmConstants {
     public static final String HELM_ADD_REPO_COMMAND_TEMPLATE =
         "KUBECONFIG=${KUBECONFIG_PATH} ${HELM_PATH} repo add ${REPO_NAME} ${REPO_URL}";
     public static final String HELM_REPO_UPDATE_COMMAND_TEMPLATE =
-        "KUBECONFIG=${KUBECONFIG_PATH} ${HELM_PATH} repo update";
+        "KUBECONFIG=${KUBECONFIG_PATH} ${HELM_PATH} repo update ${HELM_HOME_PATH_FLAG}";
     public static final String HELM_REPO_LIST_COMMAND_TEMPLATE = "KUBECONFIG=${KUBECONFIG_PATH} ${HELM_PATH} repo list";
     public static final String HELM_DELETE_RELEASE_TEMPLATE =
         "KUBECONFIG=${KUBECONFIG_PATH} ${HELM_PATH} delete ${COMMAND_FLAGS} ${FLAGS} ${RELEASE_NAME}";
