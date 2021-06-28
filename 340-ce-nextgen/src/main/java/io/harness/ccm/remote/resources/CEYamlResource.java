@@ -14,10 +14,12 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.io.File;
 import java.io.IOException;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
@@ -42,10 +44,14 @@ public class CEYamlResource {
   @POST
   @Path("/generate-cost-optimisation-yaml")
   @ApiOperation(value = "Get Cost Optimisation Yaml", nickname = "getCostOptimisationYamlTemplate")
-  public Response generateCostOptimisationYaml(@QueryParam("accountId") String accountId,
-      @QueryParam("connectorIdentifier") String connectorIdentifier) throws IOException {
+  public Response generateCostOptimisationYaml(@Context HttpServletRequest request,
+      @QueryParam("accountId") String accountId, @QueryParam("connectorIdentifier") String connectorIdentifier,
+      String apiKey) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      File yamlFile = ceYamlService.downloadCostOptimisationYaml(accountId, connectorIdentifier);
+      String serverName = request.getServerName();
+      String harnessHost = request.getScheme() + "://" + serverName;
+      File yamlFile =
+          ceYamlService.downloadCostOptimisationYaml(accountId, connectorIdentifier, apiKey, harnessHost, serverName);
       return Response.ok(yamlFile)
           .header(CONTENT_TRANSFER_ENCODING, BINARY)
           .type("text/plain; charset=UTF-8")

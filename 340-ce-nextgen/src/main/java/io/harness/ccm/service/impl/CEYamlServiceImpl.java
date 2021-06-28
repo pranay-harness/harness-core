@@ -27,10 +27,14 @@ public class CEYamlServiceImpl implements CEYamlService {
   }
 
   @Override
-  public File downloadCostOptimisationYaml(String accountId, String connectorIdentifier) throws IOException {
+  public File downloadCostOptimisationYaml(String accountId, String connectorIdentifier, String apiKey,
+      String harnessHost, String serverName) throws IOException {
     ImmutableMap<String, String> scriptParams = ImmutableMap.<String, String>builder()
                                                     .put("accountId", accountId)
                                                     .put("connectorIdentifier", connectorIdentifier)
+                                                    .put("envoyHarnessHostname", serverName)
+                                                    .put("harnessHostname", harnessHost)
+                                                    .put("APIToken", apiKey)
                                                     .build();
 
     File yaml = File.createTempFile(COST_OPTIMISATION, YAML);
