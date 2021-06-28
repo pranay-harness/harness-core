@@ -2,9 +2,9 @@ package software.wings.service.impl.appdynamics;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
-import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static io.harness.delegate.task.AbstractDelegateRunnableTask.getUnsafeHttpClient;
+
+import static software.wings.delegatetasks.cv.CVConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
