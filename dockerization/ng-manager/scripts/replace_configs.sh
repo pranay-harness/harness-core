@@ -330,6 +330,8 @@ replace_key_value baseUrls.webhookBaseUrl "$WEBHOOK_BASE_URL"
 
 replace_key_value ngAuthUIEnabled "$HARNESS_ENABLE_NG_AUTH_UI_PLACEHOLDER"
 
+replace_key_value exportMetricsToStackDriver "$EXPORT_METRICS_TO_STACK_DRIVER"
+
 replace_key_value enableDefaultResourceGroupCreation "${ENABLE_DEFAULT_RESOURCE_GROUP_CREATION:-false}"
 
 replace_key_value signupNotificationConfiguration.projectId "$SIGNUP_NOTIFICATION_GCS_PROJECT_ID"

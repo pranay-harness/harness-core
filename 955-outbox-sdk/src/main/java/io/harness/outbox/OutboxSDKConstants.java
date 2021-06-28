@@ -42,4 +42,10 @@ public class OutboxSDKConstants {
 
   public static final OutboxEventFilter DEFAULT_OUTBOX_EVENT_FILTER =
       OutboxEventFilter.builder().maximumEventsPolled(DEFAULT_MAX_EVENTS_POLLED).build();
+
+  public static final String OUTBOX_QUEUE_SIZE_METRIC_NAME = "outbox_queue_size";
+
+  public static final String OUTBOX_BLOCKED_QUEUE_SIZE_METRIC_NAME = "outbox_blocked_queue_size";
+
+  public static final String ALL_EVENT_TYPES = "AllEventTypes";
 }

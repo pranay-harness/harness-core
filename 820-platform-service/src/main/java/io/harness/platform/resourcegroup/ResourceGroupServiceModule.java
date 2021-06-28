@@ -18,6 +18,8 @@ import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.govern.ProviderModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
+import io.harness.metrics.modules.MetricsModule;
+import io.harness.metrics.service.api.MetricsPublisher;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
@@ -25,6 +27,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.OutboxSDKConstants;
 import io.harness.outbox.TransactionOutboxModule;
+import io.harness.outbox.monitor.OutboxMetricsPublisher;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
@@ -42,6 +45,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.Map;
@@ -117,6 +121,13 @@ public class ResourceGroupServiceModule extends AbstractModule {
     install(AccessControlClientModule.getInstance(
         this.appConfig.getAccessControlClientConfig(), RESOUCE_GROUP_SERVICE.getServiceId()));
     install(new TransactionOutboxModule());
+
+    if (appConfig.getResoureGroupServiceConfig().isExportMetricsToStackDriver()) {
+      install(new MetricsModule());
+      bind(MetricsPublisher.class).to(OutboxMetricsPublisher.class).in(Scopes.SINGLETON);
+    } else {
+      log.info("No configuration provided for Stack Driver, metrics will not be recorded");
+    }
   }
 
   @Provides
@@ -154,6 +165,13 @@ public class ResourceGroupServiceModule extends AbstractModule {
     OutboxPollConfiguration outboxPollConfiguration = OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
     outboxPollConfiguration.setLockId(RESOUCE_GROUP_SERVICE.getServiceId());
     return outboxPollConfiguration;
+  }
+
+  @Provides
+  @Singleton
+  @Named("serviceIdForOutboxMetrics")
+  public String getServiceIdForOutboxMetrics() {
+    return RESOUCE_GROUP_SERVICE.getServiceId();
   }
 
   @Provides

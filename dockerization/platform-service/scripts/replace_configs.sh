@@ -203,6 +203,8 @@ replace_key_value resourceGroupServiceConfig.auditClientConfig.baseUrl "$AUDIT_C
 
 replace_key_value resourceGroupServiceConfig.enableAudit "$AUDIT_ENABLED"
 
+replace_key_value resourceGroupServiceConfig.exportMetricsToStackDriver "$EXPORT_METRICS_TO_STACK_DRIVER"
+
 replace_key_value resourceGroupServiceConfig.accessControlAdminClient.accessControlServiceConfig.baseUrl "$ACCESS_CONTROL_BASE_URL"
 
 replace_key_value resourceGroupServiceConfig.accessControlAdminClient.accessControlServiceSecret "$ACCESS_CONTROL_SECRET"
