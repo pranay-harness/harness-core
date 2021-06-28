@@ -1,5 +1,8 @@
 package software.wings.resources.stats.service;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.resources.stats.model.TimeRange;
 
 import java.time.Instant;
@@ -17,6 +20,7 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @ParametersAreNonnullByDefault
+@OwnedBy(HarnessTeam.CDP)
 public class TimeRangeProvider {
   private static final ZoneOffset DEFAULT_ZONE = ZoneOffset.UTC;
 
@@ -51,6 +55,6 @@ public class TimeRangeProvider {
 
     String label = month.getDisplayName(TextStyle.FULL, Locale.CANADA) + " " + year.getValue();
     return new TimeRange(label, startOfMonth.toInstant(zone).toEpochMilli(), endOfMonth.toInstant(zone).toEpochMilli(),
-        zone.getId(), false, null);
+        zone.getId(), false, null, null, null, false);
   }
 }

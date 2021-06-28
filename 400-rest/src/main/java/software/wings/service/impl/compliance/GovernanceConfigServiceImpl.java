@@ -7,6 +7,8 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
@@ -77,6 +79,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @ValidateOnExecution
 @Singleton
 @TargetModule(HarnessModule._960_API_SERVICES)
+@OwnedBy(HarnessTeam.CDC)
 public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   private static final long MIN_FREEZE_WINDOW_TIME = 1800000L;
   private static final long MAX_FREEZE_WINDOW_TIME = 31536000000L;
@@ -397,9 +400,10 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
 
         // if no timezone(update from YAML) then fetch from db
         if (isEmpty(entry.getTimeRange().getTimeZone())) {
-          entry.setTimeRange(new TimeRange(entry.getTimeRange().getFrom(), entry.getTimeRange().getTo(),
+          new TimeRange(entry.getTimeRange().getFrom(), entry.getTimeRange().getTo(),
               oldWindow.getTimeRange().getTimeZone(), entry.getTimeRange().isDurationBased(),
-              entry.getTimeRange().getDuration()));
+              entry.getTimeRange().getDuration(), entry.getTimeRange().getEndTime(),
+              entry.getTimeRange().getFreezeOccurrence(), false);
         }
 
         if (isEmpty(entry.getDescription())) {
