@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.resources;
+package io.harness.accesscontrol.resources.resourcegroups;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

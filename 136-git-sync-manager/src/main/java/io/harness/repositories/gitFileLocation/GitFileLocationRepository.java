@@ -29,4 +29,9 @@ public interface GitFileLocationRepository
   List<GitFileLocation> findByAccountIdAndOrganizationIdAndProjectIdAndGitSyncConfigIdAndIsDefault(
       String accountIdentifier, String organizationIdentifier, String projectIdentifier, String yamlGitConfigId,
       boolean b);
+
+  Optional<GitFileLocation> findByAccountIdAndCompleteGitPathAndRepoAndBranch(
+      String accountIdentifier, String completeFilePath, String repoUrl, String branch);
+
+  List<GitFileLocation> findByAccountIdAndRepoAndBranch(String accountIdentifier, String repoUrl, String branch);
 }

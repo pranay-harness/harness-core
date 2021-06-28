@@ -50,4 +50,16 @@ public interface Constants {
   String BITBUCKET_REPO_EXPR_VAL = "Bitbucket";
   String CUSTOM_REPO_EXPR_VAL = "Custom";
   String AWS_CODECOMMIT_REPO_EXPR_VAL = "AwsCodeCommit";
+
+  String CHANGED_FILES = "changedFiles";
+  String TRIGGER_ERROR_LOG = "TRIGGER_ERROR_LOG: ";
+  String TRIGGER_INFO_LOG = "TRIGGER_INFO_LOG: ";
+  String TRIGGER_PAYLOAD_COMMITS = "<+trigger.payload.commits>";
+  String COMMIT_FILE_ADDED = "added";
+  String COMMIT_FILE_MODIFIED = "modified";
+  String COMMIT_FILE_REMOVED = "removed";
+
+  String GITHUB_LOWER_CASE = "github";
+  String GITLAB_LOWER_CASE = "gitlab";
+  String BITBUCKET_LOWER_CASE = "bitbucket";
 }

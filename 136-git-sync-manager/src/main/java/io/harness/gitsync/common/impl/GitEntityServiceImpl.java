@@ -1,6 +1,7 @@
 package io.harness.gitsync.common.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.gitsync.scm.ScmGitUtils.createFilePath;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
@@ -10,6 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.EntityReference;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.encryption.Scope;
+import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.beans.GitFileLocation.GitFileLocationKeys;
 import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
@@ -91,6 +93,28 @@ public class GitEntityServiceImpl implements GitEntityService {
         accountIdentifier, organizationIdentifier, projectIdentifier, yamlGitConfigId, true);
   }
 
+  @Override
+  public GitSyncEntityDTO get(String accountIdentifier, String completeFilePath, String repoUrl, String branch) {
+    final Optional<GitFileLocation> entityDetails =
+        gitFileLocationRepository.findByAccountIdAndCompleteGitPathAndRepoAndBranch(
+            accountIdentifier, completeFilePath, repoUrl, branch);
+    if (entityDetails.isPresent()) {
+      return buildGitSyncEntityDTO(entityDetails.get());
+    }
+    // todo @deepak; Temprory fix, will add migration later
+    List<GitFileLocation> gitFileLocations =
+        gitFileLocationRepository.findByAccountIdAndRepoAndBranch(accountIdentifier, repoUrl, branch);
+    for (GitFileLocation gitFileLocation : gitFileLocations) {
+      if (completeFilePath.equals(
+              createFilePath(gitFileLocation.getFolderPath(), gitFileLocation.getEntityGitPath()))) {
+        return buildGitSyncEntityDTO(gitFileLocation);
+      }
+    }
+    throw new InvalidRequestException(
+        String.format("No git sync entity exists for the file path %s, in repoUrl %s and branch %s", completeFilePath,
+            repoUrl, branch));
+  }
+
   private GitSyncEntityListDTO buildGitSyncEntityListDTO(
       EntityType entityType, Long totalCount, List<GitSyncEntityDTO> gitFileLocations) {
     return GitSyncEntityListDTO.builder()
@@ -144,6 +168,7 @@ public class GitEntityServiceImpl implements GitEntityService {
         .folderPath(entity.getFolderPath())
         .entityGitPath(entity.getEntityGitPath())
         .accountId(entity.getAccountId())
+        .entityReference(entity.getEntityReference())
         .build();
   }
 
@@ -225,6 +250,7 @@ public class GitEntityServiceImpl implements GitEntityService {
     final Optional<GitFileLocation> gitFileLocation =
         gitFileLocationRepository.findByEntityGitPathAndGitSyncConfigIdAndAccountId(
             filePath, yamlGitConfig.getIdentifier(), accountId);
+    String completeFilePath = createFilePath(folderPath, filePath);
     // todo(abhinav): changeisDefault to value which comes when
     final GitFileLocation fileLocation = GitFileLocation.builder()
                                              .accountId(accountId)
@@ -233,6 +259,7 @@ public class GitEntityServiceImpl implements GitEntityService {
                                              .entityName(entityDetail.getName())
                                              .organizationId(entityDetail.getEntityRef().getOrgIdentifier())
                                              .projectId(entityDetail.getEntityRef().getProjectIdentifier())
+                                             .completeGitPath(completeFilePath)
                                              .folderPath(folderPath)
                                              .entityGitPath(filePath)
                                              .branch(branchName)

@@ -7,6 +7,7 @@ option java_multiple_files = true;
 import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_type.proto";
 import "io/harness/gitsync/change_type.proto";
 import "google/protobuf/wrappers.proto";
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_detail.proto";
 
 service GitToHarnessService {
   rpc syncRequestFromGit(ChangeSet) returns (ProcessingResponse);
@@ -26,6 +27,7 @@ message ChangeSet {
   string file_path = 6;
   YamlGitConfigInfo yaml_git_config_info = 7;
   string change_set_id = 8;
+  io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO entityRefForDeletion = 9;
 }
 
 message ProcessingResponse {
