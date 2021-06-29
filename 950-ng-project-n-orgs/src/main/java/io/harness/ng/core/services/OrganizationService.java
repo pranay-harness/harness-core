@@ -17,6 +17,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public interface OrganizationService {
   Organization create(String accountIdentifier, OrganizationDTO organization);
 
+  List<String> getDistinctAccounts();
+
   Optional<Organization> get(String accountIdentifier, String identifier);
 
   Organization update(String accountIdentifier, String identifier, OrganizationDTO organization);
