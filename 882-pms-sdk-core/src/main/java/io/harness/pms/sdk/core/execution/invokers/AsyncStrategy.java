@@ -66,6 +66,7 @@ public class AsyncStrategy extends ProgressableStrategy {
     if (isEmpty(response.getCallbackIdsList())) {
       log.error("StepResponse has no callbackIds - currentState : " + AmbianceUtils.obtainStepIdentifier(ambiance)
           + ", nodeExecutionId: " + nodeExecutionId);
+      // Todo: Create new ExecutionException and throw that over here.
       throw new InvalidRequestException("Callback Ids cannot be empty for Async Executable Response");
     }
     AsyncSdkResumeCallback callback = AsyncSdkResumeCallback.builder().nodeExecutionId(nodeExecutionId).build();

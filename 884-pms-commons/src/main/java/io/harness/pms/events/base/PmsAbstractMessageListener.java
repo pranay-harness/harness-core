@@ -46,22 +46,20 @@ public abstract class PmsAbstractMessageListener<T extends com.google.protobuf.M
   public boolean handleMessage(Message message) {
     long startTs = System.currentTimeMillis();
     if (isProcessable(message)) {
-      executorService.submit(() -> {
-        try (AutoLogContext ignore = new AutoLogContext(message.getMessage().getMetadataMap(), OVERRIDE_NESTS)) {
-          log.info("[PMS_MESSAGE_LISTENER] Starting to process {} event with messageId: {}",
-              entityClass.getSimpleName(), message.getId());
+      try (AutoLogContext ignore = new AutoLogContext(message.getMessage().getMetadataMap(), OVERRIDE_NESTS)) {
+        log.info("[PMS_MESSAGE_LISTENER] Starting to process {} event with messageId: {}", entityClass.getSimpleName(),
+            message.getId());
 
-          T entity = extractEntity(message);
-          Long issueTimestamp = ProtoUtils.timestampToUnixMillis(message.getTimestamp());
-          processMessage(entity, message.getMessage().getMetadataMap(), issueTimestamp);
+        T entity = extractEntity(message);
+        Long issueTimestamp = ProtoUtils.timestampToUnixMillis(message.getTimestamp());
+        processMessage(entity, message.getMessage().getMetadataMap(), issueTimestamp);
 
-          log.info("[PMS_MESSAGE_LISTENER] Processing Finished for {} event with messageId: {}",
-              entityClass.getSimpleName(), message.getId());
-        } catch (Exception ex) {
-          log.info("[PMS_MESSAGE_LISTENER] Exception occurred while processing {} event with messageId: {}",
-              entityClass.getSimpleName(), message.getId());
-        }
-      });
+        log.info("[PMS_MESSAGE_LISTENER] Processing Finished for {} event with messageId: {}",
+            entityClass.getSimpleName(), message.getId());
+      } catch (Exception ex) {
+        log.info("[PMS_MESSAGE_LISTENER] Exception occurred while processing {} event with messageId: {}",
+            entityClass.getSimpleName(), message.getId());
+      }
     }
     Duration processDuration = Duration.ofMillis(System.currentTimeMillis() - startTs);
     if (THRESHOLD_PROCESS_DURATION.compareTo(processDuration) < 0) {
