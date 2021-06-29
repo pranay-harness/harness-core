@@ -13,7 +13,7 @@ from aws_util import assumed_role_session, get_secret_key
 def get_regions_and_volumes(jsonData):
     REGIONS_VOLUME_MAP = {}
     client = bigquery.Client(jsonData["projectName"])
-    awsEc2InventoryTableName = TABLE_NAME_FORMAT % (jsonData["projectName"], jsonData["accountId"], "awsEbsInventory")
+    awsEc2InventoryTableName = TABLE_NAME_FORMAT % (jsonData["projectName"], jsonData["accountIdBQ"], "awsEbsInventory")
     query = """
             SELECT distinct(region), volumeId FROM %s where state="in-use";
 		    """ % (awsEc2InventoryTableName)
