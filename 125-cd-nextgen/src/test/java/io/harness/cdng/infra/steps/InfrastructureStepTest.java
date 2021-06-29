@@ -1,12 +1,16 @@
 package io.harness.cdng.infra.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
@@ -22,6 +26,13 @@ import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure.K8SDirectInfrastructureBuilder;
 import io.harness.cdng.infra.yaml.K8sGcpInfrastructure;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
+import io.harness.connector.ConnectorInfoDTO;
+import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.services.ConnectorService;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
+import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.EnvironmentType;
@@ -34,6 +45,7 @@ import io.harness.rule.Owner;
 import com.google.inject.name.Named;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -46,6 +58,7 @@ import org.mockito.junit.MockitoRule;
 public class InfrastructureStepTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock EnvironmentService environmentService;
+  @Mock ConnectorService connectorService;
 
   @InjectMocks private InfrastructureStep infrastructureStep;
 
@@ -153,5 +166,56 @@ public class InfrastructureStepTest extends CategoryTest {
     assertThatThrownBy(() -> infrastructureStep.validateInfrastructure(k8SDirectInfrastructureBuilder.build()))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Unresolved Expression : [expression2]");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testValidateConnector() {
+    GcpConnectorDTO gcpConnectorServiceAccount =
+        GcpConnectorDTO.builder()
+            .credential(GcpConnectorCredentialDTO.builder()
+                            .gcpCredentialType(GcpCredentialType.MANUAL_CREDENTIALS)
+                            .config(GcpManualDetailsDTO.builder().build())
+                            .build())
+            .build();
+    GcpConnectorDTO gcpConnectorInheritFromDelegate =
+        GcpConnectorDTO.builder()
+            .credential(
+                GcpConnectorCredentialDTO.builder().gcpCredentialType(GcpCredentialType.INHERIT_FROM_DELEGATE).build())
+            .build();
+    doReturn(Optional.empty()).when(connectorService).get(anyString(), anyString(), anyString(), eq("missing"));
+    doReturn(Optional.of(ConnectorResponseDTO.builder()
+                             .connector(ConnectorInfoDTO.builder().connectorConfig(gcpConnectorServiceAccount).build())
+                             .build()))
+        .when(connectorService)
+        .get(anyString(), anyString(), anyString(), eq("gcp-sa"));
+    doReturn(
+        Optional.of(ConnectorResponseDTO.builder()
+                        .connector(ConnectorInfoDTO.builder().connectorConfig(gcpConnectorInheritFromDelegate).build())
+                        .build()))
+        .when(connectorService)
+        .get(anyString(), anyString(), anyString(), eq("gcp-delegate"));
+
+    assertConnectorValidationMessage(
+        K8sGcpInfrastructure.builder().connectorRef(ParameterField.createValueField("account.missing")).build(),
+        "Connector not found for identifier : [account.missing]");
+
+    assertConnectorValidationMessage(
+        K8sGcpInfrastructure.builder().connectorRef(ParameterField.createValueField("account.gcp-delegate")).build(),
+        "Deployment using Google Kubernetes Engine infrastructure with inheriting credentials from delegate is not supported yet");
+
+    assertThatCode(
+        ()
+            -> infrastructureStep.validateConnector(
+                K8sGcpInfrastructure.builder().connectorRef(ParameterField.createValueField("account.gcp-sa")).build(),
+                Ambiance.newBuilder().build()))
+        .doesNotThrowAnyException();
+  }
+
+  private void assertConnectorValidationMessage(Infrastructure infrastructure, String message) {
+    Ambiance ambiance = Ambiance.newBuilder().build();
+    assertThatThrownBy(() -> infrastructureStep.validateConnector(infrastructure, ambiance))
+        .hasMessageContaining(message);
   }
 }
