@@ -96,6 +96,7 @@ public class NGTriggerElementMapper {
   private WebhookEventPayloadParser webhookEventPayloadParser;
   private WebhookConfigProvider webhookConfigProvider;
 
+  // Comment
   public NGTriggerConfigV2 toTriggerConfigV2(String yaml) {
     try {
       return YamlPipelineUtils.read(yaml, NGTriggerConfigV2.class);
