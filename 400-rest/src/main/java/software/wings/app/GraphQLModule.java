@@ -44,6 +44,7 @@ import software.wings.graphql.datafetcher.application.UpdateApplicationGitSyncCo
 import software.wings.graphql.datafetcher.application.UpdateApplicationGitSyncConfigStatusDataFetcher;
 import software.wings.graphql.datafetcher.application.batch.ApplicationBatchDataFetcher;
 import software.wings.graphql.datafetcher.application.batch.ApplicationBatchDataLoader;
+import software.wings.graphql.datafetcher.artifact.ArtifactCleanupDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactConnectionDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
 import software.wings.graphql.datafetcher.artifactSource.ArtifactSourceDataFetcher;
@@ -426,6 +427,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(TagUsageConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(TagDataFetcher.class);
     bindDataFetcherWithAnnotation(VerificationResultConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(ArtifactCleanupDataFetcher.class);
 
     binder()
         .bind(SecretManagerMutationDataFetcher.class)
