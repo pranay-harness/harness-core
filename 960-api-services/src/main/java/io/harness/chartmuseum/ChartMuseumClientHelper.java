@@ -217,6 +217,7 @@ public class ChartMuseumClientHelper {
   }
 
   private static String getErrorMessage(String processOutput) {
+    log.warn(String.format("Could not start Chart museum server. Process output: [%s]", processOutput));
     String errorPrefix = "Failed with error: ";
 
     if (processOutput.contains(NO_SUCH_BBUCKET_ERROR_CODE)) {
