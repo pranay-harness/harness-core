@@ -3,8 +3,7 @@ package io.harness.ng.core.invites.dto;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ng.core.invites.entities.Invite.InviteType;
-import io.harness.ng.core.invites.remote.RoleBinding;
+import io.harness.ng.core.invites.InviteType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;

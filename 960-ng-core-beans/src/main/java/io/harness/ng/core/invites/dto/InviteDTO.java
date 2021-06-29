@@ -3,8 +3,7 @@ package io.harness.ng.core.invites.dto;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ng.core.invites.entities.Invite.InviteType;
-import io.harness.ng.core.invites.remote.RoleBinding;
+import io.harness.ng.core.invites.InviteType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
@@ -28,6 +27,9 @@ public class InviteDTO {
   @ApiModelProperty(required = true) String id;
   @ApiModelProperty(required = true) String name;
   @ApiModelProperty(required = true) @NotEmpty @Email String email;
+  @ApiModelProperty(required = true) String accountIdentifier;
+  @ApiModelProperty(required = true) String orgIdentifier;
+  @ApiModelProperty(required = true) String projectIdentifier;
   @ApiModelProperty(required = true) @NotEmpty List<RoleBinding> roleBindings;
   @ApiModelProperty(required = true) @NotNull InviteType inviteType;
   @Builder.Default Boolean approved = false;

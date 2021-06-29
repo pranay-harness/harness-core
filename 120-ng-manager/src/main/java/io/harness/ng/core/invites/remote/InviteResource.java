@@ -3,8 +3,10 @@ package io.harness.ng.core.invites.remote;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USER_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.USER;
-import static io.harness.ng.core.invites.remote.InviteMapper.toInviteList;
+import static io.harness.ng.core.invites.mapper.InviteMapper.toInviteList;
+import static io.harness.ng.core.invites.mapper.InviteMapper.writeDTO;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.NGCommonEntityConstants;
@@ -16,6 +18,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
 import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.invites.remote.InviteAcceptResponse;
 import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
 import io.harness.ng.beans.PageRequest;
@@ -25,12 +28,13 @@ import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.api.InviteService;
 import io.harness.ng.core.invites.dto.CreateInviteDTO;
 import io.harness.ng.core.invites.dto.InviteDTO;
+import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
+import io.harness.ng.core.invites.mapper.InviteMapper;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
 
@@ -81,6 +85,23 @@ public class InviteResource {
   }
 
   @GET
+  @Path("invite")
+  @ApiOperation(value = "Get invite", nickname = "getInvite")
+  public ResponseDTO<InviteDTO> getInviteWithToken(
+      @QueryParam("inviteId") String inviteId, @QueryParam("jwttoken") String jwtToken) {
+    if ((isBlank(inviteId) && isBlank(jwtToken)) || (!isBlank(inviteId) && !isBlank(jwtToken))) {
+      throw new InvalidRequestException("Specify either inviteId or jwtToken");
+    }
+    Optional<Invite> invite = Optional.empty();
+    if (!isBlank(inviteId)) {
+      invite = inviteService.getInvite(inviteId, false);
+    } else if (!isBlank(jwtToken)) {
+      invite = inviteService.getInviteFromToken(jwtToken, false);
+    }
+    return ResponseDTO.newResponse(writeDTO(invite.orElse(null)));
+  }
+
+  @GET
   @ApiOperation(value = "Get all invites for the queried project/organization", nickname = "getInvites")
   public ResponseDTO<PageResponse<InviteDTO>> getInvites(
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
@@ -102,7 +123,8 @@ public class InviteResource {
                             .is(Boolean.FALSE)
                             .and(InviteKeys.deleted)
                             .is(Boolean.FALSE);
-    PageResponse<InviteDTO> invites = inviteService.getInvites(criteria, pageRequest).map(InviteMapper::writeDTO);
+    PageResponse<InviteDTO> invites =
+        inviteService.getInvites(criteria, pageRequest).map(io.harness.ng.core.invites.mapper.InviteMapper::writeDTO);
     return ResponseDTO.newResponse(invites);
   }
 
@@ -178,7 +200,7 @@ public class InviteResource {
     Invite invite = InviteMapper.toInvite(inviteDTO, ngAccess);
     invite.setId(inviteId);
     Optional<Invite> inviteOptional = inviteService.updateInvite(invite);
-    return ResponseDTO.newResponse(inviteOptional.map(InviteMapper::writeDTO));
+    return ResponseDTO.newResponse(inviteOptional.map(io.harness.ng.core.invites.mapper.InviteMapper::writeDTO));
   }
 
   @DELETE
