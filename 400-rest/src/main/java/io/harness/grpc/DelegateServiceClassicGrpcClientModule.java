@@ -1,8 +1,6 @@
 package io.harness.grpc;
 
-import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.delegate.DelegateTaskGrpc;
-import io.harness.delegateprofile.DelegateProfileServiceGrpc;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.auth.ServiceAuthCallCredentials;
 import io.harness.security.ServiceTokenGenerator;
@@ -19,7 +17,6 @@ import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import java.util.function.BooleanSupplier;
 import javax.net.ssl.SSLException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,7 +31,7 @@ public class DelegateServiceClassicGrpcClientModule extends ProviderModule {
 
   @Override
   protected void configure() {
-    // bind(DelegateServiceClassicGrpcClient.class).in(Singleton.class);
+    bind(DelegateServiceClassicGrpcClient.class).in(Singleton.class);
   }
 
   public DelegateServiceClassicGrpcClientModule(String serviceSecret, String target, String authority) {
