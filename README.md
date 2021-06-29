@@ -32,6 +32,7 @@ ulimit -u 8192
 export JAVA_HOME=$(/usr/libexec/java_home -v1.8)
 ```
 
+
 Do not add the first line on MacOS Catalina
 
 If bash used, the better option migh be specifying full path to jdk, e.g:
