@@ -119,6 +119,12 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
         (GithubConnectorDTO) ciBuildStatusPushParameters.getConnectorDetails().getConnectorConfig();
 
     GithubApiAccessDTO githubApiAccessDTO = gitConfigDTO.getApiAccess();
+
+    if (githubApiAccessDTO == null) {
+      log.warn("Not sending status because api access is not enabled for sha {}", ciBuildStatusPushParameters.getSha());
+      return false;
+    }
+
     String token = null;
     if (githubApiAccessDTO.getType() == GithubApiAccessType.GITHUB_APP) {
       GithubAppSpecDTO githubAppSpecDTO =

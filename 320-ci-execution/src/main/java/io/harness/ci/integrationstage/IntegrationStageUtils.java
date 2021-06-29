@@ -82,29 +82,47 @@ public class IntegrationStageUtils {
       PlanCreationContextValue planCreationContextValue, String identifier, ParameterField<Build> parameterFieldBuild) {
     ExecutionTriggerInfo executionTriggerInfo = planCreationContextValue.getMetadata().getTriggerInfo();
 
-    if (executionTriggerInfo.getTriggerType() == TriggerType.MANUAL
-        || executionTriggerInfo.getTriggerType() == TriggerType.SCHEDULER_CRON) {
-      if (parameterFieldBuild == null) {
-        return ManualExecutionSource.builder().build();
+    if (!executionTriggerInfo.getIsRerun()) {
+      if (executionTriggerInfo.getTriggerType() == TriggerType.MANUAL
+          || executionTriggerInfo.getTriggerType() == TriggerType.SCHEDULER_CRON) {
+        handleManualExecution(parameterFieldBuild, identifier);
+      } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
+        ParsedPayload parsedPayload = planCreationContextValue.getTriggerPayload().getParsedPayload();
+        return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
+      } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK_CUSTOM) {
+        return buildCustomExecutionSource(identifier, parameterFieldBuild);
       }
-      Build build = RunTimeInputHandler.resolveBuild(parameterFieldBuild);
-      if (build != null) {
-        if (build.getType().equals(BuildType.TAG)) {
-          ParameterField<String> tag = ((TagBuildSpec) build.getSpec()).getTag();
-          String buildString = RunTimeInputHandler.resolveStringParameter("tag", "Git Clone", identifier, tag, false);
-          return ManualExecutionSource.builder().tag(buildString).build();
-        } else if (build.getType().equals(BuildType.BRANCH)) {
-          ParameterField<String> branch = ((BranchBuildSpec) build.getSpec()).getBranch();
-          String branchString =
-              RunTimeInputHandler.resolveStringParameter("branch", "Git Clone", identifier, branch, false);
-          return ManualExecutionSource.builder().branch(branchString).build();
-        }
+    } else {
+      if (executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.MANUAL
+          || executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.SCHEDULER_CRON) {
+        handleManualExecution(parameterFieldBuild, identifier);
+      } else if (executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.WEBHOOK) {
+        ParsedPayload parsedPayload = planCreationContextValue.getTriggerPayload().getParsedPayload();
+        return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
+      } else if (executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.WEBHOOK_CUSTOM) {
+        return buildCustomExecutionSource(identifier, parameterFieldBuild);
       }
-    } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
-      ParsedPayload parsedPayload = planCreationContextValue.getTriggerPayload().getParsedPayload();
-      return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
-    } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK_CUSTOM) {
-      return buildCustomExecutionSource(identifier, parameterFieldBuild);
+    }
+
+    return null;
+  }
+
+  private ManualExecutionSource handleManualExecution(ParameterField<Build> parameterFieldBuild, String identifier) {
+    if (parameterFieldBuild == null) {
+      return ManualExecutionSource.builder().build();
+    }
+    Build build = RunTimeInputHandler.resolveBuild(parameterFieldBuild);
+    if (build != null) {
+      if (build.getType().equals(BuildType.TAG)) {
+        ParameterField<String> tag = ((TagBuildSpec) build.getSpec()).getTag();
+        String buildString = RunTimeInputHandler.resolveStringParameter("tag", "Git Clone", identifier, tag, false);
+        return ManualExecutionSource.builder().tag(buildString).build();
+      } else if (build.getType().equals(BuildType.BRANCH)) {
+        ParameterField<String> branch = ((BranchBuildSpec) build.getSpec()).getBranch();
+        String branchString =
+            RunTimeInputHandler.resolveStringParameter("branch", "Git Clone", identifier, branch, false);
+        return ManualExecutionSource.builder().branch(branchString).build();
+      }
     }
 
     return null;
