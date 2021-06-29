@@ -76,10 +76,6 @@ public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListe
       }
     }
   }
-  /*
-  P1 -> ADD_EXECU + 9
-  P2 => REsume + 9
-   */
 
   private boolean handleMessage(Message message) {
     try {
