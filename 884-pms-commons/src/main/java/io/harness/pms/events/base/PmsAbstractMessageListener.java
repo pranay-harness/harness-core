@@ -14,6 +14,7 @@ import com.google.protobuf.ByteString;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,11 +26,14 @@ public abstract class PmsAbstractMessageListener<T extends com.google.protobuf.M
   public final String serviceName;
   public final Class<T> entityClass;
   public final H handler;
+  public final ExecutorService executorService;
 
-  public PmsAbstractMessageListener(String serviceName, Class<T> entityClass, H handler) {
+  public PmsAbstractMessageListener(
+      String serviceName, Class<T> entityClass, H handler, ExecutorService executorService) {
     this.serviceName = serviceName;
     this.entityClass = entityClass;
     this.handler = handler;
+    this.executorService = executorService;
   }
 
   /**
@@ -37,21 +41,22 @@ public abstract class PmsAbstractMessageListener<T extends com.google.protobuf.M
    * not ack the message and it would be delivered to the same consumer group again. This can lead to double
    * notifications
    */
-
   @Override
   public boolean handleMessage(Message message) {
     long startTs = System.currentTimeMillis();
     if (isProcessable(message)) {
-      try (AutoLogContext ignore = new AutoLogContext(message.getMessage().getMetadataMap(), OVERRIDE_NESTS)) {
-        log.info("[PMS_MESSAGE_LISTENER] Starting to process {} event with messageId: {}", entityClass.getSimpleName(),
-            message.getId());
-
-        T entity = extractEntity(message);
-        Long issueTimestamp = ProtoUtils.timestampToUnixMillis(message.getTimestamp());
-        processMessage(entity, message.getMessage().getMetadataMap(), issueTimestamp);
-
-        log.info("[PMS_MESSAGE_LISTENER] Processing Finished for {} event with messageId: {}",
-            entityClass.getSimpleName(), message.getId());
+      try {
+        executorService.submit(() -> {
+          try (AutoLogContext ignore1 = new AutoLogContext(message.getMessage().getMetadataMap(), OVERRIDE_NESTS)) {
+            log.info("[PMS_MESSAGE_LISTENER] Starting to process {} event with messageId: {}",
+                entityClass.getSimpleName(), message.getId());
+            T entity = extractEntity(message);
+            Long issueTimestamp = ProtoUtils.timestampToUnixMillis(message.getTimestamp());
+            processMessage(entity, message.getMessage().getMetadataMap(), issueTimestamp);
+            log.info("[PMS_MESSAGE_LISTENER] Processing Finished for {} event with messageId: {}",
+                entityClass.getSimpleName(), message.getId());
+          }
+        });
       } catch (Exception ex) {
         log.info("[PMS_MESSAGE_LISTENER] Exception occurred while processing {} event with messageId: {}",
             entityClass.getSimpleName(), message.getId());
