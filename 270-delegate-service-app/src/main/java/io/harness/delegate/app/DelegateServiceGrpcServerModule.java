@@ -3,6 +3,7 @@ package io.harness.delegate.app;
 import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc;
 import io.harness.grpc.DelegateProfileServiceGrpcImpl;
+import io.harness.grpc.DelegateServiceClassicGrpcImpl;
 import io.harness.grpc.DelegateServiceGrpcImpl;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.auth.ServiceInfo;
@@ -57,6 +58,8 @@ public class DelegateServiceGrpcServerModule extends AbstractModule {
     bindableServiceMultibinder.addBinding().to(DelegateServiceGrpcImpl.class);
     bindableServiceMultibinder.addBinding().to(DelegateServicePingPongService.class);
     bindableServiceMultibinder.addBinding().to(DelegateProfileServiceGrpcImpl.class);
+
+    bindableServiceMultibinder.addBinding().to(DelegateServiceClassicGrpcImpl.class);
 
     MapBinder<String, ServiceInfo> stringServiceInfoMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ServiceInfo.class);
