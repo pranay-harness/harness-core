@@ -124,6 +124,7 @@ public class OrchestrationEngine {
             .parentId(previousNodeExecution == null ? null : previousNodeExecution.getParentId())
             .previousId(previousNodeExecution == null ? null : previousNodeExecution.getUuid())
             .unitProgresses(new ArrayList<>())
+            .startTs(AmbianceUtils.getCurrentLevelStartTs(cloned))
             .build();
     nodeExecutionService.save(nodeExecution);
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(cloned).orchestrationEngine(this).build());

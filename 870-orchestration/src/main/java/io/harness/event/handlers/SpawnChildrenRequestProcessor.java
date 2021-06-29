@@ -61,6 +61,7 @@ public class SpawnChildrenRequestProcessor implements SdkResponseProcessor {
                                              .status(Status.QUEUED)
                                              .notifyId(uuid)
                                              .parentId(nodeExecution.getUuid())
+                                             .startTs(AmbianceUtils.getCurrentLevelStartTs(clonedAmbiance))
                                              .build();
       nodeExecutionService.save(childNodeExecution);
       executorService.submit(
