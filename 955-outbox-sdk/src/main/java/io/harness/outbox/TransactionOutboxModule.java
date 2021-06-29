@@ -22,6 +22,7 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.MongoTransactionManager;
@@ -55,7 +56,10 @@ public class TransactionOutboxModule extends AbstractModule {
     bind(OutboxDao.class).to(OutboxDaoImpl.class);
     bind(OutboxService.class).to(OutboxServiceImpl.class);
     if (exportMetricsToStackDriver) {
-      bind(MetricsPublisher.class).to(OutboxMetricsPublisher.class).in(Scopes.SINGLETON);
+      bind(MetricsPublisher.class)
+          .annotatedWith(Names.named("OutboxMetricsPublisher"))
+          .to(OutboxMetricsPublisher.class)
+          .in(Scopes.SINGLETON);
     } else {
       log.info("No configuration provided for Stack Driver, metrics will not be recorded.");
     }

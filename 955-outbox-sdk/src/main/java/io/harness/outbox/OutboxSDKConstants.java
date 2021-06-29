@@ -20,18 +20,9 @@ public class OutboxSDKConstants {
 
   public static final int DEFAULT_MAX_ATTEMPTS = 7;
 
-  public static final int DEFAULT_MAX_EVENTS_POLLED = 50;
+  public static final int DEFAULT_MAX_EVENTS_POLLED = 100;
 
   public static final int DEFAULT_UNBLOCK_RETRY_INTERVAL_IN_MINUTES = 10;
-
-  public static final OutboxEventIteratorConfiguration DEFAULT_OUTBOX_ITERATOR_CONFIGURATION =
-      OutboxEventIteratorConfiguration.builder()
-          .threadPoolSize(3)
-          .intervalInSeconds(5)
-          .targetIntervalInSeconds(15)
-          .acceptableNoAlertDelayInSeconds(60)
-          .maximumOutboxEventHandlingAttempts(DEFAULT_MAX_ATTEMPTS)
-          .build();
 
   public static final OutboxPollConfiguration DEFAULT_OUTBOX_POLL_CONFIGURATION =
       OutboxPollConfiguration.builder()
