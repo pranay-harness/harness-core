@@ -861,9 +861,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
         new ProviderMethodInterceptor(getProvider(RetryOnExceptionInterceptor.class));
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(RetryOnException.class), retryOnExceptionInterceptor);
     // Retry On Exception Binding ends
-    bind(SchedulerConfig.class)
-        .annotatedWith(Names.named("BackgroundSchedule"))
-        .toInstance(configuration.getBackgroundSchedulerConfig());
+    //    bind(SchedulerConfig.class)
+    //        .annotatedWith(Names.named("BackgroundSchedule"))
+    //        .toInstance(configuration.getBackgroundSchedulerConfig());
     bind(PipelineConfig.class).toInstance(configuration.getPipelineConfig());
     bind(DelegateConfiguration.class).toInstance(DelegateConfiguration.builder().build());
     bind(QueueController.class).to(ConfigurationController.class);
