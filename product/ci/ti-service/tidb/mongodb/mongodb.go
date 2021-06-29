@@ -38,34 +38,38 @@ type Relation struct {
 	// DefaultModel adds _id,created_at and updated_at fields to the Model
 	mgm.DefaultModel `bson:",inline"`
 
-	Source  int     `json:"source" bson:"source"`
-	Tests   []int   `json:"tests" bson:"tests"`
-	Acct    string  `json:"account" bson:"account"`
-	Proj    string  `json:"project" bson:"project"`
-	Org     string  `json:"organization" bson:"organization"`
-	VCSInfo VCSInfo `json:"vcs_info" bson:"vcs_info"`
+	Source   int       `json:"source" bson:"source"`
+	Tests    []int     `json:"tests" bson:"tests"`
+	Acct     string    `json:"account" bson:"account"`
+	Proj     string    `json:"project" bson:"project"`
+	Org      string    `json:"organization" bson:"organization"`
+	ExpireAt time.Time `json:"expireAt" bson:"expireAt,omitempty"` // only include field if it's not set to a zero value
+	VCSInfo  VCSInfo   `json:"vcs_info" bson:"vcs_info"`
 }
 
 type Node struct {
 	// DefaultModel adds _id,created_at and updated_at fields to the Model
 	mgm.DefaultModel `bson:",inline"`
 
-	Package string  `json:"package" bson:"package"`
-	Method  string  `json:"method" bson:"method"`
-	Id      int     `json:"id" bson:"id"`
-	Params  string  `json:"params" bson:"params"`
-	Class   string  `json:"class" bson:"class"`
-	Type    string  `json:"type" bson:"type"`
-	Acct    string  `json:"account" bson:"account"`
-	Proj    string  `json:"project" bson:"project"`
-	Org     string  `json:"organization" bson:"organization"`
-	VCSInfo VCSInfo `json:"vcs_info" bson:"vcs_info"`
+	Package  string    `json:"package" bson:"package"`
+	Method   string    `json:"method" bson:"method"`
+	Id       int       `json:"id" bson:"id"`
+	Params   string    `json:"params" bson:"params"`
+	Class    string    `json:"class" bson:"class"`
+	Type     string    `json:"type" bson:"type"`
+	Acct     string    `json:"account" bson:"account"`
+	Proj     string    `json:"project" bson:"project"`
+	Org      string    `json:"organization" bson:"organization"`
+	ExpireAt time.Time `json:"expireAt" bson:"expireAt,omitempty"` // only include field if it's not set to a zero value
+	VCSInfo  VCSInfo   `json:"vcs_info" bson:"vcs_info"`
 }
 
 const (
-	nodeColl  = "nodes"
-	relnsColl = "relations"
+	nodeColl    = "nodes"
+	relnsColl   = "relations"
 )
+
+var expireQuery = bson.M{"$set": bson.M{"expireAt": time.Now()}}
 
 // VCSInfo contains metadata corresponding to version control system details
 type VCSInfo struct {
@@ -414,7 +418,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	// query for partial callgraph for the filter -(repo + branch + (commitId != currentCommit)) and delete old entries.
 	// this will delete all the nodes create by older commits for current pull request
 	f := bson.M{"vcs_info.repo": info.Repo, "account": account, "vcs_info.branch": info.Branch, "vcs_info.commit_id": bson.M{"$ne": info.CommitId}}
-	r1, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, f, &options.DeleteOptions{})
+	r1, err := mdb.Database.Collection(nodeColl).UpdateMany(ctx, f, expireQuery)
 	if err != nil {
 		return resp, errors.Wrap(
 			err,
@@ -423,16 +427,16 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	}
 	// this will delete all the relations create by older commits for current pull request
 	f = bson.M{"vcs_info.repo": info.Repo, "account": account, "vcs_info.branch": info.Branch, "vcs_info.commit_id": bson.M{"$ne": info.CommitId}}
-	r2, err := mdb.Database.Collection(relnsColl).DeleteMany(ctx, f, &options.DeleteOptions{})
+	r2, err := mdb.Database.Collection(relnsColl).UpdateMany(ctx, f, expireQuery)
 	if err != nil {
 		return resp, errors.Wrap(
 			err,
-			fmt.Sprintf("failed to delete records from relations collection while uploading partial callgraph "+
+			fmt.Sprintf("failed to make records from relations collection expired while uploading partial callgraph "+
 				"for repo: %s, branch: %s acc: %s", info.Repo, info.Branch, account))
 	}
 	mdb.Log.Infow(
-		fmt.Sprintf("deleted %d records from nodes and %d records from relns collection",
-			r1.DeletedCount, r2.DeletedCount), "account", account, "repo", info.Repo, "branch", info.Branch)
+		fmt.Sprintf("marked %d records expired  from nodes and %d records from relns collection",
+			r1.ModifiedCount, r2.ModifiedCount), "account", account, "repo", info.Repo, "branch", info.Branch)
 
 	err = mdb.upsertNodes(ctx, nodes, info, account)
 	if err != nil {
@@ -646,11 +650,11 @@ func (mdb *MongoDb) mergeNodes(ctx context.Context, commit, branch, repo, accoun
 	// delete remaining records of src branch from nodes collection
 	// todo(AMAN):  find a better filter than $ne
 	f := bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "account": account, "vcs_info.branch": bson.M{"$ne": branch}}
-	res, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, f, &options.DeleteOptions{})
+	res, err := mdb.Database.Collection(nodeColl).UpdateMany(ctx, f, expireQuery)
 	if err != nil {
 		return formatError(err, "failed to delete records in nodes collection", repo, branch, commit)
 	}
-	mdb.Log.Infow(fmt.Sprintf("deleted %d records from nodes collection", res.DeletedCount),
+	mdb.Log.Infow(fmt.Sprintf("marked %d records as expired from nodes collection", res.ModifiedCount),
 		"account", account,
 		"repo", repo,
 		"branch", branch,
@@ -737,11 +741,11 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo, ac
 	// delete remaining records of src branch from relations collection
 	// todo(AMAN):  find a better filter than $ne
 	f := bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "account": account, "vcs_info.branch": bson.M{"$ne": branch}}
-	res, err := mdb.Database.Collection(relnsColl).DeleteMany(ctx, f, &options.DeleteOptions{})
+	res, err := mdb.Database.Collection(relnsColl).UpdateMany(ctx, f, expireQuery)
 	if err != nil {
 		return formatError(err, "failed to delete records in relations collection", repo, branch, commit)
 	}
-	mdb.Log.Infow(fmt.Sprintf("deleted %d records from relation collection", res.DeletedCount),
+	mdb.Log.Infow(fmt.Sprintf("markde %d records as deleted from relation collection", res.ModifiedCount),
 		"account", account,
 		"repo", repo,
 		"branch", branch,
