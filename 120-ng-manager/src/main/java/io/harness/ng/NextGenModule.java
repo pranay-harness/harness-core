@@ -73,7 +73,6 @@ import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.logstreaming.NGLogStreamingClientFactory;
 import io.harness.manage.ManagedScheduledExecutorService;
-import io.harness.metrics.service.api.MetricsPublisher;
 import io.harness.modules.ModulesClientModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
@@ -157,10 +156,8 @@ import io.harness.ng.webhook.services.api.WebhookService;
 import io.harness.ng.webhook.services.impl.WebhookEventProcessingServiceImpl;
 import io.harness.ng.webhook.services.impl.WebhookServiceImpl;
 import io.harness.notification.module.NotificationClientModule;
-import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
-import io.harness.outbox.monitor.OutboxMetricsPublisher;
 import io.harness.packages.HarnessPackages;
 import io.harness.persistence.UserProvider;
 import io.harness.pipeline.PipelineRemoteClientModule;
@@ -314,19 +311,6 @@ public class NextGenModule extends AbstractModule {
     Set<Class<?>> set = new HashSet<>(subTypesOfStepSpecType);
 
     return ImmutableMap.of(StepSpecType.class, set);
-  }
-
-  @Provides
-  @Singleton
-  public OutboxPollConfiguration getOutboxPollConfiguration() {
-    return appConfig.getOutboxPollConfig();
-  }
-
-  @Provides
-  @Singleton
-  @Named("serviceIdForOutboxMetrics")
-  public String getServiceIdForOutboxMetrics() {
-    return NG_MANAGER.getServiceId();
   }
 
   @Provides
@@ -495,7 +479,8 @@ public class NextGenModule extends AbstractModule {
     install(OrchestrationStepsModule.getInstance(null));
     install(EntitySetupUsageModule.getInstance());
     install(PersistentLockModule.getInstance());
-    install(new TransactionOutboxModule());
+    install(new TransactionOutboxModule(
+        appConfig.getOutboxPollConfig(), NG_MANAGER.getServiceId(), appConfig.isExportMetricsToStackDriver()));
     install(new ResourceGroupClientModule(appConfig.getResourceGroupClientConfig().getServiceConfig(),
         appConfig.getResourceGroupClientConfig().getSecret(), NG_MANAGER.getServiceId()));
     install(new NGFileServiceModule(appConfig.getFileServiceConfiguration().getFileStorageMode(),
@@ -570,13 +555,6 @@ public class NextGenModule extends AbstractModule {
     sourceCodeManagerMapBinder.addBinding(SCMType.AZURE_DEV_OPS).to(AzureDevOpsSCMMapper.class);
 
     registerEventsFrameworkMessageListeners();
-
-    if (appConfig.isExportMetricsToStackDriver()) {
-      // install(new MetricsModule());
-      bind(MetricsPublisher.class).to(OutboxMetricsPublisher.class).in(Scopes.SINGLETON);
-    } else {
-      log.info("No configuration provided for Stack Driver, metrics will not be recorded");
-    }
   }
 
   private void registerOutboxEventHandlers() {
