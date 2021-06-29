@@ -42,7 +42,7 @@ import io.harness.ng.core.events.UserInviteUpdateEvent;
 import io.harness.ng.core.events.UserMembershipAddEvent;
 import io.harness.ng.core.events.UserMembershipRemoveEvent;
 import io.harness.ng.core.invites.dto.InviteDTO;
-import io.harness.ng.core.invites.remote.RoleBinding;
+import io.harness.ng.core.invites.dto.RoleBinding;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.outbox.OutboxEvent;
 import io.harness.rule.Owner;

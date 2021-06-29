@@ -1,10 +1,11 @@
-package io.harness.ng.core.invites.remote;
+package io.harness.ng.core.invites.mapper;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.invites.dto.RoleBinding;
 
 import java.util.List;
 import lombok.experimental.UtilityClass;
