@@ -63,10 +63,8 @@ import io.harness.lock.PersistentLockModule;
 import io.harness.metrics.modules.MetricsModule;
 import io.harness.metrics.service.api.MetricsPublisher;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
-import io.harness.outbox.monitor.OutboxMetricsPublisher;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.serializer.morphia.OutboxEventMorphiaRegistrar;
@@ -170,19 +168,6 @@ public class AccessControlModule extends AbstractModule {
     return config.getIteratorsConfig();
   }
 
-  @Provides
-  @Singleton
-  public OutboxPollConfiguration getOutboxPollConfiguration() {
-    return config.getOutboxPollConfig();
-  }
-
-  @Provides
-  @Singleton
-  @Named("serviceIdForOutboxMetrics")
-  public String getServiceIdForOutboxMetrics() {
-    return ACCESS_CONTROL_SERVICE.getServiceId();
-  }
-
   @Override
   protected void configure() {
     install(AccessControlPersistenceModule.getInstance(config.getMongoConfig()));
@@ -199,7 +184,6 @@ public class AccessControlModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends MorphiaRegistrar>>() {});
     morphiaRegistrars.addBinding().toInstance(OutboxEventMorphiaRegistrar.class);
     morphiaRegistrars.addBinding().toInstance(PrimaryVersionManagerMorphiaRegistrar.class);
-    install(new TransactionOutboxModule());
     bind(OutboxEventHandler.class).to(AccessControlOutboxEventHandler.class);
     install(new ValidationModule(validatorFactory));
     install(AccessControlCoreModule.getInstance());
@@ -270,10 +254,11 @@ public class AccessControlModule extends AbstractModule {
     if (config.getAggregatorConfiguration().isExportMetricsToStackDriver()) {
       install(new MetricsModule());
       bind(MetricsPublisher.class).to(AggregatorStackDriverMetricsPublisherImpl.class).in(Scopes.SINGLETON);
-      bind(MetricsPublisher.class).to(OutboxMetricsPublisher.class).in(Scopes.SINGLETON);
     } else {
       log.info("No configuration provided for Stack Driver, aggregator metrics will not be recorded");
     }
+    install(new TransactionOutboxModule(config.getOutboxPollConfig(), ACCESS_CONTROL_SERVICE.getServiceId(),
+        config.getAggregatorConfiguration().isExportMetricsToStackDriver()));
 
     registerRequiredBindings();
   }
