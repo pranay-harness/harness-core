@@ -2,6 +2,7 @@ package io.harness.cdng.manifest.yaml.kinds;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.common.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper.StoreConfigWrapperParameters;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
@@ -31,6 +32,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
@@ -100,5 +102,22 @@ public class HelmChartManifest implements ManifestAttributes, Visitable {
   @Override
   public StoreConfig getStoreConfig() {
     return this.store.getSpec();
+  }
+
+  @Override
+  public ManifestAttributeStepParameters getManifestAttributeStepParameters() {
+    return new HelmChartManifestStepParameters(identifier, StoreConfigWrapperParameters.fromStoreConfigWrapper(store),
+        chartName, chartVersion, helmVersion, skipResourceVersioning, commandFlags);
+  }
+
+  @Value
+  public static class HelmChartManifestStepParameters implements ManifestAttributeStepParameters {
+    String identifier;
+    StoreConfigWrapperParameters store;
+    ParameterField<String> chartName;
+    ParameterField<String> chartVersion;
+    HelmVersion helmVersion;
+    ParameterField<Boolean> skipResourceVersioning;
+    List<HelmManifestCommandFlag> commandFlags;
   }
 }

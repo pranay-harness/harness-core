@@ -1,6 +1,7 @@
 package io.harness.cdng.manifest.yaml.kinds;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper.StoreConfigWrapperParameters;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
@@ -23,6 +24,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
@@ -65,5 +67,18 @@ public class OpenshiftManifest implements ManifestAttributes, Visitable {
     }
 
     return resultantManifest;
+  }
+
+  @Override
+  public ManifestAttributeStepParameters getManifestAttributeStepParameters() {
+    return new OpenshiftManifestStepParameters(
+        identifier, StoreConfigWrapperParameters.fromStoreConfigWrapper(store), skipResourceVersioning);
+  }
+
+  @Value
+  public static class OpenshiftManifestStepParameters implements ManifestAttributeStepParameters {
+    String identifier;
+    StoreConfigWrapperParameters store;
+    ParameterField<Boolean> skipResourceVersioning;
   }
 }

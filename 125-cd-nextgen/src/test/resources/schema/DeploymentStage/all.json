@@ -670,6 +670,9 @@
             "imagePath": {
               "type": "string"
             },
+            "metadata": {
+              "type": "string"
+            },
             "region": {
               "type": "string"
             },

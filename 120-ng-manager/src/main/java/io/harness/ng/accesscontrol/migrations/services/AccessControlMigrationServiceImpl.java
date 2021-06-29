@@ -211,13 +211,11 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   }
 
   private void assignViewerRoleToUsers(Scope scope) {
-    List<String> users = getUsersInScope(scope);
+    Set<String> users = getUsersInScope(scope);
     if (users.isEmpty()) {
       return;
     }
-
-    log.info("Created {} MANAGED role assignments from UserMembership for scope: {}",
-        createRoleAssignments(scope, true, buildRoleAssignments(users, getManagedViewerRole(scope))), scope);
+    users.forEach(userId -> upsertUserMembership(scope, userId));
   }
 
   private boolean hasAdmin(Scope scope) {
@@ -259,7 +257,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   }
 
   private void assignAdminRoleToUsers(Scope scope) {
-    List<String> users = getUsersInScope(scope);
+    Set<String> users = getUsersInScope(scope);
     if (users.isEmpty()) {
       return;
     }
@@ -293,16 +291,6 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
           false, UserMembershipUpdateSource.SYSTEM);
     } catch (DuplicateKeyException | DuplicateFieldException duplicateException) {
       // ignore
-    }
-  }
-
-  private static String getManagedViewerRole(Scope scope) {
-    if (!StringUtils.isEmpty(scope.getProjectIdentifier())) {
-      return "_project_viewer";
-    } else if (!StringUtils.isEmpty(scope.getOrgIdentifier())) {
-      return "_organization_viewer";
-    } else {
-      return "_account_viewer";
     }
   }
 
@@ -373,7 +361,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
         .getContent();
   }
 
-  private List<String> getUsersInScope(Scope scope) {
+  private Set<String> getUsersInScope(Scope scope) {
     return ngUserService
         .listUserMemberships(Criteria.where(UserMembershipKeys.scopes + ".accountIdentifier")
                                  .is(scope.getAccountIdentifier())
@@ -383,6 +371,6 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
                                  .is(scope.getProjectIdentifier()))
         .stream()
         .map(UserMembership::getUserId)
-        .collect(Collectors.toList());
+        .collect(Collectors.toSet());
   }
 }
