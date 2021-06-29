@@ -1,18 +1,21 @@
 package io.harness.ng.core.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.ng.core.common.beans.ApiKeyType.SERVICE_ACCOUNT;
 import static io.harness.rule.OwnerRule.SOWMYA;
 
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.harness.NgManagerTestBase;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.ng.core.AccountOrgProjectValidator;
 import io.harness.ng.core.api.ApiKeyService;
 import io.harness.ng.core.dto.ApiKeyDTO;
 import io.harness.ng.core.entities.ApiKey;
@@ -38,16 +41,18 @@ public class ApiKeyServiceImplTest extends NgManagerTestBase {
   private String identifier;
   private String parentIdentifier;
   private ApiKeyDTO apiKeyDTO;
+  private AccountOrgProjectValidator accountOrgProjectValidator;
 
   @Before
   public void setup() throws IllegalAccessException {
-    accountIdentifier = generateUuid();
-    orgIdentifier = generateUuid();
-    projectIdentifier = generateUuid();
-    identifier = generateUuid();
-    parentIdentifier = generateUuid();
+    accountIdentifier = randomAlphabetic(10);
+    orgIdentifier = randomAlphabetic(10);
+    projectIdentifier = randomAlphabetic(10);
+    identifier = randomAlphabetic(10);
+    parentIdentifier = randomAlphabetic(10);
     apiKeyRepository = mock(ApiKeyRepository.class);
     apiKeyService = new ApiKeyServiceImpl();
+    accountOrgProjectValidator = mock(AccountOrgProjectValidator.class);
 
     apiKeyDTO = ApiKeyDTO.builder()
                     .accountIdentifier(accountIdentifier)
@@ -57,7 +62,10 @@ public class ApiKeyServiceImplTest extends NgManagerTestBase {
                     .parentIdentifier(parentIdentifier)
                     .apiKeyType(SERVICE_ACCOUNT)
                     .build();
+
+    when(accountOrgProjectValidator.isPresent(any(), any(), any())).thenReturn(true);
     FieldUtils.writeField(apiKeyService, "apiKeyRepository", apiKeyRepository, true);
+    FieldUtils.writeField(apiKeyService, "accountOrgProjectValidator", accountOrgProjectValidator, true);
   }
 
   @Test

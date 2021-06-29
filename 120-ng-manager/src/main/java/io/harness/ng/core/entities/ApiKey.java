@@ -3,21 +3,27 @@ package io.harness.ng.core.entities;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.validator.EntityIdentifier;
+import io.harness.data.validator.NGEntityName;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.NGOrgAccess;
 import io.harness.ng.core.NGProjectAccess;
 import io.harness.ng.core.common.beans.ApiKeyType;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 
 import com.google.common.collect.ImmutableList;
 import java.time.Duration;
 import java.util.List;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -64,12 +70,16 @@ public class ApiKey implements PersistentEntity, UuidAware, NGAccountAccess, NGO
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
 
-  String accountIdentifier;
-  String orgIdentifier;
-  String projectIdentifier;
+  @EntityIdentifier String accountIdentifier;
+  @EntityIdentifier(allowBlank = true) String orgIdentifier;
+  @EntityIdentifier(allowBlank = true) String projectIdentifier;
 
-  String identifier;
-  String parentIdentifier;
+  @EntityIdentifier String identifier;
+  @NGEntityName String name;
+  @NotNull @Size(max = 1024) String description;
+  @NotNull @Singular @Size(max = 128) List<NGTag> tags;
+
+  @EntityIdentifier String parentIdentifier;
   ApiKeyType apiKeyType;
   @Builder.Default long defaultTimeToExpireToken = DEFAULT_TTL_FOR_TOKEN;
 }
