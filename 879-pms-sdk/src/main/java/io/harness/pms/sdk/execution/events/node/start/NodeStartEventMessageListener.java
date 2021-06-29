@@ -15,8 +15,8 @@ import java.util.concurrent.ExecutorService;
 @Singleton
 public class NodeStartEventMessageListener extends PmsAbstractMessageListener<NodeStartEvent, NodeStartEventHandler> {
   @Inject
-  public NodeStartEventMessageListener(
-      @Named(SDK_SERVICE_NAME) String serviceName, NodeStartEventHandler nodeStartEventHandler) {
-    super(serviceName, NodeStartEvent.class, nodeStartEventHandler);
+  public NodeStartEventMessageListener(@Named(SDK_SERVICE_NAME) String serviceName,
+      NodeStartEventHandler nodeStartEventHandler, @Named(SDK_PROCESSOR_SERVICE) ExecutorService executorService) {
+    super(serviceName, NodeStartEvent.class, nodeStartEventHandler, executorService);
   }
 }

@@ -15,8 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class InterruptEventMessageListener extends PmsAbstractMessageListener<InterruptEvent, InterruptEventHandler> {
   @Inject
-  public InterruptEventMessageListener(
-      @Named(SDK_SERVICE_NAME) String serviceName, InterruptEventHandler interruptEventHandler) {
-    super(serviceName, InterruptEvent.class, interruptEventHandler);
+  public InterruptEventMessageListener(@Named(SDK_SERVICE_NAME) String serviceName,
+      InterruptEventHandler interruptEventHandler, @Named(SDK_PROCESSOR_SERVICE) ExecutorService executorService) {
+    super(serviceName, InterruptEvent.class, interruptEventHandler, executorService);
   }
 }

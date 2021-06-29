@@ -19,8 +19,8 @@ import java.util.concurrent.ExecutorService;
 public class NodeResumeEventMessageListener
     extends PmsAbstractMessageListener<NodeResumeEvent, NodeResumeEventHandler> {
   @Inject
-  public NodeResumeEventMessageListener(
-      @Named(SDK_SERVICE_NAME) String serviceName, NodeResumeEventHandler nodeResumeEventHandler) {
-    super(serviceName, NodeResumeEvent.class, nodeResumeEventHandler);
+  public NodeResumeEventMessageListener(@Named(SDK_SERVICE_NAME) String serviceName,
+      NodeResumeEventHandler nodeResumeEventHandler, @Named(SDK_PROCESSOR_SERVICE) ExecutorService executorService) {
+    super(serviceName, NodeResumeEvent.class, nodeResumeEventHandler, executorService);
   }
 }

@@ -18,8 +18,8 @@ import java.util.concurrent.ExecutorService;
 @Singleton
 public class NodeAdviseEventMessageListener extends PmsAbstractMessageListener<AdviseEvent, NodeAdviseEventHandler> {
   @Inject
-  public NodeAdviseEventMessageListener(
-      @Named(SDK_SERVICE_NAME) String serviceName, NodeAdviseEventHandler nodeAdviseEventHandler) {
-    super(serviceName, AdviseEvent.class, nodeAdviseEventHandler);
+  public NodeAdviseEventMessageListener(@Named(SDK_SERVICE_NAME) String serviceName,
+      NodeAdviseEventHandler nodeAdviseEventHandler, @Named(SDK_PROCESSOR_SERVICE) ExecutorService executorService) {
+    super(serviceName, AdviseEvent.class, nodeAdviseEventHandler, executorService);
   }
 }

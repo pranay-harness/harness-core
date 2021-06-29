@@ -76,10 +76,9 @@ public class AsyncStrategy extends ProgressableStrategy {
                 stepParamString == null ? new byte[] {} : ByteString.copyFromUtf8(stepParamString).toByteArray())
             .mode(mode)
             .build();
-
-    asyncWaitEngine.waitForAllOn(callback, progressCallback, response.getCallbackIdsList().toArray(new String[0]));
     sdkNodeExecutionService.addExecutableResponse(nodeExecutionId, extractStatus(response),
         ExecutableResponse.newBuilder().setAsync(response).build(), Collections.emptyList());
+    asyncWaitEngine.waitForAllOn(callback, progressCallback, response.getCallbackIdsList().toArray(new String[0]));
   }
 
   @Override
