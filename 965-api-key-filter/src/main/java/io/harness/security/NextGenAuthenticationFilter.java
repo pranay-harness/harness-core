@@ -7,10 +7,12 @@ import static javax.ws.rs.Priorities.AUTHENTICATION;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.common.beans.ApiKeyType;
 import io.harness.ng.core.dto.TokenDTO;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.security.dto.Principal;
 import io.harness.security.dto.ServiceAccountPrincipal;
+import io.harness.security.dto.UserPrincipal;
 import io.harness.token.remote.TokenClient;
 
 import com.google.inject.Singleton;
@@ -58,7 +60,13 @@ public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
         TokenDTO tokenDTO = NGRestUtils.getResponse(tokenClient.getToken(splitToken[0]));
         if (tokenDTO != null) {
           if (tokenDTO.isValid()) {
-            Principal principal = new ServiceAccountPrincipal(tokenDTO.getParentIdentifier());
+            Principal principal = null;
+            if (tokenDTO.getApiKeyType() == ApiKeyType.SERVICE_ACCOUNT) {
+              principal = new ServiceAccountPrincipal(tokenDTO.getParentIdentifier());
+            }
+            if (tokenDTO.getApiKeyType() == ApiKeyType.USER) {
+              principal = new UserPrincipal(tokenDTO.getParentIdentifier(), "", "", "");
+            }
             SecurityContextBuilder.setContext(principal);
             SourcePrincipalContextBuilder.setSourcePrincipal(principal);
           } else {
