@@ -64,6 +64,7 @@ status:
     plural: ""
   conditions: []
   storedVersions: []
+
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -79,6 +80,7 @@ data:
     node:
       cluster: test-cluster
       id: test-id
+
     dynamic_resources:
       lds_config:
         resource_api_version: V3
@@ -96,6 +98,7 @@ data:
           grpc_services:
             - envoy_grpc:
                 cluster_name: xds_cluster
+
     static_resources:
       clusters:
       - name: xds_cluster
@@ -119,6 +122,16 @@ data:
                   socket_address:
                     address: harness-operator.harness-autostopping.svc.cluster.local
                     port_value: 18000
+      - name: harness_api_endpoint
+        connect_timeout: 0.25s
+        type: LOGICAL_DNS
+        lb_policy: ROUND_ROBIN
+        load_assignment:
+          cluster_name: harness_api_endpoint
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                hostname: ${envoyHarnessHostname}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -166,7 +179,9 @@ spec:
           defaultMode: 420
           name: as-controller-config
         name: as-controller-config
+
 ---
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -202,6 +217,15 @@ spec:
       - name: harness-operator
         image: registry.gitlab.com/lightwing/lightwing/operator:latest
         imagePullPolicy: Always
+        env:
+        - name: HARNESS_API
+          value: "${harnessHostname}/gateway/lw/api"
+        - name: CONNECTOR_ID
+          value: ${connectorIdentifier}
+        - name: REMOTE_ACCOUNT_ID
+          value: ${accountId}
+        - name: HARNESS_TOKEN
+          value: ${APIToken}
         ports:
         - containerPort: 18000
       imagePullSecrets:
@@ -262,6 +286,9 @@ spec:
       - name: harness-progress
         image: registry.gitlab.com/lightwing/lightwing/httpproxy:latest
         imagePullPolicy: Always
+        env:
+        - name: HARNESS_API_URL
+          value: "${harnessHostname}/gateway/lw/api/"
         ports:
         - containerPort: 8093
       imagePullSecrets:

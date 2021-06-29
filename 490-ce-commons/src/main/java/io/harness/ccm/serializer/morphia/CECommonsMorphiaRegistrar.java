@@ -3,6 +3,7 @@ package io.harness.ccm.serializer.morphia;
 import io.harness.ccm.budget.ApplicationBudgetScope;
 import io.harness.ccm.budget.ClusterBudgetScope;
 import io.harness.ccm.budget.PerspectiveBudgetScope;
+import io.harness.ccm.commons.entities.ClusterRecord;
 import io.harness.ccm.commons.entities.batch.BatchJobInterval;
 import io.harness.ccm.commons.entities.batch.BatchJobScheduledData;
 import io.harness.ccm.commons.entities.batch.CEDataCleanupRequest;
@@ -55,6 +56,8 @@ public class CECommonsMorphiaRegistrar implements MorphiaRegistrar {
     // k8s
     set.add(K8sWorkload.class);
     set.add(K8sYaml.class);
+    set.add(ClusterRecord.class);
+
     // k8s.recommendation
     set.add(K8sNodeRecommendation.class);
     set.add(K8sWorkloadRecommendation.class);

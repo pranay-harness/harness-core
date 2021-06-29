@@ -19,10 +19,13 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class ConnectorFeatureFlagStreamListener implements MessageListener {
   private final HarnessSMManager harnessSMManager;
+  private final CIDefaultEntityManager ciDefaultEntityManager;
 
   @Inject
-  public ConnectorFeatureFlagStreamListener(HarnessSMManager harnessSMManager) {
+  public ConnectorFeatureFlagStreamListener(
+      HarnessSMManager harnessSMManager, CIDefaultEntityManager ciDefaultEntityManager) {
     this.harnessSMManager = harnessSMManager;
+    this.ciDefaultEntityManager = ciDefaultEntityManager;
   }
 
   @Override
@@ -46,6 +49,8 @@ public class ConnectorFeatureFlagStreamListener implements MessageListener {
 
   private boolean processNGEnableAction(String accountId) {
     harnessSMManager.createHarnessSecretManager(accountId, null, null);
+    ciDefaultEntityManager.createCIDefaultEntities(accountId, null, null);
+
     return true;
   }
 }

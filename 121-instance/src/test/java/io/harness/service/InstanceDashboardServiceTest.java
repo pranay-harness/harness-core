@@ -10,7 +10,7 @@ import io.harness.entities.ArtifactDetails;
 import io.harness.entities.instance.Instance;
 import io.harness.models.BuildsByEnvironment;
 import io.harness.models.EnvBuildInstanceCount;
-import io.harness.models.InstancesByBuild;
+import io.harness.models.InstancesByBuildId;
 import io.harness.repositories.instance.InstanceRepository;
 import io.harness.rule.Owner;
 import io.harness.service.instancedashboardservice.InstanceDashboardService;
@@ -62,9 +62,9 @@ public class InstanceDashboardServiceTest extends InstancesTestBase {
 
     assertThat(environments.size()).isEqualTo(5);
     for (BuildsByEnvironment buildsByEnv : environments) {
-      List<InstancesByBuild> instanceByBuilds = buildsByEnv.getBuilds();
+      List<InstancesByBuildId> instanceByBuilds = buildsByEnv.getBuilds();
       assertThat(instanceByBuilds.size()).isEqualTo(4);
-      for (InstancesByBuild instanceByBuild : instanceByBuilds) {
+      for (InstancesByBuildId instanceByBuild : instanceByBuilds) {
         assertThat(instanceByBuild.getInstances().size()).isEqualTo(2);
       }
     }
@@ -95,6 +95,7 @@ public class InstanceDashboardServiceTest extends InstancesTestBase {
     List<EnvBuildInstanceCount> uniqueEnvIdBuildIdCombinationsWithInstanceCounts =
         instanceDashboardService.getEnvBuildInstanceCountByServiceId(
             ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SERVICE_IDENTIFIER, 5);
+    assertThat(uniqueEnvIdBuildIdCombinationsWithInstanceCounts.size()).isGreaterThan(0);
     uniqueEnvIdBuildIdCombinationsWithInstanceCounts.forEach(uniqueEnvIdBuildIdCombinationsWithInstanceCount -> {
       final String envId = uniqueEnvIdBuildIdCombinationsWithInstanceCount.getEnvId();
       final String buildId = uniqueEnvIdBuildIdCombinationsWithInstanceCount.getTag();
@@ -102,5 +103,57 @@ public class InstanceDashboardServiceTest extends InstancesTestBase {
       final int expectedCount = mock.getOrDefault(envId, new HashMap<>()).getOrDefault(buildId, 0);
       assertThat(count).isEqualTo(expectedCount);
     });
+  }
+
+  @Test
+  @Owner(developers = JASMEET)
+  @Category(UnitTests.class)
+  public void getInstancesByEnvIdAndBuildIds() {
+    Map<String, Map<String, Integer>> mock = new HashMap<>();
+    List<Pair<Pair<String, String>, Integer>> mockList =
+        Arrays.asList(Pair.of(Pair.of("envId1", "buildId1"), 30), Pair.of(Pair.of("envId1", "buildId2"), 30),
+            Pair.of(Pair.of("envId2", "buildId1"), 30), Pair.of(Pair.of("envId2", "buildId2"), 30));
+
+    mockList.forEach(mockListItem -> {
+      final String envId = mockListItem.getLeft().getLeft();
+      final String buildId = mockListItem.getLeft().getRight();
+      final Integer count = mockListItem.getRight();
+      if (!mock.containsKey(envId)) {
+        mock.put(envId, new HashMap<>());
+      }
+      mock.get(envId).put(buildId, count);
+      for (int i = 0; i < count; i++) {
+        instanceRepository.save(createDummyInstance(envId, buildId));
+      }
+    });
+
+    String inputEnvName = "envId1";
+    List<String> inputBuildIds = Arrays.asList("buildId1", "buildId2");
+    List<InstancesByBuildId> result;
+
+    // Invalid cases that should return no results
+
+    result = instanceDashboardService.getActiveInstancesByServiceIdEnvIdAndBuildIds(
+        ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, "randomServiceId", inputEnvName, inputBuildIds, 5);
+    assertThat(result.size()).isEqualTo(0);
+
+    result = instanceDashboardService.getActiveInstancesByServiceIdEnvIdAndBuildIds(
+        ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SERVICE_IDENTIFIER, "randomEnvName", inputBuildIds, 5);
+    assertThat(result.size()).isEqualTo(0);
+
+    result = instanceDashboardService.getActiveInstancesByServiceIdEnvIdAndBuildIds(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER,
+        PROJECT_IDENTIFIER, SERVICE_IDENTIFIER, inputEnvName, Arrays.asList("randomBuildId"), 5);
+    assertThat(result.size()).isEqualTo(0);
+
+    // Valid case
+
+    result = instanceDashboardService.getActiveInstancesByServiceIdEnvIdAndBuildIds(
+        ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SERVICE_IDENTIFIER, inputEnvName, inputBuildIds, 5);
+    assertThat(result.size()).isEqualTo(2);
+
+    for (int i = 0; i < inputBuildIds.size(); i++) {
+      assertThat(result.get(i).getBuildId()).isEqualTo(inputBuildIds.get(i));
+      assertThat(result.get(i).getInstances().size()).isEqualTo(20);
+    }
   }
 }
