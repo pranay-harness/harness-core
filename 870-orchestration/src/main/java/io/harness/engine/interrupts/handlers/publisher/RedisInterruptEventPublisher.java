@@ -27,7 +27,6 @@ public class RedisInterruptEventPublisher implements InterruptEventPublisher {
   public String publishEvent(String nodeExecutionId, Interrupt interrupt, InterruptType interruptType) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     String serviceName = nodeExecution.getNode().getServiceName();
-    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
     Builder builder = InterruptEvent.newBuilder()
                           .setInterruptUuid(interrupt.getUuid())
                           .setAmbiance(nodeExecution.getAmbiance())
@@ -38,7 +37,8 @@ public class RedisInterruptEventPublisher implements InterruptEventPublisher {
                               ByteString.copyFromUtf8(emptyIfNull(nodeExecution.getResolvedStepParameters().toJson())));
     InterruptEvent event = populateResponse(nodeExecution, builder);
 
-    eventSender.sendEvent(event.toByteString(), PmsEventCategory.INTERRUPT_EVENT, serviceName, accountId, false);
+    eventSender.sendEvent(
+        nodeExecution.getAmbiance(), event.toByteString(), PmsEventCategory.INTERRUPT_EVENT, serviceName, false);
     return event.getNotifyId();
   }
 

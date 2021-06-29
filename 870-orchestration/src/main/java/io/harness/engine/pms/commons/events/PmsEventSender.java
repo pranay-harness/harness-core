@@ -19,10 +19,12 @@ import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.PmsFeatureFlagService;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.plan.ConsumerConfig.ConfigCase;
 import io.harness.pms.contracts.plan.Redis;
 import io.harness.pms.events.base.PmsEventCategory;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.PmsSdkInstance;
 import io.harness.pms.sdk.PmsSdkInstance.PmsSdkInstanceKeys;
 import io.harness.redis.RedisConfig;
@@ -67,14 +69,16 @@ public class PmsEventSender {
             }
           });
 
-  public String sendEvent(
-      ByteString eventData, PmsEventCategory eventCategory, String serviceName, String accountId, boolean isMonitored) {
+  public String sendEvent(Ambiance ambiance, ByteString eventData, PmsEventCategory eventCategory, String serviceName,
+      boolean isMonitored) {
     log.info("Sending {} event for {} to the producer", eventCategory, serviceName);
     Producer producer = obtainProducer(eventCategory, serviceName);
 
-    ImmutableMap.Builder<String, String> metadataBuilder =
-        ImmutableMap.<String, String>builder().put(SERVICE_NAME, serviceName);
-    if (isMonitored && pmsFeatureFlagService.isEnabled(accountId, FeatureName.PIPELINE_MONITORING)) {
+    ImmutableMap.Builder<String, String> metadataBuilder = ImmutableMap.<String, String>builder()
+                                                               .put(SERVICE_NAME, serviceName)
+                                                               .putAll(AmbianceUtils.logContextMap(ambiance));
+    if (isMonitored
+        && pmsFeatureFlagService.isEnabled(AmbianceUtils.getAccountId(ambiance), FeatureName.PIPELINE_MONITORING)) {
       metadataBuilder.put(PIPELINE_MONITORING_ENABLED, "true");
     }
 

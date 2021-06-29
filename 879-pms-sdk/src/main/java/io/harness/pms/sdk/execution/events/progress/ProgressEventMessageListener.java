@@ -18,8 +18,8 @@ import java.util.concurrent.ExecutorService;
 @Singleton
 public class ProgressEventMessageListener extends PmsAbstractMessageListener<ProgressEvent, ProgressEventHandler> {
   @Inject
-  public ProgressEventMessageListener(@Named(SDK_SERVICE_NAME) String serviceName,
-      ProgressEventHandler progressEventHandler, @Named(SDK_PROCESSOR_SERVICE) ExecutorService executorService) {
-    super(serviceName, ProgressEvent.class, progressEventHandler, executorService);
+  public ProgressEventMessageListener(
+      @Named(SDK_SERVICE_NAME) String serviceName, ProgressEventHandler progressEventHandler) {
+    super(serviceName, ProgressEvent.class, progressEventHandler);
   }
 }

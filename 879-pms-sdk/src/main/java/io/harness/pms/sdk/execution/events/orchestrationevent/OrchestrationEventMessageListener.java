@@ -1,7 +1,6 @@
 package io.harness.pms.sdk.execution.events.orchestrationevent;
 
 import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
-import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.SDK_PROCESSOR_SERVICE;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -12,7 +11,6 @@ import io.harness.pms.sdk.core.execution.events.orchestration.SdkOrchestrationEv
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -21,9 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 public class OrchestrationEventMessageListener
     extends PmsAbstractMessageListener<OrchestrationEvent, SdkOrchestrationEventHandler> {
   @Inject
-  public OrchestrationEventMessageListener(@Named(SDK_SERVICE_NAME) String serviceName,
-      SdkOrchestrationEventHandler sdkOrchestrationEventHandler,
-      @Named(SDK_PROCESSOR_SERVICE) ExecutorService executorService) {
-    super(serviceName, OrchestrationEvent.class, sdkOrchestrationEventHandler, executorService);
+  public OrchestrationEventMessageListener(
+      @Named(SDK_SERVICE_NAME) String serviceName, SdkOrchestrationEventHandler sdkOrchestrationEventHandler) {
+    super(serviceName, OrchestrationEvent.class, sdkOrchestrationEventHandler);
   }
 }

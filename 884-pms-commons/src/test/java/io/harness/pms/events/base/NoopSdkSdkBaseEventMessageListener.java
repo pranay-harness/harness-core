@@ -7,6 +7,6 @@ import java.util.concurrent.Executors;
 public class NoopSdkSdkBaseEventMessageListener
     extends PmsAbstractMessageListener<InterruptEvent, NoopPmsEventHandler> {
   public NoopSdkSdkBaseEventMessageListener(String serviceName, NoopPmsEventHandler handler) {
-    super(serviceName, InterruptEvent.class, handler, Executors.newSingleThreadExecutor());
+    super(serviceName, InterruptEvent.class, handler);
   }
 }

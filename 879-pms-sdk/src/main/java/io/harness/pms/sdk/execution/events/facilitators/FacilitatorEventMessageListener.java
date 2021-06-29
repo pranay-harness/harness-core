@@ -16,8 +16,8 @@ import java.util.concurrent.ExecutorService;
 public class FacilitatorEventMessageListener
     extends PmsAbstractMessageListener<FacilitatorEvent, FacilitatorEventHandler> {
   @Inject
-  public FacilitatorEventMessageListener(@Named(SDK_SERVICE_NAME) String serviceName,
-      FacilitatorEventHandler facilitatorEventHandler, @Named(SDK_PROCESSOR_SERVICE) ExecutorService executorService) {
-    super(serviceName, FacilitatorEvent.class, facilitatorEventHandler, executorService);
+  public FacilitatorEventMessageListener(
+      @Named(SDK_SERVICE_NAME) String serviceName, FacilitatorEventHandler facilitatorEventHandler) {
+    super(serviceName, FacilitatorEvent.class, facilitatorEventHandler);
   }
 }

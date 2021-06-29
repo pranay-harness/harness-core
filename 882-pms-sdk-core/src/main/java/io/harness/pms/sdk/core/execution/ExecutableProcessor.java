@@ -24,14 +24,14 @@ public class ExecutableProcessor {
 
   public void handleResume(ResumePackage resumePackage) {
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(resumePackage.getAmbiance())) {
-      log.info("Calling Start for {} Strategy", executeStrategy.getClass().getSimpleName());
+      log.info("Calling Resume for {} Strategy", executeStrategy.getClass().getSimpleName());
       executeStrategy.resume(resumePackage);
     }
   }
 
   public void handleProgress(ProgressPackage progressPackage) {
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(progressPackage.getAmbiance())) {
-      log.info("Calling Start for {} Strategy", executeStrategy.getClass().getSimpleName());
+      log.info("Calling Progress for {} Strategy", executeStrategy.getClass().getSimpleName());
       executeStrategy.progress(progressPackage);
     }
   }
