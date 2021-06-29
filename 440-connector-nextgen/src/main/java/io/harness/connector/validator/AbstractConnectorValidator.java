@@ -1,14 +1,14 @@
 package io.harness.connector.validator;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTaskRequest;
-import io.harness.connector.DelegateSelectable;
 import io.harness.connector.helper.EncryptionHelper;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.ConnectorTaskParams;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.ConnectorValidationException;
@@ -16,10 +16,10 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
 
 import com.google.inject.Inject;
-import java.time.Duration;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.DX)
 @Slf4j
 public abstract class AbstractConnectorValidator implements ConnectionValidator {
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
@@ -29,17 +29,8 @@ public abstract class AbstractConnectorValidator implements ConnectionValidator 
     TaskParameters taskParameters =
         getTaskParameters(connectorConfig, accountIdentifier, orgIdentifier, projectIdentifier);
 
-    if (taskParameters instanceof ConnectorTaskParams && connectorConfig instanceof DelegateSelectable) {
-      ((ConnectorTaskParams) taskParameters)
-          .setDelegateSelectors(((DelegateSelectable) connectorConfig).getDelegateSelectors());
-    }
-    DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
-                                                  .accountId(accountIdentifier)
-                                                  .taskType(getTaskType())
-                                                  .taskParameters(taskParameters)
-                                                  .executionTimeout(Duration.ofMinutes(2))
-                                                  .forceExecute(true)
-                                                  .build();
+    DelegateTaskRequest delegateTaskRequest = DelegateTaskHelper.buildDelegateTask(
+        taskParameters, connectorConfig, getTaskType(), accountIdentifier, orgIdentifier, projectIdentifier);
 
     DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
     if (responseData instanceof ErrorNotifyResponseData) {

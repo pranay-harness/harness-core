@@ -112,4 +112,7 @@ shouldConfigureWithPMS: false
 
 portalUrl: https://localhost:8181/
 
-useRedisForSdkResponseEvents: false
+cacheConfig:
+  cacheBackend: NOOP
+  cacheNamespace: ""
+  disabledCaches: [ ]

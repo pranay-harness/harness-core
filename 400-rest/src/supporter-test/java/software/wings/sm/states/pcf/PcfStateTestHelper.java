@@ -2,8 +2,8 @@ package software.wings.sm.states.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
 
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -16,6 +16,8 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
+
+import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
 
@@ -96,7 +98,7 @@ public class PcfStateTestHelper {
         .displayName(STATE_NAME)
         .addContextElement(workflowStandardParams)
         .addContextElement(phaseElement)
-        .addStateExecutionData(PcfSetupStateExecutionData.builder().build());
+        .addStateExecutionData(PcfSetupStateExecutionData.builder().tags(singletonList("tag1")).build());
   }
 
   public PcfInfrastructureMapping getPcfInfrastructureMapping(List<String> route, List<String> tempRoute) {

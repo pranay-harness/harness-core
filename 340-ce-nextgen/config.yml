@@ -101,6 +101,10 @@ ngManagerClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
+grpcClient:
+  target: localhost:9880
+  authority: localhost
+
 # has to be comma ',' delimited flags
 featureFlagsEnabled: ""
 deployMode: KUBERNETES
@@ -120,9 +124,13 @@ featureFlagConfig:
 gcpConfig:
   gcpProjectId: gcpProjectIdPlaceHolder
 
-azureConfig:
+ceAzureSetupConfig:
   azureAppClientId: azureAppClientIdPlaceholder
+  azureAppClientSecret: azureAppClientSecretplaceholder
 
 awsConfig:
+  accessKey: accessKey_placeholder
+  secretKey: secretKey_placeholder
+  destinationBucket: destinationBucket_placeholder
   harnessAwsAccountId: 108817434118
   awsConnectorTemplate: https://continuous-efficiency-templates.s3.amazonaws.com/templateOptimOnly.yaml

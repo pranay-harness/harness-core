@@ -14,7 +14,7 @@ import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.metrics.CVNGMetricsUtils;
-import io.harness.cvng.metrics.beans.CVNGMetricContext;
+import io.harness.cvng.metrics.beans.AccountMetricContext;
 import io.harness.metrics.service.api.MetricService;
 import io.harness.persistence.HPersistence;
 
@@ -120,13 +120,13 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
   }
 
   private void incTaskStatusMetric(String accountId, ExecutionStatus status) {
-    try (CVNGMetricContext cvngMetricContext = new CVNGMetricContext(accountId)) {
+    try (AccountMetricContext accountMetricContext = new AccountMetricContext(accountId)) {
       metricService.incCounter(CVNGMetricsUtils.getLearningEngineTaskStatusMetricName(status));
     }
   }
 
   private void addTimeToFinishMetrics(LearningEngineTask task) {
-    try (CVNGMetricContext cvngMetricContext = new CVNGMetricContext(task.getAccountId())) {
+    try (AccountMetricContext accountMetricContext = new AccountMetricContext(task.getAccountId())) {
       metricService.recordDuration(CVNGMetricsUtils.LEARNING_ENGINE_TASK_TOTAL_TIME, task.totalTime(clock.instant()));
       if (task.getPickedAt() != null) { // Remove this in the future after lastPickedAt is populated.
         metricService.recordDuration(CVNGMetricsUtils.LEARNING_ENGINE_TASK_WAIT_TIME, task.waitTime());

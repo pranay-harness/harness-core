@@ -90,7 +90,7 @@ func main() {
 		svc := args.Service
 		go func() {
 			newIntegrationSvc(svc.ID, svc.Image, svc.Entrypoint, svc.Args, serviceLogger.BaseLogger,
-				serviceLogger.Writer, args.LogMetrics, log).Run()
+				serviceLogger.Writer, false, log).Run()
 		}()
 	}
 

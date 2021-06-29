@@ -373,6 +373,22 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
     FileUtils.copyInputStreamToFile(new ByteArrayInputStream(decryptedTerraformPlan), tfPlanFile);
   }
 
+  public EncryptedRecordData encryptPlan(byte[] content, String planName, EncryptionConfig encryptionConfig) {
+    return (EncryptedRecordData) encryptDecryptHelper.encryptContent(content, planName, encryptionConfig);
+  }
+
+  @NotNull
+  public String getPlanName(TerraformCommand command) {
+    switch (command) {
+      case APPLY:
+        return TERRAFORM_PLAN_FILE_OUTPUT_NAME;
+      case DESTROY:
+        return TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME;
+      default:
+        throw new IllegalArgumentException("Invalid Terraform Command : " + command.toString());
+    }
+  }
+
   @NonNull
   public String resolveBaseDir(String accountId, String provisionerId) {
     return TF_BASE_DIR.replace("${ACCOUNT_ID}", accountId).replace("${ENTITY_ID}", provisionerId);
@@ -394,7 +410,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
           return firstCommit.toString().split(" ")[1];
         }
       } catch (IOException | GitAPIException e) {
-        log.error("Failed to extract the commit id from the cloned repo.");
+        log.error("Failed to extract the commit id from the cloned repo.", e);
       }
     }
     return null;
@@ -530,10 +546,12 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
       TerraformHelperUtils.copyFilesToWorkingDirectory(
           gitClientHelper.getRepoDirectory(gitBaseRequestForConfigFile), workingDir);
     } catch (Exception ex) {
-      log.error("Exception in copying files to provisioner specific directory", ex);
+      log.error(String.format("Exception in copying files to provisioner specific directory", ex.getMessage()), ex);
       FileUtils.deleteQuietly(new File(baseDir));
       logCallback.saveExecutionLog(
-          "Failed copying files to provisioner specific directory", ERROR, CommandExecutionStatus.FAILURE);
+          "Failed copying files to provisioner specific directory", ERROR, CommandExecutionStatus.RUNNING);
+      throw new TerraformCommandExecutionException(
+          "Error encountered when copying files to provisioner specific directory", WingsException.USER);
     }
   }
 

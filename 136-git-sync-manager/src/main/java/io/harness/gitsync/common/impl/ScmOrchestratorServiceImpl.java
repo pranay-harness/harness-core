@@ -38,13 +38,23 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   @Override
   public <R> R processScmRequest(Function<ScmClientFacilitatorService, R> scmRequest, String projectIdentifier,
       String orgIdentifier, String accountId) {
-    final Optional<GitSyncSettingsDTO> gitSyncSettingsDTO =
-        gitSyncSettingsService.get(accountId, orgIdentifier, projectIdentifier);
-    // todo(abhinav): Throw exception if optional not present.
-    final boolean executeOnDelegate = gitSyncSettingsDTO.isPresent() && gitSyncSettingsDTO.get().isExecuteOnDelegate();
+    final boolean executeOnDelegate = isExecuteOnDelegate(projectIdentifier, orgIdentifier, accountId);
     if (executeOnDelegate) {
       return scmRequest.apply(scmClientDelegateService);
     }
     return scmRequest.apply(scmClientManagerService);
+  }
+
+  @Override
+  public boolean isExecuteOnDelegate(String projectIdentifier, String orgIdentifier, String accountId) {
+    final Optional<GitSyncSettingsDTO> gitSyncSettingsDTO =
+        gitSyncSettingsService.get(accountId, orgIdentifier, projectIdentifier);
+    GitSyncSettingsDTO gitSyncSettings = gitSyncSettingsDTO.orElse(GitSyncSettingsDTO.builder()
+                                                                       .accountIdentifier(accountId)
+                                                                       .projectIdentifier(projectIdentifier)
+                                                                       .organizationIdentifier(orgIdentifier)
+                                                                       .executeOnDelegate(true)
+                                                                       .build());
+    return gitSyncSettings.isExecuteOnDelegate();
   }
 }

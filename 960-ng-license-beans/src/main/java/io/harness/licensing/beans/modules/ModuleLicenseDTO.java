@@ -42,9 +42,9 @@ public abstract class ModuleLicenseDTO {
   ModuleType moduleType;
   Edition edition;
   LicenseType licenseType;
+  LicenseStatus status;
   long startTime;
   long expiryTime;
-  LicenseStatus status;
   Long createdAt;
   Long lastModifiedAt;
 }

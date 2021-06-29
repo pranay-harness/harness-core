@@ -12,8 +12,6 @@ import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
-import io.harness.pms.sdk.core.execution.events.node.NodeExecutionEventListener;
-import io.harness.queue.QueueListenerController;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -67,7 +65,6 @@ public class CdServiceApplication extends Application<CdServiceConfiguration> {
     modules.add(PmsSdkModule.getInstance(sdkConfig));
     Injector injector = Guice.createInjector(modules);
 
-    registerQueueListeners(injector);
     registerJerseyProviders(environment, injector);
 
     try {
@@ -84,7 +81,6 @@ public class CdServiceApplication extends Application<CdServiceConfiguration> {
     return PmsSdkConfiguration.builder()
         .deploymentMode(SdkDeployMode.REMOTE)
         .moduleType(ModuleType.CD)
-        .mongoConfig(config.getMongoConfig())
         .grpcServerConfig(config.getPmsSdkGrpcServerConfig())
         .pmsGrpcClientConfig(config.getPmsGrpcClientConfig())
         .pipelineServiceInfoProviderClass(CdPipelineServiceInfoProvider.class)
@@ -92,12 +88,6 @@ public class CdServiceApplication extends Application<CdServiceConfiguration> {
         .engineSteps(CdServiceStepRegistrar.getEngineSteps())
         .executionSummaryModuleInfoProviderClass(CDExecutionSummaryModuleInfoProvider.class)
         .build();
-  }
-
-  private void registerQueueListeners(Injector injector) {
-    log.info("Initializing queue listeners...");
-    QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {

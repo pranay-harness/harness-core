@@ -25,4 +25,15 @@ public interface CVConstants {
   int STATE_MACHINE_IGNORE_LIMIT = 100;
 
   int STATE_MACHINE_IGNORE_MINUTES = 30;
+
+  String DATA_SOURCE_TYPE = "type";
+
+  String LIVE_MONITORING = "live_monitoring";
+  String DEPLOYMENT = "deployment";
+
+  String TAG_DATA_SOURCE = "dataSource";
+  String TAG_VERIFICATION_TYPE = "verificationType";
+  String TAG_ACCOUNT_ID = "accountId";
+  String TAG_ONBOARDING = "onboarding";
+  String TAG_UNRECORDED = "unrecorded";
 }

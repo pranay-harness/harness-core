@@ -1,5 +1,6 @@
 package io.harness.pms.sdk;
 
+import io.harness.ModuleType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
@@ -18,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 public class PmsSdkHelper {
-  @Inject private Map<String, PlanCreationServiceGrpc.PlanCreationServiceBlockingStub> planCreatorServices;
+  @Inject private Map<ModuleType, PlanCreationServiceGrpc.PlanCreationServiceBlockingStub> planCreatorServices;
   @Inject private PmsSdkInstanceService pmsSdkInstanceService;
 
   /**
@@ -30,8 +31,8 @@ public class PmsSdkHelper {
     Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(planCreatorServices) && EmptyPredicate.isNotEmpty(sdkInstances)) {
       sdkInstances.forEach((k, v) -> {
-        if (planCreatorServices.containsKey(k)) {
-          services.put(k, new PlanCreatorServiceInfo(v, planCreatorServices.get(k)));
+        if (planCreatorServices.containsKey(ModuleType.fromString(k))) {
+          services.put(k, new PlanCreatorServiceInfo(v, planCreatorServices.get(ModuleType.fromString(k))));
         }
       });
     }

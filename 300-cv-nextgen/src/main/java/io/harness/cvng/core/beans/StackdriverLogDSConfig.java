@@ -4,6 +4,7 @@ import static io.harness.cvng.beans.CVMonitoringCategory.ERRORS;
 import static io.harness.cvng.beans.DataSourceType.STACKDRIVER_LOG;
 
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.stackdriver.StackdriverLogDefinition;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.StackdriverLogCVConfig;
 

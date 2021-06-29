@@ -8,7 +8,6 @@ import io.harness.delegate.task.ListNotifyResponseData;
 
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryType;
 
 import java.io.InputStream;
@@ -48,13 +47,6 @@ public interface ArtifactoryService {
    *
    * @return map RepoId and Name
    */
-  Map<String, String> getRepositories(ArtifactoryConfigRequest artifactoryConfig, ArtifactType artifactType);
-
-  /**
-   * Get Repositories
-   *
-   * @return map RepoId and Name
-   */
   Map<String, String> getRepositories(ArtifactoryConfigRequest artifactoryConfig, String packageType);
 
   Map<String, String> getRepositories(ArtifactoryConfigRequest artifactoryConfig, RepositoryType repositoryType);
@@ -77,6 +69,4 @@ public interface ArtifactoryService {
       ArtifactoryConfigRequest artifactoryConfig, String repoType, String artifactPath, String repositoryType);
 
   Long getFileSize(ArtifactoryConfigRequest artifactoryConfig, Map<String, String> metadata);
-
-  boolean isRunning(ArtifactoryConfigRequest artifactoryConfig);
 }

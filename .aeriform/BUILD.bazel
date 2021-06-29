@@ -12,7 +12,13 @@ aeriform("//121-access-control-migration:module")
 
 aeriform("//121-instance:module")
 
-aeriform("//122-ng-core-user:module")
+aeriform("//121-instance:tests")
+
+aeriform("//122-ng-authentication-settings:module")
+
+aeriform("//123-ng-core-user:module")
+
+aeriform("//123-ng-core-user:tests")
 
 aeriform("//125-cd-nextgen:module")
 
@@ -142,6 +148,8 @@ aeriform("//470-alert:module")
 
 aeriform("//490-ce-commons:module")
 
+aeriform("//490-ce-commons:tests")
+
 aeriform("//800-pipeline-service/src/test/java/io/harness/pms/sample/cd:module")
 
 aeriform("//800-pipeline-service/src/test/java/io/harness/pms/sample/cv:module")
@@ -190,8 +198,6 @@ aeriform("//870-cg-orchestration:module")
 
 aeriform("//870-cg-orchestration:tests")
 
-aeriform("//870-cg-yaml:module")
-
 aeriform("//870-orchestration:module")
 
 aeriform("//870-orchestration:tests")
@@ -199,8 +205,6 @@ aeriform("//870-orchestration:tests")
 aeriform("//870-yaml-beans:module")
 
 aeriform("//870-yaml-beans:tests")
-
-aeriform("//871-cg-beans:module")
 
 aeriform("//874-orchestration-delay:module")
 
@@ -217,6 +221,8 @@ aeriform("//879-pms-sdk:module")
 aeriform("//879-pms-sdk:tests")
 
 aeriform("//882-pms-sdk-core:module")
+
+aeriform("//882-pms-sdk-core:supporter-test")
 
 aeriform("//882-pms-sdk-core:tests")
 
@@ -324,6 +330,8 @@ aeriform("//950-delegate-tasks-beans:module")
 
 aeriform("//950-delegate-tasks-beans:tests")
 
+aeriform("//950-events-framework-monitor:module")
+
 aeriform("//950-events-framework:module")
 
 aeriform("//950-events-framework:tests")
@@ -331,8 +339,6 @@ aeriform("//950-events-framework:tests")
 aeriform("//950-log-client:module")
 
 aeriform("//950-log-client:tests")
-
-aeriform("//950-ng-audit-commons:module")
 
 aeriform("//950-ng-authentication-service:module")
 
@@ -362,6 +368,8 @@ aeriform("//950-walktree-visitor:module")
 
 aeriform("//950-walktree-visitor:tests")
 
+aeriform("//951-ng-audit-commons:module")
+
 aeriform("//952-scm-java-client:module")
 
 aeriform("//952-scm-java-client:tests")
@@ -379,6 +387,8 @@ aeriform("//954-connector-beans:tests")
 aeriform("//955-account-mgmt:module")
 
 aeriform("//955-alert-beans:module")
+
+aeriform("//955-cg-yaml:module")
 
 aeriform("//955-delegate-beans:module")
 
@@ -401,6 +411,8 @@ aeriform("//958-migration-sdk:module")
 aeriform("//958-migration-sdk:tests")
 
 aeriform("//958-ng-file-service-sdk:module")
+
+aeriform("//959-cg-beans:module")
 
 aeriform("//959-file-service-commons:module")
 

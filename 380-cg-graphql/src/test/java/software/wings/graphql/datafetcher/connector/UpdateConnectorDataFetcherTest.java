@@ -225,6 +225,62 @@ public class UpdateConnectorDataFetcherTest extends AbstractDataFetcherTestBase 
   @Test
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
+  public void updateShhGitConnectorWithoutSshSettingId() {
+    SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
+                                   .withAccountId(ACCOUNT_ID)
+                                   .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                                   .withValue(GitConfig.builder().sshSettingId(SSH).accountId(ACCOUNT_ID).build())
+                                   .build();
+
+    doReturn(setting).when(settingsService).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+
+    doReturn(SettingAttribute.Builder.aSettingAttribute()
+                 .withCategory(SettingAttribute.SettingCategory.CONNECTOR)
+                 .withValue(GitConfig.builder().accountId(ACCOUNT_ID).build())
+                 .build())
+        .when(settingsService)
+        .updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+    doReturn(new SettingAttribute()).when(settingsService).getByAccount(ACCOUNT_ID, SSH);
+
+    doNothing()
+        .when(settingServiceHelper)
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    doReturn(QLGitConnector.builder()).when(connectorsController).getConnectorBuilder(any());
+    doReturn(QLGitConnector.builder()).when(connectorsController).populateConnector(any(), any());
+
+    QLUpdateConnectorPayload payload = dataFetcher.mutateAndFetch(
+        QLUpdateConnectorInput.builder()
+            .connectorId(CONNECTOR_ID)
+            .connectorType(QLConnectorType.GIT)
+            .gitConnector(
+                getQlUpdateGitConnectorInputBuilder()
+                    .branch(RequestField.ofNullable(BRANCH))
+                    .generateWebhookUrl(RequestField.ofNullable(true))
+                    .customCommitDetails(RequestField.ofNullable(QLCustomCommitDetailsInput.builder()
+                                                                     .authorName(RequestField.ofNullable(AUTHOR))
+                                                                     .authorEmailId(RequestField.ofNullable(EMAIL))
+                                                                     .commitMessage(RequestField.ofNullable(MESSAGE))
+                                                                     .build()))
+                    .delegateSelectors(RequestField.ofNull())
+                    .usageScope(RequestField.ofNullable(QLUsageScope.builder().build()))
+                    .build())
+            .build(),
+        MutationContext.builder().accountId(ACCOUNT_ID).build());
+
+    verify(usageScopeController, times(1)).populateUsageRestrictions(any(), any());
+    verify(settingsService, times(1)).getByAccount(ACCOUNT_ID, CONNECTOR_ID);
+    verify(settingsService, times(1)).updateWithSettingFields(setting, setting.getUuid(), GLOBAL_APP_ID);
+    verify(settingServiceHelper, times(1))
+        .updateSettingAttributeBeforeResponse(isA(SettingAttribute.class), isA(Boolean.class));
+
+    assertThat(payload.getConnector()).isNotNull();
+    assertThat(payload.getConnector()).isInstanceOf(QLGitConnector.class);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
   public void updateGitWithBothSecrets() {
     SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
                                    .withCategory(SettingAttribute.SettingCategory.CONNECTOR)

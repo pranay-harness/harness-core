@@ -41,19 +41,6 @@ http_archive(
     ],
 )
 
-# Load and call Gazelle dependencies
-load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
-
-gazelle_dependencies()
-
-# Add a go repository
-go_repository(
-    name = "com_github_pkg_errors",
-    importpath = "github.com/pkg/errors",
-    sum = "h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=",
-    version = "v0.9.1",
-)
-
 http_archive(
     name = "rules_proto_grpc",
     sha256 = "5f0f2fc0199810c65a2de148a52ba0aff14d631d4e8202f41aff6a9d590a471b",
@@ -74,6 +61,26 @@ rules_proto_grpc_java_repos()
 load("@io_grpc_grpc_java//:repositories.bzl", "grpc_java_repositories")
 
 grpc_java_repositories()
+
+# Load and call Gazelle dependencies
+load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
+
+gazelle_dependencies()
+
+http_archive(
+    name = "com_github_query_builder_generator",
+    sha256 = "e9b3500c6003581d79bebff5b4735f3ac854a3d61831f30ef7b31a0d1867a347",
+    strip_prefix = "query-builder-generator-0.1.21",
+    urls = ["https://github.com/wings-software/query-builder-generator/archive/refs/tags/v0.1.21.zip"],
+)
+
+# Add a go repository
+go_repository(
+    name = "com_github_pkg_errors",
+    importpath = "github.com/pkg/errors",
+    sum = "h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=",
+    version = "v0.9.1",
+)
 
 go_repository(
     name = "co_honnef_go_tools",
@@ -933,8 +940,8 @@ go_repository(
 go_repository(
     name = "com_github_drone_go_scm",
     importpath = "github.com/drone/go-scm",
-    sum = "h1:yBO6lcCeegbEuEaH0QUvJmBVQS/RpYKzuzULHHMT2A4=",
-    version = "v1.15.0",
+    sum = "h1:35m/CcHkYjQ4BlOM7rIIwrki6uDUbUH+Kkb9rv6om3M=",
+    version = "v1.15.1",
 )
 
 go_repository(
@@ -949,6 +956,13 @@ go_repository(
     importpath = "github.com/h2non/gock",
     sum = "h1:17gCehSo8ZOgEsFKpQgqHiR7VLyjxdAG3lkhVvO9QZU=",
     version = "v1.0.9",
+)
+
+go_repository(
+    name = "com_github_gertd_go_pluralize",
+    importpath = "github.com/gertd/go-pluralize",
+    sum = "h1:RgvJTJ5W7olOoAks97BOwOlekBFsLEyh00W48Z6ZEZY=",
+    version = "v0.1.7",
 )
 
 ###########################################################################################
@@ -1303,7 +1317,8 @@ plain_artifacts = [
     "io.grpc:grpc-services:1.33.1",
     "io.grpc:grpc-stub:1.33.1",
     "io.gsonfire:gson-fire:1.8.3",
-    "io.harness:ff-java-server-sdk:0.0.8",
+    "io.harness.cv:data-collection-dsl:0.26-RELEASE",
+    "io.harness:ff-java-server-sdk:1.0.0",
     "io.jsonwebtoken:jjwt:0.9.1",
     "io.kubernetes:client-java-api:9.0.2",
     "io.kubernetes:client-java-extended:9.0.2",
@@ -1424,12 +1439,12 @@ plain_artifacts = [
     "org.apache.cxf:cxf-rt-wsdl:3.3.5",
     "org.apache.geronimo.specs:geronimo-jta_1.1_spec:1.1.1",
     "org.apache.geronimo.specs:geronimo-ws-metadata_2.0_spec:1.1.3",
-    "org.apache.httpcomponents:fluent-hc:4.5.1",
-    "org.apache.httpcomponents:httpasyncclient:4.1.1",
-    "org.apache.httpcomponents:httpclient:4.5.10",
-    "org.apache.httpcomponents:httpcore-nio:4.4.12",
-    "org.apache.httpcomponents:httpcore:4.4.1",
-    "org.apache.httpcomponents:httpmime:4.3.6",
+    "org.apache.httpcomponents:fluent-hc:4.5.13",
+    "org.apache.httpcomponents:httpasyncclient:4.1.4",
+    "org.apache.httpcomponents:httpclient:4.5.13",
+    "org.apache.httpcomponents:httpcore-nio:4.4.14",
+    "org.apache.httpcomponents:httpcore:4.4.14",
+    "org.apache.httpcomponents:httpmime:4.5.13",
     "org.apache.ibatis:ibatis-core:3.0",
     "org.apache.kafka:connect-api:2.6.1",
     "org.apache.kafka:connect-runtime:2.6.1",
@@ -1636,6 +1651,7 @@ plain_artifacts = [
     "org.springframework.guice:spring-guice:1.1.3.RELEASE",
     "org.springframework.kafka:spring-kafka:2.3.7.RELEASE",
     "org.springframework.retry:spring-retry:1.2.5.RELEASE",
+    "org.springframework.security:spring-security-crypto:5.3.5.RELEASE",
     "org.springframework:spring-aop:5.2.9.RELEASE",
     "org.springframework:spring-beans:5.2.9.RELEASE",
     "org.springframework:spring-context:5.2.9.RELEASE",
@@ -1829,6 +1845,7 @@ maven_install(
         "https://github.com/bkper/mvn-repo/raw/master/releases",
         "http://packages.confluent.io/maven",
         "https://harness.jfrog.io/harness/thirdparty-annonymous",
+        "https://harness.jfrog.io/harness/harness-public",
     ],
     version_conflict_policy = "pinned",
 )
@@ -1841,40 +1858,6 @@ http_jar(
     name = "jira_client",
     sha256 = "4e733673d5ecfbd0f81f6adef1703a1c3d8975bb091ce6af8dc6ec1604a56112",
     url = "https://harness.jfrog.io/artifactory/thirdparty-annonymous/net/rcarz/jira-client/0.9-SNAPSHOT/jira-client-0.9-20210122.053103-1.jar",
-)
-
-load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
-
-maven_install(
-    name = "maven_harness",
-    artifacts = [
-        "io.harness.cv:data-collection-dsl:0.23-RELEASE",
-    ],
-    repositories = [
-        "https://repo1.maven.org/maven2",
-        "https://%s:%s@harness.jfrog.io/artifactory/harness-internal" % (JFROG_USERNAME, JFROG_PASSWORD),
-    ],
-)
-
-maven_install(
-    name = "delegate",
-    artifacts = [
-        "org.apache.httpcomponents:httpmime:4.5.1",
-    ],
-    repositories = [
-        "https://repo1.maven.org/maven2",
-        "https://harness.jfrog.io/harness/thirdparty-annonymous",
-        "https://dl.bintray.com/michaelklishin/maven",
-        "https://repo.spring.io/plugins-release",
-        "https://palantir.bintray.com/releases",
-        "https://oss.sonatype.org/content/repositories/releases",
-        "https://jitpack.io",
-        "https://jcenter.bintray.com",
-        "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "https://harness.jfrog.io/harness/datacollection-dsl",
-        "http://packages.confluent.io/maven",
-    ],
-    version_conflict_policy = "pinned",
 )
 
 maven_install(
@@ -1893,7 +1876,6 @@ maven_install(
         "https://jitpack.io",
         "https://jcenter.bintray.com",
         "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "https://harness.jfrog.io/harness/datacollection-dsl",
         "http://packages.confluent.io/maven",
     ],
     version_conflict_policy = "pinned",
@@ -1914,7 +1896,6 @@ maven_install(
         "https://jitpack.io",
         "https://jcenter.bintray.com",
         "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "https://harness.jfrog.io/harness/datacollection-dsl",
         "http://packages.confluent.io/maven",
     ],
     version_conflict_policy = "pinned",
@@ -1937,7 +1918,6 @@ maven_install(
     repositories = [
         "https://repo1.maven.org/maven2",
         "https://harness.jfrog.io/harness/thirdparty-annonymous",
-        "https://harness.jfrog.io/harness/datacollection-dsl",
     ],
 )
 
@@ -3734,8 +3714,8 @@ go_repository(
 go_repository(
     name = "com_github_spf13_cobra",
     importpath = "github.com/spf13/cobra",
-    sum = "h1:6m/oheQuQ13N9ks4hubMG6BnvwOeaJrqSPLahSnczz8=",
-    version = "v1.0.0",
+    sum = "h1:xghbfqPkxzxP3C/f3n5DdpAbdKLj4ZE4BWQI362l53M=",
+    version = "v1.1.3",
 )
 
 go_repository(

@@ -15,6 +15,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.services.OrganizationService;
+import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -33,8 +34,8 @@ public class OrganizationEntityCRUDStreamListener implements MessageListener {
   private final DefaultOrganizationManager defaultOrganizationManager;
 
   @Inject
-  public OrganizationEntityCRUDStreamListener(
-      OrganizationService organizationService, DefaultOrganizationManager defaultOrganizationManager) {
+  public OrganizationEntityCRUDStreamListener(OrganizationService organizationService,
+      DefaultOrganizationManager defaultOrganizationManager, ResourceGroupClient resourceGroupClient) {
     this.organizationService = organizationService;
     this.defaultOrganizationManager = defaultOrganizationManager;
   }

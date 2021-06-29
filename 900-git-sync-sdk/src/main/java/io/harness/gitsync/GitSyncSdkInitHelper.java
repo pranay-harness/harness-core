@@ -39,5 +39,6 @@ public class GitSyncSdkInitHelper {
         injector.getInstance(Key.get(ServiceManager.class, Names.named("gitsync-sdk-service-manager"))).startAsync();
     serviceManager.awaitHealthy();
     Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
+    log.info("Initialized git sync sdk grpc.");
   }
 }

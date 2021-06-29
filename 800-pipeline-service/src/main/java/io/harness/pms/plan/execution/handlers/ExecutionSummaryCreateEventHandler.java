@@ -29,9 +29,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.bson.Document;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -75,7 +76,7 @@ public class ExecutionSummaryCreateEventHandler implements OrchestrationStartObs
     Map<String, GraphLayoutNode> layoutNodeMap = plan.getGraphLayoutInfo().getLayoutNodesMap();
     String startingNodeId = plan.getGraphLayoutInfo().getStartingNodeId();
     Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = new HashMap<>();
-    List<String> modules = new ArrayList<>();
+    Set<String> modules = new LinkedHashSet<>();
     for (Map.Entry<String, GraphLayoutNode> entry : layoutNodeMap.entrySet()) {
       GraphLayoutNodeDTO graphLayoutNodeDTO = GraphLayoutDtoMapper.toDto(entry.getValue());
       if (entry.getValue().getNodeType().equals("parallel")) {
@@ -109,7 +110,7 @@ public class ExecutionSummaryCreateEventHandler implements OrchestrationStartObs
             .executionTriggerInfo(metadata.getTriggerInfo())
             .gitSyncBranchContext(metadata.getGitSyncBranchContext())
             .tags(pipelineEntity.get().getTags())
-            .modules(modules)
+            .modules(new ArrayList<>(modules))
             .build();
     pmsExecutionSummaryRespository.save(pipelineExecutionSummaryEntity);
   }

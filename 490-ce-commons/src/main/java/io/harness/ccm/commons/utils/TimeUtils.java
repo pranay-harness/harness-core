@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Calendar;
+import lombok.NonNull;
 
 @Singleton
 public class TimeUtils {
@@ -38,6 +39,7 @@ public class TimeUtils {
     return instant.toEpochMilli();
   }
 
+  @NonNull
   public static OffsetDateTime offsetDateTimeNow() {
     return OffsetDateTime.now(ZONE_OFFSET);
   }

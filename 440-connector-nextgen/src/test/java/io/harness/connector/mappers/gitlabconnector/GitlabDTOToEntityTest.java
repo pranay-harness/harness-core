@@ -54,6 +54,7 @@ public class GitlabDTOToEntityTest extends CategoryTest {
     final String appId = "appId";
     final String insId = "insId";
     final String privateKeyRef = "privateKeyRef";
+    final String validationRepo = "validationRepo";
 
     final GitlabAuthenticationDTO gitlabAuthenticationDTO =
         GitlabAuthenticationDTO.builder()
@@ -69,12 +70,14 @@ public class GitlabDTOToEntityTest extends CategoryTest {
 
     final GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder()
                                                       .url(url)
-                                                      .connectionType(GitConnectionType.REPO)
+                                                      .validationRepo(validationRepo)
+                                                      .connectionType(GitConnectionType.ACCOUNT)
                                                       .authentication(gitlabAuthenticationDTO)
                                                       .build();
     final GitlabConnector gitlabConnector = gitlabDTOToEntity.toConnectorEntity(gitlabConnectorDTO);
     assertThat(gitlabConnector).isNotNull();
     assertThat(gitlabConnector.getUrl()).isEqualTo(url);
+    assertThat(gitlabConnector.getValidationRepo()).isEqualTo(validationRepo);
     assertThat(gitlabConnector.getAuthType()).isEqualTo(HTTP);
     assertThat(gitlabConnector.getAuthenticationDetails())
         .isEqualTo(GitlabHttpAuthentication.builder()

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 CONFIG_FILE=/opt/harness/cv-nextgen-config.yml
+REDISSON_CACHE_FILE=/opt/harness/redisson-jcache.yaml
 
 replace_key_value () {
   CONFIG_KEY="$1";
@@ -121,7 +122,40 @@ if [[ "" != "$GRPC_SERVER_PORT" ]]; then
   yq write -i $CONFIG_FILE pmsSdkGrpcServerConfig.connectors[0].port "$GRPC_SERVER_PORT"
 fi
 
-replace_key_value useRedisForSdkResponseEvents "$USE_REDIS_FOR_SDK_RESPONSE_EVENTS"
+yq delete -i $REDISSON_CACHE_FILE codec
+
+if [[ "$REDIS_SCRIPT_CACHE" == "false" ]]; then
+  yq write -i $REDISSON_CACHE_FILE useScriptCache false
+fi
+
+
+if [[ "" != "$CACHE_CONFIG_REDIS_URL" ]]; then
+  yq write -i $REDISSON_CACHE_FILE singleServerConfig.address "$CACHE_CONFIG_REDIS_URL"
+fi
+
+if [[ "$CACHE_CONFIG_USE_SENTINEL" == "true" ]]; then
+  yq delete -i $REDISSON_CACHE_FILE singleServerConfig
+fi
+
+if [[ "" != "$CACHE_CONFIG_SENTINEL_MASTER_NAME" ]]; then
+  yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.masterName "$CACHE_CONFIG_SENTINEL_MASTER_NAME"
+fi
+
+if [[ "" != "$CACHE_CONFIG_REDIS_SENTINELS" ]]; then
+  IFS=',' read -ra SENTINEL_URLS <<< "$CACHE_CONFIG_REDIS_SENTINELS"
+  INDEX=0
+  for REDIS_SENTINEL_URL in "${SENTINEL_URLS[@]}"; do
+    yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[+] "${REDIS_SENTINEL_URL}"
+    INDEX=$(expr $INDEX + 1)
+  done
+fi
+
+if [[ "" != "$REDIS_NETTY_THREADS" ]]; then
+  yq write -i $REDISSON_CACHE_FILE nettyThreads "$REDIS_NETTY_THREADS"
+fi
+
+replace_key_value cacheConfig.cacheNamespace $CACHE_NAMESPACE
+replace_key_value cacheConfig.cacheBackend $CACHE_BACKEND
 
 replace_key_value cfClientConfig.apiKey "$CF_CLIENT_API_KEY"
 replace_key_value cfClientConfig.configUrl "$CF_CLIENT_CONFIG_URL"
@@ -131,3 +165,4 @@ replace_key_value cfClientConfig.connectionTimeout "$CF_CLIENT_CONNECTION_TIMEOU
 replace_key_value cfClientConfig.readTimeout "$CF_CLIENT_READ_TIMEOUT"
 replace_key_value featureFlagConfig.featureFlagSystem "$FEATURE_FLAG_SYSTEM"
 replace_key_value featureFlagConfig.syncFeaturesToCF "$SYNC_FEATURES_TO_CF"
+replace_key_value notificationClient.secrets.notificationClientSecret "$PLATFORM_SERVICE_SECRET"

@@ -116,7 +116,7 @@ for goversion in v0.2 v0.3 v0.4; do
     curl -L -o "${GOTEMPLATE_MAC_DIR}go-template" "${GOTEMPLATE_MAC_URL}"
 done
 
-for harnesspywinrm in v0.1-dev v0.2-dev v0.3-dev; do
+for harnesspywinrm in v0.1-dev v0.2-dev v0.3-dev v0.4-dev; do
     echo "Adding harness-pywinrm $harnesspywinrm"
     HARNESSPYWINRM_LINUX_DIR="${IMAGES_DIR}/harness-pywinrm/linux/$harnesspywinrm/"
     HARNESSPYWINRM_MAC_DIR="${IMAGES_DIR}/harness-pywinrm/darwin/$harnesspywinrm/"
@@ -191,14 +191,14 @@ for tfConfigInspectVersion in v1.0; do
 
 done
 
-for scmVersion in 5622d5e9; do
+for scmVersion in 77c318c1; do
   echo "Adding scm" $scmVersion
 
   SCM_LINUX_DIR="${IMAGES_DIR}/scm/linux/$scmVersion/"
   SCM_MAC_DIR="${IMAGES_DIR}/scm/darwin/$scmVersion/"
 
-  SCM_LINUX_URL=https://app.harness.io/storage/harness-download/scm/"$scmVersion"/linux/amd64/scm
-  SCM_MAC_URL=https://app.harness.io/storage/harness-download/scm/"$scmVersion"/darwin/amd64/scm
+  SCM_LINUX_URL=https://app.harness.io/storage/harness-download/harness-scm/release/"$scmVersion"/bin/linux/amd64/scm
+  SCM_MAC_URL=https://app.harness.io/storage/harness-download/harness-scm/release/"$scmVersion"/bin/darwin/amd64/scm
 
   echo "$SCM_LINUX_DIR"
   echo "$SCM_MAC_DIR"
@@ -266,7 +266,7 @@ function setupClientUtils(){
             cp images/go-template/${platform}/$gotemplateversion/go-template ${STORAGE_DIR_LOCATION}/harness-download/snapshot-go-template/release/$gotemplateversion/bin/${platform}/amd64/
         done
 
-        for harnesspywinrmversion in v0.1-dev v0.2-dev v0.3-dev; do
+        for harnesspywinrmversion in v0.1-dev v0.2-dev v0.3-dev v0.4-dev; do
             mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/snapshot-harness-pywinrm/release/$harnesspywinrmversion/bin/${platform}/amd64/
             cp images/harness-pywinrm/${platform}/$harnesspywinrmversion/harness-pywinrm ${STORAGE_DIR_LOCATION}/harness-download/snapshot-harness-pywinrm/release/$harnesspywinrmversion/bin/${platform}/amd64/
         done
@@ -291,7 +291,7 @@ function setupClientUtils(){
             cp images/oc/${platform}/$ocversion/oc ${STORAGE_DIR_LOCATION}/harness-download/harness-oc/release/$ocversion/bin/${platform}/amd64/
         done
 
-        for scmVersion in 5622d5e9; do
+        for scmVersion in 77c318c1; do
             mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-scm/release/$scmVersion/bin/${platform}/amd64/
             cp images/scm/${platform}/$scmVersion/scm ${STORAGE_DIR_LOCATION}/harness-download/harness-scm/release/$scmVersion/bin/${platform}/amd64/
         done

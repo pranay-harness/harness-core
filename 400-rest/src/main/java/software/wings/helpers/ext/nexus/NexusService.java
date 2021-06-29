@@ -23,20 +23,6 @@ import org.apache.commons.lang3.tuple.Pair;
 @TargetModule(HarnessModule._960_API_SERVICES)
 public interface NexusService {
   /**
-   * Get Repositories
-   *
-   * @return map RepoId and Name
-   */
-  Map<String, String> getRepositories(NexusRequest nexusConfig);
-
-  /**
-   * Get Repositories
-   *
-   * @return map RepoId and Name
-   */
-  Map<String, String> getRepositories(NexusRequest nexusConfig, String repositoryFormat);
-
-  /**
    * Get Artifact paths under repository
    *
    * @param repoId
@@ -123,13 +109,6 @@ public interface NexusService {
    */
   List<BuildDetails> getBuilds(
       NexusRequest nexusConfig, ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds);
-
-  /**
-   *  Checks if it is connectable and valid credentials
-   * @param nexusConfig
-   * @return
-   */
-  boolean isRunning(NexusRequest nexusConfig);
 
   /**
    * @param nexusConfig

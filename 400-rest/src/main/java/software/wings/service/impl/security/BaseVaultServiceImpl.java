@@ -2,8 +2,6 @@ package software.wings.service.impl.security;
 
 import static io.harness.beans.EncryptedData.EncryptedDataKeys;
 import static io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -14,10 +12,13 @@ import static software.wings.beans.BaseVaultConfig.BaseVaultConfigKeys;
 import static software.wings.settings.SettingVariableTypes.VAULT;
 
 import static java.time.Duration.ofMillis;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretManagerConfig;
+import io.harness.encryptors.managerproxy.ManagerEncryptorHelper;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
@@ -47,6 +48,7 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
   private static final String SECRET_ID_SECRET_NAME_SUFFIX = "_secret_id";
 
   @Inject private AccountService accountService;
+  @Inject private ManagerEncryptorHelper managerEncryptorHelper;
 
   protected boolean deleteVaultConfigInternal(String accountId, String vaultConfigId, long count) {
     if (count > 0) {
@@ -58,12 +60,12 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
     BaseVaultConfig baseVaultConfig = wingsPersistence.get(BaseVaultConfig.class, vaultConfigId);
     checkNotNull(baseVaultConfig, "No SSH vault config found with id " + vaultConfigId);
 
-    if (isNotEmpty(baseVaultConfig.getAuthToken())) {
+    if (isNotBlank(baseVaultConfig.getAuthToken())) {
       wingsPersistence.delete(EncryptedData.class, baseVaultConfig.getAuthToken());
       log.info("Deleted encrypted auth token record {} associated with SSH vault secret engine '{}'",
           baseVaultConfig.getAuthToken(), baseVaultConfig.getName());
     }
-    if (isNotEmpty(baseVaultConfig.getSecretId())) {
+    if (isNotBlank(baseVaultConfig.getSecretId())) {
       wingsPersistence.delete(EncryptedData.class, baseVaultConfig.getSecretId());
       log.info("Deleted encrypted secret id record {} associated with SSH vault secret engine '{}'",
           baseVaultConfig.getSecretId(), baseVaultConfig.getName());
@@ -78,7 +80,7 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
     if (baseVaultConfig != null) {
       EncryptedData encryptedToken = wingsPersistence.get(EncryptedData.class, baseVaultConfig.getAuthToken());
       EncryptedData encryptedSecretId = wingsPersistence.get(EncryptedData.class, baseVaultConfig.getSecretId());
-      if (encryptedToken == null && encryptedSecretId == null) {
+      if (encryptedToken == null && encryptedSecretId == null && !baseVaultConfig.isUseVaultAgent()) {
         throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
             "Either auth token or secret Id field needs to be present for vault secret manager.", USER);
       }
@@ -112,12 +114,17 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
     baseVaultConfig.setCertValidationRequired(isCertValidationRequired);
     while (true) {
       try {
-        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                              .accountId(baseVaultConfig.getAccountId())
-                                              .timeout(Duration.ofSeconds(5).toMillis())
-                                              .appId(baseVaultConfig.getAccountId())
-                                              .correlationId(baseVaultConfig.getUuid())
-                                              .build();
+        SyncTaskContext syncTaskContext =
+            SyncTaskContext.builder()
+                .accountId(baseVaultConfig.getAccountId())
+                .timeout(Duration.ofSeconds(5).toMillis())
+                .appId(baseVaultConfig.getAccountId())
+                .correlationId(baseVaultConfig.getUuid())
+                .orgIdentifier(baseVaultConfig.getOrgIdentifier())
+                .ngTask(isNgTask(baseVaultConfig.getOrgIdentifier(), baseVaultConfig.getProjectIdentifier()))
+                .projectIdentifier(baseVaultConfig.getProjectIdentifier())
+                .build();
+
         return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
             .appRoleLogin(baseVaultConfig);
       } catch (WingsException e) {
@@ -135,13 +142,15 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
   public void renewToken(BaseVaultConfig baseVaultConfig) {
     String accountId = baseVaultConfig.getAccountId();
     BaseVaultConfig decryptedVaultConfig = getBaseVaultConfig(accountId, baseVaultConfig.getUuid());
-    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                          .accountId(accountId)
-                                          .appId(GLOBAL_APP_ID)
-                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                          .orgIdentifier(baseVaultConfig.getOrgIdentifier())
-                                          .projectIdentifier(baseVaultConfig.getProjectIdentifier())
-                                          .build();
+    SyncTaskContext syncTaskContext =
+        SyncTaskContext.builder()
+            .accountId(accountId)
+            .appId(GLOBAL_APP_ID)
+            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+            .orgIdentifier(baseVaultConfig.getOrgIdentifier())
+            .projectIdentifier(baseVaultConfig.getProjectIdentifier())
+            .ngTask(isNgTask(baseVaultConfig.getOrgIdentifier(), baseVaultConfig.getProjectIdentifier()))
+            .build();
     boolean isCertValidationRequired = accountService.isCertValidationRequired(accountId);
     baseVaultConfig.setCertValidationRequired(isCertValidationRequired);
     delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
@@ -151,7 +160,7 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
   }
 
   public BaseVaultConfig getBaseVaultConfig(String accountId, String entityId) {
-    if (isEmpty(accountId) || isEmpty(entityId)) {
+    if (isBlank(accountId) || isBlank(entityId)) {
       return new VaultConfig();
     }
     Query<BaseVaultConfig> query = wingsPersistence.createQuery(BaseVaultConfig.class)
@@ -211,7 +220,7 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
         BaseVaultConfigKeys.authToken, settingVariableTypes);
     savedVaultConfig.setAuthToken(authTokenEncryptedDataId);
     // Create a LOCAL encrypted record for Vault secretId
-    if (isNotEmpty(secretId)) {
+    if (isNotBlank(secretId)) {
       String secretIdEncryptedDataId = saveSecretField(accountId, vaultConfigId, secretId, SECRET_ID_SECRET_NAME_SUFFIX,
           BaseVaultConfigKeys.secretId, settingVariableTypes);
       savedVaultConfig.setSecretId(secretIdEncryptedDataId);
@@ -244,29 +253,51 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
   }
 
   protected void updateVaultCredentials(
-      BaseVaultConfig savedVaultConfig, String authToken, String secretId, SettingVariableTypes settingVariableTypes) {
+      BaseVaultConfig savedVaultConfig, BaseVaultConfig vaultConfig, SettingVariableTypes settingVariableTypes) {
     String vaultConfigId = savedVaultConfig.getUuid();
     String accountId = savedVaultConfig.getAccountId();
     String authTokenEncryptedDataId = savedVaultConfig.getAuthToken();
     String secretIdEncryptedDataId = savedVaultConfig.getSecretId();
 
-    // Create a LOCAL encrypted record for Vault authToken
-    Preconditions.checkNotNull(authToken);
-    Preconditions.checkNotNull(authTokenEncryptedDataId);
-    authTokenEncryptedDataId = updateSecretField(authTokenEncryptedDataId, accountId, vaultConfigId, authToken,
-        TOKEN_SECRET_NAME_SUFFIX, BaseVaultConfigKeys.authToken, settingVariableTypes);
-    savedVaultConfig.setAuthToken(authTokenEncryptedDataId);
-
-    // Create a LOCAL encrypted record for Vault secretId
-    if (isNotEmpty(secretId)) {
-      if (isNotEmpty(secretIdEncryptedDataId)) {
-        secretIdEncryptedDataId = updateSecretField(secretIdEncryptedDataId, accountId, vaultConfigId, secretId,
-            SECRET_ID_SECRET_NAME_SUFFIX, BaseVaultConfigKeys.secretId, settingVariableTypes);
-      } else {
-        secretIdEncryptedDataId = saveSecretField(accountId, vaultConfigId, secretId, SECRET_ID_SECRET_NAME_SUFFIX,
-            BaseVaultConfigKeys.secretId, settingVariableTypes);
+    if (vaultConfig.isUseVaultAgent()) {
+      // deleate AppId cred and Saved Token
+      if (isNotBlank(savedVaultConfig.getAuthToken())) {
+        wingsPersistence.delete(EncryptedData.class, savedVaultConfig.getAuthToken());
+        log.info("Deleted encrypted auth token record {} associated with Vault '{}'", savedVaultConfig.getAuthToken(),
+            savedVaultConfig.getName());
       }
-      savedVaultConfig.setSecretId(secretIdEncryptedDataId);
+      if (isNotBlank(savedVaultConfig.getSecretId())) {
+        wingsPersistence.delete(EncryptedData.class, savedVaultConfig.getSecretId());
+        log.info("Deleted encrypted secret id record {} associated with Vault '{}'", savedVaultConfig.getSecretId(),
+            savedVaultConfig.getName());
+      }
+    } else {
+      String authToken = vaultConfig.getAuthToken();
+      String secretId = vaultConfig.getSecretId();
+
+      // Create or Update a local encrypted record of Auth token
+      if (isNotBlank(authToken)) {
+        if (isNotBlank(authTokenEncryptedDataId)) {
+          authTokenEncryptedDataId = updateSecretField(authTokenEncryptedDataId, accountId, vaultConfigId, authToken,
+              TOKEN_SECRET_NAME_SUFFIX, BaseVaultConfigKeys.authToken, settingVariableTypes);
+        } else {
+          authTokenEncryptedDataId = saveSecretField(accountId, vaultConfigId, authToken, TOKEN_SECRET_NAME_SUFFIX,
+              BaseVaultConfigKeys.authToken, settingVariableTypes);
+        }
+        savedVaultConfig.setAuthToken(authTokenEncryptedDataId);
+      }
+
+      // Create a LOCAL encrypted record for Vault secretId
+      if (isNotBlank(secretId)) {
+        if (isNotBlank(secretIdEncryptedDataId)) {
+          secretIdEncryptedDataId = updateSecretField(secretIdEncryptedDataId, accountId, vaultConfigId, secretId,
+              SECRET_ID_SECRET_NAME_SUFFIX, BaseVaultConfigKeys.secretId, settingVariableTypes);
+        } else {
+          secretIdEncryptedDataId = saveSecretField(accountId, vaultConfigId, secretId, SECRET_ID_SECRET_NAME_SUFFIX,
+              BaseVaultConfigKeys.secretId, settingVariableTypes);
+        }
+        savedVaultConfig.setSecretId(secretIdEncryptedDataId);
+      }
     }
   }
 
@@ -276,7 +307,7 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
     } else {
       EncryptedData tokenData = wingsPersistence.get(EncryptedData.class, vaultConfig.getAuthToken());
       EncryptedData secretIdData = wingsPersistence.get(EncryptedData.class, vaultConfig.getSecretId());
-      if (tokenData == null && secretIdData == null) {
+      if (!vaultConfig.isUseVaultAgent() && tokenData == null && secretIdData == null) {
         throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
             "Either auth token or secret Id field needs to be present for vault secret manager.", USER);
       }
@@ -299,14 +330,17 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
     vaultConfig.setCertValidationRequired(isCertValidationRequired);
     while (true) {
       try {
-        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                              .accountId(vaultConfig.getAccountId())
-                                              .timeout(Duration.ofSeconds(10).toMillis())
-                                              .appId(GLOBAL_APP_ID)
-                                              .correlationId(vaultConfig.getUuid())
-                                              .orgIdentifier(vaultConfig.getOrgIdentifier())
-                                              .projectIdentifier(vaultConfig.getProjectIdentifier())
-                                              .build();
+        SyncTaskContext syncTaskContext =
+            SyncTaskContext.builder()
+                .accountId(vaultConfig.getAccountId())
+                .timeout(Duration.ofSeconds(10).toMillis())
+                .appId(GLOBAL_APP_ID)
+                .correlationId(vaultConfig.getUuid())
+                .orgIdentifier(vaultConfig.getOrgIdentifier())
+                .projectIdentifier(vaultConfig.getProjectIdentifier())
+                .ngTask(isNgTask(vaultConfig.getOrgIdentifier(), vaultConfig.getProjectIdentifier()))
+                .build();
+
         return delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
             .listSecretEngines(vaultConfig);
       } catch (WingsException e) {
@@ -319,5 +353,9 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
         sleep(ofMillis(1000));
       }
     }
+  }
+
+  protected boolean isNgTask(String orgIdentifier, String projectIdentifier) {
+    return isNotBlank(orgIdentifier) || isNotBlank(projectIdentifier);
   }
 }

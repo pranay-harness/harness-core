@@ -12,10 +12,14 @@ import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.connector.stats.ConnectorStatistics.ConnectorStatisticsKeys;
 import io.harness.connector.stats.ConnectorStatusStats.ConnectorStatusStatsKeys;
 import io.harness.connector.stats.ConnectorTypeStats.ConnectorTypeStatsKeys;
+import io.harness.gitsync.helpers.GitContextHelper;
+import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.repositories.ConnectorRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Arrays;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,12 +55,26 @@ public class ConnectorStatisticsHelper {
 
   private Criteria createCriteriaObjectForConnectorScope(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return Criteria.where(ConnectorKeys.accountIdentifier)
-        .in(accountIdentifier)
-        .and(ConnectorKeys.orgIdentifier)
-        .in(orgIdentifier)
-        .and(ConnectorKeys.projectIdentifier)
-        .in(projectIdentifier)
-        .orOperator(where(ConnectorKeys.deleted).exists(false), where(ConnectorKeys.deleted).is(false));
+    Criteria criteria =
+        where(ConnectorKeys.accountIdentifier)
+            .in(accountIdentifier)
+            .and(ConnectorKeys.orgIdentifier)
+            .in(orgIdentifier)
+            .and(ConnectorKeys.projectIdentifier)
+            .in(projectIdentifier)
+            .orOperator(where(ConnectorKeys.deleted).exists(false), where(ConnectorKeys.deleted).is(false));
+    GitEntityInfo gitEntityInfo = GitContextHelper.getGitEntityInfo();
+    if (gitEntityInfo != null) {
+      criteria.and(ConnectorKeys.yamlGitConfigRef)
+          .is(gitEntityInfo.getYamlGitConfigId())
+          .and(ConnectorKeys.branch)
+          .is(gitEntityInfo.getBranch());
+    } else {
+      final Criteria isDefaultConnectorCriteria = new Criteria().orOperator(
+          where(ConnectorKeys.isFromDefaultBranch).is(true), where(ConnectorKeys.isFromDefaultBranch).exists(false));
+      List<Criteria> criteriaList = Arrays.asList(criteria, isDefaultConnectorCriteria);
+      return new Criteria().andOperator(criteriaList.toArray(new Criteria[criteriaList.size()]));
+    }
+    return criteria;
   }
 }

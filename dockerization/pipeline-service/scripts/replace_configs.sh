@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 CONFIG_FILE=/opt/harness/config.yml
+REDISSON_CACHE_FILE=/opt/harness/redisson-jcache.yaml
 
 replace_key_value () {
   CONFIG_KEY="$1";
@@ -116,6 +117,22 @@ if [[ "" != "$NG_MANAGER_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cd.secret $NG_MANAGER_SERVICE_SECRET
 fi
 
+if [[ "" != "$CV_MANAGER_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cv.serviceHttpClientConfig.baseUrl $CV_MANAGER_BASE_URL
+fi
+
+if [[ "" != "$CV_MANAGER_SERVICE_CONNECT_TIMEOUT_IN_SECONDS" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cv.serviceHttpClientConfig.connectTimeOutSeconds $CV_MANAGER_SERVICE_CONNECT_TIMEOUT_IN_SECONDS
+fi
+
+if [[ "" != "$CV_MANAGER_SERVICE_READ_TIMEOUT_IN_SECONDS" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cv.serviceHttpClientConfig.readTimeOutSeconds $CV_MANAGER_SERVICE_READ_TIMEOUT_IN_SECONDS
+fi
+
+if [[ "" != "$CV_MANAGER_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cv.secret $CV_MANAGER_SERVICE_SECRET
+fi
+
 if [[ "" != "$NG_MANAGER_TARGET" ]]; then
   yq write -i $CONFIG_FILE grpcClientConfigs.cd.target $NG_MANAGER_TARGET
 fi
@@ -216,6 +233,41 @@ if [[ "" != "$ENABLE_DASHBOARD_TIMESCALE" ]]; then
   yq write -i $CONFIG_FILE enableDashboardTimescale $ENABLE_DASHBOARD_TIMESCALE
 fi
 
+yq delete -i $REDISSON_CACHE_FILE codec
+
+if [[ "$REDIS_SCRIPT_CACHE" == "false" ]]; then
+  yq write -i $REDISSON_CACHE_FILE useScriptCache false
+fi
+
+
+if [[ "" != "$CACHE_CONFIG_REDIS_URL" ]]; then
+  yq write -i $REDISSON_CACHE_FILE singleServerConfig.address "$CACHE_CONFIG_REDIS_URL"
+fi
+
+if [[ "$CACHE_CONFIG_USE_SENTINEL" == "true" ]]; then
+  yq delete -i $REDISSON_CACHE_FILE singleServerConfig
+fi
+
+if [[ "" != "$CACHE_CONFIG_SENTINEL_MASTER_NAME" ]]; then
+  yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.masterName "$CACHE_CONFIG_SENTINEL_MASTER_NAME"
+fi
+
+if [[ "" != "$CACHE_CONFIG_REDIS_SENTINELS" ]]; then
+  IFS=',' read -ra SENTINEL_URLS <<< "$CACHE_CONFIG_REDIS_SENTINELS"
+  INDEX=0
+  for REDIS_SENTINEL_URL in "${SENTINEL_URLS[@]}"; do
+    yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[+] "${REDIS_SENTINEL_URL}"
+    INDEX=$(expr $INDEX + 1)
+  done
+fi
+
+if [[ "" != "$REDIS_NETTY_THREADS" ]]; then
+  yq write -i $REDISSON_CACHE_FILE nettyThreads "$REDIS_NETTY_THREADS"
+fi
+
+replace_key_value cacheConfig.cacheNamespace $CACHE_NAMESPACE
+replace_key_value cacheConfig.cacheBackend $CACHE_BACKEND
+
 replace_key_value eventsFramework.redis.sentinel $EVENTS_FRAMEWORK_USE_SENTINEL
 replace_key_value eventsFramework.redis.envNamespace $EVENTS_FRAMEWORK_ENV_NAMESPACE
 replace_key_value eventsFramework.redis.redisUrl $EVENTS_FRAMEWORK_REDIS_URL
@@ -243,7 +295,5 @@ replace_key_value orchestrationStepConfig.ffServerApiKey "$FF_SERVER_API_KEY"
 
 replace_key_value shouldDeployWithGitSync "$ENABLE_GIT_SYNC"
 
-replace_key_value useRedisForInterrupts "$USE_REDIS_FOR_INTERRUPTS"
-replace_key_value useRedisForOrchestrationEvents "$USE_REDIS_FOR_ORCHESTRATION_EVENTS"
-replace_key_value useRedisForSdkResponseEvents "$USE_REDIS_FOR_SDK_RESPONSE_EVENTS"
-
+replace_key_value enableAudit "$ENABLE_AUDIT"
+replace_key_value auditClientConfig.baseUrl "$AUDIT_SERVICE_BASE_URL"

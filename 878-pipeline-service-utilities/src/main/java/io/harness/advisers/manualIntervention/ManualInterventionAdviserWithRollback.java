@@ -13,7 +13,6 @@ import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
 import io.harness.pms.contracts.commons.RepairActionCode;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.adviser.Adviser;
@@ -25,7 +24,7 @@ import com.google.protobuf.Duration;
 import java.util.Collections;
 import java.util.Map;
 
-@OwnedBy(HarnessTeam.CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ManualInterventionAdviserWithRollback implements Adviser {
   public static final AdviserType ADVISER_TYPE =
       AdviserType.newBuilder().setType(CommonAdviserTypes.MANUAL_INTERVENTION_WITH_ROLLBACK.name()).build();
@@ -47,6 +46,7 @@ public class ManualInterventionAdviserWithRollback implements Adviser {
                 .setRepairActionCode(
                     repairActionCode == null ? RepairActionCode.UNKNOWN : getReformedRepairActionCode(repairActionCode))
                 .putAllMetadata(getRollbackMetadataMap(repairActionCode))
+                .setFromStatus(advisingEvent.getToStatus())
                 .build())
         .setType(AdviseType.INTERVENTION_WAIT)
         .build();
@@ -54,29 +54,18 @@ public class ManualInterventionAdviserWithRollback implements Adviser {
 
   @Override
   public boolean canAdvise(AdvisingEvent advisingEvent) {
-    if (checkIfPreviousAdviserExpired(advisingEvent.getNodeExecution())) {
+    if (advisingEvent.isPreviousAdviserExpired()) {
       return false;
     }
     boolean canAdvise = StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus())
         && advisingEvent.getFromStatus() != INTERVENTION_WAITING;
     ManualInterventionAdviserRollbackParameters parameters = extractParameters(advisingEvent);
-    FailureInfo failureInfo = advisingEvent.getNodeExecution().getFailureInfo();
+    FailureInfo failureInfo = advisingEvent.getFailureInfo();
     if (failureInfo != null && parameters != null && !isEmpty(failureInfo.getFailureTypesList())) {
       return canAdvise
           && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
     }
     return canAdvise;
-  }
-
-  private boolean checkIfPreviousAdviserExpired(NodeExecutionProto nodeExecutionProto) {
-    if (nodeExecutionProto.getInterruptHistoriesCount() == 0) {
-      return false;
-    }
-    return nodeExecutionProto.getInterruptHistoriesList()
-        .get(nodeExecutionProto.getInterruptHistoriesCount() - 1)
-        .getInterruptConfig()
-        .getIssuedBy()
-        .hasTimeoutIssuer();
   }
 
   private ManualInterventionAdviserRollbackParameters extractParameters(AdvisingEvent advisingEvent) {

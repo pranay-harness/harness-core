@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SetupUsageGitInfoPopulator {
   GitInfoPopulatorForConnector gitInfoPopulatorForConnector;
   YamlGitConfigService yamlGitConfigService;
+
   /*
    * This function assumes that all the setup usages are for the same referredBy entity.
    */
@@ -47,7 +48,7 @@ public class SetupUsageGitInfoPopulator {
     }
     String repoIdentifier = gitEntityInfo.getYamlGitConfigId();
     String branch = gitEntityInfo.getBranch();
-    if (isEmpty(repoIdentifier) && isEmpty(branch)) {
+    if (isEmpty(repoIdentifier) || isEmpty(branch)) {
       return;
     }
     EntityDetail referredByEntity = setupUsages.stream().map(EntitySetupUsage::getReferredByEntity).findAny().get();
@@ -55,7 +56,7 @@ public class SetupUsageGitInfoPopulator {
     Boolean isDefault = checkWhetherIsDefaultBranch(referredByEntityRef.getAccountIdentifier(),
         referredByEntityRef.getOrgIdentifier(), referredByEntityRef.getProjectIdentifier(), repoIdentifier, branch);
     List<EntityDetail> referredEntities =
-        setupUsages.stream().map(EntitySetupUsage::getReferredEntity).collect(toList());
+        setupUsages.stream().map(EntitySetupUsage::getReferredEntity).filter(Objects::nonNull).collect(toList());
     populateRepoBranchInReferredByEntity(referredByEntity, repoIdentifier, branch, isDefault);
     populateRepoBranchInReferredEntities(referredEntities, repoIdentifier, branch, isDefault);
   }
@@ -73,7 +74,7 @@ public class SetupUsageGitInfoPopulator {
         yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, repoIdentifier);
     if (yamlGitConfigDTO == null) {
       throw new UnexpectedException(
-          String.format("No yaml git config exists with the id %s, in account %s, org %s, project %s", repoIdentifier,
+          String.format("No git sync config exists with the id %s, in account %s, org %s, project %s", repoIdentifier,
               accountIdentifier, orgIdentifier, projectIdentifier));
     }
     return yamlGitConfigDTO.getBranch().equals(branch);

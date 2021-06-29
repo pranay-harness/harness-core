@@ -11,6 +11,7 @@ import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.encryptors.VaultEncryptor;
 import io.harness.exception.SecretManagementDelegateException;
 import io.harness.helpers.ext.vault.VaultRestClientFactory;
@@ -24,7 +25,10 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.Duration;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,8 +52,8 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> upsertSecretInternal(name, plaintext, accountId, null, vaultConfig), 15, TimeUnit.SECONDS, true);
+        return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
+            () -> upsertSecretInternal(name, plaintext, accountId, null, vaultConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
@@ -69,10 +73,8 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            ()
-                -> upsertSecretInternal(name, plaintext, accountId, existingRecord, vaultConfig),
-            5, TimeUnit.SECONDS, true);
+        return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(5),
+            () -> upsertSecretInternal(name, plaintext, accountId, existingRecord, vaultConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
@@ -92,8 +94,8 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> renameSecretInternal(name, accountId, existingRecord, vaultConfig), 15, TimeUnit.SECONDS, true);
+        return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
+            () -> renameSecretInternal(name, accountId, existingRecord, vaultConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
@@ -111,9 +113,10 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     VaultConfig vaultConfig = (VaultConfig) encryptionConfig;
     try {
       String fullPath = getFullPath(vaultConfig.getBasePath(), existingRecord.getEncryptionKey());
+      String vaultToken = getToken(vaultConfig);
       return VaultRestClientFactory.create(vaultConfig)
-          .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getNamespace(),
-              vaultConfig.getSecretEngineName(), fullPath);
+          .deleteSecret(
+              String.valueOf(vaultToken), vaultConfig.getNamespace(), vaultConfig.getSecretEngineName(), fullPath);
     } catch (IOException e) {
       String message = "Deletion of Vault secret at " + existingRecord.getEncryptionKey() + " failed";
       throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
@@ -127,9 +130,9 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     // With existing encrypted value. Need to delete it first and rewrite with new value.
     String fullPath = getFullPath(vaultConfig.getBasePath(), keyUrl);
     deleteSecret(accountId, EncryptedRecordData.builder().encryptionKey(keyUrl).build(), vaultConfig);
-
+    String vaultToken = getToken(vaultConfig);
     boolean isSuccessful = VaultRestClientFactory.create(vaultConfig)
-                               .writeSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getNamespace(),
+                               .writeSecret(String.valueOf(vaultToken), vaultConfig.getNamespace(),
                                    vaultConfig.getSecretEngineName(), fullPath, value);
 
     if (isSuccessful) {
@@ -168,8 +171,8 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> fetchSecretInternal(encryptedRecord, vaultConfig), 15, TimeUnit.SECONDS, true);
+        return HTimeLimiter.callInterruptible21(
+            timeLimiter, Duration.ofSeconds(15), () -> fetchSecretInternal(encryptedRecord, vaultConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("decryption failed. trial num: {}", failedAttempts, e);
@@ -188,9 +191,9 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
         isEmpty(data.getPath()) ? getFullPath(vaultConfig.getBasePath(), data.getEncryptionKey()) : data.getPath();
     long startTime = System.currentTimeMillis();
     log.info("Reading secret {} from vault {}", fullPath, vaultConfig.getVaultUrl());
-
+    String vaultToken = getToken(vaultConfig);
     String value = VaultRestClientFactory.create(vaultConfig)
-                       .readSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getNamespace(),
+                       .readSecret(String.valueOf(vaultToken), vaultConfig.getNamespace(),
                            vaultConfig.getSecretEngineName(), fullPath);
 
     if (isNotEmpty(value)) {
@@ -201,6 +204,20 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
       String errorMsg = "Secret key path '" + fullPath + "' is invalid.";
       log.error(errorMsg);
       throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, errorMsg, USER);
+    }
+  }
+
+  private String getToken(VaultConfig vaultConfig) {
+    if (vaultConfig.isUseVaultAgent()) {
+      try {
+        byte[] content = Files.readAllBytes(Paths.get(URI.create("file://" + vaultConfig.getSinkPath())));
+        return new String(content);
+      } catch (IOException e) {
+        throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR,
+            "Using Vault Agent Cannot read Token From Sink Path:" + vaultConfig.getSinkPath(), e, USER);
+      }
+    } else {
+      return vaultConfig.getAuthToken();
     }
   }
 }

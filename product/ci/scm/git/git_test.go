@@ -76,7 +76,10 @@ func TestFindFilesInPR(t *testing.T) {
 	got, err := FindFilesInPR(context.Background(), in, log.Sugar())
 
 	assert.Nil(t, err, "no errors")
-	assert.Equal(t, 1, len(got.Files), "1 file")
+	assert.Equal(t, 4, len(got.Files), "4 files")
+	assert.True(t, got.Files[1].Added, "file 1 added")
+	assert.True(t, got.Files[2].Renamed, "file 2 renamed")
+	assert.True(t, got.Files[3].Deleted, "file deleted")
 	assert.Equal(t, int32(0), got.Pagination.Next, "No next page")
 }
 

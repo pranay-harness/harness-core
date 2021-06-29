@@ -3,15 +3,12 @@ package io.harness.pms.sdk.core;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionServiceImpl;
-import io.harness.pms.sdk.core.interrupt.InterruptEventHandler;
-import io.harness.pms.sdk.core.interrupt.InterruptEventHandlerImpl;
 import io.harness.pms.sdk.core.interrupt.PMSInterruptService;
 import io.harness.pms.sdk.core.interrupt.PMSInterruptServiceGrpcImpl;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeGrpcServiceImpl;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingGrpcOutputService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
-import io.harness.pms.sdk.core.response.publishers.MongoSdkResponseEventPublisher;
 import io.harness.pms.sdk.core.response.publishers.RedisSdkResponseEventPublisher;
 import io.harness.pms.sdk.core.response.publishers.SdkResponseEventPublisher;
 import io.harness.threading.ThreadPool;
@@ -47,20 +44,13 @@ public class PmsSdkCoreModule extends AbstractModule {
       install(PmsSdkDummyGrpcModule.getInstance());
     }
 
-    install(PmsSdkQueueModule.getInstance(config));
     bind(PMSInterruptService.class).to(PMSInterruptServiceGrpcImpl.class).in(Singleton.class);
     bind(OutcomeService.class).to(OutcomeGrpcServiceImpl.class).in(Singleton.class);
     bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingGrpcOutputService.class).in(Singleton.class);
     bind(SdkNodeExecutionService.class).to(SdkNodeExecutionServiceImpl.class).in(Singleton.class);
-    bind(InterruptEventHandler.class).to(InterruptEventHandlerImpl.class).in(Singleton.class);
     install(
         PmsSdkCoreEventsFrameworkModule.getInstance(config.getEventsFrameworkConfiguration(), config.getServiceName()));
-
-    if (config.isUseRedisForSdkResponseEvents()) {
-      bind(SdkResponseEventPublisher.class).to(RedisSdkResponseEventPublisher.class);
-    } else {
-      bind(SdkResponseEventPublisher.class).to(MongoSdkResponseEventPublisher.class);
-    }
+    bind(SdkResponseEventPublisher.class).to(RedisSdkResponseEventPublisher.class);
   }
 
   @Provides

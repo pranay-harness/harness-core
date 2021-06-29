@@ -4,6 +4,7 @@ import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheConfig;
 import io.harness.cf.CfClientConfig;
 import io.harness.cvng.core.NGManagerServiceConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
@@ -52,7 +53,7 @@ public class VerificationConfiguration extends Configuration {
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
   @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
-  @JsonProperty("useRedisForSdkResponseEvents") private Boolean useRedisForSdkResponseEvents;
+  @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
 
   private String portalUrl;
   /**

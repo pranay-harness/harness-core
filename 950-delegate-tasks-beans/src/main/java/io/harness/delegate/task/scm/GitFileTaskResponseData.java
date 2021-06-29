@@ -20,4 +20,5 @@ public class GitFileTaskResponseData implements DelegateResponseData {
   GitFileTaskType gitFileTaskType;
   byte[] fileBatchContentResponse;
   byte[] fileContent;
+  String commitId;
 }

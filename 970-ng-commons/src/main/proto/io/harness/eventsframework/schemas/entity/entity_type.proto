@@ -24,4 +24,5 @@ enum EntityTypeProtoEnum {
   PIPELINE_STEPS = 16;
   APPROVAL_STAGE = 17;
   TRIGGERS = 18;
+  FEATURE_FLAG_STAGE = 19;
 }

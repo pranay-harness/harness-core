@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -12,7 +13,7 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.plancreator.steps.common.StepElementParameters;
-import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollback;
+import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -31,7 +32,7 @@ import io.harness.supplier.ThrowingSupplier;
 import com.google.inject.Inject;
 
 @OwnedBy(CDP)
-public class K8sRollingRollbackStep extends TaskExecutableWithRollback<K8sDeployResponse> {
+public class K8sRollingRollbackStep extends TaskExecutableWithRollbackAndRbac<K8sDeployResponse> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLBACK_ROLLING.getYamlType()).build();
   public static final String K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME = "Rolling Deployment Rollback";
@@ -46,7 +47,12 @@ public class K8sRollingRollbackStep extends TaskExecutableWithRollback<K8sDeploy
   }
 
   @Override
-  public TaskRequest obtainTask(
+  public void validateResources(Ambiance ambiance, StepElementParameters stepParameters) {
+    // Noop
+  }
+
+  @Override
+  public TaskRequest obtainTaskAfterRbac(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputService.resolveOptional(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_ROLL_OUT));
@@ -74,7 +80,9 @@ public class K8sRollingRollbackStep extends TaskExecutableWithRollback<K8sDeploy
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .build();
 
-    return k8sStepHelper.queueK8sTask(stepElementParameters, rollingRollbackDeployRequest, ambiance, infrastructure)
+    return k8sStepHelper
+        .queueK8sTask(stepElementParameters, rollingRollbackDeployRequest, ambiance,
+            K8sExecutionPassThroughData.builder().infrastructure(infrastructure).build())
         .getTaskRequest();
   }
 

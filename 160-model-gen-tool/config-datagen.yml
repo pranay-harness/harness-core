@@ -222,7 +222,7 @@ ngManagerServiceHttpClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
-ngManagerAvailable: true
+eventsFrameworkAvailableInOnPrem: false
 
 grpcDelegateServiceClientConfig:
   target: localhost:9880

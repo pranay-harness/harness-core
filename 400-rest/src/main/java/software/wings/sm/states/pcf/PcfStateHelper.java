@@ -8,6 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.LogLevel.INFO;
+import static io.harness.pcf.CfCommandUnitConstants.FetchFiles;
 import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST;
 import static io.harness.pcf.model.ManifestType.AUTOSCALAR_MANIFEST;
 import static io.harness.pcf.model.ManifestType.VARIABLE_MANIFEST;
@@ -23,7 +24,6 @@ import static io.harness.pcf.model.PcfConstants.ROUTE_PLACEHOLDER_TOKEN_DEPRECAT
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
-import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.EnvironmentGlobal;
 import static software.wings.helpers.ext.k8s.request.K8sValuesLocation.ServiceOverride;
@@ -44,7 +44,11 @@ import io.harness.context.ContextElementType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
+import io.harness.delegate.task.pcf.CfCommandRequest;
+import io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.delegate.task.pcf.request.CfCommandRouteUpdateRequest;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -54,6 +58,7 @@ import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.pcf.PcfFileTypeChecker;
+import io.harness.pcf.model.CfCliVersion;
 import io.harness.pcf.model.ManifestType;
 import io.harness.pcf.model.PcfConstants;
 
@@ -91,10 +96,6 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
-import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
-import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PcfInfraStructure;
 import software.wings.service.ServiceHelper;
@@ -110,6 +111,7 @@ import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.service.mappers.artifact.CfConfigToInternalMapper;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -139,6 +141,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -188,6 +191,15 @@ public class PcfStateHelper {
         .build();
   }
 
+  public List<String> getRenderedTags(ExecutionContext context, List<String> tagList) {
+    final List<String> renderedTags = CollectionUtils.emptyIfNull(tagList)
+                                          .stream()
+                                          .map(context::renderExpression)
+                                          .distinct()
+                                          .collect(Collectors.toList());
+    return io.harness.data.structure.ListUtils.trimStrings(renderedTags);
+  }
+
   public Integer getStateTimeoutMillis(ExecutionContext context, Integer defaultValue, boolean isRollback) {
     SetupSweepingOutputPcf setupSweepingOutputPcf = null;
     try {
@@ -203,15 +215,16 @@ public class PcfStateHelper {
   }
 
   public PcfRouteUpdateStateExecutionData getRouteUpdateStateExecutionData(String activityId, String appId,
-      String accountId, PcfCommandRequest pcfCommandRequest, String commandName,
-      PcfRouteUpdateRequestConfigData requestConfigData) {
+      String accountId, CfCommandRequest cfCommandRequest, String commandName,
+      CfRouteUpdateRequestConfigData requestConfigData, List<String> tags) {
     return PcfRouteUpdateStateExecutionData.builder()
         .activityId(activityId)
         .accountId(accountId)
         .appId(appId)
-        .pcfCommandRequest(pcfCommandRequest)
+        .pcfCommandRequest(cfCommandRequest)
         .commandName(commandName)
         .pcfRouteUpdateRequestConfigData(requestConfigData)
+        .tags(tags)
         .build();
   }
 
@@ -247,7 +260,8 @@ public class PcfStateHelper {
   }
 
   public ExecutionResponse queueDelegateTaskForRouteUpdate(PcfRouteUpdateQueueRequestData queueRequestData,
-      SetupSweepingOutputPcf setupSweepingOutputPcf, String stateExecutionInstanceId, boolean selectionLogsEnabled) {
+      SetupSweepingOutputPcf setupSweepingOutputPcf, String stateExecutionInstanceId, boolean selectionLogsEnabled,
+      List<String> renderedTags) {
     Integer timeoutIntervalInMinutes = queueRequestData.getTimeoutIntervalInMinutes() == null
         ? Integer.valueOf(DEFAULT_PCF_TASK_TIMEOUT_MIN)
         : queueRequestData.getTimeoutIntervalInMinutes();
@@ -255,14 +269,14 @@ public class PcfStateHelper {
     PcfInfrastructureMapping pcfInfrastructureMapping = queueRequestData.getPcfInfrastructureMapping();
     String activityId = queueRequestData.getActivityId();
 
-    PcfCommandRequest pcfCommandRequest =
-        PcfCommandRouteUpdateRequest.builder()
+    CfCommandRequest cfCommandRequest =
+        CfCommandRouteUpdateRequest.builder()
             .pcfCommandType(PcfCommandType.UPDATE_ROUTE)
             .commandName(queueRequestData.getCommandName())
             .appId(app.getUuid())
             .accountId(app.getAccountId())
             .activityId(activityId)
-            .pcfConfig(queueRequestData.getPcfConfig())
+            .pcfConfig(CfConfigToInternalMapper.toCfInternalConfig(queueRequestData.getPcfConfig()))
             .organization(getOrganizationFromSetupContext(setupSweepingOutputPcf))
             .space(getSpaceFromSetupContext(setupSweepingOutputPcf))
             .pcfRouteUpdateConfigData(queueRequestData.getRequestConfigData())
@@ -274,11 +288,12 @@ public class PcfStateHelper {
                 featureFlagService.isEnabled(LIMIT_PCF_THREADS, queueRequestData.getPcfConfig().getAccountId()))
             .ignorePcfConnectionContextCache(featureFlagService.isEnabled(
                 IGNORE_PCF_CONNECTION_CONTEXT_CACHE, queueRequestData.getPcfConfig().getAccountId()))
+            .cfCliVersion(getCfCliVersionOrDefault(app.getAppId(), setupSweepingOutputPcf.getServiceId()))
             .build();
 
     PcfRouteUpdateStateExecutionData stateExecutionData =
-        getRouteUpdateStateExecutionData(activityId, app.getUuid(), app.getAccountId(), pcfCommandRequest,
-            queueRequestData.getCommandName(), queueRequestData.getRequestConfigData());
+        getRouteUpdateStateExecutionData(activityId, app.getUuid(), app.getAccountId(), cfCommandRequest,
+            queueRequestData.getCommandName(), queueRequestData.getRequestConfigData(), renderedTags);
 
     DelegateTask delegateTask =
         getDelegateTask(PcfDelegateTaskCreationData.builder()
@@ -290,10 +305,11 @@ public class PcfStateHelper {
                             .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
                             .environmentType(queueRequestData.getEnvironmentType())
                             .serviceId(pcfInfrastructureMapping.getServiceId())
-                            .parameters(new Object[] {pcfCommandRequest, queueRequestData.getEncryptedDataDetails()})
+                            .parameters(new Object[] {cfCommandRequest, queueRequestData.getEncryptedDataDetails()})
                             .selectionLogsTrackingEnabled(selectionLogsEnabled)
                             .taskDescription("PCF Route update task execution")
                             .timeout(timeoutIntervalInMinutes)
+                            .tagList(renderedTags)
                             .build());
 
     delegateService.queueTask(delegateTask);
@@ -927,5 +943,10 @@ public class PcfStateHelper {
                                 .updateDetails(new StringBuilder().append(logMessage).toString())
                                 .build())
         .build();
+  }
+
+  public CfCliVersion getCfCliVersionOrDefault(final String appId, final String serviceId) {
+    Service service = serviceResourceService.get(appId, serviceId);
+    return service != null && service.getCfCliVersion() != null ? service.getCfCliVersion() : CfCliVersion.V6;
   }
 }

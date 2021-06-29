@@ -2,6 +2,7 @@ package io.harness.ngtriggers.eventmapper.filters;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ngtriggers.Constants.TRIGGER_ERROR_LOG;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.EXCEPTION_WHILE_PROCESSING;
 
 import static java.util.Collections.emptyList;
@@ -38,6 +39,7 @@ public interface TriggerFilter {
                             .toString();
 
     return new StringBuilder(128)
+        .append(TRIGGER_ERROR_LOG)
         .append("Exception while evaluating Trigger: ")
         .append(triggerRef)
         .append(", Filter: ")

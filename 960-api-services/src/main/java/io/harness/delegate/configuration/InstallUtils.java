@@ -9,6 +9,7 @@ import static io.harness.network.Http.getBaseUrl;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.ProcessExecutionException;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
@@ -28,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @UtilityClass
 @Slf4j
@@ -39,7 +41,7 @@ public class InstallUtils {
   private static final String goTemplateClientVersion = "v0.4";
   private static final String goTemplateClientBaseDir = "./client-tools/go-template/";
 
-  private static final String harnessPywinrmVersion = "v0.3-dev";
+  private static final String harnessPywinrmVersion = "v0.4-dev";
   private static final String harnessPywinrmBaseDir = "./client-tools/harness-pywinrm/";
 
   static final String helm3Version = "v3.1.2";
@@ -82,7 +84,7 @@ public class InstallUtils {
 
   private static final String scmBaseDir = "./client-tools/scm/";
   private static final String scmBinary = "scm";
-  private static final String defaultScmVersion = "5622d5e9";
+  private static final String defaultScmVersion = "77c318c1";
 
   private static final String KUBECTL_CDN_PATH = "public/shared/tools/kubectl/release/%s/bin/%s/amd64/kubectl";
   private static final String CHART_MUSEUM_CDN_PATH =
@@ -96,6 +98,7 @@ public class InstallUtils {
   private static final String TERRAFORM_CONFIG_CDN_PATH =
       "public/shared/tools/terraform-config-inspect/%s/%s/amd64/terraform-config-inspect";
   private static final String KUSTOMIZE_CDN_PATH = "public/shared/tools/kustomize/release/%s/bin/%s/amd64/kustomize";
+  private static final String CF_VERSION_COMMAND = "cf --version";
   private static final String SCM_CDN_PATH = "public/shared/tools/scm/release/%s/bin/%s/amd64/scm";
 
   public static String getTerraformConfigInspectPath() {
@@ -1072,5 +1075,36 @@ public class InstallUtils {
       }
     }
     return false;
+  }
+
+  public static void validateCfCliExists() {
+    ProcessResult processResult = executeCommand(CF_VERSION_COMMAND, 1);
+    if (processResult.getExitValue() == 0) {
+      log.info(format("Found CF CLI installed by package manager : %s", processResult.outputUTF8()));
+    }
+  }
+
+  private static ProcessResult executeCommand(final String cmd, long timeoutInMin) {
+    try {
+      return new ProcessExecutor()
+          .timeout(timeoutInMin, TimeUnit.MINUTES)
+          .command("/bin/bash", "-c", cmd)
+          .readOutput(true)
+          .redirectOutput(new LogOutputStream() {
+            @Override
+            protected void processLine(String line) {
+              log.info(line);
+            }
+          })
+          .redirectError(new LogOutputStream() {
+            @Override
+            protected void processLine(String line) {
+              log.error(line);
+            }
+          })
+          .execute();
+    } catch (Exception ex) {
+      throw new ProcessExecutionException(format("Unable to execute bash command: %s", cmd), ex);
+    }
   }
 }

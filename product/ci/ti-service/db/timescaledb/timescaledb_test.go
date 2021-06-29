@@ -130,6 +130,8 @@ func Test_Summary(t *testing.T) {
 	pipeline := "pipeline"
 	build := "build"
 	report := "junit"
+	step := "step"
+	stage := "stage"
 
 	log := zap.NewExample().Sugar()
 	db, mock, err := db.NewMockDB(log)
@@ -142,7 +144,7 @@ func Test_Summary(t *testing.T) {
 		AddRow(25, "passed", "t2")
 	query := fmt.Sprintf(`
 		SELECT duration_ms, result, name FROM %s WHERE account_id = $1
-		AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6;`, table)
+		AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND step_id = $6 AND stage_id = $7 AND report = $8;`, table)
 	t1 := types.TestSummary{Name: "t1", Status: types.StatusFailed}
 	t2 := types.TestSummary{Name: "t2", Status: types.StatusPassed}
 	summary := []types.TestSummary{t1, t2}
@@ -153,9 +155,9 @@ func Test_Summary(t *testing.T) {
 	}
 	query = regexp.QuoteMeta(query)
 	mock.ExpectQuery(query).
-		WithArgs(account, org, project, pipeline, build, report).WillReturnRows(rows)
+		WithArgs(account, org, project, pipeline, build, step, stage, report).WillReturnRows(rows)
 	tdb := &TimeScaleDb{Conn: db, Log: log, EvalTable: table}
-	got, err := tdb.Summary(ctx, account, org, project, pipeline, build, report)
+	got, err := tdb.Summary(ctx, account, org, project, pipeline, build, step, stage, report)
 	assert.Nil(t, err, nil)
 	assert.Equal(t, got.TotalTests, exp.TotalTests)
 	assert.Equal(t, got.TimeMs, exp.TimeMs)
@@ -174,6 +176,8 @@ func Test_GetTestCases(t *testing.T) {
 	build := "build"
 	report := "junit"
 	suite := "s1"
+	step := "step"
+	stage := "stage"
 
 	log := zap.NewExample().Sugar()
 	db, mock, err := db.NewMockDB(log)
@@ -219,14 +223,15 @@ func Test_GetTestCases(t *testing.T) {
 		SELECT name, suite_name, class_name, duration_ms, result, message,
 		description, type, stdout, stderr, COUNT(*) OVER() AS full_count
 		FROM %s
-		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6 AND suite_name = $7 AND result IN (%s)
+		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND step_id = $6 AND stage_id = $7 AND report = $8 AND suite_name = $9 AND result IN (%s)
 		ORDER BY %s %s, %s %s
-		LIMIT $8 OFFSET $9;`, table, "'failed', 'error'", "duration_ms", "DESC", "name", "ASC")
+		LIMIT $10 OFFSET $11;`, table, "'failed', 'error'", "duration_ms", "DESC", "name", "ASC")
 	query = regexp.QuoteMeta(query)
 	mock.ExpectQuery(query).
-		WithArgs(account, org, project, pipeline, build, report, suite, defaultLimit, defaultOffset).WillReturnRows(rows)
+		WithArgs(account, org, project, pipeline, build, step, stage, report, suite, defaultLimit, defaultOffset).WillReturnRows(rows)
 	tdb := &TimeScaleDb{Conn: db, Log: log, EvalTable: table}
-	got, err := tdb.GetTestCases(ctx, account, org, project, pipeline, build, report, suite, "duration_ms", "failed", desc, "", "")
+	got, err := tdb.GetTestCases(ctx, account, org, project, pipeline, build, step, stage, report, suite, "duration_ms", "failed", desc, "", "")
+	fmt.Println("\n\ngot: ", got)
 	li, _ := strconv.Atoi(defaultLimit)
 	assert.Nil(t, err, nil)
 	assert.Equal(t, got.Metadata.TotalPages, 1)
@@ -246,6 +251,8 @@ func Test_GetTestSuites(t *testing.T) {
 	project := "project"
 	pipeline := "pipeline"
 	build := "build"
+	step := "step"
+	stage := "stage"
 	report := "junit"
 
 	log := zap.NewExample().Sugar()
@@ -285,15 +292,15 @@ func Test_GetTestSuites(t *testing.T) {
 		SUM(CASE WHEN result = 'failed' OR result = 'error' THEN 1 ELSE 0 END) * 100 / COUNT(*) AS fail_pct,
 		COUNT(*) OVER() AS full_count
 		FROM %s
-		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6 AND result IN (%s)
+		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND step_id = $6 AND stage_id = $7 AND report = $8 AND result IN (%s)
 		GROUP BY suite_name
 		ORDER BY %s %s, %s %s
-		LIMIT $7 OFFSET $8;`, table, "'failed', 'error', 'passed', 'skipped'", "fail_pct", desc, "suite_name", asc)
+		LIMIT $9 OFFSET $10;`, table, "'failed', 'error', 'passed', 'skipped'", "fail_pct", desc, "suite_name", asc)
 	query = regexp.QuoteMeta(query)
 	mock.ExpectQuery(query).
-		WithArgs(account, org, project, pipeline, build, report, defaultLimit, defaultOffset).WillReturnRows(rows)
+		WithArgs(account, org, project, pipeline, build, step, stage, report, defaultLimit, defaultOffset).WillReturnRows(rows)
 	tdb := &TimeScaleDb{Conn: db, Log: log, EvalTable: table}
-	got, err := tdb.GetTestSuites(ctx, account, org, project, pipeline, build, report, "", "", "", "", "")
+	got, err := tdb.GetTestSuites(ctx, account, org, project, pipeline, build, step, stage, report, "", "", "", "", "")
 	li, _ := strconv.Atoi(defaultLimit)
 	assert.Nil(t, err, nil)
 	assert.Equal(t, got.Metadata.TotalPages, 1)
@@ -393,12 +400,12 @@ func Test_WriteSelectedTests_WithUpsert(t *testing.T) {
 				UPDATE %s
 				SET test_count = test_count + $1, test_selected = test_selected + $2,
 				source_code_test = source_code_test + $3, new_test = new_test + $4, updated_test = updated_test + $5
-				WHERE account_id = $6 AND org_id = $7 AND project_id = $8 AND pipeline_id = $9 AND build_id = $10
+				WHERE account_id = $6 AND org_id = $7 AND project_id = $8 AND pipeline_id = $9 AND build_id = $10 AND step_id = $11 AND stage_id = $12
 				`, table)
 	stmt = regexp.QuoteMeta(stmt)
 	mock.ExpectExec(stmt).
 		WithArgs(total, selected, src, new, updated,
-			account, org, project, pipeline, build).WillReturnResult(sqlmock.NewResult(0, 1))
+			account, org, project, pipeline, build, step, stage).WillReturnResult(sqlmock.NewResult(0, 1))
 	tdb := &TimeScaleDb{Conn: db, Log: log, SelectionTable: table}
 	err = tdb.WriteSelectedTests(ctx, account, org, project, pipeline, build, stage, step, arg, true)
 	assert.Nil(t, err, nil)

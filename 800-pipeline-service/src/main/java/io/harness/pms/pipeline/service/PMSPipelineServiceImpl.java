@@ -13,7 +13,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.InvalidYamlException;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.observer.Subject;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
@@ -27,6 +29,7 @@ import io.harness.pms.pipeline.observer.PipelineActionObserver;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.variables.VariableCreatorMergeService;
 import io.harness.pms.variables.VariableMergeServiceResponse;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
 
 import com.google.inject.Inject;
@@ -71,18 +74,32 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       throw new DuplicateFieldException(format(DUP_KEY_EXP_FORMAT_STRING, pipelineEntity.getIdentifier(),
                                             pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()),
           USER_SRE, ex);
-    } catch (IOException | EventsFrameworkDownException exception) {
+    } catch (EventsFrameworkDownException ex) {
+      log.error("Events framework is down for Pipeline Service.", ex);
+      throw new InvalidRequestException("Error connecting to systems upstream", ex);
+
+    } catch (IOException ex) {
+      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+
+    } catch (Exception e) {
+      log.error(String.format("Error while saving pipeline [%s]", pipelineEntity.getIdentifier()), e);
       throw new InvalidRequestException(String.format(
-          "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
-          pipelineEntity.getIdentifier()));
+          "Error while saving pipeline [%s]: %s", pipelineEntity.getIdentifier(), ExceptionUtils.getMessage(e)));
     }
   }
 
   @Override
   public Optional<PipelineEntity> get(
       String accountId, String orgIdentifier, String projectIdentifier, String identifier, boolean deleted) {
-    return pmsPipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
-        accountId, orgIdentifier, projectIdentifier, identifier, !deleted);
+    try {
+      return pmsPipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
+          accountId, orgIdentifier, projectIdentifier, identifier, !deleted);
+    } catch (Exception e) {
+      log.error(String.format("Error while retrieving pipeline [%s]", identifier), e);
+      throw new InvalidRequestException(
+          String.format("Error while retrieving pipeline [%s]: %s", identifier, ExceptionUtils.getMessage(e)));
+    }
   }
 
   @Override
@@ -122,11 +139,16 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
             pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
       }
       return updatedResult;
-    } catch (IOException e) {
-      log.error(e.toString());
+    } catch (EventsFrameworkDownException ex) {
+      log.error("Events framework is down for Pipeline Service.", ex);
+      throw new InvalidRequestException("Error connecting to systems upstream", ex);
+    } catch (IOException ex) {
+      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+    } catch (Exception e) {
+      log.error(String.format("Error while updating pipeline [%s]", pipelineEntity.getIdentifier()), e);
       throw new InvalidRequestException(String.format(
-          "Unknown exception occurred while updating pipeline with id: [%s]. Please contact Harness Support",
-          pipelineEntity.getIdentifier()));
+          "Error while updating pipeline [%s]: %s", pipelineEntity.getIdentifier(), ExceptionUtils.getMessage(e)));
     }
   }
 
@@ -170,16 +192,21 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
 
     PipelineEntity existingEntity = optionalPipelineEntity.get();
     PipelineEntity withDeleted = existingEntity.withDeleted(true);
-    PipelineEntity deletedEntity =
-        pmsPipelineRepository.deletePipeline(withDeleted, PipelineYamlDtoMapper.toDto(withDeleted));
-
-    if (deletedEntity.getDeleted()) {
-      pipelineSubject.fireInform(PipelineActionObxxxxxxxx:onDelete, deletedEntity);
-      return true;
-    } else {
+    try {
+      PipelineEntity deletedEntity =
+          pmsPipelineRepository.deletePipeline(withDeleted, PipelineYamlDtoMapper.toDto(withDeleted));
+      if (deletedEntity.getDeleted()) {
+        pipelineSubject.fireInform(PipelineActionObxxxxxxxx:onDelete, deletedEntity);
+        return true;
+      } else {
+        throw new InvalidRequestException(
+            format("Pipeline [%s] under Project[%s], Organization [%s] could not be deleted.", pipelineIdentifier,
+                projectIdentifier, orgIdentifier));
+      }
+    } catch (Exception e) {
+      log.error(String.format("Error while deleting pipeline [%s]", pipelineIdentifier), e);
       throw new InvalidRequestException(
-          format("Pipeline [%s] under Project[%s], Organization [%s] could not be deleted.", pipelineIdentifier,
-              projectIdentifier, orgIdentifier));
+          String.format("Error while deleting pipeline [%s]: %s", pipelineIdentifier, ExceptionUtils.getMessage(e)));
     }
   }
 
@@ -210,6 +237,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     try {
       return variableCreatorMergeService.createVariablesResponse(pipelineEntity.getYaml());
     } catch (Exception ex) {
+      log.error("Error happened while creating variables for pipeline:", ex);
       throw new InvalidRequestException(
           format("Error happened while creating variables for pipeline: %s", ex.getMessage()));
     }

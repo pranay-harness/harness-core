@@ -23,6 +23,7 @@ import org.springframework.data.annotation.TypeAlias;
 public class GitConfig extends Connector {
   GitConnectionType connectionType;
   String url;
+  String validationRepo;
   String branchName;
   GitAuthentication authenticationDetails;
   GitAuthType authType;

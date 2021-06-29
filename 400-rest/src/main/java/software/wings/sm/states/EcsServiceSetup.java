@@ -28,6 +28,7 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -50,7 +51,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
@@ -174,10 +174,8 @@ public class EcsServiceSetup extends State {
 
     this.isMultipleLoadBalancersFeatureFlagActive =
         featureFlagService.isEnabled(FeatureName.ECS_MULTI_LBS, context.getAccountId());
-    if (featureFlagService.isEnabled(FeatureName.ECS_REMOTE_MANIFEST, context.getAccountId())) {
-      appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.K8S_MANIFEST);
-      valuesInGit = isRemoteManifest(appManifestMap);
-    }
+    appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.K8S_MANIFEST);
+    valuesInGit = isRemoteManifest(appManifestMap);
 
     Activity activity = ecsStateHelper.createActivity(
         context, ECS_SERVICE_SETUP_COMMAND, getStateType(), CommandUnitType.AWS_ECS_SERVICE_SETUP, activityService);

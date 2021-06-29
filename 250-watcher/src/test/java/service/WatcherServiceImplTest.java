@@ -242,7 +242,7 @@ public class WatcherServiceImplTest extends CategoryTest {
     RestResponse<DelegateConfiguration> restResponse =
         RestResponse.Builder.aRestResponse().withResource(delegateConfiguration).build();
 
-    HTimeLimiterMocker.mockCallInterruptible(timeLimiter, ofSeconds(15)).thenReturn(restResponse);
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter, ofSeconds(30)).thenReturn(restResponse);
 
     boolean downloadSuccesful = watcherService.downloadRunScriptsBeforeRestartingDelegateAndWatcher();
 
@@ -320,7 +320,7 @@ public class WatcherServiceImplTest extends CategoryTest {
             .withResource(DelegateConfiguration.builder().action(SELF_DESTRUCT).build())
             .build();
 
-    HTimeLimiterMocker.mockCallInterruptible(timeLimiter, ofSeconds(15))
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter, ofSeconds(30))
         .thenReturn(restResponse)
         .thenReturn(selfDestructRestResponse)
         .thenReturn(null);

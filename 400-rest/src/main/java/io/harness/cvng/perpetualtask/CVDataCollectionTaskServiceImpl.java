@@ -1,6 +1,8 @@
 package io.harness.cvng.perpetualtask;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
+import static io.harness.beans.shared.tasks.NgSetupFields.NG;
+import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 
@@ -48,6 +50,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.util.Durations;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.groovy.util.Maps;
 import org.jetbrains.annotations.NotNull;
 
 @OwnedBy(CV)
@@ -128,12 +131,13 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
         EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
             encryptedDataDetailList, null);
     executionCapabilities.addAll(bundle.fetchRequiredExecutionCapabilities(null));
-    return createPerpetualTaskExecutionBundle(perpetualTaskPack, executionCapabilities);
+    return createPerpetualTaskExecutionBundle(
+        perpetualTaskPack, executionCapabilities, orgIdentifier, projectIdentifier);
   }
 
   @NotNull
-  private PerpetualTaskExecutionBundle createPerpetualTaskExecutionBundle(
-      Any perpetualTaskPack, List<ExecutionCapability> executionCapabilities) {
+  private PerpetualTaskExecutionBundle createPerpetualTaskExecutionBundle(Any perpetualTaskPack,
+      List<ExecutionCapability> executionCapabilities, String orgIdentifier, String projectIdentifier) {
     PerpetualTaskExecutionBundle.Builder builder = PerpetualTaskExecutionBundle.newBuilder();
     executionCapabilities.forEach(executionCapability
         -> builder
@@ -142,7 +146,9 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
                        .setKryoCapability(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(executionCapability)))
                        .build())
                .build());
-    return builder.setTaskParams(perpetualTaskPack).build();
+    return builder.setTaskParams(perpetualTaskPack)
+        .putAllSetupAbstractions(Maps.of(NG, "true", OWNER, orgIdentifier + "/" + projectIdentifier))
+        .build();
   }
 
   private List<EncryptedDataDetail> getEncryptedDataDetail(
@@ -238,16 +244,19 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
       encryptedDataDetails = ngSecretService.getEncryptionDetails(
           basicNGAccessObject, dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntities().get(0));
     }
-    SyncTaskContext taskContext = getSyncTaskContext(accountId);
+    SyncTaskContext taskContext = getSyncTaskContext(accountId, orgIdentifier, projectIdentifier);
     return delegateProxyFactory.get(CVNGDataCollectionDelegateService.class, taskContext)
         .getDataCollectionResult(accountId, dataCollectionRequest, encryptedDataDetails);
   }
 
-  private SyncTaskContext getSyncTaskContext(String accountId) {
+  private SyncTaskContext getSyncTaskContext(String accountId, String orgIdentifier, String projectIdentifier) {
     return SyncTaskContext.builder()
         .accountId(accountId)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
         .appId(GLOBAL_APP_ID)
         .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+        .ngTask(true)
         .build();
   }
 
@@ -255,8 +264,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
       DataCollectionConnectorBundle bundle) {
     List<EncryptedDataDetail> encryptedDataDetails =
         getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
-    SyncTaskContext syncTaskContext =
-        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    SyncTaskContext syncTaskContext = getSyncTaskContext(accountId, orgIdentifier, projectIdentifier);
     return delegateProxyFactory.get(K8InfoDataService.class, syncTaskContext)
         .getNameSpaces(bundle, encryptedDataDetails, filter);
   }
@@ -266,8 +274,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
       String filter, DataCollectionConnectorBundle bundle) {
     List<EncryptedDataDetail> encryptedDataDetails =
         getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
-    SyncTaskContext syncTaskContext =
-        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    SyncTaskContext syncTaskContext = getSyncTaskContext(accountId, orgIdentifier, projectIdentifier);
     return delegateProxyFactory.get(K8InfoDataService.class, syncTaskContext)
         .getWorkloads(namespace, bundle, encryptedDataDetails, filter);
   }
@@ -277,8 +284,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
       String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle) {
     List<EncryptedDataDetail> encryptedDataDetails =
         getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
-    SyncTaskContext syncTaskContext =
-        SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
+    SyncTaskContext syncTaskContext = getSyncTaskContext(accountId, orgIdentifier, projectIdentifier);
     return delegateProxyFactory.get(K8InfoDataService.class, syncTaskContext)
         .checkCapabilityToGetEvents(bundle, encryptedDataDetails);
   }

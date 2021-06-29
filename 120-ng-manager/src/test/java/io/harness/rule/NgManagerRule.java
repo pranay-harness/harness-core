@@ -1,10 +1,15 @@
 package io.harness.rule;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.cache.CacheBackend.CAFFEINE;
+import static io.harness.cache.CacheBackend.NOOP;
 
 import static org.mockito.Mockito.mock;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheConfig;
+import io.harness.cache.CacheConfig.CacheConfigBuilder;
+import io.harness.cache.CacheModule;
 import io.harness.connector.gitsync.ConnectorGitSyncHelper;
 import io.harness.factory.ClosingFactory;
 import io.harness.gitsync.branching.GitBranchingHelper;
@@ -47,6 +52,7 @@ import io.dropwizard.jackson.Jackson;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -87,6 +93,17 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
         sourceCodeManagerMapBinder.addBinding(SCMType.AZURE_DEV_OPS).to(AzureDevOpsSCMMapper.class);
       }
     });
+
+    CacheConfigBuilder cacheConfigBuilder =
+        CacheConfig.builder().disabledCaches(new HashSet<>()).cacheNamespace("harness-cache");
+    if (annotations.stream().anyMatch(annotation -> annotation instanceof Cache)) {
+      cacheConfigBuilder.cacheBackend(CAFFEINE);
+    } else {
+      cacheConfigBuilder.cacheBackend(NOOP);
+    }
+    CacheModule cacheModule = new CacheModule(cacheConfigBuilder.build());
+    modules.add(cacheModule);
+
     modules.add(new ProviderModule() {
       @Provides
       @Singleton

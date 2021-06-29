@@ -30,7 +30,10 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f | head -c 6
 -e JRE_VERSION=1.8.0_242 \
 -e HELM3_PATH= \
 -e HELM_PATH= \
+-e CF_CLI6_PATH= \
+-e CF_CLI7_PATH= \
 -e KUSTOMIZE_PATH= \
 -e OC_PATH= \
 -e KUBECTL_PATH= \
+-e CLIENT_TOOLS_DOWNLOAD_DISABLED=false \
 harness/delegate:latest

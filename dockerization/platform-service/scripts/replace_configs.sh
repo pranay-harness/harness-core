@@ -76,6 +76,10 @@ if [[ "" != "$SMTP_HOST" ]]; then
   yq write -i $CONFIG_FILE notificationServiceConfig.smtp.host "$SMTP_HOST"
 fi
 
+if [[ "" != "$SMTP_PORT" ]]; then
+  yq write -i $CONFIG_FILE notificationServiceConfig.smtp.port "$SMTP_PORT"
+fi
+
 if [[ "" != "$SMTP_USERNAME" ]]; then
   yq write -i $CONFIG_FILE notificationServiceConfig.smtp.username "$SMTP_USERNAME"
 fi
@@ -198,6 +202,8 @@ fi
 replace_key_value resourceGroupServiceConfig.auditClientConfig.baseUrl "$AUDIT_CLIENT_BASEURL"
 
 replace_key_value resourceGroupServiceConfig.enableAudit "$AUDIT_ENABLED"
+
+replace_key_value resourceGroupServiceConfig.exportMetricsToStackDriver "$EXPORT_METRICS_TO_STACK_DRIVER"
 
 replace_key_value resourceGroupServiceConfig.accessControlAdminClient.accessControlServiceConfig.baseUrl "$ACCESS_CONTROL_BASE_URL"
 

@@ -3,6 +3,9 @@ package software.wings.app;
 import static io.harness.AuthorizationServiceHeader.DELEGATE_SERVICE;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.AccessControlClientModule;
@@ -16,9 +19,7 @@ import io.harness.annotations.retry.RetryOnException;
 import io.harness.annotations.retry.RetryOnExceptionInterceptor;
 import io.harness.artifacts.gcr.service.GcrApiService;
 import io.harness.artifacts.gcr.service.GcrApiServiceImpl;
-import io.harness.callback.DelegateCallback;
-import io.harness.callback.DelegateCallbackToken;
-import io.harness.callback.MongoDatabase;
+import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
 import io.harness.ccm.anomaly.service.itfc.AnomalyService;
 import io.harness.ccm.billing.GcpBillingService;
@@ -31,6 +32,8 @@ import io.harness.ccm.budget.BudgetService;
 import io.harness.ccm.budget.BudgetServiceImpl;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
+import io.harness.ccm.cluster.InstanceDataService;
+import io.harness.ccm.cluster.InstanceDataServiceImpl;
 import io.harness.ccm.communication.CECommunicationsService;
 import io.harness.ccm.communication.CECommunicationsServiceImpl;
 import io.harness.ccm.communication.CESlackWebhookService;
@@ -39,6 +42,8 @@ import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.config.CCMSettingServiceImpl;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.ccm.health.HealthStatusServiceImpl;
+import io.harness.ccm.ngperpetualtask.service.K8sWatchTaskService;
+import io.harness.ccm.ngperpetualtask.service.K8sWatchTaskServiceImpl;
 import io.harness.ccm.setup.CESetupServiceModule;
 import io.harness.ccm.views.service.CEReportScheduleService;
 import io.harness.ccm.views.service.CEReportTemplateBuilderService;
@@ -51,8 +56,8 @@ import io.harness.ccm.views.service.impl.CEViewServiceImpl;
 import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
 import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
 import io.harness.config.PipelineConfig;
-import io.harness.configuration.DeployMode;
 import io.harness.connector.ConnectorResourceClientModule;
+import io.harness.cv.CVCommonsServiceModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.client.CVNGService;
 import io.harness.cvng.client.CVNGServiceImpl;
@@ -74,8 +79,12 @@ import io.harness.delegate.DelegateConfigurationServiceProvider;
 import io.harness.delegate.DelegatePropertiesServiceProvider;
 import io.harness.delegate.chartmuseum.NGChartMuseumService;
 import io.harness.delegate.chartmuseum.NGChartMuseumServiceImpl;
+import io.harness.delegate.configuration.DelegateConfiguration;
+import io.harness.delegate.event.listener.OrganizationEntityCRUDEventListener;
+import io.harness.delegate.event.listener.ProjectEntityCRUDEventListener;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
+import io.harness.delegate.outbox.DelegateOutboxEventHandler;
 import io.harness.encryptors.CustomEncryptor;
 import io.harness.encryptors.Encryptors;
 import io.harness.encryptors.KmsEncryptor;
@@ -92,10 +101,6 @@ import io.harness.event.reconciliation.service.DeploymentReconService;
 import io.harness.event.reconciliation.service.DeploymentReconServiceImpl;
 import io.harness.event.timeseries.processor.instanceeventprocessor.instancereconservice.IInstanceReconService;
 import io.harness.event.timeseries.processor.instanceeventprocessor.instancereconservice.InstanceReconServiceImpl;
-import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.impl.noop.NoOpProducer;
-import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.file.FileServiceModule;
@@ -111,11 +116,12 @@ import io.harness.governance.pipeline.service.evaluators.OnWorkflow;
 import io.harness.governance.pipeline.service.evaluators.PipelineStatusEvaluator;
 import io.harness.governance.pipeline.service.evaluators.WorkflowStatusEvaluator;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
-import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.invites.NgInviteClientModule;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesContainerServiceImpl;
+import io.harness.licensing.remote.NgLicenseHttpClientModule;
+import io.harness.licensing.remote.admin.AdminLicenseHttpClientModule;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitCheckerFactoryImpl;
 import io.harness.limits.configuration.LimitConfigurationService;
@@ -132,10 +138,16 @@ import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.marketplace.gcp.procurement.CDProductHandler;
 import io.harness.marketplace.gcp.procurement.GcpProductHandler;
 import io.harness.mongo.MongoConfig;
+import io.harness.ng.core.event.MessageListener;
 import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
 import io.harness.notifications.AlertVisibilityChecker;
 import io.harness.notifications.AlertVisibilityCheckerImpl;
+import io.harness.outbox.OutboxPollConfiguration;
+import io.harness.outbox.OutboxSDKConstants;
+import io.harness.outbox.TransactionOutboxModule;
+import io.harness.outbox.api.OutboxEventHandler;
+import io.harness.pcf.CfDeploymentManager;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
@@ -163,6 +175,7 @@ import io.harness.secrets.setupusage.builders.ConfigFileSetupUsageBuilder;
 import io.harness.secrets.setupusage.builders.SecretManagerSetupUsageBuilder;
 import io.harness.secrets.setupusage.builders.ServiceVariableSetupUsageBuilder;
 import io.harness.secrets.setupusage.builders.SettingAttributeSetupUsageBuilder;
+import io.harness.secrets.setupusage.builders.TriggerSetupUsageBuilder;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.seeddata.SampleDataProviderService;
 import io.harness.seeddata.SampleDataProviderServiceImpl;
@@ -269,8 +282,7 @@ import software.wings.helpers.ext.helm.HelmDeployServiceUnsupported;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
-import software.wings.helpers.ext.pcf.PcfDeploymentManager;
-import software.wings.helpers.ext.pcf.PcfDeploymentManagerUnsupported;
+import software.wings.helpers.ext.pcf.CfDeploymentManagerUnsupported;
 import software.wings.helpers.ext.sftp.SftpService;
 import software.wings.helpers.ext.sftp.SftpServiceImpl;
 import software.wings.helpers.ext.smb.SmbService;
@@ -715,7 +727,7 @@ import software.wings.utils.CdnStorageUrlGenerator;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
-import com.google.common.base.Suppliers;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -727,6 +739,7 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import io.dropwizard.jackson.Jackson;
 import io.dropwizard.lifecycle.Managed;
 import java.io.Closeable;
 import java.io.IOException;
@@ -739,7 +752,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -763,27 +775,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
    */
   public WingsModule(MainConfiguration configuration) {
     this.configuration = configuration;
-  }
-
-  @Provides
-  @Singleton
-  Supplier<DelegateCallbackToken> getDelegateCallbackTokenSupplier(
-      DelegateServiceGrpcClient delegateServiceGrpcClient) {
-    return Suppliers.memoize(() -> getDelegateCallbackToken(delegateServiceGrpcClient, configuration));
-  }
-
-  private DelegateCallbackToken getDelegateCallbackToken(
-      DelegateServiceGrpcClient delegateServiceClient, MainConfiguration appConfig) {
-    log.info("Generating Delegate callback token");
-    final DelegateCallbackToken delegateCallbackToken = delegateServiceClient.registerCallback(
-        DelegateCallback.newBuilder()
-            .setMongoDatabase(MongoDatabase.newBuilder()
-                                  .setCollectionNamePrefix("ngManager")
-                                  .setConnection(appConfig.getMongoConnectionFactory().getUri())
-                                  .build())
-            .build());
-    log.info("delegate callback token generated =[{}]", delegateCallbackToken.getToken());
-    return delegateCallbackToken;
   }
 
   @Provides
@@ -852,48 +843,12 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(DelegateServiceDriverModule.getInstance(false));
     install(new DelegateServiceDriverGrpcClientModule(configuration.getPortal().getJwtNextGenManagerSecret(),
         configuration.getGrpcDelegateServiceClientConfig().getTarget(),
-        configuration.getGrpcDelegateServiceClientConfig().getAuthority()));
+        configuration.getGrpcDelegateServiceClientConfig().getAuthority(), false));
     install(PersistentLockModule.getInstance());
     install(AlertModule.getInstance());
 
-    install(new AbstractModule() {
-      @Override
-      protected void configure() {
-        RedisConfig redisConfig = configuration.getEventsFrameworkConfiguration().getRedisConfig();
-        String deployMode = System.getenv(DeployMode.DEPLOY_MODE);
-        if (DeployMode.isOnPrem(deployMode) || redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
-          bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
-              .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
-          bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
-              .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
-          bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
-              .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
-          bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.SAML_AUTHORIZATION_ASSERTION))
-              .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
-        } else {
-          bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
-              .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redisConfig,
-                  EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
-          bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
-              .toInstance(RedisProducer.of(EventsFrameworkConstants.FEATURE_FLAG_STREAM, redisConfig,
-                  EventsFrameworkConstants.FEATURE_FLAG_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
-          bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
-              .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_ACTIVITY, redisConfig,
-                  EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
-          bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.SAML_AUTHORIZATION_ASSERTION))
-              .toInstance(RedisProducer.of(EventsFrameworkConstants.SAML_AUTHORIZATION_ASSERTION, redisConfig,
-                  EventsFrameworkConstants.DEFAULT_TOPIC_SIZE, MANAGER.getServiceId()));
-        }
-      }
-    });
+    install(new EventsFrameworkModule(
+        configuration.getEventsFrameworkConfiguration(), configuration.isEventsFrameworkAvailableInOnPrem()));
     install(FeatureFlagModule.getInstance());
 
     bind(MainConfiguration.class).toInstance(configuration);
@@ -907,6 +862,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
         .annotatedWith(Names.named("BackgroundSchedule"))
         .toInstance(configuration.getBackgroundSchedulerConfig());
     bind(PipelineConfig.class).toInstance(configuration.getPipelineConfig());
+    bind(DelegateConfiguration.class).toInstance(DelegateConfiguration.builder().build());
     bind(QueueController.class).to(ConfigurationController.class);
     bind(HPersistence.class).to(WingsMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
@@ -1101,6 +1057,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(GcpBillingService.class).to(GcpBillingServiceImpl.class);
     bind(PreAggregateBillingService.class).to(PreAggregateBillingServiceImpl.class);
     bind(DelegateTokenService.class).to(DelegateTokenServiceImpl.class);
+    bind(InstanceDataService.class).to(InstanceDataServiceImpl.class);
 
     bind(WingsMongoExportImport.class);
 
@@ -1147,6 +1104,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(SecretManagementCoreModule.getInstance());
     registerSecretManagementBindings();
 
+    registerEventListeners();
+
     bind(PersistentScheduler.class)
         .annotatedWith(Names.named("BackgroundJobScheduler"))
         .to(BackgroundJobScheduler.class)
@@ -1181,7 +1140,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(CloudToHarnessMappingService.class).to(CloudToHarnessMappingServiceImpl.class);
     bind(DeploymentService.class).to(DeploymentServiceImpl.class);
     bind(HelmDeployService.class).to(HelmDeployServiceUnsupported.class).in(Singleton.class);
-    bind(PcfDeploymentManager.class).to(PcfDeploymentManagerUnsupported.class).in(Singleton.class);
+    bind(CfDeploymentManager.class).to(CfDeploymentManagerUnsupported.class).in(Singleton.class);
 
     bind(LogVerificationService.class).to(LogVerificationServiceImpl.class);
     bind(CVConfigurationService.class).to(CVConfigurationServiceImpl.class);
@@ -1338,13 +1297,31 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(AccessControlClientModule.getInstance(
         configuration.getAccessControlClientConfiguration(), DELEGATE_SERVICE.getServiceId()));
 
+    // ng-license dependencies
+    install(new NgLicenseHttpClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+
+    // admin ng-license dependencies
+    install(new AdminLicenseHttpClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+
     install(CgOrchestrationModule.getInstance());
     // Orchestration Dependencies
 
     bind(CVDataCollectionTaskService.class).to(CVDataCollectionTaskServiceImpl.class);
+    bind(K8sWatchTaskService.class).to(K8sWatchTaskServiceImpl.class);
     bind(HelmChartService.class).to(HelmChartServiceImpl.class);
     bind(LogStreamingServiceRestClient.class).toProvider(LogStreamingServiceClientFactory.class);
     bind(IInstanceReconService.class).to(InstanceReconServiceImpl.class);
+
+    // audit service
+    install(new AuditClientModule(this.configuration.getAuditClientConfig(),
+        this.configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId(),
+        this.configuration.isEnableAudit()));
+    install(new TransactionOutboxModule());
+
+    bind(OutboxEventHandler.class).to(DelegateOutboxEventHandler.class);
+    install(new CVCommonsServiceModule());
   }
 
   private void bindFeatures() {
@@ -1577,6 +1554,20 @@ public class WingsModule extends AbstractModule implements ServersModule {
         .bind(SecretSetupUsageBuilder.class)
         .annotatedWith(Names.named(SecretSetupUsageBuilders.SECRET_MANAGER_CONFIG_SETUP_USAGE_BUILDER.getName()))
         .to(SecretManagerSetupUsageBuilder.class);
+    binder()
+        .bind(SecretSetupUsageBuilder.class)
+        .annotatedWith(Names.named(SecretSetupUsageBuilders.TRIGGER_SETUP_USAGE_BUILDER.getName()))
+        .to(TriggerSetupUsageBuilder.class);
+  }
+
+  private void registerEventListeners() {
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(ORGANIZATION_ENTITY + ENTITY_CRUD))
+        .to(OrganizationEntityCRUDEventListener.class);
+
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(PROJECT_ENTITY + ENTITY_CRUD))
+        .to(ProjectEntityCRUDEventListener.class);
   }
 
   private void bindGcpMarketplaceProductHandlers() {
@@ -1613,5 +1604,19 @@ public class WingsModule extends AbstractModule implements ServersModule {
         }
       }
     };
+  }
+
+  @Provides
+  @Singleton
+  public ObjectMapper getYamlSchemaObjectMapperWithoutNamed() {
+    return Jackson.newObjectMapper();
+  }
+
+  @Provides
+  @Singleton
+  public OutboxPollConfiguration getOutboxPollConfiguration() {
+    OutboxPollConfiguration outboxPollConfiguration = OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
+    outboxPollConfiguration.setLockId(MANAGER.getServiceId());
+    return outboxPollConfiguration;
   }
 }

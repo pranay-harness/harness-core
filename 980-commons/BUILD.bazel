@@ -2,6 +2,7 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/macros.bzl", "run_analysis")
 load("//:tools/bazel/protos/harness_grpc_library.bzl", "harness_grpc_library")
+load("//:tools/bazel/harness.bzl", "harness_sign")
 
 harness_grpc_library(
     name = "980_commons_java_proto",
@@ -106,11 +107,16 @@ java_library(
     ],
 )
 
+signed_jar = harness_sign(
+    "//980-commons/src/test/resources:io/harness/security/non-signed.jar",
+)
+
 java_library(
     name = "tests",
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = [
+        signed_jar,
         "//980-commons/src/test/resources:resource",
     ],
     visibility = ["//visibility:public"],

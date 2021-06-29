@@ -21,4 +21,5 @@ public class SyncTaskContext {
   private String correlationId;
   private String orgIdentifier;
   private String projectIdentifier;
+  private boolean ngTask;
 }

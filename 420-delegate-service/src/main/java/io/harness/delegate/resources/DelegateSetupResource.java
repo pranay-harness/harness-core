@@ -65,6 +65,21 @@ public class DelegateSetupResource {
   }
 
   @GET
+  @Path("up-the-hierarchy")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DelegateGroupListing> listUpTheHierarchy(@QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("orgId") String orgId, @QueryParam("projectId") String projectId) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of(DELEGATE_RESOURCE_TYPE, null), DELEGATE_VIEW_PERMISSION);
+
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(
+          delegateSetupService.listDelegateGroupDetailsUpTheHierarchy(accountId, orgId, projectId));
+    }
+  }
+
+  @GET
   @Path("{delegateGroupId}")
   @Timed
   @ExceptionMetered

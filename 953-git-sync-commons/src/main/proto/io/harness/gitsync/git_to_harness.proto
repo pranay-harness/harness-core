@@ -7,6 +7,7 @@ option java_multiple_files = true;
 import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_type.proto";
 import "io/harness/gitsync/change_type.proto";
 import "google/protobuf/wrappers.proto";
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_detail.proto";
 
 service GitToHarnessService {
   rpc syncRequestFromGit(ChangeSet) returns (ProcessingResponse);
@@ -24,12 +25,19 @@ message ChangeSet {
   google.protobuf.StringValue object_id = 4;
   io.harness.gitsync.ChangeType change_type = 5;
   string file_path = 6;
+  YamlGitConfigInfo yaml_git_config_info = 7;
+  string change_set_id = 8;
+  io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO entityRefForDeletion = 9;
 }
 
 message ProcessingResponse {
   repeated FileProcessingResponse response = 1;
   string account_id = 2;
   ProcessingFailureStage processing_failure_stage = 3;
+  // used for sending status
+  // false: reached the last stage of processing and processing_failure_stage can be ignored.
+  // true: failed in one of the stages.
+  bool is_error = 4;
 }
 
 message FileProcessingResponse {
@@ -54,11 +62,8 @@ enum ProcessingFailureStage {
 }
 
 message GitToHarnessInfo {
-  string yamlGitConfigOrgIdentifier = 1;
-  string yamlGitConfigProjectIdentifier = 2;
-  string yamlGitConfigId = 3;
-  string branch = 4;
-  string repo_url = 5;
+  string branch = 1;
+  string repo_url = 2;
 }
 
 message GitToHarnessProcessRequest {
@@ -66,4 +71,11 @@ message GitToHarnessProcessRequest {
   GitToHarnessInfo gitToHarnessBranchInfo = 2;
   string account_id = 3;
   google.protobuf.StringValue commit_id = 4;
+}
+
+message YamlGitConfigInfo {
+  google.protobuf.StringValue yaml_git_config_org_identifier = 1;
+  google.protobuf.StringValue yaml_git_config_project_identifier = 2;
+  string yaml_git_config_id = 3;
+  string account_id = 4;
 }

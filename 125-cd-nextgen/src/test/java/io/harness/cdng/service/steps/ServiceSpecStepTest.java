@@ -39,9 +39,9 @@ public class ServiceSpecStepTest extends CategoryTest {
     Ambiance ambiance = Ambiance.newBuilder().setExpressionFunctorToken(12345).build();
     ServiceSpecStepParameters stepParameters =
         ServiceSpecStepParameters.builder()
-            .originalVariables(
-                Arrays.asList(prepareVariable("v1", "10"), prepareVariable("v2", "20"), prepareVariable("v3", "30")))
-            .originalVariableOverrideSets(Arrays.asList(
+            .originalVariables(ParameterField.createValueField(
+                Arrays.asList(prepareVariable("v1", "10"), prepareVariable("v2", "20"), prepareVariable("v3", "30"))))
+            .originalVariableOverrideSets(ParameterField.createValueField(Arrays.asList(
                 NGVariableOverrideSetWrapper.builder()
                     .overrideSet(NGVariableOverrideSets.builder()
                                      .identifier("vo1")
@@ -59,8 +59,9 @@ public class ServiceSpecStepTest extends CategoryTest {
                                      .identifier("vo3")
                                      .variables(Collections.singletonList(prepareVariable("v2", "23")))
                                      .build())
-                    .build()))
-            .stageOverrideVariables(Collections.singletonList(prepareVariable("v1", "12")))
+                    .build())))
+            .stageOverrideVariables(
+                ParameterField.createValueField(Collections.singletonList(prepareVariable("v1", "12"))))
             .stageOverridesUseVariableOverrideSets(ParameterField.createValueField(Arrays.asList("vo1", "vo2")))
             .build();
     Map<String, Object> finalVariables = serviceSpecStep.getFinalVariablesMap(ambiance, stepParameters, null);

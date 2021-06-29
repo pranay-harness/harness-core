@@ -22,6 +22,7 @@ public class ImageDetails {
   private String sourceName;
   private String registryUrl;
   private String username;
+  private String usernameRef;
   private String password;
   private String domainName;
 }

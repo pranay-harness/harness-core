@@ -2,7 +2,7 @@ package io.harness.pms.sdk.core.execution;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.core.steps.executables.Progressable;
 import io.harness.tasks.ProgressData;
@@ -15,14 +15,13 @@ public abstract class ProgressableStrategy implements ExecuteStrategy {
 
   @Override
   public void progress(ProgressPackage progressPackage) {
-    NodeExecutionProto nodeExecutionProto = progressPackage.getNodeExecution();
-    Step<?> step = extractStep(nodeExecutionProto);
+    Ambiance ambiance = progressPackage.getAmbiance();
+    Step<?> step = extractStep(ambiance);
     if (step instanceof Progressable) {
       ProgressData progressData = ((Progressable) step)
-                                      .handleProgress(nodeExecutionProto.getAmbiance(),
-                                          sdkNodeExecutionService.extractResolvedStepParameters(nodeExecutionProto),
-                                          progressPackage.getProgressData());
-      sdkNodeExecutionService.handleProgressResponse(nodeExecutionProto, progressData);
+                                      .handleProgress(progressPackage.getAmbiance(),
+                                          progressPackage.getStepParameters(), progressPackage.getProgressData());
+      sdkNodeExecutionService.handleProgressResponse(ambiance, progressData);
       return;
     }
     throw new UnsupportedOperationException("Progress Update not supported for strategy: " + this.getClass().getName());

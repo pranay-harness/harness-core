@@ -1,11 +1,11 @@
 package io.harness.app;
 
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.cvng.core.services.impl.VerificationServiceSecretManagerImpl;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.persistence.HPersistence;
-import io.harness.queue.QueueController;
 import io.harness.service.ContinuousVerificationServiceImpl;
 import io.harness.service.LearningEngineAnalysisServiceImpl;
 import io.harness.service.LogAnalysisServiceImpl;
@@ -19,7 +19,6 @@ import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import io.harness.threading.ThreadPool;
-import io.harness.version.VersionInfoManager;
 
 import software.wings.DataStorageMode;
 import software.wings.alerts.AlertModule;
@@ -45,19 +44,15 @@ import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import org.apache.commons.io.IOUtils;
 
 /**
  * Guice Module for initializing all beans.
@@ -93,7 +88,7 @@ public class VerificationServiceModule extends AbstractModule {
     bind(MigrationService.class).to(VerificationMigrationServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
 
-    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
     bind(TimeSeriesAnalysisService.class).to(TimeSeriesAnalysisServiceImpl.class);
     bind(LogAnalysisService.class).to(LogAnalysisServiceImpl.class);
     bind(CVTaskService.class).to(CVTaskServiceImpl.class);

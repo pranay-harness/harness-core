@@ -4,26 +4,18 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.acl.services.ACLService;
 import io.harness.accesscontrol.principals.usergroups.UserGroupService;
-import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupDBO;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
-import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupDBO;
-import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roles.RoleService;
-import io.harness.accesscontrol.roles.persistence.RoleDBO;
 import io.harness.accesscontrol.scopes.core.ScopeService;
-import io.harness.aggregator.consumers.ChangeConsumer;
 import io.harness.aggregator.consumers.ChangeEventFailureHandler;
-import io.harness.aggregator.consumers.ResourceGroupChangeConsumerImpl;
-import io.harness.aggregator.consumers.RoleAssignmentChangeConsumerImpl;
-import io.harness.aggregator.consumers.RoleChangeConsumerImpl;
-import io.harness.aggregator.consumers.UserGroupChangeConsumerImpl;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.morphia.MorphiaRegistrar;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
@@ -51,24 +43,12 @@ public class AggregatorModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    Multibinder<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
+        Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends MorphiaRegistrar>>() {});
+    morphiaRegistrars.addBinding().toInstance(AggregatorMorphiaRegistrar.class);
+    bind(AggregatorMetricsService.class).to(AggregatorMetricsServiceImpl.class);
+
     registerRequiredBindings();
-    bind(new TypeLiteral<ChangeConsumer<RoleAssignmentDBO>>() {
-    }).to(new TypeLiteral<RoleAssignmentChangeConsumerImpl>() {
-      }).in(Scopes.SINGLETON);
-
-    bind(new TypeLiteral<ChangeConsumer<ResourceGroupDBO>>() {
-    }).to(new TypeLiteral<ResourceGroupChangeConsumerImpl>() {
-      }).in(Scopes.SINGLETON);
-
-    bind(new TypeLiteral<ChangeConsumer<UserGroupDBO>>() {
-    }).to(new TypeLiteral<UserGroupChangeConsumerImpl>() {
-      }).in(Scopes.SINGLETON);
-
-    bind(new TypeLiteral<ChangeConsumer<RoleDBO>>() {
-    }).to(new TypeLiteral<RoleChangeConsumerImpl>() {
-      }).in(Scopes.SINGLETON);
-
-    bind(AggregatorMetricsService.class).to(AggregatorMetricsServiceImpl.class).in(Scopes.SINGLETON);
   }
 
   private void registerRequiredBindings() {

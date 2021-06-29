@@ -21,8 +21,9 @@ public final class EventsFrameworkConstants {
   public static final String WEBHOOK_EVENTS_STREAM = "webhook_events_stream";
   public static final String GIT_PUSH_EVENT_STREAM = "git_push_event_stream";
   public static final String GIT_PR_EVENT_STREAM = "git_pr_event_stream";
-  public static final String GIT_CREATE_BRANCH_EVENT_STREAM = "git_create_branch_event_stream";
+  public static final String GIT_BRANCH_HOOK_EVENT_STREAM = "git_branch_hook_event_stream";
   public static final String USERMEMBERSHIP = "usermembership";
+
   // created for git sdk, dont use outside sdk.
   public static final String GIT_CONFIG_STREAM = "git_config_stream";
   public static final String SAML_AUTHORIZATION_ASSERTION = "saml_authorization_assertion";
@@ -33,8 +34,35 @@ public final class EventsFrameworkConstants {
 
   // Pipeline Service Events
   public static final String PIPELINE_ORCHESTRATION_EVENT_TOPIC = "pipeline_orchestration";
+  public static final int PIPELINE_ORCHESTRATION_EVENT_BATCH_SIZE = 20;
+  public static final int PIPELINE_ORCHESTRATION_EVENT_MAX_TOPIC_SIZE = 5000;
+
   public static final String PIPELINE_SDK_RESPONSE_EVENT_TOPIC = "pipeline_sdk_response";
+  public static final int PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE = 5000;
+
   public static final String PIPELINE_INTERRUPT_TOPIC = "pipeline_interrupt";
+  public static final int PIPELINE_INTERRUPT_BATCH_SIZE = 10;
+  public static final int PIPELINE_INTERRUPT_EVENT_MAX_TOPIC_SIZE = 1000;
+
+  public static final String PIPELINE_FACILITATOR_EVENT_TOPIC = "pipeline_node_facilitation";
+  public static final int PIPELINE_FACILITATOR_EVENT_BATCH_SIZE = 10;
+  public static final int PIPELINE_FACILITATOR_EVENT_MAX_TOPIC_SIZE = 5000;
+
+  public static final String PIPELINE_NODE_START_EVENT_TOPIC = "pipeline_node_start";
+  public static final int PIPELINE_NODE_START_EVENT_BATCH_SIZE = 10;
+  public static final int PIPELINE_NODE_START_EVENT_MAX_TOPIC_SIZE = 5000;
+
+  public static final String PIPELINE_PROGRESS_EVENT_TOPIC = "pipeline_node_progress";
+  public static final int PIPELINE_PROGRESS_BATCH_SIZE = 10;
+  public static final int PIPELINE_PROGRESS_MAX_TOPIC_SIZE = 5000;
+
+  public static final String PIPELINE_NODE_ADVISE_EVENT_TOPIC = "pipeline_node_advise";
+  public static final int PIPELINE_NODE_ADVISE_BATCH_SIZE = 10;
+  public static final int PIPELINE_NODE_ADVISE_MAX_TOPIC_SIZE = 5000;
+
+  public static final String PIPELINE_NODE_RESUME_EVENT_TOPIC = "pipeline_node_resume";
+  public static final int PIPELINE_NODE_RESUME_BATCH_SIZE = 10;
+  public static final int PIPELINE_NODE_RESUME_MAX_TOPIC_SIZE = 5000;
 
   public static final int DEFAULT_TOPIC_SIZE = 10000;
   public static final int USER_MEMBERSHIP_TOPIC_SIZE = 100000;
@@ -47,21 +75,15 @@ public final class EventsFrameworkConstants {
   public static final int WEBHOOK_EVENTS_STREAM_MAX_TOPIC_SIZE = 10000;
   public static final int GIT_PUSH_EVENT_STREAM_MAX_TOPIC_SIZE = 10000;
   public static final int GIT_PR_EVENT_STREAM_MAX_TOPIC_SIZE = 10000;
-  public static final int GIT_CREATE_BRANCH_EVENT_STREAM_MAX_TOPIC_SIZE = 10000;
+  public static final int GIT_BRANCH_HOOK_EVENT_STREAM_MAX_TOPIC_SIZE = 10000;
   public static final int GIT_CONFIG_STREAM_MAX_TOPIC_SIZE = 10000;
-  // Pipeline Service Events
-  public static final int PIPELINE_INTERRUPT_BATCH_SIZE = 10;
-  public static final int PIPELINE_ORCHESTRATION_EVENT_BATCH_SIZE = 20;
-  public static final int PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE = 5000;
-  public static final int PIPELINE_ORCHESTRATION_EVENT_MAX_TOPIC_SIZE = 5000;
-  public static final int PIPELINE_INTERRUPT_EVENT_MAX_TOPIC_SIZE = 1000;
 
   public static final Duration DEFAULT_MAX_PROCESSING_TIME = Duration.ofSeconds(10);
   public static final Duration ENTITY_CRUD_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration GIT_PUSH_EVENT_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration GIT_PR_EVENT_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
-  public static final Duration GIT_CREATE_BRANCH_EVENT_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
+  public static final Duration GIT_BRANCH_HOOK_EVENT_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration FEATURE_FLAG_MAX_PROCESSING_TIME = Duration.ofMinutes(10);
   public static final Duration USERMEMBERSHIP_MAX_PROCESSING_TIME = Duration.ofMinutes(10);
   public static final Duration SETUP_USAGE_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
@@ -80,5 +102,5 @@ public final class EventsFrameworkConstants {
   public static final int WEBHOOK_EVENTS_STREAM_BATCH_SIZE = 50;
   public static final int GIT_PUSH_EVENT_STREAM_BATCH_SIZE = 50;
   public static final int GIT_PR_EVENT_STREAM_BATCH_SIZE = 50;
-  public static final int GIT_CREATE_BRANCH_EVENT_STREAM_BATCH_SIZE = 50;
+  public static final int GIT_BRANCH_HOOK_EVENT_STREAM_BATCH_SIZE = 50;
 }

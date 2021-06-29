@@ -203,7 +203,7 @@ func TestGetBazelCmd(t *testing.T) {
 	// Will add this once we have a more generic implementation.
 }
 
-func TestGetCmd(t *testing.T) {
+func TestGetCmd_WithNoFilesChanged(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
@@ -248,23 +248,31 @@ instrPackages: p1, p2, p3`
 	defer func() {
 		selectTestsFn = oldSelect
 	}()
-	selectTestsFn = func(ctx context.Context, f []types.File, id string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
+	selectTestsFn = func(ctx context.Context, f []types.File, runSelected bool, id string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
 		return types.SelectTestsResp{
 			SelectAll: false,
 			Tests:     []types.RunnableTest{t1, t2}}, nil
 	}
 
+	oldIsManual := isManualFn
+	defer func() {
+		isManualFn = oldIsManual
+	}()
+	isManualFn = func() bool {
+		return false
+	}
+
 	want, err := utils.GetLoggableCmd(`set -e
 export TMPDIR=/test/tmp
 echo x
-mvn -Dtest=pkg1.cls1,pkg2.cls1 -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
+mvn -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
 echo y`)
 	if err != nil {
 		t.Fatalf("could not get loggable cmd for %s", want)
 	}
 	got, err := r.getCmd(ctx)
 	assert.Nil(t, err)
-	assert.Equal(t, r.runOnlySelectedTests, true) // If no errors, we should run only selected tests
+	assert.Equal(t, r.runOnlySelectedTests, false) // If no errors, we should run only selected tests
 	assert.Equal(t, got, want)
 }
 
@@ -292,7 +300,7 @@ instrPackages: p1, p2, p3`
 	mf.EXPECT().Write([]byte(expData)).Return(0, nil).AnyTimes()
 	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
 
-	diffFiles, _ := json.Marshal([]types.File{})
+	diffFiles, _ := json.Marshal([]types.File{{Name: "abc.java", Status: types.FileModified}})
 
 	r := runTestsTask{
 		id:                   "id",
@@ -313,10 +321,18 @@ instrPackages: p1, p2, p3`
 	defer func() {
 		selectTestsFn = oldSelect
 	}()
-	selectTestsFn = func(ctx context.Context, f []types.File, id string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
+	selectTestsFn = func(ctx context.Context, f []types.File, runSelected bool, id string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
 		return types.SelectTestsResp{
 			SelectAll: true,
 			Tests:     []types.RunnableTest{t1, t2}}, nil
+	}
+
+	oldIsManual := isManualFn
+	defer func() {
+		isManualFn = oldIsManual
+	}()
+	isManualFn = func() bool {
+		return false
 	}
 
 	want, err := utils.GetLoggableCmd(`set -e
@@ -354,7 +370,7 @@ instrPackages: p1, p2, p3`
 	mf.EXPECT().Write([]byte(expData)).Return(0, nil).AnyTimes()
 	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
 
-	diffFiles, _ := json.Marshal([]types.File{})
+	diffFiles, _ := json.Marshal([]types.File{{Name: "abc.java", Status: types.FileModified}})
 
 	r := runTestsTask{
 		id:                   "id",
@@ -375,8 +391,16 @@ instrPackages: p1, p2, p3`
 	defer func() {
 		selectTestsFn = oldSelect
 	}()
-	selectTestsFn = func(ctx context.Context, f []types.File, id string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
+	selectTestsFn = func(ctx context.Context, f []types.File, runSelected bool, id string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
 		return types.SelectTestsResp{}, errors.New("error in selection")
+	}
+
+	oldIsManual := isManualFn
+	defer func() {
+		isManualFn = oldIsManual
+	}()
+	isManualFn = func() bool {
+		return false
 	}
 
 	want, err := utils.GetLoggableCmd(`set -e
@@ -390,6 +414,74 @@ echo y`)
 	got, err := r.getCmd(ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, r.runOnlySelectedTests, false) // Since there was an error in execution
+	assert.Equal(t, got, want)
+}
+
+func TestGetCmd_ManualExecution(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	fs := filesystem.NewMockFileSystem(ctrl)
+
+	tmpFilePath := "/test/tmp"
+	packages := "p1, p2, p3"
+
+	expDir := fmt.Sprintf(outDir, tmpFilePath)
+	expData := `outDir: /test/tmp/ti/callgraph/
+logLevel: 0
+logConsole: false
+writeTo: COVERAGE_JSON
+instrPackages: p1, p2, p3`
+	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
+	mf := filesystem.NewMockFile(ctrl)
+	mf.EXPECT().Write([]byte(expData)).Return(0, nil).AnyTimes()
+	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
+
+	diffFiles, _ := json.Marshal([]types.File{{Name: "abc.java", Status: types.FileModified}})
+
+	r := runTestsTask{
+		id:                   "id",
+		runOnlySelectedTests: true,
+		fs:                   fs,
+		preCommand:           "echo x",
+		diffFiles:            string(diffFiles),
+		args:                 "clean test",
+		postCommand:          "echo y",
+		buildTool:            "maven",
+		tmpFilePath:          tmpFilePath,
+		packages:             packages,
+		log:                  log.Sugar(),
+		addonLogger:          log.Sugar(),
+	}
+
+	oldSelect := selectTestsFn
+	defer func() {
+		selectTestsFn = oldSelect
+	}()
+	selectTestsFn = func(ctx context.Context, f []types.File, runSelected bool, id string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
+		return types.SelectTestsResp{}, nil
+	}
+
+	oldIsManual := isManualFn
+	defer func() {
+		isManualFn = oldIsManual
+	}()
+	isManualFn = func() bool {
+		return true
+	}
+
+	want, err := utils.GetLoggableCmd(`set -e
+export TMPDIR=/test/tmp
+echo x
+mvn -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
+echo y`)
+	if err != nil {
+		t.Fatalf("could not get loggable cmd for %s", want)
+	}
+	got, err := r.getCmd(ctx)
+	assert.Nil(t, err)
+	assert.Equal(t, r.runOnlySelectedTests, false) // Since it's a manual execution
 	assert.Equal(t, got, want)
 }
 
@@ -414,7 +506,7 @@ instrPackages: p1, p2, p3`
 	mf.EXPECT().Write([]byte(expData)).Return(0, nil).AnyTimes()
 	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
 
-	diffFiles, _ := json.Marshal([]types.File{})
+	diffFiles, _ := json.Marshal([]types.File{{Name: "abc.java", Status: types.FileModified}})
 
 	r := runTestsTask{
 		id:                   "id",
@@ -435,8 +527,16 @@ instrPackages: p1, p2, p3`
 	defer func() {
 		selectTestsFn = oldSelect
 	}()
-	selectTestsFn = func(ctx context.Context, f []types.File, id string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
+	selectTestsFn = func(ctx context.Context, f []types.File, runSelected bool, id string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
 		return types.SelectTestsResp{}, nil
+	}
+
+	oldIsManual := isManualFn
+	defer func() {
+		isManualFn = oldIsManual
+	}()
+	isManualFn = func() bool {
+		return false
 	}
 
 	_, err := r.getCmd(ctx)
@@ -509,7 +609,7 @@ instrPackages: p1, p2, p3`
 	mf.EXPECT().Write([]byte(expData)).Return(0, nil).AnyTimes()
 	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
 
-	diffFiles, _ := json.Marshal([]types.File{})
+	diffFiles, _ := json.Marshal([]types.File{{Name: "abc.java", Status: types.FileModified}})
 
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, "sh", gomock.Any(), gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
@@ -549,7 +649,7 @@ instrPackages: p1, p2, p3`
 	defer func() {
 		selectTestsFn = oldSelect
 	}()
-	selectTestsFn = func(ctx context.Context, f []types.File, id string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
+	selectTestsFn = func(ctx context.Context, f []types.File, runSelected bool, id string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
 		return types.SelectTestsResp{
 			SelectAll: false,
 			Tests:     []types.RunnableTest{t1, t2}}, nil
@@ -610,7 +710,7 @@ instrPackages: p1, p2, p3`
 	mf.EXPECT().Write([]byte(expData)).Return(0, nil)
 	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil)
 
-	diffFiles, _ := json.Marshal([]types.File{})
+	diffFiles, _ := json.Marshal([]types.File{{Name: "abc.java", Status: types.FileModified}})
 
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, "sh", gomock.Any(), gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
@@ -652,7 +752,7 @@ instrPackages: p1, p2, p3`
 	defer func() {
 		selectTestsFn = oldSelect
 	}()
-	selectTestsFn = func(ctx context.Context, f []types.File, id string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
+	selectTestsFn = func(ctx context.Context, f []types.File, runSelected bool, id string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
 		return types.SelectTestsResp{
 			SelectAll: false,
 			Tests:     []types.RunnableTest{t1, t2}}, nil
@@ -712,7 +812,7 @@ instrPackages: p1, p2, p3`
 	mf.EXPECT().Write([]byte(expData)).Return(0, nil)
 	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil)
 
-	diffFiles, _ := json.Marshal([]types.File{})
+	diffFiles, _ := json.Marshal([]types.File{{Name: "abc.java", Status: types.FileModified}})
 
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, "sh", gomock.Any(), gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
@@ -752,7 +852,7 @@ instrPackages: p1, p2, p3`
 	defer func() {
 		selectTestsFn = oldSelect
 	}()
-	selectTestsFn = func(ctx context.Context, f []types.File, id string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
+	selectTestsFn = func(ctx context.Context, f []types.File, runSelected bool, id string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
 		return types.SelectTestsResp{
 			SelectAll: false,
 			Tests:     []types.RunnableTest{t1, t2}}, nil
@@ -850,7 +950,7 @@ instrPackages: p1, p2, p3`
 	defer func() {
 		selectTestsFn = oldSelect
 	}()
-	selectTestsFn = func(ctx context.Context, f []types.File, id string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
+	selectTestsFn = func(ctx context.Context, f []types.File, runSelected bool, id string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
 		return types.SelectTestsResp{
 			SelectAll: false,
 			Tests:     []types.RunnableTest{t1, t2}}, nil

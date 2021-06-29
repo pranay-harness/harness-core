@@ -33,13 +33,14 @@ public class K8sApplyTaskParameters extends K8sTaskParameters implements Manifes
   private String filePaths;
   private boolean skipSteadyStateCheck;
   private boolean skipDryRun;
+  private boolean skipRendering;
 
   @Builder
   public K8sApplyTaskParameters(String accountId, String appId, String commandName, String activityId,
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesYamlList,
       String filePaths, boolean skipSteadyStateCheck, boolean skipDryRun, HelmVersion helmVersion,
-      Set<String> delegateSelectors) {
+      Set<String> delegateSelectors, boolean skipRendering) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
         timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors);
 
@@ -48,6 +49,7 @@ public class K8sApplyTaskParameters extends K8sTaskParameters implements Manifes
     this.filePaths = filePaths;
     this.skipSteadyStateCheck = skipSteadyStateCheck;
     this.skipDryRun = skipDryRun;
+    this.skipRendering = skipRendering;
   }
 
   @Override

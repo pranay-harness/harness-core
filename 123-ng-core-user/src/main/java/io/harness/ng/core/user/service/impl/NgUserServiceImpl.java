@@ -99,7 +99,7 @@ public class NgUserServiceImpl implements NgUserService {
 
   @Inject
   public NgUserServiceImpl(UserClient userClient, UserMembershipRepository userMembershipRepository,
-      AccessControlAdminClient accessControlAdminClient,
+      @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient,
       @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, OutboxService outboxService,
       UserGroupService userGroupService) {
     this.userClient = userClient;
@@ -242,16 +242,6 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
-  public void addUserToScope(UserInfo user, Scope scope, UserMembershipUpdateSource source) {
-    addUserToScope(user.getUuid(), scope, true, source);
-  }
-
-  @Override
-  public void addUserToScope(UserInfo user, Scope scope, boolean postCreation, UserMembershipUpdateSource source) {
-    addUserToScope(user.getUuid(), scope, postCreation, source);
-  }
-
-  @Override
   public void addUserToScope(String userId, Scope scope, String roleIdentifier, UserMembershipUpdateSource source) {
     List<RoleAssignmentDTO> roleAssignmentDTOs = new ArrayList<>(1);
     if (!StringUtils.isBlank(roleIdentifier)) {
@@ -303,13 +293,11 @@ public class NgUserServiceImpl implements NgUserService {
         && DEFAULT_RESOURCE_GROUP_IDENTIFIER.equals(roleAssignmentDTO.getResourceGroupIdentifier());
   }
 
-  private void addUserToScope(
+  @Override
+  public void addUserToScope(
       String userId, Scope scope, boolean addUserToParentScope, UserMembershipUpdateSource source) {
     ensureUserMembership(userId);
     addUserToScopeInternal(userId, source, scope, getDefaultRoleIdentifier(scope));
-
-    // Adding user to the account for sign in flow to work
-    addUserToAccount(userId, scope);
     if (addUserToParentScope) {
       addUserToParentScope(userId, scope, source);
     }
@@ -401,7 +389,8 @@ public class NgUserServiceImpl implements NgUserService {
     return userMembership;
   }
 
-  private void addUserToAccount(String userId, Scope scope) {
+  @Override
+  public void addUserToCG(String userId, Scope scope) {
     log.info("Adding user {} to account {}", userId, scope.getAccountIdentifier());
     try {
       RestClientUtils.getResponse(userClient.addUserToAccount(userId, scope.getAccountIdentifier()));
@@ -534,7 +523,8 @@ public class NgUserServiceImpl implements NgUserService {
       Pageable pageable = PageUtils.getPageRequest(pageRequest);
       List<Project> projects = userMembershipRepository.findProjectList(userId.get(), accountId, pageable);
       List<ProjectDTO> projectDTOList = projects.stream().map(ProjectMapper::writeDTO).collect(Collectors.toList());
-      return new PageImpl<>(projectDTOList, pageable, userMembershipRepository.getProjectCount(userId.get()));
+      return new PageImpl<>(
+          projectDTOList, pageable, userMembershipRepository.getProjectCount(userId.get(), accountId));
     } else {
       throw new IllegalStateException("user login required");
     }

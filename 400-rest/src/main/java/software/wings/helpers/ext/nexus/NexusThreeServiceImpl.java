@@ -3,13 +3,12 @@ package software.wings.helpers.ext.nexus;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.nexus.NexusHelper.isSuccessful;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getRetrofit;
-import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
 
 import static java.lang.String.format;
-import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -72,44 +71,7 @@ public class NexusThreeServiceImpl {
   private static final int MAX_PAGES = 10;
 
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
-  @Inject private NexusHelper nexusHelper;
-
-  public Map<String, String> getRepositories(NexusRequest nexusConfig, String repositoryFormat) throws IOException {
-    log.info("Retrieving repositories");
-    NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig);
-    Response<List<Nexus3Repository>> response;
-    if (nexusConfig.isHasCredentials()) {
-      response =
-          nexusThreeRestClient
-              .listRepositories(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())))
-              .execute();
-    } else {
-      response = nexusThreeRestClient.listRepositories().execute();
-    }
-
-    if (isSuccessful(response)) {
-      if (isNotEmpty(response.body())) {
-        log.info("Retrieving {} repositories success", repositoryFormat);
-        final Map<String, String> repositories;
-        if (repositoryFormat == null) {
-          repositories =
-              response.body().stream().collect(Collectors.toMap(Nexus3Repository::getName, Nexus3Repository::getName));
-        } else {
-          final String filterBy = repositoryFormat.equals(RepositoryFormat.maven.name()) ? "maven2" : repositoryFormat;
-          repositories = response.body()
-                             .stream()
-                             .filter(o -> o.getFormat().equals(filterBy))
-                             .collect(Collectors.toMap(Nexus3Repository::getName, Nexus3Repository::getName));
-        }
-        log.info("Retrieved repositories are {}", repositories.values());
-        return repositories;
-      } else {
-        throw new InvalidArtifactServerException("Failed to fetch the repositories", WingsException.USER);
-      }
-    }
-    log.info("No repositories found returning empty map");
-    return emptyMap();
-  }
+  @Inject private CGNexusHelper nexusHelper;
 
   public List<String> getPackageNames(
       NexusRequest nexusConfig, String repository, String repositoryFormat, List<String> images) throws IOException {

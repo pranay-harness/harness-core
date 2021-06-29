@@ -4,19 +4,17 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.nexus.NexusHelper.getBaseUrl;
+import static io.harness.nexus.NexusHelper.isSuccessful;
 import static io.harness.threading.Morpheus.quietSleep;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
-import static software.wings.helpers.ext.nexus.NexusServiceImpl.getBaseUrl;
 import static software.wings.helpers.ext.nexus.NexusServiceImpl.getRetrofit;
-import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
 
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -50,8 +48,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.Authenticator;
-import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -75,8 +71,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.sonatype.nexus.rest.model.ContentListResource;
 import org.sonatype.nexus.rest.model.ContentListResourceResponse;
-import org.sonatype.nexus.rest.model.RepositoryListResource;
-import org.sonatype.nexus.rest.model.RepositoryListResourceResponse;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -92,45 +86,7 @@ import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 public class NexusTwoServiceImpl {
   @Inject private ExecutorService executorService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
-  @Inject private NexusHelper nexusHelper;
-
-  public Map<String, String> getRepositories(NexusRequest nexusConfig, String repositoryFormat) throws IOException {
-    log.info("Retrieving repositories");
-    final Call<RepositoryListResourceResponse> request;
-    if (nexusConfig.isHasCredentials()) {
-      request =
-          getRestClient(nexusConfig)
-              .getAllRepositories(Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
-    } else {
-      request = getRestClient(nexusConfig).getAllRepositories();
-    }
-
-    final Response<RepositoryListResourceResponse> response = request.execute();
-    if (response.code() == 404) {
-      throw new InvalidArtifactServerException("Invalid Artifact server", USER);
-    }
-    if (isSuccessful(response)) {
-      log.info("Retrieving repositories success");
-      if (RepositoryFormat.maven.name().equals(repositoryFormat)) {
-        return response.body()
-            .getData()
-            .stream()
-            .filter(repositoryListResource -> "maven2".equals(repositoryListResource.getFormat()))
-            .collect(toMap(RepositoryListResource::getId, RepositoryListResource::getName));
-      } else if (RepositoryFormat.nuget.name().equals(repositoryFormat)
-          || RepositoryFormat.npm.name().equals(repositoryFormat)) {
-        return response.body()
-            .getData()
-            .stream()
-            .filter(repositoryListResource -> repositoryFormat.equals(repositoryListResource.getFormat()))
-            .collect(toMap(RepositoryListResource::getId, RepositoryListResource::getName));
-      }
-      return response.body().getData().stream().collect(
-          toMap(RepositoryListResource::getId, RepositoryListResource::getName));
-    }
-    log.info("No repositories found returning empty map");
-    return emptyMap();
-  }
+  @Inject private CGNexusHelper CGNexusHelper;
 
   public List<String> collectPackageNames(NexusRequest nexusConfig, String repoId, List<String> packageNames)
       throws IOException {
@@ -271,7 +227,7 @@ public class NexusTwoServiceImpl {
         }
       }
     }
-    return nexusHelper.constructBuildDetails(repoId, groupId, artifactName, versions, versionToArtifactUrls,
+    return CGNexusHelper.constructBuildDetails(repoId, groupId, artifactName, versions, versionToArtifactUrls,
         versionToArtifactDownloadUrls, extension, classifier);
   }
 
@@ -373,7 +329,7 @@ public class NexusTwoServiceImpl {
         }
       }
     }
-    return nexusHelper.constructBuildDetails(repoId, groupId, artifactName, versions, versionToArtifactUrls,
+    return CGNexusHelper.constructBuildDetails(repoId, groupId, artifactName, versions, versionToArtifactUrls,
         versionToArtifactDownloadUrls, extension, classifier);
   }
 
@@ -949,19 +905,5 @@ public class NexusTwoServiceImpl {
     }
     log.info(format("Computed file size [%d] bytes for artifact Path: %s", size, artifactUrl));
     return size;
-  }
-
-  static class MyAuthenticator extends Authenticator {
-    private String username, password;
-
-    MyAuthenticator(String user, String pass) {
-      username = user;
-      password = pass;
-    }
-
-    @Override
-    protected PasswordAuthentication getPasswordAuthentication() {
-      return new PasswordAuthentication(username, password.toCharArray());
-    }
   }
 }

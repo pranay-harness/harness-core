@@ -51,11 +51,11 @@ public class KubernetesValidationHandlerTest extends CategoryTest {
                                                         .build();
     final ConnectorValidationResult expectedResult = ConnectorValidationResult.builder().build();
 
-    doReturn(expectedResult).when(taskHelperBase).validate(kubernetesClusterConfig, "account", encryptionDetails);
+    doReturn(expectedResult).when(taskHelperBase).validate(kubernetesClusterConfig, encryptionDetails);
 
     ConnectorValidationResult result = kubernetesValidationHandler.validate(k8sValidationParams, "account");
 
-    verify(taskHelperBase).validate(kubernetesClusterConfig, "account", encryptionDetails);
+    verify(taskHelperBase).validate(kubernetesClusterConfig, encryptionDetails);
     assertThat(result).isSameAs(expectedResult);
   }
 }

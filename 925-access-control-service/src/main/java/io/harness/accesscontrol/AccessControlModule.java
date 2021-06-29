@@ -1,6 +1,7 @@
 package io.harness.accesscontrol;
 
 import static io.harness.AuthorizationServiceHeader.ACCESS_CONTROL_SERVICE;
+import static io.harness.accesscontrol.principals.PrincipalType.SERVICE_ACCOUNT;
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ACCOUNT;
@@ -26,15 +27,20 @@ import io.harness.accesscontrol.commons.notifications.NotificationConfig;
 import io.harness.accesscontrol.commons.outbox.AccessControlOutboxEventHandler;
 import io.harness.accesscontrol.commons.validation.HarnessActionValidator;
 import io.harness.accesscontrol.preference.AccessControlPreferenceModule;
-import io.harness.accesscontrol.preference.events.NGRBACEnabledFeatureFlagEventConsumer;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.principals.PrincipalValidator;
-import io.harness.accesscontrol.principals.user.UserValidator;
-import io.harness.accesscontrol.principals.user.events.UserMembershipEventConsumer;
+import io.harness.accesscontrol.principals.serviceaccounts.HarnessServiceAccountService;
+import io.harness.accesscontrol.principals.serviceaccounts.HarnessServiceAccountServiceImpl;
+import io.harness.accesscontrol.principals.serviceaccounts.ServiceAccountValidator;
+import io.harness.accesscontrol.principals.serviceaccounts.events.ServiceAccountMembershipEventConsumer;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupService;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupServiceImpl;
 import io.harness.accesscontrol.principals.usergroups.UserGroupValidator;
 import io.harness.accesscontrol.principals.usergroups.events.UserGroupEventConsumer;
+import io.harness.accesscontrol.principals.users.HarnessUserService;
+import io.harness.accesscontrol.principals.users.HarnessUserServiceImpl;
+import io.harness.accesscontrol.principals.users.UserValidator;
+import io.harness.accesscontrol.principals.users.events.UserMembershipEventConsumer;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupServiceImpl;
 import io.harness.accesscontrol.resources.resourcegroups.events.ResourceGroupEventConsumer;
@@ -47,9 +53,11 @@ import io.harness.aggregator.AggregatorModule;
 import io.harness.aggregator.consumers.ChangeEventFailureHandler;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.client.remote.AuditClientModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
+import io.harness.ff.FeatureFlagClientModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
 import io.harness.metrics.modules.MetricsModule;
@@ -58,16 +66,17 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
+import io.harness.outbox.monitor.OutboxMetricsPublisher;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.serializer.morphia.OutboxEventMorphiaRegistrar;
 import io.harness.serializer.morphia.PrimaryVersionManagerMorphiaRegistrar;
+import io.harness.serviceaccount.ServiceAccountClientModule;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.usermembership.UserMembershipClientModule;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
@@ -167,6 +176,13 @@ public class AccessControlModule extends AbstractModule {
     return config.getOutboxPollConfig();
   }
 
+  @Provides
+  @Singleton
+  @Named("serviceIdForOutboxMetrics")
+  public String getServiceIdForOutboxMetrics() {
+    return ACCESS_CONTROL_SERVICE.getServiceId();
+  }
+
   @Override
   protected void configure() {
     install(AccessControlPersistenceModule.getInstance(config.getMongoConfig()));
@@ -177,7 +193,7 @@ public class AccessControlModule extends AbstractModule {
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
         5, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     install(ExecutorModule.getInstance());
-    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
     install(PersistentLockModule.getInstance());
     Multibinder<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
         Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends MorphiaRegistrar>>() {});
@@ -188,6 +204,10 @@ public class AccessControlModule extends AbstractModule {
     install(new ValidationModule(validatorFactory));
     install(AccessControlCoreModule.getInstance());
     install(DecisionModule.getInstance(config.getDecisionModuleConfiguration()));
+    install(
+        new ServiceAccountClientModule(config.getServiceAccountClientConfiguration().getServiceAccountServiceConfig(),
+            config.getServiceAccountClientConfiguration().getServiceAccountServiceSecret(),
+            ACCESS_CONTROL_SERVICE.getServiceId()));
 
     if (config.getAggregatorConfiguration().isEnabled()) {
       bind(ChangeEventFailureHandler.class).to(AccessControlChangeEventFailureHandler.class);
@@ -210,8 +230,11 @@ public class AccessControlModule extends AbstractModule {
     install(new AuditClientModule(config.getAuditClientConfig(), config.getDefaultServiceSecret(),
         ACCESS_CONTROL_SERVICE.getServiceId(), config.isEnableAudit()));
 
-    install(AccessControlPreferenceModule.getInstance(config.getAccessControlPreferenceConfiguration()));
-
+    install(AccessControlPreferenceModule.getInstance());
+    install(
+        FeatureFlagClientModule.getInstance(config.getFeatureFlagClientConfiguration().getFeatureFlagServiceConfig(),
+            config.getFeatureFlagClientConfiguration().getFeatureFlagServiceSecret(),
+            ACCESS_CONTROL_SERVICE.getServiceId()));
     MapBinder<String, ScopeLevel> scopesByKey = MapBinder.newMapBinder(binder(), String.class, ScopeLevel.class);
     scopesByKey.addBinding(ACCOUNT.toString()).toInstance(ACCOUNT);
     scopesByKey.addBinding(ORGANIZATION.toString()).toInstance(ORGANIZATION);
@@ -220,20 +243,20 @@ public class AccessControlModule extends AbstractModule {
 
     bind(HarnessResourceGroupService.class).to(HarnessResourceGroupServiceImpl.class);
     bind(HarnessUserGroupService.class).to(HarnessUserGroupServiceImpl.class);
+    bind(HarnessUserService.class).to(HarnessUserServiceImpl.class);
+    bind(HarnessServiceAccountService.class).to(HarnessServiceAccountServiceImpl.class);
 
     MapBinder<PrincipalType, PrincipalValidator> validatorByPrincipalType =
         MapBinder.newMapBinder(binder(), PrincipalType.class, PrincipalValidator.class);
     validatorByPrincipalType.addBinding(USER).to(UserValidator.class);
     validatorByPrincipalType.addBinding(USER_GROUP).to(UserGroupValidator.class);
+    validatorByPrincipalType.addBinding(SERVICE_ACCOUNT).to(ServiceAccountValidator.class);
 
     Multibinder<EventConsumer> entityCrudEventConsumers =
         Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(ENTITY_CRUD));
     entityCrudEventConsumers.addBinding().to(ResourceGroupEventConsumer.class);
     entityCrudEventConsumers.addBinding().to(UserGroupEventConsumer.class);
-
-    Multibinder<EventConsumer> featureFlagEventConsumers =
-        Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(FEATURE_FLAG_STREAM));
-    featureFlagEventConsumers.addBinding().to(NGRBACEnabledFeatureFlagEventConsumer.class);
+    entityCrudEventConsumers.addBinding().to(ServiceAccountMembershipEventConsumer.class);
 
     Multibinder<EventConsumer> userMembershipEventConsumers =
         Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(USERMEMBERSHIP));
@@ -247,6 +270,7 @@ public class AccessControlModule extends AbstractModule {
     if (config.getAggregatorConfiguration().isExportMetricsToStackDriver()) {
       install(new MetricsModule());
       bind(MetricsPublisher.class).to(AggregatorStackDriverMetricsPublisherImpl.class).in(Scopes.SINGLETON);
+      bind(MetricsPublisher.class).to(OutboxMetricsPublisher.class).in(Scopes.SINGLETON);
     } else {
       log.info("No configuration provided for Stack Driver, aggregator metrics will not be recorded");
     }

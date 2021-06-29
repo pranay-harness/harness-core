@@ -45,24 +45,27 @@ public abstract class ModuleLicense implements PersistentEntity, NGAccountAccess
   @NotEmpty protected ModuleType moduleType;
   @NotEmpty protected Edition edition;
   @NotEmpty protected LicenseType licenseType;
+  @NotEmpty protected LicenseStatus status;
   @NotEmpty protected long startTime;
   @NotEmpty protected long expiryTime;
-  @NotEmpty protected LicenseStatus status;
   @CreatedBy protected EmbeddedUser createdBy;
   @LastModifiedBy protected EmbeddedUser lastUpdatedBy;
   @CreatedDate protected Long createdAt;
   @LastModifiedDate protected Long lastUpdatedAt;
+
+  public boolean checkExpiry(long currentTime) {
+    return currentTime >= expiryTime;
+  }
+
+  public boolean isActive() {
+    return LicenseStatus.ACTIVE.equals(status);
+  }
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .name("accountIdentifier_moduleLicense_query_index")
                  .fields(Arrays.asList(ModuleLicenseKeys.accountIdentifier))
-                 .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("unique_accountIdentifier_modulytype_index")
-                 .unique(true)
-                 .fields(Arrays.asList(ModuleLicenseKeys.accountIdentifier, ModuleLicenseKeys.moduleType))
                  .build())
         .build();
   }

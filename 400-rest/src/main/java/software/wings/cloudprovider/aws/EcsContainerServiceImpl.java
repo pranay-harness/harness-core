@@ -868,7 +868,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private void waitForAllInstanceToRegisterWithCluster(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, Integer clusterSize) {
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(10), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(10), () -> {
         while (!allInstancesRegisteredWithCluster(region, awsConfig, encryptedDataDetails, clusterName, clusterSize)) {
           sleep(ofSeconds(10));
         }
@@ -887,7 +887,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private void waitForAllInstancesToBeReady(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String region, String autoscalingGroupName, Integer clusterSize) {
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(10), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(10), () -> {
         while (!allInstanceInReadyState(awsConfig, encryptedDataDetails, region, autoscalingGroupName, clusterSize)) {
           sleep(ofSeconds(10));
         }
@@ -964,7 +964,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   private void waitForTasksToBeInRunningState(UpdateServiceCountRequestData requestData) {
     long timeoutDuration = requestData.getTimeOut() == null ? 10L : requestData.getTimeOut().longValue();
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeoutDuration), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(timeoutDuration), () -> {
         while (notAllDesiredTasksRunning(requestData)) {
           sleep(ofSeconds(10));
         }
@@ -995,9 +995,11 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
   private boolean notAllDesiredTasksRunning(UpdateServiceCountRequestData requestData) {
     ExecutionLogCallback executionLogCallback = requestData.getExecutionLogCallback();
-    Service service = getEcsServicesForCluster(requestData.getRegion(), requestData.getAwsConfig(),
-        requestData.getEncryptedDataDetails(), requestData.getCluster(), Arrays.asList(requestData.getServiceName()))
-                          .get(0);
+    List<Service> services = getEcsServicesForClusterWithRetry(requestData.getRegion(), requestData.getAwsConfig(),
+        requestData.getEncryptedDataDetails(), requestData.getCluster(), requestData.getServiceName(),
+        executionLogCallback);
+
+    Service service = services.get(0);
 
     log.info(
         "Waiting for pending tasks to finish. {}/{} running ...", service.getRunningCount(), service.getDesiredCount());
@@ -1056,9 +1058,10 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     try {
       List<String> originalTaskArns =
           getTaskArns(region, encryptedDataDetails, clusterName, serviceName, awsConfig, DesiredStatus.RUNNING);
-      Service service =
-          getEcsServicesForCluster(region, awsConfig, encryptedDataDetails, clusterName, Arrays.asList(serviceName))
-              .get(0);
+      List<Service> services = getEcsServicesForClusterWithRetry(
+          region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback);
+
+      Service service = services.get(0);
 
       // Even if service task count is already equal to desired count, try to resize
       // This should help retry step in case of timeouts or ECS provisioning issue
@@ -1440,7 +1443,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     ExecutionLogCallback executionLogCallback = requestData.getExecutionLogCallback();
     try {
       executionLogCallback.saveExecutionLog("Waiting for service to be in steady state...", LogLevel.INFO);
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(serviceSteadyStateTimeout), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(serviceSteadyStateTimeout), () -> {
         while (true) {
           List<Service> services = getEcsServicesForCluster(requestData.getRegion(), requestData.getAwsConfig(),
               requestData.getEncryptedDataDetails(), requestData.getCluster(),
@@ -1498,7 +1501,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             + " to reflect updated desired count: " + data.getDesiredCount(),
         LogLevel.INFO);
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(timeout), () -> {
         while (true) {
           service[0] = getEcsServicesForCluster(data.getRegion(), data.getAwsConfig(), data.getEncryptedDataDetails(),
               data.getCluster(), Arrays.asList(data.getServiceName()))
@@ -1701,6 +1704,36 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                 .describeServices(region, awsConfig, encryptedDataDetails,
                     new DescribeServicesRequest().withCluster(clusterName).withServices(serviceNameChunk))
                 .getServices()));
+    return services;
+  }
+
+  private List<Service> getEcsServicesForClusterWithRetry(String region, AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
+      ExecutionLogCallback executionLogCallback) {
+    List<Service> services =
+        getEcsServicesForCluster(region, awsConfig, encryptedDataDetails, clusterName, Arrays.asList(serviceName));
+
+    // AWS api sometimes intermittently returns empty service. More details in CDP-17603
+    if (CollectionUtils.isEmpty(services)) {
+      int retryCount = 10;
+      int retriesDone = 0;
+      while (CollectionUtils.isEmpty(services) && retriesDone < retryCount) {
+        String retryMessage =
+            format("Retrying Describe Service Call for service %s %d/%d", serviceName, retriesDone + 1, retryCount);
+        log.info(retryMessage);
+        executionLogCallback.saveExecutionLog(retryMessage, LogLevel.INFO);
+        services =
+            getEcsServicesForCluster(region, awsConfig, encryptedDataDetails, clusterName, Arrays.asList(serviceName));
+        retriesDone++;
+        sleep(ofSeconds(10));
+      }
+    }
+
+    if (CollectionUtils.isEmpty(services)) {
+      String errorMessage = format("Ecs Service %s not found", serviceName);
+      throw new WingsException(errorMessage);
+    }
+
     return services;
   }
 }

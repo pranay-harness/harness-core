@@ -1,19 +1,30 @@
 package io.harness.beans.converter;
 
+import io.harness.DelegateInfoHelper;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.GraphVertex;
 import io.harness.data.structure.CollectionUtils;
+import io.harness.dto.GraphDelegateSelectionLogParams;
 import io.harness.execution.NodeExecution;
+import io.harness.pms.execution.utils.AmbianceUtils;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.util.List;
 import java.util.Map;
-import lombok.experimental.UtilityClass;
 import org.bson.Document;
 
 @OwnedBy(HarnessTeam.CDC)
-@UtilityClass
+@Singleton
 public class GraphVertexConverter {
+  @Inject DelegateInfoHelper delegateInfoHelper;
+
   public GraphVertex convertFrom(NodeExecution nodeExecution) {
+    List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParamsList =
+        delegateInfoHelper.getDelegateInformationForGivenTask(nodeExecution.getExecutableResponses(),
+            nodeExecution.getMode(), AmbianceUtils.getAccountId(nodeExecution.getAmbiance()));
+
     return GraphVertex.builder()
         .uuid(nodeExecution.getUuid())
         .ambiance(nodeExecution.getAmbiance())
@@ -37,10 +48,14 @@ public class GraphVertexConverter {
         .skipType(nodeExecution.getNode().getSkipType())
         .unitProgresses(nodeExecution.getUnitProgresses())
         .progressData(nodeExecution.getProgressData())
+        .graphDelegateSelectionLogParams(graphDelegateSelectionLogParamsList)
         .build();
   }
 
   public GraphVertex convertFrom(NodeExecution nodeExecution, Map<String, Document> outcomes) {
+    List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParamsList =
+        delegateInfoHelper.getDelegateInformationForGivenTask(nodeExecution.getExecutableResponses(),
+            nodeExecution.getMode(), AmbianceUtils.getAccountId(nodeExecution.getAmbiance()));
     return GraphVertex.builder()
         .uuid(nodeExecution.getUuid())
         .ambiance(nodeExecution.getAmbiance())
@@ -65,6 +80,7 @@ public class GraphVertexConverter {
         .outcomeDocuments(outcomes)
         .unitProgresses(nodeExecution.getUnitProgresses())
         .progressData(nodeExecution.getProgressData())
+        .graphDelegateSelectionLogParams(graphDelegateSelectionLogParamsList)
         .build();
   }
 }

@@ -24,7 +24,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.execution.facilitator.DefaultFacilitatorParams;
 import io.harness.pms.expression.PmsEngineExpressionService;
-import io.harness.pms.sdk.core.facilitator.FacilitatorResponse;
+import io.harness.pms.sdk.core.execution.events.node.facilitate.FacilitatorResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;

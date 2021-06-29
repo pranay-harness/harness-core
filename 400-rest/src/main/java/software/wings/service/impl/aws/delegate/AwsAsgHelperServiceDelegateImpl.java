@@ -456,7 +456,7 @@ public class AwsAsgHelperServiceDelegateImpl
   private void waitForAutoScalingGroupToBeDeleted(
       AmazonAutoScalingClient amazonAutoScalingClient, AutoScalingGroup autoScalingGroup, LogCallback callback) {
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(1), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(1), () -> {
         Set<String> completedActivities = new HashSet<>();
         while (true) {
           tracker.trackASGCall("Describe Autoscaling Group");
@@ -524,7 +524,7 @@ public class AwsAsgHelperServiceDelegateImpl
       String region, String autoScalingGroupName, Integer desiredCount, ExecutionLogCallback logCallback,
       Integer autoScalingSteadyStateTimeout) {
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(autoScalingSteadyStateTimeout), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(autoScalingSteadyStateTimeout), () -> {
         AmazonAutoScalingClient amazonAutoScalingClient =
             getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
         Set<String> completedActivities = new HashSet<>();

@@ -15,6 +15,7 @@ import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.common.ParameterFieldHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
@@ -141,6 +142,7 @@ public class InfrastructureSectionStep implements ChildExecutable<InfraSectionSt
         .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)
         .tags(convertToList(environmentYaml.getTags()))
+        .description(ParameterFieldHelper.getParameterFieldValueHandleValueNull(environmentYaml.getDescription()))
         .build();
   }
 
@@ -157,7 +159,8 @@ public class InfrastructureSectionStep implements ChildExecutable<InfraSectionSt
       return EnvironmentYaml.builder()
           .identifier(envIdentifier)
           .name(env.getName())
-          .description(env.getDescription() == null ? null : ParameterField.createValueField(env.getDescription()))
+          .description(env.getDescription() == null ? ParameterField.createValueField("")
+                                                    : ParameterField.createValueField(env.getDescription()))
           .type(env.getType())
           .tags(TagMapper.convertToMap(env.getTags()))
           .build();

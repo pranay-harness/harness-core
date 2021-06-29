@@ -21,7 +21,6 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -273,7 +272,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends CategoryTest {
           singletonList(new AutoScalingGroup().withLaunchTemplate(new LaunchTemplateSpecification())), mockCallback);
       verify(mockClient).deleteAutoScalingGroup(any());
       verify(mockClient, times(0)).deleteLaunchConfiguration(any());
-      verify(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+      HTimeLimiterMocker.verifyTimeLimiterCalled(mockTimeLimiter);
     } catch (Exception ex) {
       fail(format("Test threw an exception: [%s]", ex.getMessage()));
     }
@@ -321,7 +320,6 @@ public class AwsAsgHelperServiceDelegateImplTest extends CategoryTest {
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     LogCallback mockCallback = mock(LogCallback.class);
     doNothing().when(mockTracker).trackASGCall(anyString());
-    //    doReturn(true).when(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
     HTimeLimiterMocker.mockCallInterruptible(mockTimeLimiter).thenReturn(true);
 
     return Mocks.builder()
@@ -401,12 +399,11 @@ public class AwsAsgHelperServiceDelegateImplTest extends CategoryTest {
     doReturn(new SetDesiredCapacityResult()).when(mockClient).setDesiredCapacity(any());
     doNothing().when(mockTracker).trackASGCall(anyString());
     try {
-      //      doReturn(true).when(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
       HTimeLimiterMocker.mockCallInterruptible(mockTimeLimiter).thenReturn(true);
       awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
           AwsConfig.builder().build(), emptyList(), "us-east-1", "asgName", 1, mockCallback, 10);
       verify(mockClient).setDesiredCapacity(any());
-      verify(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+      HTimeLimiterMocker.verifyTimeLimiterCalled(mockTimeLimiter);
     } catch (Exception ex) {
       fail(format("Test threw an exception: [%s]", ex.getMessage()));
     }

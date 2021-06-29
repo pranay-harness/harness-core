@@ -32,13 +32,13 @@ import io.harness.gitsync.core.impl.GitCommitServiceImpl;
 import io.harness.gitsync.core.impl.GitSyncTriggerServiceImpl;
 import io.harness.gitsync.core.impl.YamlChangeSetLifeCycleManagerServiceImpl;
 import io.harness.gitsync.core.impl.YamlChangeSetServiceImpl;
-import io.harness.gitsync.core.impl.webhookevent.GitCreateBranchEventExecutionServiceImpl;
+import io.harness.gitsync.core.impl.webhookevent.GitBranchHookEventExecutionServiceImpl;
 import io.harness.gitsync.core.impl.webhookevent.GitPushEventExecutionServiceImpl;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.gitsync.core.service.GitSyncTriggerService;
 import io.harness.gitsync.core.service.YamlChangeSetLifeCycleManagerService;
 import io.harness.gitsync.core.service.YamlChangeSetService;
-import io.harness.gitsync.core.service.webhookevent.GitCreateBranchEventExecutionService;
+import io.harness.gitsync.core.service.webhookevent.GitBranchHookEventExecutionService;
 import io.harness.gitsync.core.service.webhookevent.GitPushEventExecutionService;
 import io.harness.gitsync.gitfileactivity.impl.GitSyncServiceImpl;
 import io.harness.gitsync.gitfileactivity.service.GitSyncService;
@@ -95,7 +95,7 @@ public class GitSyncModule extends AbstractModule {
     bind(HarnessToGitHelperService.class).to(HarnessToGitHelperServiceImpl.class);
     bind(GitToHarnessProcessorService.class).to(GitToHarnessProcessorServiceImpl.class);
     bind(GitSyncSettingsService.class).to(GitSyncSettingsServiceImpl.class);
-    bind(GitCreateBranchEventExecutionService.class).to(GitCreateBranchEventExecutionServiceImpl.class);
+    bind(GitBranchHookEventExecutionService.class).to(GitBranchHookEventExecutionServiceImpl.class);
     bind(GitPushEventExecutionService.class).to(GitPushEventExecutionServiceImpl.class);
     bind(ScmClientFacilitatorService.class)
         .annotatedWith(Names.named(SCM_ON_MANAGER))

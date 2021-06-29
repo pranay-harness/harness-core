@@ -78,7 +78,7 @@
                 }
               ]
             },
-            "remoteCacheImage": {
+            "remoteCacheRepo": {
               "type": "string"
             },
             "repo": {
@@ -394,6 +394,19 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "OutputNGVariable": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "ParameterField": {
       "type": "object",
       "properties": {
@@ -499,6 +512,14 @@
             "image": {
               "type": "string"
             },
+            "imagePullPolicy": {
+              "type": "string",
+              "enum": [
+                "Always",
+                "Never",
+                "IfNotPresent"
+              ]
+            },
             "privileged": {
               "oneOf": [
                 {
@@ -555,7 +576,11 @@
           ],
           "properties": {
             "archiveFormat": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "Tar",
+                "Gzip"
+              ]
             },
             "bucket": {
               "type": "string"
@@ -609,7 +634,11 @@
           ],
           "properties": {
             "archiveFormat": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "Tar",
+                "Gzip"
+              ]
             },
             "bucket": {
               "type": "string"
@@ -674,6 +703,7 @@
           "type": "object",
           "required": [
             "command",
+            "connectorRef",
             "image"
           ],
           "properties": {
@@ -699,18 +729,19 @@
             "image": {
               "type": "string"
             },
-            "outputVariables": {
-              "oneOf": [
-                {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                {
-                  "type": "string"
-                }
+            "imagePullPolicy": {
+              "type": "string",
+              "enum": [
+                "Always",
+                "Never",
+                "IfNotPresent"
               ]
+            },
+            "outputVariables": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/OutputNGVariable"
+              }
             },
             "privileged": {
               "oneOf": [
@@ -738,6 +769,13 @@
                   "type": "string"
                 }
               ]
+            },
+            "shell": {
+              "type": "string",
+              "enum": [
+                "Sh",
+                "Bash"
+              ]
             }
           }
         }
@@ -754,6 +792,7 @@
           "required": [
             "args",
             "buildTool",
+            "connectorRef",
             "image",
             "language",
             "packages"
@@ -765,7 +804,7 @@
             "buildTool": {
               "type": "string"
             },
-            "connector": {
+            "connectorRef": {
               "type": "string"
             },
             "envVariables": {
@@ -773,6 +812,14 @@
             },
             "image": {
               "type": "string"
+            },
+            "imagePullPolicy": {
+              "type": "string",
+              "enum": [
+                "Always",
+                "Never",
+                "IfNotPresent"
+              ]
             },
             "language": {
               "type": "string"
@@ -842,7 +889,11 @@
           ],
           "properties": {
             "archiveFormat": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "Tar",
+                "Gzip"
+              ]
             },
             "bucket": {
               "type": "string"
@@ -910,7 +961,11 @@
           ],
           "properties": {
             "archiveFormat": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "Tar",
+                "Gzip"
+              ]
             },
             "bucket": {
               "type": "string"

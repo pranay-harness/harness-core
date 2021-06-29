@@ -1,5 +1,6 @@
 package io.harness.pms.inputset.helpers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.merger.helpers.MergeHelper.createTemplateFromPipeline;
 import static io.harness.pms.merger.helpers.MergeHelper.getInvalidFQNsInInputSet;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSetIntoPipeline;
@@ -11,6 +12,7 @@ import static io.harness.rule.OwnerRule.NAMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.inputset.InputSetErrorResponseDTOPMS;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PIPELINE)
 public class MergeHelperTest extends CategoryTest {
   private String readFile(String filename) {
     ClassLoader classLoader = getClass().getClassLoader();
@@ -67,6 +70,25 @@ public class MergeHelperTest extends CategoryTest {
     String resYaml = res.replace("\"", "");
 
     String mergedYamlFile = "pipeline-extensive-merged.yml";
+    String mergedYaml = readFile(mergedYamlFile);
+
+    assertThat(resYaml).isEqualTo(mergedYaml);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testMergeInputSetIntoServiceDependenciesPipeline() throws IOException {
+    String filename = "service-dependencies-pipeline.yaml";
+    String yaml = readFile(filename);
+
+    String inputSet = "service-dependencies-runtime-input.yaml";
+    String inputSetYaml = readFile(inputSet);
+
+    String res = mergeInputSetIntoPipeline(yaml, inputSetYaml, false);
+    String resYaml = res.replace("\"", "");
+
+    String mergedYamlFile = "service-dependencies-pipeline-merged.yaml";
     String mergedYaml = readFile(mergedYamlFile);
 
     assertThat(resYaml).isEqualTo(mergedYaml);

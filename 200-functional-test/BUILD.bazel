@@ -33,7 +33,7 @@ java_library(
 
 test_dependencies = [
     "@maven//:com_github_tomakehurst_wiremock_jre8_standalone",
-    "@delegate//:org_apache_httpcomponents_httpmime",
+    "@maven//:org_apache_httpcomponents_httpmime",
 ] + [
     "@maven//:com_google_guava_guava",
     "//:lombok",

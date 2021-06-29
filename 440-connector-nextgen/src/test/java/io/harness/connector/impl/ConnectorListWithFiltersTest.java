@@ -58,6 +58,7 @@ import io.harness.filter.service.FilterService;
 import io.harness.git.model.ChangeType;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -83,6 +84,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
   @Mock OrganizationService organizationService;
   @Mock ProjectService projectService;
   @Mock ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
+  @Inject OutboxService outboxService;
   @Inject @InjectMocks @Spy DefaultConnectorServiceImpl connectorService;
   @Inject ConnectorRepository connectorRepository;
   @Inject FilterService filterService;
@@ -197,6 +199,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
 
   private void createConnectorsWithNames(List<String> namesList) {
     ConnectorInfoDTO connectorInfoDTO = getConnector(name, identifier, description);
+    //    doReturn(a).when(outboxService).save(any());
     for (String name : namesList) {
       connectorInfoDTO.setName(name);
       connectorInfoDTO.setIdentifier(generateUuid());

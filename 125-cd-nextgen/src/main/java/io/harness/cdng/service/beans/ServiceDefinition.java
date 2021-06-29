@@ -16,6 +16,7 @@ import io.harness.walktree.visitor.Visitable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModelProperty;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -36,7 +37,8 @@ public class ServiceDefinition implements Visitable {
   @ApiModelProperty(hidden = true)
   private String uuid;
 
-  String type;
+  @NotNull @JsonProperty("type") ServiceDefinitionType type;
+  @NotNull
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   ServiceSpec serviceSpec;
@@ -46,7 +48,7 @@ public class ServiceDefinition implements Visitable {
 
   // Use Builder as Constructor then only external property(visible) will be filled.
   @Builder
-  public ServiceDefinition(String type, ServiceSpec serviceSpec) {
+  public ServiceDefinition(ServiceDefinitionType type, ServiceSpec serviceSpec) {
     this.type = type;
     this.serviceSpec = serviceSpec;
   }

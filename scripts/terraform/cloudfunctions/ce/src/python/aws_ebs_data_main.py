@@ -8,8 +8,9 @@ from google.cloud import secretmanager
 from botocore.config import Config
 import datetime
 import boto3
-from util import create_dataset, if_tbl_exists, createTable, print_, ACCOUNTID_LOG, TABLE_NAME_FORMAT
-from aws_util import assumed_role_session, STATIC_REGION, get_secret_key
+import util
+from util import create_dataset, if_tbl_exists, createTable, print_, TABLE_NAME_FORMAT
+from aws_util import assumed_role_session, STATIC_REGION
 
 def getEbsVolumesData(jsonData):
     my_config = Config(
@@ -24,8 +25,8 @@ def getEbsVolumesData(jsonData):
         print_("Assuming role")
         key, secret, token = assumed_role_session(jsonData)
     except Exception as e:
-        print_(e, "ERROR")
-        raise e
+        print_(e, "WARN")
+        return EBS_VOLUMES_DATA_MAP, set()
 
     ec2 = boto3.client('ec2', config=my_config, aws_access_key_id=key,
                        aws_secret_access_key=secret, aws_session_token=token)
@@ -34,7 +35,7 @@ def getEbsVolumesData(jsonData):
         REGIONS = [item["RegionName"] for item in response['Regions']]
     except Exception as e:
         # We probably do not have describe region permission in CF template for this customer.
-        print_(e, "ERROR")
+        print_(e, "WARN")
         print_("Using static region list")
         REGIONS = STATIC_REGION
 
@@ -43,27 +44,68 @@ def getEbsVolumesData(jsonData):
         ec2 = boto3.client('ec2', region_name=region, aws_access_key_id=key,
                            aws_secret_access_key=secret, aws_session_token=token)
 
+        # Describe snapshots call
+        volume_snapshots_mapping = getSnapshots(ec2, region, jsonData['linkedAccountId'])
+
         # Describe volumes call
         print_("Getting all volumes for region - %s" % region)
         paginator = ec2.get_paginator('describe_volumes')
         page_iterator = paginator.paginate()
         volume_count = 0
+        volume_inserted = dict()
         try:
             for volumes in page_iterator:
                 for volume in volumes['Volumes']:
-                    EBS_VOLUMES_DATA_MAP.append(getVolumeRow(volume, region, jsonData["linkedAccountId"]))
+                    EBS_VOLUMES_DATA_MAP.append(getVolumeRow(volume, region, jsonData["linkedAccountId"], volume_snapshots_mapping))
                     volume_count += 1
+                    volume_inserted[volume['VolumeId']] = True
                     unique_volume_ids.add(volume['VolumeId'])
         except Exception as e:
-            print_(e, "ERROR")
+            print_(e, "WARN")
             print_("Error in getting volumes for %s" % region)
             continue
+
+        # Insert rows for volumes which have been deleted but its snaphots are still present
+        for volume in volume_snapshots_mapping:
+            if volume_inserted.get(volume) is None:
+                EBS_VOLUMES_DATA_MAP.append(getVolumeRowForDeletedVolume(volume, region, jsonData["linkedAccountId"], volume_snapshots_mapping[volume]))
 
         print_("Found %s volumes in region %s" % (volume_count, region))
 
     return EBS_VOLUMES_DATA_MAP, unique_volume_ids
 
-def getVolumeRow(volumeData, region, linkedAccountId):
+def getSnapshots(client, region, linkedAccountId):
+    paginator = client.get_paginator('describe_snapshots')
+    page_iterator = paginator.paginate(OwnerIds=[linkedAccountId])
+    snapshot_count = 0
+    volume_has_snapshot = dict()
+    volume_snapshot_mapping = dict()
+    try:
+        for snapshots in page_iterator:
+            for snapshot in snapshots['Snapshots']:
+                volumeId = snapshot['VolumeId']
+                if volume_has_snapshot.get(volumeId) is None:
+                    volume_has_snapshot[volumeId] = True
+                    volume_snapshot_mapping[volumeId] = []
+                volume_snapshot_mapping[volumeId].append(getSnapshotDetails(snapshot))
+                snapshot_count += 1
+    except Exception as e:
+        print_(e, "WARN")
+        print_("Error in getting volumes for %s" % region)
+
+    print_("Found %s snapshots in region %s" % (snapshot_count, region))
+    return volume_snapshot_mapping
+
+def getSnapshotDetails(snapshotData):
+    return {
+        "createTime": str(snapshotData.get('StartTime')),
+        "snapshotId": snapshotData.get('SnapshotId'),
+        "status": snapshotData.get('State'),
+        "description": snapshotData.get('Description'),
+        "encrypted": snapshotData.get('Encrypted')
+    }
+
+def getVolumeRow(volumeData, region, linkedAccountId, snapshots):
     return {
         "lastUpdatedAt": str(datetime.datetime.utcnow()),
         "volumeId": volumeData['VolumeId'],
@@ -82,6 +124,31 @@ def getVolumeRow(volumeData, region, linkedAccountId):
         "kmsKeyId": volumeData.get('KmsKeyId'),
         "attachments": getAttachments(volumeData),
         "tags": getTags(volumeData),
+        "snapshots": snapshots.get(volumeData['VolumeId']),
+        "linkedAccountId": linkedAccountId,
+        "linkedAccountIdPartition": int(linkedAccountId) % 10000
+    }
+
+def getVolumeRowForDeletedVolume(volumeId, region, linkedAccountId, snapshots):
+    return {
+        "lastUpdatedAt": str(datetime.datetime.utcnow()),
+        "volumeId": volumeId,
+        "createTime": None,
+        "availabilityZone": None,
+        "region": region,
+        "encrypted": None,
+        "size": None,
+        "state": "deleted",
+        "iops": None,
+        "volumeType": None,
+        "multiAttachedEnabled": None,
+        "detachedAt": None,
+        "deleteTime": None,
+        "snapshotId": None,
+        "kmsKeyId": None,
+        "attachments": None,
+        "tags": None,
+        "snapshots": snapshots,
         "linkedAccountId": linkedAccountId,
         "linkedAccountIdPartition": int(linkedAccountId) % 10000
     }
@@ -164,7 +231,7 @@ def main(event, context):
     client = bigquery.Client(jsonData["projectName"])
 
     # Set the accountId for GCP logging
-    ACCOUNTID_LOG = jsonData.get("accountIdOrig")
+    util.ACCOUNTID_LOG = jsonData.get("accountIdOrig")
 
     jsonData["accountIdBQ"] = re.sub('[^0-9a-z]', '_', jsonData.get("accountId").lower())
     jsonData["datasetName"] = "BillingReport_%s" % jsonData["accountIdBQ"]
@@ -184,10 +251,10 @@ def main(event, context):
     # Creating tables if they don't exist
     if not if_tbl_exists(client, awsEbsInventoryTableRef):
         print_("%s table does not exists, creating table..." % awsEbsInventoryTableRef)
-        createTable(client, awsEbsInventoryTableName)
+        createTable(client, awsEbsInventoryTableRef)
     if not if_tbl_exists(client, awsEbsInventoryTempTableRef):
         print_("%s table does not exists, creating table..." % awsEbsInventoryTempTableRef)
-        createTable(client, awsEbsInventoryTempTableName)
+        createTable(client, awsEbsInventoryTempTableRef)
 
     # Updating bq tables
     currentTime = datetime.datetime.utcnow()
@@ -195,8 +262,8 @@ def main(event, context):
     if len(uniqueVolumeIds) != 0:
         uniqueVolumeIds = ", ".join(f"'{w}'" for w in uniqueVolumeIds)
         insertDataInTempTable(client, ebsVolumesDataMap, awsEbsInventoryTempTableName)
-        insertIntoMainTable(client, awsEbsInventoryTableName, awsEbsInventoryTempTableName, uniqueVolumeIds, jsonData["linkedAccountId"])
-        updateDeletedVolumesInMainTable(client, awsEbsInventoryTableName, currentTime, jsonData["linkedAccountId"])
+        # insertIntoMainTable(client, awsEbsInventoryTableName, awsEbsInventoryTempTableName, uniqueVolumeIds, jsonData["linkedAccountId"])
+        # updateDeletedVolumesInMainTable(client, awsEbsInventoryTableName, currentTime, jsonData["linkedAccountId"])
 
     print_("Completed")
 

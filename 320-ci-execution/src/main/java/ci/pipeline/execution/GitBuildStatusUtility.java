@@ -6,6 +6,7 @@ import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
 import static io.harness.delegate.beans.connector.scm.GitConnectionType.ACCOUNT;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.pms.execution.utils.StatusUtils.isFinalStatus;
+import static io.harness.steps.StepUtils.buildAbstractions;
 
 import io.harness.PipelineUtils;
 import io.harness.annotations.dev.HarnessTeam;
@@ -18,6 +19,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.task.ci.CIBuildStatusPushParameters;
 import io.harness.delegate.task.ci.GitSCMType;
+import io.harness.encryption.Scope;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.git.GitClientHelper;
 import io.harness.ng.core.NGAccess;
@@ -35,6 +37,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
@@ -98,9 +101,10 @@ public class GitBuildStatusUtility {
       }
 
       if (ciBuildStatusPushParameters.getState() != UNSUPPORTED) {
+        Map<String, String> abstractions = buildAbstractions(ambiance, Scope.PROJECT);
         DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
                                                       .accountId(accountId)
-                                                      .taskSetupAbstractions(ambiance.getSetupAbstractions())
+                                                      .taskSetupAbstractions(abstractions)
                                                       .executionTimeout(java.time.Duration.ofSeconds(60))
                                                       .taskType("BUILD_STATUS")
                                                       .taskParameters(ciBuildStatusPushParameters)
@@ -142,7 +146,7 @@ public class GitBuildStatusUtility {
         .gitSCMType(gitSCMType)
         .connectorDetails(gitConnector)
         .userName(connectorUtils.fetchUserName(gitConnector))
-        .owner(gitClientHelper.getGitOwner(retrieveURL(gitConnector)))
+        .owner(gitClientHelper.getGitOwner(retrieveURL(gitConnector), isAccountLevelConnector))
         .repo(repoName)
         .identifier(buildStatusUpdateParameter.getIdentifier())
         .state(retrieveBuildStatusState(gitSCMType, status))
@@ -224,7 +228,7 @@ public class GitBuildStatusUtility {
     if (status == Status.ABORTED || status == Status.FAILED || status == Status.EXPIRED) {
       return GITHUB_FAILED;
     }
-    if (status == Status.SUCCEEDED) {
+    if (status == Status.SUCCEEDED || status == Status.IGNORE_FAILED) {
       return GITHUB_SUCCESS;
     }
     if (status == Status.RUNNING) {
@@ -244,7 +248,7 @@ public class GitBuildStatusUtility {
     if (status == Status.ABORTED) {
       return GITLAB_CANCELED;
     }
-    if (status == Status.SUCCEEDED) {
+    if (status == Status.SUCCEEDED || status == Status.IGNORE_FAILED) {
       return GITLAB_SUCCESS;
     }
     if (status == Status.RUNNING) {
@@ -264,7 +268,7 @@ public class GitBuildStatusUtility {
     if (status == Status.ABORTED || status == Status.FAILED || status == Status.EXPIRED) {
       return BITBUCKET_FAILED;
     }
-    if (status == Status.SUCCEEDED) {
+    if (status == Status.SUCCEEDED || status == Status.IGNORE_FAILED) {
       return BITBUCKET_SUCCESS;
     }
     if (status == Status.RUNNING) {

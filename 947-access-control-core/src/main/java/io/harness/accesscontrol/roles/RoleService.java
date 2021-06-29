@@ -27,7 +27,7 @@ public interface RoleService {
 
   boolean addPermissionToRoles(@NotEmpty String permissionIdentifier, @Valid @NotNull RoleFilter roleFilter);
 
-  Role delete(@NotEmpty String identifier, @NotEmpty String scopeIdentifier);
+  Role delete(@NotEmpty String identifier, String scopeIdentifier);
 
   long deleteMulti(@Valid @NotNull RoleFilter roleFilter);
 }

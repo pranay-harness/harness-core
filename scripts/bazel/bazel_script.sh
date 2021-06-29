@@ -12,6 +12,8 @@ if [ "${PLATFORM}" == "jenkins" ]; then
   fi
 fi
 
+BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --announce_rc"
+
 BAZEL_DIRS=${HOME}/.bazel-dirs
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --experimental_convenience_symlinks=normal --symlink_prefix=${BAZEL_DIRS}/"
 
@@ -21,8 +23,8 @@ fi
 
 # Enable caching by default. Turn it off by exporting CACHE_TEST_RESULTS=no
 # to generate full call-graph for Test Intelligence
-if [[ -z "${CACHE_TEST_RESULTS}" ]]; then
-  export CACHE_TEST_RESULTS=yes
+if [[ ! -z "${CACHE_TEST_RESULTS}" ]]; then
+  export CACHE_TEST_RESULTS_ARG=--cache_test_results=${CACHE_TEST_RESULTS}
 fi
 
 bazel ${bazelrc} build ${BAZEL_ARGUMENTS}  //:resource
@@ -31,7 +33,7 @@ cat ${BAZEL_DIRS}/out/volatile-status.txt
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]; then
   bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... \
-  && bazel ${bazelrc} test --cache_test_results=${CACHE_TEST_RESULTS} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${BAZEL_ARGUMENTS} -- \
+  && bazel ${bazelrc} test ${CACHE_TEST_RESULTS_ARG} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${BAZEL_ARGUMENTS} -- \
   //... -//product/... -//commons/... -//200-functional-test/... -//190-deployment-functional-tests/...
   exit $?
 fi
@@ -64,6 +66,7 @@ BAZEL_MODULES="\
   //410-cg-rest:module \
   //420-delegate-agent:module \
   //420-delegate-service:module \
+  //425-verification-commons:module \
   //430-cv-nextgen-commons:module \
   //440-connector-nextgen:module \
   //445-cg-connectors:module \
@@ -82,11 +85,8 @@ BAZEL_MODULES="\
   //860-orchestration-steps:module \
   //860-orchestration-visualization:module \
   //870-cg-orchestration:module \
-  //870-cg-yaml:module \
   //870-orchestration:module \
   //870-yaml-beans:module \
-  //871-cg-beans:module \
-  //871-cg-beans:module \
   //874-orchestration-delay:module \
   //876-orchestration-beans:module \
   //878-pipeline-service-utilities:module \
@@ -128,8 +128,9 @@ BAZEL_MODULES="\
   //950-delegate-tasks-beans/src/main/proto:all \
   //950-delegate-tasks-beans:module \
   //950-events-framework:module \
+  //950-events-framework-monitor:module \
   //950-log-client:module \
-  //950-ng-audit-commons:module \
+  //951-ng-audit-commons:module \
   //950-ng-authentication-service:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
@@ -144,6 +145,7 @@ BAZEL_MODULES="\
   //953-git-sync-commons:module \
   //954-connector-beans:module \
   //955-account-mgmt:module \
+  //955-cg-yaml:module \
   //955-delegate-beans/src/main/proto:all \
   //955-delegate-beans:module \
   //955-filters-sdk:module \
@@ -151,6 +153,7 @@ BAZEL_MODULES="\
   //955-setup-usage-sdk:module \
   //956-feature-flag-beans:module \
   //958-migration-sdk:module \
+  //959-cg-beans:module \
   //959-file-service-commons:module \
   //959-psql-database-models:module \
   //960-api-services:module \
@@ -337,6 +340,7 @@ build_bazel_module 400-rest
 build_bazel_module 410-cg-rest
 build_bazel_module 420-delegate-agent
 build_bazel_module 420-delegate-service
+build_bazel_module 425-verification-commons
 build_bazel_module 430-cv-nextgen-commons
 build_bazel_module 440-connector-nextgen
 build_bazel_module 445-cg-connectors
@@ -352,11 +356,8 @@ build_bazel_module 850-ng-pipeline-commons
 build_bazel_module 860-orchestration-steps
 build_bazel_module 860-orchestration-visualization
 build_bazel_module 870-cg-orchestration
-build_bazel_module 870-cg-yaml
 build_bazel_module 870-orchestration
 build_bazel_module 870-yaml-beans
-build_bazel_module 871-cg-beans
-build_bazel_module 871-cg-beans
 build_bazel_module 874-orchestration-delay
 build_bazel_module 876-orchestration-beans
 build_bazel_module 878-pipeline-service-utilities
@@ -389,22 +390,24 @@ build_bazel_module 950-common-entities
 build_bazel_module 950-delegate-tasks-beans
 build_bazel_module 950-events-framework
 build_bazel_module 950-log-client
-build_bazel_module 950-ng-audit-commons
 build_bazel_module 950-ng-core
 build_bazel_module 950-ng-project-n-orgs
 build_bazel_module 950-timeout-engine
 build_bazel_module 950-wait-engine
 build_bazel_module 950-walktree-visitor
+build_bazel_module 951-ng-audit-commons
 build_bazel_module 952-scm-java-client
 build_bazel_module 953-events-api
 build_bazel_module 953-git-sync-commons
 build_bazel_module 954-connector-beans
+build_bazel_module 955-cg-yaml
 build_bazel_module 955-delegate-beans
 build_bazel_module 955-filters-sdk
 build_bazel_module 955-outbox-sdk
 build_bazel_module 955-setup-usage-sdk
 build_bazel_module 956-feature-flag-beans
 build_bazel_module 958-migration-sdk
+build_bazel_module 959-cg-beans
 build_bazel_module 959-file-service-commons
 build_bazel_module 959-psql-database-models
 build_bazel_module 960-api-services
@@ -429,3 +432,5 @@ build_java_proto_module 960-notification-beans
 
 build_proto_module ciengine product/ci/engine/proto
 build_proto_module ciscm product/ci/scm/proto
+
+bazel ${bazelrc} run ${BAZEL_ARGUMENTS} //001-microservice-intfc-tool:module | grep "Codebase Hash:" > protocol.info

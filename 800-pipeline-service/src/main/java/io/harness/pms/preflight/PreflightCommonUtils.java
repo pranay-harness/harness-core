@@ -27,7 +27,7 @@ public class PreflightCommonUtils {
 
   public PreFlightEntityErrorInfo getInternalIssueErrorInfo() {
     return PreFlightEntityErrorInfo.builder()
-        .summary("Internal Server Error, please contact Harness Support")
+        .summary("Error connecting to systems upstream")
         .causes(Collections.singletonList(PreFlightCause.builder().cause("Internal Server Error").build()))
         .build();
   }
@@ -66,7 +66,12 @@ public class PreflightCommonUtils {
     return PreFlightStatus.SUCCESS;
   }
 
-  public PreFlightStatus getOverallStatus(List<ConnectorCheckResponse> connectorCheckResponse) {
-    return getConnectorCheckStatus(connectorCheckResponse);
+  public PreFlightStatus getOverallStatus(
+      List<ConnectorCheckResponse> connectorCheckResponse, List<PipelineInputResponse> pipelineInputResponses) {
+    if (getConnectorCheckStatus(connectorCheckResponse) == PreFlightStatus.FAILURE
+        || getPipelineInputStatus(pipelineInputResponses) == PreFlightStatus.FAILURE) {
+      return PreFlightStatus.FAILURE;
+    }
+    return PreFlightStatus.SUCCESS;
   }
 }

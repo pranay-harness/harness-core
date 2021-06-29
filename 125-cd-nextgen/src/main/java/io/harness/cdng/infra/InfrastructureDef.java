@@ -4,6 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import io.harness.cdng.infra.yaml.Infrastructure;
+import io.harness.cdng.infra.yaml.InfrastructureType;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.InfrastructureDefVisitorHelper;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.walktree.beans.VisitableChildren;
@@ -26,7 +27,7 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = InfrastructureDefVisitorHelper.class)
 @TypeAlias("infrastructureDef")
 public class InfrastructureDef implements Visitable {
-  @NotNull String type;
+  @NotNull @JsonProperty("type") InfrastructureType type;
 
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
@@ -40,7 +41,7 @@ public class InfrastructureDef implements Visitable {
 
   // Use Builder as Constructor then only external property(visible) will be filled.
   @Builder
-  public InfrastructureDef(String type, Infrastructure spec, ExecutionElementConfig provisioner) {
+  public InfrastructureDef(InfrastructureType type, Infrastructure spec, ExecutionElementConfig provisioner) {
     this.type = type;
     this.spec = spec;
     this.provisioner = provisioner;

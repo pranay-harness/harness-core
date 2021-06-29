@@ -12,6 +12,7 @@ import io.harness.remote.client.RestClientUtils;
 import io.harness.signup.dto.SignupDTO;
 
 import com.google.inject.Inject;
+import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
@@ -24,7 +25,8 @@ public class AccountServiceImpl implements AccountService {
   public AccountDTO createAccount(SignupDTO dto) throws WingsException {
     String username = dto.getEmail().split("@")[0];
 
-    AccountDTO accountDTO = AccountDTO.builder().name(username).companyName(username).build();
+    AccountDTO accountDTO =
+        AccountDTO.builder().name(username).companyName(username).defaultExperience(DefaultExperience.NG).build();
 
     return RestClientUtils.getResponse(accountClient.create(accountDTO));
   }
@@ -32,5 +34,19 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public Boolean updateDefaultExperienceIfApplicable(String accountId, DefaultExperience defaultExperience) {
     return RestClientUtils.getResponse(accountClient.updateDefaultExperienceIfApplicable(accountId, defaultExperience));
+  }
+
+  @Override
+  public String getBaseUrl(String accountId, String defaultUrl) {
+    String accountBaseUrl = RestClientUtils.getResponse(accountClient.getBaseUrl(accountId));
+    if (Objects.isNull(accountBaseUrl)) {
+      accountBaseUrl = defaultUrl;
+    }
+    return accountBaseUrl;
+  }
+
+  @Override
+  public AccountDTO getAccount(String accountId) {
+    return RestClientUtils.getResponse(accountClient.getAccountDTO(accountId));
   }
 }

@@ -49,6 +49,7 @@ public class HelmDeployStateExecutionData extends StateExecutionData implements 
   private boolean rollback;
   private String commandFlags;
   private TaskType currentTaskType;
+  private String zippedManifestFileId;
   @Builder.Default private Map<K8sValuesLocation, Collection<String>> valuesFiles = new HashMap<>();
   @Builder.Default private Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
 

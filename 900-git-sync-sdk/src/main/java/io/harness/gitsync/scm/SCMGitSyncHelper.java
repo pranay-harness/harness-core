@@ -31,6 +31,7 @@ import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 
 @Singleton
 @Slf4j
@@ -78,6 +79,7 @@ public class SCMGitSyncHelper {
             .setYamlGitConfigId(gitBranchInfo.getYamlGitConfigId())
             .setEntityDetail(entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail))
             .setUserPrincipal(getUserPrincipal())
+            .putAllContextMap(MDC.getCopyOfContextMap())
             .build());
     if (!pushInfo.getStatus()) {
       WingsException wingsException =
@@ -116,6 +118,7 @@ public class SCMGitSyncHelper {
       return UserPrincipal.newBuilder()
           .setEmail(StringValue.of(userPrincipal.getEmail()))
           .setUserId(StringValue.of(userPrincipal.getName()))
+          .setUserName(StringValue.of(userPrincipal.getUsername()))
           .build();
     }
     throw new InvalidRequestException("User not set for push event.");

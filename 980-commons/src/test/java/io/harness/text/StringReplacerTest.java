@@ -5,13 +5,17 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.text.resolver.ExpressionResolver;
 
 import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class StringReplacerTest extends CategoryTest {
   @Test
   @Owner(developers = GARVIT)
@@ -20,13 +24,36 @@ public class StringReplacerTest extends CategoryTest {
     String source = "abc def <+gh <+ij <+kl> > > <+mn>>> op";
     String expected = "abc def 1 2>> op";
     DummyExpressionResolver resolver = new DummyExpressionResolver();
-    StringReplacer stringReplacer = new StringReplacer(resolver, "<+", ">");
-    String resp = stringReplacer.replace(source);
-    assertThat(resp).isNotNull();
+    String resp = replace(resolver, source);
     assertThat(resp).isEqualTo(expected);
 
     List<String> expressions = resolver.getExpressions();
     assertThat(expressions).isNotEmpty();
     assertThat(expressions).containsExactly("gh <+ij <+kl> > ", "mn");
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testStringReplacerSuffixEscape() {
+    String source =
+        "abc <+ de \\ f > <+gh <+ij <+kl.select(\"<book\\><title\\>Harry Potter</title\\></book\\>\")> > > <+abc \\> def>>> op";
+    String expected = "abc 1 2 3>> op";
+    DummyExpressionResolver resolver = new DummyExpressionResolver();
+    String resp = replace(resolver, source);
+    assertThat(resp).isEqualTo(expected);
+
+    List<String> expressions = resolver.getExpressions();
+    assertThat(expressions).isNotEmpty();
+    assertThat(expressions)
+        .containsExactly(
+            " de \\ f ", "gh <+ij <+kl.select(\"<book><title>Harry Potter</title></book>\")> > ", "abc > def");
+  }
+
+  private String replace(ExpressionResolver resolver, String source) {
+    StringReplacer stringReplacer = new StringReplacer(resolver, "<+", ">");
+    String resp = stringReplacer.replace(source);
+    assertThat(resp).isNotNull();
+    return resp;
   }
 }

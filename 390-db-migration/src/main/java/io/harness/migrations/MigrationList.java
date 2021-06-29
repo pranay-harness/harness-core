@@ -27,11 +27,13 @@ import io.harness.migrations.all.AddAccountIdToArtifactsMigration;
 import io.harness.migrations.all.AddCEPermissionToAllUserGroups;
 import io.harness.migrations.all.AddDisabledFieldMigration;
 import io.harness.migrations.all.AddDuplicateFieldToCVFeedbacks;
+import io.harness.migrations.all.AddEnableIteratorsToTriggers;
 import io.harness.migrations.all.AddHarnessCommandLibraryToAccount;
 import io.harness.migrations.all.AddHarnessGroupAccessFlagToAccount;
 import io.harness.migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
 import io.harness.migrations.all.AddLimitVicinityCheckJobToAllAccounts;
 import io.harness.migrations.all.AddLoginSettingsToAccountMigration;
+import io.harness.migrations.all.AddNgFieldToDelegateGroupMigration;
 import io.harness.migrations.all.AddReplCtrlNameToKubeSetupProperties;
 import io.harness.migrations.all.AddRestrictionsToSecretManagerConfig;
 import io.harness.migrations.all.AddScopedToAccountAttributeToEncryptedData;
@@ -422,6 +424,9 @@ public class MigrationList {
         .add(Pair.of(356, CECloudAccountMigration.class))
         .add(Pair.of(357, SshAndWinRmAccountPermissionMigration.class))
         .add(Pair.of(358, BaseMigration.class))
+        .add(Pair.of(359, BaseMigration.class))
+        .add(Pair.of(360, AddEnableIteratorsToTriggers.class))
+        .add(Pair.of(361, AddNgFieldToDelegateGroupMigration.class))
         .build();
   }
 }

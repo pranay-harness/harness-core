@@ -265,6 +265,7 @@ public class CIExecutionPlanTestHelper {
         .executionElementConfig(getExecutionElementConfig())
         .ciCodebase(getCICodebase())
         .infrastructure(getInfrastructure())
+        .timeout(600000)
         .build();
   }
 
@@ -301,6 +302,7 @@ public class CIExecutionPlanTestHelper {
         .usePVC(true)
         .executionElementConfig(getExecutionElementConfig())
         .infrastructure(getInfrastructure())
+        .timeout(600000)
         .build();
   }
 

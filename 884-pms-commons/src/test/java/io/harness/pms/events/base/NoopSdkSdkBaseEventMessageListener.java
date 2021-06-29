@@ -2,13 +2,11 @@ package io.harness.pms.events.base;
 
 import io.harness.pms.contracts.interrupts.InterruptEvent;
 
-public class NoopSdkSdkBaseEventMessageListener extends PmsAbstractMessageListener<InterruptEvent> {
-  public NoopSdkSdkBaseEventMessageListener(String serviceName) {
-    super(serviceName, InterruptEvent.class);
-  }
+import java.util.concurrent.Executors;
 
-  @Override
-  public boolean processMessage(InterruptEvent event) {
-    return false;
+public class NoopSdkSdkBaseEventMessageListener
+    extends PmsAbstractMessageListener<InterruptEvent, NoopPmsEventHandler> {
+  public NoopSdkSdkBaseEventMessageListener(String serviceName, NoopPmsEventHandler handler) {
+    super(serviceName, InterruptEvent.class, handler, Executors.newSingleThreadExecutor());
   }
 }

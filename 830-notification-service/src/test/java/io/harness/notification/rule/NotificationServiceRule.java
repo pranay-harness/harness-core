@@ -117,6 +117,13 @@ public class NotificationServiceRule implements MethodRule, InjectorRuleMixin, M
       ObjectFactory objectFactory() {
         return new DefaultCreator();
       }
+
+      @Provides
+      @Named("disableDeserialization")
+      @Singleton
+      public boolean getSerializationForDelegate() {
+        return false;
+      }
     });
     return modules;
   }

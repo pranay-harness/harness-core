@@ -65,12 +65,14 @@ public class PMSExpressionEvaluator extends AmbianceExpressionEvaluator {
     addStaticAlias("infra", "stage.spec.infrastructure.output");
 
     // Status aliases
-    addStaticAlias(OrchestrationConstants.STAGE_SUCCESS, "<+stage.currentStatus> == \"SUCCEEDED\"");
+    addStaticAlias(OrchestrationConstants.STAGE_SUCCESS,
+        "<+stage.currentStatus> == \"SUCCEEDED\" || <+stage.currentStatus> == \"IGNORE_FAILED\"");
     addStaticAlias(OrchestrationConstants.STAGE_FAILURE,
         "<+stage.currentStatus> == \"FAILED\" || <+stage.currentStatus> == \"ERRORED\" || <+stage.currentStatus> == \"EXPIRED\"");
     addStaticAlias(OrchestrationConstants.PIPELINE_FAILURE,
         "<+pipeline.currentStatus> == \"FAILED\" || <+pipeline.currentStatus> == \"ERRORED\" || <+pipeline.currentStatus> == \"EXPIRED\"");
-    addStaticAlias(OrchestrationConstants.PIPELINE_SUCCESS, "<+pipeline.currentStatus> == \"SUCCEEDED\"");
+    addStaticAlias(OrchestrationConstants.PIPELINE_SUCCESS,
+        "<+pipeline.currentStatus> == \"SUCCEEDED\" || <+pipeline.currentStatus> == \"IGNORE_FAILED\"");
     addStaticAlias(OrchestrationConstants.ALWAYS, "true");
 
     // Group aliases

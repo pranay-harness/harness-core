@@ -15,6 +15,7 @@ shared_dependencies = [
     "//960-ng-core-beans:module",
     "//960-notification-beans:module",
     "//960-notification-beans/src/main/proto:960_notification_beans_java_proto",
+    "//960-persistence:module",
     "//970-telemetry-beans:module",
     "@maven//:org_mindrot_jbcrypt",
 ]

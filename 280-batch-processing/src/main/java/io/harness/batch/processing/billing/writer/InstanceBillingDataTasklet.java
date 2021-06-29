@@ -306,6 +306,8 @@ public class InstanceBillingDataTasklet implements Tasklet {
     if (instanceType == InstanceType.EC2_INSTANCE) {
       settingId = null;
       clusterId = null;
+    } else if (settingId == null) {
+      settingId = clusterId;
     }
     String instanceName =
         (instanceData.getInstanceName() == null) ? instanceData.getInstanceId() : instanceData.getInstanceName();

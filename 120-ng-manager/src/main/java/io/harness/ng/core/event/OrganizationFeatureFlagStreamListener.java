@@ -12,18 +12,16 @@ import io.harness.exception.InvalidRequestException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.InvalidProtocolBufferException;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
+@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
 public class OrganizationFeatureFlagStreamListener implements MessageListener {
   private final DefaultOrganizationManager defaultOrganizationManager;
 
-  @Inject
-  public OrganizationFeatureFlagStreamListener(DefaultOrganizationManager defaultOrganizationManager) {
-    this.defaultOrganizationManager = defaultOrganizationManager;
-  }
   @Override
   public boolean handleMessage(Message message) {
     if (message != null && message.hasMessage()) {

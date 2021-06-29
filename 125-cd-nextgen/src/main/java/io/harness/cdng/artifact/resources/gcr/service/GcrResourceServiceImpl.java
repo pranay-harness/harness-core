@@ -3,6 +3,8 @@ package io.harness.cdng.artifact.resources.gcr.service;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.artifact.resources.gcr.dtos.GcrBuildDetailsDTO;
@@ -17,6 +19,7 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
+import io.harness.delegate.task.artifacts.ArtifactDelegateRequestUtils;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.ArtifactTaskType;
 import io.harness.delegate.task.artifacts.gcr.GcrArtifactDelegateRequest;
@@ -46,6 +49,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
 public class GcrResourceServiceImpl implements GcrResourceService {
   private final ConnectorService connectorService;
   private final SecretManagerClientService secretManagerClientService;
@@ -67,13 +71,8 @@ public class GcrResourceServiceImpl implements GcrResourceService {
     BaseNGAccess baseNGAccess =
         getBaseNGAccess(gcrConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
     List<EncryptedDataDetail> encryptionDetails = getEncryptionDetails(connector, baseNGAccess);
-    GcrArtifactDelegateRequest gcrRequest = GcrArtifactDelegateRequest.builder()
-                                                .gcpConnectorDTO(connector)
-                                                .encryptedDataDetails(encryptionDetails)
-                                                .imagePath(imagePath)
-                                                .sourceType(ArtifactSourceType.GCR)
-                                                .registryHostname(registryHostname)
-                                                .build();
+    GcrArtifactDelegateRequest gcrRequest = ArtifactDelegateRequestUtils.getGcrDelegateRequest(
+        imagePath, null, null, null, registryHostname, null, connector, encryptionDetails, ArtifactSourceType.GCR);
     ArtifactTaskExecutionResponse artifactTaskExecutionResponse = executeSyncTask(
         gcrRequest, ArtifactTaskType.GET_BUILDS, baseNGAccess, "Gcr Get Builds task failure due to error");
     return getGcrResponseDTO(artifactTaskExecutionResponse);
@@ -86,15 +85,9 @@ public class GcrResourceServiceImpl implements GcrResourceService {
     BaseNGAccess baseNGAccess =
         getBaseNGAccess(gcrConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
     List<EncryptedDataDetail> encryptionDetails = getEncryptionDetails(connector, baseNGAccess);
-    GcrArtifactDelegateRequest gcrRequest = GcrArtifactDelegateRequest.builder()
-                                                .gcpConnectorDTO(connector)
-                                                .encryptedDataDetails(encryptionDetails)
-                                                .tag(gcrRequestDTO.getTag())
-                                                .tagRegex(gcrRequestDTO.getTagRegex())
-                                                .imagePath(imagePath)
-                                                .registryHostname(gcrRequestDTO.getRegistryHostname())
-                                                .sourceType(ArtifactSourceType.GCR)
-                                                .build();
+    GcrArtifactDelegateRequest gcrRequest = ArtifactDelegateRequestUtils.getGcrDelegateRequest(imagePath,
+        gcrRequestDTO.getTag(), gcrRequestDTO.getTagRegex(), null, gcrRequestDTO.getRegistryHostname(), null, connector,
+        encryptionDetails, ArtifactSourceType.GCR);
     ArtifactTaskExecutionResponse artifactTaskExecutionResponse =
         executeSyncTask(gcrRequest, ArtifactTaskType.GET_LAST_SUCCESSFUL_BUILD, baseNGAccess,
             "Gcr Get last successful build task failure due to error");
@@ -112,13 +105,8 @@ public class GcrResourceServiceImpl implements GcrResourceService {
     BaseNGAccess baseNGAccess =
         getBaseNGAccess(gcrConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
     List<EncryptedDataDetail> encryptionDetails = getEncryptionDetails(connector, baseNGAccess);
-    GcrArtifactDelegateRequest gcrRequest = GcrArtifactDelegateRequest.builder()
-                                                .imagePath(imagePath)
-                                                .registryHostname(registryHostname)
-                                                .gcpConnectorDTO(connector)
-                                                .encryptedDataDetails(encryptionDetails)
-                                                .sourceType(ArtifactSourceType.GCR)
-                                                .build();
+    GcrArtifactDelegateRequest gcrRequest = ArtifactDelegateRequestUtils.getGcrDelegateRequest(
+        imagePath, null, null, null, registryHostname, null, connector, encryptionDetails, ArtifactSourceType.GCR);
     ArtifactTaskExecutionResponse artifactTaskExecutionResponse =
         executeSyncTask(gcrRequest, ArtifactTaskType.VALIDATE_ARTIFACT_SERVER, baseNGAccess,
             "Gcr validate artifact server task failure due to error");
@@ -132,13 +120,8 @@ public class GcrResourceServiceImpl implements GcrResourceService {
     BaseNGAccess baseNGAccess =
         getBaseNGAccess(gcrConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);
     List<EncryptedDataDetail> encryptionDetails = getEncryptionDetails(connector, baseNGAccess);
-    GcrArtifactDelegateRequest gcrRequest = GcrArtifactDelegateRequest.builder()
-                                                .gcpConnectorDTO(connector)
-                                                .registryHostname(registryHostname)
-                                                .encryptedDataDetails(encryptionDetails)
-                                                .imagePath(imagePath)
-                                                .sourceType(ArtifactSourceType.GCR)
-                                                .build();
+    GcrArtifactDelegateRequest gcrRequest = ArtifactDelegateRequestUtils.getGcrDelegateRequest(
+        imagePath, null, null, null, registryHostname, null, connector, encryptionDetails, ArtifactSourceType.GCR);
     ArtifactTaskExecutionResponse artifactTaskExecutionResponse =
         executeSyncTask(gcrRequest, ArtifactTaskType.VALIDATE_ARTIFACT_SOURCE, baseNGAccess,
             "Gcr validate artifact source task failure due to error");
@@ -197,9 +180,13 @@ public class GcrResourceServiceImpl implements GcrResourceService {
             .taskType(NGTaskType.GCR_ARTIFACT_TASK_NG.name())
             .taskParameters(artifactTaskParameters)
             .executionTimeout(java.time.Duration.ofSeconds(timeoutInSecs))
+            .taskSetupAbstraction("ng", "true")
+            .taskSetupAbstraction("owner", ngAccess.getOrgIdentifier() + "/" + ngAccess.getProjectIdentifier())
             .taskSetupAbstraction("orgIdentifier", ngAccess.getOrgIdentifier())
             .taskSetupAbstraction("projectIdentifier", ngAccess.getProjectIdentifier())
+            .taskSelectors(gcrRequest.getGcpConnectorDTO().getDelegateSelectors())
             .build();
+
     return delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
   }
 

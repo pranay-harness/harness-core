@@ -12,6 +12,7 @@ import io.harness.helper.ScmGitCapabilityHelper;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Value;
 
@@ -21,11 +22,12 @@ import lombok.Value;
 public class ScmGitFileTaskParams implements TaskParameters, ExecutionCapabilityDemander {
   GitFileTaskType gitFileTaskType;
   ScmConnector scmConnector;
-  List<String> foldersList;
+  Set<String> foldersList;
   List<String> filePathsList;
-  String branchName;
   List<EncryptedDataDetail> encryptedDataDetails;
   GitFilePathDetails gitFilePathDetails;
+  String ref;
+  String branch;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

@@ -3,6 +3,7 @@ package io.harness.ng.core.entities;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.ChangeDataCapture;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
@@ -10,6 +11,7 @@ import io.harness.mongo.CollationLocale;
 import io.harness.mongo.CollationStrength;
 import io.harness.mongo.index.Collation;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
@@ -41,6 +43,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "organizations", noClassnameStored = true)
 @Document("organizations")
 @TypeAlias("organizations")
+@ChangeDataCapture(table = "organizations", dataStore = "ng-harness", fields = {}, handler = "Organizations")
+@ChangeDataCapture(table = "tags_info", dataStore = "ng-harness", fields = {}, handler = "TagsInfoCD")
 @StoreIn(DbAliases.NG_MANAGER)
 public class Organization implements PersistentEntity, NGAccountAccess {
   public static List<MongoIndex> mongoIndexes() {
@@ -86,7 +90,7 @@ public class Organization implements PersistentEntity, NGAccountAccess {
 
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
   String accountIdentifier;
-  @EntityIdentifier(allowBlank = false) String identifier;
+  @EntityIdentifier(allowBlank = false) @FdIndex String identifier;
 
   @NGEntityName String name;
 
