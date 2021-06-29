@@ -1325,7 +1325,11 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                                                                   .executionCapabilities(executionCapabilityList)
                                                                   .delegateCallbackToken(delegateTask.getDriverId());
 
-      if (featureFlagService.isEnabled(FeatureName.LOG_STREAMING_INTEGRATION, delegateTask.getAccountId())) {
+      boolean isTaskNg = !isEmpty(delegateTask.getSetupAbstractions())
+          && Boolean.parseBoolean(delegateTask.getSetupAbstractions().get(NG));
+
+      if (isTaskNg
+          && featureFlagService.isEnabled(FeatureName.LOG_STREAMING_INTEGRATION, delegateTask.getAccountId())) {
         try {
           String logStreamingAccountToken = logStreamingAccountTokenCache.get(delegateTask.getAccountId());
 

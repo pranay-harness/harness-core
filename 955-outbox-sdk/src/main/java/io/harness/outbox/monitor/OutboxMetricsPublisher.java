@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.outbox.OutboxSDKConstants.ALL_EVENT_TYPES;
 import static io.harness.outbox.OutboxSDKConstants.OUTBOX_BLOCKED_QUEUE_SIZE_METRIC_NAME;
 import static io.harness.outbox.OutboxSDKConstants.OUTBOX_QUEUE_SIZE_METRIC_NAME;
+import static io.harness.outbox.TransactionOutboxModule.SERVICE_ID_FOR_OUTBOX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.metrics.service.api.MetricService;
@@ -26,7 +27,7 @@ public class OutboxMetricsPublisher implements MetricsPublisher {
 
   @Inject
   public OutboxMetricsPublisher(
-      OutboxDao outboxDao, MetricService metricService, @Named("serviceIdForOutboxMetrics") String serviceId) {
+      OutboxDao outboxDao, MetricService metricService, @Named(SERVICE_ID_FOR_OUTBOX) String serviceId) {
     this.outboxDao = outboxDao;
     this.metricService = metricService;
     this.serviceId = serviceId;

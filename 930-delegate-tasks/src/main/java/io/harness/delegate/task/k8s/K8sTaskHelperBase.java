@@ -147,6 +147,7 @@ import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
+import io.kubernetes.client.openapi.models.V1TokenReviewStatus;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -2168,6 +2169,12 @@ public class K8sTaskHelperBase {
       return createConnectivityFailureValidationResult(ex);
     }
     return ConnectorValidationResult.builder().status(connectivityStatus).build();
+  }
+
+  public V1TokenReviewStatus fetchTokenReviewStatus(
+      KubernetesClusterConfigDTO kubernetesClusterConfigDTO, List<EncryptedDataDetail> encryptionDetailList) {
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(kubernetesClusterConfigDTO, encryptionDetailList);
+    return kubernetesContainerService.fetchTokenReviewStatus(kubernetesConfig);
   }
 
   private ConnectorValidationResult createConnectivityFailureValidationResult(Exception ex) {

@@ -1,11 +1,8 @@
 package io.harness.ng.accesscontrol.migrations;
 
-import io.harness.NGConstants;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.accesscontrol.migrations.services.AccessControlMigrationService;
-import io.harness.ng.core.entities.Organization;
-import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.services.OrganizationService;
 
 import com.google.common.base.Stopwatch;
@@ -20,9 +17,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -44,7 +39,7 @@ public class AccessControlMigrationJob implements Managed {
       log.error("Error while dropping accessControlMigrations/accessControlPreferences collection", exception);
     }
 
-    executorService.scheduleWithFixedDelay(this::run, 1, 30, TimeUnit.MINUTES);
+    executorService.scheduleWithFixedDelay(this::run, 15, 60, TimeUnit.MINUTES);
   }
 
   private void run() {
@@ -64,10 +59,7 @@ public class AccessControlMigrationJob implements Managed {
   }
 
   private List<String> getAccountsToMigrate() {
-    return organizationService
-        .list(Criteria.where(OrganizationKeys.identifier).is(NGConstants.DEFAULT_ORG_IDENTIFIER), Pageable.unpaged())
-        .map(Organization::getAccountIdentifier)
-        .getContent();
+    return organizationService.getDistinctAccounts();
   }
 
   @Override

@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.entities.instance.Instance;
 import io.harness.entities.instance.Instance.InstanceKeys;
 import io.harness.models.EnvBuildInstanceCount;
+import io.harness.models.InstancesByBuildId;
 import io.harness.models.constants.InstanceSyncConstants;
 
 import com.google.inject.Inject;
@@ -19,6 +20,7 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -76,7 +78,7 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
     Criteria criteria =
         getCriteriaForActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier, timestampInMs)
-            .where(InstanceKeys.serviceId)
+            .and(InstanceKeys.serviceId)
             .is(serviceId);
     Query query = new Query().addCriteria(criteria);
     return mongoTemplate.find(query, Instance.class);
@@ -87,15 +89,50 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
     Criteria criteria =
         getCriteriaForActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier, timestampInMs)
-            .where(InstanceKeys.serviceId)
+            .and(InstanceKeys.serviceId)
             .is(serviceId);
 
     MatchOperation matchStage = Aggregation.match(criteria);
     GroupOperation groupEnvId =
-        group(InstanceKeys.envId, InstanceKeys.envName, InstanceSyncConstants.primaryArtifactTag)
+        group(InstanceKeys.envId, InstanceKeys.envName, InstanceSyncConstants.PRIMARY_ARTIFACT_TAG)
             .count()
-            .as(InstanceSyncConstants.count);
+            .as(InstanceSyncConstants.COUNT);
     return mongoTemplate.aggregate(newAggregation(matchStage, groupEnvId), Instance.class, EnvBuildInstanceCount.class);
+  }
+
+  /*
+    Returns instances that are active at a given timestamp for specified accountIdentifier, projectIdentifier,
+    orgIdentifier, serviceId, envId and list of buildIds
+  */
+  @Override
+  public AggregationResults<InstancesByBuildId> getActiveInstancesByServiceIdEnvIdAndBuildIds(String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String serviceId, String envId, List<String> buildIds,
+      long timestampInMs, int limit) {
+    Criteria criteria =
+        getCriteriaForActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier, timestampInMs)
+            .and(InstanceKeys.envId)
+            .is(envId)
+            .and(InstanceKeys.serviceId)
+            .is(serviceId)
+            .and(InstanceSyncConstants.PRIMARY_ARTIFACT_TAG)
+            .in(buildIds);
+
+    MatchOperation matchStage = Aggregation.match(criteria);
+    GroupOperation group = group(InstanceSyncConstants.PRIMARY_ARTIFACT_TAG)
+                               .push(InstanceSyncConstants.PRIMARY_ARTIFACT_TAG)
+                               .as(InstanceSyncConstants.buildId)
+                               .push(Aggregation.ROOT)
+                               .as(InstanceSyncConstants.INSTANCES);
+
+    ProjectionOperation projection = Aggregation.project()
+                                         .andExpression(InstanceSyncConstants.ID)
+                                         .as(InstanceSyncConstants.buildId)
+                                         .andExpression(InstanceSyncConstants.INSTANCES)
+                                         .slice(limit)
+                                         .as(InstanceSyncConstants.INSTANCES);
+
+    return mongoTemplate.aggregate(
+        newAggregation(matchStage, group, projection), Instance.class, InstancesByBuildId.class);
   }
 
   /*
@@ -106,9 +143,9 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, long timestampInMs) {
     Criteria baseCriteria = Criteria.where(InstanceKeys.accountIdentifier)
                                 .is(accountIdentifier)
-                                .where(InstanceKeys.orgIdentifier)
+                                .and(InstanceKeys.orgIdentifier)
                                 .is(orgIdentifier)
-                                .where(InstanceKeys.projectIdentifier)
+                                .and(InstanceKeys.projectIdentifier)
                                 .is(projectIdentifier);
 
     Criteria filterCreatedAt = Criteria.where(InstanceKeys.createdAt).lte(timestampInMs);

@@ -1,4 +1,4 @@
-package io.harness.ng.core.invites.remote;
+package io.harness.ng.core.invites.mapper;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
@@ -25,13 +25,16 @@ public class InviteMapper {
         .id(invite.getId())
         .name(invite.getName())
         .email(invite.getEmail())
+        .accountIdentifier(invite.getAccountIdentifier())
+        .orgIdentifier(invite.getOrgIdentifier())
+        .projectIdentifier(invite.getProjectIdentifier())
         .roleBindings(invite.getRoleBindings())
         .inviteType(invite.getInviteType())
         .approved(invite.getApproved())
         .build();
   }
 
-  static Invite toInvite(InviteDTO inviteDTO, NGAccess ngAccess) {
+  public static Invite toInvite(InviteDTO inviteDTO, NGAccess ngAccess) {
     if (inviteDTO == null) {
       return null;
     }
@@ -48,7 +51,7 @@ public class InviteMapper {
         .build();
   }
 
-  static List<Invite> toInviteList(
+  public static List<Invite> toInviteList(
       CreateInviteDTO createInviteDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     if (isEmpty(createInviteDTO.getUsers())) {
       return new ArrayList<>();

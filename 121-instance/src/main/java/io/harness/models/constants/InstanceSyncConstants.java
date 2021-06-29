@@ -22,6 +22,10 @@ public final class InstanceSyncConstants {
   public static final int TIMEOUT_SECONDS = 600;
   public static final int INTERVAL_MINUTES = 10;
   public static final int VALIDATION_TIMEOUT_MINUTES = 2;
-  public static final String count = "count";
-  public static final String primaryArtifactTag = InstanceKeys.primaryArtifact + "." + ArtifactDetailsKeys.tag;
+  public static final String COUNT = "count";
+  public static final String PRIMARY_ARTIFACT_TAG = InstanceKeys.primaryArtifact + "." + ArtifactDetailsKeys.tag;
+  public static final String ID = "_id";
+  public static final String INSTANCES = "instances";
+  public static final int INSTANCE_LIMIT = 20;
+  public static final String buildId = "buildId";
 }

@@ -1,4 +1,4 @@
-package io.harness.ng.core.invites;
+package io.harness.ng.core.invites.dto;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 

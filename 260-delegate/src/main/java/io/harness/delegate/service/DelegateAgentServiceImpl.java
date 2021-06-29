@@ -64,6 +64,7 @@ import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
 import static io.harness.network.SafeHttpCall.execute;
 import static io.harness.threading.Morpheus.sleep;
+import static io.harness.utils.MemoryPerformanceUtils.memoryUsage;
 
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
@@ -1747,13 +1748,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     try (AutoLogContext ignore = new AutoLogContext(obtainPerformance(), OVERRIDE_NESTS)) {
       log.info("Current performance");
     }
-  }
-
-  private void memoryUsage(ImmutableMap.Builder<String, String> builder, String prefix, MemoryUsage memoryUsage) {
-    builder.put(prefix + "init", Long.toString(memoryUsage.getInit()));
-    builder.put(prefix + "used", Long.toString(memoryUsage.getUsed()));
-    builder.put(prefix + "committed", Long.toString(memoryUsage.getCommitted()));
-    builder.put(prefix + "max", Long.toString(memoryUsage.getMax()));
   }
 
   private void abortDelegateTask(DelegateTaskAbortEvent delegateTaskEvent) {

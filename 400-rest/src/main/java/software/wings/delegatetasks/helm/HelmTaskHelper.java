@@ -9,7 +9,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
 import static io.harness.helm.HelmConstants.CHARTS_YAML_KEY;
-import static io.harness.helm.HelmConstants.HELM_HOME_PATH_FLAG;
 import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 import static io.harness.helm.HelmConstants.REPO_NAME;
 import static io.harness.helm.HelmConstants.VALUES_YAML;
@@ -330,8 +329,7 @@ public class HelmTaskHelper {
         HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.REPO_UPDATE, helmVersion)
             .replace(HELM_PATH_PLACEHOLDER, helmTaskHelperBase.getHelmPath(helmVersion))
             .replace("KUBECONFIG=${KUBECONFIG_PATH}", "")
-            .replace(REPO_NAME, repoName)
-        + HELM_HOME_PATH_FLAG;
+            .replace(REPO_NAME, repoName);
 
     return helmTaskHelperBase.applyHelmHomePath(repoUpdateCommand, workingDirectory);
   }
@@ -343,9 +341,10 @@ public class HelmTaskHelper {
   public void updateRepo(String repoName, String workingDirectory, HelmVersion helmVersion, long timeoutInMillis) {
     try {
       String repoUpdateCommand = getRepoUpdateCommand(repoName, workingDirectory, helmVersion);
-
       ProcessResult processResult = helmTaskHelperBase.executeCommand(
           repoUpdateCommand, null, format("update helm repo %s", repoName), timeoutInMillis);
+
+      log.info("Repo update command executed on delegate: {}", repoUpdateCommand);
       if (processResult.getExitValue() != 0) {
         log.warn("Failed to update helm repo {}. {}", repoName, processResult.getOutput().getUTF8());
       }
@@ -528,11 +527,14 @@ public class HelmTaskHelper {
     StringBuilder sb = new StringBuilder();
     ProcessExecutor processExecutor = createProcessExecutorWithRedirectOutput(command, chartDirectory, sb);
 
+    log.info("Helm command executed on delegate: {}", command);
+
     try {
       ProcessResult processResult = processExecutor.execute();
-      if (processResult.getExitValue() == 0) {
-        return sb.toString();
+      if (processResult.getExitValue() != 0) {
+        log.warn("Command failed with following result: {}", sb.toString());
       }
+      return sb.toString();
     } catch (IOException e) {
       throw new HelmClientException(format("[IO exception] %s", errorMessage), USER, e);
     } catch (InterruptedException e) {
@@ -541,7 +543,6 @@ public class HelmTaskHelper {
     } catch (TimeoutException | UncheckedTimeoutException e) {
       throw new HelmClientException(format("[Timed out] %s", errorMessage), USER, e);
     }
-    return null;
   }
 
   ProcessExecutor createProcessExecutorWithRedirectOutput(

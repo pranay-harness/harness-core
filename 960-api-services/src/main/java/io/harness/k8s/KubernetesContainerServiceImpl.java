@@ -135,8 +135,13 @@ import io.fabric8.openshift.client.dsl.DeployableScalableResource;
 import io.github.resilience4j.retry.Retry;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.apis.AuthenticationV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.apis.VersionApi;
+import io.kubernetes.client.openapi.auth.ApiKeyAuth;
+import io.kubernetes.client.openapi.auth.Authentication;
+import io.kubernetes.client.openapi.auth.HttpBasicAuth;
+import io.kubernetes.client.openapi.auth.HttpBearerAuth;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1ConfigMapBuilder;
 import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
@@ -145,6 +150,9 @@ import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1SecretBuilder;
 import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.openapi.models.V1TokenReview;
+import io.kubernetes.client.openapi.models.V1TokenReviewBuilder;
+import io.kubernetes.client.openapi.models.V1TokenReviewStatus;
 import io.kubernetes.client.openapi.models.VersionInfo;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -168,6 +176,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.internal.IstioSpecRegistry;
@@ -531,6 +540,39 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public List<CEK8sDelegatePrerequisite.Rule> validateCEResourcePermissions(KubernetesConfig kubernetesConfig) {
     return k8sResourceValidator.validateCEPermissions2(kubernetesHelperService.getApiClient(kubernetesConfig));
+  }
+
+  @SneakyThrows
+  @Override
+  public V1TokenReviewStatus fetchTokenReviewStatus(KubernetesConfig kubernetesConfig) {
+    ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
+
+    String token = isNotEmpty(kubernetesConfig.getServiceAccountToken())
+        ? new String(kubernetesConfig.getServiceAccountToken())
+        : "";
+
+    for (String key : apiClient.getAuthentications().keySet()) {
+      log.info("ApiClint.Authentications key: [{}]", key);
+      Authentication authentication = apiClient.getAuthentications().get(key);
+
+      if (authentication instanceof HttpBearerAuth) {
+        log.warn("HttpBearerAuth: seeing this first time");
+      } else if (authentication instanceof HttpBasicAuth) {
+        log.warn("HttpBasicAuth: seeing this first time");
+      } else if (authentication instanceof ApiKeyAuth) {
+        ApiKeyAuth apiKey = (ApiKeyAuth) authentication;
+        log.debug("ApiKeyAuth: [{}, {}]", apiKey.getApiKeyPrefix(), apiKey.getApiKey());
+        token = apiKey.getApiKey();
+      }
+    }
+
+    AuthenticationV1Api api = new AuthenticationV1Api(apiClient);
+    V1TokenReview tokenReview = api.createTokenReview(
+        new V1TokenReviewBuilder().withNewSpec().withNewToken(token).endSpec().build(), null, null, null);
+
+    log.info("V1TokenReviewStatus: [{}]", tokenReview.getStatus());
+
+    return tokenReview.getStatus();
   }
 
   @Override

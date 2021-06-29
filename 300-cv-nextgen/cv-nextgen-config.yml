@@ -132,3 +132,8 @@ cfClientConfig:
 featureFlagConfig:
   featureFlagSystem: LOCAL
   syncFeaturesToCF: false
+
+cacheConfig:
+  cacheBackend: REDIS
+  cacheNamespace: ""
+  disabledCaches: [ ]

@@ -8,6 +8,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_S
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PIPELINE_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
+import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
@@ -41,8 +42,6 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.organization.OrganizationClientModule;
-import io.harness.outbox.OutboxPollConfiguration;
-import io.harness.outbox.OutboxSDKConstants;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.packages.HarnessPackages;
@@ -224,7 +223,7 @@ public class PipelineServiceModule extends AbstractModule {
     install(
         new AuditClientModule(this.configuration.getAuditClientConfig(), this.configuration.getManagerServiceSecret(),
             PIPELINE_SERVICE.getServiceId(), this.configuration.isEnableAudit()));
-    install(new TransactionOutboxModule());
+    install(new TransactionOutboxModule(DEFAULT_OUTBOX_POLL_CONFIGURATION, PIPELINE_SERVICE.getServiceId(), false));
 
     bind(OutboxEventHandler.class).to(PipelineOutboxEventHandler.class);
     bind(HPersistence.class).to(MongoPersistence.class);
@@ -426,14 +425,6 @@ public class PipelineServiceModule extends AbstractModule {
   @Singleton
   public LogStreamingServiceConfiguration getLogStreamingServiceConfiguration() {
     return configuration.getLogStreamingServiceConfig();
-  }
-
-  @Provides
-  @Singleton
-  public OutboxPollConfiguration getOutboxPollConfiguration() {
-    OutboxPollConfiguration outboxPollConfiguration = OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
-    outboxPollConfiguration.setLockId(PIPELINE_SERVICE.getServiceId());
-    return outboxPollConfiguration;
   }
 
   @Provides
