@@ -4,6 +4,7 @@ import static io.harness.AuthorizationServiceHeader.AUDIT_SERVICE;
 import static io.harness.AuthorizationServiceHeader.RESOUCE_GROUP_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
+import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
 
 import io.harness.AccessControlClientModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -19,12 +20,11 @@ import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.govern.ProviderModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
+import io.harness.metrics.modules.MetricsModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.outbox.OutboxPollConfiguration;
-import io.harness.outbox.OutboxSDKConstants;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
@@ -118,7 +118,13 @@ public class ResourceGroupServiceModule extends AbstractModule {
         this.appConfig.getResoureGroupServiceConfig().isEnableAudit()));
     install(AccessControlClientModule.getInstance(
         this.appConfig.getAccessControlClientConfig(), RESOUCE_GROUP_SERVICE.getServiceId()));
-    install(new TransactionOutboxModule());
+
+    if (appConfig.getResoureGroupServiceConfig().isExportMetricsToStackDriver()) {
+      install(new MetricsModule());
+    }
+    install(new TransactionOutboxModule(DEFAULT_OUTBOX_POLL_CONFIGURATION, RESOUCE_GROUP_SERVICE.getServiceId(),
+        appConfig.getResoureGroupServiceConfig().isExportMetricsToStackDriver()));
+
     install(new TokenClientModule(this.appConfig.getServiceHttpClientConfig(),
         this.appConfig.getPlatformSecrets().getNgManagerServiceSecret(), RESOUCE_GROUP_SERVICE.getServiceId()));
   }
@@ -150,14 +156,6 @@ public class ResourceGroupServiceModule extends AbstractModule {
         .configure()
         .parameterNameProvider(new ReflectionParameterNameProvider())
         .buildValidatorFactory();
-  }
-
-  @Provides
-  @Singleton
-  public OutboxPollConfiguration getOutboxPollConfiguration() {
-    OutboxPollConfiguration outboxPollConfiguration = OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
-    outboxPollConfiguration.setLockId(RESOUCE_GROUP_SERVICE.getServiceId());
-    return outboxPollConfiguration;
   }
 
   @Provides

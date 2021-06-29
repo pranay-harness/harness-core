@@ -6,8 +6,6 @@ import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.lock.mongo.MongoPersistentLocker.LOCKS_STORE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
@@ -24,9 +22,13 @@ import static com.google.inject.matcher.Matchers.not;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
+import io.harness.beans.FeatureName;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
 import io.harness.capability.service.CapabilityService;
@@ -54,8 +56,6 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.delegate.event.handler.DelegateProfileEventHandler;
-import io.harness.delegate.event.listener.OrganizationEntityCRUDEventListener;
-import io.harness.delegate.event.listener.ProjectEntityCRUDEventListener;
 import io.harness.delegate.eventstream.EntityCRUDConsumer;
 import io.harness.delegate.resources.DelegateTaskResource;
 import io.harness.delegate.task.executioncapability.BlockingCapabilityPermissionsRecordHandler;
@@ -90,7 +90,6 @@ import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.QuartzCleaner;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CorrelationFilter;
-import io.harness.ng.core.event.MessageListener;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClient;
@@ -153,6 +152,7 @@ import io.harness.workers.background.iterator.InstanceSyncHandler;
 import io.harness.workers.background.iterator.SettingAttributeValidateConnectivityHandler;
 
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
+import software.wings.beans.Account;
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.User;
@@ -194,8 +194,6 @@ import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
 import software.wings.security.LoginRateLimitFilter;
 import software.wings.security.ThreadLocalUserProvider;
-import software.wings.security.encryption.migration.EncryptedDataAwsKmsToGcpKmsMigrationHandler;
-import software.wings.security.encryption.migration.EncryptedDataLocalToGcpKmsMigrationHandler;
 import software.wings.security.encryption.migration.SettingAttributesSecretsMigrationHandler;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ApplicationManifestServiceImpl;
@@ -244,6 +242,7 @@ import com.fasterxml.jackson.databind.introspect.Annotated;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -275,11 +274,17 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import javax.cache.Cache;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -730,6 +735,28 @@ public class WingsApplication extends Application<MainConfiguration> {
   private void initializeFeatureFlags(MainConfiguration mainConfiguration, Injector injector) {
     injector.getInstance(FeatureFlagService.class)
         .initializeFeatureFlags(mainConfiguration.getDeployMode(), mainConfiguration.getFeatureNames());
+
+    // Required to Publish Feature Flag Events to Events Framework
+    if (DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
+      enableFeatureFlagsIndividuallyForOnPremAccount(injector, mainConfiguration.getFeatureNames());
+    }
+  }
+
+  private void enableFeatureFlagsIndividuallyForOnPremAccount(Injector injector, String featureNames) {
+    Optional<Account> onPremAccount = injector.getInstance(AccountService.class).getOnPremAccount();
+    if (!onPremAccount.isPresent()) {
+      return;
+    }
+
+    FeatureFlagService featureFlagService = injector.getInstance(FeatureFlagService.class);
+    List<String> enabled = isBlank(featureNames)
+        ? emptyList()
+        : Splitter.on(',').omitEmptyStrings().trimResults().splitToList(featureNames);
+    for (String name : Arrays.stream(FeatureName.values()).map(FeatureName::name).collect(toSet())) {
+      if (enabled.contains(name)) {
+        featureFlagService.enableAccount(FeatureName.valueOf(name), onPremAccount.get().getUuid());
+      }
+    }
   }
 
   private void registerHealthChecks(Environment environment, Injector injector) {
@@ -1029,8 +1056,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(DeletedEntityHandler.class).registerIterators();
     injector.getInstance(DelegateCapabilitiesRecordHandler.class).registerIterators();
     injector.getInstance(BlockingCapabilityPermissionsRecordHandler.class).registerIterators();
-    injector.getInstance(EncryptedDataLocalToGcpKmsMigrationHandler.class).registerIterators();
-    injector.getInstance(EncryptedDataAwsKmsToGcpKmsMigrationHandler.class).registerIterators();
     injector.getInstance(ResourceLookupSyncHandler.class).registerIterators();
     injector.getInstance(AccessRequestHandler.class).registerIterators();
     injector.getInstance(ScheduledTriggerHandler.class).registerIterators();

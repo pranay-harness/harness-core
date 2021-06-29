@@ -1,6 +1,6 @@
 package io.harness.watcher.service;
 
-import static io.harness.concurrent.HTimeLimiter.callInterruptible;
+import static io.harness.concurrent.HTimeLimiter.callInterruptible21;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.DelegateConfiguration.Action.SELF_DESTRUCT;
@@ -40,7 +40,9 @@ import static io.harness.delegate.message.MessageConstants.WATCHER_STARTED;
 import static io.harness.delegate.message.MessageConstants.WATCHER_VERSION;
 import static io.harness.delegate.message.MessengerType.DELEGATE;
 import static io.harness.delegate.message.MessengerType.WATCHER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.threading.Morpheus.sleep;
+import static io.harness.utils.MemoryPerformanceUtils.memoryUsage;
 import static io.harness.watcher.app.WatcherApplication.getProcessId;
 
 import static com.google.common.collect.Sets.newHashSet;
@@ -77,6 +79,7 @@ import io.harness.delegate.message.MessageService;
 import io.harness.event.client.impl.tailer.ChronicleEventTailer;
 import io.harness.filesystem.FileIo;
 import io.harness.grpc.utils.DelegateGrpcConfigExtractor;
+import io.harness.logging.AutoLogContext;
 import io.harness.managerclient.ManagerClientV2;
 import io.harness.managerclient.SafeHttpCall;
 import io.harness.network.Http;
@@ -94,6 +97,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -110,6 +114,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -442,8 +447,25 @@ public class WatcherServiceImpl implements WatcherService {
 
     heartbeatExecutor.scheduleWithFixedDelay(
         new Schedulable("Error while heart-beating", this::heartbeat), 0, 10, TimeUnit.SECONDS);
+    heartbeatExecutor.scheduleWithFixedDelay(
+        new Schedulable("Error while logging-performance", this::logPerformance), 0, 30, TimeUnit.SECONDS);
     watchExecutor.scheduleWithFixedDelay(
         new Schedulable("Error while watching delegate", this::syncWatchDelegate), 0, 10, TimeUnit.SECONDS);
+  }
+
+  private void logPerformance() {
+    try (AutoLogContext ignore = new AutoLogContext(obtainPerformance(), OVERRIDE_NESTS)) {
+      log.info("Current performance");
+    }
+  }
+
+  public Map<String, String> obtainPerformance() {
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+
+    MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+    memoryUsage(builder, "heap-", memoryMXBean.getHeapMemoryUsage());
+    memoryUsage(builder, "non-heap-", memoryMXBean.getNonHeapMemoryUsage());
+    return builder.build();
   }
 
   private void heartbeat() {
@@ -895,7 +917,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void checkAccountStatus() {
     try {
-      RestResponse<String> restResponse = callInterruptible(timeLimiter, ofSeconds(5),
+      RestResponse<String> restResponse = callInterruptible21(timeLimiter, ofSeconds(5),
           () -> SafeHttpCall.execute(managerClient.getAccountStatus(watcherConfiguration.getAccountId())));
 
       if (restResponse == null) {
@@ -923,7 +945,7 @@ public class WatcherServiceImpl implements WatcherService {
   public List<String> findExpectedDelegateVersions() {
     try {
       if (multiVersion) {
-        RestResponse<DelegateConfiguration> restResponse = callInterruptible(timeLimiter, ofSeconds(30),
+        RestResponse<DelegateConfiguration> restResponse = callInterruptible21(timeLimiter, ofSeconds(30),
             () -> SafeHttpCall.execute(managerClient.getDelegateConfiguration(watcherConfiguration.getAccountId())));
 
         if (restResponse == null) {
@@ -969,10 +991,10 @@ public class WatcherServiceImpl implements WatcherService {
 
     RestResponse<DelegateScripts> restResponse = null;
     if (isBlank(delegateSize)) {
-      restResponse = callInterruptible(timeLimiter, ofMinutes(1),
+      restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           () -> SafeHttpCall.execute(managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version)));
     } else {
-      restResponse = callInterruptible(timeLimiter, ofMinutes(1),
+      restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
               -> SafeHttpCall.execute(
                   managerClient.getDelegateScriptsNg(watcherConfiguration.getAccountId(), version, delegateSize)));
@@ -1024,7 +1046,7 @@ public class WatcherServiceImpl implements WatcherService {
       return;
     }
 
-    RestResponse<String> restResponse = callInterruptible(timeLimiter, ofSeconds(30),
+    RestResponse<String> restResponse = callInterruptible21(timeLimiter, ofSeconds(30),
         ()
             -> SafeHttpCall.execute(
                 managerClient.getDelegateDownloadUrl(minorVersion, watcherConfiguration.getAccountId())));

@@ -47,7 +47,10 @@ public class RetryHelper {
     NodeExecution nodeExecution = Preconditions.checkNotNull(nodeExecutionService.get(nodeExecutionId));
     PlanNodeProto node = nodeExecution.getNode();
     String newUuid = generateUuid();
+
     Ambiance oldAmbiance = nodeExecution.getAmbiance();
+    updateRetriedNodeStatusIfInterventionWaiting(nodeExecution);
+
     Level currentLevel = AmbianceUtils.obtainCurrentLevel(oldAmbiance);
     Ambiance ambiance = AmbianceUtils.cloneForFinish(oldAmbiance);
     int newRetryIndex = currentLevel != null ? currentLevel.getRetryIndex() + 1 : 0;
@@ -55,10 +58,9 @@ public class RetryHelper {
     NodeExecution newNodeExecution =
         cloneForRetry(nodeExecution, parameters, newUuid, ambiance, interruptConfig, interruptId);
     NodeExecution savedNodeExecution = nodeExecutionService.save(newNodeExecution);
+
     nodeExecutionService.updateRelationShipsForRetryNode(nodeExecution.getUuid(), savedNodeExecution.getUuid());
     nodeExecutionService.markRetried(nodeExecution.getUuid());
-    updateRetriedNodeStatusIfInterventionWaiting(nodeExecution);
-
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(ambiance).orchestrationEngine(engine).build());
   }
 
@@ -107,7 +109,7 @@ public class RetryHelper {
         .ambiance(ambiance)
         .node(newPlanNode)
         .mode(null)
-        .startTs(null)
+        .startTs(AmbianceUtils.getCurrentLevelStartTs(ambiance))
         .endTs(null)
         .initialWaitDuration(null)
         .resolvedStepParameters((StepParameters) null)

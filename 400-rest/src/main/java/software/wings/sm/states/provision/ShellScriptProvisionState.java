@@ -247,10 +247,8 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
   public Map<String, String> validateFields() {
     Map<String, String> results = new HashMap<>();
     if (isEmpty(provisionerId)) {
-      results.put("Required Fields missing", "Provision must be provided.");
-      return results;
+      results.put("Provisioner", "Provisioner must be provided.");
     }
-    log.info("Shell Script Provision State Validated");
     return results;
   }
 

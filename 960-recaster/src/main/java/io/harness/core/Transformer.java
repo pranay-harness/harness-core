@@ -3,6 +3,7 @@ package io.harness.core;
 import static java.lang.String.format;
 
 import io.harness.beans.CastedField;
+import io.harness.beans.RecasterMap;
 import io.harness.exceptions.RecasterException;
 import io.harness.transformers.DefaultRecastTransformer;
 import io.harness.transformers.RecastTransformer;
@@ -56,12 +57,12 @@ public abstract class Transformer {
     }
   }
 
-  public Object decode(final Class<?> c, final Object docObject, final CastedField cf) {
+  public Object decode(final Class<?> c, final Object object, final CastedField cf) {
     Class<?> toDecode = c;
     if (toDecode == null) {
-      toDecode = docObject.getClass();
+      toDecode = object.getClass();
     }
-    return getTransformer(toDecode).decode(toDecode, docObject, cf);
+    return getTransformer(toDecode).decode(toDecode, object, cf);
   }
 
   public Object encode(final Object o) {
@@ -73,6 +74,21 @@ public abstract class Transformer {
 
   public void fromDocument(final Object targetEntity, final CastedField cf, final Document document) {
     final Object object = cf.getDocumentValue(document);
+    if (object != null) {
+      RecastTransformer transformer = getTransformer(cf.getType());
+      Object decodedValue = transformer.decode(cf.getType(), object, cf);
+      try {
+        cf.setFieldValue(targetEntity, decodedValue);
+      } catch (IllegalArgumentException e) {
+        throw new RecasterException(format("Error setting value from converter (%s) for %s to %s",
+                                        transformer.getClass().getSimpleName(), cf.getFullName(), decodedValue),
+            e);
+      }
+    }
+  }
+
+  public void putToEntity(final Object targetEntity, final CastedField cf, final RecasterMap recasterMap) {
+    final Object object = cf.getRecastedMapValue(recasterMap);
     if (object != null) {
       RecastTransformer transformer = getTransformer(cf.getType());
       Object decodedValue = transformer.decode(cf.getType(), object, cf);
@@ -99,6 +115,21 @@ public abstract class Transformer {
 
     final Object encoded = enc.encode(fieldValue, cf);
     document.put(cf.getNameToStore(), encoded);
+  }
+
+  public void putToMap(final Object containingObject, final CastedField cf, final RecasterMap recasterMap) {
+    final Object fieldValue = cf.getFieldValue(containingObject);
+    RecastTransformer enc = getTransformer(fieldValue, cf);
+    if (!(enc instanceof SimpleValueTransformer)) {
+      enc = getTransformer(fieldValue != null ? fieldValue.getClass() : containingObject.getClass());
+    }
+
+    if (enc instanceof DefaultRecastTransformer && fieldValue != null) {
+      log.warn("Default transformer is used for {} with value {}", cf.getField(), fieldValue);
+    }
+
+    final Object encoded = enc.encode(fieldValue, cf);
+    recasterMap.put(cf.getNameToStore(), encoded);
   }
 
   public Object encode(final Class<?> c, final Object o) {

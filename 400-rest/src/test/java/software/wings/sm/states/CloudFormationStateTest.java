@@ -505,4 +505,23 @@ public class CloudFormationStateTest extends WingsBaseTest {
     assertThat(cloudFormationDeleteStackRequest.getStackNameSuffix()).isEqualTo(EXPECTED_SUFFIX);
     assertThat(cloudFormationDeleteStackRequest.getTimeoutInMs()).isEqualTo(1000);
   }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testValidation() {
+    // create stack
+    assertThat(cloudFormationCreateStackState.validateFields().size()).isEqualTo(2);
+    cloudFormationCreateStackState.setProvisionerId("test provisioner");
+    assertThat(cloudFormationCreateStackState.validateFields().size()).isEqualTo(1);
+    cloudFormationCreateStackState.setAwsConfigId("AWS_CONFIG_ID");
+    assertThat(cloudFormationCreateStackState.validateFields().size()).isEqualTo(0);
+
+    // delete stack
+    assertThat(cloudFormationDeleteStackState.validateFields().size()).isEqualTo(2);
+    cloudFormationDeleteStackState.setProvisionerId("test provisioner");
+    assertThat(cloudFormationDeleteStackState.validateFields().size()).isEqualTo(1);
+    cloudFormationDeleteStackState.setAwsConfigId("AWS_CONFIG_ID");
+    assertThat(cloudFormationDeleteStackState.validateFields().size()).isEqualTo(0);
+  }
 }

@@ -12,7 +12,6 @@ import "io/harness/pms/contracts/triggers/trigger_payload.proto";
 message ExecutionMetadata {
   int32 runSequence = 1;
   ExecutionTriggerInfo triggerInfo = 2;
-  io.harness.pms.contracts.triggers.TriggerPayload triggerPayload = 3 [deprecated = true];
   string pipelineIdentifier = 4;
   string executionUuid = 6;
   ExecutionPrincipalInfo principalInfo = 8;

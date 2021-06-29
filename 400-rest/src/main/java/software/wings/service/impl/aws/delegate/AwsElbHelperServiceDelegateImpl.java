@@ -346,7 +346,7 @@ public class AwsElbHelperServiceDelegateImpl
       List<EncryptedDataDetail> encryptionDetails, String region, String classicLB, String asgName, int timeout,
       ExecutionLogCallback logCallback) {
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(timeout), () -> {
         com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
             getClassicElbClient(Regions.fromName(region), awsConfig);
         List<String> instanceIds = awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(
@@ -396,7 +396,7 @@ public class AwsElbHelperServiceDelegateImpl
       List<EncryptedDataDetail> encryptionDetails, String region, String classicLB, String asgName, int timeout,
       ExecutionLogCallback logCallback) {
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(timeout), () -> {
         com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
             getClassicElbClient(Regions.fromName(region), awsConfig);
         List<String> instanceIds = awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(
@@ -449,7 +449,7 @@ public class AwsElbHelperServiceDelegateImpl
       List<EncryptedDataDetail> encryptionDetails, String region, String targetGroupArn, String asgName, int timeout,
       ExecutionLogCallback logCallback) {
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(timeout), () -> {
         AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
             getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
         List<String> instanceIds = awsAsgHelperServiceDelegate.listAutoScalingGroupInstanceIds(
@@ -500,7 +500,7 @@ public class AwsElbHelperServiceDelegateImpl
       List<EncryptedDataDetail> encryptionDetails, String region, String targetGroupArn, String asgName, int timeout,
       ExecutionLogCallback logCallback) {
     try {
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(timeout), () -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(timeout), () -> {
         AmazonElasticLoadBalancingClient amazonElasticLoadBalancingClient =
             getAmazonElasticLoadBalancingClientV2(Regions.fromName(region), awsConfig);
         while (true) {

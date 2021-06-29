@@ -2,6 +2,7 @@ package software.wings.sm.states.provision;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANIL;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
@@ -344,5 +345,26 @@ public class ARMRollbackStateTest extends WingsBaseTest {
 
   private ARMInfrastructureProvisioner getArmInfrastructureProvisioner() {
     return ARMInfrastructureProvisioner.builder().uuid(PROVISIONER_ID).name("ARM-Provisioner").build();
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testValidation() {
+    // provision state
+    ARMProvisionState armProvisionState = new ARMProvisionState("ARM Provision");
+    assertThat(armProvisionState.validateFields().size()).isEqualTo(2);
+    armProvisionState.setProvisionerId("test provisioner");
+    assertThat(armProvisionState.validateFields().size()).isEqualTo(1);
+    armProvisionState.setCloudProviderId("AZURE_CONFIG_ID");
+    assertThat(armProvisionState.validateFields().size()).isEqualTo(0);
+
+    // rollback test
+    ARMRollbackState armRollbackState = new ARMRollbackState("ARM Rollback");
+    assertThat(armRollbackState.validateFields().size()).isEqualTo(2);
+    armRollbackState.setProvisionerId("test provisioner");
+    assertThat(armRollbackState.validateFields().size()).isEqualTo(1);
+    armRollbackState.setCloudProviderId("AZURE_CONFIG_ID");
+    assertThat(armRollbackState.validateFields().size()).isEqualTo(0);
   }
 }

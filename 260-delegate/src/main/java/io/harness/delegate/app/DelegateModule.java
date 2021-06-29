@@ -148,6 +148,7 @@ import io.harness.delegate.task.helm.HttpHelmConnectivityDelegateTask;
 import io.harness.delegate.task.helm.HttpHelmValidationHandler;
 import io.harness.delegate.task.jira.JiraTaskNG;
 import io.harness.delegate.task.jira.connection.JiraTestConnectionTaskNG;
+import io.harness.delegate.task.k8s.K8sFetchServiceAccountTask;
 import io.harness.delegate.task.k8s.K8sTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask;
@@ -1144,6 +1145,9 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.ACR_VALIDATE_ARTIFACT_STREAM).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.ACR_GET_PLANS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.ACR_GET_ARTIFACT_PATHS).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.ACR_GET_REGISTRIES).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.ACR_GET_REGISTRY_NAMES).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.ACR_GET_REPOSITORIES).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.NEXUS_GET_JOBS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.NEXUS_GET_PLANS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.NEXUS_GET_ARTIFACT_PATHS).toInstance(ServiceImplDelegateTask.class);
@@ -1391,6 +1395,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.AWS_CODECOMMIT_API_TASK).toInstance(AwsCodeCommitApiDelegateTask.class);
     mapBinder.addBinding(TaskType.CE_VALIDATE_KUBERNETES_CONFIG)
         .toInstance(CEKubernetesTestConnectionDelegateTask.class);
+    mapBinder.addBinding(TaskType.K8S_SERVICE_ACCOUNT_INFO).toInstance(K8sFetchServiceAccountTask.class);
     mapBinder.addBinding(TaskType.HTTP_HELM_CONNECTIVITY_TASK).toInstance(HttpHelmConnectivityDelegateTask.class);
 
     mapBinder.addBinding(TaskType.K8_FETCH_NAMESPACES).toInstance(ServiceImplDelegateTask.class);

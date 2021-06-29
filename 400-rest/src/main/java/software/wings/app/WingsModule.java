@@ -7,6 +7,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
+import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
 
 import io.harness.AccessControlClientModule;
 import io.harness.CgOrchestrationModule;
@@ -57,6 +58,7 @@ import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
 import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
 import io.harness.config.PipelineConfig;
 import io.harness.connector.ConnectorResourceClientModule;
+import io.harness.cv.CVCommonsServiceModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.client.CVNGService;
 import io.harness.cvng.client.CVNGServiceImpl;
@@ -119,6 +121,8 @@ import io.harness.invites.NgInviteClientModule;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesContainerServiceImpl;
+import io.harness.licensing.remote.NgLicenseHttpClientModule;
+import io.harness.licensing.remote.admin.AdminLicenseHttpClientModule;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitCheckerFactoryImpl;
 import io.harness.limits.configuration.LimitConfigurationService;
@@ -140,8 +144,6 @@ import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
 import io.harness.notifications.AlertVisibilityChecker;
 import io.harness.notifications.AlertVisibilityCheckerImpl;
-import io.harness.outbox.OutboxPollConfiguration;
-import io.harness.outbox.OutboxSDKConstants;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.pcf.CfDeploymentManager;
@@ -844,7 +846,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(PersistentLockModule.getInstance());
     install(AlertModule.getInstance());
 
-    install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
+    install(new EventsFrameworkModule(
+        configuration.getEventsFrameworkConfiguration(), configuration.isEventsFrameworkAvailableInOnPrem()));
     install(FeatureFlagModule.getInstance());
 
     bind(MainConfiguration.class).toInstance(configuration);
@@ -1293,6 +1296,14 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(AccessControlClientModule.getInstance(
         configuration.getAccessControlClientConfiguration(), DELEGATE_SERVICE.getServiceId()));
 
+    // ng-license dependencies
+    install(new NgLicenseHttpClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+
+    // admin ng-license dependencies
+    install(new AdminLicenseHttpClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+
     install(CgOrchestrationModule.getInstance());
     // Orchestration Dependencies
 
@@ -1306,9 +1317,10 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new AuditClientModule(this.configuration.getAuditClientConfig(),
         this.configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId(),
         this.configuration.isEnableAudit()));
-    install(new TransactionOutboxModule());
+    install(new TransactionOutboxModule(DEFAULT_OUTBOX_POLL_CONFIGURATION, MANAGER.getServiceId(), false));
 
     bind(OutboxEventHandler.class).to(DelegateOutboxEventHandler.class);
+    install(new CVCommonsServiceModule());
   }
 
   private void bindFeatures() {
@@ -1597,13 +1609,5 @@ public class WingsModule extends AbstractModule implements ServersModule {
   @Singleton
   public ObjectMapper getYamlSchemaObjectMapperWithoutNamed() {
     return Jackson.newObjectMapper();
-  }
-
-  @Provides
-  @Singleton
-  public OutboxPollConfiguration getOutboxPollConfiguration() {
-    OutboxPollConfiguration outboxPollConfiguration = OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
-    outboxPollConfiguration.setLockId(MANAGER.getServiceId());
-    return outboxPollConfiguration;
   }
 }

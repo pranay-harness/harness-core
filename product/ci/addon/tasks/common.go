@@ -159,7 +159,7 @@ func collectTestReports(ctx context.Context, reports []*pb.Report, stepID string
 		}
 
 		var tests []string
-		testc, _ := rep.GetTests(ctx)
+		testc := rep.GetTests(ctx)
 		for t := range testc {
 			jt, _ := json.Marshal(t)
 			tests = append(tests, string(jt))

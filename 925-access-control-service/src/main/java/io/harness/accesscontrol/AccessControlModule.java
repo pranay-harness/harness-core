@@ -29,7 +29,6 @@ import io.harness.accesscontrol.commons.notifications.NotificationConfig;
 import io.harness.accesscontrol.commons.outbox.AccessControlOutboxEventHandler;
 import io.harness.accesscontrol.commons.validation.HarnessActionValidator;
 import io.harness.accesscontrol.preference.AccessControlPreferenceModule;
-import io.harness.accesscontrol.preference.events.NGRBACEnabledFeatureFlagEventConsumer;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.principals.PrincipalValidator;
 import io.harness.accesscontrol.principals.serviceaccounts.HarnessServiceAccountService;
@@ -60,12 +59,12 @@ import io.harness.concurrent.HTimeLimiter;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
+import io.harness.ff.FeatureFlagClientModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
 import io.harness.metrics.modules.MetricsModule;
 import io.harness.metrics.service.api.MetricsPublisher;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.redis.RedisConfig;
@@ -172,12 +171,6 @@ public class AccessControlModule extends AbstractModule {
     return config.getIteratorsConfig();
   }
 
-  @Provides
-  @Singleton
-  public OutboxPollConfiguration getOutboxPollConfiguration() {
-    return config.getOutboxPollConfig();
-  }
-
   @Override
   protected void configure() {
     install(AccessControlPersistenceModule.getInstance(config.getMongoConfig()));
@@ -194,7 +187,6 @@ public class AccessControlModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends MorphiaRegistrar>>() {});
     morphiaRegistrars.addBinding().toInstance(OutboxEventMorphiaRegistrar.class);
     morphiaRegistrars.addBinding().toInstance(PrimaryVersionManagerMorphiaRegistrar.class);
-    install(new TransactionOutboxModule());
     bind(OutboxEventHandler.class).to(AccessControlOutboxEventHandler.class);
     install(new ValidationModule(validatorFactory));
     install(AccessControlCoreModule.getInstance());
@@ -229,8 +221,11 @@ public class AccessControlModule extends AbstractModule {
         config.getServiceAccountClientConfiguration().getServiceAccountServiceSecret(),
         ACCESS_CONTROL_SERVICE.getServiceId()));
 
-    install(AccessControlPreferenceModule.getInstance(config.getAccessControlPreferenceConfiguration()));
-
+    install(AccessControlPreferenceModule.getInstance());
+    install(
+        FeatureFlagClientModule.getInstance(config.getFeatureFlagClientConfiguration().getFeatureFlagServiceConfig(),
+            config.getFeatureFlagClientConfiguration().getFeatureFlagServiceSecret(),
+            ACCESS_CONTROL_SERVICE.getServiceId()));
     MapBinder<String, ScopeLevel> scopesByKey = MapBinder.newMapBinder(binder(), String.class, ScopeLevel.class);
     scopesByKey.addBinding(ACCOUNT.toString()).toInstance(ACCOUNT);
     scopesByKey.addBinding(ORGANIZATION.toString()).toInstance(ORGANIZATION);
@@ -254,10 +249,6 @@ public class AccessControlModule extends AbstractModule {
     entityCrudEventConsumers.addBinding().to(UserGroupEventConsumer.class);
     entityCrudEventConsumers.addBinding().to(ServiceAccountMembershipEventConsumer.class);
 
-    Multibinder<EventConsumer> featureFlagEventConsumers =
-        Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(FEATURE_FLAG_STREAM));
-    featureFlagEventConsumers.addBinding().to(NGRBACEnabledFeatureFlagEventConsumer.class);
-
     Multibinder<EventConsumer> userMembershipEventConsumers =
         Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(USERMEMBERSHIP));
     userMembershipEventConsumers.addBinding().to(UserMembershipEventConsumer.class);
@@ -273,6 +264,8 @@ public class AccessControlModule extends AbstractModule {
     } else {
       log.info("No configuration provided for Stack Driver, aggregator metrics will not be recorded");
     }
+    install(new TransactionOutboxModule(config.getOutboxPollConfig(), ACCESS_CONTROL_SERVICE.getServiceId(),
+        config.getAggregatorConfiguration().isExportMetricsToStackDriver()));
 
     registerRequiredBindings();
   }

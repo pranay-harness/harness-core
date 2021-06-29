@@ -17,6 +17,7 @@ import io.harness.ModuleType;
 import io.harness.PipelineServiceUtilityModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheModule;
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
@@ -331,6 +332,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new CVNextGenCommonsServiceModule());
     modules.add(new NotificationClientModule(configuration.getNotificationClientConfiguration()));
     modules.add(new CvPersistenceModule());
+    modules.add(new CacheModule(configuration.getCacheConfig()));
     modules.add(new TokenClientModule(configuration.getManagerClientConfig(),
         configuration.getNgManagerServiceConfig().getManagerServiceSecret(), "NextGenManager"));
     YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()

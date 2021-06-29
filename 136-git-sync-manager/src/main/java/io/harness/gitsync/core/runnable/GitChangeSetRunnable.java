@@ -47,7 +47,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @OwnedBy(DX)
 public class GitChangeSetRunnable implements Runnable {
   public static final int MAX_RUNNING_CHANGESETS_FOR_ACCOUNT = 5;
-  public static final int MAX_RETRY_FOR_CHANGESET = 3;
+  public static final int MAX_RETRY_FOR_CHANGESET = 10;
   public static final List<YamlChangeSetStatus> terminalStatusList =
       ImmutableList.of(YamlChangeSetStatus.FAILED, YamlChangeSetStatus.COMPLETED, YamlChangeSetStatus.SKIPPED);
   public static final List<YamlChangeSetStatus> runningStatusList = ImmutableList.of(YamlChangeSetStatus.RUNNING);

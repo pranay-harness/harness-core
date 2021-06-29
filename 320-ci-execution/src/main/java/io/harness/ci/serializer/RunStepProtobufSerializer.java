@@ -24,6 +24,7 @@ import io.harness.product.ci.engine.proto.StepContext;
 import io.harness.product.ci.engine.proto.UnitStep;
 import io.harness.yaml.core.timeout.Timeout;
 import io.harness.yaml.core.timeout.TimeoutUtils;
+import io.harness.yaml.core.variables.OutputNGVariable;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @Singleton
 @OwnedBy(CI)
@@ -64,10 +66,10 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
       }
     }
 
-    List<String> output = RunTimeInputHandler.resolveListParameter(
-        "OutputVariables", "Run", step.getIdentifier(), runStepInfo.getOutputVariables(), false);
-    if (isNotEmpty(output)) {
-      runStepBuilder.addAllEnvVarOutputs(output);
+    if (isNotEmpty(runStepInfo.getOutputVariables())) {
+      List<String> outputVarNames =
+          runStepInfo.getOutputVariables().stream().map(OutputNGVariable::getName).collect(Collectors.toList());
+      runStepBuilder.addAllEnvVarOutputs(outputVarNames);
     }
 
     long timeout = TimeoutUtils.getTimeoutInSeconds(step.getTimeout(), ciStepInfo.getDefaultTimeout());
@@ -119,10 +121,10 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
       }
     }
 
-    List<String> output = RunTimeInputHandler.resolveListParameter(
-        "OutputVariables", "Run", identifier, runStepInfo.getOutputVariables(), false);
-    if (isNotEmpty(output)) {
-      runStepBuilder.addAllEnvVarOutputs(output);
+    if (isNotEmpty(runStepInfo.getOutputVariables())) {
+      List<String> outputVarNames =
+          runStepInfo.getOutputVariables().stream().map(OutputNGVariable::getName).collect(Collectors.toList());
+      runStepBuilder.addAllEnvVarOutputs(outputVarNames);
     }
 
     long timeout = TimeoutUtils.getTimeoutInSeconds(parameterFieldTimeout, runStepInfo.getDefaultTimeout());

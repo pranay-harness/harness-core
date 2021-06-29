@@ -106,6 +106,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
   @JsonProperty("enableDashboardTimescale") private Boolean enableDashboardTimescale;
   @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
+  @JsonProperty("exportMetricsToStackDriver") private boolean exportMetricsToStackDriver;
   @JsonProperty("signupNotificationConfiguration")
   private SignupNotificationConfiguration signupNotificationConfiguration;
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;

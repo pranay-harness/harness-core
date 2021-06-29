@@ -104,17 +104,14 @@ func (t *pluginTask) resolveExprInEnv(ctx context.Context) (map[string]string, e
 	for k, v := range t.environment {
 		envVarMap[k] = v
 	}
-	m, err := resolver.ResolveJEXLInMapValues(ctx, envVarMap, t.id, t.prevStepOutputs, t.log)
+
+	// Resolves secret in environment variables e.g. foo-${ngSecretManager.obtain("secret", 1234)}
+	resolvedSecretMap, err := resolver.ResolveSecretInMapValues(envVarMap)
 	if err != nil {
 		return nil, err
 	}
 
-	resolvedSecretMap, err := resolver.ResolveSecretInMapValues(m)
-	if err != nil {
-		return nil, err
-	}
-
-	return resolver.ResolveEnvInMapValues(resolvedSecretMap), nil
+	return resolvedSecretMap, nil
 }
 
 func (t *pluginTask) execute(ctx context.Context, retryCount int32) (*pb.Artifact, error) {

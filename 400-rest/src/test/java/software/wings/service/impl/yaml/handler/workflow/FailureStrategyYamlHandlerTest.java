@@ -7,6 +7,7 @@ import static io.harness.beans.ExecutionInterruptType.MARK_SUCCESS;
 import static io.harness.beans.ExecutionInterruptType.ROLLBACK;
 import static io.harness.beans.RepairActionCode.MANUAL_INTERVENTION;
 import static io.harness.rule.OwnerRule.AGORODETKI;
+import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.beans.yaml.ChangeContext.Builder;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -80,6 +81,19 @@ public class FailureStrategyYamlHandlerTest extends CategoryTest {
                                Builder.aChangeContext().withYaml(yaml).build(), Collections.emptyList()))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessage("\"manualInterventionTimeout\" should not be less than 1m (60000)");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowInvalidArgumentsExceptionWhenRetryCountIsLessThanOne() {
+    Yaml yaml = Yaml.builder().retryCount(0).repairActionCode("retry").build();
+
+    assertThatThrownBy(()
+                           -> failureStrategyYamlHandler.upsertFromYaml(
+                               Builder.aChangeContext().withYaml(yaml).build(), Collections.emptyList()))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessage("\"retryCount\" should be greater than 0");
   }
 
   @Test

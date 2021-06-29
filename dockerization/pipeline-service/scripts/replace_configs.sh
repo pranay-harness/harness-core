@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 CONFIG_FILE=/opt/harness/config.yml
+REDISSON_CACHE_FILE=/opt/harness/redisson-jcache.yaml
 
 replace_key_value () {
   CONFIG_KEY="$1";
@@ -231,6 +232,41 @@ fi
 if [[ "" != "$ENABLE_DASHBOARD_TIMESCALE" ]]; then
   yq write -i $CONFIG_FILE enableDashboardTimescale $ENABLE_DASHBOARD_TIMESCALE
 fi
+
+yq delete -i $REDISSON_CACHE_FILE codec
+
+if [[ "$REDIS_SCRIPT_CACHE" == "false" ]]; then
+  yq write -i $REDISSON_CACHE_FILE useScriptCache false
+fi
+
+
+if [[ "" != "$CACHE_CONFIG_REDIS_URL" ]]; then
+  yq write -i $REDISSON_CACHE_FILE singleServerConfig.address "$CACHE_CONFIG_REDIS_URL"
+fi
+
+if [[ "$CACHE_CONFIG_USE_SENTINEL" == "true" ]]; then
+  yq delete -i $REDISSON_CACHE_FILE singleServerConfig
+fi
+
+if [[ "" != "$CACHE_CONFIG_SENTINEL_MASTER_NAME" ]]; then
+  yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.masterName "$CACHE_CONFIG_SENTINEL_MASTER_NAME"
+fi
+
+if [[ "" != "$CACHE_CONFIG_REDIS_SENTINELS" ]]; then
+  IFS=',' read -ra SENTINEL_URLS <<< "$CACHE_CONFIG_REDIS_SENTINELS"
+  INDEX=0
+  for REDIS_SENTINEL_URL in "${SENTINEL_URLS[@]}"; do
+    yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[+] "${REDIS_SENTINEL_URL}"
+    INDEX=$(expr $INDEX + 1)
+  done
+fi
+
+if [[ "" != "$REDIS_NETTY_THREADS" ]]; then
+  yq write -i $REDISSON_CACHE_FILE nettyThreads "$REDIS_NETTY_THREADS"
+fi
+
+replace_key_value cacheConfig.cacheNamespace $CACHE_NAMESPACE
+replace_key_value cacheConfig.cacheBackend $CACHE_BACKEND
 
 replace_key_value eventsFramework.redis.sentinel $EVENTS_FRAMEWORK_USE_SENTINEL
 replace_key_value eventsFramework.redis.envNamespace $EVENTS_FRAMEWORK_ENV_NAMESPACE

@@ -20,11 +20,13 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
-import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollback;
+import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -41,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.CDP)
 @Slf4j
-public class K8sRollingStep extends TaskChainExecutableWithRollback implements K8sStepExecutor {
+public class K8sRollingStep extends TaskChainExecutableWithRollbackAndRbac implements K8sStepExecutor {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLING.getYamlType()).build();
   private final String K8S_ROLLING_DEPLOY_COMMAND_NAME = "Rolling Deploy";
@@ -50,12 +52,17 @@ public class K8sRollingStep extends TaskChainExecutableWithRollback implements K
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
 
   @Override
+  public void validateResources(Ambiance ambiance, StepElementParameters stepParameters) {
+    // Noop
+  }
+
+  @Override
   public Class<StepElementParameters> getStepParametersClass() {
     return StepElementParameters.class;
   }
 
   @Override
-  public TaskChainResponse startChainLink(
+  public TaskChainResponse startChainLinkAfterRbac(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     return k8sStepHelper.startChainLink(this, ambiance, stepElementParameters);
   }
@@ -71,12 +78,14 @@ public class K8sRollingStep extends TaskChainExecutableWithRollback implements K
         k8sRollingStepParameters.getSkipDryRun(), K8sRollingBaseStepInfoKeys.skipDryRun, stepElementParameters);
     List<String> manifestFilesContents = k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents);
     boolean isOpenshiftTemplate = ManifestType.OpenshiftTemplate.equals(k8sManifestOutcome.getType());
+    OptionalSweepingOutput optionalCanaryOutcome = executionSweepingOutputService.resolveOptional(
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME));
 
     final String accountId = AmbianceHelper.getAccountId(ambiance);
     K8sRollingDeployRequest k8sRollingDeployRequest =
         K8sRollingDeployRequest.builder()
             .skipDryRun(skipDryRun)
-            .inCanaryWorkflow(false)
+            .inCanaryWorkflow(optionalCanaryOutcome.isFound())
             .releaseName(releaseName)
             .commandName(K8S_ROLLING_DEPLOY_COMMAND_NAME)
             .taskType(K8sTaskType.DEPLOYMENT_ROLLING)

@@ -122,7 +122,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
 
     try {
       long timeoutMs = context.getTimeout() == null ? TimeUnit.MINUTES.toMillis(10) : context.getTimeout().longValue();
-      commandExecutionStatus = HTimeLimiter.callInterruptible(
+      commandExecutionStatus = HTimeLimiter.callInterruptible21(
           timeLimiter, Duration.ofMillis(timeoutMs), () -> commandUnit.execute(shellCommandExecutionContext));
     } catch (InterruptedException | TimeoutException | UncheckedTimeoutException e) {
       logService.save(context.getAccountId(),

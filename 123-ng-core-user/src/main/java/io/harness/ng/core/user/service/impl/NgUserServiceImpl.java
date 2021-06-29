@@ -316,13 +316,11 @@ public class NgUserServiceImpl implements NgUserService {
         && DEFAULT_RESOURCE_GROUP_IDENTIFIER.equals(roleAssignmentDTO.getResourceGroupIdentifier());
   }
 
-  private void addUserToScope(
+  @Override
+  public void addUserToScope(
       String userId, Scope scope, boolean addUserToParentScope, UserMembershipUpdateSource source) {
     ensureUserMembership(userId);
     addUserToScopeInternal(userId, source, scope, getDefaultRoleIdentifier(scope));
-
-    // Adding user to the account for sign in flow to work
-    addUserToAccount(userId, scope);
     if (addUserToParentScope) {
       addUserToParentScope(userId, scope, source);
     }
@@ -414,7 +412,8 @@ public class NgUserServiceImpl implements NgUserService {
     return userMembership;
   }
 
-  private void addUserToAccount(String userId, Scope scope) {
+  @Override
+  public void addUserToCG(String userId, Scope scope) {
     log.info("Adding user {} to account {}", userId, scope.getAccountIdentifier());
     try {
       RestClientUtils.getResponse(userClient.addUserToAccount(userId, scope.getAccountIdentifier()));

@@ -147,6 +147,7 @@ import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
+import io.kubernetes.client.openapi.models.V1TokenReviewStatus;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -296,7 +297,7 @@ public class K8sTaskHelperBase {
 
   public List<K8sPod> getPodDetailsWithLabels(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
       Map<String, String> labels, long timeoutinMillis) throws Exception {
-    return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeoutinMillis),
+    return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMillis(timeoutinMillis),
         ()
             -> kubernetesContainerService.getRunningPodsWithLabels(kubernetesConfig, namespace, labels)
                    .stream()
@@ -357,7 +358,7 @@ public class K8sTaskHelperBase {
 
   private <T> T waitForLoadBalancerService(String name, Callable<T> getLoadBalancerService, int timeoutInSeconds) {
     try {
-      return HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(timeoutInSeconds), () -> {
+      return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(timeoutInSeconds), () -> {
         while (true) {
           T result = getLoadBalancerService.call();
           if (result != null) {
@@ -1731,7 +1732,7 @@ public class K8sTaskHelperBase {
       for (KubernetesResource kubernetesResource : resources) {
         String steadyCondition = kubernetesResource.getMetadataAnnotationValue(HarnessAnnotations.steadyStateCondition);
         currentSteadyCondition = steadyCondition;
-        success = HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeoutInMillis),
+        success = HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMillis(timeoutInMillis),
             ()
                 -> doStatusCheckForCustomResources(client, kubernetesResource.getResourceId(), steadyCondition,
                     k8sDelegateTaskParams, executionLogCallback));
@@ -1862,8 +1863,12 @@ public class K8sTaskHelperBase {
   }
 
   private String getReleaseHistoryDataK8sClient(KubernetesConfig kubernetesConfig, String releaseName) {
-    String releaseHistoryData =
-        kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
+    String releaseHistoryData = null;
+    try {
+      releaseHistoryData = kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
+    } catch (WingsException e) {
+      log.warn(e.getMessage());
+    }
 
     if (isEmpty(releaseHistoryData)) {
       releaseHistoryData = kubernetesContainerService.fetchReleaseHistoryFromConfigMap(kubernetesConfig, releaseName);
@@ -2164,6 +2169,12 @@ public class K8sTaskHelperBase {
       return createConnectivityFailureValidationResult(ex);
     }
     return ConnectorValidationResult.builder().status(connectivityStatus).build();
+  }
+
+  public V1TokenReviewStatus fetchTokenReviewStatus(
+      KubernetesClusterConfigDTO kubernetesClusterConfigDTO, List<EncryptedDataDetail> encryptionDetailList) {
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(kubernetesClusterConfigDTO, encryptionDetailList);
+    return kubernetesContainerService.fetchTokenReviewStatus(kubernetesConfig);
   }
 
   private ConnectorValidationResult createConnectivityFailureValidationResult(Exception ex) {

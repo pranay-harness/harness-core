@@ -132,7 +132,7 @@ public abstract class AbstractChangeDataHandler implements ChangeHandler {
       updateQueryBuilder.append(insertSQL(tableName, columnValueMappingForSet));
     }
     // On conflict condition
-    updateQueryBuilder.append(" ON CONFLICT (id) Do ");
+    updateQueryBuilder.append(" ON CONFLICT (id,startts) Do ");
 
     if (!columnValueMappingForSet.isEmpty()) {
       Set<Map.Entry<String, String>> setOfEntries = columnValueMappingForSet.entrySet();

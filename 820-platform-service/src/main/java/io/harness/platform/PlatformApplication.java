@@ -48,6 +48,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
+import com.google.inject.Injector;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -148,15 +149,28 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
 
     new NotificationServiceSetup().setup(
         appConfig.getNotificationServiceConfig(), environment, godInjector.get(NOTIFICATION_SERVICE));
+
     if (appConfig.getResoureGroupServiceConfig().isEnableResourceGroup()) {
       new ResourceGroupServiceSetup().setup(
           appConfig.getResoureGroupServiceConfig(), environment, godInjector.get(RESOURCE_GROUP_SERVICE));
     }
+
     if (appConfig.getAuditServiceConfig().isEnableAuditService()) {
       new AuditServiceSetup().setup(appConfig.getAuditServiceConfig(), environment, godInjector.get(AUDIT_SERVICE));
     }
+
+    if (appConfig.getResoureGroupServiceConfig().isEnableResourceGroup()) {
+      blockingMigrations(godInjector.get(RESOURCE_GROUP_SERVICE));
+    }
+
     MaintenanceController.forceMaintenance(false);
+
     new Thread(godInjector.get(NOTIFICATION_SERVICE).getInstance(MessageConsumer.class)).start();
+  }
+
+  private void blockingMigrations(Injector injector) {
+    //    This is is temporary one time blocking migration
+    injector.getInstance(PurgeDeletedResourceGroups.class).cleanUp();
   }
 
   private void registerCommonResources(

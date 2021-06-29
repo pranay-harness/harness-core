@@ -10,6 +10,9 @@ import lombok.Data;
 @Builder
 @OwnedBy(HarnessTeam.CE)
 public class AwsConfig {
+  private String accessKey;
+  private String secretKey;
+  private String destinationBucket;
   private String harnessAwsAccountId;
   private String awsConnectorTemplate;
 }

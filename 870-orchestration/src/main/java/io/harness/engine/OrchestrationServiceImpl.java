@@ -66,6 +66,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                             .setPlanId(plan.getUuid())
                             .setMetadata(metadata)
                             .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
+                            .setStartTs(System.currentTimeMillis())
                             .build();
     eventEmitter.emitEvent(OrchestrationEvent.newBuilder()
                                .setAmbiance(ambiance)

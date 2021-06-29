@@ -33,6 +33,8 @@ nextGen:
 
 enableAudit: false
 
+exportMetricsToStackDriver: false
+
 allowedOrigins:
   - https://localhost:8181
   - https://127.0.0.1:8181

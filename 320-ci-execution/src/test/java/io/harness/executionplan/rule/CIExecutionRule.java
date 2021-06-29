@@ -1,5 +1,7 @@
 package io.harness.executionplan.rule;
 
+import static io.harness.cache.CacheBackend.CAFFEINE;
+import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static org.mockito.Mockito.mock;
@@ -9,6 +11,9 @@ import io.harness.CIExecutionTestModule;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheConfig;
+import io.harness.cache.CacheConfig.CacheConfigBuilder;
+import io.harness.cache.CacheModule;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.delegate.DelegateServiceGrpc;
@@ -27,6 +32,7 @@ import io.harness.queue.QueueController;
 import io.harness.registrars.ExecutionAdvisers;
 import io.harness.registrars.ExecutionRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -48,6 +54,7 @@ import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
@@ -85,6 +92,15 @@ public class CIExecutionRule implements MethodRule, InjectorRuleMixin, MongoRule
         bind(HPersistence.class).to(MongoPersistence.class);
       }
     });
+    CacheConfigBuilder cacheConfigBuilder =
+        CacheConfig.builder().disabledCaches(new HashSet<>()).cacheNamespace("harness-cache");
+    if (annotations.stream().anyMatch(annotation -> annotation instanceof Cache)) {
+      cacheConfigBuilder.cacheBackend(CAFFEINE);
+    } else {
+      cacheConfigBuilder.cacheBackend(NOOP);
+    }
+    CacheModule cacheModule = new CacheModule(cacheConfigBuilder.build());
+    modules.add(cacheModule);
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {

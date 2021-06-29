@@ -37,7 +37,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.dto.UserInviteDTO;
-import io.harness.ng.core.invites.InviteOperationResponse;
+import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;

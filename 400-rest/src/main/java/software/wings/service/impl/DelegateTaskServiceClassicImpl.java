@@ -8,6 +8,7 @@ import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.beans.DelegateTask.Status.runningStatuses;
 import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
+import static io.harness.beans.shared.tasks.NgSetupFields.NG;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.SizeFunction.size;
@@ -172,6 +173,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.io.IOException;
 import java.time.Clock;
 import java.time.Duration;
@@ -250,7 +252,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
   @Inject private DelegateTaskSelectorMapService taskSelectorMapService;
   @Inject private SettingsService settingsService;
   @Inject private LogStreamingServiceRestClient logStreamingServiceRestClient;
-  @Inject private SecretManagerClientService ngSecretService;
+  @Inject @Named("PRIVILEGED") private SecretManagerClientService ngSecretService;
   @Inject private DelegateCache delegateCache;
   @Inject private CapabilityService capabilityService;
   @Inject private DelegateInsightsService delegateInsightsService;
@@ -334,7 +336,10 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       selectorCapabilities.add(selectorCapability);
     }
 
-    if (task.getData() != null && task.getData().getTaskType() != null) {
+    boolean isTaskNg =
+        !isEmpty(task.getSetupAbstractions()) && Boolean.parseBoolean(task.getSetupAbstractions().get(NG));
+
+    if (!isTaskNg && task.getData() != null && task.getData().getTaskType() != null) {
       TaskGroup taskGroup = TaskType.valueOf(task.getData().getTaskType()).getTaskGroup();
       TaskSelectorMap mapFromTaskType = taskSelectorMapService.get(task.getAccountId(), taskGroup);
       if (mapFromTaskType != null && isNotEmpty(mapFromTaskType.getSelectors())) {
@@ -1320,7 +1325,11 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                                                                   .executionCapabilities(executionCapabilityList)
                                                                   .delegateCallbackToken(delegateTask.getDriverId());
 
-      if (featureFlagService.isEnabled(FeatureName.LOG_STREAMING_INTEGRATION, delegateTask.getAccountId())) {
+      boolean isTaskNg = !isEmpty(delegateTask.getSetupAbstractions())
+          && Boolean.parseBoolean(delegateTask.getSetupAbstractions().get(NG));
+
+      if (isTaskNg
+          && featureFlagService.isEnabled(FeatureName.LOG_STREAMING_INTEGRATION, delegateTask.getAccountId())) {
         try {
           String logStreamingAccountToken = logStreamingAccountTokenCache.get(delegateTask.getAccountId());
 

@@ -9,10 +9,12 @@ import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_S
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PIPELINE_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
+import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.audit.client.remote.AuditClientModule;
+import io.harness.cache.HarnessCacheManager;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -41,8 +43,6 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.organization.OrganizationClientModule;
-import io.harness.outbox.OutboxPollConfiguration;
-import io.harness.outbox.OutboxSDKConstants;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.packages.HarnessPackages;
@@ -109,6 +109,7 @@ import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.token.TokenClientModule;
 import io.harness.user.UserClientModule;
 import io.harness.usergroups.UserGroupClientModule;
+import io.harness.version.VersionInfoManager;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
@@ -135,6 +136,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import javax.cache.Cache;
+import javax.cache.expiry.AccessedExpiryPolicy;
+import javax.cache.expiry.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.reflections.Reflections;
@@ -221,9 +225,10 @@ public class PipelineServiceModule extends AbstractModule {
     install(
         new AuditClientModule(this.configuration.getAuditClientConfig(), this.configuration.getManagerServiceSecret(),
             PIPELINE_SERVICE.getServiceId(), this.configuration.isEnableAudit()));
-    install(new TransactionOutboxModule());
+    install(new TransactionOutboxModule(DEFAULT_OUTBOX_POLL_CONFIGURATION,PIPELINE_SERVICE.getServiceId(), false));
     install(new TokenClientModule(this.configuration.getNgManagerServiceHttpClientConfig(),
         this.configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
+
 
     bind(OutboxEventHandler.class).to(PipelineOutboxEventHandler.class);
     bind(HPersistence.class).to(MongoPersistence.class);
@@ -429,14 +434,6 @@ public class PipelineServiceModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public OutboxPollConfiguration getOutboxPollConfiguration() {
-    OutboxPollConfiguration outboxPollConfiguration = OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
-    outboxPollConfiguration.setLockId(PIPELINE_SERVICE.getServiceId());
-    return outboxPollConfiguration;
-  }
-
-  @Provides
-  @Singleton
   public PipelineServiceIteratorsConfig getIteratorsConfig() {
     return configuration.getIteratorsConfig() == null ? PipelineServiceIteratorsConfig.builder().build()
                                                       : configuration.getIteratorsConfig();
@@ -448,5 +445,14 @@ public class PipelineServiceModule extends AbstractModule {
   public ExecutorService pipelineExecutorService() {
     return ThreadPool.create(
         5, 10, 10, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("PipelineExecutorService-%d").build());
+  }
+
+  @Provides
+  @Singleton
+  @Named("pmsEventsCache")
+  public Cache<String, Integer> sdkEventsCache(
+      HarnessCacheManager harnessCacheManager, VersionInfoManager versionInfoManager) {
+    return harnessCacheManager.getCache("pmsEventsCache", String.class, Integer.class,
+        AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES), versionInfoManager.getVersionInfo().getBuildNo());
   }
 }

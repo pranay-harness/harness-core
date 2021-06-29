@@ -1,10 +1,10 @@
 package io.harness.ng.core.invites.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.ng.core.invites.InviteOperationResponse.USER_ALREADY_ADDED;
-import static io.harness.ng.core.invites.InviteOperationResponse.USER_ALREADY_INVITED;
-import static io.harness.ng.core.invites.InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
-import static io.harness.ng.core.invites.entities.Invite.InviteType.ADMIN_INITIATED_INVITE;
+import static io.harness.ng.core.invites.InviteType.ADMIN_INITIATED_INVITE;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_ADDED;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_INVITED;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
 import static io.harness.rule.OwnerRule.ANKUSH;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
@@ -17,11 +17,12 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.beans.PageRequest;
-import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.api.InviteService;
 import io.harness.ng.core.invites.dto.CreateInviteDTO;
 import io.harness.ng.core.invites.dto.InviteDTO;
+import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.invites.entities.Invite;
+import io.harness.ng.core.invites.mapper.InviteMapper;
 import io.harness.rule.Owner;
 import io.harness.utils.PageUtils;
 

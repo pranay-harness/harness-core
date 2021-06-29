@@ -64,6 +64,7 @@ import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
 import static io.harness.network.SafeHttpCall.execute;
 import static io.harness.threading.Morpheus.sleep;
+import static io.harness.utils.MemoryPerformanceUtils.memoryUsage;
 
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
@@ -1070,7 +1071,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         String profileId = profileParams == null ? "" : profileParams.getProfileId();
         long updated = profileParams == null || !resultExists ? 0L : profileParams.getProfileLastUpdatedAt();
         RestResponse<DelegateProfileParams> response =
-            HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+            HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
                 ()
                     -> delegateExecute(
                         delegateAgentManagerClient.checkForProfile(delegateId, accountId, profileId, updated)));
@@ -1191,7 +1192,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
     // MultipartBody.Part is used to send also the actual file name
     Part part = Part.createFormData("file", profileResult.getName(), requestFile);
-    HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+    HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
         ()
             -> delegateExecute(delegateAgentManagerClient.saveProfileResult(
                 delegateId, accountId, exitCode != 0, FileBucket.PROFILE_RESULTS, part)));
@@ -1269,7 +1270,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         log.info("Checking for upgrade");
         try {
           RestResponse<DelegateScripts> restResponse =
-              HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMinutes(1),
+              HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(1),
                   () -> delegateExecute(delegateAgentManagerClient.getDelegateScripts(accountId, version)));
           DelegateScripts delegateScripts = restResponse.getResource();
           if (delegateScripts.isDoUpgrade()) {
@@ -1314,7 +1315,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     if (pollingForTasks.get() && shouldContactManager()) {
       try {
         DelegateTaskEventsResponse taskEventsResponse =
-            HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+            HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
                 () -> delegateExecute(delegateAgentManagerClient.pollTaskEvents(delegateId, accountId)));
         if (shouldProcessDelegateTaskEvents(taskEventsResponse)) {
           boolean processTaskEventsAsync = taskEventsResponse.isProcessTaskEventsAsync();
@@ -1584,7 +1585,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
               .build();
 
       try {
-        HTimeLimiter.callInterruptible(
+        HTimeLimiter.callInterruptible21(
             timeLimiter, Duration.ofSeconds(15), () -> socket.fire(JsonUtils.asJson(delegateParams)));
         lastHeartbeatSentAt.set(clock.millis());
       } catch (UncheckedTimeoutException ex) {
@@ -1606,7 +1607,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       log.info("Sending keepAlive packet...");
       updateBuilderIfEcsDelegate(builder);
       try {
-        HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15), () -> {
+        HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15), () -> {
           DelegateParams delegateParams = builder.build().toBuilder().keepAlivePacket(true).build();
           return socket.fire(JsonUtils.asJson(delegateParams));
         });
@@ -1666,7 +1667,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       setSwitchStorage(receivedDelegateResponse.isUseCdn());
       updateJreVersion(receivedDelegateResponse.getJreVersion());
 
-      HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(15),
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
           ()
               -> delegateExecute(
                   delegateAgentManagerClient.doConnectionHeartbeat(delegateId, accountId, connectionHeartbeat)));
@@ -1747,13 +1748,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     try (AutoLogContext ignore = new AutoLogContext(obtainPerformance(), OVERRIDE_NESTS)) {
       log.info("Current performance");
     }
-  }
-
-  private void memoryUsage(ImmutableMap.Builder<String, String> builder, String prefix, MemoryUsage memoryUsage) {
-    builder.put(prefix + "init", Long.toString(memoryUsage.getInit()));
-    builder.put(prefix + "used", Long.toString(memoryUsage.getUsed()));
-    builder.put(prefix + "committed", Long.toString(memoryUsage.getCommitted()));
-    builder.put(prefix + "max", Long.toString(memoryUsage.getMax()));
   }
 
   private void abortDelegateTask(DelegateTaskAbortEvent delegateTaskEvent) {
@@ -2225,7 +2219,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       Response<ResponseBody> response = null;
       try {
-        response = HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(30), () -> {
+        response = HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(30), () -> {
           Response<ResponseBody> resp = null;
           int retries = 3;
           while (retries-- > 0) {
@@ -2283,7 +2277,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
     if (taskFuture != null) {
       try {
-        HTimeLimiter.callInterruptible(timeLimiter, Duration.ofSeconds(5), taskFuture::get);
+        HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(5), taskFuture::get);
       } catch (UncheckedTimeoutException e) {
         ignoredOnPurpose(e);
         log.error("Timed out getting task future");

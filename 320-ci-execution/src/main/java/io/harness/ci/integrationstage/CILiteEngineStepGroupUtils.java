@@ -201,6 +201,9 @@ public class CILiteEngineStepGroupUtils {
 
   private ExecutionWrapperConfig getGitCloneStep(CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase) {
     Map<String, String> settings = new HashMap<>();
+    if (ciCodebase == null) {
+      throw new CIStageExecutionException("Codebase is mandatory with enabled cloneCodebase flag");
+    }
     Integer depth = ciCodebase.getDepth();
     if (depth == null && ciExecutionArgs.getExecutionSource().getType() != ExecutionSource.Type.WEBHOOK) {
       depth = GIT_CLONE_MANUAL_DEPTH;

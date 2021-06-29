@@ -1,5 +1,0 @@
-collection(DelegateTask)
-    .filter(accountId = <+>, uuid = <+>)
-collection(DelegateTask)
-    .filter(accountId = <+>, uuid in list<+>, delegateId = <+>, status = <+>)
-    .project(uuid, data_timeout)
