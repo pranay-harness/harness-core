@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"os"
 	"os/exec"
 	"syscall"
 	"testing"
@@ -170,111 +169,4 @@ func TestPluginEmptyEntrypointErr(t *testing.T) {
 	executor := NewPluginTask(step, nil, log.Sugar(), &buf, false, log.Sugar())
 	_, _, err := executor.Run(ctx)
 	assert.NotNil(t, err)
-}
-
-func TestPluginWithJEXlErr(t *testing.T) {
-	ctrl, ctx := gomock.WithContext(context.Background(), t)
-	defer ctrl.Finish()
-
-	k := "PLUGIN_KEY"
-	v := "<+foo.bar>"
-	os.Setenv(k, v)
-	defer os.Unsetenv(k)
-
-	numRetries := int32(1)
-	var buf bytes.Buffer
-	commands := []string{"git"}
-	cmdFactory := mexec.NewMockCmdContextFactory(ctrl)
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	e := pluginTask{
-		id:                "step1",
-		image:             "plugin/drone-git",
-		timeoutSecs:       5,
-		numRetries:        numRetries,
-		log:               log.Sugar(),
-		addonLogger:       log.Sugar(),
-		cmdContextFactory: cmdFactory,
-		procWriter:        &buf,
-	}
-
-	oldImgMetadata := getImgMetadata
-	getImgMetadata = func(ctx context.Context, id, image, secret string, log *zap.SugaredLogger) ([]string, []string, error) {
-		return commands, nil, nil
-	}
-	defer func() { getImgMetadata = oldImgMetadata }()
-
-	oldEvaluateJEXL := evaluateJEXL
-	evaluateJEXL = func(ctx context.Context, stepID string, exprs []string, stageOutput map[string]*pb.StepOutput, log *zap.SugaredLogger) (
-		map[string]string, error) {
-		return nil, fmt.Errorf("failed to evaluate JEXL")
-	}
-	defer func() { evaluateJEXL = oldEvaluateJEXL }()
-
-	_, retries, err := e.Run(ctx)
-	assert.NotNil(t, err)
-	assert.Equal(t, retries, numRetries)
-}
-
-func TestPluginWithJEXlSuccess(t *testing.T) {
-	ctrl, ctx := gomock.WithContext(context.Background(), t)
-	defer ctrl.Finish()
-
-	k := "PLUGIN_KEY"
-	v := "${foo.bar}"
-	os.Setenv(k, v)
-	defer os.Unsetenv(k)
-
-	resolvedExprs := make(map[string]string)
-	resolvedExprs[v] = "test"
-	numRetries := int32(1)
-	var buf bytes.Buffer
-	commands := []string{"git"}
-	cmdFactory := mexec.NewMockCmdContextFactory(ctrl)
-	cmd := mexec.NewMockCommand(ctrl)
-	pstate := mexec.NewMockProcessState(ctrl)
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	e := pluginTask{
-		id:                "step1",
-		image:             "plugin/drone-git",
-		timeoutSecs:       5,
-		numRetries:        numRetries,
-		logMetrics:        true,
-		log:               log.Sugar(),
-		addonLogger:       log.Sugar(),
-		cmdContextFactory: cmdFactory,
-		procWriter:        &buf,
-	}
-
-	oldImgMetadata := getImgMetadata
-	getImgMetadata = func(ctx context.Context, id, image, secret string, log *zap.SugaredLogger) ([]string, []string, error) {
-		return commands, nil, nil
-	}
-	defer func() { getImgMetadata = oldImgMetadata }()
-
-	oldEvaluateJEXL := evaluateJEXL
-	evaluateJEXL = func(ctx context.Context, stepID string, exprs []string, stageOutput map[string]*pb.StepOutput, log *zap.SugaredLogger) (
-		map[string]string, error) {
-		return resolvedExprs, nil
-	}
-	defer func() { evaluateJEXL = oldEvaluateJEXL }()
-
-	oldMlog := mlog
-	mlog = func(pid int32, id string, l *zap.SugaredLogger) {
-		return
-	}
-	defer func() { mlog = oldMlog }()
-
-	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, gomock.Any()).Return(cmd)
-	cmd.EXPECT().WithStdout(&buf).Return(cmd)
-	cmd.EXPECT().WithStderr(&buf).Return(cmd)
-	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
-	cmd.EXPECT().Start().Return(nil)
-	cmd.EXPECT().Pid().Return(int(1))
-	cmd.EXPECT().ProcessState().Return(pstate)
-	pstate.EXPECT().SysUsageUnit().Return(&syscall.Rusage{Maxrss: 100}, nil)
-	cmd.EXPECT().Wait().Return(nil)
-
-	_, retries, err := e.Run(ctx)
-	assert.Nil(t, err)
-	assert.Equal(t, retries, numRetries)
 }
