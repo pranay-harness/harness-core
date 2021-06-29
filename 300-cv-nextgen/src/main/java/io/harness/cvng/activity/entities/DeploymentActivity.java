@@ -1,7 +1,6 @@
 package io.harness.cvng.activity.entities;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityType;
@@ -67,14 +66,7 @@ public class DeploymentActivity extends Activity {
 
   @Override
   public void validateActivityParams() {
-    Preconditions.checkNotNull(getVerificationJobRuntimeDetails(),
-        "Verification job details cannot be "
-            + "empty for a deployment activity");
     Preconditions.checkNotNull(deploymentTag, "Deployment tag can not be null");
-    getVerificationJobRuntimeDetails().forEach(verificationJob -> {
-      Preconditions.checkNotNull(isEmpty(verificationJob.getVerificationJobIdentifier()),
-          "The verification job identifier is a required parameter for deployment activities");
-    });
   }
 
   @Override
