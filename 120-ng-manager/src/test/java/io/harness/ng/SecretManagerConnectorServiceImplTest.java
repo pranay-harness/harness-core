@@ -82,7 +82,7 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
     when(connectorRepository.updateMultiple(any(), any())).thenReturn(null);
     ConnectorResponseDTO connectorDTO = secretManagerConnectorService.create(getRequestDTO(), ACCOUNT);
     assertThat(connectorDTO).isEqualTo(null);
-    verify(defaultConnectorService).create(any(), any());
+    verify(defaultConnectorService).create(any(), any(), any());
   }
 
   @Test
