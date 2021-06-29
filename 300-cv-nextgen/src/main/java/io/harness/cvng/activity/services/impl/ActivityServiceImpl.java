@@ -117,6 +117,24 @@ public class ActivityServiceImpl implements ActivityService {
     return activity.getUuid();
   }
   @Override
+  public String register(Activity activity) {
+    activity.validate();
+    List<VerificationJobInstance> verificationJobInstances = new ArrayList<>();
+    activity.getVerificationJobs().forEach(verificationJob -> {
+      VerificationJobInstanceBuilder verificationJobInstanceBuilder = fillOutCommonJobInstanceProperties(
+          activity, verificationJob.resolveAdditionsFields(verificationJobInstanceService));
+      validateJob(verificationJob);
+      activity.fillInVerificationJobInstanceDetails(verificationJobInstanceBuilder);
+
+      verificationJobInstances.add(verificationJobInstanceBuilder.build());
+    });
+    activity.setVerificationJobInstanceIds(verificationJobInstanceService.create(verificationJobInstances));
+    hPersistence.save(activity);
+    log.info("Registered  an activity of type {} for account {}, project {}, org {}", activity.getType(),
+        activity.getAccountId(), activity.getProjectIdentifier(), activity.getOrgIdentifier());
+    return activity.getUuid();
+  }
+  @Override
   public CD10RegisterActivityDTO registerCD10Activity(String accountId, ActivityDTO activityDTO) {
     Preconditions.checkNotNull(activityDTO);
     Preconditions.checkState(

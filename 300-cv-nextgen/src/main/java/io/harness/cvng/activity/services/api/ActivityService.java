@@ -22,6 +22,7 @@ public interface ActivityService {
   String register(String accountId, String webhookToken, ActivityDTO activityDTO);
 
   String register(String accountId, ActivityDTO activityDTO);
+  String register(Activity activity);
 
   CD10RegisterActivityDTO registerCD10Activity(String accountId, ActivityDTO activityDTO);
 
