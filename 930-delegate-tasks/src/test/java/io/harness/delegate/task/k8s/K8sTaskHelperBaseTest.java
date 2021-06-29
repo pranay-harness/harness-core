@@ -18,6 +18,7 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SAHIL;
+import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.UTSAV;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -1190,6 +1191,18 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
       resources.add(processYaml(fileContents).get(0));
     });
     return resources;
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testGetErrorMessageIfProcessFailed() {
+    ProcessResult mockProcessResult = mock(ProcessResult.class);
+    ProcessOutput mockProcessOutput = mock(ProcessOutput.class);
+    doReturn(mockProcessOutput).doReturn(mockProcessOutput).when(mockProcessResult).getOutput();
+    doReturn("").doReturn("foo").when(mockProcessOutput).getUTF8();
+    assertThat(k8sTaskHelperBase.getErrorMessageIfProcessFailed("base", mockProcessResult)).isEqualTo("base");
+    assertThat(k8sTaskHelperBase.getErrorMessageIfProcessFailed("base", mockProcessResult)).isEqualTo("base Error foo");
   }
 
   @Test
