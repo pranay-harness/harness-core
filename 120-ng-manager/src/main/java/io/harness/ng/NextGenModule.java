@@ -20,7 +20,7 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANI
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.SECRET_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_ENTITY;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_PROJECT_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_SCOPE_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import static java.lang.Boolean.TRUE;
@@ -112,7 +112,7 @@ import io.harness.ng.core.event.OrganizationFeatureFlagStreamListener;
 import io.harness.ng.core.event.ProjectEntityCRUDStreamListener;
 import io.harness.ng.core.event.SecretEntityCRUDStreamListener;
 import io.harness.ng.core.event.UserMembershipStreamListener;
-import io.harness.ng.core.event.UserProjectEntityCRUDStreamListener;
+import io.harness.ng.core.event.UserScopeReconciliationMessageProcessor;
 import io.harness.ng.core.impl.OrganizationServiceImpl;
 import io.harness.ng.core.impl.ProjectServiceImpl;
 import io.harness.ng.core.outbox.ApiKeyEventHandler;
@@ -586,9 +586,9 @@ public class NextGenModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(SECRET_ENTITY + ENTITY_CRUD))
         .to(SecretEntityCRUDStreamListener.class);
-    bind(MessageListener.class)
-        .annotatedWith(Names.named(USER_PROJECT_ENTITY + ENTITY_CRUD))
-        .to(UserProjectEntityCRUDStreamListener.class);
+    bind(MessageProcessor.class)
+        .annotatedWith(Names.named(USER_SCOPE_ENTITY))
+        .to(UserScopeReconciliationMessageProcessor.class);
 
     bind(MessageListener.class)
         .annotatedWith(Names.named(ORGANIZATION_ENTITY + FEATURE_FLAG_STREAM))

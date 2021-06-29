@@ -28,16 +28,16 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 @Slf4j
 @Singleton
-public class UserProjectEntityCRUDStreamListener implements MessageListener {
+public class UserScopeReconciliationMessageProcessor implements MessageProcessor {
   private final NgUserService ngUserService;
 
   @Inject
-  public UserProjectEntityCRUDStreamListener(NgUserService ngUserService) {
+  public UserScopeReconciliationMessageProcessor(NgUserService ngUserService) {
     this.ngUserService = ngUserService;
   }
 
   @Override
-  public boolean handleMessage(Message message) {
+  public boolean processMessage(Message message) {
     if (message != null && message.hasMessage()) {
       Map<String, String> metadataMap = message.getMessage().getMetadataMap();
       if (metadataMap != null && metadataMap.get(ENTITY_TYPE) != null) {
