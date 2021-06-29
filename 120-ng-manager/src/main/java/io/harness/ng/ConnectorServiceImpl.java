@@ -214,6 +214,11 @@ public class ConnectorServiceImpl implements ConnectorService {
    ***/
   @Override
   public ConnectorResponseDTO update(@NotNull ConnectorDTO connector, String accountIdentifier) {
+    return update(connector, accountIdentifier, ChangeType.MODIFY);
+  }
+
+  @Override
+  public ConnectorResponseDTO update(ConnectorDTO connector, String accountIdentifier, ChangeType gitChangeType) {
     try (AutoLogContext ignore1 = new NgAutoLogContext(connector.getConnectorInfo().getProjectIdentifier(),
              connector.getConnectorInfo().getOrgIdentifier(), accountIdentifier, OVERRIDE_ERROR);
          AutoLogContext ignore2 =
