@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
+import static io.harness.git.model.ChangeType.NONE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
@@ -87,15 +88,16 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
 
   @Override
   public ConnectorResponseDTO create(@Valid ConnectorDTO connector, String accountIdentifier) {
-    return createSecretManagerConnector(connector, accountIdentifier);
+    return createSecretManagerConnector(connector, accountIdentifier, ChangeType.ADD);
   }
 
   @Override
   public ConnectorResponseDTO create(ConnectorDTO connector, String accountIdentifier, ChangeType gitChangeType) {
-    return defaultConnectorService.create(connector, accountIdentifier, gitChangeType);
+    return createSecretManagerConnector(connector, accountIdentifier, ChangeType.ADD);
   }
 
-  private ConnectorResponseDTO createSecretManagerConnector(ConnectorDTO connector, String accountIdentifier) {
+  private ConnectorResponseDTO createSecretManagerConnector(
+      ConnectorDTO connector, String accountIdentifier, ChangeType gitChangeType) {
     ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
     if (get(accountIdentifier, connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(),
             connectorInfo.getIdentifier())
@@ -117,7 +119,7 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
         clearDefaultFlagOfSecretManagers(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
             connector.getConnectorInfo().getProjectIdentifier());
       }
-      return defaultConnectorService.create(connector, accountIdentifier);
+      return defaultConnectorService.create(connector, accountIdentifier, NONE);
     }
     throw new SecretManagementException(
         SECRET_MANAGEMENT_ERROR, "Error occurred while saving secret manager remotely.", SRE);
@@ -163,6 +165,11 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
 
   @Override
   public ConnectorResponseDTO update(ConnectorDTO connector, String accountIdentifier) {
+    return update(connector, accountIdentifier, ChangeType.MODIFY);
+  }
+
+  @Override
+  public ConnectorResponseDTO update(ConnectorDTO connector, String accountIdentifier, ChangeType gitChangeType) {
     ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
     ConnectorConfigDTO connectorConfigDTO = connectorInfo.getConnectorConfig();
 
@@ -192,7 +199,7 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
         setHarnessSecretManagerAsDefault(accountIdentifier, connector.getConnectorInfo().getOrgIdentifier(),
             connector.getConnectorInfo().getProjectIdentifier());
       }
-      return defaultConnectorService.update(connector, accountIdentifier);
+      return defaultConnectorService.update(connector, accountIdentifier, NONE);
     }
     throw new SecretManagementException(
         SECRET_MANAGEMENT_ERROR, "Error occurred while updating secret manager in 71 rest.", SRE);
@@ -212,7 +219,7 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
                             .is(HARNESS_SECRET_MANAGER_IDENTIFIER);
 
     Update update = new Update().set(VaultConnectorKeys.isDefault, Boolean.TRUE);
-    connectorRepository.update(criteria, update, ChangeType.NONE, projectIdentifier, orgIdentifier, accountIdentifier);
+    connectorRepository.update(criteria, update, NONE, projectIdentifier, orgIdentifier, accountIdentifier);
   }
 
   @Override

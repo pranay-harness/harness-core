@@ -2,15 +2,15 @@ package io.harness.cvng.cdng.services.impl;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
-import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
-import io.harness.cvng.beans.activity.DeploymentActivityDTO;
 import io.harness.cvng.cdng.beans.CVNGStepParameter;
 import io.harness.cvng.cdng.beans.CVNGStepType;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
-import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
+import io.harness.cvng.verificationjob.entities.VerificationJob;
+import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -37,9 +37,9 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -62,24 +62,32 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
     String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
     validate(stepParameters);
     Instant startTime = clock.instant();
-    String activityUuid = activityService.register(accountId,
-        DeploymentActivityDTO.builder()
-            .serviceIdentifier(stepParameters.getServiceIdentifier().getValue())
-            .environmentIdentifier(stepParameters.getEnvIdentifier().getValue())
-            .accountIdentifier(accountId)
-            .orgIdentifier(orgIdentifier)
+    VerificationJob verificationJob =
+        stepParameters.getVerificationJobBuilder()
+            .serviceIdentifier(
+                RuntimeParameter.builder().value(stepParameters.getServiceIdentifier().getValue()).build())
+            .envIdentifier(RuntimeParameter.builder().value(stepParameters.getEnvIdentifier().getValue()).build())
             .projectIdentifier(projectIdentifier)
-            .verificationStartTime(startTime.toEpochMilli())
-            .activityStartTime(startTime.minus(Duration.ofMinutes(5)).toEpochMilli()) // TODO: need this info from PMS.
-            .name(getActivityName(stepParameters))
-            .deploymentTag(stepParameters.getDeploymentTag().getValue())
-            .deploymentTag(stepParameters.getDeploymentTag().getValue())
-            .verificationJobRuntimeDetails(
-                Collections.singletonList(ActivityDTO.VerificationJobRuntimeDetails.builder()
-                                              .verificationJobIdentifier(stepParameters.getVerificationJobIdentifier())
-                                              .runtimeValues(getRuntimeValues(stepParameters))
-                                              .build()))
-            .build());
+            .orgIdentifier(orgIdentifier)
+            .accountId(accountId)
+            .monitoringSources(stepParameters.getHealthSources()
+                                   .stream()
+                                   .map(healthSource -> healthSource.getIdentifier().getValue())
+                                   .collect(Collectors.toList()))
+            .build();
+    DeploymentActivity deploymentActivity = DeploymentActivity.builder()
+                                                .deploymentTag(stepParameters.getDeploymentTag().getValue())
+                                                .verificationStartTime(startTime.toEpochMilli())
+                                                .build();
+    deploymentActivity.setVerificationJobs(Collections.singletonList(verificationJob));
+    deploymentActivity.setActivityStartTime(startTime.minus(Duration.ofMinutes(5)));
+    deploymentActivity.setOrgIdentifier(orgIdentifier);
+    deploymentActivity.setAccountId(accountId);
+    deploymentActivity.setProjectIdentifier(projectIdentifier);
+    deploymentActivity.setServiceIdentifier(stepParameters.getServiceIdentifier().getValue());
+    deploymentActivity.setEnvironmentIdentifier(stepParameters.getEnvIdentifier().getValue());
+    deploymentActivity.setActivityName(getActivityName(stepParameters));
+    String activityUuid = activityService.register(deploymentActivity);
     CVNGStepTask cvngStepTask = CVNGStepTask.builder()
                                     .accountId(accountId)
                                     .status(CVNGStepTask.Status.IN_PROGRESS)
@@ -90,7 +98,6 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
   }
 
   private void validate(CVNGStepParameter stepParameters) {
-    Preconditions.checkNotNull(stepParameters.getVerificationJobIdentifier(), "verificationJobRef can not be null");
     Preconditions.checkNotNull(stepParameters.getServiceIdentifier().getValue(),
         "Could not resolve expression for serviceRef. Please check your expression.");
     Preconditions.checkNotNull(stepParameters.getEnvIdentifier().getValue(),
@@ -102,14 +109,6 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
   private String getActivityName(CVNGStepParameter stepParameters) {
     return "CD Nextgen - " + stepParameters.getServiceIdentifier().getValue() + " - "
         + stepParameters.getDeploymentTag().getValue();
-  }
-
-  private Map<String, String> getRuntimeValues(CVNGStepParameter stepParameters) {
-    Map<String, String> runtimeValues = new HashMap<>();
-    runtimeValues.put(VerificationJobKeys.serviceIdentifier, stepParameters.getServiceIdentifier().getValue());
-    runtimeValues.put(VerificationJobKeys.envIdentifier, stepParameters.getEnvIdentifier().getValue());
-    runtimeValues.putAll(stepParameters.getRuntimeValues());
-    return runtimeValues;
   }
 
   @Value

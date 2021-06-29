@@ -9,11 +9,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVMonitoringCategory;
-import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
-import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.cdng.beans.CVNGStepParameter;
+import io.harness.cvng.cdng.beans.HealthSource;
 import io.harness.cvng.cdng.beans.TestVerificationJobSpec;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskKeys;
@@ -23,8 +22,8 @@ import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
-import io.harness.cvng.verificationjob.entities.VerificationJob;
-import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter;
+import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobBuilder;
 import io.harness.eraro.ErrorCode;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -40,11 +39,9 @@ import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import org.junit.Before;
@@ -54,15 +51,14 @@ import org.junit.experimental.categories.Category;
 public class CVNGStepTest extends CvNextGenTestBase {
   private CVNGStep cvngStep;
   @Inject private Injector injector;
-  @Inject private VerificationJobService verificationJobService;
   @Inject private CVConfigService cvConfigService;
   @Inject private HPersistence hPersistence;
   private String accountId;
   private String projectIdentifier;
   private String orgIdentifier;
-  private String verificationJobIdentifier;
   private String serviceIdentifier;
   private String envIdentifier;
+  private String monitoringSourceIdentifier;
 
   @Before
   public void setup() {
@@ -73,19 +69,19 @@ public class CVNGStepTest extends CvNextGenTestBase {
     orgIdentifier = generateUuid();
     serviceIdentifier = generateUuid();
     envIdentifier = generateUuid();
-    verificationJobIdentifier = "testJob";
+    monitoringSourceIdentifier = "monitoringIdentifier";
   }
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testExecuteAsync_noJobExistException() {
+  public void testExecuteAsync_noMonitoringSourceDefined() {
     Ambiance ambiance = getAmbiance();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     CVNGStepParameter cvngStepParameter = getCvngStepParameter();
 
     assertThatThrownBy(() -> cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null))
-        .isInstanceOf(NullPointerException.class)
-        .hasMessage("No Job exists for verificationJobIdentifier: 'testJob'");
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("No monitoring sources with identifiers [monitoringIdentifier]");
   }
   @Test
   @Owner(developers = KAMAL)
@@ -93,7 +89,6 @@ public class CVNGStepTest extends CvNextGenTestBase {
   public void testExecuteAsync_createActivity() {
     Ambiance ambiance = getAmbiance();
     cvConfigService.save(getCVConfig());
-    verificationJobService.save(createVerificationJob());
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     CVNGStepParameter cvngStepParameter = getCvngStepParameter();
     AsyncExecutableResponse asyncExecutableResponse =
@@ -262,18 +257,16 @@ public class CVNGStepTest extends CvNextGenTestBase {
   private CVNGStepParameter getCvngStepParameter() {
     TestVerificationJobSpec spec = TestVerificationJobSpec.builder()
                                        .deploymentTag(randomParameter())
-                                       .serviceRef(ParameterField.<String>builder().value(serviceIdentifier).build())
-                                       .envRef(ParameterField.<String>builder().value(envIdentifier).build())
                                        .duration(ParameterField.<String>builder().value("5m").build())
                                        .sensitivity(ParameterField.<String>builder().value("High").build())
                                        .build();
-    String verificationJobIdentifier = "testJob";
     return CVNGStepParameter.builder()
-        .verificationJobIdentifier(verificationJobIdentifier)
-        .serviceIdentifier(spec.getServiceRef())
-        .envIdentifier(spec.getEnvRef())
+        .serviceIdentifier(ParameterField.createValueField(serviceIdentifier))
+        .envIdentifier(ParameterField.createValueField(envIdentifier))
+        .verificationJobBuilder(getVerificationJobBuilder())
         .deploymentTag(spec.getDeploymentTag())
-        .runtimeValues(spec.getRuntimeValues())
+        .healthSources(Collections.singletonList(
+            HealthSource.builder().identifier(ParameterField.createValueField(monitoringSourceIdentifier)).build()))
         .build();
   }
 
@@ -289,21 +282,10 @@ public class CVNGStepTest extends CvNextGenTestBase {
         .putAllSetupAbstractions(setupAbstractions)
         .build();
   }
-  private VerificationJob createVerificationJob() {
-    TestVerificationJob testVerificationJob = new TestVerificationJob();
-    testVerificationJob.setAccountId(accountId);
-    testVerificationJob.setIdentifier(verificationJobIdentifier);
-    testVerificationJob.setJobName(generateUuid());
-    testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS));
-    testVerificationJob.setMonitoringSources(Arrays.asList("monitoringIdentifier"));
-    testVerificationJob.setSensitivity(Sensitivity.MEDIUM);
-    testVerificationJob.setServiceIdentifier("<+input>", true);
-    testVerificationJob.setEnvIdentifier("<+input>", true);
-    testVerificationJob.setBaselineVerificationJobInstanceId(generateUuid());
-    testVerificationJob.setDuration(Duration.ofMinutes(5));
-    testVerificationJob.setProjectIdentifier(projectIdentifier);
-    testVerificationJob.setOrgIdentifier(orgIdentifier);
-    return testVerificationJob;
+  private VerificationJobBuilder getVerificationJobBuilder() {
+    return TestVerificationJob.builder()
+        .sensitivity(RuntimeParameter.builder().value("Low").build())
+        .duration(RuntimeParameter.builder().value("5m").build());
   }
 
   private AppDynamicsCVConfig getCVConfig() {
@@ -316,7 +298,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
     cvConfig.setConnectorIdentifier(generateUuid());
     cvConfig.setServiceIdentifier(serviceIdentifier);
     cvConfig.setEnvIdentifier(envIdentifier);
-    cvConfig.setIdentifier("monitoringIdentifier");
+    cvConfig.setIdentifier(monitoringSourceIdentifier);
     cvConfig.setMonitoringSourceName(generateUuid());
     cvConfig.setApplicationName("applicationName");
     cvConfig.setTierName("tierName");

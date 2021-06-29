@@ -39,6 +39,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.List;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -72,7 +73,7 @@ public class ServiceAccountResource {
   @ApiOperation(value = "Create service account", nickname = "createServiceAccount")
   @NGAccessControlCheck(resourceType = SERVICEACCOUNT, permission = PlatformPermissions.EDIT_SERVICEACCOUNT_PERMISSION)
   public ResponseDTO<ServiceAccountDTO> createServiceAccount(
-      @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
       @Optional @QueryParam(PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @Valid ServiceAccountDTO serviceAccountRequestDTO) {
@@ -86,10 +87,11 @@ public class ServiceAccountResource {
   @ApiOperation(value = "Update service account", nickname = "updateServiceAccount")
   @NGAccessControlCheck(resourceType = SERVICEACCOUNT, permission = PlatformPermissions.EDIT_SERVICEACCOUNT_PERMISSION)
   public ResponseDTO<ServiceAccountDTO> updateServiceAccount(
-      @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
       @Optional @QueryParam(PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @PathParam(IDENTIFIER) @ResourceIdentifier String identifier, @Valid ServiceAccountDTO serviceAccountRequestDTO) {
+      @NotNull @PathParam(IDENTIFIER) @ResourceIdentifier String identifier,
+      @Valid ServiceAccountDTO serviceAccountRequestDTO) {
     ServiceAccountDTO serviceAccountDTO = serviceAccountService.updateServiceAccount(
         accountIdentifier, orgIdentifier, projectIdentifier, identifier, serviceAccountRequestDTO);
     return ResponseDTO.newResponse(serviceAccountDTO);
@@ -101,10 +103,10 @@ public class ServiceAccountResource {
   @NGAccessControlCheck(
       resourceType = SERVICEACCOUNT, permission = PlatformPermissions.DELETE_SERVICEACCOUNT_PERMISSION)
   public ResponseDTO<Boolean>
-  deleteServiceAccount(@QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+  deleteServiceAccount(@NotNull @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
       @Optional @QueryParam(PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @PathParam(IDENTIFIER) @ResourceIdentifier String identifier) {
+      @NotNull @PathParam(IDENTIFIER) @ResourceIdentifier String identifier) {
     boolean deleted =
         serviceAccountService.deleteServiceAccount(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return ResponseDTO.newResponse(deleted);
@@ -114,7 +116,7 @@ public class ServiceAccountResource {
   @ApiOperation(value = "List service account", nickname = "listServiceAccount")
   @NGAccessControlCheck(resourceType = SERVICEACCOUNT, permission = PlatformPermissions.VIEW_SERVICEACCOUNT_PERMISSION)
   public ResponseDTO<List<ServiceAccountDTO>> listServiceAccounts(
-      @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
       @Optional @QueryParam(PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @Optional @QueryParam(IDENTIFIERS) List<String> identifiers) {
@@ -128,7 +130,7 @@ public class ServiceAccountResource {
   @ApiOperation(value = "List service account", nickname = "listAggregatedServiceAccounts")
   @NGAccessControlCheck(resourceType = SERVICEACCOUNT, permission = PlatformPermissions.VIEW_SERVICEACCOUNT_PERMISSION)
   public ResponseDTO<PageResponse<ServiceAccountAggregateDTO>> listAggregatedServiceAccounts(
-      @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
       @Optional @QueryParam(PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @Optional @QueryParam(IDENTIFIERS) List<String> identifiers, @BeanParam PageRequest pageRequest,
@@ -148,5 +150,19 @@ public class ServiceAccountResource {
     PageResponse<ServiceAccountAggregateDTO> requestDTOS = serviceAccountService.listAggregateServiceAccounts(
         accountIdentifier, orgIdentifier, projectIdentifier, identifiers, getPageRequest(pageRequest), filterDTO);
     return ResponseDTO.newResponse(requestDTOS);
+  }
+
+  @GET
+  @Path("aggregate/{identifier}")
+  @ApiOperation(value = "Get service account", nickname = "getAggregatedServiceAccount")
+  @NGAccessControlCheck(resourceType = SERVICEACCOUNT, permission = PlatformPermissions.VIEW_SERVICEACCOUNT_PERMISSION)
+  public ResponseDTO<ServiceAccountAggregateDTO> getAggregatedServiceAccount(
+      @NotNull @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Optional @QueryParam(PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @NotNull @PathParam(IDENTIFIER) @ResourceIdentifier String identifier) {
+    ServiceAccountAggregateDTO aggregateDTO = serviceAccountService.getServiceAccountAggregateDTO(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    return ResponseDTO.newResponse(aggregateDTO);
   }
 }

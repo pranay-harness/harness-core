@@ -339,6 +339,12 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   @Override
   public ConnectorResponseDTO update(ConnectorDTO connectorRequest, String accountIdentifier) {
+    return update(connectorRequest, accountIdentifier, ChangeType.MODIFY);
+  }
+
+  @Override
+  public ConnectorResponseDTO update(
+      ConnectorDTO connectorRequest, String accountIdentifier, ChangeType gitChangeType) {
     assurePredefined(connectorRequest, accountIdentifier);
     ConnectorInfoDTO connector = connectorRequest.getConnectorInfo();
     Objects.requireNonNull(connector.getIdentifier());
@@ -384,8 +390,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
             -> outboxService.save(new ConnectorUpdateEvent(
                 accountIdentifier, oldConnectorDTO.getConnector(), connectorRequest.getConnectorInfo()));
       }
-      Connector updatedConnector =
-          connectorRepository.save(newConnector, connectorRequest, ChangeType.MODIFY, supplier);
+      Connector updatedConnector = connectorRepository.save(newConnector, connectorRequest, gitChangeType, supplier);
       connectorEntityReferenceHelper.createSetupUsageForSecret(connector, accountIdentifier, true);
       return connectorMapper.writeDTO(updatedConnector);
 
