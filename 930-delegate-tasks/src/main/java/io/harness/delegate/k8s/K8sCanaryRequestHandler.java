@@ -155,6 +155,7 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
   boolean init(K8sCanaryDeployRequest request, K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback logCallback)
       throws IOException {
     logCallback.saveExecutionLog("Initializing..\n");
+    logCallback.saveExecutionLog(color(String.format("Release Name: [%s]", request.getReleaseName()), Yellow, Bold));
     k8sCanaryHandlerConfig.setKubernetesConfig(
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(request.getK8sInfraDelegateConfig()));
     k8sCanaryHandlerConfig.setClient(
