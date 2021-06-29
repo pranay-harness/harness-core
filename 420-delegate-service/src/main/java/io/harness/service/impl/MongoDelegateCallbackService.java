@@ -76,8 +76,15 @@ public class MongoDelegateCallbackService implements DelegateCallbackService {
     Bson update = new Document("$set", document);
 
     UpdateResult updateResult = asyncTaskResponseCollection.updateOne(filter, update, upsert);
-    log.info("DB acknowledged write operation of task id: {} progress response: {}.", delegateTaskId,
-        updateResult.wasAcknowledged());
+    log.info("DB acknowledged write operation of task id: {} progress response: {} {} {} {}.", delegateTaskId,
+        updateResult.wasAcknowledged(), updateResult.getMatchedCount(), updateResult.getUpsertedId(),
+        updateResult.getModifiedCount());
+    Document asyncFilter = new Document();
+    asyncFilter.put(ID_FIELD_NAME, delegateTaskId);
+    Document asyncResponse = asyncTaskResponseCollection.find(asyncFilter).first();
+    if (asyncResponse == null) {
+      log.error("could not find the response with id {} after write was acknowledged", delegateTaskId);
+    }
   }
 
   @Override
@@ -93,7 +100,8 @@ public class MongoDelegateCallbackService implements DelegateCallbackService {
     Bson update = new Document("$set", document);
 
     UpdateResult updateResult = taskProgressResponseCollection.updateOne(filter, update, upsert);
-    log.info("DB acknowledged write operation of task progress response: {}.", updateResult.wasAcknowledged());
+    log.info("DB acknowledged write operation of task progress response: {} {} {} {}.", updateResult.wasAcknowledged(),
+        updateResult.getMatchedCount(), updateResult.getUpsertedId(), updateResult.getModifiedCount());
   }
 
   @Override
