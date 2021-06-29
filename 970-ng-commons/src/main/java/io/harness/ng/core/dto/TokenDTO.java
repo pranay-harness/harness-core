@@ -7,7 +7,9 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.ng.core.common.beans.ApiKeyType;
 
 import io.swagger.annotations.ApiModelProperty;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -29,4 +31,10 @@ public class TokenDTO {
   @EntityIdentifier private String apiKeyIdentifier;
   @EntityIdentifier private String parentIdentifier;
   @NotNull private ApiKeyType apiKeyType;
+
+  @Size(max = 1024) String description;
+  @Size(max = 128) Map<String, String> tags;
+
+  private String email;
+  private String username;
 }

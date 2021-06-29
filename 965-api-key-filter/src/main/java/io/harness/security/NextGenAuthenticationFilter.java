@@ -3,6 +3,7 @@ package io.harness.security;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static javax.ws.rs.Priorities.AUTHENTICATION;
+import static org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder.BCryptVersion.$2A;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -26,6 +27,7 @@ import javax.ws.rs.container.ResourceInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @OwnedBy(PL)
 @Singleton
@@ -58,20 +60,24 @@ public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
       String[] splitToken = apiKey.split(delimiter);
       if (EmptyPredicate.isNotEmpty(splitToken)) {
         TokenDTO tokenDTO = NGRestUtils.getResponse(tokenClient.getToken(splitToken[0]));
+        String rawPassword = apiKey.replaceAll(splitToken[0] + delimiter, "");
         if (tokenDTO != null) {
-          if (tokenDTO.isValid()) {
-            Principal principal = null;
-            if (tokenDTO.getApiKeyType() == ApiKeyType.SERVICE_ACCOUNT) {
-              principal = new ServiceAccountPrincipal(tokenDTO.getParentIdentifier());
-            }
-            if (tokenDTO.getApiKeyType() == ApiKeyType.USER) {
-              principal = new UserPrincipal(tokenDTO.getParentIdentifier(), "", "", "");
-            }
-            SecurityContextBuilder.setContext(principal);
-            SourcePrincipalContextBuilder.setSourcePrincipal(principal);
-          } else {
+          if (!new BCryptPasswordEncoder($2A, 10).matches(rawPassword, tokenDTO.getIdentifier())) {
+            throw new InvalidRequestException("Could not find the API token in Harness");
+          }
+          if (!tokenDTO.isValid()) {
             throw new InvalidRequestException("Incoming API token " + tokenDTO.getName() + " has expired");
           }
+          Principal principal = null;
+          if (tokenDTO.getApiKeyType() == ApiKeyType.SERVICE_ACCOUNT) {
+            principal = new ServiceAccountPrincipal(tokenDTO.getParentIdentifier());
+          }
+          if (tokenDTO.getApiKeyType() == ApiKeyType.USER) {
+            principal = new UserPrincipal(tokenDTO.getParentIdentifier(), tokenDTO.getEmail(), tokenDTO.getUsername(),
+                tokenDTO.getAccountIdentifier());
+          }
+          SecurityContextBuilder.setContext(principal);
+          SourcePrincipalContextBuilder.setSourcePrincipal(principal);
         } else {
           throw new InvalidRequestException("Could not find the API token in Harness");
         }

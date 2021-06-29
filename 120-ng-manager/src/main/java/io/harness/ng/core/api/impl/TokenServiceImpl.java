@@ -26,6 +26,8 @@ import io.harness.ng.core.events.TokenCreateEvent;
 import io.harness.ng.core.events.TokenDeleteEvent;
 import io.harness.ng.core.events.TokenUpdateEvent;
 import io.harness.ng.core.mapper.TokenDTOMapper;
+import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.ng.core.spring.TokenRepository;
 import io.harness.security.SourcePrincipalContextBuilder;
@@ -60,6 +62,7 @@ public class TokenServiceImpl implements TokenService {
   @Inject private OutboxService outboxService;
   @Inject private AccountOrgProjectValidator accountOrgProjectValidator;
   @Inject @Named(OUTBOX_TRANSACTION_TEMPLATE) private TransactionTemplate transactionTemplate;
+  @Inject private NgUserService ngUserService;
 
   private static final String deliminator = ".";
 
@@ -70,11 +73,10 @@ public class TokenServiceImpl implements TokenService {
     String randomString = RandomStringUtils.random(20, 0, 0, true, true, null, new SecureRandom());
     PasswordEncoder passwordEncoder = new BCryptPasswordEncoder($2A, 10);
     String tokenString = passwordEncoder.encode(randomString);
-    String identifier = passwordEncoder.encode(tokenString);
     ApiKey apiKey = apiKeyService.getApiKey(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(),
         tokenDTO.getProjectIdentifier(), tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(),
         tokenDTO.getApiKeyIdentifier());
-    tokenDTO.setIdentifier(identifier);
+    tokenDTO.setIdentifier(tokenString);
     Token token = TokenDTOMapper.getTokenFromDTO(tokenDTO, apiKey.getDefaultTimeToExpireToken());
     validate(token);
     Token newToken = Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
@@ -82,7 +84,7 @@ public class TokenServiceImpl implements TokenService {
       outboxService.save(new TokenCreateEvent(TokenDTOMapper.getDTOFromToken(savedToken)));
       return savedToken;
     }));
-    return newToken.getUuid() + deliminator + tokenString;
+    return newToken.getUuid() + deliminator + randomString;
   }
 
   private void validateTokenRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
@@ -139,7 +141,21 @@ public class TokenServiceImpl implements TokenService {
   @Override
   public TokenDTO getToken(String tokenId) {
     Optional<Token> optionalToken = tokenRepository.findById(tokenId);
-    return optionalToken.map(TokenDTOMapper::getDTOFromToken).orElse(null);
+    if (optionalToken.isPresent()) {
+      TokenDTO tokenDTO = optionalToken.map(TokenDTOMapper::getDTOFromToken).orElse(null);
+      if (ApiKeyType.USER == tokenDTO.getApiKeyType()) {
+        Optional<UserInfo> optionalUserInfo = ngUserService.getUserById(tokenDTO.getParentIdentifier());
+        if (optionalUserInfo.isPresent()) {
+          UserInfo userInfo = optionalUserInfo.get();
+          tokenDTO.setEmail(userInfo.getEmail());
+          tokenDTO.setUsername(userInfo.getName());
+          return tokenDTO;
+        }
+      } else {
+        return tokenDTO;
+      }
+    }
+    return null;
   }
 
   @Override

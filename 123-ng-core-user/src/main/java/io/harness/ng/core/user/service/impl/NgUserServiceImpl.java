@@ -243,11 +243,6 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
-  public void addUserToScope(UserInfo user, Scope scope, boolean postCreation, UserMembershipUpdateSource source) {
-    addUserToScope(user.getUuid(), scope, postCreation, source);
-  }
-
-  @Override
   public void addServiceAccountToScope(
       String serviceAccountId, Scope scope, String roleIdentifier, UserMembershipUpdateSource source) {
     List<RoleAssignmentDTO> roleAssignmentDTOs = new ArrayList<>(1);

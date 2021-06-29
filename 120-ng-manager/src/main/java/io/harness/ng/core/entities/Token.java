@@ -13,6 +13,7 @@ import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.NGOrgAccess;
 import io.harness.ng.core.NGProjectAccess;
 import io.harness.ng.core.common.beans.ApiKeyType;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 
@@ -21,9 +22,11 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -74,6 +77,8 @@ public class Token implements PersistentEntity, UuidAware, NGAccountAccess, NGOr
   Instant validFrom;
   Instant validTo;
   Instant scheduledExpireTime;
+  @NotNull @Size(max = 1024) String description;
+  @NotNull @Singular @Size(max = 128) List<NGTag> tags;
 
   @FdTtlIndex private Date validUntil;
 
