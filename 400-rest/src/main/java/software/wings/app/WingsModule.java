@@ -409,6 +409,7 @@ import software.wings.service.impl.apm.ApmVerificationServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
 import software.wings.service.impl.applicationmanifest.HelmChartServiceImpl;
 import software.wings.service.impl.artifact.ArtifactCleanupServiceAsyncImpl;
+import software.wings.service.impl.artifact.ArtifactCleanupServiceSyncImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceAsyncImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceImpl;
 import software.wings.service.impl.artifact.ArtifactServiceImpl;
@@ -1132,6 +1133,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(ArtifactCleanupService.class)
         .annotatedWith(Names.named("AsyncArtifactCleanupService"))
         .to(ArtifactCleanupServiceAsyncImpl.class);
+    bind(ArtifactCleanupService.class)
+        .annotatedWith(Names.named("SyncArtifactCleanupService"))
+        .to(ArtifactCleanupServiceSyncImpl.class);
     bind(CustomBuildSourceService.class).to(CustomBuildSourceServiceImpl.class);
 
     bind(ContainerSync.class).to(ContainerSyncImpl.class);
