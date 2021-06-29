@@ -53,6 +53,7 @@ import io.harness.concurrent.HTimeLimiter;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.container.ContainerInfo;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -1577,8 +1578,9 @@ public class K8sTaskHelperBase {
             k8sDelegateTaskParams.getWorkingDirectory(), goTemplateCommand, logErrorStream, timeoutInMillis);
 
         if (processResult.getExitValue() != 0) {
-          throw new InvalidRequestException(format("Failed to render template for %s. Error %s",
-                                                manifestFile.getFileName(), processResult.getOutput().getUTF8()),
+          throw new InvalidRequestException(
+              getErrorMessageIfProcessFailed(
+                  format("Failed to render template for %s.", manifestFile.getFileName()), processResult),
               USER);
         }
 
@@ -2222,13 +2224,22 @@ public class K8sTaskHelperBase {
       ProcessResult processResult =
           executeShellCommand(manifestFilesDirectory, helmTemplateCommand, logErrorStream, timeoutInMillis);
       if (processResult.getExitValue() != 0) {
-        throw new WingsException(format("Failed to render helm chart. Error %s", processResult.getOutput().getUTF8()));
+        throw new InvalidRequestException(
+            getErrorMessageIfProcessFailed("Failed to render helm chart.", processResult), USER);
       }
-
       result.add(FileData.builder().fileName("manifest.yaml").fileContent(processResult.outputUTF8()).build());
     }
 
     return result;
+  }
+
+  @VisibleForTesting
+  String getErrorMessageIfProcessFailed(String baseMessage, ProcessResult processResult) {
+    StringBuilder stringBuilder = new StringBuilder(baseMessage);
+    if (EmptyPredicate.isNotEmpty(processResult.getOutput().getUTF8())) {
+      stringBuilder.append(String.format(" Error %s", processResult.getOutput().getUTF8()));
+    }
+    return stringBuilder.toString();
   }
 
   public List<FileData> renderTemplateForHelmChartFiles(String helmPath, String manifestFilesDirectory,
