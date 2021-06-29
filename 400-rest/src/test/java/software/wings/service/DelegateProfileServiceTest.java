@@ -80,35 +80,28 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   public static final String ACCOUNT_KEY = "ACCOUNT_KEY";
   public static final String TEST_IDENTIFIER = "testIdentifier";
 
-  @Mock
-  private Subject<DelegateProfileObserver> delegateProfileSubject;
-  @Mock
-  private AuditServiceHelper auditServiceHelper;
-  @Mock
-  private FeatureFlagService featureFlagService;
-  @Mock
-  private Producer eventProducer;
-  @InjectMocks
-  @Inject
-  private DelegateProfileServiceImpl delegateProfileService;
-  @Inject
-  private HPersistence persistence;
+  @Mock private Subject<DelegateProfileObserver> delegateProfileSubject;
+  @Mock private AuditServiceHelper auditServiceHelper;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private Producer eventProducer;
+  @InjectMocks @Inject private DelegateProfileServiceImpl delegateProfileService;
+  @Inject private HPersistence persistence;
 
   private DelegateProfileBuilder createDelegateProfileBuilder() {
     return DelegateProfile.builder()
-            .accountId(ACCOUNT_ID)
-            .name(DELEGATE_PROFILE_NAME)
-            .description(DELEGATE_PROFILE_DESC);
+        .accountId(ACCOUNT_ID)
+        .name(DELEGATE_PROFILE_NAME)
+        .description(DELEGATE_PROFILE_DESC);
   }
 
   private DelegateBuilder createDelegateBuilder() {
     return Delegate.builder()
-            .accountId(ACCOUNT_ID)
-            .ip(IP)
-            .hostName(HOSTNAME)
-            .version(VERSION)
-            .status(DelegateInstanceStatus.ENABLED)
-            .lastHeartBeat(System.currentTimeMillis());
+        .accountId(ACCOUNT_ID)
+        .ip(IP)
+        .hostName(HOSTNAME)
+        .version(VERSION)
+        .status(DelegateInstanceStatus.ENABLED)
+        .lastHeartBeat(System.currentTimeMillis());
   }
 
   @Before
@@ -146,46 +139,46 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testOnAccountCreatedShouldCreatePrimaryProfile() {
     Account account = anAccount()
-            .withUuid(generateUuid())
-            .withCompanyName(COMPANY_NAME)
-            .withAccountName(ACCOUNT_NAME)
-            .withAccountKey(ACCOUNT_KEY)
-            .withLicenseInfo(getLicenseInfo())
-            .build();
+                          .withUuid(generateUuid())
+                          .withCompanyName(COMPANY_NAME)
+                          .withAccountName(ACCOUNT_NAME)
+                          .withAccountKey(ACCOUNT_KEY)
+                          .withLicenseInfo(getLicenseInfo())
+                          .build();
 
     delegateProfileService.onAccountCreated(account);
 
     DelegateProfile cgPrimaryProfile = persistence.createQuery(DelegateProfile.class)
-            .field(DelegateProfileKeys.accountId)
-            .equal(account.getUuid())
-            .field(DelegateProfileKeys.primary)
-            .equal(true)
-            .filter(DelegateProfileKeys.ng, false)
-            .get();
+                                           .field(DelegateProfileKeys.accountId)
+                                           .equal(account.getUuid())
+                                           .field(DelegateProfileKeys.primary)
+                                           .equal(true)
+                                           .filter(DelegateProfileKeys.ng, false)
+                                           .get();
 
     assertThat(cgPrimaryProfile).isNotNull();
     assertThat(cgPrimaryProfile.getUuid()).isNotNull();
     assertThat(cgPrimaryProfile.getAccountId()).isEqualTo(account.getUuid());
     assertThat(cgPrimaryProfile.getName()).isEqualTo(CG_PRIMARY_PROFILE_NAME);
     assertThat(cgPrimaryProfile.getDescription())
-            .isEqualTo(String.format("%s %s", PRIMARY_PROFILE_DESCRIPTION, "account"));
+        .isEqualTo(String.format("%s %s", PRIMARY_PROFILE_DESCRIPTION, "account"));
     assertThat(cgPrimaryProfile.isPrimary()).isTrue();
     assertThat(cgPrimaryProfile.isNg()).isFalse();
 
     DelegateProfile ngPrimaryProfile = persistence.createQuery(DelegateProfile.class)
-            .field(DelegateProfileKeys.accountId)
-            .equal(account.getUuid())
-            .field(DelegateProfileKeys.primary)
-            .equal(true)
-            .filter(DelegateProfileKeys.ng, true)
-            .get();
+                                           .field(DelegateProfileKeys.accountId)
+                                           .equal(account.getUuid())
+                                           .field(DelegateProfileKeys.primary)
+                                           .equal(true)
+                                           .filter(DelegateProfileKeys.ng, true)
+                                           .get();
 
     assertThat(ngPrimaryProfile).isNotNull();
     assertThat(ngPrimaryProfile.getUuid()).isNotNull();
     assertThat(ngPrimaryProfile.getAccountId()).isEqualTo(account.getUuid());
     assertThat(ngPrimaryProfile.getName()).isEqualTo("Primary Account Configuration");
     assertThat(ngPrimaryProfile.getDescription())
-            .isEqualTo(String.format("%s %s", PRIMARY_PROFILE_DESCRIPTION, "account"));
+        .isEqualTo(String.format("%s %s", PRIMARY_PROFILE_DESCRIPTION, "account"));
     assertThat(ngPrimaryProfile.isPrimary()).isTrue();
     assertThat(ngPrimaryProfile.isNg()).isTrue();
   }
@@ -195,23 +188,23 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testOnAccountCreatedShouldNotCreatePrimaryProfile() {
     Account account = anAccount()
-            .withUuid(generateUuid())
-            .withCompanyName(COMPANY_NAME)
-            .withAccountName(ACCOUNT_NAME)
-            .withAccountKey(ACCOUNT_KEY)
-            .withLicenseInfo(getLicenseInfo())
-            .build();
+                          .withUuid(generateUuid())
+                          .withCompanyName(COMPANY_NAME)
+                          .withAccountName(ACCOUNT_NAME)
+                          .withAccountKey(ACCOUNT_KEY)
+                          .withLicenseInfo(getLicenseInfo())
+                          .build();
 
     account.setForImport(true);
 
     delegateProfileService.onAccountCreated(account);
 
     DelegateProfile primaryProfile = persistence.createQuery(DelegateProfile.class)
-            .field(DelegateProfileKeys.accountId)
-            .equal(account.getUuid())
-            .field(DelegateProfileKeys.primary)
-            .equal(true)
-            .get();
+                                         .field(DelegateProfileKeys.accountId)
+                                         .equal(account.getUuid())
+                                         .field(DelegateProfileKeys.primary)
+                                         .equal(true)
+                                         .get();
 
     assertThat(primaryProfile).isNull();
   }
@@ -223,13 +216,13 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     String accountId = "existingAccountId";
 
     DelegateProfile primaryProfile = DelegateProfile.builder()
-            .uuid(generateUuid())
-            .accountId(accountId)
-            .name(CG_PRIMARY_PROFILE_NAME)
-            .description(PRIMARY_PROFILE_DESCRIPTION)
-            .primary(true)
-            .ng(false)
-            .build();
+                                         .uuid(generateUuid())
+                                         .accountId(accountId)
+                                         .name(CG_PRIMARY_PROFILE_NAME)
+                                         .description(PRIMARY_PROFILE_DESCRIPTION)
+                                         .primary(true)
+                                         .ng(false)
+                                         .build();
 
     persistence.save(primaryProfile);
 
@@ -257,7 +250,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     assertThat(fetchedProfile.getAccountId()).isEqualTo(accountId);
     assertThat(fetchedProfile.getName()).isEqualTo(CG_PRIMARY_PROFILE_NAME);
     assertThat(fetchedProfile.getDescription())
-            .isEqualTo(String.format("%s %s", PRIMARY_PROFILE_DESCRIPTION, "account"));
+        .isEqualTo(String.format("%s %s", PRIMARY_PROFILE_DESCRIPTION, "account"));
     assertThat(fetchedProfile.isPrimary()).isTrue();
     assertThat(fetchedProfile.isNg()).isFalse();
   }
@@ -274,14 +267,14 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     final String profileName = String.format(NG_PRIMARY_PROFILE_NAME_TEMPLATE, "Project", owner.getIdentifier());
 
     DelegateProfile primaryProfile = DelegateProfile.builder()
-            .uuid(generateUuid())
-            .accountId(accountId)
-            .name(profileName)
-            .owner(owner)
-            .description(PRIMARY_PROFILE_DESCRIPTION)
-            .primary(true)
-            .ng(true)
-            .build();
+                                         .uuid(generateUuid())
+                                         .accountId(accountId)
+                                         .name(profileName)
+                                         .owner(owner)
+                                         .description(PRIMARY_PROFILE_DESCRIPTION)
+                                         .primary(true)
+                                         .ng(true)
+                                         .build();
 
     persistence.save(primaryProfile);
 
@@ -303,14 +296,14 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     final String accountId = "existingAccountId";
 
     DelegateProfile primaryProfile = DelegateProfile.builder()
-            .uuid(generateUuid())
-            .accountId(accountId)
-            .name(NG_PRIMARY_PROFILE_NAME_ACCOUNT)
-            .owner(null)
-            .description(PRIMARY_PROFILE_DESCRIPTION)
-            .primary(true)
-            .ng(true)
-            .build();
+                                         .uuid(generateUuid())
+                                         .accountId(accountId)
+                                         .name(NG_PRIMARY_PROFILE_NAME_ACCOUNT)
+                                         .owner(null)
+                                         .description(PRIMARY_PROFILE_DESCRIPTION)
+                                         .primary(true)
+                                         .ng(true)
+                                         .build();
 
     persistence.save(primaryProfile);
 
@@ -340,9 +333,10 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     assertThat(fetchedProfile).isNotNull();
     assertThat(fetchedProfile.getUuid()).isNotNull();
     assertThat(fetchedProfile.getAccountId()).isEqualTo(accountId);
-    assertThat(fetchedProfile.getName()).isEqualTo(String.format("Primary Project Configuration (%s)", owner.getIdentifier()));
+    assertThat(fetchedProfile.getName())
+        .isEqualTo(String.format("Primary Project Configuration (%s)", owner.getIdentifier()));
     assertThat(fetchedProfile.getDescription())
-            .isEqualTo(String.format("%s %s project", PRIMARY_PROFILE_DESCRIPTION, owner.getIdentifier()));
+        .isEqualTo(String.format("%s %s project", PRIMARY_PROFILE_DESCRIPTION, owner.getIdentifier()));
     assertThat(fetchedProfile.isPrimary()).isTrue();
     assertThat(fetchedProfile.isNg()).isTrue();
   }
@@ -361,9 +355,10 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     assertThat(fetchedProfile).isNotNull();
     assertThat(fetchedProfile.getUuid()).isNotNull();
     assertThat(fetchedProfile.getAccountId()).isEqualTo(accountId);
-    assertThat(fetchedProfile.getName()).isEqualTo(String.format("Primary Organization Configuration (%s)", owner.getIdentifier()));
+    assertThat(fetchedProfile.getName())
+        .isEqualTo(String.format("Primary Organization Configuration (%s)", owner.getIdentifier()));
     assertThat(fetchedProfile.getDescription())
-            .isEqualTo(String.format("%s %s organization", PRIMARY_PROFILE_DESCRIPTION, owner.getIdentifier()));
+        .isEqualTo(String.format("%s %s organization", PRIMARY_PROFILE_DESCRIPTION, owner.getIdentifier()));
     assertThat(fetchedProfile.isPrimary()).isTrue();
     assertThat(fetchedProfile.isNg()).isTrue();
   }
@@ -375,7 +370,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     delegateProfileService.delete(ACCOUNT_ID, generateUuid());
 
     verify(auditServiceHelper, never())
-            .reportDeleteForAuditingUsingAccountId(eq(ACCOUNT_ID), any(DelegateProfile.class));
+        .reportDeleteForAuditingUsingAccountId(eq(ACCOUNT_ID), any(DelegateProfile.class));
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -418,7 +413,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     List<String> profileSelectors = Arrays.asList("selector1", "selector2");
 
     DelegateProfile delegateProfile =
-            createDelegateProfileBuilder() /*.uuid(uuid)*/.startupScript("script").approvalRequired(false).build();
+        createDelegateProfileBuilder() /*.uuid(uuid)*/.startupScript("script").approvalRequired(false).build();
     DelegateProfileScopingRule rule = DelegateProfileScopingRule.builder().description("test").build();
     delegateProfile.setScopingRules(Collections.singletonList(rule));
     persistence.save(delegateProfile);
@@ -451,12 +446,12 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     List<String> profileSelectors = Arrays.asList("testSelector1", "testSelector2");
 
     DelegateProfile delegateProfile = createDelegateProfileBuilder()
-            .accountId(accountId)
-            .name(profileName)
-            .description(profileDescription)
-            .startupScript("script")
-            .selectors(profileSelectors)
-            .build();
+                                          .accountId(accountId)
+                                          .name(profileName)
+                                          .description(profileDescription)
+                                          .startupScript("script")
+                                          .selectors(profileSelectors)
+                                          .build();
 
     DelegateProfile savedDelegateProfile = delegateProfileService.add(delegateProfile);
 
@@ -479,13 +474,13 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     List<String> profileSelectors = Arrays.asList("testSelector1", "testSelector2");
 
     DelegateProfile delegateProfile = createDelegateProfileBuilder()
-            .accountId(accountId)
-            .name(profileName)
-            .description(profileDescription)
-            .startupScript("script")
-            .selectors(profileSelectors)
-            .identifier(profileIdentifier)
-            .build();
+                                          .accountId(accountId)
+                                          .name(profileName)
+                                          .description(profileDescription)
+                                          .startupScript("script")
+                                          .selectors(profileSelectors)
+                                          .identifier(profileIdentifier)
+                                          .build();
 
     DelegateProfile savedDelegateProfile = delegateProfileService.add(delegateProfile);
 
@@ -505,33 +500,33 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     String uuid = generateUuid();
     String accountId = generateUuid();
     List<String> profileSelectors =
-            Arrays.asList("testProfileSelector1", "testProfileSelector2", "testProfileSelector3");
+        Arrays.asList("testProfileSelector1", "testProfileSelector2", "testProfileSelector3");
 
     when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(true);
 
     DelegateProfile delegateProfile = DelegateProfile.builder()
-            .uuid(uuid)
-            .accountId(accountId)
-            .startupScript("script")
-            .approvalRequired(false)
-            .selectors(profileSelectors)
-            .build();
+                                          .uuid(uuid)
+                                          .accountId(accountId)
+                                          .startupScript("script")
+                                          .approvalRequired(false)
+                                          .selectors(profileSelectors)
+                                          .build();
 
     persistence.save(delegateProfile);
 
     List<String> profileSelectorsUpdated =
-            Arrays.asList("updatedProfileSelector1", "updatedProfileSelector2", "testProfileSelector3");
+        Arrays.asList("updatedProfileSelector1", "updatedProfileSelector2", "testProfileSelector3");
 
     delegateProfileService.updateDelegateProfileSelectors(uuid, accountId, profileSelectorsUpdated);
 
     DelegateProfile retrievedDelegateProfile = persistence.createQuery(DelegateProfile.class)
-            .filter(DelegateProfileKeys.uuid, delegateProfile.getUuid())
-            .get();
+                                                   .filter(DelegateProfileKeys.uuid, delegateProfile.getUuid())
+                                                   .get();
 
     assertThat(retrievedDelegateProfile).isNotNull();
     assertThat(retrievedDelegateProfile.getSelectors()).hasSize(3);
     assertThat(retrievedDelegateProfile.getSelectors())
-            .containsExactly("updatedProfileSelector1", "updatedProfileSelector2", "testProfileSelector3");
+        .containsExactly("updatedProfileSelector1", "updatedProfileSelector2", "testProfileSelector3");
 
     verify(delegateProfileSubject).fireInform(any(), eq(accountId), eq(delegateProfile.getUuid()));
   }
@@ -541,7 +536,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testUpdateShouldUpdateScopingRules() {
     DelegateProfile delegateProfile =
-            createDelegateProfileBuilder().startupScript("script").approvalRequired(false).build();
+        createDelegateProfileBuilder().startupScript("script").approvalRequired(false).build();
 
     when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, delegateProfile.getAccountId())).thenReturn(true);
 
@@ -549,7 +544,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
 
     DelegateProfileScopingRule rule = DelegateProfileScopingRule.builder().description("test").build();
     DelegateProfile updatedDelegateProfile = delegateProfileService.updateScopingRules(
-            delegateProfile.getAccountId(), delegateProfile.getUuid(), Collections.singletonList(rule));
+        delegateProfile.getAccountId(), delegateProfile.getUuid(), Collections.singletonList(rule));
 
     assertThat(updatedDelegateProfile.getScopingRules()).containsExactly(rule);
 
@@ -562,14 +557,14 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   public void testUpdateShouldUpdateScopingRulesWithNull() {
     DelegateProfileScopingRule rule = DelegateProfileScopingRule.builder().description("test").build();
     DelegateProfile delegateProfile = createDelegateProfileBuilder()
-            .startupScript("script")
-            .scopingRules(Collections.singletonList(rule))
-            .approvalRequired(false)
-            .build();
+                                          .startupScript("script")
+                                          .scopingRules(Collections.singletonList(rule))
+                                          .approvalRequired(false)
+                                          .build();
     persistence.save(delegateProfile);
 
     DelegateProfile updatedDelegateProfile =
-            delegateProfileService.updateScopingRules(delegateProfile.getAccountId(), delegateProfile.getUuid(), null);
+        delegateProfileService.updateScopingRules(delegateProfile.getAccountId(), delegateProfile.getUuid(), null);
 
     assertThat(updatedDelegateProfile.getScopingRules()).isNull();
   }
@@ -580,14 +575,14 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   public void testUpdateShouldUpdateScopingRulesWithEmptyList() {
     DelegateProfileScopingRule rule = DelegateProfileScopingRule.builder().description("test").build();
     DelegateProfile delegateProfile = createDelegateProfileBuilder()
-            .startupScript("script")
-            .scopingRules(Collections.singletonList(rule))
-            .approvalRequired(false)
-            .build();
+                                          .startupScript("script")
+                                          .scopingRules(Collections.singletonList(rule))
+                                          .approvalRequired(false)
+                                          .build();
     persistence.save(delegateProfile);
 
     DelegateProfile updatedDelegateProfile = delegateProfileService.updateScopingRules(
-            delegateProfile.getAccountId(), delegateProfile.getUuid(), emptyList());
+        delegateProfile.getAccountId(), delegateProfile.getUuid(), emptyList());
 
     assertThat(updatedDelegateProfile.getScopingRules()).isNull();
   }
@@ -598,23 +593,23 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     String uuid = generateUuid();
     String accountId = generateUuid();
     List<String> profileSelectors =
-            Arrays.asList("testProfileSelector1", "testProfileSelector2", "testProfileSelector3");
+        Arrays.asList("testProfileSelector1", "testProfileSelector2", "testProfileSelector3");
 
     DelegateProfile delegateProfile = DelegateProfile.builder()
-            .uuid(uuid)
-            .accountId(accountId)
-            .startupScript("script")
-            .approvalRequired(false)
-            .selectors(profileSelectors)
-            .build();
+                                          .uuid(uuid)
+                                          .accountId(accountId)
+                                          .startupScript("script")
+                                          .approvalRequired(false)
+                                          .selectors(profileSelectors)
+                                          .build();
 
     persistence.save(delegateProfile);
 
     delegateProfileService.updateDelegateProfileSelectors(uuid, accountId, null);
 
     DelegateProfile retrievedDelegateProfile = persistence.createQuery(DelegateProfile.class)
-            .filter(DelegateProfileKeys.uuid, delegateProfile.getUuid())
-            .get();
+                                                   .filter(DelegateProfileKeys.uuid, delegateProfile.getUuid())
+                                                   .get();
 
     assertThat(retrievedDelegateProfile).isNotNull();
     assertThat(retrievedDelegateProfile.getSelectors()).isNullOrEmpty();
@@ -627,15 +622,15 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     String uuid = generateUuid();
     String accountId = generateUuid();
     List<String> profileSelectors =
-            Arrays.asList("testProfileSelector1", "testProfileSelector2", "testProfileSelector3");
+        Arrays.asList("testProfileSelector1", "testProfileSelector2", "testProfileSelector3");
 
     DelegateProfile delegateProfile = DelegateProfile.builder()
-            .uuid(uuid)
-            .accountId(accountId)
-            .startupScript("script")
-            .approvalRequired(false)
-            .selectors(profileSelectors)
-            .build();
+                                          .uuid(uuid)
+                                          .accountId(accountId)
+                                          .startupScript("script")
+                                          .approvalRequired(false)
+                                          .selectors(profileSelectors)
+                                          .build();
 
     persistence.save(delegateProfile);
 
@@ -644,8 +639,8 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     delegateProfileService.updateDelegateProfileSelectors(uuid, accountId, profileSelectorsUpdated);
 
     DelegateProfile retrievedDelegateProfile = persistence.createQuery(DelegateProfile.class)
-            .filter(DelegateProfileKeys.uuid, delegateProfile.getUuid())
-            .get();
+                                                   .filter(DelegateProfileKeys.uuid, delegateProfile.getUuid())
+                                                   .get();
 
     assertThat(retrievedDelegateProfile).isNotNull();
     assertThat(retrievedDelegateProfile.getSelectors()).isNullOrEmpty();
@@ -668,7 +663,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void isValidIdentifier_valid() {
     DelegateProfile delegateProfile =
-            createDelegateProfileBuilder().uuid(generateUuid()).identifier(TEST_IDENTIFIER).build();
+        createDelegateProfileBuilder().uuid(generateUuid()).identifier(TEST_IDENTIFIER).build();
 
     persistence.save(delegateProfile);
 
@@ -680,7 +675,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void isValidIdentifier_invalid() {
     DelegateProfile delegateProfile =
-            createDelegateProfileBuilder().uuid(generateUuid()).identifier(TEST_IDENTIFIER).build();
+        createDelegateProfileBuilder().uuid(generateUuid()).identifier(TEST_IDENTIFIER).build();
 
     persistence.save(delegateProfile);
 
@@ -701,7 +696,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     persistence.save(delegate);
 
     List<String> delegatesForProfile =
-            delegateProfileService.getDelegatesForProfile(delegateProfile.getAccountId(), delegateProfile.getUuid());
+        delegateProfileService.getDelegatesForProfile(delegateProfile.getAccountId(), delegateProfile.getUuid());
 
     assertThat(delegatesForProfile).isNotNull();
     assertThat(delegatesForProfile.size()).isEqualTo(1);

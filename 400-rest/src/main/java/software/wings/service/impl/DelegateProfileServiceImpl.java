@@ -71,20 +71,13 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   public static final String NG_PRIMARY_PROFILE_NAME_ACCOUNT = "Primary Account Configuration";
   public static final String PRIMARY_PROFILE_DESCRIPTION = "The primary profile for the";
 
-  @Inject
-  private HPersistence persistence;
-  @Inject
-  private AuditServiceHelper auditServiceHelper;
-  @Inject
-  private FeatureFlagService featureFlagService;
-  @Inject
-  private DelegateCache delegateCache;
-  @Inject
-  @Named(EventsFrameworkConstants.ENTITY_CRUD)
-  private Producer eventProducer;
+  @Inject private HPersistence persistence;
+  @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private DelegateCache delegateCache;
+  @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
 
-  @Getter
-  private final Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
+  @Getter private final Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
 
   @Override
   public PageResponse<DelegateProfile> list(PageRequest<DelegateProfile> pageRequest) {
@@ -99,12 +92,12 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   @Override
   public DelegateProfile fetchCgPrimaryProfile(String accountId) {
     Optional<DelegateProfile> primaryProfile = Optional.ofNullable(
-            persistence.createQuery(DelegateProfile.class)
-                    .filter(DelegateProfileKeys.accountId, accountId)
-                    .field(DelegateProfileKeys.ng)
-                    .notEqual(Boolean.TRUE) // This is required to cover case when flag is not set at all and when it is false
-                    .filter(DelegateProfileKeys.primary, Boolean.TRUE)
-                    .get());
+        persistence.createQuery(DelegateProfile.class)
+            .filter(DelegateProfileKeys.accountId, accountId)
+            .field(DelegateProfileKeys.ng)
+            .notEqual(Boolean.TRUE) // This is required to cover case when flag is not set at all and when it is false
+            .filter(DelegateProfileKeys.primary, Boolean.TRUE)
+            .get());
 
     return primaryProfile.orElseGet(() -> add(buildPrimaryDelegateProfile(accountId, null, false)));
   }
@@ -112,12 +105,12 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   @Override
   public DelegateProfile fetchNgPrimaryProfile(final String accountId, @Nullable final DelegateEntityOwner owner) {
     Optional<DelegateProfile> primaryProfile =
-            Optional.ofNullable(persistence.createQuery(DelegateProfile.class)
-                    .filter(DelegateProfileKeys.accountId, accountId)
-                    .filter(DelegateProfileKeys.ng, Boolean.TRUE)
-                    .filter(DelegateProfileKeys.primary, Boolean.TRUE)
-                    .filter(DelegateProfileKeys.owner, owner)
-                    .get());
+        Optional.ofNullable(persistence.createQuery(DelegateProfile.class)
+                                .filter(DelegateProfileKeys.accountId, accountId)
+                                .filter(DelegateProfileKeys.ng, Boolean.TRUE)
+                                .filter(DelegateProfileKeys.primary, Boolean.TRUE)
+                                .filter(DelegateProfileKeys.owner, owner)
+                                .get());
 
     return primaryProfile.orElseGet(() -> add(buildPrimaryDelegateProfile(accountId, owner, true)));
   }
@@ -135,8 +128,8 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     setUnset(updateOperations, DelegateProfileKeys.scopingRules, delegateProfile.getScopingRules());
 
     Query<DelegateProfile> query = persistence.createQuery(DelegateProfile.class)
-            .filter(DelegateProfileKeys.accountId, delegateProfile.getAccountId())
-            .filter(ID_KEY, delegateProfile.getUuid());
+                                       .filter(DelegateProfileKeys.accountId, delegateProfile.getAccountId())
+                                       .filter(ID_KEY, delegateProfile.getUuid());
 
     // Update and invalidate cache
     persistence.update(query, updateOperations);
@@ -146,20 +139,20 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     log.info("Updated delegate profile: {}", updatedDelegateProfile.getUuid());
 
     delegateProfileSubject.fireInform(
-            DelegateProfileObxxxxxxxx:onProfileUpdated, originalProfile, updatedDelegateProfile);
+        DelegateProfileObxxxxxxxx:onProfileUpdated, originalProfile, updatedDelegateProfile);
 
     auditServiceHelper.reportForAuditingUsingAccountId(
-            delegateProfile.getAccountId(), delegateProfile, updatedDelegateProfile, Event.Type.UPDATE);
+        delegateProfile.getAccountId(), delegateProfile, updatedDelegateProfile, Event.Type.UPDATE);
     log.info("Auditing update of Delegate Profile for accountId={}", delegateProfile.getAccountId());
     return updatedDelegateProfile;
   }
 
   @Override
   public DelegateProfile updateDelegateProfileSelectors(
-          String delegateProfileId, String accountId, List<String> selectors) {
+      String delegateProfileId, String accountId, List<String> selectors) {
     Query<DelegateProfile> delegateProfileQuery = persistence.createQuery(DelegateProfile.class)
-            .filter(DelegateProfileKeys.accountId, accountId)
-            .filter(DelegateProfileKeys.uuid, delegateProfileId);
+                                                      .filter(DelegateProfileKeys.accountId, accountId)
+                                                      .filter(DelegateProfileKeys.uuid, delegateProfileId);
     DelegateProfile originalProfile = delegateProfileQuery.get();
 
     UpdateOperations<DelegateProfile> updateOperations = persistence.createUpdateOperations(DelegateProfile.class);
@@ -168,17 +161,17 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
     // Update and invalidate cache
     DelegateProfile delegateProfileSelectorsUpdated =
-            persistence.findAndModify(delegateProfileQuery, updateOperations, returnNewOptions);
+        persistence.findAndModify(delegateProfileQuery, updateOperations, returnNewOptions);
     delegateCache.invalidateDelegateProfileCache(accountId, delegateProfileId);
     log.info("Updated delegate profile selectors: {}", delegateProfileSelectorsUpdated.getSelectors());
 
     if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)) {
       delegateProfileSubject.fireInform(
-              DelegateProfileObxxxxxxxx:onProfileSelectorsUpdated, accountId, delegateProfileId);
+          DelegateProfileObxxxxxxxx:onProfileSelectorsUpdated, accountId, delegateProfileId);
     }
 
     auditServiceHelper.reportForAuditingUsingAccountId(
-            accountId, originalProfile, delegateProfileSelectorsUpdated, Event.Type.UPDATE);
+        accountId, originalProfile, delegateProfileSelectorsUpdated, Event.Type.UPDATE);
     log.info("Auditing update of Selectors of Delegate Profile for accountId={}", accountId);
 
     return delegateProfileSelectorsUpdated;
@@ -186,12 +179,12 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
   @Override
   public DelegateProfile updateScopingRules(
-          String accountId, String delegateProfileId, List<DelegateProfileScopingRule> scopingRules) {
+      String accountId, String delegateProfileId, List<DelegateProfileScopingRule> scopingRules) {
     UpdateOperations<DelegateProfile> updateOperations = persistence.createUpdateOperations(DelegateProfile.class);
     setUnset(updateOperations, DelegateProfileKeys.scopingRules, scopingRules);
     Query<DelegateProfile> query = persistence.createQuery(DelegateProfile.class)
-            .filter(DelegateProfileKeys.accountId, accountId)
-            .filter(DelegateProfileKeys.uuid, delegateProfileId);
+                                       .filter(DelegateProfileKeys.accountId, accountId)
+                                       .filter(DelegateProfileKeys.uuid, delegateProfileId);
     // Update and invalidate cache
     DelegateProfile updatedDelegateProfile = persistence.findAndModify(query, updateOperations, returnNewOptions);
     delegateCache.invalidateDelegateProfileCache(accountId, delegateProfileId);
@@ -207,14 +200,14 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   @Override
   public DelegateProfile add(DelegateProfile delegateProfile) {
     if (Strings.isNotBlank(delegateProfile.getIdentifier())
-            && !isValidIdentifier(delegateProfile.getAccountId(), delegateProfile.getIdentifier())) {
+        && !isValidIdentifier(delegateProfile.getAccountId(), delegateProfile.getIdentifier())) {
       throw new InvalidRequestException("The identifier is invalid. Could not add delegate profile.");
     }
 
     persistence.save(delegateProfile);
     log.info("Added delegate profile: {}", delegateProfile.getUuid());
     auditServiceHelper.reportForAuditingUsingAccountId(
-            delegateProfile.getAccountId(), null, delegateProfile, Event.Type.CREATE);
+        delegateProfile.getAccountId(), null, delegateProfile, Event.Type.CREATE);
     log.info("Auditing adding of Delegate Profile for accountId={}", delegateProfile.getAccountId());
     return delegateProfile;
   }
@@ -222,9 +215,9 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   @Override
   public void delete(String accountId, String delegateProfileId) {
     DelegateProfile delegateProfile = persistence.createQuery(DelegateProfile.class)
-            .filter(DelegateProfileKeys.accountId, accountId)
-            .filter(ID_KEY, delegateProfileId)
-            .get();
+                                          .filter(DelegateProfileKeys.accountId, accountId)
+                                          .filter(ID_KEY, delegateProfileId)
+                                          .get();
     if (delegateProfile != null) {
       ensureProfileSafeToDelete(accountId, delegateProfile);
       log.info("Deleting delegate profile: {}", delegateProfileId);
@@ -246,34 +239,34 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
     try {
       EntityChangeDTO.Builder entityChangeDTOBuilder =
-              EntityChangeDTO.newBuilder()
-                      .setAccountIdentifier(StringValue.of(delegateProfile.getAccountId()))
-                      .setIdentifier(StringValue.of(delegateProfile.getUuid()));
+          EntityChangeDTO.newBuilder()
+              .setAccountIdentifier(StringValue.of(delegateProfile.getAccountId()))
+              .setIdentifier(StringValue.of(delegateProfile.getUuid()));
 
       if (delegateProfile.getOwner() != null) {
         String orgIdentifier =
-                DelegateEntityOwnerHelper.extractOrgIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
+            DelegateEntityOwnerHelper.extractOrgIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
         if (isNotBlank(orgIdentifier)) {
           entityChangeDTOBuilder.setOrgIdentifier(StringValue.of(orgIdentifier));
         }
 
         String projectIdentifier =
-                DelegateEntityOwnerHelper.extractProjectIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
+            DelegateEntityOwnerHelper.extractProjectIdFromOwnerIdentifier(delegateProfile.getOwner().getIdentifier());
         if (isNotBlank(projectIdentifier)) {
           entityChangeDTOBuilder.setProjectIdentifier(StringValue.of(projectIdentifier));
         }
       }
 
       eventProducer.send(Message.newBuilder()
-              .putAllMetadata(ImmutableMap.of("accountId", delegateProfile.getAccountId(),
-                      EventsFrameworkMetadataConstants.ENTITY_TYPE,
-                      EventsFrameworkMetadataConstants.DELEGATE_CONFIGURATION_ENTITY,
-                      EventsFrameworkMetadataConstants.ACTION, action))
-              .setData(entityChangeDTOBuilder.build().toByteString())
-              .build());
+                             .putAllMetadata(ImmutableMap.of("accountId", delegateProfile.getAccountId(),
+                                 EventsFrameworkMetadataConstants.ENTITY_TYPE,
+                                 EventsFrameworkMetadataConstants.DELEGATE_CONFIGURATION_ENTITY,
+                                 EventsFrameworkMetadataConstants.ACTION, action))
+                             .setData(entityChangeDTOBuilder.build().toByteString())
+                             .build());
     } catch (Exception ex) {
       log.error(String.format("Failed to publish delegate profile %s event for accountId %s via event framework.",
-              action, delegateProfile.getAccountId()));
+          action, delegateProfile.getAccountId()));
     }
   }
 
@@ -289,17 +282,17 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
     String delegateProfileId = delegateProfile.getUuid();
     List<Delegate> delegates = persistence.createQuery(Delegate.class)
-            .filter(DelegateKeys.accountId, accountId)
-            .field(DelegateKeys.status)
-            .notEqual(DelegateInstanceStatus.DELETED)
-            .asList();
+                                   .filter(DelegateKeys.accountId, accountId)
+                                   .field(DelegateKeys.status)
+                                   .notEqual(DelegateInstanceStatus.DELETED)
+                                   .asList();
     List<String> delegateNames = delegates.stream()
-            .filter(delegate -> delegateProfileId.equals(delegate.getDelegateProfileId()))
-            .map(Delegate::getHostName)
-            .collect(toList());
+                                     .filter(delegate -> delegateProfileId.equals(delegate.getDelegateProfileId()))
+                                     .map(Delegate::getHostName)
+                                     .collect(toList());
     if (isNotEmpty(delegateNames)) {
       String message = format("Delegate profile [%s] could not be deleted because it's used by these delegates [%s]",
-              delegateProfile.getName(), String.join(", ", delegateNames));
+          delegateProfile.getName(), String.join(", ", delegateNames));
       throw new InvalidRequestException(message, USER);
     }
   }
@@ -331,27 +324,27 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   @Override
   public List<String> getDelegatesForProfile(String accountId, String profileId) {
     return persistence.createQuery(Delegate.class)
-            .filter(DelegateKeys.accountId, accountId)
-            .filter(DelegateKeys.delegateProfileId, profileId)
-            .field(DelegateKeys.status)
-            .notEqual(DelegateInstanceStatus.DELETED)
-            .asKeyList()
-            .stream()
-            .map(key -> key.getId().toString())
-            .collect(toList());
+        .filter(DelegateKeys.accountId, accountId)
+        .filter(DelegateKeys.delegateProfileId, profileId)
+        .field(DelegateKeys.status)
+        .notEqual(DelegateInstanceStatus.DELETED)
+        .asKeyList()
+        .stream()
+        .map(key -> key.getId().toString())
+        .collect(toList());
   }
 
   private DelegateProfile buildPrimaryDelegateProfile(
-          final String accountId, @Nullable final DelegateEntityOwner owner, final boolean isNg) {
+      final String accountId, @Nullable final DelegateEntityOwner owner, final boolean isNg) {
     return DelegateProfile.builder()
-            .uuid(generateUuid())
-            .accountId(accountId)
-            .name(getProfileName(owner, isNg))
-            .description(getProfileDescription(owner, isNg))
-            .primary(true)
-            .owner(owner)
-            .ng(isNg)
-            .build();
+        .uuid(generateUuid())
+        .accountId(accountId)
+        .name(getProfileName(owner, isNg))
+        .description(getProfileDescription(owner, isNg))
+        .primary(true)
+        .owner(owner)
+        .ng(isNg)
+        .build();
   }
 
   /**
@@ -392,9 +385,9 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   @VisibleForTesting
   public boolean isValidIdentifier(String accountId, String proposedIdentifier) {
     Query<DelegateProfile> result = persistence.createQuery(DelegateProfile.class)
-            .filter(DelegateKeys.accountId, accountId)
-            .field(DelegateProfileKeys.identifier)
-            .equalIgnoreCase(proposedIdentifier);
+                                        .filter(DelegateKeys.accountId, accountId)
+                                        .field(DelegateProfileKeys.identifier)
+                                        .equalIgnoreCase(proposedIdentifier);
 
     return result.get() == null;
   }
