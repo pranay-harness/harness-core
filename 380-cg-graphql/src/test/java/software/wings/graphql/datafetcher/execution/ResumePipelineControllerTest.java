@@ -20,10 +20,12 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
+import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.deployment.DeploymentMetadata;
 import software.wings.graphql.schema.mutation.pipeline.input.QLRuntimeExecutionInputs;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -136,8 +138,9 @@ public class ResumePipelineControllerTest extends WingsBaseTest {
         JsonUtils.readResourceFile("execution/graphql_continue_exec_params.json", QLRuntimeExecutionInputs.class);
     WorkflowExecution workflowExecution =
         WorkflowExecution.builder().workflowId(PIPELINE_ID).accountId(ACCOUNT_ID).build();
+    UserThreadLocal.set(User.Builder.anUser().build());
     when(workflowExecutionService.getWorkflowExecution(anyString(), anyString())).thenReturn(workflowExecution);
-    when(pipelineExecutionController.resolveEnvId(any(), anyList())).thenReturn(ENV_ID);
+    when(pipelineExecutionController.resolveEnvId(any(), any(), anyList())).thenReturn(ENV_ID);
 
     try {
       resumePipelineController.resumePipeline(parameter);
