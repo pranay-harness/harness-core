@@ -12,6 +12,7 @@ import io.harness.engine.executions.plan.PlanService;
 import io.harness.engine.pms.resume.EngineResumeCallback;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.logging.AutoLogContext;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildrenExecutableResponse.Child;
@@ -24,6 +25,7 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.extern.slf4j.Slf4j;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -34,6 +36,7 @@ import java.util.concurrent.ExecutorService;
 
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
+@Slf4j
 public class SpawnChildrenRequestProcessor implements SdkResponseProcessor {
   @Inject private PlanService planService;
   @Inject private NodeExecutionService nodeExecutionService;
@@ -48,33 +51,36 @@ public class SpawnChildrenRequestProcessor implements SdkResponseProcessor {
     NodeExecution nodeExecution = nodeExecutionService.get(request.getNodeExecutionId());
     Ambiance ambiance = nodeExecution.getAmbiance();
     Plan plan = planService.fetchPlan(nodeExecution.getAmbiance().getPlanId());
-    List<String> callbackIds = new ArrayList<>();
-    for (Child child : request.getChildren().getChildrenList()) {
-      String uuid = generateUuid();
-      callbackIds.add(uuid);
-      PlanNodeProto node = plan.fetchNode(child.getChildNodeId());
-      Ambiance clonedAmbiance = AmbianceUtils.cloneForChild(ambiance, LevelUtils.buildLevelFromPlanNode(uuid, node));
-      NodeExecution childNodeExecution = NodeExecution.builder()
-                                             .uuid(uuid)
-                                             .node(node)
-                                             .ambiance(clonedAmbiance)
-                                             .status(Status.QUEUED)
-                                             .notifyId(uuid)
-                                             .parentId(nodeExecution.getUuid())
-                                             .build();
-      nodeExecutionService.save(childNodeExecution);
-      executorService.submit(
-          ExecutionEngineDispatcher.builder().ambiance(clonedAmbiance).orchestrationEngine(engine).build());
+    try (AutoLogContext autoLogContext = AmbianceUtils.autoLogContext(ambiance)) {
+      List<String> callbackIds = new ArrayList<>();
+      for (Child child : request.getChildren().getChildrenList()) {
+        String uuid = generateUuid();
+        callbackIds.add(uuid);
+        PlanNodeProto node = plan.fetchNode(child.getChildNodeId());
+        Ambiance clonedAmbiance = AmbianceUtils.cloneForChild(ambiance, LevelUtils.buildLevelFromPlanNode(uuid, node));
+        NodeExecution childNodeExecution = NodeExecution.builder()
+                                               .uuid(uuid)
+                                               .node(node)
+                                               .ambiance(clonedAmbiance)
+                                               .status(Status.QUEUED)
+                                               .notifyId(uuid)
+                                               .parentId(nodeExecution.getUuid())
+                                               .build();
+        nodeExecutionService.save(childNodeExecution);
+        log.info("For Children Executable starting Child NodeExecution with id: {}", uuid);
+        executorService.submit(
+            ExecutionEngineDispatcher.builder().ambiance(clonedAmbiance).orchestrationEngine(engine).build());
+      }
+
+      // Attach a Callback to the parent for the child
+      OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(request.getNodeExecutionId()).build();
+      waitNotifyEngine.waitForAllOn(publisherName, callback, callbackIds.toArray(new String[0]));
+
+      // Update the parent with executable response
+      nodeExecutionService.update(nodeExecution.getUuid(),
+          ops
+          -> ops.addToSet(NodeExecutionKeys.executableResponses,
+              ExecutableResponse.newBuilder().setChildren(request.getChildren()).build()));
     }
-
-    // Attach a Callback to the parent for the child
-    OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(request.getNodeExecutionId()).build();
-    waitNotifyEngine.waitForAllOn(publisherName, callback, callbackIds.toArray(new String[0]));
-
-    // Update the parent with executable response
-    nodeExecutionService.update(nodeExecution.getUuid(),
-        ops
-        -> ops.addToSet(NodeExecutionKeys.executableResponses,
-            ExecutableResponse.newBuilder().setChildren(request.getChildren()).build()));
   }
 }

@@ -23,6 +23,7 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
+import lombok.extern.slf4j.Slf4j;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -31,6 +32,7 @@ import java.util.concurrent.ExecutorService;
 
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
+@Slf4j
 public class SpawnChildRequestProcessor implements SdkResponseProcessor {
   @Inject private PlanService planService;
   @Inject private NodeExecutionService nodeExecutionService;
@@ -44,6 +46,8 @@ public class SpawnChildRequestProcessor implements SdkResponseProcessor {
     SpawnChildRequest request = event.getSdkResponseEventRequest().getSpawnChildRequest();
 
     NodeExecution childNodeExecution = buildChildNodeExecution(request);
+
+    log.info("For Child Executable starting Child NodeExecution with id: {}", childNodeExecution.getUuid());
 
     // Attach a Callback to the parent for the child
     OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(request.getNodeExecutionId()).build();
