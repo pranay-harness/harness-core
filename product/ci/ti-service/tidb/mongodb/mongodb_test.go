@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"testing"
+	"time"
 )
 
 var db *MongoDb
@@ -70,6 +71,8 @@ func TestMongoDb_UploadPartialCgForNodes(t *testing.T) {
 		"proj",
 		"target",
 	)
+	// ttl script of mongo runs every 60 seconds.
+	time.Sleep(70 * time.Second)
 
 	// Expectations --
 	// - commitId of node `oldNode` is older so this node should be deleted.
@@ -131,6 +134,8 @@ func TestMongoDb_MergeCgForNodes(t *testing.T) {
 	}
 	db.MergePartialCg(ctx, mergeReq)
 
+	// ttl script of mongo runs every 60 seconds.
+	time.Sleep(70 * time.Second)
 	curr, _ = db.Database.Collection("nodes").Find(ctx, bson.M{"vcs_info.branch": "b1"}, &options.FindOptions{})
 	curr.All(ctx, &nodes)
 
@@ -174,6 +179,9 @@ func TestMongoDb_MergePartialCgForRelations(t *testing.T) {
 		Diff: types.DiffInfo{Sha: "commit1"},
 	}
 	db.MergePartialCg(ctx, mergeReq)
+
+	// ttl script of mongo runs every 60 seconds.
+	time.Sleep(70 * time.Second)
 
 	var relations []Relation
 	curr, _ := db.Database.Collection("relations").Find(ctx, bson.M{"vcs_info.branch": "b1"}, &options.FindOptions{})
@@ -240,6 +248,10 @@ func TestMongoDb_UploadPartialCgForRelations(t *testing.T) {
 		"proj",
 		"target",
 	)
+
+	// ttl script of mongo runs every 60 seconds.
+	time.Sleep(70 * time.Second)
+
 	var relations []Relation
 	curr, _ := db.Database.Collection("relations").Find(ctx, bson.M{}, &options.FindOptions{})
 	curr.All(ctx, &relations)
