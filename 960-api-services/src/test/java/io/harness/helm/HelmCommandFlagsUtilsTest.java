@@ -6,6 +6,7 @@ import static io.harness.helm.HelmCliCommandType.RENDER_CHART;
 import static io.harness.helm.HelmCliCommandType.VERSION;
 import static io.harness.helm.HelmCommandFlagsUtils.applyHelmCommandFlags;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.SATYAM;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -15,6 +16,7 @@ import io.harness.k8s.model.HelmVersion;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;
+import java.util.HashMap;
 import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -50,6 +52,16 @@ public class HelmCommandFlagsUtilsTest extends CategoryTest {
     assertThat(applyHelmCommandFlags(COMMAND_WITH_PLACEHOLDER, INSTALL.name(), null, HelmVersion.V3))
         .isEqualTo("helm command ");
     assertThat(applyHelmCommandFlags(COMMAND_WITH_PLACEHOLDER, INSTALL.name(), ImmutableMap.of(), HelmVersion.V3))
+        .isEqualTo("helm command ");
+  }
+
+  @Test
+  @Owner(developers = SATYAM)
+  @Category(UnitTests.class)
+  public void testApplyHelmCommandsEmptyValueInMap() {
+    Map<HelmSubCommandType, String> helmCommands = new HashMap<>();
+    helmCommands.put(HelmSubCommandType.INSTALL, null);
+    assertThat(applyHelmCommandFlags(COMMAND_WITH_PLACEHOLDER, INSTALL.name(), helmCommands, HelmVersion.V2))
         .isEqualTo("helm command ");
   }
 }
