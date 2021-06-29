@@ -1,6 +1,5 @@
 package io.harness.accesscontrol.roles;
 
-import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_CUSTOM;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_MANAGED;
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -123,16 +122,21 @@ public class RoleServiceImpl implements RoleService {
 
   @Override
   public Role delete(String identifier, String scopeIdentifier) {
-    Optional<Role> roleOpt = get(identifier, scopeIdentifier, NO_FILTER);
+    Optional<Role> roleOpt = get(identifier, scopeIdentifier, ONLY_CUSTOM);
     if (!roleOpt.isPresent()) {
-      throw new InvalidRequestException(String.format("Could not find the role in the scope %s", scopeIdentifier));
+      throw new InvalidRequestException(
+          String.format("Could not find the role %s in the scope %s", identifier, scopeIdentifier));
     }
-    Role role = roleOpt.get();
-    if (role.isManaged()) {
-      return deleteManagedRole(identifier);
-    } else {
-      return deleteCustomRole(identifier, scopeIdentifier);
+    return deleteCustomRole(identifier, scopeIdentifier);
+  }
+
+  @Override
+  public Role deleteManaged(String identifier) {
+    Optional<Role> roleOpt = get(identifier, null, ONLY_MANAGED);
+    if (!roleOpt.isPresent()) {
+      throw new InvalidRequestException(String.format("Could not find the role %s", identifier));
     }
+    return deleteManagedRole(identifier);
   }
 
   @Override
@@ -150,7 +154,7 @@ public class RoleServiceImpl implements RoleService {
                                             .includeChildScopes(true)
                                             .roleFilter(Sets.newHashSet(roleIdentifier))
                                             .build());
-      return roleDao.delete(roleIdentifier, null)
+      return roleDao.delete(roleIdentifier, null, true)
           .orElseThrow(
               () -> new UnexpectedException(String.format("Failed to delete the managed role %s", roleIdentifier)));
     }));
@@ -163,7 +167,7 @@ public class RoleServiceImpl implements RoleService {
       throw new InvalidRequestException(String.format(
           "Cannot delete role because %s role assignments exists using the role", pageResponse.getTotalItems()));
     }
-    return roleDao.delete(identifier, scopeIdentifier)
+    return roleDao.delete(identifier, scopeIdentifier, false)
         .orElseThrow(()
                          -> new UnexpectedException(String.format(
                              "Failed to delete the role %s in the scope %s", identifier, scopeIdentifier)));

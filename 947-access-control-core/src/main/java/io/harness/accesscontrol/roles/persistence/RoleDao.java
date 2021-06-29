@@ -23,7 +23,7 @@ public interface RoleDao {
 
   Role update(@NotNull @Valid Role role);
 
-  Optional<Role> delete(@NotEmpty String identifier, String scopeIdentifier);
+  Optional<Role> delete(@NotEmpty String identifier, String scopeIdentifier, boolean managed);
 
   boolean removePermissionFromRoles(@NotEmpty String permissionIdentifier);
 

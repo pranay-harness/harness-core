@@ -91,8 +91,10 @@ public class RoleDaoImpl implements RoleDao {
       criteria.and(RoleDBOKeys.scopeIdentifier).in(scopeIdentifier, null);
     } else if (managedFilter.equals(ONLY_CUSTOM)) {
       criteria.and(RoleDBOKeys.scopeIdentifier).is(scopeIdentifier);
+      criteria.and(RoleDBOKeys.managed).is(false);
     } else if (managedFilter.equals(ONLY_MANAGED)) {
       criteria.and(RoleDBOKeys.scopeIdentifier).is(null);
+      criteria.and(RoleDBOKeys.managed).is(true);
     }
 
     if (!isEmpty(scopeIdentifier)) {
@@ -118,8 +120,8 @@ public class RoleDaoImpl implements RoleDao {
   }
 
   @Override
-  public Optional<Role> delete(String identifier, String scopeIdentifier) {
-    return roleRepository.deleteByIdentifierAndScopeIdentifier(identifier, scopeIdentifier)
+  public Optional<Role> delete(String identifier, String scopeIdentifier, boolean managed) {
+    return roleRepository.deleteByIdentifierAndScopeIdentifierAndManaged(identifier, scopeIdentifier, managed)
         .stream()
         .findFirst()
         .flatMap(r -> Optional.of(fromDBO(r)));
@@ -167,13 +169,16 @@ public class RoleDaoImpl implements RoleDao {
 
     if (roleFilter.getManagedFilter().equals(ONLY_MANAGED)) {
       criteria.and(RoleDBOKeys.scopeIdentifier).is(null);
+      criteria.and(RoleDBOKeys.managed).is(true);
     } else if (roleFilter.getManagedFilter().equals(NO_FILTER)) {
       criteria.and(RoleDBOKeys.scopeIdentifier).in(roleFilter.getScopeIdentifier(), null);
     } else if (roleFilter.getManagedFilter().equals(ONLY_CUSTOM) && roleFilter.isIncludeChildScopes()) {
       Pattern startsWithScope = Pattern.compile("^".concat(roleFilter.getScopeIdentifier()));
       criteria.and(RoleDBOKeys.scopeIdentifier).regex(startsWithScope);
+      criteria.and(RoleDBOKeys.managed).is(false);
     } else if (roleFilter.getManagedFilter().equals(ONLY_CUSTOM)) {
       criteria.and(RoleDBOKeys.scopeIdentifier).is(roleFilter.getScopeIdentifier());
+      criteria.and(RoleDBOKeys.managed).is(false);
     }
 
     if (isNotEmpty(roleFilter.getScopeIdentifier()) && !roleFilter.isIncludeChildScopes()) {

@@ -79,7 +79,7 @@ public class RolesManagementJob {
 
     addedRoles.forEach(roleService::create);
     updatedRoles.forEach(roleService::update);
-    removedIdentifiers.forEach(identifier -> roleService.delete(identifier, null));
+    removedIdentifiers.forEach(roleService::deleteManaged);
 
     ConfigurationState configurationState =
         optional.orElseGet(() -> ConfigurationState.builder().identifier(rolesConfig.getName()).build());
