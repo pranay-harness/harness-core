@@ -8,6 +8,7 @@ import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSets;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -86,11 +88,32 @@ public class ValidateAndMergeHelper {
     if (inputSetReferences.isEmpty()) {
       throw new InvalidRequestException("Input Set References can't be empty");
     }
+    List<Optional<InputSetEntity>> inputSets;
+    if (GitContextHelper.isUpdateToNewBranch()) {
+      String baseBranch = Objects.requireNonNull(GitContextHelper.getGitEntityInfo()).getBaseBranch();
+      String repoIdentifier = GitContextHelper.getGitEntityInfo().getYamlGitConfigId();
+      GitSyncBranchContext branchContext =
+          GitSyncBranchContext.builder()
+              .gitBranchInfo(GitEntityInfo.builder().branch(baseBranch).yamlGitConfigId(repoIdentifier).build())
+              .build();
+      try (PmsGitSyncBranchContextGuard ignored = new PmsGitSyncBranchContextGuard(branchContext, true)) {
+        inputSets = findAllReferredInputSets(
+            inputSetReferences, accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
+      }
+    } else {
+      inputSets =
+          findAllReferredInputSets(inputSetReferences, accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
+    }
+    return MergeUtils.getInvalidInputSetReferences(inputSets, inputSetReferences);
+  }
+
+  private List<Optional<InputSetEntity>> findAllReferredInputSets(List<String> referencesInOverlay, String accountId,
+      String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
     List<Optional<InputSetEntity>> inputSets = new ArrayList<>();
-    inputSetReferences.forEach(identifier
+    referencesInOverlay.forEach(identifier
         -> inputSets.add(pmsInputSetService.get(
             accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier, false)));
-    return MergeUtils.getInvalidInputSetReferences(inputSets, inputSetReferences);
+    return inputSets;
   }
 
   public String getPipelineTemplate(
