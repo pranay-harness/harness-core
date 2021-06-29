@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListener> implements Runnable {
-  private static final int WAIT_TIME_IN_MILLISECONDS = 10;
+  private static final int WAIT_TIME_IN_SECONDS = 10;
   private static final String CACHE_KEY = "%s_%s";
   private final Consumer redisConsumer;
   private final T messageListener;
@@ -57,7 +57,7 @@ public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListe
       pollAndProcessMessages();
     } catch (EventsFrameworkDownException e) {
       log.error("Events framework is down for " + this.getClass().getSimpleName() + " consumer. Retrying again...", e);
-      TimeUnit.SECONDS.sleep(WAIT_TIME_IN_MILLISECONDS);
+      TimeUnit.SECONDS.sleep(WAIT_TIME_IN_SECONDS);
     }
   }
 
@@ -65,7 +65,7 @@ public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListe
     List<Message> messages;
     String messageId;
     boolean messageProcessed;
-    messages = redisConsumer.read(Duration.ofMillis(WAIT_TIME_IN_MILLISECONDS));
+    messages = redisConsumer.read(Duration.ofSeconds(WAIT_TIME_IN_SECONDS));
     log.info(String.format("Starting processing of the following messages: [%s]",
         messages.stream().map(message -> message.getId()).collect(Collectors.joining(","))));
     for (Message message : messages) {
