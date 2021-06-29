@@ -43,8 +43,6 @@ public class ServiceAccount implements PersistentEntity, UuidAware, NGAccountAcc
         .add(CompoundMongoIndex.builder()
                  .name("unique_idx")
                  .field(ServiceAccountKeys.accountIdentifier)
-                 .field(ServiceAccountKeys.orgIdentifier)
-                 .field(ServiceAccountKeys.projectIdentifier)
                  .field(ServiceAccountKeys.identifier)
                  .unique(true)
                  .build(),
