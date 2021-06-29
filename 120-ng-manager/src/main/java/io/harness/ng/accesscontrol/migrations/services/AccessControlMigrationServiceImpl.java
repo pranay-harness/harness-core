@@ -22,6 +22,7 @@ import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
+import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.UserInfo;
@@ -42,8 +43,10 @@ import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -52,6 +55,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.dao.DuplicateKeyException;
@@ -62,7 +66,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @OwnedBy(HarnessTeam.PL)
 @Slf4j
 public class AccessControlMigrationServiceImpl implements AccessControlMigrationService {
-  public static final int BATCH_SIZE = 50;
+  public static final int BATCH_SIZE = 5;
   public static final String ALL_RESOURCES = "_all_resources";
   private final AccessControlMigrationDAO accessControlMigrationDAO;
   private final ProjectService projectService;
@@ -72,8 +76,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   private final UserClient userClient;
   private final ResourceGroupClient resourceGroupClient;
   private final NgUserService ngUserService;
-  private final ExecutorService executorService =
-      Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
+  private final ExecutorService executorService = Executors.newFixedThreadPool(5);
 
   @Override
   public void save(AccessControlMigration accessControlMigration) {
@@ -119,6 +122,8 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   }
 
   private long createRoleAssignments(Scope scope, boolean managed, List<RoleAssignmentDTO> roleAssignments) {
+    roleAssignments = dedupRoleAssignments(roleAssignments);
+
     List<List<RoleAssignmentDTO>> batchedRoleAssignments = Lists.partition(roleAssignments, BATCH_SIZE);
     List<Future<List<RoleAssignmentResponseDTO>>> futures = new ArrayList<>();
     batchedRoleAssignments.forEach(batch
@@ -145,6 +150,26 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
     return createdRoleAssignments;
   }
 
+  private List<RoleAssignmentDTO> dedupRoleAssignments(List<RoleAssignmentDTO> roleAssignments) {
+    Map<RoleAssignmentKey, RoleAssignmentDTO> map = new HashMap<>();
+    for (RoleAssignmentDTO roleAssignment : roleAssignments) {
+      RoleAssignmentKey key = new RoleAssignmentKey(roleAssignment.getResourceGroupIdentifier(),
+          roleAssignment.getRoleIdentifier(), roleAssignment.getPrincipal().getIdentifier(),
+          roleAssignment.getPrincipal().getType(), roleAssignment.isDisabled());
+      map.put(key, roleAssignment);
+    }
+    return new ArrayList<>(map.values());
+  }
+
+  @Value
+  private static class RoleAssignmentKey {
+    String resourceGroupIdentifier;
+    String roleIdentifier;
+    String principalIdentifier;
+    PrincipalType principalType;
+    boolean disabled;
+  }
+
   private void migrateInternal(Scope scope) {
     if (isMigrated(scope)) {
       log.info("Scope {} already migrated", scope);
@@ -155,14 +180,19 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
 
     try {
       ensureManagedResourceGroup(scope);
-      migrateMockRoleAssignments(scope);
       assignViewerRoleToUsers(scope);
+      migrateMockRoleAssignments(scope);
       if (!hasAdmin(scope)) {
         assignAdminRoleToUsers(scope);
       }
 
       if (!hasAdmin(scope)) {
         assignAdminAndViewerRoleToCGUsers(scope);
+      }
+
+      if (!hasAdmin(scope)) {
+        log.error(String.format("Access control migration failed for scope : %s", scope.toString()));
+        return;
       }
 
       long durationInSeconds = stopwatch.elapsed(TimeUnit.SECONDS);
@@ -191,7 +221,9 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   }
 
   private boolean hasAdmin(Scope scope) {
-    return !isEmpty(ngUserService.listUsersHavingRole(scope, getManagedAdminRole(scope)));
+    List<UserMetadataDTO> admins = ngUserService.listUsersHavingRole(scope, getManagedAdminRole(scope));
+    log.info("Admins in scope {} are {}", scope, admins == null ? Collections.emptyList() : admins);
+    return !isEmpty(admins);
   }
 
   private void ensureManagedResourceGroup(Scope scope) {
@@ -239,14 +271,12 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   private void assignAdminAndViewerRoleToCGUsers(Scope scope) {
     Set<String> currentGenUsers =
         getUsers(scope.getAccountIdentifier()).stream().map(UserInfo::getUuid).collect(Collectors.toSet());
+    log.info("Number of CG Users : {}", currentGenUsers.size());
     if (currentGenUsers.isEmpty()) {
       return;
     }
 
     currentGenUsers.forEach(userId -> upsertUserMembership(scope, userId));
-
-    log.info("Created {} MANAGED role assignments from CG Users for scope: {}",
-        createRoleAssignments(scope, true, buildRoleAssignments(currentGenUsers, getManagedViewerRole(scope))), scope);
 
     log.info("Created {} NON-MANAGED role assignments from CG Users for scope: {}",
         createRoleAssignments(scope, false, buildRoleAssignments(currentGenUsers, getManagedAdminRole(scope))), scope);

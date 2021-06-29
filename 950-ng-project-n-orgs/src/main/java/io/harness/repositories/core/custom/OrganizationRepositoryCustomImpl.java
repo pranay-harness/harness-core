@@ -37,6 +37,12 @@ public class OrganizationRepositoryCustomImpl implements OrganizationRepositoryC
   }
 
   @Override
+  public List<String> findDistinctAccounts() {
+    return mongoTemplate.findDistinct(
+        new Query(), OrganizationKeys.accountIdentifier, Organization.class, String.class);
+  }
+
+  @Override
   public List<Organization> findAll(Criteria criteria) {
     Query query = new Query(criteria);
     return mongoTemplate.find(query, Organization.class);
