@@ -84,9 +84,6 @@ public class WebhookParserSCMServiceImpl implements WebhookParserSCMService {
       builder = convertPullRequestHook(prHook);
     } else if (parseWebhookResponse.hasPush()) {
       PushHook pushHook = parseWebhookResponse.getPush();
-      if (pushHook.getRef().startsWith("refs/tags/")) {
-        throw new InvalidRequestException("Tag event not supported", USER);
-      }
       builder = convertPushHook(pushHook);
     } else if (parseWebhookResponse.hasComment() && parseWebhookResponse.getComment().getIssue() != null
         && parseWebhookResponse.getComment().getIssue().getPr() != null) {
