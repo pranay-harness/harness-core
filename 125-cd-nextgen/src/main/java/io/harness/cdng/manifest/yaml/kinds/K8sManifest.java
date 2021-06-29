@@ -1,6 +1,7 @@
 package io.harness.cdng.manifest.yaml.kinds;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper.StoreConfigWrapperParameters;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
@@ -25,6 +26,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
@@ -75,5 +77,18 @@ public class K8sManifest implements ManifestAttributes, Visitable {
     VisitableChildren children = VisitableChildren.builder().build();
     children.add(YAMLFieldNameConstants.STORE, store);
     return children;
+  }
+
+  @Override
+  public ManifestAttributeStepParameters getManifestAttributeStepParameters() {
+    return new K8sManifestStepParameters(
+        identifier, StoreConfigWrapperParameters.fromStoreConfigWrapper(store), skipResourceVersioning);
+  }
+
+  @Value
+  public static class K8sManifestStepParameters implements ManifestAttributeStepParameters {
+    String identifier;
+    StoreConfigWrapperParameters store;
+    ParameterField<Boolean> skipResourceVersioning;
   }
 }
