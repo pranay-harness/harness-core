@@ -48,6 +48,7 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import java.util.Map;
 import java.util.Set;
 import javax.validation.Validation;
@@ -124,7 +125,10 @@ public class ResourceGroupServiceModule extends AbstractModule {
 
     if (appConfig.getResoureGroupServiceConfig().isExportMetricsToStackDriver()) {
       install(new MetricsModule());
-      bind(MetricsPublisher.class).to(OutboxMetricsPublisher.class).in(Scopes.SINGLETON);
+      bind(MetricsPublisher.class)
+          .annotatedWith(Names.named("OutboxMetricsPublisher"))
+          .to(OutboxMetricsPublisher.class)
+          .in(Scopes.SINGLETON);
     } else {
       log.info("No configuration provided for Stack Driver, metrics will not be recorded");
     }

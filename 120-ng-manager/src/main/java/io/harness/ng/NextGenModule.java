@@ -573,7 +573,10 @@ public class NextGenModule extends AbstractModule {
 
     if (appConfig.isExportMetricsToStackDriver()) {
       // install(new MetricsModule());
-      bind(MetricsPublisher.class).to(OutboxMetricsPublisher.class).in(Scopes.SINGLETON);
+      bind(MetricsPublisher.class)
+          .annotatedWith(Names.named("OutboxMetricsPublisher"))
+          .to(OutboxMetricsPublisher.class)
+          .in(Scopes.SINGLETON);
     } else {
       log.info("No configuration provided for Stack Driver, metrics will not be recorded");
     }
