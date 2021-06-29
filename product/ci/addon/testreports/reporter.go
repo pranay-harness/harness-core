@@ -9,5 +9,5 @@ import (
 // TestReporter is any interface which can send us tests in our custom format
 type TestReporter interface {
 	// Get test case information
-	GetTests(context.Context) (<-chan *types.TestCase, <-chan error)
+	GetTests(context.Context) <-chan *types.TestCase
 }
