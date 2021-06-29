@@ -5,6 +5,7 @@ package io.harness.pms.contracts.interrupts;
 option java_multiple_files = true;
 
 import "io/harness/pms/contracts/interrupts/interrupt_type.proto";
+import "io/harness/pms/contracts/interrupts/interrupt_config.proto";
 import "io/harness/pms/contracts/execution/node_execution_proto.proto";
 import "io/harness/pms/contracts/execution/executable_response.proto";
 import "io/harness/pms/contracts/ambiance/ambiance.proto";
@@ -22,9 +23,13 @@ message InterruptEvent {
     io.harness.pms.contracts.execution.TaskExecutableResponse task = 9;
     io.harness.pms.contracts.execution.TaskChainExecutableResponse taskChain = 10;
   }
+  InterruptConfig interruptConfig = 20;
 }
 
-message InterruptEventResponseProto {
+message InterruptEventResponse {
   string notifyId = 1;
   InterruptType interruptType = 2;
+  string nodeExecutionId = 3;
+  string interruptId = 4;
+  InterruptConfig interruptConfig = 5;
 }

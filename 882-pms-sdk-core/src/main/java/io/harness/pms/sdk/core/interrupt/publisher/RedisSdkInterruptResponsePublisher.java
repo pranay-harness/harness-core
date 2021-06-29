@@ -5,7 +5,8 @@ import static io.harness.pms.sdk.core.PmsSdkCoreEventsFrameworkConstants.SDK_INT
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Producer;
-import io.harness.pms.contracts.interrupts.InterruptEventResponseProto;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
+import io.harness.pms.contracts.interrupts.InterruptEventResponse;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.sdk.core.events.PipelineSdkEventSender;
@@ -19,11 +20,14 @@ public class RedisSdkInterruptResponsePublisher implements SdkInterruptResponseP
   @Inject @Named(SDK_INTERRUPT_RESPONSE_PRODUCER) private Producer eventProducer;
 
   @Override
-  public void publishEvent(String notifyId, InterruptType interruptType) {
+  public void publishEvent(
+      String nodeExecutionId, InterruptType interruptType, String interruptId, InterruptConfig interruptConfig) {
     pipelineSdkEventSender.sendEvent(eventProducer,
-        InterruptEventResponseProto.newBuilder()
-            .setNotifyId(notifyId)
+        InterruptEventResponse.newBuilder()
+            .setNodeExecutionId(nodeExecutionId)
+            .setInterruptId(interruptId)
             .setInterruptType(interruptType)
+            .setInterruptConfig(interruptConfig)
             .build()
             .toByteString(),
         PmsEventCategory.SDK_INTERRUPT_RESPONSE, false);

@@ -81,7 +81,8 @@ public class InterruptEventHandler extends PmsBaseEventHandler<InterruptEvent> {
             RecastOrchestrationUtils.fromDocumentJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
         ((Failable) step).handleFailureInterrupt(event.getAmbiance(), stepParameters, event.getMetadataMap());
       }
-      interruptEventNotifyPublisher.publishEvent(event.getNotifyId(), event.getType());
+      interruptEventNotifyPublisher.publishEvent(
+          event.getNotifyId(), event.getType(), event.getInterruptUuid(), event.getInterruptConfig());
     } catch (Exception ex) {
       throw new InvalidRequestException("Handling failure at sdk failed with exception - " + ex.getMessage()
           + " with interrupt event - " + event.getInterruptUuid());
@@ -96,14 +97,17 @@ public class InterruptEventHandler extends PmsBaseEventHandler<InterruptEvent> {
         StepParameters stepParameters =
             RecastOrchestrationUtils.fromDocumentJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
         ((Abortable) step).handleAbort(event.getAmbiance(), stepParameters, extractExecutableResponses(event));
-        interruptEventNotifyPublisher.publishEvent(event.getNotifyId(), event.getType());
+        interruptEventNotifyPublisher.publishEvent(
+            event.getNotifyId(), event.getType(), event.getInterruptUuid(), event.getInterruptConfig());
       } else {
-        interruptEventNotifyPublisher.publishEvent(event.getNotifyId(), event.getType());
+        interruptEventNotifyPublisher.publishEvent(
+            event.getNotifyId(), event.getType(), event.getInterruptUuid(), event.getInterruptConfig());
       }
     } catch (Exception ex) {
       log.error("Handling abort at sdk failed with interrupt event - {} ", event.getInterruptUuid(), ex);
       // Even if error send feedback
-      interruptEventNotifyPublisher.publishEvent(event.getNotifyId(), event.getType());
+      interruptEventNotifyPublisher.publishEvent(
+          event.getNotifyId(), event.getType(), event.getInterruptUuid(), event.getInterruptConfig());
     }
   }
 

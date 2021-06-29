@@ -34,6 +34,7 @@ public class RedisInterruptEventPublisher implements InterruptEventPublisher {
                           .setType(interruptType)
                           .putAllMetadata(CollectionUtils.emptyIfNull(interrupt.getMetadata()))
                           .setNotifyId(generateUuid())
+                          .setInterruptConfig(interrupt.getInterruptConfig())
                           .setStepParameters(
                               ByteString.copyFromUtf8(emptyIfNull(nodeExecution.getResolvedStepParameters().toJson())));
     InterruptEvent event = populateResponse(nodeExecution, builder);

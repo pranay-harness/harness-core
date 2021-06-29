@@ -31,14 +31,14 @@ public class CustomFailureInterruptHandler extends MarkStatusInterruptHandler {
     try {
       String notifyId =
           interruptEventPublisher.publishEvent(interrupt.getNodeExecutionId(), interrupt, InterruptType.CUSTOM_FAILURE);
-      waitNotifyEngine.waitForAllOn(publisherName,
-          FailureInterruptCallback.builder()
-              .nodeExecutionId(interrupt.getNodeExecutionId())
-              .interruptId(interrupt.getUuid())
-              .interruptType(interrupt.getType())
-              .interruptConfig(interrupt.getInterruptConfig())
-              .build(),
-          notifyId);
+      //      waitNotifyEngine.waitForAllOn(publisherName,
+      //          FailureInterruptCallback.builder()
+      //              .nodeExecutionId(interrupt.getNodeExecutionId())
+      //              .interruptId(interrupt.getUuid())
+      //              .interruptType(interrupt.getType())
+      //              .interruptConfig(interrupt.getInterruptConfig())
+      //              .build(),
+      //          notifyId);
       return interruptService.markProcessing(interrupt.getUuid());
     } catch (NodeExecutionUpdateFailedException ex) {
       interruptService.markProcessed(interrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);

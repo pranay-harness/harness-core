@@ -53,14 +53,14 @@ public class AbortHelper {
       }
 
       String notifyId = interruptEventPublisher.publishEvent(nodeExecution.getUuid(), interrupt, ABORT);
-      waitNotifyEngine.waitForAllOn(publisherName,
-          AbortInterruptCallback.builder()
-              .nodeExecutionId(nodeExecution.getUuid())
-              .interruptId(interrupt.getUuid())
-              .interruptType(interrupt.getType())
-              .interruptConfig(interrupt.getInterruptConfig())
-              .build(),
-          notifyId);
+      //      waitNotifyEngine.waitForAllOn(publisherName,
+      //          AbortInterruptCallback.builder()
+      //              .nodeExecutionId(nodeExecution.getUuid())
+      //              .interruptId(interrupt.getUuid())
+      //              .interruptType(interrupt.getType())
+      //              .interruptConfig(interrupt.getInterruptConfig())
+      //              .build(),
+      //          notifyId);
     } catch (NodeExecutionUpdateFailedException ex) {
       throw new InterruptProcessingFailedException(InterruptType.ABORT_ALL,
           "Abort failed for execution Plan :" + nodeExecution.getAmbiance().getPlanExecutionId()
