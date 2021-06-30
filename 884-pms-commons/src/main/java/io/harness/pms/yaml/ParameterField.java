@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.NotExpression;
 import io.harness.pms.yaml.validation.InputSetValidator;
@@ -11,14 +12,17 @@ import io.harness.walktree.registries.visitorfield.VisitorFieldType;
 import io.harness.walktree.registries.visitorfield.VisitorFieldWrapper;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.io.IOException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Data
 @NoArgsConstructor
 @OwnedBy(PIPELINE)
 @RecasterAlias("parameterField")
+@Slf4j
 public class ParameterField<T> implements VisitorFieldWrapper {
   public static final VisitorFieldType VISITOR_FIELD_TYPE = VisitorFieldType.builder().type("PARAMETER_FIELD").build();
 
@@ -132,5 +136,28 @@ public class ParameterField<T> implements VisitorFieldWrapper {
     }
     // Every flag should be false.
     return !actualField.isExpression() && !actualField.isJsonResponseField() && !actualField.isTypeString();
+  }
+
+  public static boolean containsInputSetValidator(String value) {
+    try {
+      ParameterField<?> parameterField = YamlUtils.read(value, ParameterField.class);
+      return parameterField.getInputSetValidator() != null;
+    } catch (IOException e) {
+      throw new InvalidRequestException(value + " is not a valid value for runtime input");
+    }
+  }
+
+  public static String getValueFromParameterFieldWithInputSetValidator(String value) {
+    try {
+      ParameterField<?> parameterField = YamlUtils.read(value, ParameterField.class);
+      if (parameterField.getInputSetValidator() != null) {
+        return parameterField.getValue().toString();
+      }
+      log.error("getValueFromParameterFieldWithInputSetValidator was called for value [" + value
+          + "] that does not have an input set validator");
+      return null;
+    } catch (IOException e) {
+      throw new InvalidRequestException(value + " is not a valid value for runtime input");
+    }
   }
 }
