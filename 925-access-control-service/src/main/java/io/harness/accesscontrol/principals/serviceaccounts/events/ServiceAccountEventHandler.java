@@ -1,11 +1,13 @@
 package io.harness.accesscontrol.principals.serviceaccounts.events;
 
+import static org.apache.commons.lang3.StringUtils.stripToNull;
+
 import io.harness.accesscontrol.commons.events.EventHandler;
 import io.harness.accesscontrol.principals.serviceaccounts.HarnessServiceAccountService;
 import io.harness.accesscontrol.scopes.core.Scope;
+import io.harness.accesscontrol.scopes.core.ScopeParams;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
-import io.harness.accesscontrol.scopes.harness.HarnessScopeParams.HarnessScopeParamsBuilder;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.consumer.Message;
@@ -20,12 +22,12 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PL)
 @Slf4j
 @Singleton
-public class ServiceAccountMembershipEventHandler implements EventHandler {
+public class ServiceAccountEventHandler implements EventHandler {
   private final HarnessServiceAccountService harnessServiceAccountService;
   private final ScopeService scopeService;
 
   @Inject
-  public ServiceAccountMembershipEventHandler(
+  public ServiceAccountEventHandler(
       HarnessServiceAccountService harnessServiceAccountService, ScopeService scopeService) {
     this.harnessServiceAccountService = harnessServiceAccountService;
     this.scopeService = scopeService;
@@ -43,18 +45,13 @@ public class ServiceAccountMembershipEventHandler implements EventHandler {
       return true;
     }
     try {
-      HarnessScopeParamsBuilder builder =
-          HarnessScopeParams.builder().accountIdentifier(entityChangeDTO.getAccountIdentifier().getValue());
-
-      if (entityChangeDTO.getOrgIdentifier() != null) {
-        builder.orgIdentifier(entityChangeDTO.getOrgIdentifier().getValue());
-      }
-      if (entityChangeDTO.getProjectIdentifier() != null) {
-        builder.projectIdentifier(entityChangeDTO.getProjectIdentifier().getValue());
-      }
-
-      Scope scope = scopeService.buildScopeFromParams(builder.build());
-      harnessServiceAccountService.sync(entityChangeDTO.getIdentifier().getValue(), scope);
+      ScopeParams params = HarnessScopeParams.builder()
+                               .accountIdentifier(stripToNull(entityChangeDTO.getAccountIdentifier().getValue()))
+                               .orgIdentifier(stripToNull(entityChangeDTO.getOrgIdentifier().getValue()))
+                               .projectIdentifier(stripToNull(entityChangeDTO.getProjectIdentifier().getValue()))
+                               .build();
+      Scope scope = scopeService.buildScopeFromParams(params);
+      harnessServiceAccountService.sync(stripToNull(entityChangeDTO.getIdentifier().getValue()), scope);
     } catch (Exception e) {
       log.error("Could not process the resource group change event {} due to error", entityChangeDTO, e);
       return false;
