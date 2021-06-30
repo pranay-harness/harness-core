@@ -4,6 +4,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
@@ -70,6 +71,7 @@ public final class MonitoredService
   String projectIdentifier;
   String serviceIdentifier;
   String environmentIdentifier;
+  MonitoredServiceType type;
   List<String> healthSourceIdentifiers;
   private long lastUpdatedAt;
   private long createdAt;

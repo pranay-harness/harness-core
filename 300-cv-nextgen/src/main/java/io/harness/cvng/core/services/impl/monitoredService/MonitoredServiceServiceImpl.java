@@ -3,6 +3,7 @@ package io.harness.cvng.core.services.impl.monitoredService;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Sources;
@@ -146,6 +147,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         .projectIdentifier(monitoredServiceEntity.getProjectIdentifier())
         .environmentRef(monitoredServiceEntity.getEnvironmentIdentifier())
         .serviceRef(monitoredServiceEntity.getServiceIdentifier())
+        .type(monitoredServiceEntity.getType())
         .sources(Sources.builder()
                      .healthSources(healthSourceService.get(monitoredServiceEntity.getAccountId(),
                          monitoredServiceEntity.getOrgIdentifier(), monitoredServiceEntity.getProjectIdentifier(),
@@ -223,6 +225,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
                                                   .environmentIdentifier(monitoredServiceDTO.getEnvironmentRef())
                                                   .serviceIdentifier(monitoredServiceDTO.getServiceRef())
                                                   .identifier(monitoredServiceDTO.getIdentifier())
+                                                  .type(monitoredServiceDTO.getType())
                                                   .build();
     if (monitoredServiceDTO.getSources() != null) {
       monitoredServiceEntity.setHealthSourceIdentifiers(monitoredServiceDTO.getSources()
@@ -323,6 +326,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
                                                   .projectIdentifier(projectIdentifier)
                                                   .serviceRef(serviceIdentifier)
                                                   .environmentRef(environmentIdentifier)
+                                                  .type(MonitoredServiceType.APPLICATION)
                                                   .description("Default Monitored Service")
                                                   .sources(Sources.builder().build())
                                                   .build();
@@ -337,9 +341,11 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
 
   private MonitoredServiceListDTO toMonitorServiceListDTO(MonitoredService monitoredService) {
     return MonitoredServiceListDTO.builder()
+        .name(monitoredService.getName())
         .identifier(monitoredService.getIdentifier())
         .serviceRef(monitoredService.getServiceIdentifier())
         .environmentRef(monitoredService.getEnvironmentIdentifier())
+        .type(monitoredService.getType())
         .build();
   }
 }
