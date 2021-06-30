@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
+import io.harness.common.NGExpressionUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.validator.NGRegexValidatorConstants;
 import io.harness.validator.NGVariableName;
@@ -42,6 +43,9 @@ public class StringNGVariable implements NGVariable {
 
   @Override
   public ParameterField<?> getCurrentValue() {
-    return value;
+    return ParameterField.isNull(value)
+            || (value.isExpression() && NGExpressionUtils.matchesInputSetPattern(value.getExpressionValue()))
+        ? ParameterField.createValueField(defaultValue)
+        : value;
   }
 }
