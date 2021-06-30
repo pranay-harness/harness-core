@@ -32,7 +32,8 @@ public class RedisSdkResponseEventPublisher implements SdkResponseEventPublisher
 
     // TODO: add plan execution Id here
     metadataMap.put("eventType", event.getSdkResponseEventType().name());
-    metadataMap.put("nodeExecutionId", event.getSdkResponseEventRequest().getNodeExecutionId());
+    metadataMap.put("nodeExecutionId", event.getNodeExecutionId());
+    metadataMap.put("planExecutionId", event.getPlanExecutionId());
     eventProducer.send(Message.newBuilder().putAllMetadata(metadataMap).setData(event.toByteString()).build());
   }
 }

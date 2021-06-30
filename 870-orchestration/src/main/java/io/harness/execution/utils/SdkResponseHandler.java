@@ -20,8 +20,8 @@ public class SdkResponseHandler extends PmsBaseEventHandler<SdkResponseEventProt
 
   @Override
   protected Map<String, String> extraLogProperties(SdkResponseEventProto event) {
-    return ImmutableMap.of("eventType", event.getSdkResponseEventType().name(), "runtimeId",
-        event.getSdkResponseEventRequest().getNodeExecutionId());
+    return ImmutableMap.of("eventType", event.getSdkResponseEventType().name(), "nodeExecutionId",
+        event.getNodeExecutionId(), "planExecutionId", event.getPlanExecutionId());
   }
 
   @Override
@@ -41,11 +41,11 @@ public class SdkResponseHandler extends PmsBaseEventHandler<SdkResponseEventProt
 
   @Override
   protected void handleEventWithContext(SdkResponseEventProto event) {
-    log.info("Event for SdkResponseEvent received with nodeExecutionId {} for eventType {}",
-        event.getSdkResponseEventRequest().getNodeExecutionId(), event.getSdkResponseEventType());
+    log.info("Event for SdkResponseEvent received with nodeExecutionId {} for eventType {}", event.getNodeExecutionId(),
+        event.getSdkResponseEventType());
     SdkResponseProcessor handler = handlerRegistry.getHandler(event.getSdkResponseEventType());
     handler.handleEvent(event);
     log.info("Event for SdkResponseEvent with nodeExecutionId {} for event type {} completed successfully",
-        event.getSdkResponseEventRequest().getNodeExecutionId(), event.getSdkResponseEventType());
+        event.getNodeExecutionId(), event.getSdkResponseEventType());
   }
 }

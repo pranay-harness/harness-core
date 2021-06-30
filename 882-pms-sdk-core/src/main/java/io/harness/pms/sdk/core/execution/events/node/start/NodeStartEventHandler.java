@@ -78,7 +78,8 @@ public class NodeStartEventHandler extends PmsBaseEventHandler<NodeStartEvent> {
       log.info("Successfully handled NodeStart event");
     } catch (Exception ex) {
       log.error("Error while handle NodeStart event", ex);
-      sdkNodeExecutionService.handleStepResponse(AmbianceUtils.obtainCurrentRuntimeId(nodeStartEvent.getAmbiance()),
+      sdkNodeExecutionService.handleStepResponse(nodeStartEvent.getAmbiance().getPlanExecutionId(),
+          AmbianceUtils.obtainCurrentRuntimeId(nodeStartEvent.getAmbiance()),
           NodeExecutionUtils.constructStepResponse(ex));
     }
   }

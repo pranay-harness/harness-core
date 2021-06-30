@@ -34,7 +34,6 @@ import io.harness.waiter.StringNotifyResponseData;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
-import java.util.List;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,15 +76,15 @@ public class AsyncStrategyTest extends PmsSdkCoreTestBase {
                                         .stepParameters(TestStepParameters.builder().param("TEST_PARAM").build())
                                         .build();
 
+    ArgumentCaptor<String> planExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> nodeExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<Status> statusCaptor = ArgumentCaptor.forClass(Status.class);
     ArgumentCaptor<ExecutableResponse> responseArgumentCaptor = ArgumentCaptor.forClass(ExecutableResponse.class);
-    ArgumentCaptor<List> callbackIdsCaptor = ArgumentCaptor.forClass(List.class);
 
     asyncStrategy.start(invokerPackage);
     Mockito.verify(sdkNodeExecutionService, Mockito.times(1))
-        .addExecutableResponse(nodeExecutionIdCaptor.capture(), statusCaptor.capture(),
-            responseArgumentCaptor.capture(), callbackIdsCaptor.capture());
+        .addExecutableResponse(planExecutionIdCaptor.capture(), nodeExecutionIdCaptor.capture(), statusCaptor.capture(),
+            responseArgumentCaptor.capture());
 
     ArgumentCaptor<AsyncSdkResumeCallback> notifyCallbackArgumentCaptor =
         ArgumentCaptor.forClass(AsyncSdkResumeCallback.class);
@@ -126,6 +125,7 @@ public class AsyncStrategyTest extends PmsSdkCoreTestBase {
     Ambiance ambiance = Ambiance.newBuilder()
                             .putAllSetupAbstractions(setupAbstractions())
                             .setPlanId(generateUuid())
+                            .setPlanExecutionId(generateUuid())
                             .addLevels(Level.newBuilder()
                                            .setSetupId(generateUuid())
                                            .setRuntimeId(generateUuid())
@@ -140,13 +140,16 @@ public class AsyncStrategyTest extends PmsSdkCoreTestBase {
                                           StringNotifyResponseData.builder().data("someString").build()))
                                       .build();
 
+    ArgumentCaptor<String> planExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> nodeExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<StepResponseProto> stepResponseCaptor = ArgumentCaptor.forClass(StepResponseProto.class);
     asyncStrategy.resume(resumePackage);
     Mockito.verify(sdkNodeExecutionService, Mockito.times(1))
-        .handleStepResponse(nodeExecutionIdCaptor.capture(), stepResponseCaptor.capture());
+        .handleStepResponse(
+            planExecutionIdCaptor.capture(), nodeExecutionIdCaptor.capture(), stepResponseCaptor.capture());
 
     assertThat(nodeExecutionIdCaptor.getValue()).isEqualTo(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+    assertThat(planExecutionIdCaptor.getValue()).isEqualTo(ambiance.getPlanExecutionId());
   }
   private Map<String, String> setupAbstractions() {
     return ImmutableMap.<String, String>builder()

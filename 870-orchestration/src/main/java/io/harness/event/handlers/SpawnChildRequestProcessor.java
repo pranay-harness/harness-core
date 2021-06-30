@@ -43,18 +43,18 @@ public class SpawnChildRequestProcessor implements SdkResponseProcessor {
 
   @Override
   public void handleEvent(SdkResponseEventProto event) {
-    SpawnChildRequest request = event.getSdkResponseEventRequest().getSpawnChildRequest();
+    SpawnChildRequest request = event.getSpawnChildRequest();
 
-    NodeExecution childNodeExecution = buildChildNodeExecution(request);
+    NodeExecution childNodeExecution = buildChildNodeExecution(event.getNodeExecutionId(), request);
 
     log.info("For Child Executable starting Child NodeExecution with id: {}", childNodeExecution.getUuid());
 
     // Attach a Callback to the parent for the child
-    OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(request.getNodeExecutionId()).build();
+    OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(event.getNodeExecutionId()).build();
     waitNotifyEngine.waitForAllOn(publisherName, callback, childNodeExecution.getUuid());
 
     // Update the parent with executable response
-    nodeExecutionService.update(request.getNodeExecutionId(),
+    nodeExecutionService.update(event.getNodeExecutionId(),
         ops -> ops.addToSet(NodeExecutionKeys.executableResponses, buildExecutableResponse(request)));
 
     executorService.submit(ExecutionEngineDispatcher.builder()
@@ -63,8 +63,8 @@ public class SpawnChildRequestProcessor implements SdkResponseProcessor {
                                .build());
   }
 
-  private NodeExecution buildChildNodeExecution(SpawnChildRequest spawnChildRequest) {
-    NodeExecution nodeExecution = nodeExecutionService.get(spawnChildRequest.getNodeExecutionId());
+  private NodeExecution buildChildNodeExecution(String nodeExecutionId, SpawnChildRequest spawnChildRequest) {
+    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
 
     String childNodeId = extractChildNodeId(spawnChildRequest);
     PlanNodeProto node = planService.fetchNode(nodeExecution.getAmbiance().getPlanId(), childNodeId);
