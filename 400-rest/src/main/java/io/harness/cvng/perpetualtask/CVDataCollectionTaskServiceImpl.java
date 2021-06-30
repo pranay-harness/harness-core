@@ -9,6 +9,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DecryptableEntity;
 import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
 import io.harness.cvng.beans.CVNGPerpetualTaskState;
@@ -25,6 +26,7 @@ import io.harness.exception.UnknownEnumTypeException;
 import io.harness.govern.Switch;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
+import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
@@ -35,7 +37,8 @@ import io.harness.perpetualtask.PerpetualTaskUnassignedReason;
 import io.harness.perpetualtask.datacollection.DataCollectionPerpetualTaskParams;
 import io.harness.perpetualtask.datacollection.K8ActivityCollectionPerpetualTaskParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
-import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
+import io.harness.remote.client.NGRestUtils;
+import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 
@@ -45,6 +48,7 @@ import software.wings.delegatetasks.cvng.K8InfoDataService;
 import software.wings.service.intfc.cvng.CVNGDataCollectionDelegateService;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.util.Durations;
@@ -57,7 +61,7 @@ import org.jetbrains.annotations.NotNull;
 public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskService {
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private KryoSerializer kryoSerializer;
-  @Inject private SecretManagerClientService ngSecretService;
+  @Inject @Named("PRIVILEGED") private SecretNGManagerClient secretNGManagerClient;
   @Inject private DelegateProxyFactory delegateProxyFactory;
 
   @Override
@@ -160,7 +164,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
                                        .build();
     switch (bundle.getDataCollectionType()) {
       case CV:
-        return ngSecretService.getEncryptionDetails(basicNGAccessObject,
+        return getEncryptedDataDetails(basicNGAccessObject,
             isNotEmpty(bundle.getConnectorDTO().getConnectorConfig().getDecryptableEntities())
                 ? bundle.getConnectorDTO().getConnectorConfig().getDecryptableEntities().get(0)
                 : null);
@@ -171,12 +175,20 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
         if (!credential.getKubernetesCredentialType().isDecryptable()) {
           return new ArrayList<>();
         }
-        return ngSecretService.getEncryptionDetails(
+        return getEncryptedDataDetails(
             basicNGAccessObject, ((KubernetesClusterDetailsDTO) credential.getConfig()).getAuth().getCredentials());
       default:
         Switch.unhandled(bundle.getDataCollectionType());
         throw new IllegalStateException("invalid type " + bundle.getDataCollectionType());
     }
+  }
+
+  private List<EncryptedDataDetail> getEncryptedDataDetails(
+      NGAccess basicNgAccessObject, DecryptableEntity decryptableEntity) {
+    return NGRestUtils.getResponse(secretNGManagerClient.getEncryptionDetails(NGAccessWithEncryptionConsumer.builder()
+                                                                                  .ngAccess(basicNgAccessObject)
+                                                                                  .decryptableEntity(decryptableEntity)
+                                                                                  .build()));
   }
 
   @Override
@@ -241,7 +253,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
                                        .build();
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     if (isNotEmpty(dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntities())) {
-      encryptedDataDetails = ngSecretService.getEncryptionDetails(
+      encryptedDataDetails = getEncryptedDataDetails(
           basicNGAccessObject, dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntities().get(0));
     }
     SyncTaskContext taskContext = getSyncTaskContext(accountId, orgIdentifier, projectIdentifier);

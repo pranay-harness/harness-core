@@ -9,9 +9,9 @@ import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VUK;
 
-import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -33,6 +33,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountD
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.grpc.utils.AnyUtils;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -43,28 +44,34 @@ import io.harness.perpetualtask.datacollection.K8ActivityCollectionPerpetualTask
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
 import io.harness.rule.Owner;
-import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
+import io.harness.secrets.remote.SecretNGManagerClient;
+import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.WingsBaseTest;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import okhttp3.Request;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
+import retrofit2.Call;
+import retrofit2.Response;
 
 @OwnedBy(CV)
 public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
   @Inject private CVDataCollectionTaskService dataCollectionTaskService;
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private PerpetualTaskRecordDao perpetualTaskRecordDao;
-  @Mock private SecretManagerClientService ngSecretService;
+  @Mock private SecretNGManagerClient secretNGManagerClient;
   private String accountId;
   private String cvConfigId;
   private String connectorIdentifier;
@@ -72,7 +79,7 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
   private String projectIdentifier;
   private String dataCollectionWorkerId;
   @Before
-  public void setup() throws IllegalAccessException {
+  public void setup() throws IllegalAccessException, IOException {
     initMocks(this);
     accountId = generateUuid();
     cvConfigId = generateUuid();
@@ -80,8 +87,15 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
     orgIdentifier = generateUuid();
     projectIdentifier = generateUuid();
     dataCollectionWorkerId = generateUuid();
-    FieldUtils.writeField(dataCollectionTaskService, "ngSecretService", ngSecretService, true);
-    when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(emptyList());
+    FieldUtils.writeField(dataCollectionTaskService, "secretNGManagerClient", secretNGManagerClient, true);
+    Request request = new Request.Builder().url("http://example.com/test").build();
+    Call<ResponseDTO<List<EncryptedDataDetail>>> call = mock(Call.class);
+    when(call.clone()).thenReturn(call);
+    when(call.request()).thenReturn(request);
+    ResponseDTO<List<EncryptedDataDetail>> responseDTO = ResponseDTO.newResponse(Collections.emptyList());
+    Response<ResponseDTO<List<EncryptedDataDetail>>> response = Response.success(responseDTO);
+    when(call.execute()).thenReturn(response);
+    when(secretNGManagerClient.getEncryptionDetails(any())).thenReturn(call);
   }
 
   @Test
