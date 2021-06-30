@@ -1,5 +1,7 @@
 package io.harness.accesscontrol.resources.resourcegroups.events;
 
+import static org.apache.commons.lang3.StringUtils.stripToNull;
+
 import io.harness.accesscontrol.commons.events.EventHandler;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupService;
 import io.harness.accesscontrol.scopes.core.Scope;
@@ -43,12 +45,12 @@ public class ResourceGroupEventHandler implements EventHandler {
     }
     try {
       ScopeParams scopeParams = HarnessScopeParams.builder()
-                                    .accountIdentifier(resourceGroupEntityChangeDTO.getAccountIdentifier())
-                                    .orgIdentifier(resourceGroupEntityChangeDTO.getOrgIdentifier())
-                                    .projectIdentifier(resourceGroupEntityChangeDTO.getProjectIdentifier())
+                                    .accountIdentifier(stripToNull(resourceGroupEntityChangeDTO.getAccountIdentifier()))
+                                    .orgIdentifier(stripToNull(resourceGroupEntityChangeDTO.getOrgIdentifier()))
+                                    .projectIdentifier(stripToNull(resourceGroupEntityChangeDTO.getProjectIdentifier()))
                                     .build();
       Scope scope = scopeService.buildScopeFromParams(scopeParams);
-      harnessResourceGroupService.sync(resourceGroupEntityChangeDTO.getIdentifier(), scope);
+      harnessResourceGroupService.sync(stripToNull(resourceGroupEntityChangeDTO.getIdentifier()), scope);
     } catch (Exception e) {
       log.error("Could not process the resource group change event {} due to error", resourceGroupEntityChangeDTO, e);
       return false;
