@@ -85,7 +85,7 @@ public class IntegrationStageUtils {
     if (!executionTriggerInfo.getIsRerun()) {
       if (executionTriggerInfo.getTriggerType() == TriggerType.MANUAL
           || executionTriggerInfo.getTriggerType() == TriggerType.SCHEDULER_CRON) {
-        handleManualExecution(parameterFieldBuild, identifier);
+        return handleManualExecution(parameterFieldBuild, identifier);
       } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
         ParsedPayload parsedPayload = planCreationContextValue.getTriggerPayload().getParsedPayload();
         return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
@@ -95,7 +95,7 @@ public class IntegrationStageUtils {
     } else {
       if (executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.MANUAL
           || executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.SCHEDULER_CRON) {
-        handleManualExecution(parameterFieldBuild, identifier);
+        return handleManualExecution(parameterFieldBuild, identifier);
       } else if (executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.WEBHOOK) {
         ParsedPayload parsedPayload = planCreationContextValue.getTriggerPayload().getParsedPayload();
         return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
