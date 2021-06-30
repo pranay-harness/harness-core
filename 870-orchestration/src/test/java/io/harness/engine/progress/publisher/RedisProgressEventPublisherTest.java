@@ -23,7 +23,6 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.progress.ProgressEvent;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.events.base.PmsEventCategory;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
@@ -91,7 +90,7 @@ public class RedisProgressEventPublisherTest extends OrchestrationTestBase {
                                       .build();
 
     verify(eventSender)
-        .sendEvent(progressEvent.toByteString(), PmsEventCategory.PROGRESS_EVENT,
-            nodeExecution.getNode().getServiceName(), AmbianceUtils.getAccountId(nodeExecution.getAmbiance()), false);
+        .sendEvent(nodeExecution.getAmbiance(), progressEvent.toByteString(), PmsEventCategory.PROGRESS_EVENT,
+            nodeExecution.getNode().getServiceName(), false);
   }
 }

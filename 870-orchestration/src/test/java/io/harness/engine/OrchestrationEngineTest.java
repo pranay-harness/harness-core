@@ -75,7 +75,9 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void handleStepResponseWithError() {
     StepResponseProto stepResponseProto = StepResponseProto.newBuilder().build();
-    NodeExecution nodeExecution = NodeExecution.builder().uuid(generateUuid()).build();
+    Ambiance ambiance =
+        Ambiance.newBuilder().setPlanExecutionId("planExecutionId").putAllSetupAbstractions(prepareInputArgs()).build();
+    NodeExecution nodeExecution = NodeExecution.builder().uuid(generateUuid()).ambiance(ambiance).build();
     when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
     doThrow(new InvalidRequestException("test"))
         .when(endNodeExecutionHelper)

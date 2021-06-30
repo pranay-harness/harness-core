@@ -14,6 +14,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import javax.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,6 +66,8 @@ public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListe
     String messageId;
     boolean messageProcessed;
     messages = redisConsumer.read(Duration.ofSeconds(WAIT_TIME_IN_SECONDS));
+    log.info(String.format("Starting processing of the following messages: [%s]",
+        messages.stream().map(message -> message.getId()).collect(Collectors.joining(","))));
     for (Message message : messages) {
       messageId = message.getId();
       messageProcessed = handleMessage(message);
