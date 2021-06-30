@@ -13,6 +13,7 @@ import io.harness.accesscontrol.principals.users.UserClientConfiguration;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupClientConfiguration;
 import io.harness.aggregator.AggregatorConfiguration;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheConfig;
 import io.harness.ff.FeatureFlagClientConfiguration;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoConfig;
@@ -75,6 +76,7 @@ public class AccessControlConfiguration extends Configuration {
   @JsonProperty("outboxPollConfig") private OutboxPollConfiguration outboxPollConfig;
   @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
   @JsonProperty("serviceAccountClient") private ServiceAccountClientConfiguration serviceAccountClientConfiguration;
+  @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
 
   public boolean isAuthEnabled() {
     return this.enableAuth;

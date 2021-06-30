@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.AccessControlClientConfiguration;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheConfig;
 import io.harness.platform.audit.AuditServiceConfiguration;
 import io.harness.platform.notification.NotificationServiceConfiguration;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -47,6 +48,7 @@ public class PlatformConfiguration extends Configuration {
   @JsonProperty("managerClientConfig") private ServiceHttpClientConfig serviceHttpClientConfig;
   @JsonProperty("rbacServiceConfig") private ServiceHttpClientConfig rbacServiceConfig;
   @JsonProperty("secrets") private PlatformSecrets platformSecrets;
+  @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
   @JsonProperty(value = "environment", defaultValue = "dev") private String environment;
   @JsonProperty(value = "accessControlClient") private AccessControlClientConfiguration accessControlClientConfig;
