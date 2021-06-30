@@ -22,10 +22,13 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
+import io.harness.utils.RetryUtils;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -33,6 +36,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
+import org.springframework.transaction.TransactionException;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @OwnedBy(PL)
 @Slf4j
@@ -43,16 +50,24 @@ public class RoleServiceImpl implements RoleService {
   private final PermissionService permissionService;
   private final ScopeService scopeService;
   private final RoleAssignmentService roleAssignmentService;
+  private final TransactionTemplate transactionTemplate;
+
   private static final Set<PermissionStatus> ALLOWED_PERMISSION_STATUS =
       Sets.newHashSet(PermissionStatus.EXPERIMENTAL, PermissionStatus.ACTIVE, PermissionStatus.DEPRECATED);
 
+  private static final RetryPolicy<Object> removeRoleTransactionPolicy = RetryUtils.getRetryPolicy(
+      "[Retrying]: Failed to remove role assignments for the role and remove the role; attempt: {}",
+      "[Failed]: Failed to remove role assignments for the role and remove the role; attempt: {}",
+      ImmutableList.of(TransactionException.class), Duration.ofSeconds(5), 3, log);
+
   @Inject
   public RoleServiceImpl(RoleDao roleDao, PermissionService permissionService, ScopeService scopeService,
-      RoleAssignmentService roleAssignmentService) {
+      RoleAssignmentService roleAssignmentService, TransactionTemplate transactionTemplate) {
     this.roleDao = roleDao;
     this.permissionService = permissionService;
     this.scopeService = scopeService;
     this.roleAssignmentService = roleAssignmentService;
+    this.transactionTemplate = transactionTemplate;
   }
 
   @Override
@@ -107,20 +122,21 @@ public class RoleServiceImpl implements RoleService {
 
   @Override
   public Role delete(String identifier, String scopeIdentifier) {
-    Optional<Role> currentRoleOptional = get(identifier, scopeIdentifier, ONLY_CUSTOM);
-    if (!currentRoleOptional.isPresent()) {
-      throw new InvalidRequestException(String.format("Could not find the role in the scope %s", scopeIdentifier));
+    Optional<Role> roleOpt = get(identifier, scopeIdentifier, ONLY_CUSTOM);
+    if (!roleOpt.isPresent()) {
+      throw new InvalidRequestException(
+          String.format("Could not find the role %s in the scope %s", identifier, scopeIdentifier));
     }
-    PageResponse<RoleAssignment> pageResponse = roleAssignmentService.list(PageRequest.builder().pageSize(1).build(),
-        RoleAssignmentFilter.builder().scopeFilter(scopeIdentifier).roleFilter(Sets.newHashSet(identifier)).build());
-    if (pageResponse.getTotalItems() > 0) {
-      throw new InvalidRequestException(String.format(
-          "Cannot delete role because %s role assignments exists using the role", pageResponse.getTotalItems()));
+    return deleteCustomRole(identifier, scopeIdentifier);
+  }
+
+  @Override
+  public Role deleteManaged(String identifier) {
+    Optional<Role> roleOpt = get(identifier, null, ONLY_MANAGED);
+    if (!roleOpt.isPresent()) {
+      throw new InvalidRequestException(String.format("Could not find the role %s", identifier));
     }
-    return roleDao.delete(identifier, scopeIdentifier)
-        .orElseThrow(()
-                         -> new UnexpectedException(String.format(
-                             "Failed to delete the role %s in the scope %s", identifier, scopeIdentifier)));
+    return deleteManagedRole(identifier);
   }
 
   @Override
@@ -129,6 +145,32 @@ public class RoleServiceImpl implements RoleService {
       throw new InvalidRequestException("Can only delete custom roles");
     }
     return roleDao.deleteMulti(roleFilter);
+  }
+
+  private Role deleteManagedRole(String roleIdentifier) {
+    return Failsafe.with(removeRoleTransactionPolicy).get(() -> transactionTemplate.execute(status -> {
+      roleAssignmentService.deleteMulti(RoleAssignmentFilter.builder()
+                                            .scopeFilter("/")
+                                            .includeChildScopes(true)
+                                            .roleFilter(Sets.newHashSet(roleIdentifier))
+                                            .build());
+      return roleDao.delete(roleIdentifier, null, true)
+          .orElseThrow(
+              () -> new UnexpectedException(String.format("Failed to delete the managed role %s", roleIdentifier)));
+    }));
+  }
+
+  private Role deleteCustomRole(String identifier, String scopeIdentifier) {
+    PageResponse<RoleAssignment> pageResponse = roleAssignmentService.list(PageRequest.builder().pageSize(1).build(),
+        RoleAssignmentFilter.builder().scopeFilter(scopeIdentifier).roleFilter(Sets.newHashSet(identifier)).build());
+    if (pageResponse.getTotalItems() > 0) {
+      throw new InvalidRequestException(String.format(
+          "Cannot delete role because %s role assignments exists using the role", pageResponse.getTotalItems()));
+    }
+    return roleDao.delete(identifier, scopeIdentifier, false)
+        .orElseThrow(()
+                         -> new UnexpectedException(String.format(
+                             "Failed to delete the role %s in the scope %s", identifier, scopeIdentifier)));
   }
 
   private void validatePermissions(Role role) {

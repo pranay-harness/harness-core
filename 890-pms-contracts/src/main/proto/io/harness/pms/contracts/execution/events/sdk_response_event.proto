@@ -16,47 +16,40 @@ option java_multiple_files = true;
 
 message SdkResponseEventProto {
   SdkResponseEventType sdkResponseEventType = 1;
-  SdkResponseEventRequest sdkResponseEventRequest = 2;
   google.protobuf.Timestamp createdAt = 3;
-}
-
-message SdkResponseEventRequest {
+  string nodeExecutionId = 4;
+  string planExecutionId = 5;
   oneof request {
-    QueueTaskRequest queueTaskRequest = 1;
-    AddExecutableResponseRequest addExecutableResponseRequest = 4;
-    HandleStepResponseRequest handleStepResponseRequest = 5;
-    ResumeNodeExecutionRequest resumeNodeExecutionRequest = 6;
-    FacilitatorResponseRequest facilitatorResponseRequest = 7;
-    EventErrorRequest eventErrorRequest = 8;
-    AdviserResponseRequest adviserResponseRequest = 9;
-    SuspendChainRequest suspendChainRequest = 11;
-    SpawnChildRequest spawnChildRequest = 12;
-    SpawnChildrenRequest spawnChildrenRequest = 13;
-    HandleProgressRequest progressRequest = 14;
+    QueueTaskRequest queueTaskRequest = 6;
+    AddExecutableResponseRequest addExecutableResponseRequest = 7;
+    HandleStepResponseRequest handleStepResponseRequest = 8;
+    ResumeNodeExecutionRequest resumeNodeExecutionRequest = 9;
+    FacilitatorResponseRequest facilitatorResponseRequest = 10;
+    EventErrorRequest eventErrorRequest = 11;
+    AdviserResponseRequest adviserResponseRequest = 12;
+    SuspendChainRequest suspendChainRequest = 13;
+    SpawnChildRequest spawnChildRequest = 14;
+    SpawnChildrenRequest spawnChildrenRequest = 15;
+    HandleProgressRequest progressRequest = 16;
   }
-  string nodeExecutionId = 3;
 }
 
 message FacilitatorResponseRequest {
-  string nodeExecutionId = 1;
   string notifyId = 2;
   io.harness.pms.contracts.facilitators.FacilitatorResponseProto facilitatorResponse = 3;
 }
 
 message AddExecutableResponseRequest {
-  string nodeExecutionId = 1;
   io.harness.pms.contracts.execution.Status status = 2;
   io.harness.pms.contracts.execution.ExecutableResponse executableResponse = 3;
-  repeated string callbackIds = 4;
 }
 
 message HandleStepResponseRequest {
-  string nodeExecutionId = 1;
   steps.io.StepResponseProto stepResponse = 2;
+  io.harness.pms.contracts.execution.ExecutableResponse executableResponse = 3;
 }
 
 message ResumeNodeExecutionRequest {
-  string nodeExecutionId = 1;
   map<string, bytes> response = 2;
   bool asyncError = 3;
 }
@@ -68,21 +61,17 @@ message EventErrorRequest {
 }
 
 message AdviserResponseRequest {
-  string nodeExecutionId = 1;
   string notifyId = 2;
   io.harness.pms.contracts.advisers.AdviserResponse adviserResponse = 3;
 }
 
 message SuspendChainRequest {
-  string nodeExecutionId = 1;
   io.harness.pms.contracts.execution.ExecutableResponse executableResponse = 2;
   map<string, bytes> response = 3;
   bool isError = 4;
 }
 
 message SpawnChildRequest {
-  string planExecutionId = 1;
-  string nodeExecutionId = 2;
   oneof spawnableExecutableResponse {
     io.harness.pms.contracts.execution.ChildExecutableResponse child = 3;
     io.harness.pms.contracts.execution.ChildChainExecutableResponse childChain = 4;
@@ -90,13 +79,10 @@ message SpawnChildRequest {
 }
 
 message SpawnChildrenRequest {
-  string planExecutionId = 1;
-  string nodeExecutionId = 2;
   io.harness.pms.contracts.execution.ChildrenExecutableResponse children = 3;
 }
 
 message QueueTaskRequest {
-  string nodeExecutionId = 1;
   io.harness.pms.contracts.execution.ExecutableResponse executableResponse = 2;
   io.harness.pms.contracts.execution.Status status = 3;
   map<string, string> setupAbstractions = 4;
@@ -104,8 +90,6 @@ message QueueTaskRequest {
 }
 
 message HandleProgressRequest {
-  string planExecutionId = 1;
-  string nodeExecutionId = 2;
   string progressJson = 3;
 }
 

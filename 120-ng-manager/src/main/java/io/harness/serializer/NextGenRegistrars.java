@@ -5,17 +5,21 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.dto.secrets.SecretRequestWrapper;
+import io.harness.serializer.morphia.FeedbackMorphiaRegistrars;
 import io.harness.serializer.morphia.InvitesMorphiaRegistrar;
 import io.harness.serializer.morphia.MockRoleAssignmentMorphiaRegistrar;
+import io.harness.serializer.morphia.NGMorphiaRegistrars;
 import io.harness.serializer.morphia.NgAccessControlMigrationMorphiaRegistrar;
 import io.harness.serializer.morphia.NgUserGroupMorphiaRegistrar;
 import io.harness.serializer.morphia.NgUserMembershipMorphiaRegistrar;
 import io.harness.serializer.morphia.NgUserProfileMorphiaRegistrars;
+import io.harness.serializer.morphia.ServiceAccountMorphiaRegistrars;
 import io.harness.serializer.morphia.WebhookMorphiaRegistrars;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import io.serializer.registrars.NGCommonsRegistrars;
 import org.mongodb.morphia.converters.TypeConverter;
 
 @OwnedBy(HarnessTeam.PL)
@@ -28,6 +32,7 @@ public class NextGenRegistrars {
           .addAll(OutboxEventRegistrars.kryoRegistrars)
           .addAll(NGFileServiceRegistrars.kryoRegistrars)
           .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
+          .addAll(NGCommonsRegistrars.kryoRegistrars)
           .add(PipelineServiceUtilKryoRegistrar.class)
           .build();
 
@@ -50,6 +55,10 @@ public class NextGenRegistrars {
           .add(InvitesMorphiaRegistrar.class)
           .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
           .addAll(LicenseManagerRegistrars.morphiaRegistrars)
+          .addAll(SignupRegistrars.morphiaRegistrars)
+          .add(ServiceAccountMorphiaRegistrars.class)
+          .add(NGMorphiaRegistrars.class)
+          .add(FeedbackMorphiaRegistrars.class)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =

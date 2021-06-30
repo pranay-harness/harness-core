@@ -3,6 +3,7 @@ package io.harness.perpetualtask.k8s.watch;
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.UTSAV;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -14,10 +15,14 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.DelegateTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.ccm.K8sClusterInfo;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.task.citasks.cik8handler.K8sConnectorHelper;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.k8s.apiclient.ApiClientFactoryImpl;
@@ -62,6 +67,7 @@ import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1PodListBuilder;
 import io.kubernetes.client.util.ClientBuilder;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
@@ -86,6 +92,7 @@ public class K8SWatchTaskExecutorTest extends DelegateTestBase {
   @Mock K8sWatchServiceDelegate k8sWatchServiceDelegate;
   @Mock ApiClientFactoryImpl apiClientFactory;
   @Mock ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Mock K8sConnectorHelper k8sConnectorHelper;
   @Captor ArgumentCaptor<Message> messageArgumentCaptor;
   @Captor ArgumentCaptor<Map<String, String>> mapArgumentCaptor;
 
@@ -103,6 +110,7 @@ public class K8SWatchTaskExecutorTest extends DelegateTestBase {
   private final String CLUSTER_NAME = "cluster-name";
   private final String CLOUD_PROVIDER_ID = "cloud-provider-id";
   private final String PERPETUAL_TASK_ID = "perpetualTaskId";
+  private static final KubernetesConfig KUBERNETES_CONFIG = KubernetesConfig.builder().build();
 
   @Before
   public void setUp() throws Exception {
@@ -111,8 +119,8 @@ public class K8SWatchTaskExecutorTest extends DelegateTestBase {
     apiClient = new ClientBuilder().setBasePath("http://localhost:" + wireMockRule.port()).build();
     doReturn(apiClient).when(apiClientFactory).getClient(any(KubernetesConfig.class));
 
-    k8SWatchTaskExecutor = new K8SWatchTaskExecutor(
-        eventPublisher, k8sWatchServiceDelegate, apiClientFactory, kryoSerializer, containerDeploymentDelegateHelper);
+    k8SWatchTaskExecutor = new K8SWatchTaskExecutor(eventPublisher, k8sWatchServiceDelegate, apiClientFactory,
+        kryoSerializer, containerDeploymentDelegateHelper, k8sConnectorHelper);
 
     stubFor(get(urlPathEqualTo("/api/v1/namespaces/kube-system"))
                 .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(new V1NamespaceBuilder()
@@ -183,25 +191,61 @@ public class K8SWatchTaskExecutorTest extends DelegateTestBase {
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
   public void shouldRunK8sPerpetualTask() {
-    Instant heartBeatTime = Instant.now();
     K8sWatchTaskParams k8sWatchTaskParams = getK8sWatchTaskParams();
-    when(k8sWatchServiceDelegate.create(k8sWatchTaskParams)).thenReturn(WATCH_ID);
+    when(k8sWatchServiceDelegate.create(eq(k8sWatchTaskParams), any())).thenReturn(WATCH_ID);
+
+    Instant heartBeatTime = Instant.now();
+    PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
     PerpetualTaskExecutionParams params =
         PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(k8sWatchTaskParams)).build();
-    PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
+
     PerpetualTaskResponse perpetualTaskResponse = k8SWatchTaskExecutor.runOnce(perpetualTaskId, params, heartBeatTime);
     assertThat(perpetualTaskResponse.getResponseCode()).isEqualTo(200);
+
+    verifyZeroInteractions(k8sConnectorHelper);
   }
 
-  private K8sWatchTaskParams getK8sWatchTaskParams() {
-    K8sClusterConfig config = K8sClusterConfig.builder().build();
-    ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(config));
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void shouldRunK8sPerpetualTask_NG() {
+    K8sWatchTaskParams k8sWatchTaskParams = getK8sWatchTaskParamsNG();
+    when(k8sConnectorHelper.getKubernetesConfig(any(), any())).thenReturn(KUBERNETES_CONFIG);
+    when(k8sWatchServiceDelegate.create(k8sWatchTaskParams, KUBERNETES_CONFIG)).thenReturn(WATCH_ID);
+
+    Instant heartBeatTime = Instant.now();
+    PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
+    PerpetualTaskExecutionParams params =
+        PerpetualTaskExecutionParams.newBuilder().setCustomizedParams(Any.pack(k8sWatchTaskParams)).build();
+
+    PerpetualTaskResponse perpetualTaskResponse = k8SWatchTaskExecutor.runOnce(perpetualTaskId, params, heartBeatTime);
+    assertThat(perpetualTaskResponse.getResponseCode()).isEqualTo(200);
+
+    verifyZeroInteractions(containerDeploymentDelegateHelper);
+  }
+
+  private K8sWatchTaskParams getK8sWatchTaskParamsNG() {
+    K8sClusterInfo k8sClusterInfo = K8sClusterInfo.builder()
+                                        .connectorConfigDTO(KubernetesClusterConfigDTO.builder().build())
+                                        .encryptedDataDetails(Collections.emptyList())
+                                        .build();
 
     return K8sWatchTaskParams.newBuilder()
         .setCloudProviderId(CLOUD_PROVIDER_ID)
         .setClusterId(CLUSTER_ID)
         .setClusterName(CLUSTER_NAME)
-        .setK8SClusterConfig(bytes)
+        .setK8SClusterInfo(ByteString.copyFrom(kryoSerializer.asBytes(k8sClusterInfo)))
+        .build();
+  }
+
+  private K8sWatchTaskParams getK8sWatchTaskParams() {
+    K8sClusterConfig config = K8sClusterConfig.builder().build();
+
+    return K8sWatchTaskParams.newBuilder()
+        .setCloudProviderId(CLOUD_PROVIDER_ID)
+        .setClusterId(CLUSTER_ID)
+        .setClusterName(CLUSTER_NAME)
+        .setK8SClusterConfig(ByteString.copyFrom(kryoSerializer.asBytes(config)))
         .build();
   }
 

@@ -24,8 +24,8 @@ import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
-import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.pms.yaml.ParameterField;
@@ -79,36 +79,50 @@ public class IntegrationStageUtils {
   }
 
   public ExecutionSource buildExecutionSource(
-      ExecutionMetadata executionMetadata, String identifier, ParameterField<Build> parameterFieldBuild) {
-    ExecutionTriggerInfo executionTriggerInfo = executionMetadata.getTriggerInfo();
+      PlanCreationContextValue planCreationContextValue, String identifier, ParameterField<Build> parameterFieldBuild) {
+    ExecutionTriggerInfo executionTriggerInfo = planCreationContextValue.getMetadata().getTriggerInfo();
 
-    if (executionTriggerInfo.getTriggerType() == TriggerType.MANUAL
-        || executionTriggerInfo.getTriggerType() == TriggerType.SCHEDULER_CRON) {
-      if (parameterFieldBuild == null) {
-        return ManualExecutionSource.builder().build();
-      }
-      Build build = RunTimeInputHandler.resolveBuild(parameterFieldBuild);
-      if (build != null) {
-        if (build.getType().equals(BuildType.TAG)) {
-          ParameterField<String> tag = ((TagBuildSpec) build.getSpec()).getTag();
-          String buildString = RunTimeInputHandler.resolveStringParameter("tag", "Git Clone", identifier, tag, false);
-          return ManualExecutionSource.builder().tag(buildString).build();
-        } else if (build.getType().equals(BuildType.BRANCH)) {
-          ParameterField<String> branch = ((BranchBuildSpec) build.getSpec()).getBranch();
-          String branchString =
-              RunTimeInputHandler.resolveStringParameter("branch", "Git Clone", identifier, branch, false);
-          return ManualExecutionSource.builder().branch(branchString).build();
-        }
-      }
-    } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
-      ParsedPayload parsedPayload = executionMetadata.getTriggerPayload().getParsedPayload();
-      if (parsedPayload != null) {
+    if (!executionTriggerInfo.getIsRerun()) {
+      if (executionTriggerInfo.getTriggerType() == TriggerType.MANUAL
+          || executionTriggerInfo.getTriggerType() == TriggerType.SCHEDULER_CRON) {
+        return handleManualExecution(parameterFieldBuild, identifier);
+      } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
+        ParsedPayload parsedPayload = planCreationContextValue.getTriggerPayload().getParsedPayload();
         return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
-      } else {
-        throw new CIStageExecutionException("Parsed payload is empty for webhook execution");
+      } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK_CUSTOM) {
+        return buildCustomExecutionSource(identifier, parameterFieldBuild);
       }
-    } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK_CUSTOM) {
-      return buildCustomExecutionSource(identifier, parameterFieldBuild);
+    } else {
+      if (executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.MANUAL
+          || executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.SCHEDULER_CRON) {
+        return handleManualExecution(parameterFieldBuild, identifier);
+      } else if (executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.WEBHOOK) {
+        ParsedPayload parsedPayload = planCreationContextValue.getTriggerPayload().getParsedPayload();
+        return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
+      } else if (executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.WEBHOOK_CUSTOM) {
+        return buildCustomExecutionSource(identifier, parameterFieldBuild);
+      }
+    }
+
+    return null;
+  }
+
+  private ManualExecutionSource handleManualExecution(ParameterField<Build> parameterFieldBuild, String identifier) {
+    if (parameterFieldBuild == null) {
+      return ManualExecutionSource.builder().build();
+    }
+    Build build = RunTimeInputHandler.resolveBuild(parameterFieldBuild);
+    if (build != null) {
+      if (build.getType().equals(BuildType.TAG)) {
+        ParameterField<String> tag = ((TagBuildSpec) build.getSpec()).getTag();
+        String buildString = RunTimeInputHandler.resolveStringParameter("tag", "Git Clone", identifier, tag, false);
+        return ManualExecutionSource.builder().tag(buildString).build();
+      } else if (build.getType().equals(BuildType.BRANCH)) {
+        ParameterField<String> branch = ((BranchBuildSpec) build.getSpec()).getBranch();
+        String branchString =
+            RunTimeInputHandler.resolveStringParameter("branch", "Git Clone", identifier, branch, false);
+        return ManualExecutionSource.builder().branch(branchString).build();
+      }
     }
 
     return null;

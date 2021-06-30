@@ -410,7 +410,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
           return firstCommit.toString().split(" ")[1];
         }
       } catch (IOException | GitAPIException e) {
-        log.error("Failed to extract the commit id from the cloned repo.");
+        log.error("Failed to extract the commit id from the cloned repo.", e);
       }
     }
     return null;
@@ -546,10 +546,12 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
       TerraformHelperUtils.copyFilesToWorkingDirectory(
           gitClientHelper.getRepoDirectory(gitBaseRequestForConfigFile), workingDir);
     } catch (Exception ex) {
-      log.error("Exception in copying files to provisioner specific directory", ex);
+      log.error(String.format("Exception in copying files to provisioner specific directory", ex.getMessage()), ex);
       FileUtils.deleteQuietly(new File(baseDir));
       logCallback.saveExecutionLog(
-          "Failed copying files to provisioner specific directory", ERROR, CommandExecutionStatus.FAILURE);
+          "Failed copying files to provisioner specific directory", ERROR, CommandExecutionStatus.RUNNING);
+      throw new TerraformCommandExecutionException(
+          "Error encountered when copying files to provisioner specific directory", WingsException.USER);
     }
   }
 

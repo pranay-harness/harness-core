@@ -4,12 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
+import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.Application;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
-import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
 
 import java.util.List;
 import lombok.Builder;
@@ -27,7 +27,7 @@ public class PcfRouteUpdateQueueRequestData {
   private EnvironmentType environmentType;
   private Integer timeoutIntervalInMinutes;
   private String commandName;
-  private PcfRouteUpdateRequestConfigData requestConfigData;
+  private CfRouteUpdateRequestConfigData requestConfigData;
   private List<EncryptedDataDetail> encryptedDataDetails;
   private boolean skipRollback;
   private boolean downsizeOldApps;

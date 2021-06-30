@@ -5,6 +5,7 @@ import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sSwapServiceSelectorsRequest;
@@ -13,7 +14,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.plancreator.steps.common.StepElementParameters;
-import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollback;
+import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -35,7 +36,7 @@ import io.harness.supplier.ThrowingSupplier;
 import com.google.inject.Inject;
 
 @OwnedBy(CDP)
-public class K8sBGSwapServicesStep extends TaskExecutableWithRollback<K8sDeployResponse> {
+public class K8sBGSwapServicesStep extends TaskExecutableWithRollbackAndRbac<K8sDeployResponse> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_BG_SWAP_SERVICES.getYamlType()).build();
   public static final String K8S_BG_SWAP_SERVICES_COMMAND_NAME = "Blue/Green Swap Services";
@@ -48,7 +49,12 @@ public class K8sBGSwapServicesStep extends TaskExecutableWithRollback<K8sDeployR
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
 
   @Override
-  public TaskRequest obtainTask(
+  public void validateResources(Ambiance ambiance, StepElementParameters stepParameters) {
+    // Noop
+  }
+
+  @Override
+  public TaskRequest obtainTaskAfterRbac(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     OptionalOutcome optionalOutcome = outcomeService.resolveOptional(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_BG_SWAP_SERVICES_OUTCOME));
@@ -78,13 +84,16 @@ public class K8sBGSwapServicesStep extends TaskExecutableWithRollback<K8sDeployR
             .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepElementParameters))
             .build();
 
-    return k8sStepHelper.queueK8sTask(stepElementParameters, swapServiceSelectorsRequest, ambiance, infrastructure)
+    return k8sStepHelper
+        .queueK8sTask(stepElementParameters, swapServiceSelectorsRequest, ambiance,
+            K8sExecutionPassThroughData.builder().infrastructure(infrastructure).build())
         .getTaskRequest();
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepElementParameters,
-      ThrowingSupplier<K8sDeployResponse> responseSupplier) throws Exception {
+  public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance,
+      StepElementParameters stepElementParameters, ThrowingSupplier<K8sDeployResponse> responseSupplier)
+      throws Exception {
     K8sDeployResponse executionResponse = responseSupplier.get();
     StepResponseBuilder stepResponseBuilder =
         StepResponse.builder().unitProgressList(executionResponse.getCommandUnitsProgress().getUnitProgresses());

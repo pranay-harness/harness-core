@@ -29,6 +29,7 @@ import io.harness.request.RequestContext;
 import io.harness.request.RequestContextData;
 import io.harness.request.RequestMetadata;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serviceaccount.ServiceAccountDTO;
 
 import com.esotericsoftware.kryo.Kryo;
 
@@ -65,5 +66,6 @@ public class NGCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(JsonSchemaValidationException.class, 970005);
     kryo.register(FilterCreatorException.class, 970006);
     kryo.register(PlanCreatorException.class, 970007);
+    kryo.register(ServiceAccountDTO.class, 970008);
   }
 }

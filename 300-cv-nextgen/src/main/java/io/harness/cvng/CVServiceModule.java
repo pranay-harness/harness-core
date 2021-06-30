@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceUpdatableEntity;
 import io.harness.cvng.activity.entities.CD10ActivitySource.CD10ActivitySourceUpdatableEntity;
 import io.harness.cvng.activity.entities.CDNGActivitySource.CDNGActivitySourceUpdatableEntity;
@@ -95,6 +96,8 @@ import io.harness.cvng.core.services.api.SumoLogicService;
 import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.WebhookService;
+import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
+import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.core.services.impl.AppDynamicsCVConfigTransformer;
 import io.harness.cvng.core.services.impl.AppDynamicsDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.AppDynamicsServiceImpl;
@@ -131,6 +134,10 @@ import io.harness.cvng.core.services.impl.SumoLogicServiceImpl;
 import io.harness.cvng.core.services.impl.TimeSeriesRecordServiceImpl;
 import io.harness.cvng.core.services.impl.VerificationTaskServiceImpl;
 import io.harness.cvng.core.services.impl.WebhookServiceImpl;
+import io.harness.cvng.core.services.impl.monitoredService.HealthSourceServiceImpl;
+import io.harness.cvng.core.services.impl.monitoredService.MonitoredServiceServiceImpl;
+import io.harness.cvng.core.utils.monitoredService.AppDynamicsHealthSourceSpecTransformer;
+import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransformer;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
@@ -184,7 +191,6 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
@@ -281,6 +287,10 @@ public class CVServiceModule extends AbstractModule {
         .annotatedWith(Names.named(ActivitySourceType.HARNESS_CD10.name()))
         .to(CD10ActivitySourceUpdatableEntity.class);
 
+    bind(CVConfigToHealthSourceTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
+        .to(AppDynamicsHealthSourceSpecTransformer.class);
+
     bind(CVConfigTransformer.class)
         .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
         .to(AppDynamicsCVConfigTransformer.class);
@@ -342,7 +352,7 @@ public class CVServiceModule extends AbstractModule {
     bind(CVSetupService.class).to(CVSetupServiceImpl.class);
     bindTheMonitoringSourceImportStatusCreators();
     bind(CVNGMigrationService.class).to(CVNGMigrationServiceImpl.class).in(Singleton.class);
-    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
     bind(StackdriverService.class).to(StackdriverServiceImpl.class);
     bind(CVEventService.class).to(CVEventServiceImpl.class);
     bind(RedisConfig.class)
@@ -399,6 +409,9 @@ public class CVServiceModule extends AbstractModule {
     bind(PrometheusService.class).to(PrometheusServiceImpl.class);
     bind(CVNGYamlSchemaService.class).to(CVNGYamlSchemaServiceImpl.class);
     bind(SumoLogicService.class).to(SumoLogicServiceImpl.class);
+
+    bind(HealthSourceService.class).to(HealthSourceServiceImpl.class);
+    bind(MonitoredServiceService.class).to(MonitoredServiceServiceImpl.class);
   }
 
   private void bindTheMonitoringSourceImportStatusCreators() {

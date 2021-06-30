@@ -2,17 +2,19 @@ package io.harness.cdng.manifest.yaml.kinds;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.common.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper.StoreConfigWrapperParameters;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
-import io.harness.cdng.manifest.yaml.StoreConfig;
-import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
 import io.harness.cdng.visitor.helpers.manifest.KustomizeManifestVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.SkipAutoEvaluation;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 import io.harness.yaml.YamlSchemaTypes;
@@ -24,6 +26,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
@@ -41,8 +44,8 @@ import org.springframework.data.annotation.TypeAlias;
 public class KustomizeManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
   @Wither @JsonProperty("store") StoreConfigWrapper store;
-  @Wither @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipResourceVersioning;
-  @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) ParameterField<String> pluginPath;
+  @Wither @YamlSchemaTypes({string, bool}) @SkipAutoEvaluation ParameterField<Boolean> skipResourceVersioning;
+  @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) @SkipAutoEvaluation ParameterField<String> pluginPath;
 
   @Override
   public String getKind() {
@@ -71,5 +74,19 @@ public class KustomizeManifest implements ManifestAttributes, Visitable {
     }
 
     return resultantManifest;
+  }
+
+  @Override
+  public ManifestAttributeStepParameters getManifestAttributeStepParameters() {
+    return new KustomizeManifestStepParameters(
+        identifier, StoreConfigWrapperParameters.fromStoreConfigWrapper(store), skipResourceVersioning, pluginPath);
+  }
+
+  @Value
+  public static class KustomizeManifestStepParameters implements ManifestAttributeStepParameters {
+    String identifier;
+    StoreConfigWrapperParameters store;
+    ParameterField<Boolean> skipResourceVersioning;
+    ParameterField<String> pluginPath;
   }
 }

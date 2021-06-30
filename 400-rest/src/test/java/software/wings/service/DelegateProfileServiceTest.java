@@ -4,6 +4,7 @@ import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.Delegate.DelegateBuilder;
 import static io.harness.rule.OwnerRule.MARKO;
+import static io.harness.rule.OwnerRule.MARKOM;
 import static io.harness.rule.OwnerRule.NICOLAS;
 import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.SANJA;
@@ -11,7 +12,7 @@ import static io.harness.rule.OwnerRule.VUK;
 
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.service.impl.DelegateProfileServiceImpl.CG_PRIMARY_PROFILE_NAME;
-import static software.wings.service.impl.DelegateProfileServiceImpl.NG_PRIMARY_PROFILE_NAME;
+import static software.wings.service.impl.DelegateProfileServiceImpl.NG_PRIMARY_PROFILE_NAME_TEMPLATE;
 import static software.wings.service.impl.DelegateProfileServiceImpl.PRIMARY_PROFILE_DESCRIPTION;
 
 import static java.util.Collections.emptyList;
@@ -174,7 +175,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     assertThat(ngPrimaryProfile).isNotNull();
     assertThat(ngPrimaryProfile.getUuid()).isNotNull();
     assertThat(ngPrimaryProfile.getAccountId()).isEqualTo(account.getUuid());
-    assertThat(ngPrimaryProfile.getName()).isEqualTo(String.format("%s for %s", NG_PRIMARY_PROFILE_NAME, "Account"));
+    assertThat(ngPrimaryProfile.getName()).isEqualTo("Primary Account Configuration");
     assertThat(ngPrimaryProfile.getDescription())
         .isEqualTo(String.format("%s %s", PRIMARY_PROFILE_DESCRIPTION, "account"));
     assertThat(ngPrimaryProfile.isPrimary()).isTrue();
@@ -262,7 +263,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     final String projectId = "existingProjectId";
 
     final DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
-    final String profileName = String.format("%s for %s", NG_PRIMARY_PROFILE_NAME, owner.getIdentifier());
+    final String profileName = String.format("%s for %s", NG_PRIMARY_PROFILE_NAME_TEMPLATE, owner.getIdentifier());
 
     DelegateProfile primaryProfile = DelegateProfile.builder()
                                          .uuid(generateUuid())
@@ -292,7 +293,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testFetchNgPrimaryAccountProfileShouldFetchFromDb() {
     final String accountId = "existingAccountId";
-    final String profileName = String.format("%s for %s", NG_PRIMARY_PROFILE_NAME, "Account");
+    final String profileName = String.format(NG_PRIMARY_PROFILE_NAME_TEMPLATE, "Account");
 
     DelegateProfile primaryProfile = DelegateProfile.builder()
                                          .uuid(generateUuid())
@@ -332,10 +333,30 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     assertThat(fetchedProfile).isNotNull();
     assertThat(fetchedProfile.getUuid()).isNotNull();
     assertThat(fetchedProfile.getAccountId()).isEqualTo(accountId);
-    assertThat(fetchedProfile.getName())
-        .isEqualTo(String.format("%s for %s", NG_PRIMARY_PROFILE_NAME, owner.getIdentifier()));
+    assertThat(fetchedProfile.getName()).isEqualTo("Primary Project Configuration");
     assertThat(fetchedProfile.getDescription())
         .isEqualTo(String.format("%s %s project", PRIMARY_PROFILE_DESCRIPTION, owner.getIdentifier()));
+    assertThat(fetchedProfile.isPrimary()).isTrue();
+    assertThat(fetchedProfile.isNg()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = MARKOM)
+  @Category(UnitTests.class)
+  public void testFetchNgPrimaryProfileShouldCreateOrgProfile() {
+    final String accountId = "accountId";
+    final String orgId = "orgId";
+
+    final DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, null);
+
+    DelegateProfile fetchedProfile = delegateProfileService.fetchNgPrimaryProfile(accountId, owner);
+
+    assertThat(fetchedProfile).isNotNull();
+    assertThat(fetchedProfile.getUuid()).isNotNull();
+    assertThat(fetchedProfile.getAccountId()).isEqualTo(accountId);
+    assertThat(fetchedProfile.getName()).isEqualTo("Primary Organization Configuration");
+    assertThat(fetchedProfile.getDescription())
+        .isEqualTo(String.format("%s %s organization", PRIMARY_PROFILE_DESCRIPTION, owner.getIdentifier()));
     assertThat(fetchedProfile.isPrimary()).isTrue();
     assertThat(fetchedProfile.isNg()).isTrue();
   }

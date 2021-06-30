@@ -42,7 +42,7 @@ public class HarnessResourceTypeResource {
   ResourceTypeService resourceTypeService;
 
   @GET
-  @ApiOperation(value = "Gets a resource types available at this scope", nickname = "getResourceTypes")
+  @ApiOperation(value = "Gets all resource types available at this scope", nickname = "getResourceTypes")
   public ResponseDTO<ResourceTypeDTO> get(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,

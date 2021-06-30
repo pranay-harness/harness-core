@@ -52,7 +52,7 @@ public class BuildStatusStep implements TaskExecutable<BuildStatusUpdateParamete
         CIBuildStatusPushParameters.builder()
             .desc(stepParameters.getDesc())
             .sha(stepParameters.getSha())
-            .owner(gitClientHelper.getGitOwner(gitConfigDTO.getUrl()))
+            .owner(gitClientHelper.getGitOwner(gitConfigDTO.getUrl(), false))
             .repo(gitClientHelper.getGitRepo(gitConfigDTO.getUrl()))
             .identifier(stepParameters.getIdentifier())
             .state(stepParameters.getState())

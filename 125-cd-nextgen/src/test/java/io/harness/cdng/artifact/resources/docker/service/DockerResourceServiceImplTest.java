@@ -8,6 +8,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
@@ -34,6 +36,7 @@ import io.harness.service.DelegateGrpcClientWrapper;
 
 import io.fabric8.utils.Lists;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +47,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class DockerResourceServiceImplTest extends CategoryTest {
   private static String ACCOUNT_ID = "accountId";
   private static String IMAGE_PATH = "imagePath";
@@ -62,11 +66,15 @@ public class DockerResourceServiceImplTest extends CategoryTest {
   }
 
   private ConnectorResponseDTO getConnector() {
-    ConnectorInfoDTO connectorInfoDTO =
-        ConnectorInfoDTO.builder()
-            .connectorType(ConnectorType.DOCKER)
-            .connectorConfig(DockerConnectorDTO.builder().auth(DockerAuthenticationDTO.builder().build()).build())
-            .build();
+    ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder()
+                                            .connectorType(ConnectorType.DOCKER)
+                                            .connectorConfig(DockerConnectorDTO.builder()
+                                                                 .delegateSelectors(Collections.emptySet())
+                                                                 .auth(DockerAuthenticationDTO.builder().build())
+                                                                 .build())
+                                            .orgIdentifier("dummyOrg")
+                                            .projectIdentifier("dummyProject")
+                                            .build();
     return ConnectorResponseDTO.builder().connector(connectorInfoDTO).build();
   }
 

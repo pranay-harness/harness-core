@@ -1,10 +1,10 @@
 package software.wings.sm.states.azure;
 
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
 import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 
-import software.wings.beans.ResizeStrategy;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContext;
 

@@ -16,8 +16,6 @@ import io.harness.serializer.spring.converters.plannode.PlanNodeProtoReadConvert
 import io.harness.serializer.spring.converters.plannode.PlanNodeProtoWriteConverter;
 import io.harness.serializer.spring.converters.sdk.SdkModuleInfoReadConverter;
 import io.harness.serializer.spring.converters.sdk.SdkModuleInfoWriteConverter;
-import io.harness.serializer.spring.converters.steps.SdkResponseEventRequestReadConverter;
-import io.harness.serializer.spring.converters.steps.SdkResponseEventRequestWriteConverter;
 import io.harness.serializer.spring.converters.steptype.StepTypeReadConverter;
 import io.harness.serializer.spring.converters.steptype.StepTypeWriteConverter;
 
@@ -35,10 +33,9 @@ public class PmsCommonsModuleRegistrars {
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder().add(PmsCommonsMorphiaRegistrar.class).build();
 
-  public final ImmutableList<Class<? extends Converter<?, ?>>> springConverters = ImmutableList.of(
-      StepTypeReadConverter.class, StepTypeWriteConverter.class, SdkResponseEventRequestReadConverter.class,
-      SdkResponseEventRequestWriteConverter.class, AmbianceWriteConverter.class, AmbianceReadConverter.class,
-      FacilitatorResponseReadConverter.class, FacilitatorResponseWriteConverter.class, PlanNodeProtoReadConverter.class,
-      PlanNodeProtoWriteConverter.class, NodeExecutionReadConverter.class, NodeExecutionWriteConverter.class,
-      SdkModuleInfoReadConverter.class, SdkModuleInfoWriteConverter.class);
+  public final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
+      ImmutableList.of(StepTypeReadConverter.class, StepTypeWriteConverter.class, AmbianceWriteConverter.class,
+          AmbianceReadConverter.class, FacilitatorResponseReadConverter.class, FacilitatorResponseWriteConverter.class,
+          PlanNodeProtoReadConverter.class, PlanNodeProtoWriteConverter.class, NodeExecutionReadConverter.class,
+          NodeExecutionWriteConverter.class, SdkModuleInfoReadConverter.class, SdkModuleInfoWriteConverter.class);
 }

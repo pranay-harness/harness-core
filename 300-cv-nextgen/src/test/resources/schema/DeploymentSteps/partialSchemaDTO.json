@@ -1,6 +1,11 @@
 {
   "schema": {
     "type": "object",
+    "required": [
+      "identifier",
+      "name",
+      "type"
+    ],
     "properties": {
       "description": {
         "type": "string"
@@ -20,7 +25,8 @@
         "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
       },
       "timeout": {
-        "type": "string"
+        "type": "string",
+        "pattern": "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*))$"
       },
       "type": {
         "type": "string"
@@ -390,17 +396,22 @@
             {
               "type": "object",
               "required": [
-                "type",
-                "verificationJobRef"
+                "healthSources",
+                "monitoredServiceRef",
+                "type"
               ],
               "properties": {
-                "description": {
-                  "$ref": "#/definitions/cvng/ParameterFieldString"
+                "healthSources": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/cvng/HealthSource"
+                  }
+                },
+                "monitoredServiceRef": {
+                  "type": "string",
+                  "description": "It supports runtime input and expression"
                 },
                 "type": {
-                  "type": "string"
-                },
-                "verificationJobRef": {
                   "type": "string"
                 }
               }
@@ -441,14 +452,14 @@
               "if": {
                 "properties": {
                   "type": {
-                    "const": "Health"
+                    "const": "LoadTest"
                   }
                 }
               },
               "then": {
                 "properties": {
                   "spec": {
-                    "$ref": "#/definitions/cvng/HealthVerificationJobSpec"
+                    "$ref": "#/definitions/cvng/TestVerificationJobSpec"
                   }
                 }
               }
@@ -457,14 +468,14 @@
               "if": {
                 "properties": {
                   "type": {
-                    "const": "Test"
+                    "const": "Rolling"
                   }
                 }
               },
               "then": {
                 "properties": {
                   "spec": {
-                    "$ref": "#/definitions/cvng/TestVerificationJobSpec"
+                    "$ref": "#/definitions/cvng/ImprovisedCanaryVerificationJobSpec"
                   }
                 }
               }
@@ -698,16 +709,17 @@
           ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
-        "HealthVerificationJobSpec": {
-          "allOf": [
-            {
-              "$ref": "#/definitions/cvng/VerificationJobSpec"
-            },
-            {
-              "type": "object",
-              "properties": {}
-            }
+        "HealthSource": {
+          "type": "object",
+          "required": [
+            "identifier"
           ],
+          "properties": {
+            "identifier": {
+              "type": "string",
+              "description": "Health Source identifier"
+            }
+          },
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "HoldingScope": {
@@ -817,20 +829,28 @@
           ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
-        "InputSetValidator": {
-          "type": "object",
-          "properties": {
-            "parameters": {
-              "type": "string"
+        "ImprovisedCanaryVerificationJobSpec": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/cvng/VerificationJobSpec"
             },
-            "validatorType": {
-              "type": "string",
-              "enum": [
-                "ALLOWED_VALUES",
-                "REGEX"
-              ]
+            {
+              "type": "object",
+              "required": [
+                "sensitivity"
+              ],
+              "properties": {
+                "sensitivity": {
+                  "type": "string",
+                  "description": "Possible values: [Low, Medium, High]"
+                },
+                "trafficSplitPercentage": {
+                  "type": "string",
+                  "description": "Example: 50, You can put max upto 50."
+                }
+              }
             }
-          },
+          ],
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "JexlCriteriaSpec": {
@@ -889,6 +909,7 @@
             },
             {
               "type": "object",
+              "required": ["connectorRef","issueType","projectKey"],
               "properties": {
                 "connectorRef": {
                   "type": "string"
@@ -1235,60 +1256,6 @@
           },
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
-        "ParameterField": {
-          "type": "object",
-          "properties": {
-            "expression": {
-              "type": "boolean"
-            },
-            "expressionValue": {
-              "type": "string"
-            },
-            "inputSetValidator": {
-              "$ref": "#/definitions/cvng/InputSetValidator"
-            },
-            "jsonResponseField": {
-              "type": "boolean"
-            },
-            "responseField": {
-              "type": "string"
-            },
-            "typeString": {
-              "type": "boolean"
-            },
-            "value": {
-              "type": "object"
-            }
-          },
-          "$schema": "http://json-schema.org/draft-07/schema#"
-        },
-        "ParameterFieldString": {
-          "type": "object",
-          "properties": {
-            "expression": {
-              "type": "boolean"
-            },
-            "expressionValue": {
-              "type": "string"
-            },
-            "inputSetValidator": {
-              "$ref": "#/definitions/cvng/InputSetValidator"
-            },
-            "jsonResponseField": {
-              "type": "boolean"
-            },
-            "responseField": {
-              "type": "string"
-            },
-            "typeString": {
-              "type": "boolean"
-            },
-            "value": {
-              "type": "string"
-            }
-          },
-          "$schema": "http://json-schema.org/draft-07/schema#"
-        },
         "PatchInstruction": {
           "type": "object",
           "discriminator": "type",
@@ -1339,7 +1306,8 @@
         "RemoveSegmentToVariationTargetMapYamlSpec": {
           "type": "object",
           "required": [
-            "segments", "variation"
+            "segments",
+            "variation"
           ],
           "properties": {
             "segments": {
@@ -1489,7 +1457,9 @@
               "type": "array",
               "items": {
                 "type": "string"
-              }
+              },
+              "maxItems": 2147483647,
+              "minItems": 1
             }
           },
           "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1592,6 +1562,11 @@
         },
         "StepElementConfig": {
           "type": "object",
+          "required": [
+            "identifier",
+            "name",
+            "type"
+          ],
           "properties": {
             "description": {
               "type": "string"
@@ -1611,7 +1586,8 @@
               "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
             },
             "timeout": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*))$"
             },
             "type": {
               "type": "string",
@@ -1880,9 +1856,7 @@
           "type": "object",
           "required": [
             "deploymentTag",
-            "duration",
-            "envRef",
-            "serviceRef"
+            "duration"
           ],
           "discriminator": "type",
           "properties": {
@@ -1893,14 +1867,6 @@
             "duration": {
               "type": "string",
               "description": "Format example: 5m, 30m, please put multiple of 5"
-            },
-            "envRef": {
-              "type": "string",
-              "description": "You can put expression <+env.identifier> to resolve env of current stage."
-            },
-            "serviceRef": {
-              "type": "string",
-              "description": "You can put expression <+service.identifier> to resolve env of current stage."
             }
           },
           "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1910,5 +1876,6 @@
   },
   "nodeType": "Verify",
   "nodeName": "CVNGStepInfo",
-  "namespace": "cvng"
+  "namespace": "cvng",
+  "moduleType": "CV"
 }

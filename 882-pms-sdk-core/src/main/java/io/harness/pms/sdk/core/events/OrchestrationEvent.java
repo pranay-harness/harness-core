@@ -10,11 +10,13 @@ import io.harness.metrics.ThreadAutoLogContext;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.queue.Queuable;
 import io.harness.queue.WithMonitoring;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -49,6 +51,8 @@ public class OrchestrationEvent extends Queuable implements WithMonitoring {
   @Getter @Setter @NonFinal @CreatedDate Long createdAt;
   @Setter @NonFinal @Version Long version;
   @Getter @Setter @NonFinal boolean monitoringEnabled;
+  TriggerPayload triggerPayload;
+  List<String> tags;
 
   public AutoLogContext autoLogContext() {
     Map<String, String> logContext = AmbianceUtils.logContextMap(ambiance);
@@ -63,7 +67,7 @@ public class OrchestrationEvent extends Queuable implements WithMonitoring {
     logContext.put("eventType", eventType.name());
     logContext.put("module", getTopic());
     logContext.put("pipelineIdentifier", ambiance.getMetadata().getPipelineIdentifier());
-    return new ThreadAutoLogContext(logContext, OVERRIDE_NESTS);
+    return new ThreadAutoLogContext(logContext);
   }
 
   @Override

@@ -1,0 +1,30 @@
+serviceDefinition:
+  spec:
+    artifacts:
+      sidecars: []
+    manifestOverrideSets:
+      - overrideSet:
+          identifier: overrideset1
+          manifests:
+            - manifest:
+                identifier: manifest1
+                type: K8sManifest
+                spec:
+                  store:
+                    type: Git
+                    spec:
+                      connectorRef: org.GitConnectorForAutomationTest
+                      gitFetchType: Branch
+                      branch: master
+                      paths:
+                        - ng-automation/k8s/templates/
+    manifests: []
+    artifactOverrideSets: []
+    variableOverrideSets: []
+    variables: []
+  type: Kubernetes
+service:
+  name: service7
+  identifier: service7
+stageOverrides:
+  manifests: []

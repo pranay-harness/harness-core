@@ -1,15 +1,19 @@
 package io.harness.batch.processing.schedule;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.batch.processing.service.impl.BatchJobTimeLogContext;
 import io.harness.batch.processing.service.intfc.BatchJobIntervalService;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.ccm.commons.entities.batch.BatchJobInterval;
 import io.harness.ccm.commons.entities.batch.BatchJobScheduledData;
+import io.harness.logging.AutoLogContext;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -105,19 +109,22 @@ public class BatchJobRunner {
                   .addString(CCMJobConstants.JOB_END_DATE, String.valueOf(endInstant.toEpochMilli()))
                   .addString(CCMJobConstants.BATCH_JOB_TYPE, batchJobType.name())
                   .toJobParameters();
-          Instant jobStartTime = Instant.now();
-          BatchStatus status = jobLauncher.run(job, params).getStatus();
-          log.info("Job status {}", status);
-          Instant jobStopTime = Instant.now();
+          try (AutoLogContext ignore =
+                   new BatchJobTimeLogContext(String.valueOf(startInstant.toEpochMilli()), OVERRIDE_ERROR)) {
+            Instant jobStartTime = Instant.now();
+            BatchStatus status = jobLauncher.run(job, params).getStatus();
+            log.info("Job status {}", status);
+            Instant jobStopTime = Instant.now();
 
-          if (status == BatchStatus.COMPLETED) {
-            BatchJobScheduledData batchJobScheduledData = new BatchJobScheduledData(accountId, batchJobType.name(),
-                Duration.between(jobStartTime, jobStopTime).toMillis(), startInstant, endInstant);
-            batchJobScheduledDataService.create(batchJobScheduledData);
-            startInstant = endInstant;
-          } else {
-            logJobErrors(accountId, batchJobType, status, startInstant, endInstant);
-            break;
+            if (status == BatchStatus.COMPLETED) {
+              BatchJobScheduledData batchJobScheduledData = new BatchJobScheduledData(accountId, batchJobType.name(),
+                  Duration.between(jobStartTime, jobStopTime).toMillis(), startInstant, endInstant);
+              batchJobScheduledDataService.create(batchJobScheduledData);
+              startInstant = endInstant;
+            } else {
+              logJobErrors(accountId, batchJobType, status, startInstant, endInstant);
+              break;
+            }
           }
         } else {
           logDelayedJobs(accountId, batchJobType, startInstant, endInstant);

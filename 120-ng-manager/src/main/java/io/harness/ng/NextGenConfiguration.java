@@ -8,6 +8,7 @@ import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
 import io.harness.account.AccountConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheConfig;
 import io.harness.cf.CfClientConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.ff.FeatureFlagConfig;
@@ -29,7 +30,6 @@ import io.harness.resourcegroupclient.remote.ResourceGroupClientConfig;
 import io.harness.signup.SignupNotificationConfiguration;
 import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.timescaledb.TimeScaleDBConfig;
-import io.harness.yaml.schema.client.config.YamlSchemaClientConfig;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
@@ -105,10 +105,11 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
   @JsonProperty("enableDashboardTimescale") private Boolean enableDashboardTimescale;
-  @JsonProperty("yamlSchemaClientConfig") private YamlSchemaClientConfig yamlSchemaClientConfig;
   @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
+  @JsonProperty("exportMetricsToStackDriver") private boolean exportMetricsToStackDriver;
   @JsonProperty("signupNotificationConfiguration")
   private SignupNotificationConfiguration signupNotificationConfiguration;
+  @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;

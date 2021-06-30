@@ -1,7 +1,13 @@
 package io.harness.ng.cdOverview.resource;
 
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_PROJECT_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.PROJECT;
+
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
+import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cd.NGServiceConstants;
@@ -62,10 +68,11 @@ public class CDDashboardOverviewResource {
   @GET
   @Path("/deploymentHealth")
   @ApiOperation(value = "Get deployment health", nickname = "getDeploymentHealth")
+  @NGAccessControlCheck(resourceType = PROJECT, permission = VIEW_PROJECT_PERMISSION)
   public ResponseDTO<HealthDeploymentDashboard> getDeploymentHealth(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     log.info("Getting deployment health");
@@ -110,10 +117,11 @@ public class CDDashboardOverviewResource {
   @GET
   @Path("/deploymentExecution")
   @ApiOperation(value = "Get deployment execution", nickname = "getDeploymentExecution")
+  @NGAccessControlCheck(resourceType = PROJECT, permission = VIEW_PROJECT_PERMISSION)
   public ResponseDTO<ExecutionDeploymentInfo> getDeploymentExecution(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     log.info("Getting deployment execution");
@@ -127,10 +135,11 @@ public class CDDashboardOverviewResource {
   @GET
   @Path("/getDeployments")
   @ApiOperation(value = "Get deployments", nickname = "getDeployments")
+  @NGAccessControlCheck(resourceType = PROJECT, permission = VIEW_PROJECT_PERMISSION)
   public ResponseDTO<DashboardDeploymentActiveFailedRunningInfo> getDeployments(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
       @QueryParam("top") @DefaultValue("20") long days) {
     log.info("Getting deployments for active failed and running status");
     return ResponseDTO.newResponse(cdOverviewDashboardService.getDeploymentActiveFailedRunningInfo(
@@ -140,10 +149,11 @@ public class CDDashboardOverviewResource {
   @GET
   @Path("/getWorkloads")
   @ApiOperation(value = "Get workloads", nickname = "getWorkloads")
+  @NGAccessControlCheck(resourceType = PROJECT, permission = VIEW_PROJECT_PERMISSION)
   public ResponseDTO<DashboardWorkloadDeployment> getWorkloads(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval,
       @QueryParam(NGServiceConstants.ENVIRONMENT_TYPE) EnvironmentType envType) {

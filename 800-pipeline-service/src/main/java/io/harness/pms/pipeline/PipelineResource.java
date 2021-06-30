@@ -6,7 +6,6 @@ import static java.lang.Long.parseLong;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
-import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.AccountIdentifier;
@@ -20,7 +19,6 @@ import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionNode;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.encryption.Scope;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterPropertiesDTO;
@@ -54,7 +52,6 @@ import io.harness.pms.variables.VariableMergeServiceResponse;
 import io.harness.utils.PageUtils;
 import io.harness.yaml.schema.YamlSchemaResource;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import io.swagger.annotations.Api;
@@ -72,8 +69,6 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.NotSupportedException;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -120,14 +115,14 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull @ApiParam(hidden = true) String yaml)
       throws IOException {
-    log.info("Creating pipeline");
+    PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
+    log.info(String.format("Creating pipeline with identifier %s in project %s, org %s, account %s",
+        pipelineEntity.getIdentifier(), projectId, orgId, accountId));
 
     pmsYamlSchemaService.validateYamlSchema(accountId, orgId, projectId, yaml);
 
     // validate unique fqn in yaml
     pmsYamlSchemaService.validateUniqueFqn(yaml);
-
-    PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
     PipelineEntity createdEntity = pmsPipelineService.create(pipelineEntity);
 
     return ResponseDTO.newResponse(createdEntity.getVersion().toString(), createdEntity.getIdentifier());
@@ -159,7 +154,8 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
-    log.info("Get pipeline");
+    log.info(String.format("Retrieving pipeline with identifier %s in project %s, org %s, account %s", pipelineId,
+        projectId, orgId, accountId));
 
     Optional<PipelineEntity> pipelineEntity = pmsPipelineService.get(accountId, orgId, projectId, pipelineId, false);
     String version = "0";
@@ -186,7 +182,8 @@ public class PipelineResource implements YamlSchemaResource {
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
       @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull @ApiParam(hidden = true) String yaml)
       throws IOException {
-    log.info("Updating pipeline");
+    log.info(String.format("Updating pipeline with identifier %s in project %s, org %s, account %s", pipelineId,
+        projectId, orgId, accountId));
 
     pmsYamlSchemaService.validateYamlSchema(accountId, orgId, projectId, yaml);
 
@@ -215,7 +212,8 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
       @BeanParam GitEntityDeleteInfoDTO entityDeleteInfo) {
-    log.info("Deleting pipeline");
+    log.info(String.format("Deleting pipeline with identifier %s in project %s, org %s, account %s", pipelineId,
+        projectId, orgId, accountId));
 
     return ResponseDTO.newResponse(pmsPipelineService.delete(
         accountId, orgId, projectId, pipelineId, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
@@ -233,7 +231,7 @@ public class PipelineResource implements YamlSchemaResource {
       @QueryParam("sort") List<String> sort, @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam("module") String module, @QueryParam("filterIdentifier") String filterIdentifier,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo, FilterPropertiesDTO filterProperties) {
-    log.info("Get List of pipelines");
+    log.info(String.format("Get List of pipelines in project %s, org %s, account %s", projectId, orgId, accountId));
     Criteria criteria = pmsPipelineService.formCriteria(accountId, orgId, projectId, filterIdentifier,
         (PipelineFilterPropertiesDto) filterProperties, false, module, searchTerm);
 
@@ -261,7 +259,9 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
-    log.info("Get pipeline Summary");
+    log.info(
+        String.format("Get pipeline summary for pipeline with with identifier %s in project %s, org %s, account %s",
+            pipelineId, projectId, orgId, accountId));
 
     PMSPipelineSummaryResponseDTO pipelineSummary = PMSPipelineDtoMapper.preparePipelineSummary(
         pmsPipelineService.get(accountId, orgId, projectId, pipelineId, false)
@@ -277,7 +277,7 @@ public class PipelineResource implements YamlSchemaResource {
   @ApiOperation(value = "Get Steps for given module", nickname = "getSteps")
   public ResponseDTO<StepCategory> getSteps(@NotNull @QueryParam("category") String category,
       @NotNull @QueryParam("module") String module, @QueryParam("accountId") String accountId) {
-    log.info("Get Steps for given module");
+    log.info("Get Steps for module " + module);
 
     return ResponseDTO.newResponse(pmsPipelineService.getSteps(module, category, accountId));
   }
@@ -377,22 +377,6 @@ public class PipelineResource implements YamlSchemaResource {
       @QueryParam("resolveExpressions") @DefaultValue("false") boolean resolveExpressions,
       @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
     return pmsExecutionService.getInputSetYaml(accountId, orgId, projectId, planExecutionId, false, resolveExpressions);
-  }
-
-  @GET
-  @Path("/yaml-schema")
-  @ApiOperation(value = "Get Yaml Schema", nickname = "getYamlSchema")
-  public ResponseDTO<JsonNode> getYamlSchema(@QueryParam("entityType") @NotNull EntityType entityType,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @QueryParam("scope") Scope scope) {
-    if (entityType != EntityType.PIPELINES) {
-      throw new NotSupportedException(String.format("Entity type %s is not supported", entityType.getYamlName()));
-    }
-    JsonNode schema = pmsYamlSchemaService.getPipelineYamlSchema(projectIdentifier, orgIdentifier, scope);
-    if (schema == null) {
-      throw new NotFoundException(String.format("No schema found for entity type %s ", entityType.getYamlName()));
-    }
-    return ResponseDTO.newResponse(schema);
   }
 
   @GET

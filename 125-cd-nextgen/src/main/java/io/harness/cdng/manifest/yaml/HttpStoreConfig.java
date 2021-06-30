@@ -5,9 +5,11 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.manifest.ManifestStoreType;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 import io.harness.filters.ConnectorRefExtractorHelper;
 import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.SkipAutoEvaluation;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -30,7 +32,10 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("httpStore")
 public class HttpStoreConfig implements StoreConfig, Visitable, WithConnectorRef {
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> connectorRef;
+  @SkipAutoEvaluation
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  private ParameterField<String> connectorRef;
 
   @Override
   public String getKind() {
@@ -43,6 +48,10 @@ public class HttpStoreConfig implements StoreConfig, Visitable, WithConnectorRef
   }
 
   @Override
+  public ParameterField<String> getConnectorReference() {
+    return connectorRef;
+  }
+
   public StoreConfig applyOverrides(StoreConfig overrideConfig) {
     HttpStoreConfig helmHttpStore = (HttpStoreConfig) overrideConfig;
     HttpStoreConfig resultantHelmHttpStore = this;

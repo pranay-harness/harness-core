@@ -41,6 +41,8 @@ public interface ConnectorCrudService {
 
   ConnectorResponseDTO update(ConnectorDTO connectorRequestDTO, String accountIdentifier);
 
+  ConnectorResponseDTO update(ConnectorDTO connectorRequestDTO, String accountIdentifier, ChangeType gitChangeType);
+
   boolean delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier);
 
   ConnectorCatalogueResponseDTO getConnectorCatalogue();

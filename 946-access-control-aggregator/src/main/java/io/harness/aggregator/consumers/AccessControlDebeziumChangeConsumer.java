@@ -56,7 +56,7 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
     Optional<OpType> opType =
         getOperationType(((EmbeddedEngineChangeEvent<String, String>) changeEvent).sourceRecord());
     if (opType.isPresent() && collectionName.isPresent()) {
-      log.info("Handling {} event for entity: {}.{}", opType, collectionName, id);
+      log.info("Handling {} event for entity: {}.{}", opType.get(), collectionName.get(), id);
 
       ChangeConsumer<? extends AccessControlEntity> changeConsumer = collectionToConsumerMap.get(collectionName.get());
       changeConsumer.consumeEvent(opType.get(), id, deserialize(collectionName.get(), changeEvent));
@@ -71,6 +71,11 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
       try {
         retry.executeSupplier(() -> handleEvent(changeEvent));
       } catch (Exception exception) {
+        log.error(
+            String.format(
+                "Exception caught when trying to process event: [%s]. Retrying this event with exponential backoff now...",
+                changeEvent),
+            exception);
         changeEventFailureHandler.handle(changeEvent, exception);
       }
       recordCommitter.markProcessed(changeEvent);

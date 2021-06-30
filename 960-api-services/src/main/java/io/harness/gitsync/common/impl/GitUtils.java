@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.dtos.RepoProviders;
 import io.harness.gitsync.common.dtos.SaasGitDTO;
+import io.harness.utils.FilePathUtils;
 
 import java.net.URL;
 import lombok.experimental.UtilityClass;
@@ -47,7 +48,12 @@ public class GitUtils {
   }
 
   public static String convertToUrlWithGit(String url) {
-    if (isEmpty(url) || !url.endsWith(".git")) {
+    if (isEmpty(url)) {
+      return url;
+    }
+
+    url = FilePathUtils.removeTrailingChars(url, "/");
+    if (!url.endsWith(".git")) {
       return url;
     }
     final int lastIndexOfGit = url.lastIndexOf(".git");

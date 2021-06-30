@@ -26,6 +26,8 @@ public class CIExecutionConstants {
   public static final String STEP_MOUNT_PATH = "/harness";
   public static final String STEP_WORK_DIR = STEP_MOUNT_PATH;
 
+  public static final int POD_MAX_WAIT_UNTIL_READY_SECS = 8 * 60;
+
   // Constants for implicit git clone step
   public static final String GIT_CLONE_STEP_ID = "harness-git-clone";
   public static final String GIT_CLONE_STEP_NAME = "Git clone";
@@ -101,7 +103,6 @@ public class CIExecutionConstants {
   public static final String HARNESS_SERVICE_ARGS = "HARNESS_SERVICE_ARGS";
 
   public static final String HARNESS_WORKSPACE = "HARNESS_WORKSPACE";
-  public static final String HARNESS_SECRETS_LIST = "HARNESS_SECRETS_LIST";
 
   // Deprecated
   public static final List<String> SH_COMMAND = Collections.unmodifiableList(Arrays.asList("sh", "-c", "--"));

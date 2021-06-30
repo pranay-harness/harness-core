@@ -1,11 +1,13 @@
 package io.harness.cdng.manifest.yaml.kinds;
 
+import static io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper.StoreConfigWrapperParameters;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
-import io.harness.cdng.manifest.yaml.StoreConfig;
-import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
 import io.harness.cdng.visitor.helpers.manifest.ValuesManifestVisitorHelper;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.beans.VisitableChildren;
@@ -18,6 +20,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.Wither;
 import org.springframework.data.annotation.TypeAlias;
@@ -59,5 +62,16 @@ public class ValuesManifest implements ManifestAttributes, Visitable {
     VisitableChildren children = VisitableChildren.builder().build();
     children.add(YAMLFieldNameConstants.STORE, store);
     return children;
+  }
+
+  @Override
+  public ManifestAttributeStepParameters getManifestAttributeStepParameters() {
+    return new ValuesManifestStepParameters(identifier, StoreConfigWrapperParameters.fromStoreConfigWrapper(store));
+  }
+
+  @Value
+  public static class ValuesManifestStepParameters implements ManifestAttributeStepParameters {
+    String identifier;
+    StoreConfigWrapperParameters store;
   }
 }

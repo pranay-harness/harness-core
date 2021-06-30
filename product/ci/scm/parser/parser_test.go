@@ -176,7 +176,7 @@ func TestParseCreateBranch(t *testing.T) {
 	err = jsonpb.UnmarshalString(string(raw), want)
 
 	if !proto.Equal(got, want) {
-		t.Errorf("Unexpected Results error: %s",err)
+		t.Errorf("Unexpected Results error: %s", err)
 		t.Log(got)
 		t.Log(want)
 	}

@@ -1,5 +1,8 @@
 {
   "type": "object",
+  "required": [
+    "infrastructure"
+  ],
   "properties": {
     "cloneCodebase": {
       "type": "boolean"
@@ -68,6 +71,10 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "image"
+          ],
           "properties": {
             "args": {
               "oneOf": [
@@ -114,8 +121,37 @@
             "image": {
               "type": "string"
             },
+            "imagePullPolicy": {
+              "type": "string",
+              "enum": [
+                "Always",
+                "Never",
+                "IfNotPresent"
+              ]
+            },
+            "privileged": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
             "resources": {
               "$ref": "#/definitions/ContainerResource"
+            },
+            "runAsUser": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                {
+                  "type": "string"
+                }
+              ]
             }
           }
         }
@@ -137,7 +173,8 @@
     "DependencyElement": {
       "type": "object",
       "required": [
-        "identifier"
+        "identifier",
+        "type"
       ],
       "properties": {
         "description": {
@@ -150,7 +187,10 @@
           "type": "string"
         },
         "type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "Service"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -288,6 +328,9 @@
     },
     "IntegrationStageConfig": {
       "type": "object",
+      "required": [
+        "infrastructure"
+      ],
       "properties": {
         "cloneCodebase": {
           "type": "boolean"
@@ -356,6 +399,10 @@
     },
     "K8sDirectInfraYamlSpec": {
       "type": "object",
+      "required": [
+        "connectorRef",
+        "namespace"
+      ],
       "properties": {
         "annotations": {
           "oneOf": [
@@ -371,6 +418,9 @@
           ]
         },
         "connectorRef": {
+          "type": "string"
+        },
+        "initTimeout": {
           "type": "string"
         },
         "labels": {
@@ -399,6 +449,9 @@
               "type": "string"
             }
           ]
+        },
+        "serviceAccountName": {
+          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -661,7 +714,9 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "maxItems": 2147483647,
+          "minItems": 1
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -690,6 +745,11 @@
     },
     "StepElementConfig": {
       "type": "object",
+      "required": [
+        "identifier",
+        "name",
+        "type"
+      ],
       "properties": {
         "description": {
           "type": "string"
@@ -712,7 +772,8 @@
           "$ref": "#/definitions/StepSpecType"
         },
         "timeout": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(((\\d+[smhwd][\\s]?)*(\\d+[smhwd]))|(<\\+input>.*))$"
         },
         "type": {
           "type": "string"

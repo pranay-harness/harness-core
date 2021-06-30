@@ -90,6 +90,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.model.Pod;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -106,6 +107,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -243,7 +245,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       HelmCommandRequest commandRequest, LogCallback executionLogCallback, long timeoutInMillis) throws Exception {
     List<ContainerInfo> containerInfos = new ArrayList<>();
     LogCallback finalExecutionLogCallback = executionLogCallback;
-    HTimeLimiter.callInterruptible(timeLimiter, Duration.ofMillis(timeoutInMillis),
+    HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMillis(timeoutInMillis),
         () -> containerInfos.addAll(fetchContainerInfo(commandRequest, finalExecutionLogCallback, new ArrayList<>())));
     return containerInfos;
   }
@@ -334,8 +336,49 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       case HelmChartRepo:
         fetchChartRepo(commandRequest, timeoutInMillis);
         break;
+      case CUSTOM:
+        fetchCustomSourceManifest(commandRequest);
+        break;
       default:
         throw new InvalidRequestException("Unsupported store type: " + repoConfig.getManifestStoreTypes(), USER);
+    }
+  }
+
+  @VisibleForTesting
+  void fetchCustomSourceManifest(HelmCommandRequest commandRequest) throws IOException {
+    K8sDelegateManifestConfig sourceRepoConfig = commandRequest.getRepoConfig();
+
+    handleIncorrectConfiguration(sourceRepoConfig);
+    String workingDirectory = Paths.get(getWorkingDirectory(commandRequest)).toString();
+    helmTaskHelper.downloadAndUnzipCustomSourceManifestFiles(workingDirectory,
+        sourceRepoConfig.getCustomManifestSource().getZippedManifestFileId(), commandRequest.getAccountId());
+
+    File file = new File(workingDirectory);
+    if (isEmpty(file.list())) {
+      throw new InvalidRequestException("No manifest files found under working directory", USER);
+    }
+    File manifestDirectory = file.listFiles(pathname -> !file.isHidden())[0];
+    copyManifestFilesToWorkingDir(manifestDirectory, new File(workingDirectory));
+
+    commandRequest.setWorkingDir(workingDirectory);
+    commandRequest.getExecutionLogCallback().saveExecutionLog("Custom source manifest downloaded locally");
+  }
+
+  private static void copyManifestFilesToWorkingDir(File src, File dest) throws IOException {
+    FileUtils.copyDirectory(src, dest);
+    FileUtils.deleteDirectory(src);
+    FileIo.waitForDirectoryToBeAccessibleOutOfProcess(dest.getPath(), 10);
+  }
+
+  private void handleIncorrectConfiguration(K8sDelegateManifestConfig sourceRepoConfig) {
+    if (sourceRepoConfig == null) {
+      throw new InvalidRequestException("Source Config can not be null", USER);
+    }
+    if (!sourceRepoConfig.isCustomManifestEnabled()) {
+      throw new InvalidRequestException("Can not use store type: CUSTOM, with feature flag off", USER);
+    }
+    if (sourceRepoConfig.getCustomManifestSource() == null) {
+      throw new InvalidRequestException("Custom Manifest Source can not be null", USER);
     }
   }
 
@@ -409,7 +452,9 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         Optional.ofNullable(repoConfig)
             .map(K8sDelegateManifestConfig::getManifestStoreTypes)
             .filter(Objects::nonNull)
-            .filter(storeType -> storeType == StoreType.HelmSourceRepo || storeType == StoreType.HelmChartRepo);
+            .filter(storeType
+                -> storeType == StoreType.HelmSourceRepo || storeType == StoreType.HelmChartRepo
+                    || storeType == StoreType.CUSTOM);
 
     if (!storeTypeOpt.isPresent()) {
       log.warn("Unsupported store type, storeType: {}", repoConfig != null ? repoConfig.getManifestStoreTypes() : null);
@@ -590,7 +635,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Override
   public HelmCommandResponse ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest) {
     try {
-      return HTimeLimiter.callInterruptible(
+      return HTimeLimiter.callInterruptible21(
           timeLimiter, Duration.ofMillis(DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS), () -> {
             HelmCliResponse cliResponse = helmClient.getClientAndServerVersion(helmCommandRequest);
             if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
@@ -993,6 +1038,10 @@ public class HelmDeployServiceImpl implements HelmDeployService {
             helmChartInfo = helmTaskHelper.getHelmChartInfoFromChartsYamlFile(request);
             helmChartInfo.setRepoUrl(
                 helmHelper.getRepoUrlForHelmRepoConfig(request.getRepoConfig().getHelmChartConfigParams()));
+            break;
+
+          case CUSTOM:
+            helmChartInfo = helmTaskHelper.getHelmChartInfoFromChartsYamlFile(request);
             break;
 
           default:

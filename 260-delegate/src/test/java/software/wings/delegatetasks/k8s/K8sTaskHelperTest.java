@@ -20,6 +20,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -77,6 +78,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
@@ -1330,7 +1332,8 @@ public class K8sTaskHelperTest extends CategoryTest {
 
     final List<FileData> manifestFiles = spyHelper.renderTemplateForGivenFiles(k8sDelegateTaskParams,
         K8sDelegateManifestConfig.builder().manifestStoreTypes(Local).build(), ".", new ArrayList<>(),
-        new ArrayList<>(), "release", "namespace", executionLogCallback, K8sApplyTaskParameters.builder().build());
+        new ArrayList<>(), "release", "namespace", executionLogCallback, K8sApplyTaskParameters.builder().build(),
+        false);
 
     assertThat(manifestFiles.size()).isEqualTo(0);
   }
@@ -1355,9 +1358,37 @@ public class K8sTaskHelperTest extends CategoryTest {
 
     final List<FileData> manifestFiles = spyHelper.renderTemplateForGivenFiles(k8sDelegateTaskParams,
         K8sDelegateManifestConfig.builder().manifestStoreTypes(Remote).build(), ".", new ArrayList<>(),
-        new ArrayList<>(), "release", "namespace", executionLogCallback, K8sApplyTaskParameters.builder().build());
+        new ArrayList<>(), "release", "namespace", executionLogCallback, K8sApplyTaskParameters.builder().build(),
+        false);
 
     assertThat(manifestFiles.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testRenderTemplateForGivenFilesGitSkipRendering() throws Exception {
+    fetchManifestFilesAndWriteToDirectory();
+    final String workingDirectory = ".";
+    K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder()
+                                                      .workingDirectory(workingDirectory)
+                                                      .ocPath("oc")
+                                                      .kubectlPath("kubectl")
+                                                      .kubeconfigPath("config-path")
+                                                      .build();
+
+    FileData fileData = FileData.builder().fileName("test").build();
+    List<FileData> manifestFilesList = singletonList(fileData);
+    Mockito.when(mockK8sTaskHelperBase.readFilesFromDirectory(anyString(), anyList(), any(ExecutionLogCallback.class)))
+        .thenReturn(manifestFilesList);
+
+    final List<FileData> manifestFiles = spyHelper.renderTemplateForGivenFiles(k8sDelegateTaskParams,
+        K8sDelegateManifestConfig.builder().manifestStoreTypes(Remote).build(), ".", new ArrayList<>(),
+        new ArrayList<>(), "release", "namespace", executionLogCallback, K8sApplyTaskParameters.builder().build(),
+        true);
+
+    assertThat(manifestFiles).isEqualTo(manifestFilesList);
+    verify(mockK8sTaskHelperBase, times(0)).renderManifestFilesForGoTemplate(any(), any(), any(), any(), anyLong());
   }
 
   @Test
@@ -1371,7 +1402,7 @@ public class K8sTaskHelperTest extends CategoryTest {
     spyHelper.renderTemplateForGivenFiles(k8sDelegateTaskParams,
         K8sDelegateManifestConfig.builder().manifestStoreTypes(HelmSourceRepo).helmCommandFlag(commandFlag).build(),
         ".", new ArrayList<>(), new ArrayList<>(), "release", "namespace", executionLogCallback,
-        K8sApplyTaskParameters.builder().build());
+        K8sApplyTaskParameters.builder().build(), false);
 
     verify(mockK8sTaskHelperBase)
         .renderTemplateForHelmChartFiles(
@@ -1389,7 +1420,8 @@ public class K8sTaskHelperTest extends CategoryTest {
     when(kustomizeTaskHelper.buildForApply(any(), any(), any(), any(), any())).thenReturn(new ArrayList<>());
     final List<FileData> manifestFiles = spyHelper.renderTemplateForGivenFiles(k8sDelegateTaskParams,
         K8sDelegateManifestConfig.builder().manifestStoreTypes(KustomizeSourceRepo).build(), ".", new ArrayList<>(),
-        new ArrayList<>(), "release", "namespace", executionLogCallback, K8sApplyTaskParameters.builder().build());
+        new ArrayList<>(), "release", "namespace", executionLogCallback, K8sApplyTaskParameters.builder().build(),
+        false);
     verify(kustomizeTaskHelper).buildForApply(any(), any(), any(), any(), any());
     assertThat(manifestFiles.size()).isEqualTo(0);
   }
@@ -1432,7 +1464,7 @@ public class K8sTaskHelperTest extends CategoryTest {
             .manifestStoreTypes(HelmChartRepo)
             .build(),
         ".", new ArrayList<>(), new ArrayList<>(), "release", "namespace", executionLogCallback,
-        K8sApplyTaskParameters.builder().build());
+        K8sApplyTaskParameters.builder().build(), false);
 
     assertThat(manifestFiles.size()).isEqualTo(0);
   }
@@ -1939,6 +1971,24 @@ public class K8sTaskHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testShouldGetReleaseHistoryConfigMapIfInvalidRequestExceptionThrown() {
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
+    Mockito.when(mockKubernetesContainerService.fetchReleaseHistoryFromSecrets(any(), any()))
+        .thenThrow(new InvalidRequestException(""));
+    Mockito.when(mockKubernetesContainerService.fetchReleaseHistoryFromConfigMap(any(), any())).thenReturn("configmap");
+    String releaseHistory = spyHelperBase.getReleaseHistoryData(kubernetesConfig, "release");
+    ArgumentCaptor<String> releaseArgumentCaptor = ArgumentCaptor.forClass(String.class);
+    verify(mockKubernetesContainerService, times(1)).fetchReleaseHistoryFromSecrets(any(), anyString());
+    verify(mockKubernetesContainerService, times(1))
+        .fetchReleaseHistoryFromConfigMap(any(), releaseArgumentCaptor.capture());
+
+    assertThat(releaseArgumentCaptor.getValue()).isEqualTo("release");
+    assertThat(releaseHistory).isEqualTo("configmap");
+  }
+
+  @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testShouldRunStatusCheckForHelmResources() throws Exception {
@@ -1979,7 +2029,7 @@ public class K8sTaskHelperTest extends CategoryTest {
 
     List<KubernetesResource> resources =
         helper.getResourcesFromManifests(params, config, "manifestDir", singletonList("file.yaml"),
-            singletonList("values.yaml"), "release", "default", new ExecutionLogCallback(), k8sTaskParameters);
+            singletonList("values.yaml"), "release", "default", new ExecutionLogCallback(), k8sTaskParameters, false);
     assertThat(resources).isEmpty();
   }
 
@@ -2017,7 +2067,7 @@ public class K8sTaskHelperTest extends CategoryTest {
 
     List<KubernetesResource> resources =
         helper.getResourcesFromManifests(params, config, "manifestDir", singletonList("file.yaml"),
-            singletonList("values.yaml"), "release", "default", new ExecutionLogCallback(), k8sTaskParameters);
+            singletonList("values.yaml"), "release", "default", new ExecutionLogCallback(), k8sTaskParameters, false);
     assertThat(resources).isNotEmpty();
   }
 }

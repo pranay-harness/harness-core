@@ -6,11 +6,13 @@ import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.cdng.manifest.ManifestStoreType;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 import io.harness.common.ParameterFieldHelper;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.filters.ConnectorRefExtractorHelper;
 import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.SkipAutoEvaluation;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.validation.OneOfField;
 import io.harness.walktree.beans.VisitableChildren;
@@ -41,20 +43,34 @@ import org.springframework.data.annotation.TypeAlias;
 @OwnedBy(CDP)
 public class GitStore implements GitStoreConfig, Visitable, WithConnectorRef {
   @NotNull
+  @SkipAutoEvaluation
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
   @Wither
   private ParameterField<String> connectorRef;
 
   @NotNull @Wither private FetchType gitFetchType;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> branch;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> commitId;
+  @SkipAutoEvaluation
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  private ParameterField<String> branch;
+  @SkipAutoEvaluation
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  private ParameterField<String> commitId;
 
   @YamlSchemaTypes(value = {string})
+  @SkipAutoEvaluation
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   @Wither
   private ParameterField<List<String>> paths;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> folderPath;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> repoName;
+  @SkipAutoEvaluation
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  private ParameterField<String> folderPath;
+  @SkipAutoEvaluation
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  private ParameterField<String> repoName;
 
   // For Visitor Framework Impl
   String metadata;
@@ -62,6 +78,11 @@ public class GitStore implements GitStoreConfig, Visitable, WithConnectorRef {
   @Override
   public String getKind() {
     return ManifestStoreType.GIT;
+  }
+
+  @Override
+  public ParameterField<String> getConnectorReference() {
+    return connectorRef;
   }
 
   public GitStore cloneInternal() {

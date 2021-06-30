@@ -1,6 +1,7 @@
 package software.wings.sm.states.azure;
 
-import software.wings.beans.ResizeStrategy;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
+
 import software.wings.beans.command.CommandUnit;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.State;

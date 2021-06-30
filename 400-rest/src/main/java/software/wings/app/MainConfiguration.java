@@ -127,7 +127,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("ocVersion") private String ocVersion;
   @JsonProperty("scmVersion") private String scmVersion;
   @JsonProperty("trialRegistrationAllowed") private boolean trialRegistrationAllowed;
-  @JsonProperty("ngManagerAvailable") private boolean ngManagerAvailable;
+  @JsonProperty("eventsFrameworkAvailableInOnPrem") private boolean eventsFrameworkAvailableInOnPrem;
   @JsonProperty(value = "trialRegistrationAllowedForBugathon", defaultValue = "false")
   private boolean trialRegistrationAllowedForBugathon;
   @JsonProperty("blacklistedEmailDomainsAllowed") private boolean blacklistedEmailDomainsAllowed;
@@ -185,6 +185,8 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
   @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
   @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
+  @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
+  @JsonProperty(value = "enableAudit") private boolean enableAudit;
 
   private int applicationPort;
   private boolean sslEnabled;

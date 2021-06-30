@@ -93,6 +93,7 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
   @Mock private Query query;
   @Mock private MorphiaIterator<Artifact, Artifact> artifactIterator;
   @Mock private ExecutorService executorService;
+  private BuildSourceCleanupHelper buildSourceCleanupHelper;
 
   @InjectMocks @Inject private BuildSourceCleanupCallback buildSourceCleanupCallback;
 
@@ -232,6 +233,9 @@ public class BuildSourceCleanupCallbackTest extends WingsBaseTest {
     when(artifactService.create(ARTIFACT_1)).thenReturn(ARTIFACT_1);
     when(artifactService.create(ARTIFACT_2)).thenReturn(ARTIFACT_2);
     buildSourceCleanupCallback.setAccountId(ACCOUNT_ID);
+    buildSourceCleanupHelper =
+        new BuildSourceCleanupHelper(artifactService, featureFlagService, artifactCollectionUtils);
+    buildSourceCleanupCallback.setBuildSourceCleanupHelper(buildSourceCleanupHelper);
   }
 
   @Test

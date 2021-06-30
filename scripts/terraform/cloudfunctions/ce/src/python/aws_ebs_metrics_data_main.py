@@ -13,7 +13,7 @@ from aws_util import assumed_role_session, get_secret_key
 def get_regions_and_volumes(jsonData):
     REGIONS_VOLUME_MAP = {}
     client = bigquery.Client(jsonData["projectName"])
-    awsEc2InventoryTableName = TABLE_NAME_FORMAT % (jsonData["projectName"], jsonData["accountId"], "awsEbsInventory")
+    awsEc2InventoryTableName = TABLE_NAME_FORMAT % (jsonData["projectName"], jsonData["accountIdBQ"], "awsEbsInventory")
     query = """
             SELECT distinct(region), volumeId FROM %s where state="in-use";
 		    """ % (awsEc2InventoryTableName)
@@ -27,6 +27,7 @@ def get_regions_and_volumes(jsonData):
             REGIONS_VOLUME_MAP[row.region] = [row.volumeId]
     print_(REGIONS_VOLUME_MAP)
     return REGIONS_VOLUME_MAP
+
 
 def get_ebs_metrics_data(jsonData):
     EBS_DATA_MAP = {}
@@ -143,6 +144,7 @@ def get_ebs_metrics_data(jsonData):
 
     return EBS_DATA_MAP, added_at
 
+
 def executeQueries(MetricDataQueries, cloudwatch, added_at, EBS_DATA_MAP):
     # We have close to 500 MetricDataQueries. Fire the api call
     startTime = datetime.datetime.combine(datetime.date.today() - datetime.timedelta(days=1), datetime.time())
@@ -175,6 +177,7 @@ def executeQueries(MetricDataQueries, cloudwatch, added_at, EBS_DATA_MAP):
         print_(e)
         raise e
 
+
 def main(event, context):
     print(event)
     data = base64.b64decode(event['data']).decode('utf-8')
@@ -200,7 +203,7 @@ def main(event, context):
 
     if not if_tbl_exists(client, awsEbsInventoryMetricsTableRef):
         print_("%s table does not exists, creating table..." % awsEbsInventoryMetricsTableRef)
-        createTable(client, awsEbsInventoryMetricsTableName)
+        createTable(client, awsEbsInventoryMetricsTableRef)
 
     data_map, added_at = get_ebs_metrics_data(jsonData)
     print_("Total volumes for which Metrics data was fetched: %s" % len(data_map))
@@ -216,6 +219,3 @@ def main(event, context):
     job = client.load_table_from_file(data_as_file, awsEbsInventoryMetricsTableName, job_config=job_config)
     print_(job.job_id)
     job.result()
-
-
-

@@ -1,0 +1,13 @@
+extend type Mutation {
+  #Clean an artifact stream
+  artifactCleanup(input: ArtifactCleanupInput!): ArtifactCleanUpPayload @dataFetcher(name: artifactCleanup)
+}
+
+input ArtifactCleanupInput {
+  #Unique ID of the artifact stream
+  artifactStreamId: String!
+}
+
+type ArtifactCleanUpPayload {
+  message: String
+}

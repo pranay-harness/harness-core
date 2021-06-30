@@ -82,6 +82,7 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.managerclient.HttpsCertRequirement.CertRequirement;
 import io.harness.network.Http;
+import io.harness.ng.core.account.DefaultExperience;
 import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
 import io.harness.reflection.ReflectionUtils;
@@ -127,6 +128,7 @@ import software.wings.licensing.LicenseService;
 import software.wings.scheduler.AlertCheckJob;
 import software.wings.scheduler.InstanceStatsCollectorJob;
 import software.wings.scheduler.LdapGroupSyncJob;
+import software.wings.scheduler.LdapGroupSyncJobHelper;
 import software.wings.scheduler.LimitVicinityCheckerJob;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.security.AppPermissionSummary;
@@ -232,6 +234,7 @@ public class AccountServiceImpl implements AccountService {
   private static final String SAMPLE_DELEGATE_NAME = "harness-sample-k8s-delegate";
   private static final String SAMPLE_DELEGATE_STATUS_ENDPOINT_FORMAT_STRING = "http://%s/account-%s.txt";
   private static final String DELIMITER = "####";
+  private static final String DEFAULT_EXPERIENCE = "defaultExperience";
 
   @Inject protected AuthService authService;
   @Inject protected HarnessCacheManager harnessCacheManager;
@@ -268,6 +271,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private AccountDao accountDao;
   @Inject private AccountDataRetentionService accountDataRetentionService;
   @Inject private PersistentLocker persistentLocker;
+  @Inject private LdapGroupSyncJobHelper ldapGroupSyncJobHelper;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
@@ -523,6 +527,8 @@ public class AccountServiceImpl implements AccountService {
     accountDetails.setCluster(mainConfiguration.getDeploymentClusterName());
     accountDetails.setLicenseInfo(account.getLicenseInfo());
     accountDetails.setCeLicenseInfo(account.getCeLicenseInfo());
+    accountDetails.setDefaultExperience(account.getDefaultExperience());
+    accountDetails.setCreatedFromNG(account.isCreatedFromNG());
     return accountDetails;
   }
 
@@ -1285,6 +1291,7 @@ public class AccountServiceImpl implements AccountService {
     List<LdapSettings> ldapSettings = getAllLdapSettingsForAccount(accountId);
     for (LdapSettings ldapSetting : ldapSettings) {
       LdapGroupSyncJob.add(jobScheduler, accountId, ldapSetting.getUuid());
+      ldapGroupSyncJobHelper.syncJob(ldapSetting);
     }
     log.info("Started all background quartz jobs for account {}", accountId);
   }
@@ -1816,5 +1823,15 @@ public class AccountServiceImpl implements AccountService {
       return false;
     }
     return true;
+  }
+
+  @Override
+  public Void setDefaultExperience(String accountId, DefaultExperience defaultExperience) {
+    Account account = getFromCacheWithFallback(accountId);
+    notNullCheck("Invalid Account for the given Id: " + accountId, account);
+    notNullCheck("Invalid Default Experience: " + defaultExperience, defaultExperience);
+    wingsPersistence.updateField(Account.class, accountId, DEFAULT_EXPERIENCE, defaultExperience);
+    dbCache.invalidate(Account.class, account.getUuid());
+    return null;
   }
 }

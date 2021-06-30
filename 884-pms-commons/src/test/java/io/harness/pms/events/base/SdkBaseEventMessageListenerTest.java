@@ -20,7 +20,8 @@ public class SdkBaseEventMessageListenerTest extends CategoryTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestIsProcessableForNull() {
-    NoopSdkSdkBaseEventMessageListener noopListener = new NoopSdkSdkBaseEventMessageListener("RANDOM_SERVICE");
+    NoopSdkSdkBaseEventMessageListener noopListener =
+        new NoopSdkSdkBaseEventMessageListener("RANDOM_SERVICE", new NoopPmsEventHandler());
     boolean processable = noopListener.isProcessable(Message.newBuilder().build());
     assertThat(processable).isFalse();
   }
@@ -29,7 +30,8 @@ public class SdkBaseEventMessageListenerTest extends CategoryTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestIsProcessableForService() {
-    NoopSdkSdkBaseEventMessageListener noopListener = new NoopSdkSdkBaseEventMessageListener("RANDOM_SERVICE");
+    NoopSdkSdkBaseEventMessageListener noopListener =
+        new NoopSdkSdkBaseEventMessageListener("RANDOM_SERVICE", new NoopPmsEventHandler());
     boolean processable = noopListener.isProcessable(
         Message.newBuilder()
             .setMessage(io.harness.eventsframework.producer.Message.newBuilder()
@@ -44,7 +46,8 @@ public class SdkBaseEventMessageListenerTest extends CategoryTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestIsProcessableForDiffService() {
-    NoopSdkSdkBaseEventMessageListener noopListener = new NoopSdkSdkBaseEventMessageListener("CD");
+    NoopSdkSdkBaseEventMessageListener noopListener =
+        new NoopSdkSdkBaseEventMessageListener("CD", new NoopPmsEventHandler());
     boolean processable = noopListener.isProcessable(
         Message.newBuilder()
             .setMessage(io.harness.eventsframework.producer.Message.newBuilder()
@@ -59,7 +62,8 @@ public class SdkBaseEventMessageListenerTest extends CategoryTest {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestExtractEntity() {
-    NoopSdkSdkBaseEventMessageListener noopListener = new NoopSdkSdkBaseEventMessageListener("CD");
+    NoopSdkSdkBaseEventMessageListener noopListener =
+        new NoopSdkSdkBaseEventMessageListener("CD", new NoopPmsEventHandler());
     InterruptEvent event = noopListener.extractEntity(
         Message.newBuilder()
             .setMessage(io.harness.eventsframework.producer.Message.newBuilder()

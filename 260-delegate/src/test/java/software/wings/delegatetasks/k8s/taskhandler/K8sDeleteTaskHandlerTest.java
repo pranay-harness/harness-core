@@ -181,7 +181,7 @@ public class K8sDeleteTaskHandlerTest extends WingsBaseTest {
     verify(k8sTaskHelper)
         .getResourcesFromManifests(any(K8sDelegateTaskParams.class), any(K8sDelegateManifestConfig.class),
             any(String.class), eq(ImmutableList.of("a", "b", "c")), any(List.class), any(String.class),
-            any(String.class), any(ExecutionLogCallback.class), eq(deleteAllParams));
+            any(String.class), any(ExecutionLogCallback.class), eq(deleteAllParams), eq(false));
   }
 
   @Test

@@ -2,6 +2,7 @@ package io.harness.helm;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.k8s.model.HelmVersion;
 
 import java.util.Map;
@@ -15,6 +16,9 @@ public class HelmCommandFlagsUtils {
     if (isNotEmpty(commandFlags)) {
       HelmSubCommandType subCommandType = HelmSubCommandType.getSubCommandType(commandType, helmVersion);
       flags = commandFlags.getOrDefault(subCommandType, "");
+      if (EmptyPredicate.isEmpty(flags)) {
+        flags = "";
+      }
     }
 
     return command.replace(HelmConstants.HELM_COMMAND_FLAG_PLACEHOLDER, flags);

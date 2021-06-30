@@ -2,6 +2,7 @@ package io.harness.cdng.manifest.yaml.kinds;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.common.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper.StoreConfigWrapperParameters;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
@@ -9,12 +10,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
-import io.harness.cdng.manifest.yaml.StoreConfig;
-import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
 import io.harness.cdng.visitor.helpers.manifest.HelmChartManifestVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.SkipAutoEvaluation;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -30,6 +32,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
@@ -47,10 +50,10 @@ import org.springframework.data.annotation.TypeAlias;
 public class HelmChartManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
   @Wither @JsonProperty("store") StoreConfigWrapper store;
-  @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) ParameterField<String> chartName;
-  @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) ParameterField<String> chartVersion;
+  @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) @SkipAutoEvaluation ParameterField<String> chartName;
+  @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) @SkipAutoEvaluation ParameterField<String> chartVersion;
   @Wither HelmVersion helmVersion;
-  @Wither @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipResourceVersioning;
+  @Wither @YamlSchemaTypes({string, bool}) @SkipAutoEvaluation ParameterField<Boolean> skipResourceVersioning;
   @Wither List<HelmManifestCommandFlag> commandFlags;
 
   @Override
@@ -99,5 +102,22 @@ public class HelmChartManifest implements ManifestAttributes, Visitable {
   @Override
   public StoreConfig getStoreConfig() {
     return this.store.getSpec();
+  }
+
+  @Override
+  public ManifestAttributeStepParameters getManifestAttributeStepParameters() {
+    return new HelmChartManifestStepParameters(identifier, StoreConfigWrapperParameters.fromStoreConfigWrapper(store),
+        chartName, chartVersion, helmVersion, skipResourceVersioning, commandFlags);
+  }
+
+  @Value
+  public static class HelmChartManifestStepParameters implements ManifestAttributeStepParameters {
+    String identifier;
+    StoreConfigWrapperParameters store;
+    ParameterField<String> chartName;
+    ParameterField<String> chartVersion;
+    HelmVersion helmVersion;
+    ParameterField<Boolean> skipResourceVersioning;
+    List<HelmManifestCommandFlag> commandFlags;
   }
 }

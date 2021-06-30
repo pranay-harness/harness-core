@@ -9,6 +9,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.task.k8s.K8sYamlToDelegateDTOMapper;
 import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.model.KubernetesConfig;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
@@ -16,6 +17,7 @@ import com.google.inject.Singleton;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 @Singleton
@@ -30,14 +32,18 @@ public class K8sConnectorHelper {
   }
 
   public KubernetesConfig getKubernetesConfig(ConnectorDetails k8sConnectorDetails) {
-    KubernetesClusterConfigDTO clusterConfigDTO = (KubernetesClusterConfigDTO) k8sConnectorDetails.getConnectorConfig();
+    return getKubernetesConfig((KubernetesClusterConfigDTO) k8sConnectorDetails.getConnectorConfig(),
+        k8sConnectorDetails.getEncryptedDataDetails());
+  }
 
+  public KubernetesConfig getKubernetesConfig(
+      KubernetesClusterConfigDTO clusterConfigDTO, List<EncryptedDataDetail> encryptedDataDetails) {
     KubernetesCredentialSpecDTO credentialSpecDTO = clusterConfigDTO.getCredential().getConfig();
     KubernetesCredentialType kubernetesCredentialType = clusterConfigDTO.getCredential().getKubernetesCredentialType();
     if (kubernetesCredentialType == KubernetesCredentialType.MANUAL_CREDENTIALS) {
       KubernetesAuthCredentialDTO kubernetesCredentialAuth =
           ((KubernetesClusterDetailsDTO) credentialSpecDTO).getAuth().getCredentials();
-      secretDecryptionService.decrypt(kubernetesCredentialAuth, k8sConnectorDetails.getEncryptedDataDetails());
+      secretDecryptionService.decrypt(kubernetesCredentialAuth, encryptedDataDetails);
     }
     return k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(clusterConfigDTO);
   }

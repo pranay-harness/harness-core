@@ -194,14 +194,16 @@ public class NgUserServiceImpl implements NgUserService {
                                     .map(PrincipalDTO::getIdentifier)
                                     .distinct()
                                     .collect(toList());
-    UserGroupFilterDTO userGroupFilterDTO = UserGroupFilterDTO.builder()
-                                                .accountIdentifier(scope.getAccountIdentifier())
-                                                .orgIdentifier(scope.getOrgIdentifier())
-                                                .projectIdentifier(scope.getProjectIdentifier())
-                                                .identifierFilter(new HashSet<>(userGroupIds))
-                                                .build();
-    List<UserGroup> userGroups = userGroupService.list(userGroupFilterDTO);
-    userGroups.forEach(userGroup -> userIds.addAll(userGroup.getUsers()));
+    if (!userGroupIds.isEmpty()) {
+      UserGroupFilterDTO userGroupFilterDTO = UserGroupFilterDTO.builder()
+                                                  .accountIdentifier(scope.getAccountIdentifier())
+                                                  .orgIdentifier(scope.getOrgIdentifier())
+                                                  .projectIdentifier(scope.getProjectIdentifier())
+                                                  .identifierFilter(new HashSet<>(userGroupIds))
+                                                  .build();
+      List<UserGroup> userGroups = userGroupService.list(userGroupFilterDTO);
+      userGroups.forEach(userGroup -> userIds.addAll(userGroup.getUsers()));
+    }
     return getUserMetadata(new ArrayList<>(userIds));
   }
 
@@ -239,11 +241,6 @@ public class NgUserServiceImpl implements NgUserService {
   @Override
   public List<UserMetadataDTO> getUserMetadata(List<String> userIds) {
     return userMembershipRepository.getUserMetadata(Criteria.where(UserMembershipKeys.userId).in(userIds));
-  }
-
-  @Override
-  public void addUserToScope(UserInfo user, Scope scope, boolean postCreation, UserMembershipUpdateSource source) {
-    addUserToScope(user.getUuid(), scope, postCreation, source);
   }
 
   @Override
@@ -298,13 +295,13 @@ public class NgUserServiceImpl implements NgUserService {
         && DEFAULT_RESOURCE_GROUP_IDENTIFIER.equals(roleAssignmentDTO.getResourceGroupIdentifier());
   }
 
-  private void addUserToScope(
+  @Override
+  public void addUserToScope(
       String userId, Scope scope, boolean addUserToParentScope, UserMembershipUpdateSource source) {
     ensureUserMembership(userId);
     addUserToScopeInternal(userId, source, scope, getDefaultRoleIdentifier(scope));
-
     // Adding user to the account for sign in flow to work
-    addUserToAccount(userId, scope);
+    addUserToCG(userId, scope);
     if (addUserToParentScope) {
       addUserToParentScope(userId, scope, source);
     }
@@ -396,7 +393,8 @@ public class NgUserServiceImpl implements NgUserService {
     return userMembership;
   }
 
-  private void addUserToAccount(String userId, Scope scope) {
+  @Override
+  public void addUserToCG(String userId, Scope scope) {
     log.info("Adding user {} to account {}", userId, scope.getAccountIdentifier());
     try {
       RestClientUtils.getResponse(userClient.addUserToAccount(userId, scope.getAccountIdentifier()));
@@ -529,7 +527,8 @@ public class NgUserServiceImpl implements NgUserService {
       Pageable pageable = PageUtils.getPageRequest(pageRequest);
       List<Project> projects = userMembershipRepository.findProjectList(userId.get(), accountId, pageable);
       List<ProjectDTO> projectDTOList = projects.stream().map(ProjectMapper::writeDTO).collect(Collectors.toList());
-      return new PageImpl<>(projectDTOList, pageable, projectDTOList.size());
+      return new PageImpl<>(
+          projectDTOList, pageable, userMembershipRepository.getProjectCount(userId.get(), accountId));
     } else {
       throw new IllegalStateException("user login required");
     }

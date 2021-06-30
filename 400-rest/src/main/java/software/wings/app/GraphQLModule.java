@@ -44,6 +44,7 @@ import software.wings.graphql.datafetcher.application.UpdateApplicationGitSyncCo
 import software.wings.graphql.datafetcher.application.UpdateApplicationGitSyncConfigStatusDataFetcher;
 import software.wings.graphql.datafetcher.application.batch.ApplicationBatchDataFetcher;
 import software.wings.graphql.datafetcher.application.batch.ApplicationBatchDataLoader;
+import software.wings.graphql.datafetcher.artifact.ArtifactCleanupDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactConnectionDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
 import software.wings.graphql.datafetcher.artifactSource.ArtifactSourceDataFetcher;
@@ -98,6 +99,7 @@ import software.wings.graphql.datafetcher.connector.ConnectorStatsDataFetcher;
 import software.wings.graphql.datafetcher.connector.CreateConnectorDataFetcher;
 import software.wings.graphql.datafetcher.connector.DeleteConnectorDataFetcher;
 import software.wings.graphql.datafetcher.connector.UpdateConnectorDataFetcher;
+import software.wings.graphql.datafetcher.cv.VerificationResultConnectionDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentConnectionDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentDataFetcher;
 import software.wings.graphql.datafetcher.environment.EnvironmentStatsDataFetcher;
@@ -424,6 +426,8 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(TagConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(TagUsageConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(TagDataFetcher.class);
+    bindDataFetcherWithAnnotation(VerificationResultConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(ArtifactCleanupDataFetcher.class);
 
     binder()
         .bind(SecretManagerMutationDataFetcher.class)

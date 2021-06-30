@@ -11,6 +11,7 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.yaml.extended.ArchiveFormat;
 import io.harness.beans.yaml.extended.CIShellType;
+import io.harness.beans.yaml.extended.ImagePullPolicy;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.ngexception.CIStageExecutionUserException;
 import io.harness.pms.yaml.ParameterField;
@@ -56,6 +57,14 @@ public class RunTimeInputHandler {
       return CIShellType.SH;
     } else {
       return CIShellType.fromString(shellType.fetchFinalValue().toString());
+    }
+  }
+
+  public String resolveImagePullPolicy(ParameterField<ImagePullPolicy> pullPolicy) {
+    if (pullPolicy == null || pullPolicy.isExpression() || pullPolicy.getValue() == null) {
+      return null;
+    } else {
+      return ImagePullPolicy.fromString(pullPolicy.fetchFinalValue().toString()).getYamlName();
     }
   }
 
@@ -187,6 +196,31 @@ public class RunTimeInputHandler {
 
   public List<String> resolveListParameter(String fieldName, String stepType, String stepIdentifier,
       ParameterField<List<String>> parameterField, boolean isMandatory) {
+    if (parameterField == null || parameterField.getValue() == null) {
+      if (isMandatory) {
+        throw new CIStageExecutionUserException(
+            format("Failed to resolve mandatory field %s in step type %s with identifier %s", fieldName, stepType,
+                stepIdentifier));
+      }
+    }
+
+    if (parameterField.isExpression()) {
+      if (isMandatory) {
+        throw new CIStageExecutionUserException(
+            format("Failed to resolve mandatory field %s in step type %s with identifier %s", fieldName, stepType,
+                stepIdentifier));
+      } else {
+        log.warn(format("Failed to resolve optional field %s in step type %s with identifier %s", fieldName, stepType,
+            stepIdentifier));
+        return new ArrayList<>();
+      }
+    }
+
+    return parameterField.getValue();
+  }
+
+  public <T> List<T> resolveGenericListParameter(String fieldName, String stepType, String stepIdentifier,
+      ParameterField<List<T>> parameterField, boolean isMandatory) {
     if (parameterField == null || parameterField.getValue() == null) {
       if (isMandatory) {
         throw new CIStageExecutionUserException(

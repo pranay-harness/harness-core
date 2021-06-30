@@ -149,7 +149,7 @@ func TestGetTests_All(t *testing.T) {
 	paths = append(paths, getBaseDir()+"**/*.xml") // Regex to get both reports
 	log := zap.NewExample().Sugar()
 	j := New(paths, log)
-	testc, _ := j.GetTests(context.Background())
+	testc := j.GetTests(context.Background())
 	var tests []*types.TestCase
 	for tc := range testc {
 		tests = append(tests, tc)
@@ -181,7 +181,7 @@ func TestGetTests_All_MultiplePaths(t *testing.T) {
 	paths = append(paths, basePath+"a/b/c/d/*.xml")
 	log := zap.NewExample().Sugar()
 	j := New(paths, log)
-	testc, _ := j.GetTests(context.Background())
+	testc := j.GetTests(context.Background())
 	var tests []*types.TestCase
 	for tc := range testc {
 		tests = append(tests, tc)
@@ -209,7 +209,7 @@ func TestGetTests_FirstRegex(t *testing.T) {
 	paths = append(paths, basePath+"a/b/*.xml") // Regex to get both reports
 	log := zap.NewExample().Sugar()
 	j := New(paths, log)
-	testc, _ := j.GetTests(context.Background())
+	testc := j.GetTests(context.Background())
 	var tests []*types.TestCase
 	for tc := range testc {
 		tests = append(tests, tc)
@@ -237,7 +237,7 @@ func TestGetTests_SecondRegex(t *testing.T) {
 	paths = append(paths, basePath+"a/b/**/*2.xml") // Regex to get both reports
 	log := zap.NewExample().Sugar()
 	j := New(paths, log)
-	testc, _ := j.GetTests(context.Background())
+	testc := j.GetTests(context.Background())
 	var tests []*types.TestCase
 	for tc := range testc {
 		tests = append(tests, tc)
@@ -265,7 +265,7 @@ func TestGetTests_NoMatchingRegex(t *testing.T) {
 	paths = append(paths, basePath+"a/b/**/*3.xml") // Regex to get both reports
 	log := zap.NewExample().Sugar()
 	j := New(paths, log)
-	testc, _ := j.GetTests(context.Background())
+	testc := j.GetTests(context.Background())
 	var tests []*types.TestCase
 	for tc := range testc {
 		tests = append(tests, tc)

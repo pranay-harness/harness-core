@@ -5,6 +5,7 @@ package io.harness.delegate.task.citasks.cik8handler;
  * git secrets.
  */
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.ci.k8s.PodStatus.Status.RUNNING;
 import static io.harness.delegate.beans.ci.pod.CIContainerType.LITE_ENGINE;
@@ -56,9 +57,11 @@ import io.kubernetes.client.util.Watch;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -81,6 +84,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
   private static final String DOCKER_CONFIG_KEY = ".dockercfg";
   private static final String HARNESS_IMAGE_SECRET = "HARNESS_IMAGE_SECRET";
+  private static final String HARNESS_SECRETS_LIST = "HARNESS_SECRETS_LIST";
 
   @Override
   public Type getType() {
@@ -124,7 +128,8 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
         cik8JavaClientHandler.createOrReplacePodWithRetries(kubernetesConfig, pod, namespace);
         Watch<V1Event> watch =
             k8EventHandler.startAsyncPodEventWatch(kubernetesConfig, namespace, podName, logStreamingTaskClient);
-        PodStatus podStatus = kubeCtlHandler.waitUntilPodIsReady(kubernetesClient, podName, namespace);
+        PodStatus podStatus = kubeCtlHandler.waitUntilPodIsReady(
+            kubernetesClient, podName, namespace, cik8BuildTaskParams.getPodMaxWaitUntilReadySecs());
         if (watch != null) {
           k8EventHandler.stopEventWatch(watch);
         }
@@ -235,6 +240,15 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       Map<String, ConnectorDetails> functorConnectors = containerParams.getContainerSecrets().getFunctorConnectors();
       Map<String, SecretParams> plainTextSecretsByName =
           containerParams.getContainerSecrets().getPlainTextSecretsByName();
+      Map<String, String> envVarsWithSecretRef = containerParams.getEnvVarsWithSecretRef();
+
+      if (isNotEmpty(envVarsWithSecretRef)) {
+        log.info("Creating environment variables with secret functor value for container {} present on pod: {}",
+            containerParams.getName(), podParams.getName());
+        Map<String, String> envVarsWithSecretRefSecretData =
+            getAndUpdateEnvVarsWithSecretRefSecretData(envVarsWithSecretRef, containerParams, k8SecretName);
+        secretData.putAll(envVarsWithSecretRefSecretData);
+      }
 
       if (isNotEmpty(functorConnectors)) {
         log.info("Creating git hub app token env variables for container {} present on pod: {}",
@@ -271,10 +285,12 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
         }
       }
 
+      log.info("Creating proxy env variables for container {} present on pod: {}", containerParams.getName(),
+          podParams.getName());
+      secretData.putAll(getAndUpdateProxyConfigurationSecretData(containerParams, k8SecretName));
       if (containerParams.getContainerType() == LITE_ENGINE) {
-        log.info("Creating proxy env variables for container {} present on pod: {}", containerParams.getName(),
+        log.info("Creating delegate service token for container {} present on pod: {}", containerParams.getName(),
             podParams.getName());
-        secretData.putAll(getAndUpdateProxyConfigurationSecretData(containerParams, k8SecretName));
         secretData.putAll(getAndUpdateDelegateServiceToken(containerParams, k8SecretName));
       }
     }
@@ -285,12 +301,32 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     secretData.putAll(gitSecretData);
     log.info("Determined environment secrets to create for stage for pod {}", podParams.getName());
 
+    for (CIK8ContainerParams containerParams : containerParamsList) {
+      Set<String> allSecrets = new HashSet<>();
+      if (!isEmpty(containerParams.getSecretEnvVars())) {
+        allSecrets.addAll(containerParams.getSecretEnvVars().keySet());
+        updateContainerWithEnvVariable(allSecrets, containerParams);
+      }
+    }
+
     if (isNotEmpty(secretData)) {
       log.info("Creating environment secrets for pod name: {}", podParams.getName());
       kubeCtlHandler.createSecret(kubernetesClient, k8SecretName, namespace, secretData);
       log.info("Environment k8 secret creation is complete for pod name: {}", podParams.getName());
     }
     log.info("Environment variable creation took: {} for pod: {} ", timer.stop(), podParams.getName());
+  }
+
+  private Map<String, String> getAndUpdateEnvVarsWithSecretRefSecretData(
+      Map<String, String> envVarsWithSecretRef, CIK8ContainerParams containerParams, String k8SecretName) {
+    Map<String, SecretParams> secretData =
+        kubeCtlHandler.fetchEnvVarsWithSecretRefSecretParams(envVarsWithSecretRef, containerParams.getName());
+    if (isNotEmpty(secretData)) {
+      updateContainer(containerParams, k8SecretName, secretData);
+      return secretData.values().stream().collect(Collectors.toMap(SecretParams::getSecretKey, SecretParams::getValue));
+    } else {
+      return Collections.emptyMap();
+    }
   }
 
   private Map<String, String> getAndUpdateGithubAppTokenSecretData(
@@ -341,7 +377,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
   private Map<String, String> getAndUpdateProxyConfigurationSecretData(
       CIK8ContainerParams containerParams, String secretName) {
-    if (proxyVariableHelper.checkIfProxyIsConfigured()) {
+    if (proxyVariableHelper != null && proxyVariableHelper.checkIfProxyIsConfigured()) {
       Map<String, SecretParams> proxyConfiguration = proxyVariableHelper.getProxyConfiguration();
       updateContainer(containerParams, secretName, proxyConfiguration);
       return proxyConfiguration.values().stream().collect(
@@ -428,5 +464,19 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     }
     secretEnvVars.put(
         variableName, SecretVarParams.builder().secretKey(secretParam.getSecretKey()).secretName(secretName).build());
+  }
+
+  private void updateContainerWithEnvVariable(Set<String> allSecrets, ContainerParams containerParams) {
+    if (isEmpty(allSecrets)) {
+      return;
+    }
+
+    Map<String, String> secretEnvVars = containerParams.getEnvVars();
+    if (secretEnvVars == null) {
+      secretEnvVars = new HashMap<>();
+      containerParams.setEnvVars(secretEnvVars);
+    }
+    String secret = String.join(",", allSecrets);
+    secretEnvVars.put(HARNESS_SECRETS_LIST, secret);
   }
 }

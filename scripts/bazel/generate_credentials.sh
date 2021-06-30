@@ -31,11 +31,4 @@ if [[ ! -f "$GOOGLE_CREDENTIALS_FILE" ]]; then
       -o $GOOGLE_CREDENTIALS_FILE
 fi
 
-#Configure JFrog credentials file
-
-cat > bazel-credentials.bzl <<EOF
-JFROG_USERNAME="${JFROG_USERNAME}"
-JFROG_PASSWORD="${JFROG_PASSWORD}"
-EOF
-
 scripts/bazel/testDistribute.sh

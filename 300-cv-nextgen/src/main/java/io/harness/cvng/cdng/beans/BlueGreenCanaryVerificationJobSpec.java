@@ -6,7 +6,6 @@ import io.harness.beans.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 
 import io.swagger.annotations.ApiModelProperty;
-import java.util.HashMap;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,14 +23,4 @@ public abstract class BlueGreenCanaryVerificationJobSpec extends VerificationJob
   ParameterField<String> sensitivity;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH, value = "Example: 50, You can put max upto 50.")
   ParameterField<String> trafficSplitPercentage;
-  @Override
-  protected void addToRuntimeParams(HashMap<String, String> runtimeParams) {
-    if (sensitivity.getValue() != null) {
-      runtimeParams.put(BlueGreenCanaryVerificationJobSpecKeys.sensitivity, sensitivity.getValue());
-    }
-    if (trafficSplitPercentage != null && trafficSplitPercentage.getValue() != null) {
-      runtimeParams.put(
-          BlueGreenCanaryVerificationJobSpecKeys.trafficSplitPercentage, trafficSplitPercentage.getValue());
-    }
-  }
 }

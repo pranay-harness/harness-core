@@ -31,6 +31,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Anshul Anshul <anshul@harness.io>$" |\
     grep -iv "^Anubhaw Srivastava <anubhaw@harness.io>$" |\
     grep -iv "^Archit Singla <archit.singla@harness.io>$" |\
+    grep -iv "^Arpit Tiwari <arpit.tiwari@harness.io>$" |\
     grep -iv "^Arvind Choudhary <arvind.choudhary@harness.io>$" |\
     grep -iv "^Bojan Micovic <bojan.micovic@harness.io>$" |\
     grep -iv "^bojanmicovic <bojan.micovic@harness.io>$" |\
@@ -38,6 +39,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Boopesh Shanmugam <boopesh.shanmugam@harness.io>$" |\
     grep -iv "^bot-harness <bot@harness.io>$" |\
     grep -iv "^Brett Zane <brett@harness.io>$" |\
+    grep -iv "^Bhavya Agrawal <bhavya.agrawal@harness.io>$" |\
     grep -iv "^Brijesh Dhakar <brijesh.dhakar@harness.io>$" |\
     grep -iv "^Christopher Clark <christopher.clark@harness.io>$" |\
     grep -iv "^CI Bot <bot@harness.io>$" |\
@@ -62,6 +64,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Ishan Bhanuka <ishan.bhanuka@harness.io>$" |\
     grep -iv "^Ivan Mijailovic <ivan.mijailovic@harness.io>$" |\
     grep -iv "^Jasmeet Singh Saini <jasmeet.saini@harness.io>$" |\
+    grep -iv "^Munish Jalota <munish.jalota@harness.io>$" |\
     grep -iv "^Jatin Shridhar <jatin@harness.io>$" |\
     grep -iv "^Jenny James <jenny.james@harness.io>$" |\
     grep -iv "^Johnny Liu <johnny.liu@harness.io>$" |\
@@ -81,6 +84,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Matt Hill <matt@harness.io>$" |\
     grep -iv "^Matt Lin <matthew.lin@harness.io>$" |\
     grep -iv "^Meenakshi Raikwar <meenakshi.raikwar@harness.io>$" |\
+    grep -iv "^Meet Rathod <rathod.meetsatish@harness.io>$" |\
     grep -iv "^Mehul Kasliwal <mehul.kasliwal@harness.io>$" |\
     grep -iv "^Michael Katz <michael.katz@harness.io>$" |\
     grep -iv "^Milan Balaban <milan.balaban@harness.io>$" |\
@@ -174,6 +178,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Xin Shao <xin.shao@harness.io>$" |\
     grep -iv "^Yogesh Chauhan <yogesh.chauhan@harness.io>$" |\
     grep -iv "^Prakhar Saxena <prakhar.saxena@harness.io>$" |\
+    grep -iv "^Madhusudan Khoradiya <madhusudan.khoradiya@harness.io>$" |\
     grep -iv "^Zhuo Yin <zhuo.yin@harness.io>$"` || :
 
 if [ ! -z "$UNKNOWN_USERS" ]

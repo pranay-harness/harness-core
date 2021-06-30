@@ -4,6 +4,7 @@ import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
 import static io.harness.accesscontrol.AccessControlPermissions.MANAGE_USERGROUP_PERMISSION;
 import static io.harness.accesscontrol.AccessControlPermissions.MANAGE_USER_PERMISSION;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
+import static io.harness.accesscontrol.principals.PrincipalType.SERVICE_ACCOUNT;
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO.MODEL_NAME;
@@ -28,8 +29,12 @@ import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.accesscontrol.common.validation.ValidationResult;
 import io.harness.accesscontrol.principals.Principal;
 import io.harness.accesscontrol.principals.PrincipalType;
+import io.harness.accesscontrol.principals.serviceaccounts.HarnessServiceAccountService;
+import io.harness.accesscontrol.principals.serviceaccounts.ServiceAccountService;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupService;
 import io.harness.accesscontrol.principals.usergroups.UserGroupService;
+import io.harness.accesscontrol.principals.users.HarnessUserService;
+import io.harness.accesscontrol.principals.users.UserService;
 import io.harness.accesscontrol.resourcegroups.api.ResourceGroupDTO;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
@@ -115,10 +120,14 @@ public class RoleAssignmentResource {
   RoleAssignmentService roleAssignmentService;
   HarnessResourceGroupService harnessResourceGroupService;
   HarnessUserGroupService harnessUserGroupService;
+  HarnessUserService harnessUserService;
+  HarnessServiceAccountService harnessServiceAccountService;
   ScopeService scopeService;
   RoleService roleService;
   ResourceGroupService resourceGroupService;
   UserGroupService userGroupService;
+  UserService userService;
+  ServiceAccountService serviceAccountService;
   RoleAssignmentDTOMapper roleAssignmentDTOMapper;
   RoleDTOMapper roleDTOMapper;
   @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate;
@@ -428,6 +437,14 @@ public class RoleAssignmentResource {
     if (roleAssignment.getPrincipalType().equals(USER_GROUP)
         && !userGroupService.get(roleAssignment.getPrincipalIdentifier(), scope.toString()).isPresent()) {
       harnessUserGroupService.sync(roleAssignment.getPrincipalIdentifier(), scope);
+    }
+    if (roleAssignment.getPrincipalType().equals(USER)
+        && !userService.get(roleAssignment.getPrincipalIdentifier(), scope.toString()).isPresent()) {
+      harnessUserService.sync(roleAssignment.getPrincipalIdentifier(), scope);
+    }
+    if (roleAssignment.getPrincipalType().equals(SERVICE_ACCOUNT)
+        && !serviceAccountService.get(roleAssignment.getPrincipalIdentifier(), scope.toString()).isPresent()) {
+      harnessServiceAccountService.sync(roleAssignment.getPrincipalIdentifier(), scope);
     }
   }
 }

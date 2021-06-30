@@ -1,6 +1,5 @@
 package io.harness.engine.pms.start;
 
-import static io.harness.pms.events.PmsEventFrameworkConstants.SERVICE_NAME;
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
 import static java.lang.String.format;
@@ -10,16 +9,16 @@ import io.harness.engine.ExecutionCheck;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionTimeoutCallback;
 import io.harness.engine.interrupts.InterruptService;
-import io.harness.engine.utils.OrchestrationEventsFrameworkUtils;
-import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.producer.Message;
+import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.pms.PmsFeatureFlagService;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.start.NodeStartEvent;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
+import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.serializer.KryoSerializer;
@@ -34,7 +33,6 @@ import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.util.ArrayList;
@@ -45,12 +43,13 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class NodeStartHelper {
-  @Inject private OrchestrationEventsFrameworkUtils eventsFrameworkUtils;
+  @Inject private PmsEventSender eventSender;
   @Inject private InterruptService interruptService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private TimeoutEngine timeoutEngine;
   @Inject private TimeoutRegistry timeoutRegistry;
+  @Inject private PmsFeatureFlagService pmsFeatureFlagService;
 
   public void startNode(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
     ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
@@ -65,6 +64,7 @@ public class NodeStartHelper {
   }
 
   private void sendEvent(NodeExecution nodeExecution, ByteString passThroughData) {
+    String serviceName = nodeExecution.getNode().getServiceName();
     NodeStartEvent nodeStartEvent = NodeStartEvent.newBuilder()
                                         .setAmbiance(nodeExecution.getAmbiance())
                                         .addAllRefObjects(nodeExecution.getNode().getRebObjectsList())
@@ -73,19 +73,14 @@ public class NodeStartHelper {
                                             nodeExecution.getResolvedStepParameters().toJson())))
                                         .setMode(nodeExecution.getMode())
                                         .build();
-    Producer producer = eventsFrameworkUtils.obtainProducerForNodeStart(nodeExecution.getNode().getServiceName());
-    producer.send(Message.newBuilder()
-                      .putAllMetadata(ImmutableMap.of(SERVICE_NAME, nodeExecution.getNode().getServiceName()))
-                      .setData(nodeStartEvent.toByteString())
-                      .build());
-    log.info("Successfully Sent NodeStart event to the producer");
+    eventSender.sendEvent(
+        nodeExecution.getAmbiance(), nodeStartEvent.toByteString(), PmsEventCategory.NODE_START, serviceName, true);
   }
 
   private NodeExecution prepareNodeExecutionForInvocation(Ambiance ambiance) {
     NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     return Preconditions.checkNotNull(nodeExecutionService.updateStatusWithOps(
         AmbianceUtils.obtainCurrentRuntimeId(ambiance), Status.RUNNING, ops -> {
-          ops.set(NodeExecutionKeys.startTs, System.currentTimeMillis());
           if (!ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
             setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution));
           }

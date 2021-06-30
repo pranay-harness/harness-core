@@ -45,6 +45,11 @@
             <artifactId>940-feature-flag</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+		<dependency>
+			<groupId>software.wings</groupId>
+			<artifactId>945-ng-audit-client</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>948-access-control-sdk</artifactId>
@@ -60,6 +65,11 @@
             <artifactId>950-common-entities</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+		<dependency>
+			<groupId>software.wings</groupId>
+			<artifactId>955-outbox-sdk</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>960-ng-core-beans</artifactId>

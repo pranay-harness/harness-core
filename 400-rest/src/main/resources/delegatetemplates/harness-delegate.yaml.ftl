@@ -5,7 +5,7 @@ metadata:
 
 ---
 
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: harness-delegate-cluster-admin
@@ -164,6 +164,8 @@ spec:
           value: "${grpcServiceEnabled}"
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "${grpcServiceConnectorPort}"
+        - name: CLIENT_TOOLS_DOWNLOAD_DISABLED
+          value: "false"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:

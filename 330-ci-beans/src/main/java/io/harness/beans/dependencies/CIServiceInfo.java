@@ -1,12 +1,15 @@
 package io.harness.beans.dependencies;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.beans.common.SwaggerConstants.BOOLEAN_CLASSPATH;
+import static io.harness.beans.common.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.beans.common.SwaggerConstants.STRING_CLASSPATH;
 import static io.harness.beans.common.SwaggerConstants.STRING_LIST_CLASSPATH;
 import static io.harness.beans.common.SwaggerConstants.STRING_MAP_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.yaml.extended.ImagePullPolicy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
@@ -49,9 +52,13 @@ public class CIServiceInfo implements DependencySpecType {
   @ApiModelProperty(dataType = STRING_LIST_CLASSPATH)
   private ParameterField<List<String>> args;
 
-  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> image;
-  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
+  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> image;
+  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
+  @YamlSchemaTypes({string}) @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> privileged;
+  @YamlSchemaTypes({string}) @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
   private ContainerResource resources;
+  @ApiModelProperty(dataType = "io.harness.beans.yaml.extended.ImagePullPolicy")
+  private ParameterField<ImagePullPolicy> imagePullPolicy;
 
   @JsonIgnore
   public CIDependencyType getType() {

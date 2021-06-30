@@ -56,6 +56,7 @@ public class ChildrenStrategyTest extends PmsSdkCoreTestBase {
     Ambiance ambiance = Ambiance.newBuilder()
                             .putAllSetupAbstractions(setupAbstractions())
                             .setPlanId(generateUuid())
+                            .setPlanExecutionId(generateUuid())
                             .addLevels(Level.newBuilder()
                                            .setSetupId(generateUuid())
                                            .setRuntimeId(generateUuid())
@@ -71,15 +72,18 @@ public class ChildrenStrategyTest extends PmsSdkCoreTestBase {
             .stepParameters(TestChildrenStepParameters.builder().parallelNodeId(childNodeId).build())
             .build();
 
+    ArgumentCaptor<String> planExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> nodeExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<SpawnChildrenRequest> spawnChildrenRequestArgumentCaptor =
         ArgumentCaptor.forClass(SpawnChildrenRequest.class);
 
     childrenStrategy.start(invokerPackage);
     Mockito.verify(sdkNodeExecutionService, Mockito.times(1))
-        .spawnChildren(spawnChildrenRequestArgumentCaptor.capture());
+        .spawnChildren(planExecutionIdCaptor.capture(), nodeExecutionIdCaptor.capture(),
+            spawnChildrenRequestArgumentCaptor.capture());
+    assertThat(planExecutionIdCaptor.getValue()).isEqualTo(ambiance.getPlanExecutionId());
+    assertThat(nodeExecutionIdCaptor.getValue()).isEqualTo(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     SpawnChildrenRequest spawnChildrenRequest = spawnChildrenRequestArgumentCaptor.getValue();
-    assertThat(spawnChildrenRequest.getPlanExecutionId()).isEqualTo(ambiance.getPlanExecutionId());
-    assertThat(spawnChildrenRequest.getNodeExecutionId()).isEqualTo(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
 
     ChildrenExecutableResponse children = spawnChildrenRequest.getChildren();
     assertThat(children.getChildrenCount()).isEqualTo(1);
@@ -111,12 +115,15 @@ public class ChildrenStrategyTest extends PmsSdkCoreTestBase {
             .build();
 
     childrenStrategy.resume(resumePackage);
+    ArgumentCaptor<String> planExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> nodeExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<StepResponseProto> stepResponseCaptor = ArgumentCaptor.forClass(StepResponseProto.class);
 
     Mockito.verify(sdkNodeExecutionService, Mockito.times(1))
-        .handleStepResponse(nodeExecutionIdCaptor.capture(), stepResponseCaptor.capture());
+        .handleStepResponse(
+            planExecutionIdCaptor.capture(), nodeExecutionIdCaptor.capture(), stepResponseCaptor.capture());
     assertThat(nodeExecutionIdCaptor.getValue()).isEqualTo(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+    assertThat(planExecutionIdCaptor.getValue()).isEqualTo(ambiance.getPlanExecutionId());
 
     StepResponseProto stepResponseProto = stepResponseCaptor.getValue();
     assertThat(stepResponseProto.getStatus()).isEqualTo(Status.SUCCEEDED);

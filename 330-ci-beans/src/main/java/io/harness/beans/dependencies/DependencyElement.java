@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -28,7 +29,9 @@ public class DependencyElement implements WithIdentifier {
   @EntityIdentifier String identifier;
   @EntityName String name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
-  String type;
+
+  @NotNull @ApiModelProperty(allowableValues = DependencyConstants.SERVICE_TYPE) DependencyType type;
+
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   DependencySpecType dependencySpecType;
@@ -50,7 +53,7 @@ public class DependencyElement implements WithIdentifier {
   }
 
   @Builder
-  public DependencyElement(String identifier, String name, String type, DependencySpecType dependencySpecType) {
+  public DependencyElement(String identifier, String name, DependencyType type, DependencySpecType dependencySpecType) {
     this.identifier = identifier;
     this.name = name;
     this.type = type;

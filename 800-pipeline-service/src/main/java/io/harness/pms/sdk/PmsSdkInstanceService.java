@@ -4,6 +4,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 import static org.springframework.data.mongodb.core.query.Update.update;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -16,6 +17,7 @@ import io.harness.pms.contracts.plan.PmsServiceGrpc.PmsServiceImplBase;
 import io.harness.pms.contracts.plan.Types;
 import io.harness.pms.exception.InitializeSdkException;
 import io.harness.pms.pipeline.StepPalleteInfo;
+import io.harness.pms.pipeline.service.yamlschema.SchemaFetcher;
 import io.harness.pms.sdk.PmsSdkInstance.PmsSdkInstanceKeys;
 import io.harness.repositories.sdk.PmsSdkInstanceRepository;
 
@@ -43,13 +45,15 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
   private final PmsSdkInstanceRepository pmsSdkInstanceRepository;
   private final MongoTemplate mongoTemplate;
   private final PersistentLocker persistentLocker;
+  private final SchemaFetcher schemaFetcher;
 
   @Inject
   public PmsSdkInstanceService(PmsSdkInstanceRepository pmsSdkInstanceRepository, MongoTemplate mongoTemplate,
-      PersistentLocker persistentLocker) {
+      PersistentLocker persistentLocker, SchemaFetcher schemaFetcher) {
     this.pmsSdkInstanceRepository = pmsSdkInstanceRepository;
     this.mongoTemplate = mongoTemplate;
     this.persistentLocker = persistentLocker;
+    this.schemaFetcher = schemaFetcher;
   }
 
   @Override
@@ -64,6 +68,7 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
         throw new InitializeSdkException("Could not acquire lock");
       }
       saveSdkInstance(request);
+      schemaFetcher.invalidateCache(ModuleType.fromString(request.getName()));
     }
     responseObserver.onNext(InitializeSdkResponse.newBuilder().build());
     responseObserver.onCompleted();
@@ -93,7 +98,9 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
             .set(PmsSdkInstanceKeys.lastUpdatedAt, System.currentTimeMillis())
             .set(PmsSdkInstanceKeys.facilitatorEventConsumerConfig, request.getFacilitatorEventConsumerConfig())
             .set(PmsSdkInstanceKeys.nodeStartEventConsumerConfig, request.getNodeStartEventConsumerConfig())
-            .set(PmsSdkInstanceKeys.progressEventConsumerConfig, request.getProgressEventConsumerConfig());
+            .set(PmsSdkInstanceKeys.progressEventConsumerConfig, request.getProgressEventConsumerConfig())
+            .set(PmsSdkInstanceKeys.nodeAdviseEventConsumerConfig, request.getNodeAdviseEventConsumerConfig())
+            .set(PmsSdkInstanceKeys.nodeResumeEventConsumerConfig, request.getNodeResumeEventConsumerConfig());
     mongoTemplate.findAndModify(
         query, update, new FindAndModifyOptions().upsert(true).returnNew(true), PmsSdkInstance.class);
   }
@@ -119,6 +126,12 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
   public Set<String> getInstanceNames() {
     Set<String> instanceNames = new HashSet<>();
     pmsSdkInstanceRepository.findAll().forEach(instance -> instanceNames.add(instance.getName()));
+    return instanceNames;
+  }
+
+  public Set<String> getActiveInstanceNames() {
+    Set<String> instanceNames = new HashSet<>();
+    pmsSdkInstanceRepository.findByActive(true).forEach(instance -> instanceNames.add(instance.getName()));
     return instanceNames;
   }
 }

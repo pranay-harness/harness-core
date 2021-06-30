@@ -1,5 +1,7 @@
 package io.harness;
 
+import static io.harness.cache.CacheBackend.CAFFEINE;
+import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.maintenance.MaintenanceController.forceMaintenance;
 
@@ -7,6 +9,9 @@ import static org.mockito.Mockito.mock;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheConfig;
+import io.harness.cache.CacheConfig.CacheConfigBuilder;
+import io.harness.cache.CacheModule;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delay.DelayEventListener;
 import io.harness.delegate.DelegateServiceGrpc;
@@ -23,9 +28,9 @@ import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
-import io.harness.pms.sdk.core.execution.events.node.NodeExecutionEventListener;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
+import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
@@ -59,6 +64,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -71,7 +77,6 @@ import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.MongoTransactionManager;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
@@ -130,15 +135,15 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
-      @Named("pmsSdkMongoTemplate")
-      MongoTemplate sdkTemplate(Injector injector) {
-        return injector.getInstance(MongoTemplate.class);
+      TransactionTemplate getTransactionTemplate(MongoTransactionManager mongoTransactionManager) {
+        return new HTransactionTemplate(mongoTransactionManager, false);
       }
 
       @Provides
+      @Named("disableDeserialization")
       @Singleton
-      TransactionTemplate getTransactionTemplate(MongoTransactionManager mongoTransactionManager) {
-        return new HTransactionTemplate(mongoTransactionManager, false);
+      public boolean getSerializationForDelegate() {
+        return false;
       }
     });
 
@@ -183,6 +188,15 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
                                             .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
                                             .isPipelineService(true)
                                             .build()));
+    CacheConfigBuilder cacheConfigBuilder =
+        CacheConfig.builder().disabledCaches(new HashSet<>()).cacheNamespace("harness-cache");
+    if (annotations.stream().anyMatch(annotation -> annotation instanceof Cache)) {
+      cacheConfigBuilder.cacheBackend(CAFFEINE);
+    } else {
+      cacheConfigBuilder.cacheBackend(NOOP);
+    }
+    CacheModule cacheModule = new CacheModule(cacheConfigBuilder.build());
+    modules.add(cacheModule);
     PmsSdkConfiguration sdkConfig =
         PmsSdkConfiguration.builder().moduleType(ModuleType.PMS).deploymentMode(SdkDeployMode.LOCAL).build();
     modules.add(PmsSdkModule.getInstance(sdkConfig));
@@ -200,7 +214,6 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     }
     forceMaintenance(false);
     final QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
 
     closingFactory.addServer(new Closeable() {

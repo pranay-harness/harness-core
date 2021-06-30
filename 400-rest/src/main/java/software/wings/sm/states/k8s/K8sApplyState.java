@@ -68,6 +68,7 @@ public class K8sApplyState extends AbstractK8sState {
   private String stateTimeoutInMinutes;
   @Getter @Setter @Attributes(title = "Skip steady state check") private boolean skipSteadyStateCheck;
   @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
+  @Getter @Setter @Attributes(title = "Skip manifest rendering") private boolean skipRendering;
 
   @Override
   public Integer getTimeoutMillis() {
@@ -133,6 +134,7 @@ public class K8sApplyState extends AbstractK8sState {
                                                   context, appManifestMap.get(K8sValuesLocation.Service)))
                                               .valuesYamlList(fetchRenderedValuesFiles(appManifestMap, context))
                                               .skipDryRun(skipDryRun)
+                                              .skipRendering(skipRendering)
                                               .build();
 
     return queueK8sDelegateTask(context, k8sTaskParameters, appManifestMap);

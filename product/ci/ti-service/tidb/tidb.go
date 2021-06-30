@@ -10,10 +10,10 @@ import (
 
 type TiDB interface {
 	// GetTestsToRun reads in the changed files and returns which tests to run.
-	GetTestsToRun(ctx context.Context, req types.SelectTestsReq) (types.SelectTestsResp, error)
+	GetTestsToRun(ctx context.Context, req types.SelectTestsReq, account string) (types.SelectTestsResp, error)
 
 	// UploadPartialCg uploads a call graph
-	UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info mongodb.VCSInfo, acc, org, proj, target string) (types.SelectTestsResp, error)
+	UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info mongodb.VCSInfo, account, org, project, target string) (types.SelectTestsResp, error)
 
 	// MergePartialCg merges a partial cg corresponding to a list of commits and a repo to the
 	// master call graph.

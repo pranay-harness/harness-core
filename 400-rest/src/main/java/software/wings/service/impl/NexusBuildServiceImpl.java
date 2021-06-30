@@ -15,6 +15,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.nexus.NexusClientImpl;
 import io.harness.nexus.NexusRequest;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -48,10 +49,11 @@ import lombok.extern.slf4j.Slf4j;
 public class NexusBuildServiceImpl implements NexusBuildService {
   @Inject private NexusService nexusService;
   @Inject private EncryptionService encryptionService;
+  @Inject private NexusClientImpl nexusClient;
 
   @Override
   public Map<String, String> getPlans(NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    return nexusService.getRepositories(
+    return nexusClient.getRepositories(
         NexusConfigToNexusRequestMapper.toNexusRequest(config, encryptionService, encryptionDetails));
   }
 
@@ -65,9 +67,9 @@ public class NexusBuildServiceImpl implements NexusBuildService {
     NexusRequest nexusRequest =
         NexusConfigToNexusRequestMapper.toNexusRequest(config, encryptionService, encryptionDetails);
     if (artifactType == ArtifactType.DOCKER) {
-      return nexusService.getRepositories(nexusRequest, RepositoryFormat.docker.name());
+      return nexusClient.getRepositories(nexusRequest, RepositoryFormat.docker.name());
     }
-    return nexusService.getRepositories(nexusRequest, repositoryFormat);
+    return nexusClient.getRepositories(nexusRequest, repositoryFormat);
   }
 
   @Override
@@ -75,7 +77,7 @@ public class NexusBuildServiceImpl implements NexusBuildService {
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails, RepositoryFormat repositoryFormat) {
     NexusRequest nexusRequest =
         NexusConfigToNexusRequestMapper.toNexusRequest(config, encryptionService, encryptionDetails);
-    return nexusService.getRepositories(nexusRequest, repositoryFormat.name());
+    return nexusClient.getRepositories(nexusRequest, repositoryFormat.name());
   }
 
   @Override
@@ -138,7 +140,7 @@ public class NexusBuildServiceImpl implements NexusBuildService {
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
     NexusRequest nexusRequest =
         NexusConfigToNexusRequestMapper.toNexusRequest(config, encryptionService, encryptionDetails);
-    List<String> jobNames = Lists.newArrayList(nexusService.getRepositories(nexusRequest).keySet());
+    List<String> jobNames = Lists.newArrayList(nexusClient.getRepositories(nexusRequest).keySet());
     return wrapJobNameWithJobDetails(jobNames);
   }
 
@@ -199,7 +201,7 @@ public class NexusBuildServiceImpl implements NexusBuildService {
     }
     NexusRequest nexusRequest =
         NexusConfigToNexusRequestMapper.toNexusRequest(nexusConfig, encryptionService, encryptedDataDetails);
-    return nexusService.isRunning(nexusRequest);
+    return nexusClient.isRunning(nexusRequest);
   }
 
   @Override

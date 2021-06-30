@@ -12,6 +12,7 @@ import io.grpc.Channel;
 import io.grpc.ManagedChannel;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,7 @@ public class ScmDelegateClientImpl implements ScmDelegateClient {
             }
             Thread.sleep(100);
           } else {
+            shutdownChannel(channel);
             throw e;
           }
         }
@@ -51,9 +53,7 @@ public class ScmDelegateClientImpl implements ScmDelegateClient {
       if (retryCount <= 20) {
         log.info(format("Succeeded processing scm request with %s retries", retryCount));
       }
-      if (channel != null) {
-        channel.shutdown();
-      }
+      shutdownChannel(channel);
     }
     throw new InvalidRequestException("Cannot start Scm Unix Manager");
   }
@@ -71,5 +71,20 @@ public class ScmDelegateClientImpl implements ScmDelegateClient {
       throw new InvalidRequestException("Manager could not be created", e);
     }
     throw new InvalidRequestException("SCM on" + OS + "is not supported yet");
+  }
+
+  private void shutdownChannel(ManagedChannel channel) {
+    if (channel != null) {
+      try {
+        channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        log.error("Interrupted Exception while shutting down channel", e);
+      }
+      if (channel.isShutdown()) {
+        log.info("scm channel successfully shut down");
+      } else {
+        log.error("Channel couldn't be shutdown");
+      }
+    }
   }
 }

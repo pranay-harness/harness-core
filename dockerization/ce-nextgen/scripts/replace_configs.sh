@@ -18,6 +18,7 @@ replace_key_value logging.level $LOGGING_LEVEL
 replace_key_value server.applicationConnectors[0].port $CE_NEXTGEN_PORT
 
 replace_key_value events-mongo.uri "${EVENTS_MONGO_DB_URL//\\&/&}"
+replace_key_value events-mongo.indexManagerMode $EVENTS_MONGO_INDEX_MANAGER_MODE
 
 replace_key_value ngManagerClientConfig.baseUrl $NG_MANAGER_CLIENT_BASEURL
 replace_key_value managerClientConfig.baseUrl $MANAGER_CLIENT_BASEURL
@@ -41,8 +42,13 @@ replace_key_value eventsFramework.redis.sslConfig.CATrustStorePath $EVENTS_FRAME
 replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PASSWORD
 
 replace_key_value gcpConfig.gcpProjectId "$GCP_PROJECT_ID"
+
 replace_key_value ceAzureSetupConfig.azureAppClientId "$AZURE_APP_CLIENT_ID"
 replace_key_value ceAzureSetupConfig.azureAppClientSecret "$AZURE_APP_CLIENT_SECRET"
+
+replace_key_value awsConfig.accessKey "$AWS_ACCESS_KEY"
+replace_key_value awsConfig.secretKey "$AWS_SECRET_KEY"
+replace_key_value awsConfig.destinationBucket "$AWS_DESTINATION_BUCKET"
 replace_key_value awsConfig.harnessAwsAccountId "$AWS_ACCOUNT_ID"
 replace_key_value awsConfig.awsConnectorTemplate "$AWS_TEMPLATE_LINK"
 replace_key_value awsConfig.awsAccessKey "$AWS_ACCESS_KEY"
@@ -56,6 +62,8 @@ replace_key_value cfClientConfig.readTimeout "$CF_CLIENT_READ_TIMEOUT"
 replace_key_value featureFlagConfig.featureFlagSystem "$FEATURE_FLAG_SYSTEM"
 replace_key_value featureFlagConfig.syncFeaturesToCF "$SYNC_FEATURES_TO_CF"
 
+replace_key_value grpcClient.target "$MANAGER_TARGET"
+replace_key_value grpcClient.authority "$MANAGER_AUTHORITY"
 
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   IFS=',' read -ra SENTINEL_URLS <<< "$EVENTS_FRAMEWORK_REDIS_SENTINELS"

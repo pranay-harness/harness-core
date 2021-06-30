@@ -51,6 +51,7 @@ import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceConnect
 import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceSettingConstants;
 import io.harness.delegate.beans.azure.appservicesettings.AzureAppServiceSettingDTO;
 import io.harness.delegate.beans.azure.registry.AzureRegistryType;
+import io.harness.delegate.beans.ccm.K8sClusterInfo;
 import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.CIClusterType;
 import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
@@ -92,6 +93,7 @@ import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryValid
 import io.harness.delegate.beans.connector.awscodecommitconnector.AwsCodeCommitTaskParams;
 import io.harness.delegate.beans.connector.awscodecommitconnector.AwsCodeCommitValidationParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsDelegateTaskResponse;
+import io.harness.delegate.beans.connector.awsconnector.AwsS3BucketResponse;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskType;
 import io.harness.delegate.beans.connector.awsconnector.AwsValidateTaskResponse;
@@ -112,6 +114,7 @@ import io.harness.delegate.beans.connector.helm.HttpHelmConnectivityTaskResponse
 import io.harness.delegate.beans.connector.helm.HttpHelmValidationParams;
 import io.harness.delegate.beans.connector.jira.JiraConnectionTaskParams;
 import io.harness.delegate.beans.connector.jira.connection.JiraTestConnectionTaskNGResponse;
+import io.harness.delegate.beans.connector.k8Connector.K8sServiceAccountInfoResponse;
 import io.harness.delegate.beans.connector.k8Connector.K8sValidationParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskResponse;
@@ -158,6 +161,12 @@ import io.harness.delegate.beans.logstreaming.CommandUnitStatusProgress;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.nexus.NexusTaskParams;
 import io.harness.delegate.beans.nexus.NexusTaskResponse;
+import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
+import io.harness.delegate.beans.pcf.CfInternalConfig;
+import io.harness.delegate.beans.pcf.CfInternalInstanceElement;
+import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
+import io.harness.delegate.beans.pcf.CfServiceData;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
@@ -253,10 +262,13 @@ import io.harness.delegate.task.ci.CIBuildPushParameters.CIBuildPushTaskType;
 import io.harness.delegate.task.ci.CIBuildStatusPushParameters;
 import io.harness.delegate.task.ci.GitSCMType;
 import io.harness.delegate.task.gcp.GcpTaskType;
+import io.harness.delegate.task.gcp.request.GcpListBucketsRequest;
 import io.harness.delegate.task.gcp.request.GcpListClustersRequest;
 import io.harness.delegate.task.gcp.request.GcpTaskParameters;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
+import io.harness.delegate.task.gcp.response.GcpBucketDetails;
 import io.harness.delegate.task.gcp.response.GcpClusterListTaskResponse;
+import io.harness.delegate.task.gcp.response.GcpListBucketsResponse;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
@@ -296,7 +308,21 @@ import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
 import io.harness.delegate.task.manifests.request.CustomManifestFetchConfig;
 import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
 import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
+import io.harness.delegate.task.pcf.CfCommandRequest;
+import io.harness.delegate.task.pcf.CfCommandResponse;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.delegate.task.pcf.request.CfCommandDeployRequest;
+import io.harness.delegate.task.pcf.request.CfCommandRollbackRequest;
+import io.harness.delegate.task.pcf.request.CfCommandRouteUpdateRequest;
+import io.harness.delegate.task.pcf.request.CfCommandTaskParameters;
+import io.harness.delegate.task.pcf.request.CfInfraMappingDataRequest;
+import io.harness.delegate.task.pcf.request.CfInstanceSyncRequest;
+import io.harness.delegate.task.pcf.request.CfRunPluginCommandRequest;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
+import io.harness.delegate.task.pcf.response.CfDeployCommandResponse;
+import io.harness.delegate.task.pcf.response.CfInfraMappingDataResponse;
+import io.harness.delegate.task.pcf.response.CfInstanceSyncResponse;
+import io.harness.delegate.task.pcf.response.CfSetupCommandResponse;
 import io.harness.delegate.task.scm.GitFileTaskResponseData;
 import io.harness.delegate.task.scm.GitFileTaskType;
 import io.harness.delegate.task.scm.GitPRTaskType;
@@ -310,6 +336,8 @@ import io.harness.delegate.task.scm.ScmGitWebhookTaskParams;
 import io.harness.delegate.task.scm.ScmGitWebhookTaskResponseData;
 import io.harness.delegate.task.scm.ScmPRTaskParams;
 import io.harness.delegate.task.scm.ScmPRTaskResponseData;
+import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskParams;
+import io.harness.delegate.task.scm.ScmPathFilterEvaluationTaskResponse;
 import io.harness.delegate.task.scm.ScmPushTaskParams;
 import io.harness.delegate.task.scm.ScmPushTaskResponseData;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
@@ -779,13 +807,14 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ScmGitRefTaskParams.class, 543316);
     kryo.register(ScmGitRefTaskResponseData.class, 543317);
     kryo.register(GitRefType.class, 543318);
-    kryo.register(GitWebhookTaskType.class, 543319);
-    kryo.register(ScmGitWebhookTaskParams.class, 543320);
-    kryo.register(ScmGitWebhookTaskResponseData.class, 543321);
 
     kryo.register(ScmGitFileTaskParams.class, 543122);
     kryo.register(GitFileTaskResponseData.class, 543123);
     kryo.register(GitFileTaskType.class, 543124);
+
+    kryo.register(GitWebhookTaskType.class, 543319);
+    kryo.register(ScmGitWebhookTaskParams.class, 543320);
+    kryo.register(ScmGitWebhookTaskResponseData.class, 543321);
     kryo.register(CVConnectorValidationParams.class, 543322);
 
     kryo.register(SecretParams.class, 543325);
@@ -807,5 +836,38 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(NewRelicMetricSlice.class, 543354);
     kryo.register(NewRelicMetricTimeSlice.class, 543355);
     kryo.register(NewRelicMetricData.class, 543356);
+
+    kryo.register(AwsS3BucketResponse.class, 543357);
+    kryo.register(GcpListBucketsRequest.class, 543358);
+    kryo.register(GcpListBucketsResponse.class, 543359);
+    kryo.register(GcpBucketDetails.class, 543360);
+
+    kryo.register(K8sClusterInfo.class, 543361);
+    kryo.register(K8sServiceAccountInfoResponse.class, 543362);
+
+    kryo.register(CfDeployCommandResponse.class, 543401);
+    kryo.register(CfInfraMappingDataResponse.class, 543402);
+    kryo.register(CfInstanceSyncResponse.class, 543403);
+    kryo.register(CfSetupCommandResponse.class, 543404);
+    kryo.register(CfCommandRequest.PcfCommandType.class, 543405);
+    kryo.register(CfCommandRequest.class, 543406);
+    kryo.register(CfCommandResponse.class, 543407);
+    kryo.register(ResizeStrategy.class, 543408);
+    kryo.register(CfAppSetupTimeDetails.class, 543409);
+    kryo.register(CfInternalInstanceElement.class, 543410);
+    kryo.register(CfRouteUpdateRequestConfigData.class, 543411);
+    kryo.register(CfServiceData.class, 543412);
+    kryo.register(CfCommandDeployRequest.class, 543413);
+    kryo.register(CfInternalConfig.class, 543414);
+    kryo.register(CfCommandRollbackRequest.class, 543415);
+    kryo.register(CfCommandRouteUpdateRequest.class, 543416);
+    kryo.register(CfCommandTaskParameters.class, 543417);
+    kryo.register(CfInfraMappingDataRequest.class, 543418);
+    kryo.register(CfInfraMappingDataRequest.ActionType.class, 543419);
+    kryo.register(CfInstanceSyncRequest.class, 543420);
+    kryo.register(CfRunPluginCommandRequest.class, 543421);
+    kryo.register(CfCommandExecutionResponse.class, 543422);
+    kryo.register(ScmPathFilterEvaluationTaskParams.class, 543423);
+    kryo.register(ScmPathFilterEvaluationTaskResponse.class, 543424);
   }
 }

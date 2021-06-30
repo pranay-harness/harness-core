@@ -5,9 +5,9 @@ import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.consumer.Message;
-import io.harness.execution.utils.SdkResponseListenerHelper;
+import io.harness.execution.utils.SdkResponseHandler;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
-import io.harness.pms.events.base.PmsAbstractBaseMessageListenerWithObservers;
+import io.harness.pms.events.base.PmsAbstractMessageListener;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,26 +18,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class SdkResponseEventMessageListener
-    extends PmsAbstractBaseMessageListenerWithObservers<SdkResponseEventProto> {
-  private final SdkResponseListenerHelper sdkResponseListenerHelper;
-
+    extends PmsAbstractMessageListener<SdkResponseEventProto, SdkResponseHandler> {
   @Inject
   public SdkResponseEventMessageListener(
-      @Named(SDK_SERVICE_NAME) String serviceName, SdkResponseListenerHelper sdkResponseListenerHelper) {
-    super(serviceName, SdkResponseEventProto.class);
-    this.sdkResponseListenerHelper = sdkResponseListenerHelper;
-  }
-
-  @Override
-  public boolean processMessageInternal(SdkResponseEventProto sdkResponseEventProto) {
-    try {
-      sdkResponseListenerHelper.handleEvent(sdkResponseEventProto);
-      return true;
-    } catch (Exception ex) {
-      // TODO (prashant) : Handle Failure should we retry here. Currently acknowledging the message ?
-      log.error("Processing failed for SdkResponseEvent", ex);
-      return true;
-    }
+      @Named(SDK_SERVICE_NAME) String serviceName, SdkResponseHandler sdkResponseHandler) {
+    super(serviceName, SdkResponseEventProto.class, sdkResponseHandler);
   }
 
   @Override

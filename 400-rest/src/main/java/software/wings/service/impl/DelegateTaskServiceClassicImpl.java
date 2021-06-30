@@ -8,6 +8,7 @@ import static io.harness.beans.DelegateTask.Status.STARTED;
 import static io.harness.beans.DelegateTask.Status.runningStatuses;
 import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
+import static io.harness.beans.shared.tasks.NgSetupFields.NG;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.SizeFunction.size;
@@ -88,6 +89,10 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskParameters;
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskResponse;
 import io.harness.delegate.task.executioncapability.CapabilityCheckDetails;
+import io.harness.delegate.task.pcf.CfCommandRequest;
+import io.harness.delegate.task.pcf.request.CfCommandTaskParameters;
+import io.harness.delegate.task.pcf.request.CfCommandTaskParameters.CfCommandTaskParametersBuilder;
+import io.harness.delegate.task.pcf.request.CfRunPluginCommandRequest;
 import io.harness.environment.SystemEnvironment;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.CriticalExpressionEvaluationException;
@@ -146,10 +151,6 @@ import software.wings.expression.NgSecretManagerFunctor;
 import software.wings.expression.SecretManagerFunctor;
 import software.wings.expression.SecretManagerMode;
 import software.wings.expression.SweepingOutputSecretFunctor;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters;
-import software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters.PcfCommandTaskParametersBuilder;
-import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.infra.InfraDownloadService;
@@ -172,6 +173,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.io.IOException;
 import java.time.Clock;
 import java.time.Duration;
@@ -204,8 +206,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander")
-@BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandRequest")
-@BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters")
 @OwnedBy(DEL)
 public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassic {
   private static final String ASYNC = "async";
@@ -252,7 +252,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
   @Inject private DelegateTaskSelectorMapService taskSelectorMapService;
   @Inject private SettingsService settingsService;
   @Inject private LogStreamingServiceRestClient logStreamingServiceRestClient;
-  @Inject private SecretManagerClientService ngSecretService;
+  @Inject @Named("PRIVILEGED") private SecretManagerClientService ngSecretService;
   @Inject private DelegateCache delegateCache;
   @Inject private CapabilityService capabilityService;
   @Inject private DelegateInsightsService delegateInsightsService;
@@ -336,7 +336,10 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       selectorCapabilities.add(selectorCapability);
     }
 
-    if (task.getData() != null && task.getData().getTaskType() != null) {
+    boolean isTaskNg =
+        !isEmpty(task.getSetupAbstractions()) && Boolean.parseBoolean(task.getSetupAbstractions().get(NG));
+
+    if (!isTaskNg && task.getData() != null && task.getData().getTaskType() != null) {
       TaskGroup taskGroup = TaskType.valueOf(task.getData().getTaskType()).getTaskGroup();
       TaskSelectorMap mapFromTaskType = taskSelectorMapService.get(task.getAccountId(), taskGroup);
       if (mapFromTaskType != null && isNotEmpty(mapFromTaskType.getSelectors())) {
@@ -945,10 +948,10 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         task.getData().setParameters(newParams.toArray());
         return;
       case PCF_COMMAND_TASK:
-        PcfCommandRequest commandRequest = (PcfCommandRequest) params[0];
-        if (!(commandRequest instanceof PcfRunPluginCommandRequest)) {
-          PcfCommandTaskParametersBuilder parametersBuilder =
-              PcfCommandTaskParameters.builder().pcfCommandRequest(commandRequest);
+        CfCommandRequest commandRequest = (CfCommandRequest) params[0];
+        if (!(commandRequest instanceof CfRunPluginCommandRequest)) {
+          CfCommandTaskParametersBuilder parametersBuilder =
+              CfCommandTaskParameters.builder().pcfCommandRequest(commandRequest);
           if (params.length > 1) {
             parametersBuilder.encryptedDataDetails((List<EncryptedDataDetail>) params[1]);
           }
@@ -1322,7 +1325,11 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                                                                   .executionCapabilities(executionCapabilityList)
                                                                   .delegateCallbackToken(delegateTask.getDriverId());
 
-      if (featureFlagService.isEnabled(FeatureName.LOG_STREAMING_INTEGRATION, delegateTask.getAccountId())) {
+      boolean isTaskNg = !isEmpty(delegateTask.getSetupAbstractions())
+          && Boolean.parseBoolean(delegateTask.getSetupAbstractions().get(NG));
+
+      if (isTaskNg
+          && featureFlagService.isEnabled(FeatureName.LOG_STREAMING_INTEGRATION, delegateTask.getAccountId())) {
         try {
           String logStreamingAccountToken = logStreamingAccountTokenCache.get(delegateTask.getAccountId());
 

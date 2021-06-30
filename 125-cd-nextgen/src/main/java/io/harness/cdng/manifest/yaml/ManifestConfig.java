@@ -1,10 +1,13 @@
 package io.harness.cdng.manifest.yaml;
 
+import static io.harness.cdng.manifest.yaml.ManifestAttributes.ManifestAttributeStepParameters;
+
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.manifest.ManifestConfigType;
 import io.harness.cdng.visitor.helpers.manifest.ManifestConfigVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
@@ -16,10 +19,12 @@ import io.harness.walktree.visitor.Visitable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModelProperty;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Value;
 import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(HarnessTeam.CDC)
@@ -33,10 +38,13 @@ public class ManifestConfig implements Visitable {
   @ApiModelProperty(hidden = true)
   private String uuid;
 
-  @EntityIdentifier String identifier;
-  String type;
+  @NotNull @EntityIdentifier String identifier;
+
+  @NotNull @JsonProperty("type") ManifestConfigType type;
+
+  @NotNull
   @JsonProperty("spec")
-  @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY)
+  @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   ManifestAttributes spec;
 
   // For Visitor Framework Impl
@@ -55,7 +63,7 @@ public class ManifestConfig implements Visitable {
 
   // Use Builder as Constructor then only external property(visible) will be filled.
   @Builder
-  public ManifestConfig(String uuid, String identifier, String type, ManifestAttributes spec) {
+  public ManifestConfig(String uuid, String identifier, ManifestConfigType type, ManifestAttributes spec) {
     this.uuid = uuid;
     this.identifier = identifier;
     this.type = type;
@@ -67,5 +75,21 @@ public class ManifestConfig implements Visitable {
     VisitableChildren children = VisitableChildren.builder().build();
     children.add(YAMLFieldNameConstants.SPEC, spec);
     return children;
+  }
+
+  @Value
+  public static class ManifestConfigStepParameters {
+    String identifier;
+    String type;
+    ManifestAttributeStepParameters spec;
+
+    public static ManifestConfigStepParameters fromManifestConfig(ManifestConfig manifestConfig) {
+      if (manifestConfig == null) {
+        return null;
+      }
+      return new ManifestConfigStepParameters(manifestConfig.getIdentifier(),
+          manifestConfig.getType() == null ? null : manifestConfig.getType().getDisplayName(),
+          manifestConfig.getSpec().getManifestAttributeStepParameters());
+    }
   }
 }

@@ -2,7 +2,6 @@ package io.harness.engine.facilitation;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.pms.contracts.execution.Status.FAILED;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,8 +15,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.ExecutionCheck;
 import io.harness.engine.OrchestrationEngine;
-import io.harness.eraro.ErrorCode;
-import io.harness.eraro.Level;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.expression.EngineExpressionEvaluator;
@@ -25,9 +22,6 @@ import io.harness.expression.VariableResolverTracker;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.execution.failure.FailureData;
-import io.harness.pms.contracts.execution.failure.FailureInfo;
-import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.execution.run.ExpressionBlock;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
@@ -145,27 +139,12 @@ public class RunPreFacilitationCheckerTest extends OrchestrationTestBase {
     when(variableResolverTracker.getUsage()).thenReturn(new HashMap<>());
     when(pmsEngineExpressionService.prepareExpressionEvaluator(nodeExecution.getAmbiance()))
         .thenReturn(engineExpressionEvaluator);
-    when(engineExpressionEvaluator.evaluateExpression(whenCondition))
-        .thenThrow(new InvalidRequestException("TestException"));
+    InvalidRequestException testException = new InvalidRequestException("TestException");
+    when(engineExpressionEvaluator.evaluateExpression(whenCondition)).thenThrow(testException);
     ExecutionCheck check = checker.performCheck(nodeExecution);
     assertThat(check).isNotNull();
     assertThat(check.isProceed()).isFalse();
-    verify(engine, times(1))
-        .handleStepResponse(nodeExecution.getUuid(),
-            StepResponseProto.newBuilder()
-                .setStatus(FAILED)
-                .setFailureInfo(
-                    FailureInfo.newBuilder()
-                        .setErrorMessage("Skip Condition Evaluation failed : INVALID_REQUEST")
-                        .addFailureTypes(FailureType.APPLICATION_FAILURE)
-                        .addFailureData(FailureData.newBuilder()
-                                            .setMessage("Skip Condition Evaluation failed : INVALID_REQUEST")
-                                            .setLevel(Level.ERROR.name())
-                                            .setCode(ErrorCode.DEFAULT_ERROR_CODE.name())
-                                            .addFailureTypes(FailureType.APPLICATION_FAILURE)
-                                            .build())
-                        .build())
-                .build());
+    verify(engine, times(1)).handleError(nodeExecution.getAmbiance(), testException);
   }
 
   @Test

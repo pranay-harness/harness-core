@@ -64,18 +64,15 @@ func New(paths []string, log *zap.SugaredLogger) testreports.TestReporter {
 }
 
 // GetTests parses XMLs and writes relevant data to the channel
-func (j *Junit) GetTests(ctx context.Context) (<-chan *types.TestCase, <-chan error) {
-	errc := make(chan error, 1)
+func (j *Junit) GetTests(ctx context.Context) <-chan *types.TestCase {
 	testc := make(chan *types.TestCase, buffSize)
 	go func() {
-		defer close(errc)
 		defer close(testc)
 		total := 0
 		for _, file := range j.Files {
 			suites, err := gojunit.IngestFile(file)
 			if err != nil {
 				j.Log.Errorw(fmt.Sprintf("could not parse file %s. Error: %s", file, err), "file", file, zap.Error(err))
-				errc <- err
 				continue
 			}
 			for _, suite := range suites {
@@ -91,7 +88,7 @@ func (j *Junit) GetTests(ctx context.Context) (<-chan *types.TestCase, <-chan er
 		}
 		j.Log.Infow(fmt.Sprintf("parsed %d test cases", total), "num_cases", total)
 	}()
-	return testc, errc
+	return testc
 }
 
 // convert combines relevant information in test cases and test suites and parses it to our custom format

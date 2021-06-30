@@ -1,17 +1,19 @@
 package io.harness.cdng.manifest.yaml.kinds;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper.StoreConfigWrapperParameters;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
-import io.harness.cdng.manifest.yaml.StoreConfig;
-import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
 import io.harness.cdng.visitor.helpers.manifest.K8sManifestVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.SkipAutoEvaluation;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -24,6 +26,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
@@ -41,7 +44,7 @@ import org.springframework.data.annotation.TypeAlias;
 public class K8sManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
   @Wither @JsonProperty("store") StoreConfigWrapper store;
-  @Wither @YamlSchemaTypes({string, bool}) ParameterField<Boolean> skipResourceVersioning;
+  @Wither @YamlSchemaTypes({string, bool}) @SkipAutoEvaluation ParameterField<Boolean> skipResourceVersioning;
   // For Visitor Framework Impl
   String metadata;
 
@@ -74,5 +77,18 @@ public class K8sManifest implements ManifestAttributes, Visitable {
     VisitableChildren children = VisitableChildren.builder().build();
     children.add(YAMLFieldNameConstants.STORE, store);
     return children;
+  }
+
+  @Override
+  public ManifestAttributeStepParameters getManifestAttributeStepParameters() {
+    return new K8sManifestStepParameters(
+        identifier, StoreConfigWrapperParameters.fromStoreConfigWrapper(store), skipResourceVersioning);
+  }
+
+  @Value
+  public static class K8sManifestStepParameters implements ManifestAttributeStepParameters {
+    String identifier;
+    StoreConfigWrapperParameters store;
+    ParameterField<Boolean> skipResourceVersioning;
   }
 }

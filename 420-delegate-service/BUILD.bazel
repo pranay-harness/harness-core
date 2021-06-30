@@ -14,11 +14,13 @@ shared_dependencies = [
     "//920-delegate-agent-beans:module",
     "//920-delegate-service-beans:module",
     "//940-feature-flag:module",
+    "//945-ng-audit-client:module",
     "//948-access-control-sdk:module",
     "//950-cg-ng-shared-orchestration-beans:module",
     "//950-common-entities:module",
     "//950-wait-engine:module",
     "//955-account-mgmt:module",
+    "//955-outbox-sdk:module",
     "//960-ng-core-beans:module",
     "//960-persistence:module",
     "//960-continuous-features:module",
@@ -53,7 +55,7 @@ shared_dependencies = [
 
 java_library(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob(["src/main/**/*.java"]) + ["//420-delegate-service/src/main/qbg:queries"],
     visibility = ["//visibility:public"],
     deps = shared_dependencies,
 )
@@ -64,8 +66,9 @@ java_library(
     srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "module",
+        ":module",
         "//:lombok",
+        "//420-delegate-service/src/test/java/resources",
         "//460-capability:module",
         "//910-delegate-service-driver:module",
         "//920-delegate-agent-beans:module",

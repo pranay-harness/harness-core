@@ -29,5 +29,7 @@ public interface RoleService {
 
   Role delete(@NotEmpty String identifier, @NotEmpty String scopeIdentifier);
 
+  Role deleteManaged(@NotEmpty String identifier);
+
   long deleteMulti(@Valid @NotNull RoleFilter roleFilter);
 }

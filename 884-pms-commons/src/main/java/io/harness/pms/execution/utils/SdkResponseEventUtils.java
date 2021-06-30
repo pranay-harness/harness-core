@@ -20,7 +20,7 @@ public class SdkResponseEventUtils {
   private Map<String, String> logContextMap(SdkResponseEventProto sdkResponseEvent) {
     Map<String, String> logContext = new HashMap<>();
     logContext.put("sdkResponseEventType", sdkResponseEvent.getSdkResponseEventType().name());
-    logContext.put("nodeExecutionId", sdkResponseEvent.getSdkResponseEventRequest().getNodeExecutionId());
+    logContext.put("nodeExecutionId", sdkResponseEvent.getNodeExecutionId());
     return logContext;
   }
 }

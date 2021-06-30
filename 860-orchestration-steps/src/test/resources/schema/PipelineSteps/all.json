@@ -470,6 +470,11 @@
         },
         {
           "type": "object",
+          "required": [
+            "connectorRef",
+            "issueType",
+            "projectKey"
+          ],
           "properties": {
             "connectorRef": {
               "type": "string"

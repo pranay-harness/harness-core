@@ -24,7 +24,7 @@ func ConvertBranchHook(h *scm.BranchHook) (*pb.BranchHook, error) {
 		Action: convertAction(h.Action),
 		Repo:   repo,
 		Sender: sender,
-		Ref: convertReference(h.Ref),
+		Ref:    convertReference(h.Ref),
 	}, nil
 
 }

@@ -268,6 +268,12 @@ Untar the downloaded file and add it to your PATH in `~/.bashrc` or `~/.zshrc`
 echo "export PATH="$PATH:$HOME/<path-to-above-directory>/bin" >> ~/.zshrc
 ```
 
+to format .graphql files: you can follow these steps:
+
+* `npm install --global prettier@1.19.1`
+
+* `prettier --write --print-width=120 <filename>` - formats given graphql file
+
 helper shell scripts:
 
 * `git clang-format` - makes sure all staged in git files are reformatted
@@ -282,7 +288,7 @@ helper shell scripts:
 2. Import `portal` as a Bazel project
    1. Open `File > Import Bazel Project...`
    1. Enter `/path/to/repo/portal` for Workspace, click Next
-   1. Select `Import project view file` and enter `.bazelproject` as the Project view
+   1. Select `Import project view file` and enter `project/bazelproject` as the Project view
 3. Install ClangFormatIJ Plugin: https://plugins.jetbrains.com/plugin/8396-clangformatij
    (use `Ctrl/Cmd-Alt-K` to format current statement or the selection)
 
@@ -636,4 +642,4 @@ AWS SDK library internal logging is done using SLF4J. SLF4J serves as a simple f
 
 We are already using logback framework in our application, so it is simple to enable logging as it is already supported in SLF4J.
 * Delegate - To enable AWS SDK logging in delegate, update root logger level to TRACE in logback.xml file in 260-delegate module resources folder and restart delegate.
-* Manager - To enable AWS SDK logging in manager, update root logger level to TRACE in logback.xml file in 360-cg-manager module resources folder and restart manager.
+* Manager - To enable AWS SDK logging in manager, update root logger level to TRACE in logback.xml file in 360-cg-manager module resources folder and restart manager. 

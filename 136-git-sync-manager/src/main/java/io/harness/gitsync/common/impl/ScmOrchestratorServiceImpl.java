@@ -5,7 +5,6 @@ import static io.harness.gitsync.GitSyncModule.SCM_ON_DELEGATE;
 import static io.harness.gitsync.GitSyncModule.SCM_ON_MANAGER;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.dtos.GitSyncSettingsDTO;
 import io.harness.gitsync.common.service.GitSyncSettingsService;
 import io.harness.gitsync.common.service.ScmClientFacilitatorService;
@@ -39,17 +38,23 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   @Override
   public <R> R processScmRequest(Function<ScmClientFacilitatorService, R> scmRequest, String projectIdentifier,
       String orgIdentifier, String accountId) {
-    final Optional<GitSyncSettingsDTO> gitSyncSettingsDTO =
-        gitSyncSettingsService.get(accountId, orgIdentifier, projectIdentifier);
-    GitSyncSettingsDTO gitSyncSettings = gitSyncSettingsDTO.orElseThrow(
-        ()
-            -> new InvalidRequestException(String.format(
-                "No Git Sync Setting found for accountIdentifier %s, organizationIdentifier %s and projectIdentifier %s",
-                accountId, orgIdentifier, projectIdentifier)));
-    final boolean executeOnDelegate = gitSyncSettings.isExecuteOnDelegate();
+    final boolean executeOnDelegate = isExecuteOnDelegate(projectIdentifier, orgIdentifier, accountId);
     if (executeOnDelegate) {
       return scmRequest.apply(scmClientDelegateService);
     }
     return scmRequest.apply(scmClientManagerService);
+  }
+
+  @Override
+  public boolean isExecuteOnDelegate(String projectIdentifier, String orgIdentifier, String accountId) {
+    final Optional<GitSyncSettingsDTO> gitSyncSettingsDTO =
+        gitSyncSettingsService.get(accountId, orgIdentifier, projectIdentifier);
+    GitSyncSettingsDTO gitSyncSettings = gitSyncSettingsDTO.orElse(GitSyncSettingsDTO.builder()
+                                                                       .accountIdentifier(accountId)
+                                                                       .projectIdentifier(projectIdentifier)
+                                                                       .organizationIdentifier(orgIdentifier)
+                                                                       .executeOnDelegate(true)
+                                                                       .build());
+    return gitSyncSettings.isExecuteOnDelegate();
   }
 }

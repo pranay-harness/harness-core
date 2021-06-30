@@ -26,6 +26,8 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(PL)
 public interface NgUserService {
+  void addUserToCG(String userId, Scope scope);
+
   Optional<UserInfo> getUserById(String userId);
 
   Optional<UserInfo> getUserFromEmail(String emailIds);
@@ -59,7 +61,7 @@ public interface NgUserService {
 
   void addUserToScope(String user, Scope scope, String roleIdentifier, UserMembershipUpdateSource source);
 
-  void addUserToScope(UserInfo user, Scope scope, boolean postCreation, UserMembershipUpdateSource source);
+  void addUserToScope(String userId, Scope scope, boolean postCreation, UserMembershipUpdateSource source);
 
   void addUserToScope(
       String userId, Scope scope, List<RoleAssignmentDTO> roleAssignmentDTOs, UserMembershipUpdateSource source);

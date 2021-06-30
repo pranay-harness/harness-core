@@ -590,6 +590,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     notNullCheck("workflowExecutionId", workflowExecutionId, USER);
     WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
+    if (workflowExecution.getWorkflowType() == PIPELINE) {
+      refreshPipelineExecution(workflowExecution);
+    }
+
     notNullCheck("workflowExecution", workflowExecution, USER);
 
     ApprovalStateExecutionData approvalStateExecutionData = null;
@@ -669,7 +673,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return null;
   }
 
-  private void refreshPipelineExecution(WorkflowExecution workflowExecution) {
+  @VisibleForTesting
+  void refreshPipelineExecution(WorkflowExecution workflowExecution) {
     if (workflowExecution == null || workflowExecution.getPipelineExecution() == null) {
       return;
     }

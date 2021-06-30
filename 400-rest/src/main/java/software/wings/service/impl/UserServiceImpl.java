@@ -11,12 +11,12 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.ng.core.common.beans.Generation.NG;
-import static io.harness.ng.core.invites.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
-import static io.harness.ng.core.invites.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
-import static io.harness.ng.core.invites.InviteOperationResponse.FAIL;
-import static io.harness.ng.core.invites.InviteOperationResponse.USER_ALREADY_ADDED;
-import static io.harness.ng.core.invites.InviteOperationResponse.USER_ALREADY_INVITED;
-import static io.harness.ng.core.invites.InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.FAIL;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_ADDED;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_INVITED;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.app.ManagerCacheRegistrar.PRIMARY_CACHE_PREFIX;
@@ -84,9 +84,11 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
+import io.harness.ng.core.account.DefaultExperience;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.dto.UserInviteDTO;
-import io.harness.ng.core.invites.InviteOperationResponse;
+import io.harness.ng.core.invites.dto.InviteDTO;
+import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.UserInfo;
@@ -677,16 +679,8 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public String generateVerificationUrl(String userId, String accountId) throws URISyntaxException {
-    EmailVerificationToken emailVerificationToken =
-        wingsPersistence.saveAndGet(EmailVerificationToken.class, new EmailVerificationToken(userId));
-    return buildAbsoluteUrl(
-        configuration.getPortal().getVerificationUrl() + "/" + emailVerificationToken.getToken(), accountId);
-  }
-
-  @Override
-  public String generateLoginUrl(String accountId) throws URISyntaxException {
-    return buildAbsoluteUrl("/login", accountId);
+  public void setUserEmailVerified(String userId) {
+    wingsPersistence.updateFields(User.class, userId, ImmutableMap.of("emailVerified", true));
   }
 
   @Override
@@ -858,8 +852,12 @@ public class UserServiceImpl implements UserService {
   }
 
   private void sendVerificationEmail(User user) {
+    EmailVerificationToken emailVerificationToken =
+        wingsPersistence.saveAndGet(EmailVerificationToken.class, new EmailVerificationToken(user.getUuid()));
     try {
-      String verificationUrl = generateVerificationUrl(user.getUuid(), user.getDefaultAccountId());
+      String verificationUrl =
+          buildAbsoluteUrl(configuration.getPortal().getVerificationUrl() + "/" + emailVerificationToken.getToken(),
+              user.getDefaultAccountId());
       Map<String, String> templateModel = getTemplateModel(user.getName(), verificationUrl);
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
@@ -1437,6 +1435,9 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User completeNGInviteAndSignIn(UserInviteDTO userInvite) {
+    if (!validateNgInvite(userInvite)) {
+      throw new InvalidRequestException("User invite token invalid");
+    }
     completeNGInvite(userInvite);
     return authenticationManager.defaultLogin(userInvite.getEmail(), userInvite.getPassword());
   }
@@ -1528,6 +1529,15 @@ public class UserServiceImpl implements UserService {
     user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
     eventPublishHelper.publishUserRegistrationCompletionEvent(userInvite.getAccountId(), user);
     NGRestUtils.getResponse(ngInviteClient.completeInvite(userInvite.getToken()));
+  }
+
+  private boolean validateNgInvite(UserInviteDTO userInvite) {
+    InviteDTO inviteDTO = NGRestUtils.getResponse(ngInviteClient.getInviteWithToken(userInvite.getToken()));
+    if (inviteDTO == null || !inviteDTO.getEmail().equals(userInvite.getEmail())
+        || !inviteDTO.getAccountIdentifier().equals(userInvite.getAccountId())) {
+      return false;
+    }
+    return true;
   }
 
   private void marketPlaceSignup(User user, final UserInvite userInvite, MarketPlaceType marketPlaceType) {
@@ -2060,9 +2070,10 @@ public class UserServiceImpl implements UserService {
       Map<String, String> templateModel = getTemplateModel(user.getName(), resetPasswordUrl);
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
+      String templateName = isNGRequest ? "ng_reset_password" : "reset_password";
       EmailData emailData = EmailData.builder()
                                 .to(toList)
-                                .templateName("reset_password")
+                                .templateName(templateName)
                                 .templateModel(templateModel)
                                 .accountId(getPrimaryAccount(user).getUuid())
                                 .build();
@@ -2843,6 +2854,7 @@ public class UserServiceImpl implements UserService {
   private Account setupAccount(Account account, boolean shouldCreateSampleApp) {
     // HAR-8645: Always set default appId for account creation to pass validation
     account.setAppId(GLOBAL_APP_ID);
+    account.setDefaultExperience(DefaultExperience.CG);
     Account savedAccount = accountService.save(account, false, shouldCreateSampleApp);
     log.info("New account created with accountId {} and licenseType {}", account.getUuid(),
         account.getLicenseInfo().getAccountType());

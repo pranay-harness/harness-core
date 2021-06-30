@@ -6,6 +6,8 @@ import static io.harness.rule.OwnerRule.ALEXEI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationVisualizationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
@@ -31,21 +33,22 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mockito;
 
 /**
- * Test class for {@link OrchestrationEndEventHandler}
+ * Test class for {@link OrchestrationEndGraphHandler}
  */
+@OwnedBy(HarnessTeam.PIPELINE)
 public class OrchestrationEndEventHandlerTest extends OrchestrationVisualizationTestBase {
   @Inject private SpringMongoStore mongoStore;
 
   @Inject PlanExecutionService planExecutionService;
   @Inject GraphGenerationService graphGenerationService;
 
-  private OrchestrationEndEventHandler orchestrationEndEventHandler;
+  private OrchestrationEndGraphHandler orchestrationEndEventHandler;
 
   @Before
   public void setUp() {
     ExecutorService executorService = Mockito.mock(ExecutorService.class);
     orchestrationEndEventHandler =
-        new OrchestrationEndEventHandler(executorService, planExecutionService, graphGenerationService);
+        new OrchestrationEndGraphHandler(executorService, planExecutionService, graphGenerationService);
   }
 
   private static final ExecutionMetadata metadata =

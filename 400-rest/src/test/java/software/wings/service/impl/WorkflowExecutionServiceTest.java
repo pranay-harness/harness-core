@@ -646,14 +646,16 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     workflowExecution.setWorkflowType(WorkflowType.PIPELINE);
     workflowExecution.setPipelineExecution(createPipelineExecution(approvalStateExecutionData));
 
-    when(workflowExecutionService.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
+    when(workflowExecutionServiceSpy.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
         .thenReturn(workflowExecution);
+    doNothing().when(workflowExecutionServiceSpy).refreshPipelineExecution(any());
 
     ApprovalStateExecutionData returnedExecutionData =
-        workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
+        workflowExecutionServiceSpy.fetchApprovalStateExecutionDataFromWorkflowExecution(
             APP_ID, workflowExecution.getUuid(), null, approvalDetails);
     assertThat(returnedExecutionData.getApprovalId()).isEqualTo(approvalId);
     assertThat(returnedExecutionData.getUserGroups()).isEqualTo(asList(userGroup.getUuid()));
+    verify(workflowExecutionServiceSpy).refreshPipelineExecution(workflowExecution);
   }
 
   @Test
@@ -731,11 +733,13 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
     workflowExecution.setWorkflowType(WorkflowType.PIPELINE);
     workflowExecution.setPipelineExecution(createPipelineExecution(null));
 
-    when(workflowExecutionService.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
+    when(workflowExecutionServiceSpy.getWorkflowExecution(APP_ID, workflowExecution.getUuid()))
         .thenReturn(workflowExecution);
 
-    workflowExecutionService.fetchApprovalStateExecutionDataFromWorkflowExecution(
+    doNothing().when(workflowExecutionServiceSpy).refreshPipelineExecution(any());
+    workflowExecutionServiceSpy.fetchApprovalStateExecutionDataFromWorkflowExecution(
         APP_ID, workflowExecution.getUuid(), null, approvalDetails);
+    verify(workflowExecutionServiceSpy).refreshPipelineExecution(any());
   }
 
   @Test

@@ -76,15 +76,23 @@ public class ResourceLookupSyncHandler implements Handler<Account> {
       long startTime = System.nanoTime();
       syncTagLinkResourceLookup(account);
       long endTime = System.nanoTime();
-      log.info("Resource Lookup sync for accountId {} took {} nanoseconds", account.getUuid(), endTime - startTime);
+      log.info("ResourceLookupSyncHandler: Resource Lookup sync for accountId {} took {} nanoseconds",
+          account.getUuid(), endTime - startTime);
     }
   }
 
   @VisibleForTesting
   public void syncTagLinkResourceLookup(Account account) {
     String accountId = account.getUuid();
+
+    // Set of resource Ids
     Set<String> tagLinkResourceIds = new HashSet<>();
+    // List of tags attached to a resource
     Map<String, List<NameValuePair>> entityIdTagsMap = new HashMap<>();
+    // appIds for a resource
+    Map<String, String> entityIdAppIdMap = new HashMap<>();
+    // entityType for a resource
+    Map<String, String> entityIdEntityTypeMap = new HashMap<>();
 
     try (HIterator<HarnessTagLink> tagLinksHIterator =
              new HIterator<>(wingsPersistence.createQuery(HarnessTagLink.class)
@@ -93,6 +101,8 @@ public class ResourceLookupSyncHandler implements Handler<Account> {
       while (tagLinksHIterator.hasNext()) {
         HarnessTagLink tagLink = tagLinksHIterator.next();
         tagLinkResourceIds.add(tagLink.getEntityId());
+        entityIdEntityTypeMap.put(tagLink.getEntityId(), tagLink.getEntityType().name());
+        entityIdAppIdMap.put(tagLink.getEntityId(), tagLink.getAppId());
 
         if (entityIdTagsMap.get(tagLink.getEntityId()) == null) {
           List<NameValuePair> tags = new ArrayList<>();
@@ -129,6 +139,17 @@ public class ResourceLookupSyncHandler implements Handler<Account> {
             }
           }
         }
+      } else {
+        ResourceLookup newResourceLookup =
+            resourceLookupService.create(ResourceLookup.builder()
+                                             .accountId(accountId)
+                                             .appId(entityIdAppIdMap.get(resourceId))
+                                             .resourceId(resourceId)
+                                             .resourceType(entityIdEntityTypeMap.get(resourceId))
+                                             .tags(tagsFromTagLinks)
+                                             .build());
+
+        log.info("ResourceLookupSyncHandler: Created new Resource Lookup with id: {}", newResourceLookup.getUuid());
       }
     });
   }

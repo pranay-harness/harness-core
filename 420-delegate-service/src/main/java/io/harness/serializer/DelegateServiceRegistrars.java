@@ -6,6 +6,7 @@ import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
 import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
 import io.harness.serializer.kryo.DelegateServiceKryoRegister;
 import io.harness.serializer.kryo.RbacCoreKryoRegistrar;
+import io.harness.serializer.kryo.WatcherBeansKryoRegister;
 import io.harness.serializer.morphia.CommonEntitiesMorphiaRegister;
 import io.harness.serializer.morphia.DelegateServiceMorphiaRegistrar;
 import io.harness.serializer.morphia.FeatureFlagBeansMorphiaRegistrar;
@@ -22,8 +23,11 @@ public class DelegateServiceRegistrars {
           .add(CgOrchestrationBeansKryoRegistrar.class)
           .add(CommonEntitiesKryoRegistrar.class)
           .add(DelegateAgentBeansKryoRegister.class)
+          .add(WatcherBeansKryoRegister.class)
           .add(DelegateServiceKryoRegister.class)
           .add(RbacCoreKryoRegistrar.class)
+          .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
+          .addAll(OutboxEventRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -33,5 +37,8 @@ public class DelegateServiceRegistrars {
           .addAll(CgOrchestrationRegistrars.morphiaRegistrars)
           .add(DelegateServiceMorphiaRegistrar.class)
           .add(FeatureFlagBeansMorphiaRegistrar.class)
+          .addAll(OutboxEventRegistrars.morphiaRegistrars)
+          .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
+          .addAll(OutboxEventRegistrars.morphiaRegistrars)
           .build();
 }

@@ -36,6 +36,7 @@ import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
@@ -152,10 +153,11 @@ public class ServicePMSPlanCreator {
       String serviceNodeId, List<String> serviceSpecChildrenIds) {
     String serviceSpecNodeId =
         addServiceSpecNode(actualServiceConfig, planNodes, serviceNodeId, serviceSpecChildrenIds);
-    ServiceDefinitionStepParameters stepParameters = ServiceDefinitionStepParameters.builder()
-                                                         .type(actualServiceConfig.getServiceDefinition().getType())
-                                                         .childNodeId(serviceSpecNodeId)
-                                                         .build();
+    ServiceDefinitionStepParameters stepParameters =
+        ServiceDefinitionStepParameters.builder()
+            .type(actualServiceConfig.getServiceDefinition().getType().getYamlName())
+            .childNodeId(serviceSpecNodeId)
+            .build();
     PlanNode node =
         PlanNode.builder()
             .uuid("service-definition-" + serviceNodeId)
@@ -179,11 +181,11 @@ public class ServicePMSPlanCreator {
     ServiceSpec serviceSpec = actualServiceConfig.getServiceDefinition().getServiceSpec();
     ServiceSpecStepParameters stepParameters =
         ServiceSpecStepParameters.builder()
-            .originalVariables(serviceSpec.getVariables())
-            .originalVariableOverrideSets(serviceSpec.getVariableOverrideSets())
+            .originalVariables(ParameterField.createValueField(serviceSpec.getVariables()))
+            .originalVariableOverrideSets(ParameterField.createValueField(serviceSpec.getVariableOverrideSets()))
             .stageOverrideVariables(actualServiceConfig.getStageOverrides() == null
                     ? null
-                    : actualServiceConfig.getStageOverrides().getVariables())
+                    : ParameterField.createValueField(actualServiceConfig.getStageOverrides().getVariables()))
             .stageOverridesUseVariableOverrideSets(actualServiceConfig.getStageOverrides() == null
                     ? null
                     : actualServiceConfig.getStageOverrides().getUseVariableOverrideSets())
@@ -225,8 +227,13 @@ public class ServicePMSPlanCreator {
   /** Method returns actual Service object by resolving useFromStage if present. */
   private ServiceConfig getActualServiceConfig(ServiceConfig serviceConfig, YamlField serviceField) {
     if (serviceConfig.getUseFromStage() == null) {
+      if (serviceConfig.getServiceDefinition() == null) {
+        throw new InvalidArgumentsException(
+            "Either Service Definition or useFromStage should be present in the given stage");
+      }
       return serviceConfig;
     }
+
     if (serviceConfig.getServiceDefinition() != null) {
       throw new InvalidArgumentsException("Service definition should not exist along with useFromStage");
     }

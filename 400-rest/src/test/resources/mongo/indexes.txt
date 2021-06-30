@@ -169,14 +169,14 @@ delegateConnectionResults {"name": "validUntil_1", "background": true, "expireAf
 delegateConnections {"name": "index2", "background": true} {"accountId": 1, "delegateId": 1, "version": 1}
 delegateConnections {"name": "lastHeartbeatIndex", "background": true} {"disconnected": 1, "lastHeartbeat": 1}
 delegateConnections {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-delegateGroups {"name": "byAccount", "unique": true} {"accountId": 1, "name": 1}
+delegateGroups {"name": "byAccount", "unique": true} {"accountId": 1, "name": 1, "ng": 1}
 delegateGroups {"name": "byAcctNgOwner", "background": true} {"accountId": 1, "ng": 1, "owner": 1}
 delegateGroups {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 delegateInsightsSummary {"name": "byAcctGrpTimeType", "background": true} {"accountId": 1, "delegateGroupId": 1, "periodStartTime": 1, "insightsType": 1}
 delegatePerpetualTaskUsageInsights {"name": "timestamp_1", "background": true} {"timestamp": 1}
 delegateProfiles {"name": "byAcctNgOwner", "background": true} {"accountId": 1, "ng": 1, "owner": 1}
 delegateProfiles {"name": "createdAt_1", "background": true} {"createdAt": 1}
-delegateProfiles {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1}
+delegateProfiles {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1, "owner": 1}
 delegateScopes {"name": "createdAt_1", "background": true} {"createdAt": 1}
 delegateScopes {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1}
 delegateSelectionLogRecords {"name": "selectionLogsGroup", "unique": true} {"accountId": 1, "taskId": 1, "message": 1, "groupId": 1}
@@ -489,8 +489,6 @@ newRelicMetricRecords {"name": "serviceGuardIndex", "background": true} {"cvConf
 newRelicMetricRecords {"name": "stateExIdx", "background": true} {"stateExecutionId": 1, "groupName": 1, "dataCollectionMinute": -1}
 newRelicMetricRecords {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 newRelicMetricRecords {"name": "workflowExIdx", "background": true} {"workflowExecutionId": 1, "groupName": 1, "dataCollectionMinute": -1}
-nodeExecutionEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
-nodeExecutionEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 notificationBatch {"name": "appId_1", "background": true} {"appId": 1}
 notificationBatch {"name": "createdAt_1", "background": true} {"createdAt": 1}
 notificationGroups {"name": "appId_1", "background": true} {"appId": 1}
@@ -506,6 +504,8 @@ notifyResponses {"name": "createdAt_1", "background": true} {"createdAt": 1}
 notifyResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 orchestrationEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 orchestrationEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
+outboxEvents {"name": "blocked_createdAt_nextUnblockAttemptAt_outbox_Idx", "background": true} {"blocked": 1, "createdAt": 1, "nextUnblockAttemptAt": 1}
+outboxEvents {"name": "eventType_blocked_outbox_Idx", "background": true} {"eventType": 1, "blocked": 1}
 pcfServiceSpecification {"name": "accountId_1", "background": true} {"accountId": 1}
 pcfServiceSpecification {"name": "appId_1", "background": true} {"appId": 1}
 pcfServiceSpecification {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -838,6 +838,11 @@ workflowExecutions {"name": "service_guard", "background": true} {"appId": 1, "s
 workflowExecutions {"name": "status_1", "background": true} {"status": 1}
 workflowExecutions {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 workflowExecutions {"name": "workflowExecutionMonitor", "background": true} {"status": 1, "nextIteration": 1}
+workflowVerificationResults {"name": "accountId_1", "background": true} {"accountId": 1}
+workflowVerificationResults {"name": "createdAt_1", "background": true} {"createdAt": 1}
+workflowVerificationResults {"name": "lastUpdatedAt_1", "background": true} {"lastUpdatedAt": 1}
+workflowVerificationResults {"name": "stateExecutionId_1", "unique": true} {"stateExecutionId": 1}
+workflowVerificationResults {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 workflows {"name": "accountIdCreatedAt", "background": true} {"accountId": 1, "createdAt": -1}
 workflows {"name": "accountId_1", "background": true} {"accountId": 1}
 workflows {"name": "appId_1", "background": true} {"appId": 1}

@@ -19,12 +19,14 @@ import io.harness.accesscontrol.roles.persistence.repositories.RoleRepository;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SortOrder;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.utils.PageUtils;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
@@ -63,6 +65,13 @@ public class RoleDaoImpl implements RoleDao {
 
   @Override
   public PageResponse<Role> list(PageRequest pageRequest, RoleFilter roleFilter) {
+    if (isEmpty(pageRequest.getSortOrders())) {
+      SortOrder managedOrder =
+          SortOrder.Builder.aSortOrder().withField(RoleDBOKeys.managed, SortOrder.OrderType.DESC).build();
+      SortOrder lastModifiedOrder =
+          SortOrder.Builder.aSortOrder().withField(RoleDBOKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
+      pageRequest.setSortOrders(ImmutableList.of(managedOrder, lastModifiedOrder));
+    }
     Pageable pageable = PageUtils.getPageRequest(pageRequest);
     Criteria criteria = createCriteriaFromFilter(roleFilter);
     Page<RoleDBO> rolePages = roleRepository.findAll(criteria, pageable);
@@ -82,8 +91,10 @@ public class RoleDaoImpl implements RoleDao {
       criteria.and(RoleDBOKeys.scopeIdentifier).in(scopeIdentifier, null);
     } else if (managedFilter.equals(ONLY_CUSTOM)) {
       criteria.and(RoleDBOKeys.scopeIdentifier).is(scopeIdentifier);
+      criteria.and(RoleDBOKeys.managed).is(false);
     } else if (managedFilter.equals(ONLY_MANAGED)) {
       criteria.and(RoleDBOKeys.scopeIdentifier).is(null);
+      criteria.and(RoleDBOKeys.managed).is(true);
     }
 
     if (!isEmpty(scopeIdentifier)) {
@@ -109,8 +120,8 @@ public class RoleDaoImpl implements RoleDao {
   }
 
   @Override
-  public Optional<Role> delete(String identifier, String scopeIdentifier) {
-    return roleRepository.deleteByIdentifierAndScopeIdentifier(identifier, scopeIdentifier)
+  public Optional<Role> delete(String identifier, String scopeIdentifier, boolean managed) {
+    return roleRepository.deleteByIdentifierAndScopeIdentifierAndManaged(identifier, scopeIdentifier, managed)
         .stream()
         .findFirst()
         .flatMap(r -> Optional.of(fromDBO(r)));
@@ -158,13 +169,16 @@ public class RoleDaoImpl implements RoleDao {
 
     if (roleFilter.getManagedFilter().equals(ONLY_MANAGED)) {
       criteria.and(RoleDBOKeys.scopeIdentifier).is(null);
+      criteria.and(RoleDBOKeys.managed).is(true);
     } else if (roleFilter.getManagedFilter().equals(NO_FILTER)) {
       criteria.and(RoleDBOKeys.scopeIdentifier).in(roleFilter.getScopeIdentifier(), null);
     } else if (roleFilter.getManagedFilter().equals(ONLY_CUSTOM) && roleFilter.isIncludeChildScopes()) {
       Pattern startsWithScope = Pattern.compile("^".concat(roleFilter.getScopeIdentifier()));
       criteria.and(RoleDBOKeys.scopeIdentifier).regex(startsWithScope);
+      criteria.and(RoleDBOKeys.managed).is(false);
     } else if (roleFilter.getManagedFilter().equals(ONLY_CUSTOM)) {
       criteria.and(RoleDBOKeys.scopeIdentifier).is(roleFilter.getScopeIdentifier());
+      criteria.and(RoleDBOKeys.managed).is(false);
     }
 
     if (isNotEmpty(roleFilter.getScopeIdentifier()) && !roleFilter.isIncludeChildScopes()) {

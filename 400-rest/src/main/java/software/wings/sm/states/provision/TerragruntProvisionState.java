@@ -878,4 +878,13 @@ public abstract class TerragruntProvisionState extends State {
   public boolean isSelectionLogsTrackingForTasksEnabled() {
     return true;
   }
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> results = new HashMap<>();
+    if (isEmpty(provisionerId)) {
+      results.put("Provisioner", "Provisioner must be provided.");
+    }
+    return results;
+  }
 }
