@@ -1,6 +1,5 @@
 package io.harness.platform.resourcegroup;
 
-import static io.harness.AuthorizationServiceHeader.AUDIT_SERVICE;
 import static io.harness.AuthorizationServiceHeader.RESOUCE_GROUP_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.lock.DistributedLockImplementation.MONGO;

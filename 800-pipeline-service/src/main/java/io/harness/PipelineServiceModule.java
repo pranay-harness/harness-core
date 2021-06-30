@@ -1,7 +1,6 @@
 package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
-import static io.harness.AuthorizationServiceHeader.NOTIFICATION_SERVICE;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
@@ -225,10 +224,9 @@ public class PipelineServiceModule extends AbstractModule {
     install(
         new AuditClientModule(this.configuration.getAuditClientConfig(), this.configuration.getManagerServiceSecret(),
             PIPELINE_SERVICE.getServiceId(), this.configuration.isEnableAudit()));
-    install(new TransactionOutboxModule(DEFAULT_OUTBOX_POLL_CONFIGURATION,PIPELINE_SERVICE.getServiceId(), false));
+    install(new TransactionOutboxModule(DEFAULT_OUTBOX_POLL_CONFIGURATION, PIPELINE_SERVICE.getServiceId(), false));
     install(new TokenClientModule(this.configuration.getNgManagerServiceHttpClientConfig(),
         this.configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
-
 
     bind(OutboxEventHandler.class).to(PipelineOutboxEventHandler.class);
     bind(HPersistence.class).to(MongoPersistence.class);
