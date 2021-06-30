@@ -53,21 +53,21 @@ public class SCMDataObtainer implements GitProviderBaseDataObtainer {
   }
 
   @Override
-  public void acquireProviderData(FilterRequestData filterRequestData) {
+  public void acquireProviderData(FilterRequestData filterRequestData, List<TriggerDetails> triggers) {
     WebhookPayloadData webhookPayloadData = filterRequestData.getWebhookPayloadData();
     ParseWebhookResponse parseWebhookResponse = webhookPayloadData.getParseWebhookResponse();
     if (parseWebhookResponse.hasPr()) {
-      acquirePullRequestCommits(filterRequestData);
+      acquirePullRequestCommits(filterRequestData, triggers);
     }
   }
 
-  private void acquirePullRequestCommits(FilterRequestData filterRequestData) {
+  private void acquirePullRequestCommits(FilterRequestData filterRequestData, List<TriggerDetails> triggers) {
     WebhookPayloadData webhookPayloadData = filterRequestData.getWebhookPayloadData();
     ParseWebhookResponse parseWebhookResponse = webhookPayloadData.getParseWebhookResponse();
     PullRequestHook pullRequestHook = parseWebhookResponse.getPr();
     PullRequest pullRequest = pullRequestHook.getPr();
     List<Commit> commitsInPr = new ArrayList<>();
-    for (TriggerDetails triggerDetails : filterRequestData.getDetails()) {
+    for (TriggerDetails triggerDetails : triggers) {
       try {
         String connectorIdentifier =
             triggerDetails.getNgTriggerEntity().getMetadata().getWebhook().getGit().getConnectorIdentifier();

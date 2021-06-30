@@ -22,7 +22,6 @@ import static io.harness.common.CIExecutionConstants.HARNESS_LOG_PREFIX_VARIABLE
 import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PIPELINE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PROJECT_ID_VARIABLE;
-import static io.harness.common.CIExecutionConstants.HARNESS_SECRETS_LIST;
 import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_LOG_KEY_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_WORKSPACE;
@@ -422,7 +421,6 @@ public class K8BuildSetupUtils {
 
     Map<String, String> envVarsWithSecretRef = removeEnvVarsWithSecretRef(envVars);
 
-    envVars.putAll(createEnvVariableForSecret(containerSecretVariableDetails, envVarsWithSecretRef));
     if (containerDefinitionInfo.getContainerType() == CIContainerType.SERVICE) {
       envVars.put(HARNESS_SERVICE_LOG_KEY_VARIABLE,
           format("%s/serviceId:%s", logPrefix, containerDefinitionInfo.getStepIdentifier()));
@@ -475,26 +473,6 @@ public class K8BuildSetupUtils {
     }
 
     return IntegrationStageUtils.getFullyQualifiedImageName(imageName, imgConnector);
-  }
-
-  private Map<String, String> createEnvVariableForSecret(
-      List<SecretVariableDetails> secretVariableDetails, Map<String, String> envVariablesWithSecretRef) {
-    Map<String, String> envVars = new HashMap<>();
-
-    List<String> secretEnvNames = new ArrayList<>();
-
-    if (isNotEmpty(secretVariableDetails)) {
-      secretEnvNames.addAll(secretVariableDetails.stream()
-                                .map(secretVariableDetail -> secretVariableDetail.getSecretVariableDTO().getName())
-                                .collect(Collectors.toList()));
-    }
-    if (isNotEmpty(envVariablesWithSecretRef)) {
-      secretEnvNames.addAll(envVariablesWithSecretRef.keySet());
-    }
-
-    envVars.put(HARNESS_SECRETS_LIST, String.join(",", secretEnvNames));
-
-    return envVars;
   }
 
   private CIK8ContainerParams createLiteEngineContainerParams(ConnectorDetails connectorDetails,
