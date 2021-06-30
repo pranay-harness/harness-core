@@ -1,5 +1,6 @@
 package io.harness.event.handlers;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.mockito.Mockito.verify;
@@ -10,7 +11,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.events.FacilitatorResponseRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
-import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.rule.Owner;
 import io.harness.tasks.BinaryResponseData;
@@ -47,15 +47,15 @@ public class FacilitateResponseRequestProcessorTest {
   @Category(UnitTests.class)
   @Ignore("Modify it to use orchestrationEngine inplace of waitEngine")
   public void testHandleAdviseEvent() {
+    String nodeExecutionId = generateUuid();
     FacilitatorResponseRequest request =
         FacilitatorResponseRequest.newBuilder()
             .setFacilitatorResponse(FacilitatorResponseProto.newBuilder().setExecutionMode(ExecutionMode.TASK).build())
             .build();
-    SdkResponseEventProto sdkResponseEventInternal =
-        SdkResponseEventProto.newBuilder()
-            .setSdkResponseEventRequest(
-                SdkResponseEventRequest.newBuilder().setFacilitatorResponseRequest(request).build())
-            .build();
+    SdkResponseEventProto sdkResponseEventInternal = SdkResponseEventProto.newBuilder()
+                                                         .setFacilitatorResponseRequest(request)
+                                                         .setNodeExecutionId(nodeExecutionId)
+                                                         .build();
     facilitateResponseRequestHandler.handleEvent(sdkResponseEventInternal);
     verify(waitNotifyEngine)
         .doneWith(request.getNotifyId(),

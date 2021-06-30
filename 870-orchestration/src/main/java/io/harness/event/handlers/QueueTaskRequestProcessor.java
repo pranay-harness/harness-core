@@ -42,8 +42,8 @@ public class QueueTaskRequestProcessor implements SdkResponseProcessor {
   @Override
   public void handleEvent(SdkResponseEventProto event) {
     // Queue Task
-    QueueTaskRequest queueTaskRequest = event.getSdkResponseEventRequest().getQueueTaskRequest();
-    String nodeExecutionId = queueTaskRequest.getNodeExecutionId();
+    QueueTaskRequest queueTaskRequest = event.getQueueTaskRequest();
+    String nodeExecutionId = event.getNodeExecutionId();
     String taskId =
         queueTask(nodeExecutionId, queueTaskRequest.getTaskRequest(), queueTaskRequest.getSetupAbstractionsMap());
     ExecutableResponse executableResponse = buildExecutableResponseWithTaskId(queueTaskRequest, taskId);

@@ -1,5 +1,6 @@
 package io.harness.pms.events.base;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
 import static io.harness.threading.Morpheus.sleep;
@@ -66,8 +67,10 @@ public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListe
     String messageId;
     boolean messageProcessed;
     messages = redisConsumer.read(Duration.ofSeconds(WAIT_TIME_IN_SECONDS));
-    log.info(String.format("Starting processing of the following messages: [%s]",
-        messages.stream().map(message -> message.getId()).collect(Collectors.joining(","))));
+    if (isNotEmpty(messages)) {
+      log.info(String.format("Starting processing of the following messages: [%s]",
+          messages.stream().map(message -> message.getId()).collect(Collectors.joining(","))));
+    }
     for (Message message : messages) {
       messageId = message.getId();
       messageProcessed = handleMessage(message);

@@ -28,7 +28,6 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
-import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
@@ -55,7 +54,7 @@ public class AsyncStrategy extends ProgressableStrategy {
     AsyncExecutable asyncExecutable = extractStep(ambiance);
     StepResponse stepResponse = asyncExecutable.handleAsyncResponse(
         ambiance, resumePackage.getStepParameters(), resumePackage.getResponseDataMap());
-    sdkNodeExecutionService.handleStepResponse(
+    sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(),
         AmbianceUtils.obtainCurrentRuntimeId(ambiance), StepResponseMapper.toStepResponseProto(stepResponse));
   }
 
@@ -69,7 +68,15 @@ public class AsyncStrategy extends ProgressableStrategy {
       // Todo: Create new ExecutionException and throw that over here.
       throw new InvalidRequestException("Callback Ids cannot be empty for Async Executable Response");
     }
-    AsyncSdkResumeCallback callback = AsyncSdkResumeCallback.builder().nodeExecutionId(nodeExecutionId).build();
+    // TODO : This is the last use of add executable response need to remove it as causing issues. Find a way to remove
+    // this
+    sdkNodeExecutionService.addExecutableResponse(ambiance.getPlanExecutionId(), nodeExecutionId,
+        extractStatus(response), ExecutableResponse.newBuilder().setAsync(response).build());
+
+    AsyncSdkResumeCallback callback = AsyncSdkResumeCallback.builder()
+                                          .planExecutionId(ambiance.getPlanExecutionId())
+                                          .nodeExecutionId(nodeExecutionId)
+                                          .build();
     AsyncSdkProgressCallback progressCallback =
         AsyncSdkProgressCallback.builder()
             .ambianceBytes(ambiance.toByteArray())
@@ -79,8 +86,6 @@ public class AsyncStrategy extends ProgressableStrategy {
             .build();
 
     asyncWaitEngine.waitForAllOn(callback, progressCallback, response.getCallbackIdsList().toArray(new String[0]));
-    sdkNodeExecutionService.addExecutableResponse(nodeExecutionId, extractStatus(response),
-        ExecutableResponse.newBuilder().setAsync(response).build(), Collections.emptyList());
   }
 
   @Override

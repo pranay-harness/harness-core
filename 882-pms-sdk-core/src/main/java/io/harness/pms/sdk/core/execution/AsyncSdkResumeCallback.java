@@ -20,16 +20,17 @@ public class AsyncSdkResumeCallback implements OldNotifyCallback {
   @Inject SdkNodeExecutionService sdkNodeExecutionService;
 
   String nodeExecutionId;
+  String planExecutionId;
 
   @Override
   public void notify(Map<String, ResponseData> response) {
     log.info("AsyncSdkResumeCallback notify is called for nodeExecutionId {}", nodeExecutionId);
-    sdkNodeExecutionService.resumeNodeExecution(nodeExecutionId, response, false);
+    sdkNodeExecutionService.resumeNodeExecution(planExecutionId, nodeExecutionId, response, false);
   }
 
   @Override
   public void notifyError(Map<String, ResponseData> response) {
     log.info("AsyncSdkResumeCallback notifyError is called for nodeExecutionId {}", nodeExecutionId);
-    sdkNodeExecutionService.resumeNodeExecution(nodeExecutionId, response, true);
+    sdkNodeExecutionService.resumeNodeExecution(planExecutionId, nodeExecutionId, response, true);
   }
 }

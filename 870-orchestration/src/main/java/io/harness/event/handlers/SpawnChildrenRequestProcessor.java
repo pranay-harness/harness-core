@@ -47,8 +47,8 @@ public class SpawnChildrenRequestProcessor implements SdkResponseProcessor {
 
   @Override
   public void handleEvent(SdkResponseEventProto event) {
-    SpawnChildrenRequest request = event.getSdkResponseEventRequest().getSpawnChildrenRequest();
-    NodeExecution nodeExecution = nodeExecutionService.get(request.getNodeExecutionId());
+    SpawnChildrenRequest request = event.getSpawnChildrenRequest();
+    NodeExecution nodeExecution = nodeExecutionService.get(event.getNodeExecutionId());
     Ambiance ambiance = nodeExecution.getAmbiance();
     Plan plan = planService.fetchPlan(nodeExecution.getAmbiance().getPlanId());
     try (AutoLogContext autoLogContext = AmbianceUtils.autoLogContext(ambiance)) {
@@ -74,7 +74,7 @@ public class SpawnChildrenRequestProcessor implements SdkResponseProcessor {
       }
 
       // Attach a Callback to the parent for the child
-      OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(request.getNodeExecutionId()).build();
+      OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(event.getNodeExecutionId()).build();
       waitNotifyEngine.waitForAllOn(publisherName, callback, callbackIds.toArray(new String[0]));
 
       // Update the parent with executable response
