@@ -8,6 +8,7 @@ import io.harness.cdng.k8s.K8sRollingOutcome.K8sRollingOutcomeBuilder;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
+import io.harness.cdng.k8s.beans.K8sRollingReleaseOutput;
 import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
@@ -100,8 +101,12 @@ public class K8sRollingStep extends TaskChainExecutableWithRollbackAndRbac imple
             .shouldOpenFetchFilesLogStream(shouldOpenFetchFilesLogStream)
             .build();
 
-    return k8sStepHelper.queueK8sTask(
-        stepElementParameters, k8sRollingDeployRequest, ambiance, executionPassThroughData);
+    TaskChainResponse response =
+        k8sStepHelper.queueK8sTask(stepElementParameters, k8sRollingDeployRequest, ambiance, executionPassThroughData);
+    executionSweepingOutputService.consume(ambiance, K8sRollingReleaseOutput.OUTPUT_NAME,
+        K8sRollingReleaseOutput.builder().name(releaseName).build(), StepOutcomeGroup.STAGE.name());
+
+    return response;
   }
 
   @Override
