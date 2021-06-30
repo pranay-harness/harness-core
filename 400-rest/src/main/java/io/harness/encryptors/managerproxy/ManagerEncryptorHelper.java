@@ -52,8 +52,10 @@ public class ManagerEncryptorHelper {
       // Verify if its a Task from NG
       owner = taskSetupAbstractionHelper.getOwner(
           encryptionConfig.getAccountId(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
-      abstractions.put(OWNER, owner);
-      if (isNotBlank(ngAccess.getOrgIdentifier()) || isNotBlank(ngAccess.getProjectIdentifier())) {
+      if (isNotBlank(owner)) {
+        abstractions.put(OWNER, owner);
+      }
+      if (isNotBlank(ngAccess.getAccountIdentifier())) {
         abstractions.put(NG, "true");
       }
     }
