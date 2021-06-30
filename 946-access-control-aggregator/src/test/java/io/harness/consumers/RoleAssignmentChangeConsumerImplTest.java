@@ -9,10 +9,8 @@ import io.harness.CategoryTest;
 import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.acl.models.SourceMetadata;
 import io.harness.accesscontrol.acl.repository.ACLRepository;
-import io.harness.accesscontrol.principals.usergroups.UserGroupService;
-import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.roleassignments.persistence.repositories.RoleAssignmentRepository;
-import io.harness.accesscontrol.roles.RoleService;
+import io.harness.aggregator.consumers.ChangeConsumerService;
 import io.harness.aggregator.consumers.RoleAssignmentChangeConsumerImpl;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -29,20 +27,16 @@ import org.junit.experimental.categories.Category;
 public class RoleAssignmentChangeConsumerImplTest extends CategoryTest {
   private RoleAssignmentChangeConsumerImpl roleAssignmentChangeConsumer;
   private ACLRepository aclRepository;
-  private ResourceGroupService resourceGroupService;
-  private RoleService roleService;
-  private UserGroupService userGroupService;
   private RoleAssignmentRepository roleAssignmentRepository;
+  private ChangeConsumerService changeConsumerService;
 
   @Before
   public void setup() {
     aclRepository = mock(ACLRepository.class);
-    resourceGroupService = mock(ResourceGroupService.class);
-    roleService = mock(RoleService.class);
-    userGroupService = mock(UserGroupService.class);
     roleAssignmentRepository = mock(RoleAssignmentRepository.class);
-    roleAssignmentChangeConsumer = new RoleAssignmentChangeConsumerImpl(
-        aclRepository, roleService, userGroupService, resourceGroupService, roleAssignmentRepository);
+    changeConsumerService = mock(ChangeConsumerService.class);
+    roleAssignmentChangeConsumer =
+        new RoleAssignmentChangeConsumerImpl(aclRepository, roleAssignmentRepository, changeConsumerService);
   }
 
   private List<ACL> getAlreadyExistingACLS() {

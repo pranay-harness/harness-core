@@ -15,6 +15,7 @@ import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.persistence.repositories.RoleRepository;
 import io.harness.aggregator.AggregatorConfiguration;
 import io.harness.aggregator.consumers.AccessControlDebeziumChangeConsumer;
+import io.harness.aggregator.consumers.ChangeConsumerService;
 import io.harness.aggregator.consumers.ChangeEventFailureHandler;
 import io.harness.aggregator.models.AggregatorSecondarySyncState;
 import io.harness.aggregator.models.AggregatorSecondarySyncState.SecondarySyncStatus;
@@ -52,10 +53,11 @@ public class AggregatorSecondarySyncController extends AggregatorBaseSyncControl
       UserGroupService userGroupService, ResourceGroupService resourceGroupService,
       AggregatorConfiguration aggregatorConfiguration, PersistentLocker persistentLocker,
       ChangeEventFailureHandler changeEventFailureHandler,
-      MongoReconciliationOffsetRepository mongoReconciliationOffsetRepository) {
+      MongoReconciliationOffsetRepository mongoReconciliationOffsetRepository,
+      ChangeConsumerService changeConsumerService) {
     super(aclRepository, roleAssignmentRepository, roleRepository, resourceGroupRepository, userGroupRepository,
         roleService, userGroupService, resourceGroupService, aggregatorConfiguration, persistentLocker,
-        changeEventFailureHandler, AggregatorJobType.SECONDARY);
+        changeEventFailureHandler, AggregatorJobType.SECONDARY, changeConsumerService);
     this.aggregatorSecondarySyncStateRepository = aggregatorSecondarySyncStateRepository;
     this.aclRepository = aclRepository;
     this.mongoReconciliationOffsetRepository = mongoReconciliationOffsetRepository;

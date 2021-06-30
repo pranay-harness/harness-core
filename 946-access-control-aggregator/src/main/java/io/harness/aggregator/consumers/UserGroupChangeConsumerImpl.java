@@ -42,9 +42,11 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
   private final RoleAssignmentRepository roleAssignmentRepository;
   private final UserGroupRepository userGroupRepository;
   private final ExecutorService executorService;
+  private final ChangeConsumerService changeConsumerService;
 
   public UserGroupChangeConsumerImpl(ACLRepository aclRepository, RoleAssignmentRepository roleAssignmentRepository,
-      UserGroupRepository userGroupRepository, String executorServiceSuffix) {
+      UserGroupRepository userGroupRepository, String executorServiceSuffix,
+      ChangeConsumerService changeConsumerService) {
     this.aclRepository = aclRepository;
     this.roleAssignmentRepository = roleAssignmentRepository;
     this.userGroupRepository = userGroupRepository;
@@ -52,6 +54,7 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
     // Number of threads = Number of Available Cores * (1 + (Wait time / Service time) )
     this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2,
         new ThreadFactoryBuilder().setNameFormat(changeConsumerThreadFactory).build());
+    this.changeConsumerService = changeConsumerService;
   }
 
   @Override
@@ -74,9 +77,9 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
     List<ReProcessRoleAssignmentOnUserGroupUpdateTask> tasksToExecute =
         roleAssignmentRepository.findAll(criteria, Pageable.unpaged())
             .stream()
-            .map(
-                (RoleAssignmentDBO roleAssignment)
-                    -> new ReProcessRoleAssignmentOnUserGroupUpdateTask(aclRepository, roleAssignment, userGroup.get()))
+            .map((RoleAssignmentDBO roleAssignment)
+                     -> new ReProcessRoleAssignmentOnUserGroupUpdateTask(
+                         aclRepository, changeConsumerService, roleAssignment, userGroup.get()))
             .collect(Collectors.toList());
 
     long numberOfACLsCreated = 0;
@@ -105,18 +108,20 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
   }
 
   @Override
-  public long consumeCreateEvent(String id, UserGroupDBO createdEntity) {
-    return 0;
+  public void consumeCreateEvent(String id, UserGroupDBO createdEntity) {
+    // we do not consume create event
   }
 
   private static class ReProcessRoleAssignmentOnUserGroupUpdateTask implements Callable<Result> {
     private final ACLRepository aclRepository;
+    private final ChangeConsumerService changeConsumerService;
     private final RoleAssignmentDBO roleAssignmentDBO;
     private final UserGroupDBO updatedUserGroup;
 
-    private ReProcessRoleAssignmentOnUserGroupUpdateTask(
-        ACLRepository aclRepository, RoleAssignmentDBO roleAssignment, UserGroupDBO updatedUserGroup) {
+    private ReProcessRoleAssignmentOnUserGroupUpdateTask(ACLRepository aclRepository,
+        ChangeConsumerService changeConsumerService, RoleAssignmentDBO roleAssignment, UserGroupDBO updatedUserGroup) {
       this.aclRepository = aclRepository;
+      this.changeConsumerService = changeConsumerService;
       this.roleAssignmentDBO = roleAssignment;
       this.updatedUserGroup = updatedUserGroup;
     }
@@ -141,13 +146,15 @@ public class UserGroupChangeConsumerImpl implements ChangeConsumer<UserGroupDBO>
 
       long numberOfACLsCreated = 0;
       List<ACL> aclsToCreate = new ArrayList<>();
-      for (String permissionIdentifier : existingPermissions) {
-        for (String principalIdentifier : principalsAddedToUserGroup) {
-          for (String resourceSelector : existingResourceSelectors) {
-            aclsToCreate.add(buildACL(
-                permissionIdentifier, Principal.of(USER, principalIdentifier), roleAssignmentDBO, resourceSelector));
-          }
-        }
+
+      if (existingResourceSelectors.isEmpty() || existingPermissions.isEmpty()) {
+        aclsToCreate.addAll(changeConsumerService.getAClsForRoleAssignment(roleAssignmentDBO));
+      } else {
+        existingPermissions.forEach(permissionIdentifier
+            -> principalsAddedToUserGroup.forEach(principalIdentifier
+                -> existingResourceSelectors.forEach(resourceSelector
+                    -> aclsToCreate.add(buildACL(permissionIdentifier, Principal.of(USER, principalIdentifier),
+                        roleAssignmentDBO, resourceSelector)))));
       }
       numberOfACLsCreated += aclRepository.insertAllIgnoringDuplicates(aclsToCreate);
 

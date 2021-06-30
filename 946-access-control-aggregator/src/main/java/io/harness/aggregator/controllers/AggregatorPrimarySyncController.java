@@ -13,6 +13,7 @@ import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.persistence.repositories.RoleRepository;
 import io.harness.aggregator.AggregatorConfiguration;
 import io.harness.aggregator.consumers.AccessControlDebeziumChangeConsumer;
+import io.harness.aggregator.consumers.ChangeConsumerService;
 import io.harness.aggregator.consumers.ChangeEventFailureHandler;
 import io.harness.aggregator.models.MongoReconciliationOffset;
 import io.harness.annotations.dev.OwnedBy;
@@ -40,10 +41,10 @@ public class AggregatorPrimarySyncController extends AggregatorBaseSyncControlle
       ResourceGroupRepository resourceGroupRepository, UserGroupRepository userGroupRepository, RoleService roleService,
       UserGroupService userGroupService, ResourceGroupService resourceGroupService,
       AggregatorConfiguration aggregatorConfiguration, PersistentLocker persistentLocker,
-      ChangeEventFailureHandler changeEventFailureHandler) {
+      ChangeEventFailureHandler changeEventFailureHandler, ChangeConsumerService changeConsumerService) {
     super(primaryAclRepository, roleAssignmentRepository, roleRepository, resourceGroupRepository, userGroupRepository,
         roleService, userGroupService, resourceGroupService, aggregatorConfiguration, persistentLocker,
-        changeEventFailureHandler, AggregatorJobType.PRIMARY);
+        changeEventFailureHandler, AggregatorJobType.PRIMARY, changeConsumerService);
   }
 
   @Override
