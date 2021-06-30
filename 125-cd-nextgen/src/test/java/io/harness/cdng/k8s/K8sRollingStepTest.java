@@ -5,9 +5,12 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,8 +19,10 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
+import io.harness.cdng.k8s.beans.K8sRollingReleaseOutput;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
+import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
 import io.harness.delegate.task.k8s.K8sRollingDeployResponse;
@@ -69,6 +74,13 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(request.getAccountId()).isEqualTo(accountId);
     assertThat(request.isSkipResourceVersioning()).isTrue();
     assertThat(request.isInCanaryWorkflow()).isFalse();
+
+    ArgumentCaptor<K8sRollingReleaseOutput> releaseOutputCaptor =
+        ArgumentCaptor.forClass(K8sRollingReleaseOutput.class);
+    verify(executionSweepingOutputService, times(1))
+        .consume(eq(ambiance), eq(K8sRollingReleaseOutput.OUTPUT_NAME), releaseOutputCaptor.capture(),
+            eq(StepOutcomeGroup.STAGE.name()));
+    assertThat(releaseOutputCaptor.getValue().getName()).isEqualTo(releaseName);
   }
 
   @Test
@@ -93,6 +105,13 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(request.getAccountId()).isEqualTo(accountId);
     assertThat(request.isSkipResourceVersioning()).isTrue();
     assertThat(request.isInCanaryWorkflow()).isTrue();
+
+    ArgumentCaptor<K8sRollingReleaseOutput> releaseOutputCaptor =
+        ArgumentCaptor.forClass(K8sRollingReleaseOutput.class);
+    verify(executionSweepingOutputService, times(1))
+        .consume(eq(ambiance), eq(K8sRollingReleaseOutput.OUTPUT_NAME), releaseOutputCaptor.capture(),
+            eq(StepOutcomeGroup.STAGE.name()));
+    assertThat(releaseOutputCaptor.getValue().getName()).isEqualTo(releaseName);
   }
 
   @Test
@@ -164,6 +183,33 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(response).isEqualTo(stepResponse);
 
     verify(k8sStepHelper, times(1)).handleTaskException(ambiance, executionPassThroughData, thrownException);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDontSaveReleaseOutputIfQueueTaskFails() {
+    final K8sRollingStepParameters stepParameters = new K8sRollingStepParameters();
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("30m")).build();
+    final RuntimeException thrownException = new RuntimeException("test");
+    stepParameters.setSkipDryRun(ParameterField.createValueField(true));
+
+    when(executionSweepingOutputService.resolveOptional(
+             ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME)))
+        .thenReturn(OptionalSweepingOutput.builder().found(false).build());
+
+    doThrow(thrownException)
+        .when(k8sStepHelper)
+        .queueK8sTask(eq(stepElementParameters), any(K8sDeployRequest.class), eq(ambiance),
+            any(K8sExecutionPassThroughData.class));
+
+    assertThatThrownBy(() -> executeTask(stepElementParameters, K8sRollingDeployRequest.class))
+        .isSameAs(thrownException);
+
+    verify(executionSweepingOutputService, never())
+        .consume(eq(ambiance), eq(OutcomeExpressionConstants.K8S_ROLL_OUT), any(K8sRollingReleaseOutput.class),
+            eq(StepOutcomeGroup.STAGE.name()));
   }
 
   @Override
