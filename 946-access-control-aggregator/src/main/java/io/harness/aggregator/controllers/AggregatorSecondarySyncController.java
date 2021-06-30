@@ -90,6 +90,11 @@ public class AggregatorSecondarySyncController extends AggregatorBaseSyncControl
               debeziumEngine =
                   getEngine(aggregatorConfiguration.getDebeziumConfig(), accessControlDebeziumChangeConsumer);
               debeziumEngineFuture = executorService.submit(debeziumEngine);
+            } else if (syncStateOpt.isPresent() && isSecondarySyncRunning(syncStateOpt.get())) {
+              AccessControlDebeziumChangeConsumer accessControlDebeziumChangeConsumer = buildDebeziumChangeConsumer();
+              debeziumEngine =
+                  getEngine(aggregatorConfiguration.getDebeziumConfig(), accessControlDebeziumChangeConsumer);
+              debeziumEngineFuture = executorService.submit(debeziumEngine);
             }
           }
         }
@@ -111,6 +116,10 @@ public class AggregatorSecondarySyncController extends AggregatorBaseSyncControl
 
   private boolean isSecondarySyncRequested(AggregatorSecondarySyncState aggregatorSecondarySyncState) {
     return SecondarySyncStatus.SECONDARY_SYNC_REQUESTED.equals(aggregatorSecondarySyncState.getSecondarySyncStatus());
+  }
+
+  private boolean isSecondarySyncRunning(AggregatorSecondarySyncState aggregatorSecondarySyncState) {
+    return SecondarySyncStatus.SECONDARY_SYNC_RUNNING.equals(aggregatorSecondarySyncState.getSecondarySyncStatus());
   }
 
   private void cleanUpAndBootstrapForBulkSync() {
