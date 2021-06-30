@@ -15,7 +15,6 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.CommandExecutionStatus;
-import io.harness.logging.LogCallback;
 
 import com.google.inject.Inject;
 import org.apache.commons.lang3.tuple.Pair;
@@ -36,14 +35,13 @@ public class K8sSwapServiceSelectorsHandler extends K8sRequestHandler {
     }
 
     K8sSwapServiceSelectorsRequest k8sSwapServiceSelectorsRequest = (K8sSwapServiceSelectorsRequest) k8sDeployRequest;
-    LogCallback logCallback =
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, SwapServiceSelectors, true, commandUnitsProgress);
-
     KubernetesConfig kubernetesConfig = containerDeploymentDelegateBaseHelper.createKubernetesConfig(
         k8sSwapServiceSelectorsRequest.getK8sInfraDelegateConfig());
 
+    startNewCommandUnit(SwapServiceSelectors, true);
     boolean success = k8sSwapServiceSelectorsBaseHandler.swapServiceSelectors(kubernetesConfig,
-        k8sSwapServiceSelectorsRequest.getService1(), k8sSwapServiceSelectorsRequest.getService2(), logCallback);
+        k8sSwapServiceSelectorsRequest.getService1(), k8sSwapServiceSelectorsRequest.getService2(),
+        getCurrentLogCallback());
 
     if (!success) {
       return getGenericFailureResponse(null);

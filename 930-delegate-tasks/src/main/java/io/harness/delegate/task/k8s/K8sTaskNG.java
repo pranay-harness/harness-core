@@ -89,6 +89,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
                                     .toAbsolutePath()
                                     .toString();
 
+      K8sRequestHandler k8sRequestHandler = k8sTaskTypeToRequestHandler.get(k8sDeployRequest.getTaskType().name());
       try {
         String kubeconfigFileContent = containerDeploymentDelegateBaseHelper.getKubeconfigFileContent(
             k8sDeployRequest.getK8sInfraDelegateConfig());
@@ -117,14 +118,15 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
         // TODO: @anshul/vaibhav , fix this
         //        logK8sVersion(k8sDeployRequest, k8SDelegateTaskParams, commandUnitsProgress);
 
-        K8sDeployResponse k8sDeployResponse = k8sTaskTypeToRequestHandler.get(k8sDeployRequest.getTaskType().name())
-                                                  .executeTask(k8sDeployRequest, k8SDelegateTaskParams,
-                                                      getLogStreamingTaskClient(), commandUnitsProgress);
+        K8sDeployResponse k8sDeployResponse = k8sRequestHandler.executeTask(
+            k8sDeployRequest, k8SDelegateTaskParams, getLogStreamingTaskClient(), commandUnitsProgress);
 
         k8sDeployResponse.setCommandUnitsProgress(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress));
         return k8sDeployResponse;
       } catch (Exception ex) {
         log.error("Exception in processing k8s task [{}]", k8sDeployRequest.toString(), ex);
+        k8sRequestHandler.handleTaskFailure(k8sDeployRequest, ex);
+
         return K8sDeployResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
             .errorMessage(ExceptionUtils.getMessage(ex))

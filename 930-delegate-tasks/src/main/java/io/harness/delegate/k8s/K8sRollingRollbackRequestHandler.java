@@ -57,13 +57,12 @@ public class K8sRollingRollbackRequestHandler extends K8sRequestHandler {
 
     K8sRollingRollbackDeployRequest k8sRollingRollbackDeployRequest =
         (K8sRollingRollbackDeployRequest) k8sDeployRequest;
-    LogCallback initLogCallback =
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true, commandUnitsProgress);
     boolean success;
+    startNewCommandUnit(Init, true);
     try {
-      success = init(k8sRollingRollbackDeployRequest, k8sDelegateTaskParams, initLogCallback);
+      success = init(k8sRollingRollbackDeployRequest, k8sDelegateTaskParams, getCurrentLogCallback());
     } catch (Exception e) {
-      initLogCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
+      getCurrentLogCallback().saveExecutionLog(e.getMessage(), ERROR, FAILURE);
       throw e;
     }
 
@@ -71,23 +70,22 @@ public class K8sRollingRollbackRequestHandler extends K8sRequestHandler {
       return getGenericFailureResponse(null);
     }
 
+    startNewCommandUnit(Rollback, true);
     success = rollbackBaseHandler.rollback(rollbackHandlerConfig, k8sDelegateTaskParams,
-        k8sRollingRollbackDeployRequest.getReleaseNumber(),
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Rollback, true, commandUnitsProgress), emptySet());
+        k8sRollingRollbackDeployRequest.getReleaseNumber(), getCurrentLogCallback(), emptySet());
     if (!success) {
       return getGenericFailureResponse(null);
     }
 
-    LogCallback waitForSteadyStateLogCallback =
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true, commandUnitsProgress);
+    startNewCommandUnit(WaitForSteadyState, true);
     try {
       rollbackBaseHandler.steadyStateCheck(rollbackHandlerConfig, k8sDelegateTaskParams,
-          k8sRollingRollbackDeployRequest.getTimeoutIntervalInMin(), waitForSteadyStateLogCallback);
+          k8sRollingRollbackDeployRequest.getTimeoutIntervalInMin(), getCurrentLogCallback());
       rollbackBaseHandler.postProcess(rollbackHandlerConfig, k8sRollingRollbackDeployRequest.getReleaseName());
-      waitForSteadyStateLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+      getCurrentLogCallback().saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
       return K8sDeployResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
     } catch (Exception e) {
-      waitForSteadyStateLogCallback.saveExecutionLog(e.getMessage(), ERROR, FAILURE);
+      getCurrentLogCallback().saveExecutionLog(e.getMessage(), ERROR, FAILURE);
       throw e;
     }
   }

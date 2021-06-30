@@ -70,12 +70,12 @@ public class K8sScaleRequestHandler extends K8sRequestHandler {
     }
 
     K8sScaleRequest k8sScaleRequest = (K8sScaleRequest) k8sDeployRequest;
-
     KubernetesConfig kubernetesConfig =
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(k8sScaleRequest.getK8sInfraDelegateConfig());
 
-    boolean success = init(k8sScaleRequest, k8SDelegateTaskParams, kubernetesConfig.getNamespace(),
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true, commandUnitsProgress));
+    startNewCommandUnit(Init, true);
+    boolean success =
+        init(k8sScaleRequest, k8SDelegateTaskParams, kubernetesConfig.getNamespace(), getCurrentLogCallback());
     if (!success) {
       return getFailureResponse();
     }
@@ -85,20 +85,19 @@ public class K8sScaleRequestHandler extends K8sRequestHandler {
     }
 
     long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(k8sScaleRequest.getTimeoutIntervalInMin());
-    LogCallback scaleLogCallback =
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Scale, true, commandUnitsProgress);
+    startNewCommandUnit(Scale, true);
     List<K8sPod> beforePodList;
     try {
-      scaleLogCallback.saveExecutionLog("Fetching existing pods before scale.");
+      getCurrentLogCallback().saveExecutionLog("Fetching existing pods before scale.");
       beforePodList = k8sTaskHelperBase.getPodDetails(kubernetesConfig, resourceIdToScale.getNamespace(),
           k8sScaleRequest.getReleaseName(), steadyStateTimeoutInMillis);
     } catch (Exception ex) {
-      scaleLogCallback.saveExecutionLog(ex.getMessage(), ERROR, FAILURE);
+      getCurrentLogCallback().saveExecutionLog(ex.getMessage(), ERROR, FAILURE);
       throw ex;
     }
 
-    success =
-        k8sTaskHelperBase.scale(client, k8SDelegateTaskParams, resourceIdToScale, targetReplicaCount, scaleLogCallback);
+    success = k8sTaskHelperBase.scale(
+        client, k8SDelegateTaskParams, resourceIdToScale, targetReplicaCount, getCurrentLogCallback());
     if (!success) {
       return getFailureResponse();
     }
@@ -112,22 +111,20 @@ public class K8sScaleRequestHandler extends K8sRequestHandler {
       }
     }
 
-    LogCallback wrapUpLogCallback =
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true, commandUnitsProgress);
-
+    startNewCommandUnit(WrapUp, true);
     try {
-      wrapUpLogCallback.saveExecutionLog("Fetching existing pods after scale.");
+      getCurrentLogCallback().saveExecutionLog("Fetching existing pods after scale.");
       List<K8sPod> afterPodList = k8sTaskHelperBase.getPodDetails(kubernetesConfig, resourceIdToScale.getNamespace(),
           k8sScaleRequest.getReleaseName(), steadyStateTimeoutInMillis);
 
       K8sScaleResponse k8sScaleResponse =
           K8sScaleResponse.builder().k8sPodList(k8sTaskHelperBase.tagNewPods(beforePodList, afterPodList)).build();
 
-      wrapUpLogCallback.saveExecutionLog("\nDone.", INFO, SUCCESS);
+      getCurrentLogCallback().saveExecutionLog("\nDone.", INFO, SUCCESS);
 
       return getSuccessResponse(k8sScaleResponse);
     } catch (Exception ex) {
-      wrapUpLogCallback.saveExecutionLog(ex.getMessage(), ERROR, FAILURE);
+      getCurrentLogCallback().saveExecutionLog(ex.getMessage(), ERROR, FAILURE);
       throw ex;
     }
   }

@@ -97,42 +97,41 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
     manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
     long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(k8sDeployRequest.getTimeoutIntervalInMin());
 
+    startNewCommandUnit(FetchFiles, k8sRollingDeployRequest.isShouldOpenFetchFilesLogStream());
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
-        k8sRollingDeployRequest.getManifestDelegateConfig(), manifestFilesDirectory,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
-            k8sRollingDeployRequest.isShouldOpenFetchFilesLogStream(), commandUnitsProgress),
+        k8sRollingDeployRequest.getManifestDelegateConfig(), manifestFilesDirectory, getCurrentLogCallback(),
         steadyStateTimeoutInMillis, k8sRollingDeployRequest.getAccountId());
     if (!success) {
       return getFailureResponse();
     }
 
-    success = init(k8sRollingDeployRequest, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true, commandUnitsProgress));
+    startNewCommandUnit(Init, true);
+    success = init(k8sRollingDeployRequest, k8sDelegateTaskParams, getCurrentLogCallback());
     if (!success) {
       return getFailureResponse();
     }
 
-    LogCallback prepareLogCallback =
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true, commandUnitsProgress);
-    success = prepareForRolling(k8sDelegateTaskParams, prepareLogCallback, k8sRollingDeployRequest.isInCanaryWorkflow(),
-        k8sRollingDeployRequest.isSkipResourceVersioning());
+    startNewCommandUnit(Prepare, true);
+    success = prepareForRolling(k8sDelegateTaskParams, getCurrentLogCallback(),
+        k8sRollingDeployRequest.isInCanaryWorkflow(), k8sRollingDeployRequest.isSkipResourceVersioning());
     if (!success) {
       return getFailureResponse();
     }
 
     List<KubernetesResource> allWorkloads = ListUtils.union(managedWorkloads, customWorkloads);
     List<K8sPod> existingPodList = k8sRollingBaseHandler.getExistingPods(
-        steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName, prepareLogCallback);
+        steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName, getCurrentLogCallback());
 
-    success = k8sTaskHelperBase.applyManifests(client, resources, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true, commandUnitsProgress), true);
+    startNewCommandUnit(Apply, true);
+    success = k8sTaskHelperBase.applyManifests(client, resources, k8sDelegateTaskParams, getCurrentLogCallback(), true);
     if (!success) {
       return getFailureResponse();
     }
 
+    startNewCommandUnit(WaitForSteadyState, true);
     if (isEmpty(managedWorkloads) && isEmpty(customWorkloads)) {
-      k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true, commandUnitsProgress)
-          .saveExecutionLog("Skipping Status Check since there is no Managed Workload.", INFO, SUCCESS);
+      getCurrentLogCallback().saveExecutionLog(
+          "Skipping Status Check since there is no Managed Workload.", INFO, SUCCESS);
     } else {
       k8sRollingBaseHandler.setManagedWorkloadsInRelease(k8sDelegateTaskParams, managedWorkloads, release, client);
       k8sRollingBaseHandler.setCustomWorkloadsInRelease(customWorkloads, release);
@@ -142,14 +141,11 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
 
       List<KubernetesResourceId> managedWorkloadKubernetesResourceIds =
           managedWorkloads.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
-      LogCallback waitForeSteadyStateLogCallback =
-          k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true, commandUnitsProgress);
       success = k8sTaskHelperBase.doStatusCheckForAllResources(client, managedWorkloadKubernetesResourceIds,
-          k8sDelegateTaskParams, kubernetesConfig.getNamespace(), waitForeSteadyStateLogCallback,
-          customWorkloads.isEmpty());
+          k8sDelegateTaskParams, kubernetesConfig.getNamespace(), getCurrentLogCallback(), customWorkloads.isEmpty());
 
-      boolean customWorkloadsStatusSuccess = k8sTaskHelperBase.doStatusCheckForAllCustomResources(client,
-          customWorkloads, k8sDelegateTaskParams, waitForeSteadyStateLogCallback, true, steadyStateTimeoutInMillis);
+      boolean customWorkloadsStatusSuccess = k8sTaskHelperBase.doStatusCheckForAllCustomResources(
+          client, customWorkloads, k8sDelegateTaskParams, getCurrentLogCallback(), true, steadyStateTimeoutInMillis);
 
       // We have to update the DeploymentConfig revision again as the rollout history command sometimes gives the older
       // revision. There seems to be delay in handling of the DeploymentConfig where it still gives older revision even
@@ -162,9 +158,8 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
       }
     }
 
-    LogCallback executionLogCallback =
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true, commandUnitsProgress);
-    k8sRollingBaseHandler.wrapUp(k8sDelegateTaskParams, executionLogCallback, client);
+    startNewCommandUnit(WrapUp, true);
+    k8sRollingBaseHandler.wrapUp(k8sDelegateTaskParams, getCurrentLogCallback(), client);
 
     try {
       String loadBalancer = k8sTaskHelperBase.getLoadBalancerEndpoint(kubernetesConfig, resources);
@@ -178,14 +173,14 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
               .build();
 
       saveRelease(k8sRollingDeployRequest, Status.Succeeded);
-      executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+      getCurrentLogCallback().saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
 
       return K8sDeployResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
           .k8sNGTaskResponse(rollingSetupResponse)
           .build();
     } catch (Exception ex) {
-      executionLogCallback.saveExecutionLog(ex.getMessage(), ERROR, FAILURE);
+      getCurrentLogCallback().saveExecutionLog(ex.getMessage(), ERROR, FAILURE);
       saveRelease(k8sRollingDeployRequest, Status.Failed);
       throw ex;
     }
