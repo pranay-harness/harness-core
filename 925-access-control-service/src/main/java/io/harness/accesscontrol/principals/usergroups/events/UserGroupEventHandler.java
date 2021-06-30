@@ -2,12 +2,14 @@ package io.harness.accesscontrol.principals.usergroups.events;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import static org.apache.commons.lang3.StringUtils.stripToNull;
+
 import io.harness.accesscontrol.commons.events.EventHandler;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupService;
 import io.harness.accesscontrol.scopes.core.Scope;
+import io.harness.accesscontrol.scopes.core.ScopeParams;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
-import io.harness.accesscontrol.scopes.harness.HarnessScopeParams.HarnessScopeParamsBuilder;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
@@ -43,18 +45,13 @@ public class UserGroupEventHandler implements EventHandler {
       return true;
     }
     try {
-      HarnessScopeParamsBuilder builder =
-          HarnessScopeParams.builder().accountIdentifier(entityChangeDTO.getAccountIdentifier().getValue());
-
-      if (entityChangeDTO.getOrgIdentifier() != null) {
-        builder.orgIdentifier(entityChangeDTO.getOrgIdentifier().getValue());
-      }
-      if (entityChangeDTO.getProjectIdentifier() != null) {
-        builder.projectIdentifier(entityChangeDTO.getProjectIdentifier().getValue());
-      }
-
-      Scope scope = scopeService.buildScopeFromParams(builder.build());
-      harnessUserGroupService.sync(entityChangeDTO.getIdentifier().getValue(), scope);
+      ScopeParams params = HarnessScopeParams.builder()
+                               .accountIdentifier(stripToNull(entityChangeDTO.getAccountIdentifier().getValue()))
+                               .orgIdentifier(stripToNull(entityChangeDTO.getOrgIdentifier().getValue()))
+                               .projectIdentifier(stripToNull(entityChangeDTO.getProjectIdentifier().getValue()))
+                               .build();
+      Scope scope = scopeService.buildScopeFromParams(params);
+      harnessUserGroupService.sync(stripToNull(entityChangeDTO.getIdentifier().getValue()), scope);
     } catch (Exception e) {
       log.error("Could not process the resource group change event {} due to error", entityChangeDTO, e);
       return false;

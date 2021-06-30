@@ -32,7 +32,7 @@ import io.harness.accesscontrol.principals.PrincipalValidator;
 import io.harness.accesscontrol.principals.serviceaccounts.HarnessServiceAccountService;
 import io.harness.accesscontrol.principals.serviceaccounts.HarnessServiceAccountServiceImpl;
 import io.harness.accesscontrol.principals.serviceaccounts.ServiceAccountValidator;
-import io.harness.accesscontrol.principals.serviceaccounts.events.ServiceAccountMembershipEventConsumer;
+import io.harness.accesscontrol.principals.serviceaccounts.events.ServiceAccountEventConsumer;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupService;
 import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupServiceImpl;
 import io.harness.accesscontrol.principals.usergroups.UserGroupValidator;
@@ -49,6 +49,7 @@ import io.harness.accesscontrol.roleassignments.validation.RoleAssignmentActionV
 import io.harness.accesscontrol.scopes.core.ScopeLevel;
 import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParamsFactory;
+import io.harness.accesscontrol.scopes.harness.events.ScopeEventConsumer;
 import io.harness.aggregator.AggregatorModule;
 import io.harness.aggregator.consumers.ChangeEventFailureHandler;
 import io.harness.annotations.dev.OwnedBy;
@@ -240,7 +241,8 @@ public class AccessControlModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(ENTITY_CRUD));
     entityCrudEventConsumers.addBinding().to(ResourceGroupEventConsumer.class);
     entityCrudEventConsumers.addBinding().to(UserGroupEventConsumer.class);
-    entityCrudEventConsumers.addBinding().to(ServiceAccountMembershipEventConsumer.class);
+    entityCrudEventConsumers.addBinding().to(ServiceAccountEventConsumer.class);
+    entityCrudEventConsumers.addBinding().to(ScopeEventConsumer.class);
 
     Multibinder<EventConsumer> userMembershipEventConsumers =
         Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(USERMEMBERSHIP));
