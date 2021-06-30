@@ -11,14 +11,6 @@ import java.util.Set;
 public interface ACLRepository {
   long insertAllIgnoringDuplicates(List<ACL> acls);
 
-  List<ACL> findByUserGroup(String scopeIdentifier, String userGroupIdentifier);
-
-  List<ACL> findByRole(String scopeIdentifier, String identifier, boolean managed);
-
-  List<ACL> findByResourceGroup(String scopeIdentifier, String identifier, boolean managed);
-
-  List<ACL> getByRoleAssignmentId(String id);
-
   long deleteByRoleAssignmentId(String id);
 
   List<String> getDistinctResourceSelectorsInACLs(String roleAssignmentId);

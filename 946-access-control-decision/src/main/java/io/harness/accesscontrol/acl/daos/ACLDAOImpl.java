@@ -116,34 +116,4 @@ public class ACLDAOImpl implements ACLDAO {
         .map(queryStringsForPermission -> queryStringsForPermission.stream().anyMatch(aclsPresentInDB::contains))
         .collect(Collectors.toList());
   }
-
-  @Override
-  public long saveAll(List<ACL> acls) {
-    return aclRepository.insertAllIgnoringDuplicates(acls);
-  }
-
-  @Override
-  public long deleteByRoleAssignment(String roleAssignmentId) {
-    return aclRepository.deleteByRoleAssignmentId(roleAssignmentId);
-  }
-
-  @Override
-  public List<ACL> getByUserGroup(String scope, String userGroupIdentifier) {
-    return aclRepository.findByUserGroup(scope, userGroupIdentifier);
-  }
-
-  @Override
-  public List<ACL> getByRole(String scope, String roleIdentifier, boolean managed) {
-    return aclRepository.findByRole(scope, roleIdentifier, managed);
-  }
-
-  @Override
-  public List<ACL> getByResourceGroup(String scope, String resourceGroupIdentifier, boolean managed) {
-    return aclRepository.findByResourceGroup(scope, resourceGroupIdentifier, managed);
-  }
-
-  @Override
-  public List<ACL> getByRoleAssignment(String roleAssignmentId) {
-    return aclRepository.getByRoleAssignmentId(roleAssignmentId);
-  }
 }

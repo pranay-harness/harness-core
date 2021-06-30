@@ -7,7 +7,6 @@ import io.harness.accesscontrol.acl.models.SourceMetadata.SourceMetadataKeys;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;
 
@@ -52,7 +51,7 @@ public class ACL implements PersistentEntity {
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
 
-  @FdIndex String roleAssignmentId;
+  String roleAssignmentId;
   String scopeIdentifier;
   String permissionIdentifier;
   SourceMetadata sourceMetadata;
@@ -60,7 +59,7 @@ public class ACL implements PersistentEntity {
   String principalType;
   String principalIdentifier;
   String aclQueryString;
-  @FdIndex @Getter(value = AccessLevel.NONE) private Boolean enabled;
+  @Getter(value = AccessLevel.NONE) private Boolean enabled;
 
   public boolean isEnabled() {
     return Boolean.TRUE.equals(enabled);
@@ -106,16 +105,6 @@ public class ACL implements PersistentEntity {
                  .name("roleAssignmentIdPrincipalIdx")
                  .field(ACLKeys.roleAssignmentId)
                  .field(ACLKeys.principalIdentifier)
-                 .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("roleIdx")
-                 .field(SourceMetadataKeys.roleIdentifier)
-                 .field(ACLKeys.scopeIdentifier)
-                 .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("resourceGroupIdx")
-                 .field(SourceMetadataKeys.resourceGroupIdentifier)
-                 .field(ACLKeys.scopeIdentifier)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("aclQueryStringEnabledIdx")
