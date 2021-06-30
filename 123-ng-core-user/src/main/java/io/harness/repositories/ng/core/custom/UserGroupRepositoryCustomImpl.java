@@ -44,4 +44,10 @@ public class UserGroupRepositoryCustomImpl implements UserGroupRepositoryCustom 
     Query query = new Query(criteria);
     return mongoTemplate.findAndRemove(query, UserGroup.class);
   }
+
+  @Override
+  public List<UserGroup> deleteAll(Criteria criteria) {
+    Query query = new Query(criteria);
+    return mongoTemplate.findAllAndRemove(query, UserGroup.class);
+  }
 }

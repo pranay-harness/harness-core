@@ -149,6 +149,17 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
 
   private boolean handleDeleteEvent(ResourceInfo resource) {
     if (isScope(resource.getResourceType())) {
+      Scope scope = Scope.builder()
+                        .accountIdentifier(resource.getAccountIdentifier())
+                        .orgIdentifier(resource.getOrgIdentifier())
+                        .projectIdentifier(resource.getProjectIdentifier())
+                        .build();
+      try {
+        resourceGroupService.deleteByScope(scope);
+      } catch (Exception e) {
+        log.error("Could not delete resource groups in scope {}. Failed due to exception", scope, e);
+        return false;
+      }
       return true;
     }
 
