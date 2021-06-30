@@ -97,7 +97,7 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
           .build();
     } else {
       // fetches additional information
-      additionalDataObtainmentManager.acquireProviderData(filterRequestData);
+      additionalDataObtainmentManager.acquireProviderData(filterRequestData, eligibleTriggers);
       addDetails(mappingResponseBuilder, filterRequestData, eligibleTriggers);
     }
 
