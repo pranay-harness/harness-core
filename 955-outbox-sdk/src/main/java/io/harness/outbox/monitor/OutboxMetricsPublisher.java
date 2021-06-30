@@ -19,8 +19,9 @@ import java.util.Map;
 
 @OwnedBy(PL)
 public class OutboxMetricsPublisher implements MetricsPublisher {
-  private static final OutboxMetricsFilter BLOCKED_QUEUE_SIZE_FILTER = OutboxMetricsFilter.builder().build();
-  private static final OutboxMetricsFilter QUEUE_SIZE_FILTER = OutboxMetricsFilter.builder().blocked(true).build();
+  private static final OutboxMetricsFilter BLOCKED_QUEUE_SIZE_FILTER =
+      OutboxMetricsFilter.builder().blocked(true).build();
+  private static final OutboxMetricsFilter QUEUE_SIZE_FILTER = OutboxMetricsFilter.builder().build();
   private final OutboxDao outboxDao;
   private final MetricService metricService;
   private final String serviceId;

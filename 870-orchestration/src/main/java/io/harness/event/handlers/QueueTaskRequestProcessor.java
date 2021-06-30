@@ -78,6 +78,7 @@ public class QueueTaskRequestProcessor implements SdkResponseProcessor {
       TaskExecutor taskExecutor = taskExecutorMap.get(taskRequest.getTaskCategory());
       String taskId =
           Preconditions.checkNotNull(taskExecutor.queueTask(setupAbstractionsMap, taskRequest, Duration.ofSeconds(0)));
+      log.info("TaskRequestQueued for NodeExecutionId : {}, TaskId; {}", nodeExecutionId, taskId);
       EngineResumeCallback callback = EngineResumeCallback.builder().nodeExecutionId(nodeExecutionId).build();
       ProgressCallback progressCallback = EngineProgressCallback.builder().nodeExecutionId(nodeExecutionId).build();
       waitNotifyEngine.waitForAllOn(publisherName, callback, progressCallback, taskId);

@@ -57,11 +57,11 @@ public class InterruptEventHandler extends PmsBaseEventHandler<InterruptEvent> {
     switch (interruptType) {
       case ABORT:
         handleAbort(event);
-        log.info("[PMS_SDK] Handled ABORT InterruptEvent Successfully");
+        log.info("Handled ABORT InterruptEvent Successfully");
         break;
       case CUSTOM_FAILURE:
         handleFailure(event);
-        log.info("[PMS_SDK] Handled CUSTOM_FAILURE InterruptEvent Successfully");
+        log.info("Handled CUSTOM_FAILURE InterruptEvent Successfully");
         break;
       default:
         log.warn("No Handling present for Interrupt Event of type : {}", interruptType);

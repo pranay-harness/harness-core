@@ -12,6 +12,7 @@ import io.harness.models.InstancesByBuildId;
 import io.harness.models.constants.InstanceSyncConstants;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import groovy.util.logging.Slf4j;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -24,6 +25,7 @@ import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
+@Singleton
 @OwnedBy(HarnessTeam.DX)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j

@@ -122,8 +122,8 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
                                                      .build();
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(null);
-    StepResponse stepResponse =
-        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
+    StepResponse stepResponse = liteEngineTaskStep.handleTaskResultWithSecurityContext(
+        ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
@@ -141,8 +141,8 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
                                                      .build();
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(null);
-    StepResponse stepResponse =
-        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
+    StepResponse stepResponse = liteEngineTaskStep.handleTaskResultWithSecurityContext(
+        ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
   }
 
@@ -173,8 +173,8 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
                                                      .build();
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(Arrays.asList(serviceContainer));
-    StepResponse stepResponse =
-        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
+    StepResponse stepResponse = liteEngineTaskStep.handleTaskResultWithSecurityContext(
+        ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
@@ -203,8 +203,8 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
                                                      .build();
 
     when(buildSetupUtils.getBuildServiceContainers(liteEngineTaskStepInfo)).thenReturn(Arrays.asList(serviceContainer));
-    StepResponse stepResponse =
-        liteEngineTaskStep.handleTaskResult(ambiance, stepElementParameters, () -> executionResponse);
+    StepResponse stepResponse = liteEngineTaskStep.handleTaskResultWithSecurityContext(
+        ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 }

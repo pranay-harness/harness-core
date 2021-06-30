@@ -28,9 +28,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.concurrent.ExecutorService;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
+@Slf4j
 public class SpawnChildRequestProcessor implements SdkResponseProcessor {
   @Inject private PlanService planService;
   @Inject private NodeExecutionService nodeExecutionService;
@@ -44,6 +46,8 @@ public class SpawnChildRequestProcessor implements SdkResponseProcessor {
     SpawnChildRequest request = event.getSdkResponseEventRequest().getSpawnChildRequest();
 
     NodeExecution childNodeExecution = buildChildNodeExecution(request);
+
+    log.info("For Child Executable starting Child NodeExecution with id: {}", childNodeExecution.getUuid());
 
     // Attach a Callback to the parent for the child
     OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(request.getNodeExecutionId()).build();

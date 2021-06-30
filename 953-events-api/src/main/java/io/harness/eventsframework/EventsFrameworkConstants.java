@@ -34,34 +34,34 @@ public final class EventsFrameworkConstants {
 
   // Pipeline Service Events
   public static final String PIPELINE_ORCHESTRATION_EVENT_TOPIC = "pipeline_orchestration";
-  public static final int PIPELINE_ORCHESTRATION_EVENT_BATCH_SIZE = 20;
+  public static final int PIPELINE_ORCHESTRATION_EVENT_BATCH_SIZE = 1;
   public static final int PIPELINE_ORCHESTRATION_EVENT_MAX_TOPIC_SIZE = 5000;
 
   public static final String PIPELINE_SDK_RESPONSE_EVENT_TOPIC = "pipeline_sdk_response";
   public static final int PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE = 5000;
 
   public static final String PIPELINE_INTERRUPT_TOPIC = "pipeline_interrupt";
-  public static final int PIPELINE_INTERRUPT_BATCH_SIZE = 10;
+  public static final int PIPELINE_INTERRUPT_BATCH_SIZE = 1;
   public static final int PIPELINE_INTERRUPT_EVENT_MAX_TOPIC_SIZE = 1000;
 
   public static final String PIPELINE_FACILITATOR_EVENT_TOPIC = "pipeline_node_facilitation";
-  public static final int PIPELINE_FACILITATOR_EVENT_BATCH_SIZE = 10;
+  public static final int PIPELINE_FACILITATOR_EVENT_BATCH_SIZE = 1;
   public static final int PIPELINE_FACILITATOR_EVENT_MAX_TOPIC_SIZE = 5000;
 
   public static final String PIPELINE_NODE_START_EVENT_TOPIC = "pipeline_node_start";
-  public static final int PIPELINE_NODE_START_EVENT_BATCH_SIZE = 10;
+  public static final int PIPELINE_NODE_START_EVENT_BATCH_SIZE = 1;
   public static final int PIPELINE_NODE_START_EVENT_MAX_TOPIC_SIZE = 5000;
 
   public static final String PIPELINE_PROGRESS_EVENT_TOPIC = "pipeline_node_progress";
-  public static final int PIPELINE_PROGRESS_BATCH_SIZE = 10;
+  public static final int PIPELINE_PROGRESS_BATCH_SIZE = 1;
   public static final int PIPELINE_PROGRESS_MAX_TOPIC_SIZE = 5000;
 
   public static final String PIPELINE_NODE_ADVISE_EVENT_TOPIC = "pipeline_node_advise";
-  public static final int PIPELINE_NODE_ADVISE_BATCH_SIZE = 10;
+  public static final int PIPELINE_NODE_ADVISE_BATCH_SIZE = 1;
   public static final int PIPELINE_NODE_ADVISE_MAX_TOPIC_SIZE = 5000;
 
   public static final String PIPELINE_NODE_RESUME_EVENT_TOPIC = "pipeline_node_resume";
-  public static final int PIPELINE_NODE_RESUME_BATCH_SIZE = 10;
+  public static final int PIPELINE_NODE_RESUME_BATCH_SIZE = 1;
   public static final int PIPELINE_NODE_RESUME_MAX_TOPIC_SIZE = 5000;
 
   public static final int DEFAULT_TOPIC_SIZE = 10000;

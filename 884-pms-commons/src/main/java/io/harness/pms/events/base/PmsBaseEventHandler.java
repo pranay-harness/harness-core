@@ -21,7 +21,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public abstract class PmsBaseEventHandler<T extends Message> {
   public static String LISTENER_END_METRIC = "%s_queue_time";
   public static String LISTENER_START_METRIC = "%s_time_in_queue";
@@ -42,9 +44,8 @@ public abstract class PmsBaseEventHandler<T extends Message> {
   protected abstract String getMetricPrefix(T message);
 
   public void handleEvent(T event, Map<String, String> metadataMap, long createdAt) {
-    try (PmsGitSyncBranchContextGuard ignore1 = gitSyncContext(event); AutoLogContext ignore2 = autoLogContext(event)) {
-      ThreadAutoLogContext metricContext =
-          new ThreadAutoLogContext(extractMetricContext(event), OverrideBehavior.OVERRIDE_NESTS);
+    try (PmsGitSyncBranchContextGuard ignore1 = gitSyncContext(event); AutoLogContext ignore2 = autoLogContext(event);
+         ThreadAutoLogContext metricContext = new ThreadAutoLogContext(extractMetricContext(event))) {
       GlobalContextManager.upsertGlobalContextRecord(
           MonitoringContext.builder()
               .isMonitoringEnabled(
@@ -59,6 +60,8 @@ public abstract class PmsBaseEventHandler<T extends Message> {
       eventMonitoringService.sendMetric(LISTENER_START_METRIC, monitoringInfo, metadataMap);
       handleEventWithContext(event);
       eventMonitoringService.sendMetric(LISTENER_END_METRIC, monitoringInfo, metadataMap);
+    } catch (Exception e) {
+      log.error("Unknown exception occurred while handling event", e);
     }
   }
 

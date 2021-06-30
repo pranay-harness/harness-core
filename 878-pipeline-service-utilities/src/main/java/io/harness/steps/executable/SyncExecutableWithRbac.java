@@ -9,16 +9,22 @@ import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.security.PmsSecurityContextEventGuard;
+
+import lombok.SneakyThrows;
 
 @OwnedBy(PIPELINE)
 public interface SyncExecutableWithRbac<T extends StepParameters> extends SyncExecutable<T> {
   void validateResources(Ambiance ambiance, T stepParameters);
 
   @Override
+  @SneakyThrows
   default StepResponse executeSync(
       Ambiance ambiance, T stepParameters, StepInputPackage inputPackage, PassThroughData passThroughData) {
-    validateResources(ambiance, stepParameters);
-    return this.executeSyncAfterRbac(ambiance, stepParameters, inputPackage, passThroughData);
+    try (PmsSecurityContextEventGuard securityContextEventGuard = new PmsSecurityContextEventGuard(ambiance)) {
+      validateResources(ambiance, stepParameters);
+      return this.executeSyncAfterRbac(ambiance, stepParameters, inputPackage, passThroughData);
+    }
   }
 
   StepResponse executeSyncAfterRbac(

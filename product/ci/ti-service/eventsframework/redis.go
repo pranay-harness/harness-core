@@ -5,9 +5,9 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
-	"errors"
 	"github.com/robinjoseph08/redisqueue"
 	"io/ioutil"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -21,9 +21,21 @@ import (
 type MergeCallbackFn func(ctx context.Context, req types.MergePartialCgRequest) error
 
 type RedisBroker struct {
-	consumer *redisqueue.Consumer
-	log      *zap.SugaredLogger
+	consumers     map[string]*ConsumerInfo
+	log           *zap.SugaredLogger
+	errorInterval time.Duration
+	consumerOpts  *redisqueue.ConsumerOptions
 }
+
+type ConsumerInfo struct {
+	Topic    string
+	Fn       func(msg *redisqueue.Message) error
+	Consumer *redisqueue.Consumer
+}
+
+const (
+	defaultErrorInterval = 1 * time.Second
+)
 
 func New(endpoint, password string, enableTLS bool, certPath string, log *zap.SugaredLogger) (*RedisBroker, error) {
 	// TODO: (vistaar) Configure with options using values suitable for prod and pass as env variables.
@@ -47,37 +59,93 @@ func New(endpoint, password string, enableTLS bool, certPath string, log *zap.Su
 		}
 		opt.TLSConfig = &tls.Config{RootCAs: roots}
 	}
-	c1, err := redisqueue.NewConsumerWithOptions(&redisqueue.ConsumerOptions{
+	consumerOpts := redisqueue.ConsumerOptions{
+		GroupName:         "TestIntelligence",
 		RedisOptions:      &opt,
 		VisibilityTimeout: 60 * time.Second,
 		BlockingTimeout:   5 * time.Second,
-		ReclaimInterval:   1 * time.Second,
+		ReclaimInterval:   5 * time.Second,
 		BufferSize:        100,
-		Concurrency:       10})
-	if err != nil {
-		return nil, err
+		Concurrency:       5,
 	}
+	return &RedisBroker{consumers: map[string]*ConsumerInfo{},
+		log:           log,
+		errorInterval: defaultErrorInterval,
+		consumerOpts:  &consumerOpts}, nil
+}
+
+// Using code from FF
+// https://github.com/wings-software/ff-server/blob/master/pkg/concurent/redis.go
+func (r *RedisBroker) handleConsumerError(topic string, err error) {
+	r.log.Errorw("[redis stream]: (%s) err: %+v\n", "topic", topic, zap.Error(err))
+	if strings.Contains(err.Error(), "NOGROUP") || strings.Contains(err.Error(), "MOVED") {
+		// there was likely a failover and the groups got das boot.
+		r.log.Errorw("[redis stream]: possible failover occuring")
+		go r.restartConsumer(topic)
+		time.Sleep(time.Second)
+	} else if strings.Contains(err.Error(), "CLUSTERDOWN") || strings.Contains(err.Error(), "connection refused") {
+		r.log.Errorw("[redis stream]: possible cluster issue")
+		// sleep to allow cluster to get it's sorted
+		time.Sleep(10 * time.Second)
+		go r.restartAllConsumers()
+	} else {
+		time.Sleep(r.errorInterval)
+	}
+}
+
+func (r *RedisBroker) restartConsumer(topic string) {
+	// Restart the consumer
+	r.log.Warnw("restarting consumer", "topic", topic)
+	consumer, consumerExists := r.consumers[topic]
+	if consumerExists {
+		consumer.Consumer.Shutdown()
+		r.Register(topic, consumer.Fn)
+		r.log.Infow("restarted the consumer", "topic", topic)
+	}
+}
+
+func (r *RedisBroker) restartAllConsumers() {
+	r.log.Warnw("restarting all consumers")
+	consumers := r.consumers
+	for topic := range consumers {
+		r.restartConsumer(topic)
+	}
+}
+
+func (r *RedisBroker) Register(topic string, fn func(msg *redisqueue.Message) error) error {
+	//r.consumers[topic].Consumer.Register(topic, fn)
+	consumer, err := redisqueue.NewConsumerWithOptions(r.consumerOpts)
+	if err != nil {
+		return err
+	}
+	consumer.Register(topic, fn)
 	go func() {
-		for err := range c1.Errors {
-			log.Errorw("error in webhook watcher thread", zap.Error(err))
+		for err := range consumer.Errors {
+			r.handleConsumerError(topic, err)
 		}
 	}()
-	return &RedisBroker{consumer: c1, log: log}, nil
-}
-
-func (r *RedisBroker) Register(topic string, fn func(msg *redisqueue.Message) error) {
-	r.consumer.Register(topic, fn)
-}
-
-func (r *RedisBroker) Run() {
-	go func() {
-		r.consumer.Run()
-	}()
+	_, consumerExists := r.consumers[topic]
+	if consumerExists {
+		r.consumers[topic].Consumer.Shutdown()
+		r.consumers[topic].Fn = fn
+		r.consumers[topic].Consumer = consumer
+	} else {
+		r.consumers[topic] = &ConsumerInfo{Topic: topic,
+			Fn:       fn,
+			Consumer: consumer,
+		}
+	}
+	go consumer.Run()
+	return nil
 }
 
 // Callback which will be invoked for merging of partial call graph
-func (r *RedisBroker) RegisterMerge(ctx context.Context, topic string, fn MergeCallbackFn, db db.Db) {
-	r.Register(topic, r.getCallback(ctx, fn, db))
+func (r *RedisBroker) RegisterMerge(ctx context.Context, topic string, fn MergeCallbackFn, db db.Db) error {
+	err := r.Register(topic, r.getCallback(ctx, fn, db))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db.Db) func(msg *redisqueue.Message) error {
@@ -86,24 +154,24 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db
 		var webhookResp interface{}
 		var ok bool
 		if accountId, ok = msg.Values["accountId"].(string); !ok {
-			r.log.Errorw("no account ID found in the stream")
-			return errors.New("account ID not found in the stream")
+			r.log.Errorw("[redis stream]: no account ID found in the stream")
+			return nil
 		}
 		if webhookResp, ok = msg.Values["o"]; !ok {
-			r.log.Errorw("no webhook data found in the stream")
-			return errors.New("webhook data not found in the stream")
+			r.log.Errorw("[redis stream]: no webhook data found in the stream")
+			return nil
 		}
 		// Try to unmarshal webhookResp using type webhookDTO
 		dto := pb.WebhookDTO{}
 		decoded, err := base64.StdEncoding.DecodeString(webhookResp.(string))
 		if err != nil {
-			r.log.Errorw("could not b64 decode webhook resp data", "account_id", accountId, zap.Error(err))
-			return err
+			r.log.Errorw("[redis stream]: could not b64 decode webhook resp data", "account_id", accountId, zap.Error(err))
+			return nil
 		}
 		err = proto.Unmarshal(decoded, &dto)
 		if err != nil {
-			r.log.Errorw("could not unmarshal webhook response data", "account_id", accountId, zap.Error(err))
-			return errors.New("could not unmarshal webhook response data")
+			r.log.Errorw("[redis stream]: could not unmarshal webhook response data", "account_id", accountId, zap.Error(err))
+			return nil
 		}
 		switch dto.GetParsedResponse().Hook.(type) {
 		case *scmpb.ParseWebhookResponse_Pr:
@@ -120,11 +188,11 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db
 			sha := pr.GetPr().GetSha()       // Sha of the topmost commit in the commits list
 			if repo == "" || source == "" || target == "" || sha == "" {
 				// These fields should always be populated
-				r.log.Errorw("missing information for merge event", "account_id", accountId,
+				r.log.Errorw("[redis stream]: missing information for merge event", "account_id", accountId,
 					"repo", repo, "source", source, "target", target, "sha", sha)
-				return errors.New("missing information for merge event")
+				return nil
 			}
-			r.log.Infow("got a merge notification", "account_id", accountId,
+			r.log.Infow("[redis stream]: got a merge notification", "account_id", accountId,
 				"repo", repo, "source", source, "target", target, "sha", sha)
 			req := types.MergePartialCgRequest{AccountId: accountId,
 				TargetBranch: target, Repo: repo, Diff: types.DiffInfo{Sha: sha}}
@@ -140,14 +208,14 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db
 			// Add this if statement once we start writing files with updated schema
 			//if len(req.Diff.Files) != 0 {
 			// Found the merge event with changed files
-			r.log.Infow("calling merge CG", "account_id", accountId, "repo", repo,
+			r.log.Infow("[redis stream]: calling merge CG", "account_id", accountId, "repo", repo,
 				"source", source, "target", target, "sha", sha, "changed_files", req.Diff.Files)
 			err := fn(ctx, req)
 			if err != nil {
-				r.log.Errorw("could not merge partial call graph to master", "account_id", accountId,
+				r.log.Errorw("[redis stream]: could not merge partial call graph to master", "account_id", accountId,
 					"repo", repo, "source", source, "target", target, "sha", sha, "changed_files", req.Diff.Files,
 					zap.Error(err))
-				return err
+				return nil
 			}
 			//}
 		}

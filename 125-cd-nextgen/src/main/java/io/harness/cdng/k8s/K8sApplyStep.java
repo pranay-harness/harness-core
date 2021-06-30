@@ -80,9 +80,9 @@ public class K8sApplyStep extends TaskChainExecutableWithRollbackAndRbac impleme
   }
 
   @Override
-  public TaskChainResponse executeNextLink(Ambiance ambiance, StepElementParameters stepElementParameters,
-      StepInputPackage inputPackage, PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseSupplier)
-      throws Exception {
+  public TaskChainResponse executeNextLinkWithSecurityContext(Ambiance ambiance,
+      StepElementParameters stepElementParameters, StepInputPackage inputPackage, PassThroughData passThroughData,
+      ThrowingSupplier<ResponseData> responseSupplier) throws Exception {
     return k8sStepHelper.executeNextLink(this, ambiance, stepElementParameters, passThroughData, responseSupplier);
   }
 
@@ -120,8 +120,9 @@ public class K8sApplyStep extends TaskChainExecutableWithRollbackAndRbac impleme
   }
 
   @Override
-  public StepResponse finalizeExecution(Ambiance ambiance, StepElementParameters stepElementParameters,
-      PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) {
+  public StepResponse finalizeExecutionWithSecurityContext(Ambiance ambiance,
+      StepElementParameters stepElementParameters, PassThroughData passThroughData,
+      ThrowingSupplier<ResponseData> responseDataSupplier) {
     if (passThroughData instanceof GitFetchResponsePassThroughData) {
       return k8sStepHelper.handleGitTaskFailure((GitFetchResponsePassThroughData) passThroughData);
     }

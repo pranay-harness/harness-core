@@ -77,8 +77,9 @@ public class K8sScaleStep extends TaskExecutableWithRollbackAndRbac<K8sDeployRes
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepElementParameters,
-      ThrowingSupplier<K8sDeployResponse> responseSupplier) throws Exception {
+  public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance,
+      StepElementParameters stepElementParameters, ThrowingSupplier<K8sDeployResponse> responseSupplier)
+      throws Exception {
     K8sDeployResponse k8sTaskExecutionResponse = responseSupplier.get();
     // do we need to include the newPods with instance details + summaries
     StepResponseBuilder stepResponseBuilder =

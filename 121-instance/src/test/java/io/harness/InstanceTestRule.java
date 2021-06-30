@@ -12,6 +12,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
+import io.harness.service.instanceService.InstanceService;
+import io.harness.service.instanceService.InstanceServiceImpl;
 import io.harness.service.instancedashboardservice.InstanceDashboardService;
 import io.harness.service.instancedashboardservice.InstanceDashboardServiceImpl;
 import io.harness.springdata.SpringPersistenceTestModule;
@@ -55,6 +57,7 @@ public class InstanceTestRule implements InjectorRuleMixin, MethodRule, MongoRul
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
         bind(InstanceDashboardService.class).to(InstanceDashboardServiceImpl.class);
+        bind(InstanceService.class).to(InstanceServiceImpl.class);
       }
     });
 

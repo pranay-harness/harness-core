@@ -24,7 +24,7 @@ public class EventMonitoringServiceImpl implements EventMonitoringService {
         return;
       }
       long currentTimeMillis = System.currentTimeMillis();
-      if (currentTimeMillis % 1000 == 5 || (currentTimeMillis - monitoringInfo.getCreatedAt() > 5000)) {
+      if (currentTimeMillis % 100 == 0 || (currentTimeMillis - monitoringInfo.getCreatedAt() > 5000)) {
         log.info("Sampling the query....");
         metricService.recordMetric(String.format(metricName, monitoringInfo.getMetricPrefix()),
             System.currentTimeMillis() - monitoringInfo.getCreatedAt());

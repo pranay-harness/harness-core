@@ -67,7 +67,7 @@ public class OrchestrationEvent extends Queuable implements WithMonitoring {
     logContext.put("eventType", eventType.name());
     logContext.put("module", getTopic());
     logContext.put("pipelineIdentifier", ambiance.getMetadata().getPipelineIdentifier());
-    return new ThreadAutoLogContext(logContext, OVERRIDE_NESTS);
+    return new ThreadAutoLogContext(logContext);
   }
 
   @Override

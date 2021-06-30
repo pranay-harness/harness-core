@@ -14,6 +14,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHE
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_BATCH_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_EVENT_TOPIC;
+import static io.harness.pms.events.PmsEventFrameworkConstants.MAX_PROCESSING_TIME_MINUTES;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_FACILITATOR_CONSUMER;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_INTERRUPT_CONSUMER;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_ADVISE_CONSUMER;
@@ -101,38 +102,38 @@ public class PmsSdkEventsFrameworkModule extends AbstractModule {
     } else {
       bind(Consumer.class)
           .annotatedWith(Names.named(PT_INTERRUPT_CONSUMER))
-          .toInstance(RedisConsumer.of(PIPELINE_INTERRUPT_TOPIC, serviceName, redisConfig, Duration.ofSeconds(10),
+          .toInstance(RedisConsumer.of(PIPELINE_INTERRUPT_TOPIC, serviceName, redisConfig, Duration.ofMinutes(10),
               PIPELINE_INTERRUPT_BATCH_SIZE));
       bind(Consumer.class)
           .annotatedWith(Names.named(PT_ORCHESTRATION_EVENT_CONSUMER))
           .toInstance(RedisConsumer.of(PIPELINE_ORCHESTRATION_EVENT_TOPIC, serviceName, redisConfig,
-              Duration.ofSeconds(10), PIPELINE_ORCHESTRATION_EVENT_BATCH_SIZE));
+              Duration.ofMinutes(MAX_PROCESSING_TIME_MINUTES), PIPELINE_ORCHESTRATION_EVENT_BATCH_SIZE));
 
       // facilitator
       bind(Consumer.class)
           .annotatedWith(Names.named(PT_FACILITATOR_CONSUMER))
           .toInstance(RedisConsumer.of(PIPELINE_FACILITATOR_EVENT_TOPIC, serviceName, redisConfig,
-              Duration.ofSeconds(10), PIPELINE_FACILITATOR_EVENT_BATCH_SIZE));
+              Duration.ofMinutes(MAX_PROCESSING_TIME_MINUTES), PIPELINE_FACILITATOR_EVENT_BATCH_SIZE));
 
       bind(Consumer.class)
           .annotatedWith(Names.named(PT_NODE_START_CONSUMER))
           .toInstance(RedisConsumer.of(PIPELINE_NODE_START_EVENT_TOPIC, serviceName, redisConfig,
-              Duration.ofSeconds(10), PIPELINE_NODE_START_EVENT_BATCH_SIZE));
+              Duration.ofMinutes(MAX_PROCESSING_TIME_MINUTES), PIPELINE_NODE_START_EVENT_BATCH_SIZE));
 
       bind(Consumer.class)
           .annotatedWith(Names.named(PT_PROGRESS_CONSUMER))
-          .toInstance(RedisConsumer.of(PIPELINE_PROGRESS_EVENT_TOPIC, serviceName, redisConfig, Duration.ofSeconds(10),
-              PIPELINE_PROGRESS_BATCH_SIZE));
+          .toInstance(RedisConsumer.of(PIPELINE_PROGRESS_EVENT_TOPIC, serviceName, redisConfig,
+              Duration.ofMinutes(MAX_PROCESSING_TIME_MINUTES), PIPELINE_PROGRESS_BATCH_SIZE));
 
       bind(Consumer.class)
           .annotatedWith(Names.named(PT_NODE_ADVISE_CONSUMER))
           .toInstance(RedisConsumer.of(PIPELINE_NODE_ADVISE_EVENT_TOPIC, serviceName, redisConfig,
-              Duration.ofSeconds(10), PIPELINE_NODE_ADVISE_BATCH_SIZE));
+              Duration.ofMinutes(MAX_PROCESSING_TIME_MINUTES), PIPELINE_NODE_ADVISE_BATCH_SIZE));
 
       bind(Consumer.class)
           .annotatedWith(Names.named(PT_NODE_RESUME_CONSUMER))
           .toInstance(RedisConsumer.of(PIPELINE_NODE_RESUME_EVENT_TOPIC, serviceName, redisConfig,
-              Duration.ofSeconds(10), PIPELINE_NODE_RESUME_BATCH_SIZE));
+              Duration.ofMinutes(MAX_PROCESSING_TIME_MINUTES), PIPELINE_NODE_RESUME_BATCH_SIZE));
     }
   }
 
