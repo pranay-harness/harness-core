@@ -1,8 +1,11 @@
 package io.harness.cvng.core.beans.monitoredService;
 
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.monitoredService.HealthSource.CVConfigUpdateResult;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.services.api.MetricPackService;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import java.util.List;
@@ -12,8 +15,9 @@ import java.util.List;
 public abstract class HealthSourceSpec {
   public abstract CVConfigUpdateResult getCVConfigUpdateResult(String accountId, String orgIdentifier,
       String projectIdentifier, String environmentRef, String serviceRef, String identifier, String name,
-      List<CVConfig> existingCVConfigs);
+      List<CVConfig> existingCVConfigs, MetricPackService metricPackService);
   public abstract String getConnectorRef();
+  @JsonIgnore public abstract DataSourceType getType();
 
   protected void fillCommonFields(CVConfig cvConfig, String accountId, String orgIdentifier, String projectIdentifier,
       String identifier, String connectorRef, String name, String feature) {
