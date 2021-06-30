@@ -1,9 +1,11 @@
 package io.harness.pms.events.base;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 import static io.harness.pms.events.PmsEventFrameworkConstants.SERVICE_NAME;
 
 import io.harness.eventsframework.consumer.Message;
 import io.harness.exception.InvalidRequestException;
+import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.serializer.ProtoUtils;
 
@@ -12,7 +14,6 @@ import com.google.protobuf.ByteString;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,14 +25,11 @@ public abstract class PmsAbstractMessageListener<T extends com.google.protobuf.M
   public final String serviceName;
   public final Class<T> entityClass;
   public final H handler;
-  public final ExecutorService executorService;
 
-  public PmsAbstractMessageListener(
-      String serviceName, Class<T> entityClass, H handler, ExecutorService executorService) {
+  public PmsAbstractMessageListener(String serviceName, Class<T> entityClass, H handler) {
     this.serviceName = serviceName;
     this.entityClass = entityClass;
     this.handler = handler;
-    this.executorService = executorService;
   }
 
   /**
@@ -44,26 +42,24 @@ public abstract class PmsAbstractMessageListener<T extends com.google.protobuf.M
   public boolean handleMessage(Message message) {
     long startTs = System.currentTimeMillis();
     if (isProcessable(message)) {
-      try {
-        log.info(
-            "[PMS_SDK] Starting to process {} event with messageId: {}", entityClass.getSimpleName(), message.getId());
-
-        executorService.submit(() -> {
-          T entity = extractEntity(message);
-          Long issueTimestamp = ProtoUtils.timestampToUnixMillis(message.getTimestamp());
-          processMessage(entity, message.getMessage().getMetadataMap(), issueTimestamp);
-        });
-
-        log.info("[PMS_SDK] Processing Finished for {} event with messageId: {}", entityClass.getSimpleName(),
+      try (AutoLogContext ignore = new AutoLogContext(message.getMessage().getMetadataMap(), OVERRIDE_NESTS)) {
+        log.info("[PMS_MESSAGE_LISTENER] Starting to process {} event with messageId: {}", entityClass.getSimpleName(),
             message.getId());
+
+        T entity = extractEntity(message);
+        Long issueTimestamp = ProtoUtils.timestampToUnixMillis(message.getTimestamp());
+        processMessage(entity, message.getMessage().getMetadataMap(), issueTimestamp);
+
+        log.info("[PMS_MESSAGE_LISTENER] Processing Finished for {} event with messageId: {}",
+            entityClass.getSimpleName(), message.getId());
       } catch (Exception ex) {
-        log.info("[PMS_SDK] Exception occurred while processing {} event with messageId: {}",
+        log.info("[PMS_MESSAGE_LISTENER] Exception occurred while processing {} event with messageId: {}",
             entityClass.getSimpleName(), message.getId());
       }
     }
     Duration processDuration = Duration.ofMillis(System.currentTimeMillis() - startTs);
     if (THRESHOLD_PROCESS_DURATION.compareTo(processDuration) < 0) {
-      log.warn("[PMS_SDK] Processing for {} event took {}s which is more than threshold of {}s",
+      log.warn("[PMS_MESSAGE_LISTENER] Processing for {} event took {}s which is more than threshold of {}s",
           entityClass.getSimpleName(), processDuration.getSeconds(), THRESHOLD_PROCESS_DURATION.getSeconds());
     }
     return true;

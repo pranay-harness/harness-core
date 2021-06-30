@@ -13,7 +13,6 @@ import io.harness.pms.contracts.interrupts.InterruptEvent;
 import io.harness.pms.contracts.interrupts.InterruptEvent.Builder;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.events.base.PmsEventCategory;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.InterruptEventUtils;
 
 import com.google.inject.Inject;
@@ -27,7 +26,6 @@ public class RedisInterruptEventPublisher implements InterruptEventPublisher {
   public String publishEvent(String nodeExecutionId, Interrupt interrupt, InterruptType interruptType) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     String serviceName = nodeExecution.getNode().getServiceName();
-    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
     Builder builder = InterruptEvent.newBuilder()
                           .setInterruptUuid(interrupt.getUuid())
                           .setAmbiance(nodeExecution.getAmbiance())
@@ -38,7 +36,8 @@ public class RedisInterruptEventPublisher implements InterruptEventPublisher {
                               ByteString.copyFromUtf8(emptyIfNull(nodeExecution.getResolvedStepParameters().toJson())));
     InterruptEvent event = populateResponse(nodeExecution, builder);
 
-    eventSender.sendEvent(event.toByteString(), PmsEventCategory.INTERRUPT_EVENT, serviceName, accountId, false);
+    eventSender.sendEvent(
+        nodeExecution.getAmbiance(), event.toByteString(), PmsEventCategory.INTERRUPT_EVENT, serviceName, false);
     return event.getNotifyId();
   }
 

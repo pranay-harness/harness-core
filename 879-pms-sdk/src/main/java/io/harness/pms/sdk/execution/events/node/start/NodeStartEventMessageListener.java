@@ -1,7 +1,6 @@
 package io.harness.pms.sdk.execution.events.node.start;
 
 import static io.harness.pms.sdk.PmsSdkModuleUtils.SDK_SERVICE_NAME;
-import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.SDK_PROCESSOR_SERVICE;
 
 import io.harness.pms.contracts.execution.start.NodeStartEvent;
 import io.harness.pms.events.base.PmsAbstractMessageListener;
@@ -10,13 +9,12 @@ import io.harness.pms.sdk.core.execution.events.node.start.NodeStartEventHandler
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import java.util.concurrent.ExecutorService;
 
 @Singleton
 public class NodeStartEventMessageListener extends PmsAbstractMessageListener<NodeStartEvent, NodeStartEventHandler> {
   @Inject
-  public NodeStartEventMessageListener(@Named(SDK_SERVICE_NAME) String serviceName,
-      NodeStartEventHandler nodeStartEventHandler, @Named(SDK_PROCESSOR_SERVICE) ExecutorService executorService) {
-    super(serviceName, NodeStartEvent.class, nodeStartEventHandler, executorService);
+  public NodeStartEventMessageListener(
+      @Named(SDK_SERVICE_NAME) String serviceName, NodeStartEventHandler nodeStartEventHandler) {
+    super(serviceName, NodeStartEvent.class, nodeStartEventHandler);
   }
 }

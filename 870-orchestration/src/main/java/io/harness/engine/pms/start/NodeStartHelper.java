@@ -65,7 +65,6 @@ public class NodeStartHelper {
 
   private void sendEvent(NodeExecution nodeExecution, ByteString passThroughData) {
     String serviceName = nodeExecution.getNode().getServiceName();
-    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
     NodeStartEvent nodeStartEvent = NodeStartEvent.newBuilder()
                                         .setAmbiance(nodeExecution.getAmbiance())
                                         .addAllRefObjects(nodeExecution.getNode().getRebObjectsList())
@@ -74,7 +73,8 @@ public class NodeStartHelper {
                                             nodeExecution.getResolvedStepParameters().toJson())))
                                         .setMode(nodeExecution.getMode())
                                         .build();
-    eventSender.sendEvent(nodeStartEvent.toByteString(), PmsEventCategory.NODE_START, serviceName, accountId, true);
+    eventSender.sendEvent(
+        nodeExecution.getAmbiance(), nodeStartEvent.toByteString(), PmsEventCategory.NODE_START, serviceName, true);
   }
 
   private NodeExecution prepareNodeExecutionForInvocation(Ambiance ambiance) {

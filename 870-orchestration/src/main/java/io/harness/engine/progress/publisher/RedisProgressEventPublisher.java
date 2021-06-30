@@ -7,7 +7,6 @@ import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.progress.ProgressEvent;
 import io.harness.pms.events.base.PmsEventCategory;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.tasks.BinaryResponseData;
 
 import com.google.inject.Inject;
@@ -24,7 +23,6 @@ public class RedisProgressEventPublisher implements ProgressEventPublisher {
   public String publishEvent(String nodeExecutionId, BinaryResponseData progressData) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     String serviceName = nodeExecution.getNode().getServiceName();
-    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
     ProgressEvent progressEvent = ProgressEvent.newBuilder()
                                       .setAmbiance(nodeExecution.getAmbiance())
                                       .setExecutionMode(nodeExecution.getMode())
@@ -33,6 +31,6 @@ public class RedisProgressEventPublisher implements ProgressEventPublisher {
                                       .build();
 
     return eventSender.sendEvent(
-        progressEvent.toByteString(), PmsEventCategory.PROGRESS_EVENT, serviceName, accountId, false);
+        nodeExecution.getAmbiance(), progressEvent.toByteString(), PmsEventCategory.PROGRESS_EVENT, serviceName, false);
   }
 }
