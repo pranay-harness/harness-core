@@ -20,10 +20,10 @@ import io.harness.serializer.morphia.EventMorphiaRegistrar;
 import io.harness.serializer.morphia.LimitsMorphiaRegistrar;
 import io.harness.serializer.morphia.ManagerMorphiaRegistrar;
 import io.harness.serializer.morphia.ProjectAndOrgMorphiaRegistrar;
+import io.harness.serializer.registrars.NGCommonsRegistrars;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import io.serializer.registrars.NGCommonsRegistrars;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;

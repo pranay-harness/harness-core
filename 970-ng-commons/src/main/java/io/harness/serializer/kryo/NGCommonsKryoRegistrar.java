@@ -1,4 +1,4 @@
-package io.serializer.kryo;
+package io.harness.serializer.kryo;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
@@ -19,11 +19,13 @@ import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.ResourceScope;
 import io.harness.ng.core.Status;
+import io.harness.ng.core.common.beans.ApiKeyType;
 import io.harness.ng.core.common.beans.KeyValuePair;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.dto.TokenDTO;
 import io.harness.request.HttpRequestInfo;
 import io.harness.request.RequestContext;
 import io.harness.request.RequestContextData;
@@ -67,5 +69,7 @@ public class NGCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(FilterCreatorException.class, 970006);
     kryo.register(PlanCreatorException.class, 970007);
     kryo.register(ServiceAccountDTO.class, 970008);
+    kryo.register(TokenDTO.class, 970009);
+    kryo.register(ApiKeyType.class, 970010);
   }
 }

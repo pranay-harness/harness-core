@@ -13,6 +13,7 @@ import io.harness.persistence.UserProvider;
 import io.harness.queue.QueueController;
 import io.harness.serializer.ConnectorBeansRegistrars;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serializer.registrars.NGCommonsRegistrars;
 import io.harness.springdata.SpringPersistenceModule;
 
 import com.google.common.collect.ImmutableList;
@@ -21,7 +22,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import io.serializer.registrars.NGCommonsRegistrars;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;

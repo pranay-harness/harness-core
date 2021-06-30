@@ -5,9 +5,9 @@ import io.harness.persistence.converters.DurationConverter;
 import io.harness.persistence.converters.ObjectArrayConverter;
 import io.harness.serializer.kryo.PersistenceKryoRegistrar;
 import io.harness.serializer.morphia.PersistenceMorphiaRegistrar;
+import io.harness.serializer.registrars.NGCommonsRegistrars;
 
 import com.google.common.collect.ImmutableSet;
-import io.serializer.registrars.NGCommonsRegistrars;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.converters.TypeConverter;
 

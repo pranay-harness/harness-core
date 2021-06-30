@@ -6,9 +6,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.filter.serializer.FiltersRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.morphia.NGAuditServiceMorphiaRegistrar;
+import io.harness.serializer.registrars.NGCommonsRegistrars;
 
 import com.google.common.collect.ImmutableSet;
-import io.serializer.registrars.NGCommonsRegistrars;
 import lombok.experimental.UtilityClass;
 
 @OwnedBy(PL)

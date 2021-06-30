@@ -15,11 +15,11 @@ import io.harness.serializer.morphia.NgUserMembershipMorphiaRegistrar;
 import io.harness.serializer.morphia.NgUserProfileMorphiaRegistrars;
 import io.harness.serializer.morphia.ServiceAccountMorphiaRegistrars;
 import io.harness.serializer.morphia.WebhookMorphiaRegistrars;
+import io.harness.serializer.registrars.NGCommonsRegistrars;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import io.serializer.registrars.NGCommonsRegistrars;
 import org.mongodb.morphia.converters.TypeConverter;
 
 @OwnedBy(HarnessTeam.PL)

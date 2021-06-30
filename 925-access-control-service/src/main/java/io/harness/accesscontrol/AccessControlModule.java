@@ -1,8 +1,6 @@
 package io.harness.accesscontrol;
 
 import static io.harness.AuthorizationServiceHeader.ACCESS_CONTROL_SERVICE;
-import static io.harness.AuthorizationServiceHeader.NOTIFICATION_SERVICE;
-import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.accesscontrol.principals.PrincipalType.SERVICE_ACCOUNT;
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;

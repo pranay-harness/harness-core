@@ -1,4 +1,4 @@
-package io.serializer.morphia;
+package io.harness.serializer.morphia;
 
 import io.harness.beans.WithIdentifier;
 import io.harness.morphia.MorphiaRegistrar;
