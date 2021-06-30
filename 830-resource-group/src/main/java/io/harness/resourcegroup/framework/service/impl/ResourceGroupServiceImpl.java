@@ -2,6 +2,7 @@ package io.harness.resourcegroup.framework.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
@@ -39,6 +40,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.AccessLevel;
@@ -157,6 +159,24 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
       resourceGroupRepository.delete(resourceGroup);
       outboxService.save(
           new ResourceGroupDeleteEvent(scope.getAccountIdentifier(), ResourceGroupMapper.toDTO(resourceGroup)));
+      return true;
+    }));
+  }
+
+  @Override
+  public void deleteByScope(Scope scope) {
+    if (scope == null || isEmpty(scope.getAccountIdentifier())) {
+      throw new InvalidRequestException("Invalid scope. Cannot proceed with deletion.");
+    }
+    Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
+      List<ResourceGroup> deletedResourceGroups =
+          resourceGroupRepository.deleteByAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
+              scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier());
+      if (isNotEmpty(deletedResourceGroups)) {
+        deletedResourceGroups.forEach(rg
+            -> outboxService.save(
+                new ResourceGroupDeleteEvent(rg.getAccountIdentifier(), ResourceGroupMapper.toDTO(rg))));
+      }
       return true;
     }));
   }

@@ -214,6 +214,20 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
+  public boolean deleteByScope(Scope scope) {
+    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      Criteria criteria =
+          createScopeCriteria(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier());
+      List<UserGroup> deleteUserGroups = userGroupRepository.deleteAll(criteria);
+      if (isNotEmpty(deleteUserGroups)) {
+        deleteUserGroups.forEach(userGroup
+            -> outboxService.save(new UserGroupDeleteEvent(userGroup.getAccountIdentifier(), toDTO(userGroup))));
+      }
+      return true;
+    }));
+  }
+
+  @Override
   public boolean checkMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String userGroupIdentifier, String userIdentifier) {
     UserGroup existingUserGroup = getOrThrow(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);

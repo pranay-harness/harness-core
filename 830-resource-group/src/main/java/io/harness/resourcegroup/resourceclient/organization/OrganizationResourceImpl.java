@@ -6,6 +6,7 @@ import static io.harness.remote.client.NGRestUtils.getResponse;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
@@ -91,10 +92,10 @@ public class OrganizationResourceImpl implements Resource {
       return null;
     }
     return ResourceInfo.builder()
-        .accountIdentifier(organizationEntityChangeDTO.getAccountIdentifier())
-        .orgIdentifier(organizationEntityChangeDTO.getIdentifier())
+        .accountIdentifier(stripToNull(organizationEntityChangeDTO.getAccountIdentifier()))
+        .orgIdentifier(stripToNull(organizationEntityChangeDTO.getIdentifier()))
         .resourceType(getType())
-        .resourceIdentifier(organizationEntityChangeDTO.getIdentifier())
+        .resourceIdentifier(stripToNull(organizationEntityChangeDTO.getIdentifier()))
         .build();
   }
 }

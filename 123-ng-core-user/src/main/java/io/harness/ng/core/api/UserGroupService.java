@@ -42,6 +42,8 @@ public interface UserGroupService {
 
   UserGroup delete(Scope scope, String identifier);
 
+  boolean deleteByScope(Scope scope);
+
   boolean checkMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String userGroupIdentifier, String userIdentifier);
 
