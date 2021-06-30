@@ -17,4 +17,6 @@ public class CcmConnectorFilter {
   String awsAccountId;
   String azureSubscriptionId;
   String azureTenantId;
+  String gcpProjectId;
+  String k8sConnectorRef;
 }

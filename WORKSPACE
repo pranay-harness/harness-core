@@ -1884,6 +1884,7 @@ maven_install(
 maven_install(
     name = "batch",
     artifacts = [
+        "com.fasterxml.jackson.core:jackson-databind:2.11.3",
         "com.squareup.okhttp3:okhttp:4.9.0",
     ],
     repositories = [
