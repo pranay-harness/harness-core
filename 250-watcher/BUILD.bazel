@@ -6,9 +6,9 @@ shared_dependencies = [
     "@maven//:com_google_guava_guava",
 ] + [
     "//:lombok",
-    "//980-commons:module",
+    "//925-watcher-beans:module",
     "//970-grpc:module",
-    "//920-delegate-agent-beans:module",
+    "//980-commons:module",
     "@maven//:com_google_inject_guice",
     "@maven//:commons_collections_commons_collections",
     "@maven//:commons_io_commons_io",
