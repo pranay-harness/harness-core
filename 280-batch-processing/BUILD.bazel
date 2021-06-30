@@ -4,7 +4,10 @@ load("//:tools/bazel/macros.bzl", "run_analysis")
 
 HarnessTeam = "CE"
 
-shared_dependencies = ["@batch//:com_squareup_okhttp3_okhttp"] + [
+shared_dependencies = [
+    "@batch//:com_fasterxml_jackson_core_jackson_databind",
+    "@batch//:com_squareup_okhttp3_okhttp",
+] + [
     "//350-event-xxxxxxxxmodule",
     "//375-ce-graphql:module",
     "//380-cg-graphql:module",
