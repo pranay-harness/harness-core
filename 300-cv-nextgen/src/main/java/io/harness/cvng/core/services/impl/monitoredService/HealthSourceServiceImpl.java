@@ -7,6 +7,7 @@ import io.harness.cvng.core.beans.monitoredService.HealthSource.CVConfigUpdateRe
 import io.harness.cvng.core.beans.monitoredService.HealthSourceSpec;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
 import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransformer;
@@ -26,14 +27,15 @@ public class HealthSourceServiceImpl implements HealthSourceService {
   @Inject Injector injector;
   @Inject private CVConfigService cvConfigService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
+  @Inject private MetricPackService metricPackService;
 
   @Override
   public void create(String accountId, String orgIdentifier, String projectIdentifier, String environmentRef,
       String serviceRef, Set<HealthSource> healthSources) {
     healthSources.forEach(healthSource -> {
-      CVConfigUpdateResult cvConfigUpdateResult =
-          healthSource.getSpec().getCVConfigUpdateResult(accountId, orgIdentifier, projectIdentifier, environmentRef,
-              serviceRef, healthSource.getIdentifier(), healthSource.getName(), Collections.emptyList());
+      CVConfigUpdateResult cvConfigUpdateResult = healthSource.getSpec().getCVConfigUpdateResult(accountId,
+          orgIdentifier, projectIdentifier, environmentRef, serviceRef, healthSource.getIdentifier(),
+          healthSource.getName(), Collections.emptyList(), metricPackService);
       cvConfigService.save(cvConfigUpdateResult.getAdded());
       monitoringSourcePerpetualTaskService.createTask(accountId, orgIdentifier, projectIdentifier,
           healthSource.getSpec().getConnectorRef(), healthSource.getIdentifier());
@@ -77,7 +79,7 @@ public class HealthSourceServiceImpl implements HealthSourceService {
           cvConfigService.list(accountId, orgIdentifier, projectIdentifier, healthSource.getIdentifier());
       CVConfigUpdateResult cvConfigUpdateResult =
           healthSource.getSpec().getCVConfigUpdateResult(accountId, orgIdentifier, projectIdentifier, environmentRef,
-              serviceRef, healthSource.getIdentifier(), healthSource.getName(), saved);
+              serviceRef, healthSource.getIdentifier(), healthSource.getName(), saved, metricPackService);
       cvConfigUpdateResult.getDeleted().forEach(cvConfig -> cvConfigService.delete(cvConfig.getUuid()));
       cvConfigService.update(cvConfigUpdateResult.getUpdated());
       cvConfigService.save(cvConfigUpdateResult.getAdded());

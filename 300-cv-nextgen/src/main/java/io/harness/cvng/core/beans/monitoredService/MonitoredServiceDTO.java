@@ -1,5 +1,6 @@
 package io.harness.cvng.core.beans.monitoredService;
 
+import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.gitsync.beans.YamlDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -21,6 +22,7 @@ public class MonitoredServiceDTO implements YamlDTO {
   @NotNull String projectIdentifier;
   @NotNull String identifier;
   @NotNull String name;
+  @NotNull MonitoredServiceType type;
   String description;
   @NotNull String serviceRef;
   @NotNull String environmentRef;

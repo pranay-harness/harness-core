@@ -45,13 +45,12 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
   public static final Duration timeout = Duration.ofMinutes(10);
 
   @Override
-  public void cleanupArtifactsAsync(ArtifactStream artifactStream) {
+  public void cleanupArtifacts(ArtifactStream artifactStream, String accountId) {
     log.info("Cleaning build details for artifact stream type {} and source name {} ",
         artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
 
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
-    String accountId;
     BuildSourceParameters buildSourceRequest;
 
     String waitId = generateUuid();

@@ -1,8 +1,10 @@
 package io.harness.cvng.core.beans.monitoredService;
 
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.core.services.api.MetricPackService;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.Sets;
@@ -32,9 +34,9 @@ public class AppDynamicsHealthSourceSpec extends HealthSourceSpec {
   @Override
   public HealthSource.CVConfigUpdateResult getCVConfigUpdateResult(String accountId, String orgIdentifier,
       String projectIdentifier, String environmentRef, String serviceRef, String identifier, String name,
-      List<CVConfig> existingCVConfigs) {
-    List<AppDynamicsCVConfig> cvConfigsFromThisObj =
-        toCVConfigs(accountId, orgIdentifier, projectIdentifier, environmentRef, serviceRef, identifier, name);
+      List<CVConfig> existingCVConfigs, MetricPackService metricPackService) {
+    List<AppDynamicsCVConfig> cvConfigsFromThisObj = toCVConfigs(
+        accountId, orgIdentifier, projectIdentifier, environmentRef, serviceRef, identifier, name, metricPackService);
     Map<Key, AppDynamicsCVConfig> existingConfigMap = new HashMap<>();
     List<AppDynamicsCVConfig> existingAppDCVConfig = (List<AppDynamicsCVConfig>) (List<?>) existingCVConfigs;
     for (AppDynamicsCVConfig appDynamicsCVConfig : existingAppDCVConfig) {
@@ -61,8 +63,13 @@ public class AppDynamicsHealthSourceSpec extends HealthSourceSpec {
         .build();
   }
 
+  @Override
+  public DataSourceType getType() {
+    return DataSourceType.APP_DYNAMICS;
+  }
+
   private List<AppDynamicsCVConfig> toCVConfigs(String accountId, String orgIdentifier, String projectIdentifier,
-      String environmentRef, String serviceRef, String identifier, String name) {
+      String environmentRef, String serviceRef, String identifier, String name, MetricPackService metricPackService) {
     List<AppDynamicsCVConfig> cvConfigs = new ArrayList<>();
     metricPacks.forEach(metricPack -> {
       AppDynamicsCVConfig appDynamicsCVConfig = new AppDynamicsCVConfig();
@@ -73,8 +80,8 @@ public class AppDynamicsHealthSourceSpec extends HealthSourceSpec {
       appDynamicsCVConfig.setTierName(appdTierName);
       appDynamicsCVConfig.setServiceIdentifier(serviceRef);
       appDynamicsCVConfig.setMetricPack(
-          metricPack.toMetricPack(accountId, orgIdentifier, projectIdentifier, metricPack));
-      appDynamicsCVConfig.setCategory(metricPack.getCategory());
+          metricPack.toMetricPack(accountId, orgIdentifier, projectIdentifier, getType(), metricPackService));
+      appDynamicsCVConfig.setCategory(metricPack.getIdentifier());
       cvConfigs.add(appDynamicsCVConfig);
     });
     return cvConfigs;

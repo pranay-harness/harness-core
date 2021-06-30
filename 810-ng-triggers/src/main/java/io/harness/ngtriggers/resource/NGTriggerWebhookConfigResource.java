@@ -186,8 +186,7 @@ public class NGTriggerWebhookConfigResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
-      @QueryParam(TRIGGER_KEY) String triggerIdentifier, @NotNull String eventPayload,
-      @Context HttpHeaders httpHeaders) {
+      @QueryParam(TRIGGER_KEY) String triggerIdentifier, String eventPayload, @Context HttpHeaders httpHeaders) {
     List<HeaderConfig> headerConfigs = new ArrayList<>();
     httpHeaders.getRequestHeaders().forEach(
         (k, v) -> headerConfigs.add(HeaderConfig.builder().key(k).values(v).build()));
