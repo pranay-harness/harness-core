@@ -268,6 +268,12 @@ Untar the downloaded file and add it to your PATH in `~/.bashrc` or `~/.zshrc`
 echo "export PATH="$PATH:$HOME/<path-to-above-directory>/bin" >> ~/.zshrc
 ```
 
+to format .graphql files: you can follow these steps:
+
+* `npm install --global prettier@1.19.1`
+
+* `prettier --write --print-width=120 <filename>` - formats given graphql file
+
 helper shell scripts:
 
 * `git clang-format` - makes sure all staged in git files are reformatted
