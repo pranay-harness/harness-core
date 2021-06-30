@@ -13,6 +13,7 @@ import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
 import io.harness.repositories.instance.InstanceRepository;
 import io.harness.rule.Owner;
+import io.harness.service.instanceService.InstanceService;
 import io.harness.service.instancedashboardservice.InstanceDashboardService;
 
 import com.google.inject.Inject;
@@ -27,6 +28,7 @@ import org.mockito.Mock;
 
 public class InstanceDashboardServiceTest extends InstancesTestBase {
   @Inject private InstanceDashboardService instanceDashboardService;
+  @Inject @Mock private InstanceService instanceService;
   @Inject @Mock private InstanceRepository instanceRepository;
   private static final String ACCOUNT_IDENTIFIER = "ACCOUNT_IDENTIFIER";
   private static final String ORG_IDENTIFIER = "ORG_IDENTIFIER";
