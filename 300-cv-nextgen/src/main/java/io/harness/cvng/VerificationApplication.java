@@ -8,6 +8,7 @@ import static io.harness.cvng.migration.beans.CVNGSchema.CVNGMigrationStatus.RUN
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 import static io.harness.security.ServiceTokenGenerator.VERIFICATION_SERVICE_SECRET;
+import static io.harness.token.TokenClientModule.NG_HARNESS_API_KEY_CACHE;
 
 import static com.google.inject.matcher.Matchers.not;
 import static java.time.Duration.ofMinutes;
@@ -87,6 +88,7 @@ import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.morphia.MorphiaModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.ng.core.dto.TokenDTO;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.notification.module.NotificationClientModule;
@@ -162,6 +164,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import javax.cache.Cache;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.Path;
@@ -691,7 +694,9 @@ public class VerificationApplication extends Application<VerificationConfigurati
     serviceToSecretMapping.put(
         DEFAULT.getServiceId(), configuration.getNgManagerServiceConfig().getManagerServiceSecret());
     environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping,
-        injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
+        injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED"))),
+        injector.getInstance(
+            Key.get(new TypeLiteral<Cache<String, TokenDTO>>() {}, Names.named(NG_HARNESS_API_KEY_CACHE)))));
     environment.jersey().register(injector.getInstance(CVNGAuthenticationFilter.class));
   }
 

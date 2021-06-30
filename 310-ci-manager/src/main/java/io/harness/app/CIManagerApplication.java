@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+import static io.harness.token.TokenClientModule.NG_HARNESS_API_KEY_CACHE;
 
 import static java.util.Collections.singletonList;
 
@@ -29,6 +30,7 @@ import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.ng.core.dto.TokenDTO;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
@@ -110,6 +112,7 @@ import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import javax.cache.Cache;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.Path;
@@ -415,7 +418,9 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       serviceToSecretMapping.put(
           AuthorizationServiceHeader.DEFAULT.getServiceId(), configuration.getNgManagerServiceSecret());
       environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping,
-          injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
+          injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED"))),
+          injector.getInstance(
+              Key.get(new TypeLiteral<Cache<String, TokenDTO>>() {}, Names.named(NG_HARNESS_API_KEY_CACHE)))));
     }
   }
 

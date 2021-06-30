@@ -4,6 +4,7 @@ import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.PipelineServiceConfiguration.getResourceClasses;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.token.TokenClientModule.NG_HARNESS_API_KEY_CACHE;
 import static io.harness.waiter.PmsNotifyEventListener.PMS_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -47,6 +48,7 @@ import io.harness.migration.NGMigrationSdkInitHelper;
 import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.ng.core.dto.TokenDTO;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
@@ -166,6 +168,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import javax.cache.Cache;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -410,7 +413,9 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
           AuthorizationServiceHeader.IDENTITY_SERVICE.getServiceId(), config.getJwtIdentityServiceSecret());
       serviceToSecretMapping.put(AuthorizationServiceHeader.DEFAULT.getServiceId(), config.getNgManagerServiceSecret());
       environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping,
-          injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
+          injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED"))),
+          injector.getInstance(
+              Key.get(new TypeLiteral<Cache<String, TokenDTO>>() {}, Names.named(NG_HARNESS_API_KEY_CACHE)))));
     }
   }
 

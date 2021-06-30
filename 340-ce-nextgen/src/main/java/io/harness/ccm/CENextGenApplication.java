@@ -3,6 +3,7 @@ package io.harness.ccm;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.remote.NGObjectMapperHelper.configureNGObjectMapper;
+import static io.harness.token.TokenClientModule.NG_HARNESS_API_KEY_CACHE;
 
 import io.harness.AuthorizationServiceHeader;
 import io.harness.Microservice;
@@ -23,6 +24,7 @@ import io.harness.migration.NGMigrationSdkInitHelper;
 import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.ng.core.dto.TokenDTO;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
@@ -41,8 +43,9 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
-import com.google.inject.name.Names;
 import com.google.inject.Module;
+import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.ConfigurationSourceProvider;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -59,6 +62,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import javax.cache.Cache;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -203,7 +207,9 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
       serviceToSecretMapping.put(
           AuthorizationServiceHeader.DEFAULT.getServiceId(), configuration.getNgManagerServiceSecret());
       environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping,
-          injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
+          injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED"))),
+          injector.getInstance(
+              Key.get(new TypeLiteral<Cache<String, TokenDTO>>() {}, Names.named(NG_HARNESS_API_KEY_CACHE)))));
     }
   }
 
