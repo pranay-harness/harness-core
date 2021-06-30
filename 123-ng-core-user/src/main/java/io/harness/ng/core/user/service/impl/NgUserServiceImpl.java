@@ -194,14 +194,16 @@ public class NgUserServiceImpl implements NgUserService {
                                     .map(PrincipalDTO::getIdentifier)
                                     .distinct()
                                     .collect(toList());
-    UserGroupFilterDTO userGroupFilterDTO = UserGroupFilterDTO.builder()
-                                                .accountIdentifier(scope.getAccountIdentifier())
-                                                .orgIdentifier(scope.getOrgIdentifier())
-                                                .projectIdentifier(scope.getProjectIdentifier())
-                                                .identifierFilter(new HashSet<>(userGroupIds))
-                                                .build();
-    List<UserGroup> userGroups = userGroupService.list(userGroupFilterDTO);
-    userGroups.forEach(userGroup -> userIds.addAll(userGroup.getUsers()));
+    if (!userGroupIds.isEmpty()) {
+      UserGroupFilterDTO userGroupFilterDTO = UserGroupFilterDTO.builder()
+                                                  .accountIdentifier(scope.getAccountIdentifier())
+                                                  .orgIdentifier(scope.getOrgIdentifier())
+                                                  .projectIdentifier(scope.getProjectIdentifier())
+                                                  .identifierFilter(new HashSet<>(userGroupIds))
+                                                  .build();
+      List<UserGroup> userGroups = userGroupService.list(userGroupFilterDTO);
+      userGroups.forEach(userGroup -> userIds.addAll(userGroup.getUsers()));
+    }
     return getUserMetadata(new ArrayList<>(userIds));
   }
 
@@ -298,9 +300,8 @@ public class NgUserServiceImpl implements NgUserService {
       String userId, Scope scope, boolean addUserToParentScope, UserMembershipUpdateSource source) {
     ensureUserMembership(userId);
     addUserToScopeInternal(userId, source, scope, getDefaultRoleIdentifier(scope));
-
     // Adding user to the account for sign in flow to work
-    addUserToAccount(userId, scope);
+    addUserToCG(userId, scope);
     if (addUserToParentScope) {
       addUserToParentScope(userId, scope, source);
     }
@@ -392,7 +393,8 @@ public class NgUserServiceImpl implements NgUserService {
     return userMembership;
   }
 
-  private void addUserToAccount(String userId, Scope scope) {
+  @Override
+  public void addUserToCG(String userId, Scope scope) {
     log.info("Adding user {} to account {}", userId, scope.getAccountIdentifier());
     try {
       RestClientUtils.getResponse(userClient.addUserToAccount(userId, scope.getAccountIdentifier()));

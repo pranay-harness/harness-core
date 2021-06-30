@@ -9,13 +9,20 @@ import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
+import io.harness.filters.ConnectorRefExtractorHelper;
+import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.validation.OneOfField;
+import io.harness.walktree.visitor.SimpleVisitorHelper;
+import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -31,10 +38,11 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ECR_NAME)
+@SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("ecrArtifactConfig")
 @OwnedBy(CDC)
 @OneOfField(fields = {"tag", "tagRegex"})
-public class EcrArtifactConfig implements ArtifactConfig {
+public class EcrArtifactConfig implements ArtifactConfig, Visitable, WithConnectorRef {
   /**
    * AWS connector to connect to Google Container Registry.
    */
@@ -101,5 +109,12 @@ public class EcrArtifactConfig implements ArtifactConfig {
       resultantConfig = resultantConfig.withTagRegex(ecrArtifactSpecConfig.getTagRegex());
     }
     return resultantConfig;
+  }
+
+  @Override
+  public Map<String, ParameterField<String>> extractConnectorRefs() {
+    Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
+    connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
+    return connectorRefMap;
   }
 }

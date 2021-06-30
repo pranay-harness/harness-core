@@ -16,6 +16,7 @@ import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
@@ -100,7 +101,8 @@ public class RetryHelperTest extends OrchestrationTestBase {
     NodeExecution nodeExecution =
         NodeExecution.builder()
             .uuid(generateUuid())
-            .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
+            .ambiance(
+                Ambiance.newBuilder().setPlanExecutionId(generateUuid()).addLevels(Level.newBuilder().build()).build())
             .status(Status.FAILED)
             .mode(ExecutionMode.TASK)
             .executableResponse(ExecutableResponse.newBuilder()
@@ -128,7 +130,7 @@ public class RetryHelperTest extends OrchestrationTestBase {
     assertThat(clonedNodeExecution.getRetryIds()).containsExactly(nodeExecution.getUuid());
     assertThat(clonedNodeExecution.getInterruptHistories()).hasSize(1);
     assertThat(clonedNodeExecution.getInterruptHistories().get(0).getInterruptType()).isEqualTo(InterruptType.RETRY);
-    assertThat(clonedNodeExecution.getStartTs()).isNull();
+    assertThat(clonedNodeExecution.getStartTs()).isEqualTo(0L);
     assertThat(clonedNodeExecution.getEndTs()).isNull();
     assertThat(clonedNodeExecution.getStatus()).isEqualTo(Status.QUEUED);
   }

@@ -108,6 +108,11 @@ public class OrganizationServiceImpl implements OrganizationService {
     }
   }
 
+  @Override
+  public List<String> getDistinctAccounts() {
+    return organizationRepository.findDistinctAccounts();
+  }
+
   private void setupOrganization(Scope scope) {
     if (DEFAULT_ORG_IDENTIFIER.equals(scope.getOrgIdentifier())) {
       // Default org is a special case. That is handled by default org service

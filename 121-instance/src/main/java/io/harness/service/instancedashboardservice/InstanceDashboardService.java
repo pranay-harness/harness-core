@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.models.BuildsByEnvironment;
 import io.harness.models.EnvBuildInstanceCount;
+import io.harness.models.InstancesByBuildId;
 import io.harness.models.dashboard.InstanceCountDetails;
 
 import java.util.List;
@@ -16,4 +17,6 @@ public interface InstanceDashboardService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs);
   List<EnvBuildInstanceCount> getEnvBuildInstanceCountByServiceId(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs);
+  List<InstancesByBuildId> getActiveInstancesByServiceIdEnvIdAndBuildIds(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String serviceId, String envId, List<String> buildIds, long timestampInMs);
 }

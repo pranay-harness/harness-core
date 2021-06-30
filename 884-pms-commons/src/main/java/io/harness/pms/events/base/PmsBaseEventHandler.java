@@ -1,10 +1,14 @@
 package io.harness.pms.events.base;
 
+import static io.harness.pms.events.PmsEventFrameworkConstants.PIPELINE_MONITORING_ENABLED;
+
 import io.harness.data.structure.CollectionUtils;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.AutoLogContext.OverrideBehavior;
+import io.harness.manage.GlobalContextManager;
 import io.harness.metrics.ThreadAutoLogContext;
 import io.harness.monitoring.EventMonitoringService;
+import io.harness.monitoring.MonitoringContext;
 import io.harness.monitoring.MonitoringInfo;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -15,6 +19,7 @@ import com.google.inject.Inject;
 import com.google.protobuf.Message;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import lombok.NonNull;
 
 public abstract class PmsBaseEventHandler<T extends Message> {
@@ -40,10 +45,16 @@ public abstract class PmsBaseEventHandler<T extends Message> {
     try (PmsGitSyncBranchContextGuard ignore1 = gitSyncContext(event); AutoLogContext ignore2 = autoLogContext(event)) {
       ThreadAutoLogContext metricContext =
           new ThreadAutoLogContext(extractMetricContext(event), OverrideBehavior.OVERRIDE_NESTS);
+      GlobalContextManager.upsertGlobalContextRecord(
+          MonitoringContext.builder()
+              .isMonitoringEnabled(
+                  Objects.equals(metadataMap.getOrDefault(PIPELINE_MONITORING_ENABLED, "false"), "true"))
+              .build());
       MonitoringInfo monitoringInfo = MonitoringInfo.builder()
                                           .createdAt(createdAt)
                                           .metricPrefix(getMetricPrefix(event))
                                           .metricContext(metricContext)
+                                          .accountId(AmbianceUtils.getAccountId(extractAmbiance(event)))
                                           .build();
       eventMonitoringService.sendMetric(LISTENER_START_METRIC, monitoringInfo, metadataMap);
       handleEventWithContext(event);

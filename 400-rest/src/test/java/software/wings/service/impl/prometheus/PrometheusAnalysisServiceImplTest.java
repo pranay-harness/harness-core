@@ -1,6 +1,7 @@
 package software.wings.service.impl.prometheus;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -91,7 +92,7 @@ public class PrometheusAnalysisServiceImplTest extends WingsBaseTest {
   public void test_renderFetchQueries() {
     List<TimeSeries> timeSeriesList = new ArrayList<>();
     timeSeriesList.add(TimeSeries.builder()
-                           .url("container_memory_usage_bytes{container_name=\"POD\", pod_name=\"$hostName\"}")
+                           .url("container_memory_usage_bytes{container_name=\"POD\",pod_name=\"$hostName\"}")
                            .metricType(MetricType.INFRA.name())
                            .txnName(generateUuid())
                            .metricName(generateUuid())
@@ -100,7 +101,7 @@ public class PrometheusAnalysisServiceImplTest extends WingsBaseTest {
     timeSeriesList.add(
         TimeSeries.builder()
             .url(
-                "api/v1/query_range?start=$startTime&end=$endTime&step=60s&query=container_memory_usage_bytes{container_name=\"POD\", pod_name=\"${host}\"}")
+                "api/v1/query_range?start=$startTime&end=$endTime&step=60s&query=container_memory_usage_bytes{container_name=\"POD\",pod_name=\"${host}\"}")
             .metricType(MetricType.INFRA.name())
             .txnName(generateUuid())
             .metricName(generateUuid())
@@ -112,6 +113,30 @@ public class PrometheusAnalysisServiceImplTest extends WingsBaseTest {
     renderFetchQueries.forEach(
         (url, apmMetricInfos)
             -> assertThat(url).isEqualTo(
-                "api/v1/query_range?start=${start_time_seconds}&end=${end_time_seconds}&step=60s&query=container_memory_usage_bytes{container_name=\"POD\", pod_name=\"${host}\"}"));
+                "api/v1/query_range?start=${start_time_seconds}&end=${end_time_seconds}&step=60s&query=container_memory_usage_bytes{container_name=\"POD\",pod_name=\"${host}\"}"));
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testRenderFetchQueries_withSpace() {
+    List<TimeSeries> timeSeriesList = new ArrayList<>();
+
+    timeSeriesList.add(
+        TimeSeries.builder()
+            .url(
+                "api/v1/query_range?start=$startTime&end=$endTime&step=60s&query=sum of (container_memory_usage_bytes{container_name=\"POD\",pod_name=\"${host}\"})")
+            .metricType(MetricType.INFRA.name())
+            .txnName(generateUuid())
+            .metricName(generateUuid())
+            .build());
+
+    final Map<String, List<APMMetricInfo>> renderFetchQueries =
+        prometheusAnalysisService.apmMetricEndPointsFetchInfo(timeSeriesList);
+
+    renderFetchQueries.forEach(
+        (url, apmMetricInfos)
+            -> assertThat(url).isEqualTo(
+                "api/v1/query_range?start=${start_time_seconds}&end=${end_time_seconds}&step=60s&query=sum+of+(container_memory_usage_bytes{container_name=\"POD\",pod_name=\"${host}\"})"));
   }
 }

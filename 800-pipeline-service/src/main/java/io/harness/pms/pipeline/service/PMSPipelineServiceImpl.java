@@ -14,8 +14,10 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.ExplanationException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidYamlException;
+import io.harness.exception.ScmException;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.observer.Subject;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
@@ -82,6 +84,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
       throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
 
+    } catch (ExplanationException | ScmException e) {
+      log.error("Error while updating pipeline " + pipelineEntity.getIdentifier(), e);
+      throw e;
     } catch (Exception e) {
       log.error(String.format("Error while saving pipeline [%s]", pipelineEntity.getIdentifier()), e);
       throw new InvalidRequestException(String.format(
@@ -145,6 +150,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     } catch (IOException ex) {
       log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
       throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+    } catch (ExplanationException | ScmException e) {
+      log.error("Error while updating pipeline " + pipelineEntity.getIdentifier(), e);
+      throw e;
     } catch (Exception e) {
       log.error(String.format("Error while updating pipeline [%s]", pipelineEntity.getIdentifier()), e);
       throw new InvalidRequestException(String.format(

@@ -26,6 +26,8 @@ public interface CVConstants {
 
   int STATE_MACHINE_IGNORE_MINUTES = 30;
 
+  String DATA_SOURCE_TYPE = "type";
+
   String LIVE_MONITORING = "live_monitoring";
   String DEPLOYMENT = "deployment";
 

@@ -1,12 +1,14 @@
 package io.harness.pms.plan.execution;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
+import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
@@ -16,8 +18,10 @@ import io.harness.plan.Plan;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
+import io.harness.pms.contracts.plan.RerunInfo;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.helpers.PrincipalInfoHelper;
+import io.harness.pms.helpers.TriggeredByHelper;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
@@ -62,12 +66,15 @@ public class PipelineExecuteHelper {
   private final PMSYamlSchemaService pmsYamlSchemaService;
   private final PmsGitSyncHelper pmsGitSyncHelper;
   private final PlanExecutionMetadataService planExecutionMetadataService;
+  private final TriggeredByHelper triggeredByHelper;
+  private final PlanExecutionService planExecutionService;
 
   public PlanExecutionResponseDto runPipelineWithInputSetPipelineYaml(@NotNull String accountId,
       @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String pipelineIdentifier,
-      String moduleType, String inputSetPipelineYaml, ExecutionTriggerInfo triggerInfo) throws IOException {
+      String moduleType, String inputSetPipelineYaml) throws IOException {
     PipelineEntity pipelineEntity =
         fetchPipelineEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
+    ExecutionTriggerInfo triggerInfo = buildTriggerInfo(null);
     ExecArgs execArgs = buildExecutionArgs(pipelineEntity, moduleType, inputSetPipelineYaml, triggerInfo);
 
     PlanExecution planExecution =
@@ -80,9 +87,12 @@ public class PipelineExecuteHelper {
 
   public PlanExecutionResponseDto rerunPipelineWithInputSetPipelineYaml(String accountId, String orgIdentifier,
       String projectIdentifier, String pipelineIdentifier, String moduleType, String originalExecutionId,
-      String inputSetPipelineYaml, ExecutionTriggerInfo triggerInfo) throws IOException {
+      String inputSetPipelineYaml) throws IOException {
     PipelineEntity pipelineEntity =
         fetchPipelineEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
+
+    ExecutionTriggerInfo triggerInfo = buildTriggerInfo(originalExecutionId);
+
     ExecArgs execArgs = buildExecutionArgs(pipelineEntity, moduleType, inputSetPipelineYaml, triggerInfo);
 
     // TODO: this is Quick fix for CIGA :( we would need to refactor this later
@@ -96,14 +106,44 @@ public class PipelineExecuteHelper {
         .build();
   }
 
+  private ExecutionTriggerInfo buildTriggerInfo(String originalExecutionId) {
+    ExecutionTriggerInfo.Builder triggerInfoBuilder =
+        ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).setTriggeredBy(
+            triggeredByHelper.getFromSecurityContext());
+
+    if (originalExecutionId == null) {
+      return triggerInfoBuilder.setIsRerun(false).build();
+    }
+    PlanExecution originalPlanExecution = planExecutionService.get(originalExecutionId);
+    ExecutionTriggerInfo originalTriggerInfo = originalPlanExecution.getMetadata().getTriggerInfo();
+    RerunInfo.Builder rerunInfoBuilder = RerunInfo.newBuilder()
+                                             .setPrevExecutionId(originalExecutionId)
+                                             .setPrevTriggerType(originalTriggerInfo.getTriggerType());
+    if (originalTriggerInfo.getIsRerun()) {
+      return triggerInfoBuilder.setIsRerun(true)
+          .setRerunInfo(rerunInfoBuilder.setRootExecutionId(originalTriggerInfo.getRerunInfo().getRootExecutionId())
+                            .setRootTriggerType(originalTriggerInfo.getRerunInfo().getRootTriggerType())
+                            .build())
+          .build();
+    }
+
+    return triggerInfoBuilder.setIsRerun(true)
+        .setRerunInfo(rerunInfoBuilder.setRootExecutionId(originalExecutionId)
+                          .setRootTriggerType(originalTriggerInfo.getTriggerType())
+                          .build())
+        .build();
+  }
+
   public PlanExecutionResponseDto runPipelineWithInputSetReferencesList(String accountId, String orgIdentifier,
       String projectIdentifier, String pipelineIdentifier, String moduleType, List<String> inputSetReferences,
-      String pipelineBranch, String pipelineRepoID, ExecutionTriggerInfo triggerInfo) throws IOException {
+      String pipelineBranch, String pipelineRepoID) throws IOException {
     String mergedRuntimeInputYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(accountId,
         orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences, pipelineBranch, pipelineRepoID);
 
     PipelineEntity pipelineEntity =
         fetchPipelineEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
+
+    ExecutionTriggerInfo triggerInfo = buildTriggerInfo(null);
     ExecArgs execArgs = buildExecutionArgs(pipelineEntity, moduleType, mergedRuntimeInputYaml, triggerInfo);
 
     PlanExecution planExecution =
@@ -116,12 +156,14 @@ public class PipelineExecuteHelper {
 
   public PlanExecutionResponseDto rerunPipelineWithInputSetReferencesList(String accountId, String orgIdentifier,
       String projectIdentifier, String pipelineIdentifier, String moduleType, String originalExecutionId,
-      List<String> inputSetReferences, String pipelineBranch, String pipelineRepoID, ExecutionTriggerInfo triggerInfo)
-      throws IOException {
+      List<String> inputSetReferences, String pipelineBranch, String pipelineRepoID) throws IOException {
     String mergedRuntimeInputYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(accountId,
         orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences, pipelineBranch, pipelineRepoID);
     PipelineEntity pipelineEntity =
         fetchPipelineEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
+
+    ExecutionTriggerInfo triggerInfo = buildTriggerInfo(originalExecutionId);
+
     ExecArgs execArgs = buildExecutionArgs(pipelineEntity, moduleType, mergedRuntimeInputYaml, triggerInfo);
 
     // TODO: this is Quick fix for CIGA :( we would need to refactor this later

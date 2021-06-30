@@ -148,6 +148,7 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
     doReturn("https://app.harness.io/pipeline/api")
         .doReturn("https://app.harness.io/pipeline/api/")
         .doReturn("https://app.harness.io/pipeline/api/#")
+        .doReturn("https://app.harness.io/pipeline/api")
         .doReturn(null)
         .when(webhookConfigProvider)
         .getPmsApiBaseUrl();
@@ -560,13 +561,21 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
     assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl())
         .isEqualTo("https://app.harness.io/pipeline/api/webhook/trigger?accountIdentifier=accId");
 
+    ngTriggerEntity =
+        ngTriggerElementMapper.toTriggerDetails("accId", "org", "proj", ngTriggerYaml_custom).getNgTriggerEntity();
+    ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false, true);
+    // baseUrl: "https://app.harness.io/pipeline/api"
+    assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl())
+        .isEqualTo(
+            "https://app.harness.io/pipeline/api/webhook/custom?accountIdentifier=accId&orgIdentifier=org&projectIdentifier=proj&pipelineIdentifier=pipeline&triggerIdentifier=first_trigger");
+
     // baseUrl: null
     ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false, true);
     assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl()).isNull();
 
     ngTriggerEntity.setType(SCHEDULED);
     ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false, true);
-    assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl()).isNull();
+    assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl()).isEmpty();
   }
 
   private TriggerEventHistory generateEventHistoryWithTimestamp(SimpleDateFormat formatter6, String sDate1)

@@ -53,6 +53,7 @@ import io.harness.concurrent.HTimeLimiter;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.container.ContainerInfo;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -147,6 +148,7 @@ import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
+import io.kubernetes.client.openapi.models.V1TokenReviewStatus;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -1576,8 +1578,9 @@ public class K8sTaskHelperBase {
             k8sDelegateTaskParams.getWorkingDirectory(), goTemplateCommand, logErrorStream, timeoutInMillis);
 
         if (processResult.getExitValue() != 0) {
-          throw new InvalidRequestException(format("Failed to render template for %s. Error %s",
-                                                manifestFile.getFileName(), processResult.getOutput().getUTF8()),
+          throw new InvalidRequestException(
+              getErrorMessageIfProcessFailed(
+                  format("Failed to render template for %s.", manifestFile.getFileName()), processResult),
               USER);
         }
 
@@ -1862,8 +1865,12 @@ public class K8sTaskHelperBase {
   }
 
   private String getReleaseHistoryDataK8sClient(KubernetesConfig kubernetesConfig, String releaseName) {
-    String releaseHistoryData =
-        kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
+    String releaseHistoryData = null;
+    try {
+      releaseHistoryData = kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
+    } catch (WingsException e) {
+      log.warn(e.getMessage());
+    }
 
     if (isEmpty(releaseHistoryData)) {
       releaseHistoryData = kubernetesContainerService.fetchReleaseHistoryFromConfigMap(kubernetesConfig, releaseName);
@@ -2166,6 +2173,12 @@ public class K8sTaskHelperBase {
     return ConnectorValidationResult.builder().status(connectivityStatus).build();
   }
 
+  public V1TokenReviewStatus fetchTokenReviewStatus(
+      KubernetesClusterConfigDTO kubernetesClusterConfigDTO, List<EncryptedDataDetail> encryptionDetailList) {
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(kubernetesClusterConfigDTO, encryptionDetailList);
+    return kubernetesContainerService.fetchTokenReviewStatus(kubernetesConfig);
+  }
+
   private ConnectorValidationResult createConnectivityFailureValidationResult(Exception ex) {
     String errorMessage = ex.getMessage();
     ErrorDetail errorDetail = ngErrorHelper.createErrorDetail(errorMessage);
@@ -2211,13 +2224,22 @@ public class K8sTaskHelperBase {
       ProcessResult processResult =
           executeShellCommand(manifestFilesDirectory, helmTemplateCommand, logErrorStream, timeoutInMillis);
       if (processResult.getExitValue() != 0) {
-        throw new WingsException(format("Failed to render helm chart. Error %s", processResult.getOutput().getUTF8()));
+        throw new InvalidRequestException(
+            getErrorMessageIfProcessFailed("Failed to render helm chart.", processResult), USER);
       }
-
       result.add(FileData.builder().fileName("manifest.yaml").fileContent(processResult.outputUTF8()).build());
     }
 
     return result;
+  }
+
+  @VisibleForTesting
+  String getErrorMessageIfProcessFailed(String baseMessage, ProcessResult processResult) {
+    StringBuilder stringBuilder = new StringBuilder(baseMessage);
+    if (EmptyPredicate.isNotEmpty(processResult.getOutput().getUTF8())) {
+      stringBuilder.append(String.format(" Error %s", processResult.getOutput().getUTF8()));
+    }
+    return stringBuilder.toString();
   }
 
   public List<FileData> renderTemplateForHelmChartFiles(String helmPath, String manifestFilesDirectory,

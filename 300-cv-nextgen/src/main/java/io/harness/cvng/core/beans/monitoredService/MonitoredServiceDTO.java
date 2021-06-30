@@ -1,0 +1,44 @@
+package io.harness.cvng.core.beans.monitoredService;
+
+import io.harness.cvng.beans.MonitoredServiceType;
+import io.harness.gitsync.beans.YamlDTO;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.Collections;
+import java.util.Set;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
+import lombok.experimental.FieldDefaults;
+
+@Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class MonitoredServiceDTO implements YamlDTO {
+  @NotNull String orgIdentifier;
+  @NotNull String projectIdentifier;
+  @NotNull String identifier;
+  @NotNull String name;
+  @NotNull MonitoredServiceType type;
+  String description;
+  @NotNull String serviceRef;
+  @NotNull String environmentRef;
+
+  @Valid Sources sources;
+
+  @Data
+  @Builder
+  public static class Sources {
+    @Valid Set<HealthSource> healthSources;
+
+    public Set<HealthSource> getHealthSources() {
+      if (healthSources == null) {
+        return Collections.emptySet();
+      }
+      return healthSources;
+    }
+  }
+}

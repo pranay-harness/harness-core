@@ -81,7 +81,6 @@ public class NodeStartHelper {
     NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     return Preconditions.checkNotNull(nodeExecutionService.updateStatusWithOps(
         AmbianceUtils.obtainCurrentRuntimeId(ambiance), Status.RUNNING, ops -> {
-          ops.set(NodeExecutionKeys.startTs, System.currentTimeMillis());
           if (!ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
             setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution));
           }

@@ -29,7 +29,7 @@ public class CIDefaultEntityManager {
   }
 
   private void createDockerConnector(String accountId, String org, String project) {
-    Optional<ConnectorResponseDTO> harnessImage = connectorService.get(accountId, org, project, "harnessImage");
+    Optional<ConnectorResponseDTO> harnessImage = connectorService.get(accountId, org, project, HARNESS_IMAGE);
     if (harnessImage.isPresent()) {
       log.info(String.format(
           "skipping creating docker connector as its already present in account id: %s, org: %s, project: %s",

@@ -20,18 +20,9 @@ public class OutboxSDKConstants {
 
   public static final int DEFAULT_MAX_ATTEMPTS = 7;
 
-  public static final int DEFAULT_MAX_EVENTS_POLLED = 50;
+  public static final int DEFAULT_MAX_EVENTS_POLLED = 100;
 
   public static final int DEFAULT_UNBLOCK_RETRY_INTERVAL_IN_MINUTES = 10;
-
-  public static final OutboxEventIteratorConfiguration DEFAULT_OUTBOX_ITERATOR_CONFIGURATION =
-      OutboxEventIteratorConfiguration.builder()
-          .threadPoolSize(3)
-          .intervalInSeconds(5)
-          .targetIntervalInSeconds(15)
-          .acceptableNoAlertDelayInSeconds(60)
-          .maximumOutboxEventHandlingAttempts(DEFAULT_MAX_ATTEMPTS)
-          .build();
 
   public static final OutboxPollConfiguration DEFAULT_OUTBOX_POLL_CONFIGURATION =
       OutboxPollConfiguration.builder()
@@ -42,4 +33,10 @@ public class OutboxSDKConstants {
 
   public static final OutboxEventFilter DEFAULT_OUTBOX_EVENT_FILTER =
       OutboxEventFilter.builder().maximumEventsPolled(DEFAULT_MAX_EVENTS_POLLED).build();
+
+  public static final String OUTBOX_QUEUE_SIZE_METRIC_NAME = "outbox_queue_size";
+
+  public static final String OUTBOX_BLOCKED_QUEUE_SIZE_METRIC_NAME = "outbox_blocked_queue_size";
+
+  public static final String ALL_EVENT_TYPES = "AllEventTypes";
 }

@@ -11,4 +11,5 @@ public class MonitoringInfo {
   String metricPrefix;
   Long createdAt;
   ThreadAutoLogContext metricContext;
+  String accountId;
 }

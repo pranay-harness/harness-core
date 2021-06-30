@@ -63,7 +63,6 @@ import io.harness.lock.PersistentLockModule;
 import io.harness.metrics.modules.MetricsModule;
 import io.harness.metrics.service.api.MetricsPublisher;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.redis.RedisConfig;
@@ -169,12 +168,6 @@ public class AccessControlModule extends AbstractModule {
     return config.getIteratorsConfig();
   }
 
-  @Provides
-  @Singleton
-  public OutboxPollConfiguration getOutboxPollConfiguration() {
-    return config.getOutboxPollConfig();
-  }
-
   @Override
   protected void configure() {
     install(AccessControlPersistenceModule.getInstance(config.getMongoConfig()));
@@ -191,7 +184,6 @@ public class AccessControlModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends MorphiaRegistrar>>() {});
     morphiaRegistrars.addBinding().toInstance(OutboxEventMorphiaRegistrar.class);
     morphiaRegistrars.addBinding().toInstance(PrimaryVersionManagerMorphiaRegistrar.class);
-    install(new TransactionOutboxModule());
     bind(OutboxEventHandler.class).to(AccessControlOutboxEventHandler.class);
     install(new ValidationModule(validatorFactory));
     install(AccessControlCoreModule.getInstance());
@@ -265,6 +257,8 @@ public class AccessControlModule extends AbstractModule {
     } else {
       log.info("No configuration provided for Stack Driver, aggregator metrics will not be recorded");
     }
+    install(new TransactionOutboxModule(config.getOutboxPollConfig(), ACCESS_CONTROL_SERVICE.getServiceId(),
+        config.getAggregatorConfiguration().isExportMetricsToStackDriver()));
 
     registerRequiredBindings();
   }

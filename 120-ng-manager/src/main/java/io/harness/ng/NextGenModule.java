@@ -135,6 +135,8 @@ import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.user.service.impl.NgUserServiceImpl;
 import io.harness.ng.core.user.service.impl.UserEntityCrudStreamListener;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
+import io.harness.ng.feedback.services.FeedbackService;
+import io.harness.ng.feedback.services.impls.FeedbackServiceImpl;
 import io.harness.ng.serviceaccounts.service.api.ServiceAccountService;
 import io.harness.ng.serviceaccounts.service.impl.ServiceAccountServiceImpl;
 import io.harness.ng.userprofile.commons.SCMType;
@@ -154,7 +156,6 @@ import io.harness.ng.webhook.services.api.WebhookService;
 import io.harness.ng.webhook.services.impl.WebhookEventProcessingServiceImpl;
 import io.harness.ng.webhook.services.impl.WebhookServiceImpl;
 import io.harness.notification.module.NotificationClientModule;
-import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.packages.HarnessPackages;
@@ -310,12 +311,6 @@ public class NextGenModule extends AbstractModule {
     Set<Class<?>> set = new HashSet<>(subTypesOfStepSpecType);
 
     return ImmutableMap.of(StepSpecType.class, set);
-  }
-
-  @Provides
-  @Singleton
-  public OutboxPollConfiguration getOutboxPollConfiguration() {
-    return appConfig.getOutboxPollConfig();
   }
 
   @Provides
@@ -484,7 +479,8 @@ public class NextGenModule extends AbstractModule {
     install(OrchestrationStepsModule.getInstance(null));
     install(EntitySetupUsageModule.getInstance());
     install(PersistentLockModule.getInstance());
-    install(new TransactionOutboxModule());
+    install(new TransactionOutboxModule(
+        appConfig.getOutboxPollConfig(), NG_MANAGER.getServiceId(), appConfig.isExportMetricsToStackDriver()));
     install(new ResourceGroupClientModule(appConfig.getResourceGroupClientConfig().getServiceConfig(),
         appConfig.getResourceGroupClientConfig().getSecret(), NG_MANAGER.getServiceId()));
     install(new NGFileServiceModule(appConfig.getFileServiceConfiguration().getFileStorageMode(),
@@ -548,6 +544,7 @@ public class NextGenModule extends AbstractModule {
     bind(SourceCodeManagerService.class).to(SourceCodeManagerServiceImpl.class);
     bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);
     bind(TokenService.class).to(TokenServiceImpl.class);
+    bind(FeedbackService.class).to(FeedbackServiceImpl.class);
 
     MapBinder<SCMType, SourceCodeManagerMapper> sourceCodeManagerMapBinder =
         MapBinder.newMapBinder(binder(), SCMType.class, SourceCodeManagerMapper.class);

@@ -62,4 +62,6 @@ public interface Constants {
   String GITHUB_LOWER_CASE = "github";
   String GITLAB_LOWER_CASE = "gitlab";
   String BITBUCKET_LOWER_CASE = "bitbucket";
+
+  String TRIGGER_KEY = "triggerIdentifier";
 }

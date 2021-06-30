@@ -7,8 +7,8 @@ import io.harness.invites.remote.InviteAcceptResponse;
 import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
-import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.dto.InviteDTO;
+import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.invites.entities.Invite;
 
 import java.net.URI;
