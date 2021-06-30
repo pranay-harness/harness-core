@@ -77,7 +77,8 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
         return k8sTaskTypeToRequestHandler.get(k8sDeployRequest.getTaskType().name())
             .executeTask(k8sDeployRequest, null, getLogStreamingTaskClient(), commandUnitsProgress);
       } catch (Exception ex) {
-        log.error("Exception in processing k8s task [{}]", k8sDeployRequest.toString(), ex);
+        log.error("Exception in processing k8s task [{}]",
+            k8sDeployRequest.getCommandName() + ":" + k8sDeployRequest.getTaskType(), ex);
         return K8sDeployResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
             .errorMessage(ExceptionUtils.getMessage(ex))
@@ -124,7 +125,8 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
         k8sDeployResponse.setCommandUnitsProgress(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress));
         return k8sDeployResponse;
       } catch (Exception ex) {
-        log.error("Exception in processing k8s task [{}]", k8sDeployRequest.toString(), ex);
+        log.error("Exception in processing k8s task [{}]",
+            k8sDeployRequest.getCommandName() + ":" + k8sDeployRequest.getTaskType(), ex);
         return K8sDeployResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
             .errorMessage(ExceptionUtils.getMessage(ex))
