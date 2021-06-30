@@ -30,6 +30,7 @@ import io.harness.pms.merger.helpers.FQNUtils;
 import io.harness.pms.pipeline.observer.PipelineActionObserver;
 import io.harness.pms.rbac.InternalReferredEntityExtractor;
 import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.IdentifierRefHelper;
@@ -105,6 +106,9 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
         String finalValue = ((TextNode) fqnToObjectMapMergedYaml.get(fqn)).asText();
         if (NGExpressionUtils.isRuntimeOrExpressionField(finalValue)) {
           continue;
+        }
+        if (ParameterField.containsInputSetValidator(finalValue)) {
+          finalValue = ParameterField.getValueFromParameterFieldWithInputSetValidator(finalValue);
         }
         IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
             finalValue, accountIdentifier, orgIdentifier, projectIdentifier, metadata);
