@@ -124,7 +124,8 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
                                          .commandUnitsProgress(UnitProgressData.builder().build())
                                          .build();
 
-    StepResponse stepResponse = canaryDeleteStep.handleTaskResult(ambiance, stepElementParameters, () -> responseData);
+    StepResponse stepResponse =
+        canaryDeleteStep.handleTaskResultWithSecurityContext(ambiance, stepElementParameters, () -> responseData);
     assertThat(stepResponse.getStatus()).isEqualTo(SUCCEEDED);
   }
 
@@ -143,7 +144,8 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
                                          .commandUnitsProgress(UnitProgressData.builder().build())
                                          .build();
 
-    StepResponse stepResponse = canaryDeleteStep.handleTaskResult(ambiance, stepElementParameters, () -> responseData);
+    StepResponse stepResponse =
+        canaryDeleteStep.handleTaskResultWithSecurityContext(ambiance, stepElementParameters, () -> responseData);
     assertThat(stepResponse.getStatus()).isEqualTo(FAILED);
     assertThat(stepResponse.getFailureInfo().getErrorMessage()).isEqualTo("task failed");
   }

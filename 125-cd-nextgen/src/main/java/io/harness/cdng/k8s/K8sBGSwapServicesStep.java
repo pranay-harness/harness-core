@@ -91,8 +91,9 @@ public class K8sBGSwapServicesStep extends TaskExecutableWithRollbackAndRbac<K8s
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepElementParameters,
-      ThrowingSupplier<K8sDeployResponse> responseSupplier) throws Exception {
+  public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance,
+      StepElementParameters stepElementParameters, ThrowingSupplier<K8sDeployResponse> responseSupplier)
+      throws Exception {
     K8sDeployResponse executionResponse = responseSupplier.get();
     StepResponseBuilder stepResponseBuilder =
         StepResponse.builder().unitProgressList(executionResponse.getCommandUnitsProgress().getUnitProgresses());

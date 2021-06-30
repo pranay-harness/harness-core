@@ -71,7 +71,7 @@ public class JiraUpdateStep extends TaskExecutableWithRollbackAndRbac<JiraTaskNG
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepParameters,
+  public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance, StepElementParameters stepParameters,
       ThrowingSupplier<JiraTaskNGResponse> responseSupplier) throws Exception {
     return jiraStepHelperService.prepareStepResponse(responseSupplier);
   }

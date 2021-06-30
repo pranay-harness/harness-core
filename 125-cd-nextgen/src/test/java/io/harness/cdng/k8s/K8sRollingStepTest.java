@@ -130,7 +130,7 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
             .build();
     when(k8sStepHelper.getReleaseName(any())).thenReturn("releaseName");
 
-    StepResponse response = k8sRollingStep.finalizeExecution(
+    StepResponse response = k8sRollingStep.finalizeExecutionWithSecurityContext(
         ambiance, stepElementParameters, K8sExecutionPassThroughData.builder().build(), () -> k8sDeployResponse);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
     assertThat(response.getStepOutcomes()).hasSize(1);
@@ -158,7 +158,7 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
 
     doReturn(stepResponse).when(k8sStepHelper).handleTaskException(ambiance, executionPassThroughData, thrownException);
 
-    StepResponse response = k8sRollingStep.finalizeExecution(
+    StepResponse response = k8sRollingStep.finalizeExecutionWithSecurityContext(
         ambiance, stepElementParameters, executionPassThroughData, () -> { throw thrownException; });
 
     assertThat(response).isEqualTo(stepResponse);
