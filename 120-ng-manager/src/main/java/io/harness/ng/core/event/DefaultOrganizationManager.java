@@ -38,6 +38,7 @@ import com.google.inject.name.Named;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -59,14 +60,21 @@ public class DefaultOrganizationManager {
   private final AccessControlMigrationService accessControlMigrationService;
 
   public void createDefaultOrganization(String accountIdentifier) {
-    if (accountOrgProjectValidator.isPresent(accountIdentifier, DEFAULT_ORG_IDENTIFIER, null)) {
-      log.info(String.format("Default Organization for account %s already present", accountIdentifier));
-      return;
-    }
     if (!accountOrgProjectValidator.isPresent(accountIdentifier, null, null)) {
       log.info(String.format(
           "Account with accountIdentifier %s not found, skipping creation of Default Organization", accountIdentifier));
       return;
+    }
+
+    Organization defaultOrg = ensureDefaultOrg(accountIdentifier);
+    setupAccount(defaultOrg.getAccountIdentifier(), defaultOrg.getIdentifier());
+  }
+
+  private Organization ensureDefaultOrg(String accountIdentifier) {
+    Optional<Organization> organization = organizationService.get(accountIdentifier, DEFAULT_ORG_IDENTIFIER);
+    if (organization.isPresent()) {
+      log.info(String.format("Default Organization for account %s already present", accountIdentifier));
+      return organization.get();
     }
     OrganizationDTO createOrganizationDTO = OrganizationDTO.builder().build();
     createOrganizationDTO.setIdentifier(DEFAULT_ORG_IDENTIFIER);
@@ -74,41 +82,37 @@ public class DefaultOrganizationManager {
     createOrganizationDTO.setTags(emptyMap());
     createOrganizationDTO.setDescription("Default Organization");
     createOrganizationDTO.setHarnessManaged(true);
-    Organization createdOrg = organizationService.create(accountIdentifier, createOrganizationDTO);
-
-    setupAccount(createdOrg);
+    return organizationService.create(accountIdentifier, createOrganizationDTO);
   }
 
-  private void setupAccount(Organization defaultOrg) {
-    String accountIdentifier = defaultOrg.getAccountIdentifier();
-    String orgIdentifier = defaultOrg.getIdentifier();
-
+  private void setupAccount(String accountIdentifier, String orgIdentifier) {
     NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(accountIdentifier, null, null));
-    NGRestUtils.getResponse(
-        resourceGroupClient.createManagedResourceGroup(defaultOrg.getAccountIdentifier(), orgIdentifier, null));
+    NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(accountIdentifier, orgIdentifier, null));
 
-    Collection<UserInfo> cgUsers = getUsers(accountIdentifier);
+    Collection<UserInfo> cgUsers = getCGUsers(accountIdentifier);
     Collection<String> cgAdmins =
         cgUsers.stream().filter(UserInfo::isAdmin).map(UserInfo::getUuid).collect(Collectors.toSet());
 
     Scope accountScope = Scope.of(accountIdentifier, null, null);
-    cgUsers.forEach(user -> upsertUserMembership(accountScope, user.getUuid()));
-    assignAdminRoleToUsers(accountScope, cgAdmins, getManagedAdminRole(accountScope));
     if (!hasAdmin(accountScope)) {
-      throw new GeneralException(String.format("No Admin could be assigned in scope %s", accountScope));
+      cgUsers.forEach(user -> upsertUserMembership(accountScope, user.getUuid()));
+      assignAdminRoleToUsers(accountScope, cgAdmins, getManagedAdminRole(accountScope));
+      if (!hasAdmin(accountScope)) {
+        throw new GeneralException(String.format("No Admin could be assigned in scope %s", accountScope));
+      }
+      accessControlMigrationService.save(AccessControlMigration.builder().accountIdentifier(accountIdentifier).build());
     }
-
-    accessControlMigrationService.save(AccessControlMigration.builder().accountIdentifier(accountIdentifier).build());
 
     Scope orgScope = Scope.of(accountIdentifier, orgIdentifier, null);
-    cgAdmins.forEach(user -> upsertUserMembership(orgScope, user));
-    assignAdminRoleToUsers(orgScope, cgAdmins, getManagedAdminRole(orgScope));
     if (!hasAdmin(orgScope)) {
-      throw new GeneralException(String.format("No Admin could be assigned in scope %s", orgScope));
+      cgAdmins.forEach(user -> upsertUserMembership(orgScope, user));
+      assignAdminRoleToUsers(orgScope, cgAdmins, getManagedAdminRole(orgScope));
+      if (!hasAdmin(orgScope)) {
+        throw new GeneralException(String.format("No Admin could be assigned in scope %s", orgScope));
+      }
+      accessControlMigrationService.save(
+          AccessControlMigration.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build());
     }
-
-    accessControlMigrationService.save(
-        AccessControlMigration.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build());
   }
 
   private boolean hasAdmin(Scope scope) {
@@ -165,7 +169,7 @@ public class DefaultOrganizationManager {
     }
   }
 
-  private Collection<UserInfo> getUsers(String accountId) {
+  private Collection<UserInfo> getCGUsers(String accountId) {
     int offset = 0;
     int limit = 500;
     int maxIterations = 50;
