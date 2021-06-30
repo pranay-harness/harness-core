@@ -73,6 +73,17 @@ public interface AuthService {
   /**
    * Authorize.
    * @param accountId
+   * @param appId                the app id
+   * @param entityId             the entity id
+   * @param user                 the user
+   * @param permissionAttributes the permission attributes
+   */
+  void authorize(String accountId, String appId, String entityId, User user,
+      List<PermissionAttribute> permissionAttributes, boolean matchesAny);
+
+  /**
+   * Authorize.
+   * @param accountId
    * @param appIds               list of app ids
    * @param entityId             the entity id
    * @param user                 the user
