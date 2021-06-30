@@ -22,6 +22,8 @@ import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.entities.embedded.ceawsconnector.CEAwsConfig.CEAwsConfigKeys;
 import io.harness.connector.entities.embedded.ceazure.CEAzureConfig.CEAzureConfigKeys;
+import io.harness.connector.entities.embedded.cek8s.CEK8sDetails.CEK8sDetailsKeys;
+import io.harness.connector.entities.embedded.gcpccm.GcpCloudCostConfig.GcpCloudCostConfigKeys;
 import io.harness.connector.services.ConnectorFilterService;
 import io.harness.delegate.beans.connector.CcmConnectorFilter;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -274,12 +276,26 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
   private void populateCcmFilters(Criteria criteria, CcmConnectorFilter ccmConnectorFilter) {
     populateAwsFilters(criteria, ccmConnectorFilter);
     populateAzureFilters(criteria, ccmConnectorFilter);
+    populateGcpFilters(criteria, ccmConnectorFilter);
+    populateK8sFilters(criteria, ccmConnectorFilter);
     populateAllFilter(criteria, CEAzureConfigKeys.featuresEnabled, ccmConnectorFilter.getFeaturesEnabled());
   }
 
   private void populateAwsFilters(Criteria criteria, CcmConnectorFilter ccmConnectorFilter) {
     if (ccmConnectorFilter.getAwsAccountId() != null) {
       populateInFilter(criteria, CEAwsConfigKeys.awsAccountId, Arrays.asList(ccmConnectorFilter.getAwsAccountId()));
+    }
+  }
+
+  private void populateGcpFilters(Criteria criteria, CcmConnectorFilter ccmConnectorFilter) {
+    if (ccmConnectorFilter.getGcpProjectId() != null) {
+      populateInFilter(criteria, GcpCloudCostConfigKeys.projectId, Arrays.asList(ccmConnectorFilter.getGcpProjectId()));
+    }
+  }
+
+  private void populateK8sFilters(Criteria criteria, CcmConnectorFilter ccmConnectorFilter) {
+    if (ccmConnectorFilter.getK8sConnectorRef() != null) {
+      populateInFilter(criteria, CEK8sDetailsKeys.connectorRef, Arrays.asList(ccmConnectorFilter.getK8sConnectorRef()));
     }
   }
 
