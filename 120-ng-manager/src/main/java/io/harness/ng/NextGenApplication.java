@@ -8,6 +8,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.getResourceClasses;
 import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+import static io.harness.token.TokenClientModule.NG_HARNESS_API_KEY_CACHE;
 
 import static com.google.common.collect.ImmutableMap.of;
 
@@ -54,6 +55,7 @@ import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.accesscontrol.migrations.AccessControlMigrationJob;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
+import io.harness.ng.core.dto.TokenDTO;
 import io.harness.ng.core.event.NGEventConsumerService;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
@@ -146,6 +148,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import javax.cache.Cache;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -526,14 +529,16 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerAuthFilters(NextGenConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.isEnableAuth()) {
-      registerNextGenAuthFilter(
-          configuration, environment, injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED"))));
+      registerNextGenAuthFilter(configuration, environment,
+          injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED"))),
+          injector.getInstance(
+              Key.get(new TypeLiteral<Cache<String, TokenDTO>>() {}, Names.named(NG_HARNESS_API_KEY_CACHE))));
       registerInternalApiAuthFilter(configuration, environment);
     }
   }
 
-  private void registerNextGenAuthFilter(
-      NextGenConfiguration configuration, Environment environment, TokenClient tokenClient) {
+  private void registerNextGenAuthFilter(NextGenConfiguration configuration, Environment environment,
+      TokenClient tokenClient, Cache<String, TokenDTO> tokenCache) {
     Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate =
         (getAuthenticationExemptedRequestsPredicate().negate())
             .and((getAuthFilterPredicate(InternalApi.class)).negate());
@@ -543,7 +548,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         IDENTITY_SERVICE.getServiceId(), configuration.getNextGenConfig().getJwtIdentityServiceSecret());
     serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getNextGenConfig().getNgManagerServiceSecret());
     environment.jersey().register(
-        new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping, tokenClient));
+        new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping, tokenClient, tokenCache));
   }
 
   private void registerInternalApiAuthFilter(NextGenConfiguration configuration, Environment environment) {

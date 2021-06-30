@@ -9,6 +9,7 @@ import static io.harness.platform.PlatformConfiguration.getPlatformServiceCombin
 import static io.harness.platform.audit.AuditServiceSetup.AUDIT_SERVICE;
 import static io.harness.platform.notification.NotificationServiceSetup.NOTIFICATION_SERVICE;
 import static io.harness.platform.resourcegroup.ResourceGroupServiceSetup.RESOURCE_GROUP_SERVICE;
+import static io.harness.token.TokenClientModule.NG_HARNESS_API_KEY_CACHE;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
@@ -16,9 +17,11 @@ import static java.util.stream.Collectors.toSet;
 import io.harness.AuthorizationServiceHeader;
 import io.harness.GodInjector;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheModule;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.ng.core.dto.TokenDTO;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
@@ -46,9 +49,10 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -66,6 +70,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import javax.cache.Cache;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -125,20 +130,24 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     MaintenanceController.forceMaintenance(true);
     GodInjector godInjector = new GodInjector();
     godInjector.put(NOTIFICATION_SERVICE,
-        Guice.createInjector(new NotificationServiceModule(appConfig), new MetricRegistryModule(metricRegistry)));
+        Guice.createInjector(new CacheModule(appConfig.getCacheConfig()), new NotificationServiceModule(appConfig),
+            new MetricRegistryModule(metricRegistry)));
     if (appConfig.getResoureGroupServiceConfig().isEnableResourceGroup()) {
       godInjector.put(RESOURCE_GROUP_SERVICE,
-          Guice.createInjector(new ResourceGroupServiceModule(appConfig), new MetricRegistryModule(metricRegistry)));
+          Guice.createInjector(new CacheModule(appConfig.getCacheConfig()), new ResourceGroupServiceModule(appConfig),
+              new MetricRegistryModule(metricRegistry)));
     }
     if (appConfig.getAuditServiceConfig().isEnableAuditService()) {
       godInjector.put(AUDIT_SERVICE,
-          Guice.createInjector(new AuditServiceModule(appConfig), new MetricRegistryModule(metricRegistry)));
+          Guice.createInjector(new CacheModule(appConfig.getCacheConfig()), new AuditServiceModule(appConfig),
+              new MetricRegistryModule(metricRegistry)));
     }
 
     godInjector.put(PLATFORM_SERVICE,
-        Guice.createInjector(new TokenClientModule(appConfig.getServiceHttpClientConfig(),
-            appConfig.getPlatformSecrets().getNgManagerServiceSecret(),
-            AuthorizationServiceHeader.PLATFORM_SERVICE.getServiceId())));
+        Guice.createInjector(new CacheModule(appConfig.getCacheConfig()),
+            new TokenClientModule(appConfig.getServiceHttpClientConfig(),
+                appConfig.getPlatformSecrets().getNgManagerServiceSecret(),
+                AuthorizationServiceHeader.PLATFORM_SERVICE.getServiceId())));
 
     registerCommonResources(appConfig, environment, godInjector);
     registerCorsFilter(appConfig, environment);
@@ -242,7 +251,9 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
         IDENTITY_SERVICE.getServiceId(), configuration.getPlatformSecrets().getJwtIdentityServiceSecret());
     serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getPlatformSecrets().getNgManagerServiceSecret());
     environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping,
-        injector.get(PLATFORM_SERVICE).getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
+        injector.get(PLATFORM_SERVICE).getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED"))),
+        injector.get(PLATFORM_SERVICE).getInstance(Key.get(new TypeLiteral<Cache<String, TokenDTO>>() {
+        }, Names.named(NG_HARNESS_API_KEY_CACHE)))));
   }
 
   private void registerInternalApiAuthFilter(PlatformConfiguration configuration, Environment environment) {

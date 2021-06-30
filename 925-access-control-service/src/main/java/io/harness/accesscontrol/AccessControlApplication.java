@@ -14,6 +14,7 @@ import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.accesscontrol.AccessControlConfiguration.getResourceClasses;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.token.TokenClientModule.NG_HARNESS_API_KEY_CACHE;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
@@ -29,6 +30,7 @@ import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroup
 import io.harness.aggregator.AggregatorService;
 import io.harness.aggregator.MongoOffsetCleanupJob;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheModule;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.health.HealthService;
@@ -37,6 +39,7 @@ import io.harness.metrics.MetricRegistryModule;
 import io.harness.metrics.jobs.RecordMetricsJob;
 import io.harness.metrics.service.api.MetricService;
 import io.harness.ng.core.CorrelationFilter;
+import io.harness.ng.core.dto.TokenDTO;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
@@ -55,6 +58,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -71,6 +75,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
+import javax.cache.Cache;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration.Dynamic;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -120,8 +125,8 @@ public class AccessControlApplication extends Application<AccessControlConfigura
   public void run(AccessControlConfiguration appConfig, Environment environment) {
     log.info("Starting Access Control Application ...");
     MaintenanceController.forceMaintenance(true);
-    Injector injector =
-        Guice.createInjector(AccessControlModule.getInstance(appConfig), new MetricRegistryModule(metricRegistry));
+    Injector injector = Guice.createInjector(new CacheModule(appConfig.getCacheConfig()),
+        AccessControlModule.getInstance(appConfig), new MetricRegistryModule(metricRegistry));
     injector.getInstance(HPersistence.class);
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
@@ -259,7 +264,9 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     serviceToSecretMapping.put(ACCESS_CONTROL_SERVICE.getServiceId(), configuration.getDefaultServiceSecret());
     serviceToSecretMapping.put(IDENTITY_SERVICE.getServiceId(), configuration.getIdentityServiceSecret());
     environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping,
-        injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
+        injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED"))),
+        injector.getInstance(
+            Key.get(new TypeLiteral<Cache<String, TokenDTO>>() {}, Names.named(NG_HARNESS_API_KEY_CACHE)))));
   }
 
   private void registerInternalApiAuthFilter(AccessControlConfiguration configuration, Environment environment) {
