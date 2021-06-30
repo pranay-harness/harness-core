@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeType;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -31,13 +32,14 @@ public class FQNUtils {
     Map<FQN, Object> res = new LinkedHashMap<>();
     fullMap.keySet().forEach(key -> {
       if (key.contains(baseFQN)) {
-        validateUniqueFqn(key, fullMap.get(key), res);
+        res.put(key, fullMap.get(key));
       }
     });
     return res;
   }
 
   public Map<FQN, Object> generateFQNMap(JsonNode yamlMap) {
+    HashSet<String> expressions = new HashSet<>();
     Set<String> fieldNames = new LinkedHashSet<>();
     yamlMap.fieldNames().forEachRemaining(fieldNames::add);
     String topKey = fieldNames.iterator().next();
@@ -47,20 +49,22 @@ public class FQNUtils {
 
     Map<FQN, Object> res = new LinkedHashMap<>();
 
-    generateFQNMap(yamlMap.get(topKey), currentFQN, res);
+    generateFQNMap(yamlMap.get(topKey), currentFQN, res, expressions);
     return res;
   }
 
-  private void validateUniqueFqn(FQN fqn, Object value, Map<FQN, Object> res) {
-    if (res.containsKey(fqn)) {
+  private void validateUniqueFqn(FQN fqn, Object value, Map<FQN, Object> res, HashSet<String> expressions) {
+    String expressionFqn = fqn.getExpressionFqn();
+    if (expressions.contains(expressionFqn)) {
       String fqnDisplay = fqn.display();
       throw new InvalidRequestException(String.format(" This element is coming twice in yaml %s",
           fqn.display().substring(0, fqnDisplay.lastIndexOf('.', fqnDisplay.length() - 2))));
     }
+    expressions.add(expressionFqn);
     res.put(fqn, value);
   }
 
-  private void generateFQNMap(JsonNode map, FQN baseFQN, Map<FQN, Object> res) {
+  private void generateFQNMap(JsonNode map, FQN baseFQN, Map<FQN, Object> res, HashSet<String> expressions) {
     Set<String> fieldNames = new LinkedHashSet<>();
     map.fieldNames().forEachRemaining(fieldNames::add);
     for (String key : fieldNames) {
@@ -68,52 +72,53 @@ public class FQNUtils {
       FQN currFQN = FQN.duplicateAndAddNode(baseFQN, FQNNode.builder().nodeType(FQNNode.NodeType.KEY).key(key).build());
       if (value.getNodeType() == JsonNodeType.ARRAY) {
         if (value.size() == 0) {
-          validateUniqueFqn(currFQN, value, res);
+          validateUniqueFqn(currFQN, value, res, expressions);
           continue;
         }
         ArrayNode arrayNode = (ArrayNode) value;
-        generateFQNMapFromList(arrayNode, currFQN, res);
+        generateFQNMapFromList(arrayNode, currFQN, res, expressions);
       } else if (value.getNodeType() == JsonNodeType.OBJECT) {
         if (value.size() == 0) {
-          validateUniqueFqn(currFQN, value, res);
+          validateUniqueFqn(currFQN, value, res, expressions);
           continue;
         }
-        generateFQNMap(value, currFQN, res);
+        generateFQNMap(value, currFQN, res, expressions);
       } else {
-        validateUniqueFqn(currFQN, value, res);
+        validateUniqueFqn(currFQN, value, res, expressions);
       }
     }
   }
 
-  private void generateFQNMapFromList(ArrayNode list, FQN baseFQN, Map<FQN, Object> res) {
+  private void generateFQNMapFromList(ArrayNode list, FQN baseFQN, Map<FQN, Object> res, HashSet<String> expressions) {
     if (list == null || list.get(0) == null) {
-      validateUniqueFqn(baseFQN, list, res);
+      validateUniqueFqn(baseFQN, list, res, expressions);
       return;
     }
     JsonNode firstNode = list.get(0);
     if (firstNode.getNodeType() != JsonNodeType.OBJECT) {
-      validateUniqueFqn(baseFQN, list, res);
+      validateUniqueFqn(baseFQN, list, res, expressions);
       return;
     }
 
     int noOfKeys = firstNode.size();
     if (noOfKeys == 1) {
-      generateFQNMapFromListOfSingleKeyMaps(list, baseFQN, res);
+      generateFQNMapFromListOfSingleKeyMaps(list, baseFQN, res, expressions);
     } else {
-      generateFQNMapFromListOfMultipleKeyMaps(list, baseFQN, res);
+      generateFQNMapFromListOfMultipleKeyMaps(list, baseFQN, res, expressions);
     }
   }
 
-  private void generateFQNMapFromListOfSingleKeyMaps(ArrayNode list, FQN baseFQN, Map<FQN, Object> res) {
+  private void generateFQNMapFromListOfSingleKeyMaps(
+      ArrayNode list, FQN baseFQN, Map<FQN, Object> res, HashSet<String> expressions) {
     if (checkIfListHasNoIdentifier(list)) {
-      validateUniqueFqn(baseFQN, list, res);
+      validateUniqueFqn(baseFQN, list, res, expressions);
       return;
     }
     list.forEach(element -> {
       if (element.has(YAMLFieldNameConstants.PARALLEL)) {
         FQN currFQN = FQN.duplicateAndAddNode(baseFQN, FQNNode.builder().nodeType(FQNNode.NodeType.PARALLEL).build());
         ArrayNode listOfMaps = (ArrayNode) element.get(YAMLFieldNameConstants.PARALLEL);
-        generateFQNMapFromList(listOfMaps, currFQN, res);
+        generateFQNMapFromList(listOfMaps, currFQN, res, expressions);
       } else {
         Set<String> fieldNames = new LinkedHashSet<>();
         element.fieldNames().forEachRemaining(fieldNames::add);
@@ -127,7 +132,7 @@ public class FQNUtils {
                 .uuidKey(YAMLFieldNameConstants.IDENTIFIER)
                 .uuidValue(identifier)
                 .build());
-        generateFQNMap(innerMap, currFQN, res);
+        generateFQNMap(innerMap, currFQN, res, expressions);
       }
     });
   }
@@ -144,10 +149,11 @@ public class FQNUtils {
     return !innerMap.has(YAMLFieldNameConstants.IDENTIFIER);
   }
 
-  private void generateFQNMapFromListOfMultipleKeyMaps(ArrayNode list, FQN baseFQN, Map<FQN, Object> res) {
+  private void generateFQNMapFromListOfMultipleKeyMaps(
+      ArrayNode list, FQN baseFQN, Map<FQN, Object> res, HashSet<String> expressions) {
     String uuidKey = getUuidKey(list);
     if (EmptyPredicate.isEmpty(uuidKey)) {
-      validateUniqueFqn(baseFQN, list, res);
+      validateUniqueFqn(baseFQN, list, res, expressions);
       return;
     }
     list.forEach(element -> {
@@ -158,14 +164,14 @@ public class FQNUtils {
               .uuidValue(element.get(uuidKey).asText())
               .build());
       if (uuidKey.equals(YAMLFieldNameConstants.IDENTIFIER)) {
-        generateFQNMap(element, currFQN, res);
+        generateFQNMap(element, currFQN, res, expressions);
       } else {
         Set<String> fieldNames = new LinkedHashSet<>();
         element.fieldNames().forEachRemaining(fieldNames::add);
         for (String key : fieldNames) {
           FQN finalFQN =
               FQN.duplicateAndAddNode(currFQN, FQNNode.builder().nodeType(FQNNode.NodeType.KEY).key(key).build());
-          validateUniqueFqn(finalFQN, element.get(key), res);
+          validateUniqueFqn(finalFQN, element.get(key), res, expressions);
         }
       }
     });
