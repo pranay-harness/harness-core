@@ -6,11 +6,11 @@ import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.dtos.InstanceDTO;
+import io.harness.dtos.InstanceDTO.InstanceDTOBuilder;
 import io.harness.entities.DeploymentSummary;
 import io.harness.entities.deploymentinfo.DeploymentInfo;
 import io.harness.entities.infrastructureMapping.InfrastructureMapping;
-import io.harness.entities.instance.Instance;
-import io.harness.entities.instance.Instance.InstanceBuilder;
 import io.harness.entities.instanceinfo.InstanceInfo;
 import io.harness.models.InstanceHandlerKey;
 import io.harness.models.InstanceSyncFlowType;
@@ -21,7 +21,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.repositories.infrastructuremapping.InfrastructureMappingRepository;
-import io.harness.repositories.instance.InstanceRepositoryCustom;
+import io.harness.service.instanceService.InstanceService;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -41,19 +41,19 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
 
   @Inject protected InfrastructureMappingRepository infrastructureMappingRepository;
   @Inject protected OutcomeService outcomeService;
-  @Inject private InstanceRepositoryCustom instanceRepository;
+  @Inject private InstanceService instanceService;
 
   protected abstract V validateAndReturnDeploymentInfo(DeploymentSummary deploymentSummary);
 
   protected abstract Y validateAndReturnInstanceInfo(InstanceInfo instanceInfo);
 
-  protected abstract Multimap<T, Instance> createDeploymentInstanceMap(DeploymentSummary deploymentSummary);
+  protected abstract Multimap<T, InstanceDTO> createDeploymentInstanceMap(DeploymentSummary deploymentSummary);
 
   protected abstract U validateAndReturnInfrastructureMapping(InfrastructureMapping infrastructureMapping);
 
   protected abstract void validatePerpetualTaskDelegateResponse(X response);
 
-  protected abstract String getInstanceUniqueIdentifier(Instance instance);
+  protected abstract String getInstanceUniqueIdentifier(InstanceDTO instance);
 
   // This key acts as common key for logical handling of instances in the handler
   // Fetch it using deployment info
@@ -74,7 +74,7 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
   protected abstract X executeDelegateSyncTaskToFetchServerInstances(U infrastructureMapping, T instanceHandlerKey);
 
   // Override this method in case of specific custom instance build requirements
-  protected void buildInstanceCustom(InstanceBuilder instanceBuilder, Z serverInstance) {}
+  protected void buildInstanceCustom(InstanceDTOBuilder instanceBuilder, Z serverInstance) {}
 
   // Get concrete infrastructure mapping object based on infrastructure mapping type
   protected abstract InfrastructureMapping getInfrastructureMappingByType(
@@ -145,7 +145,7 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
 
   // ---------------------------- PRIVATE METHODS ---------------------------
 
-  private void createOrUpdateInstances(List<Instance> oldInstances, List<Instance> newInstances) {
+  private void createOrUpdateInstances(List<InstanceDTO> oldInstances, List<InstanceDTO> newInstances) {
     //    we delete the instance oldInstances - newInstances
     //    we create the instance newInstances - oldInstances
     // also update common instances with the newInstances details
@@ -166,7 +166,7 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
   // TODO need to check how to handle rollback
   private void syncInstancesInternal(U infrastructureMapping, DeploymentSummary newDeploymentSummary,
       RollbackInfo rollbackInfo, X delegateResponseData, InstanceSyncFlowType instanceSyncFlow) {
-    Multimap<T, Instance> instanceHandlerKeyVsInstanceMap = ArrayListMultimap.create();
+    Multimap<T, InstanceDTO> instanceHandlerKeyVsInstanceMap = ArrayListMultimap.create();
     loadInstanceHandlerKeyVsInstanceMap(infrastructureMapping, instanceHandlerKeyVsInstanceMap);
 
     // If its a perpetual task response, then delegate response data contains new instances info
@@ -192,17 +192,17 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
   }
 
   private void processInstanceSyncForGivenInstanceHandlerKey(U infrastructureMapping, T instanceHandlerKey,
-      Multimap<T, Instance> instanceHandlerKeyVsInstanceMap, DeploymentSummary deploymentSummary) {
+      Multimap<T, InstanceDTO> instanceHandlerKeyVsInstanceMap, DeploymentSummary deploymentSummary) {
     X delegateSyncTaskResponse =
         executeDelegateSyncTaskToFetchServerInstances(infrastructureMapping, instanceHandlerKey);
     processInstanceSync(
         infrastructureMapping, instanceHandlerKeyVsInstanceMap, delegateSyncTaskResponse, deploymentSummary);
   }
 
-  private void processInstanceSync(U infrastructureMapping, Multimap<T, Instance> instanceHandlerKeyVsInstanceMap,
+  private void processInstanceSync(U infrastructureMapping, Multimap<T, InstanceDTO> instanceHandlerKeyVsInstanceMap,
       X delegateResponseData, DeploymentSummary deploymentSummary) {
     T instanceHandlerKeyFromDelegateResponse = getInstanceHandlerKey(delegateResponseData);
-    List<Instance> instancesInDB =
+    List<InstanceDTO> instancesInDB =
         new ArrayList<>(instanceHandlerKeyVsInstanceMap.get(instanceHandlerKeyFromDelegateResponse));
     List<Z> serverInstances = getServerInstancesFromDelegateResponse(delegateResponseData);
     if (deploymentSummary == null) {
@@ -210,16 +210,16 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
       // required to be constructed from existing instances
       deploymentSummary = instancesInDB.size() > 0 ? generateDeploymentSummaryFromInstance(instancesInDB.get(0)) : null;
     }
-    List<Instance> instancesFromServer =
+    List<InstanceDTO> instancesFromServer =
         getInstancesFromServerInstances(infrastructureMapping, serverInstances, deploymentSummary);
     createOrUpdateInstances(instancesInDB, instancesFromServer);
   }
 
-  private Instance buildInstance(U infrastructureMapping, Z serverInstance, DeploymentSummary deploymentSummary) {
+  private InstanceDTO buildInstance(U infrastructureMapping, Z serverInstance, DeploymentSummary deploymentSummary) {
     // TODO build instance base
-    InstanceBuilder instanceBuilder = Instance.builder();
+    InstanceDTOBuilder instanceBuilder = InstanceDTO.builder();
     instanceBuilder.instanceInfo(getInstanceInfo(serverInstance));
-    // Why don't we have common field for instane info in mongo
+    // Why don't we have common field for instance info in mongo
     // rather having separate field names for different deployment type
     // TODO set instance info
 
@@ -228,16 +228,16 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
     return instanceBuilder.build();
   }
 
-  private List<Instance> getInstancesFromServerInstances(
+  private List<InstanceDTO> getInstancesFromServerInstances(
       U infrastructureMapping, List<Z> serverInstances, DeploymentSummary deploymentSummary) {
-    List<Instance> instances = new ArrayList<>();
+    List<InstanceDTO> instances = new ArrayList<>();
     for (Z serverInstance : serverInstances) {
       instances.add(buildInstance(infrastructureMapping, serverInstance, deploymentSummary));
     }
     return instances;
   }
 
-  private DeploymentSummary generateDeploymentSummaryFromInstance(Instance instance) {
+  private DeploymentSummary generateDeploymentSummaryFromInstance(InstanceDTO instance) {
     if (instance == null) {
       return null;
     }
@@ -256,18 +256,18 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
   }
 
   private void loadInstanceHandlerKeyVsInstanceMap(
-      U infrastrastructureMapping, Multimap<T, Instance> instanceHandlerKeyVsInstanceMap) {
-    List<Instance> instancesInDB = getInstances(infrastrastructureMapping);
+      U infrastrastructureMapping, Multimap<T, InstanceDTO> instanceHandlerKeyVsInstanceMap) {
+    List<InstanceDTO> instancesInDB = getInstances(infrastrastructureMapping);
 
-    for (Instance instance : instancesInDB) {
+    for (InstanceDTO instance : instancesInDB) {
       Y instanceInfo = validateAndReturnInstanceInfo(instance.getInstanceInfo());
       T instanceHandlerKey = getInstanceHandlerKey(instanceInfo);
       instanceHandlerKeyVsInstanceMap.put(instanceHandlerKey, instance);
     }
   }
 
-  private List<Instance> getInstances(InfrastructureMapping infrastructureMapping) {
-    return instanceRepository.getInstances(infrastructureMapping.getAccountIdentifier(),
+  private List<InstanceDTO> getInstances(InfrastructureMapping infrastructureMapping) {
+    return instanceService.getInstances(infrastructureMapping.getAccountIdentifier(),
         infrastructureMapping.getOrgIdentifier(), infrastructureMapping.getProjectIdentifier(),
         infrastructureMapping.getId());
   }

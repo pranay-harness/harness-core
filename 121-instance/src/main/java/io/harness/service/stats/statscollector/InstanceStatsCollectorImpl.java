@@ -2,9 +2,9 @@ package io.harness.service.stats.statscollector;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.entities.instance.Instance;
+import io.harness.dtos.InstanceDTO;
 import io.harness.helper.SnapshotTimeProvider;
-import io.harness.repositories.instance.InstanceRepository;
+import io.harness.service.instanceService.InstanceService;
 import io.harness.service.instancestats.InstanceStatsService;
 import io.harness.service.stats.usagemetrics.eventpublisher.UsageMetricsEventPublisher;
 
@@ -28,7 +28,7 @@ public class InstanceStatsCollectorImpl implements StatsCollector {
   private static final long SYNC_INTERVAL = TimeUnit.MINUTES.toMinutes(SYNC_INTERVAL_MINUTES);
 
   private InstanceStatsService instanceStatsService;
-  private InstanceRepository instanceRepository;
+  private InstanceService instanceService;
   private UsageMetricsEventPublisher usageMetricsEventPublisher;
 
   @Override
@@ -68,9 +68,9 @@ public class InstanceStatsCollectorImpl implements StatsCollector {
   }
 
   private boolean createStats(String accountId, Instant instant) {
-    List<Instance> instances = null;
+    List<InstanceDTO> instances = null;
     try {
-      instances = instanceRepository.getActiveInstancesByAccount(accountId, instant.toEpochMilli());
+      instances = instanceService.getActiveInstancesByAccount(accountId, instant.toEpochMilli());
       log.info("Fetched instances. Count: {}, Account: {}, Time: {}", instances.size(), accountId, instant);
 
       usageMetricsEventPublisher.publishInstanceStatsTimeSeries(accountId, instant.toEpochMilli(), instances);

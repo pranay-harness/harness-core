@@ -2,7 +2,7 @@ package io.harness.service.instanceService;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.entities.instance.Instance;
+import io.harness.dtos.InstanceDTO;
 import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
 
@@ -11,10 +11,15 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 
 @OwnedBy(HarnessTeam.DX)
 public interface InstanceService {
-  List<Instance> getActiveInstances(
+  List<InstanceDTO> getActiveInstancesByAccount(String accountIdentifier, long timestamp);
+
+  List<InstanceDTO> getInstances(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String infrastructureMappingId);
+
+  List<InstanceDTO> getActiveInstances(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, long timestampInMs);
 
-  List<Instance> getActiveInstancesByServiceId(
+  List<InstanceDTO> getActiveInstancesByServiceId(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs);
 
   AggregationResults<EnvBuildInstanceCount> getEnvBuildInstanceCountByServiceId(

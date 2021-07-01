@@ -46,6 +46,8 @@ public class InstanceDashboardServiceTest extends InstancesTestBase {
         .primaryArtifact(ArtifactDetails.builder().tag(tag).build())
         .createdAt(0L)
         .deletedAt(10L)
+        .createdAt(0L)
+        .lastModifiedAt(0L)
         .build();
   }
 

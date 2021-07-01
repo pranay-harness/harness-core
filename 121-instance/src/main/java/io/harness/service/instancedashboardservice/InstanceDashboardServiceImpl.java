@@ -4,7 +4,7 @@ import static java.lang.System.currentTimeMillis;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.entities.instance.Instance;
+import io.harness.dtos.InstanceDTO;
 import io.harness.models.BuildsByEnvironment;
 import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
@@ -38,7 +38,7 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
   @Override
   public InstanceCountDetails getActiveInstanceCountDetailsByEnvType(
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    List<Instance> instances =
+    List<InstanceDTO> instances =
         instanceService.getActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier, currentTimeMillis());
 
     Map<String, Map<EnvironmentType, Integer>> serviceVsInstanceCountMap = new HashMap<>();
@@ -64,11 +64,11 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
   @Override
   public List<BuildsByEnvironment> getActiveInstancesByServiceIdGroupedByEnvironmentAndBuild(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
-    List<Instance> instances = instanceService.getActiveInstancesByServiceId(
+    List<InstanceDTO> instances = instanceService.getActiveInstancesByServiceId(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs);
 
     // used to map a list of instances to build and map it further to environment
-    Map<String, Map<String, List<Instance>>> instanceGroupMap = new HashMap<>();
+    Map<String, Map<String, List<InstanceDTO>>> instanceGroupMap = new HashMap<>();
     instances.forEach(instance -> {
       String envId = instance.getEnvId();
       String buildId = instance.getPrimaryArtifact().getTag();
@@ -134,7 +134,7 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
 
     buildIdAndInstancesAggregationResults.getMappedResults().forEach(buildIdAndInstances -> {
       String buildId = buildIdAndInstances.getBuildId();
-      List<Instance> instances = buildIdAndInstances.getInstances();
+      List<InstanceDTO> instances = buildIdAndInstances.getInstances();
       buildIdAndInstancesList.add(new InstancesByBuildId(buildId, instances));
     });
 
@@ -166,7 +166,7 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
   }
 
   private List<BuildsByEnvironment> prepareInstanceGroupedByEnvironmentAndBuildData(
-      Map<String, Map<String, List<Instance>>> instanceGroupMap) {
+      Map<String, Map<String, List<InstanceDTO>>> instanceGroupMap) {
     List<BuildsByEnvironment> buildsByEnvironment = new ArrayList<>();
     for (String envId : instanceGroupMap.keySet()) {
       List<InstancesByBuildId> instancesByBuilds = new ArrayList<>();

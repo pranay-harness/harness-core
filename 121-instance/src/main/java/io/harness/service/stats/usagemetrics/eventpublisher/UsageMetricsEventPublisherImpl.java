@@ -5,7 +5,7 @@ import static java.util.stream.Collectors.groupingBy;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.entities.instance.Instance;
+import io.harness.dtos.InstanceDTO;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.schemas.instancestatstimeseriesevent.DataPoint;
@@ -27,15 +27,15 @@ import lombok.extern.slf4j.Slf4j;
 public class UsageMetricsEventPublisherImpl implements UsageMetricsEventPublisher {
   private Producer eventProducer;
 
-  public void publishInstanceStatsTimeSeries(String accountId, long timestamp, List<Instance> instances) {
+  public void publishInstanceStatsTimeSeries(String accountId, long timestamp, List<InstanceDTO> instances) {
     if (EmptyPredicate.isEmpty(instances)) {
       return;
     }
 
     List<DataPoint> dataPointList = new ArrayList<>();
-    // key - infraMappingId, value - Set<Instance>
-    Map<String, List<Instance>> infraMappingInstancesMap =
-        instances.stream().collect(groupingBy(Instance::getInfrastructureMappingId));
+    // key - infraMappingId, value - Set<InstanceDTO>
+    Map<String, List<InstanceDTO>> infraMappingInstancesMap =
+        instances.stream().collect(groupingBy(InstanceDTO::getInfrastructureMappingId));
 
     infraMappingInstancesMap.values().forEach(instanceList -> {
       if (EmptyPredicate.isEmpty(instanceList)) {
@@ -43,7 +43,7 @@ public class UsageMetricsEventPublisherImpl implements UsageMetricsEventPublishe
       }
 
       int size = instanceList.size();
-      Instance instance = instanceList.get(0);
+      InstanceDTO instance = instanceList.get(0);
       Map<String, String> data = new HashMap<>();
       data.put(Constants.ACCOUNT_ID.getKey(), instance.getAccountIdentifier());
       data.put(Constants.ORG_ID.getKey(), instance.getOrgIdentifier());
