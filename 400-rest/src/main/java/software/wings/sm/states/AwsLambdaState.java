@@ -487,10 +487,8 @@ public class AwsLambdaState extends State {
     wfRequestBuilder.commandName(getCommandName());
     wfRequestBuilder.artifactStreamAttributes(artifactStreamAttributes);
     wfRequestBuilder.roleArn(infrastructureMapping.getRole());
+    wfRequestBuilder.evaluatedAliases(getEvaluatedAliases(context));
 
-    if (isNotEmpty(aliases)) {
-      wfRequestBuilder.evaluatedAliases(getEvaluatedAliases(context));
-    }
     String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infrastructureMapping);
     Map<String, String> serviceVariables =
         serviceTemplateService
