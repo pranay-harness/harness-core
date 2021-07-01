@@ -14,4 +14,9 @@ public class TerraformCommandExecutionException extends WingsException {
     super(message, null, TERRAFORM_EXECUTION_ERROR, Level.ERROR, reportTargets, null);
     super.getParams().put("message", message);
   }
+
+  public TerraformCommandExecutionException(String message, EnumSet<ReportTarget> reportTargets, Throwable cause) {
+    super(message, cause, TERRAFORM_EXECUTION_ERROR, Level.ERROR, reportTargets, null);
+    super.getParams().put("message", message);
+  }
 }

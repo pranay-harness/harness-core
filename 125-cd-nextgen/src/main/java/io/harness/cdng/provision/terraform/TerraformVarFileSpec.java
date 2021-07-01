@@ -13,8 +13,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @OwnedBy(CDP)
 @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = InlineTerraformVarFileSpec.class, name = "Inline")
-  , @JsonSubTypes.Type(value = RemoteTerraformVarFileSpec.class, name = "Remote"),
+  @JsonSubTypes.Type(value = InlineTerraformVarFileSpec.class, name = TerraformVarFileTypes.Inline)
+  , @JsonSubTypes.Type(value = RemoteTerraformVarFileSpec.class, name = TerraformVarFileTypes.Remote),
 })
 public interface TerraformVarFileSpec {
   String getType();

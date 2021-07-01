@@ -520,10 +520,10 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
     try {
       gitClient.ensureRepoLocallyClonedAndUpdated(gitBaseRequestForConfigFile);
     } catch (RuntimeException ex) {
-      logCallback.saveExecutionLog(format("Failed performing git operation. Reason: %s", ex.getMessage()), ERROR,
-          CommandExecutionStatus.RUNNING);
-      throw new TerraformCommandExecutionException(
-          format("Exception in processing git operation"), WingsException.USER);
+      String msg = isNotEmpty(ex.getMessage()) ? format("Failed performing git operation. Reason: %s", ex.getMessage())
+                                               : "Failed performing git operation.";
+      logCallback.saveExecutionLog(msg, ERROR, CommandExecutionStatus.RUNNING);
+      throw new TerraformCommandExecutionException("Exception in processing git operation", WingsException.USER, ex);
     }
   }
 
