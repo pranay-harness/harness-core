@@ -1,5 +1,6 @@
 package io.harness.cdng.provision.terraform;
 
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SATYAM;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +34,8 @@ import io.harness.delegate.task.terraform.InlineTerraformVarFileInfo;
 import io.harness.delegate.task.terraform.RemoteTerraformVarFileInfo;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.delegate.task.terraform.TerraformVarFileInfo;
+import io.harness.exception.InvalidRequestException;
+import io.harness.filesystem.FileIo;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -44,10 +47,13 @@ import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptionType;
 
 import com.google.common.collect.ImmutableMap;
+import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -167,6 +173,7 @@ public class TerraformStepHelperTest extends CategoryTest {
     varFilesMap.put("var-file-1",
         TerraformVarFile.builder().identifier("var-file-1").type("Inline").spec(remoteTerraformVarFileSpec).build());
     TerraformApplyStepParameters parameters = TerraformApplyStepParameters.infoBuilder()
+                                                  .provisionerIdentifier(ParameterField.createValueField("provId_$"))
                                                   .configuration(TerraformStepConfigurationParameters.builder()
                                                                      .type(TerraformStepConfigurationType.INLINE)
                                                                      .spec(TerraformExecutionDataParameters.builder()
@@ -254,5 +261,27 @@ public class TerraformStepHelperTest extends CategoryTest {
         .isEqualTo("VarFiles/");
     assertThat(remoteTerraformVarFileInfo.getGitFetchFilesConfig().getGitStoreDelegateConfig().getFetchType())
         .isEqualTo(FetchType.BRANCH);
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testGenerateFullIdentifier() throws IOException {
+    String entityId = helper.generateFullIdentifier("tfplan_$", getAmbiance());
+    FileIo.createDirectoryIfDoesNotExist(entityId);
+    assertThat(FileIo.checkIfFileExist(entityId)).isTrue();
+    FileUtils.deleteQuietly(new File(entityId));
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testGenerateFullIdentifierInvalidProvisionerIdentifer() {
+    try {
+      helper.generateFullIdentifier("tfplan_ $", getAmbiance());
+    } catch (InvalidRequestException invalidRequestException) {
+      assertThat(invalidRequestException.getMessage())
+          .isEqualTo("Provisioner Identifier cannot contain special characters or spaces: [tfplan_ $]");
+    }
   }
 }
