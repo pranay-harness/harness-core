@@ -5281,7 +5281,7 @@ container_pull(
     digest = "sha256:a568e8f557c055ce59215ccdb864e8a73ac7ff9deed260ae9ced82f0a86e42bb",
     registry = "us.gcr.io",
     repository = "platform-205701/alpine",
-    tag = "safe-alpine3.12-sec1096-apm",
+    tag = "safe-alpine3.12-sec1338-apm",
 )
 
 container_pull(
@@ -5289,7 +5289,7 @@ container_pull(
     digest = "sha256:8540a3afd5c6d43a9f6549f19f56abff42c7010265426c3c39ccc64d1d88a1c2",
     registry = "us.gcr.io",
     repository = "platform-205701/ubuntu",
-    tag = "safe-ubuntu18.04-sec1096",
+    tag = "safe-ubuntu18.04-sec1338",
 )
 
 load(
