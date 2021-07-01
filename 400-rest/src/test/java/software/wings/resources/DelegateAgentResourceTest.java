@@ -5,11 +5,9 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateConfiguration.Action.SELF_DESTRUCT;
 import static io.harness.delegate.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.DEEPAK;
-import static io.harness.rule.OwnerRule.JENNY;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -86,7 +84,6 @@ import com.google.common.collect.Lists;
 import com.google.protobuf.Any;
 import com.google.protobuf.TextFormat;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
@@ -458,39 +455,6 @@ public class DelegateAgentResourceTest {
     verify(delegateService, atLeastOnce())
         .getDelegateScripts(ACCOUNT_ID, delegateVersion,
             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl);
-    assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull();
-  }
-
-  @Test
-  @Owner(developers = JENNY)
-  @Category(UnitTests.class)
-  public void delegateScriptsWithDelegateParams() throws IOException {
-    String delegateVersion = "0.0.0";
-    String verificationUrl = httpServletRequest.getScheme() + "://" + httpServletRequest.getServerName() + ":"
-        + httpServletRequest.getServerPort();
-
-    DelegateParams delegateParams = DelegateParams.builder()
-                                        .ip(getLocalHostAddress())
-                                        .accountId(ACCOUNT_ID)
-                                        .delegateName("")
-                                        .version(delegateVersion)
-                                        .location(Paths.get("").toAbsolutePath().toString())
-                                        .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")))
-                                        .build();
-    DelegateScripts delegateScripts = DelegateScripts.builder().build();
-    when(delegateService.getDelegateScripts(
-             delegateParams, subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl))
-        .thenReturn(delegateScripts);
-
-    RestResponse<DelegateScripts> restResponse = RESOURCES.client()
-                                                     .target("/agent/delegates/delegateScripts")
-                                                     .request()
-                                                     .post(entity(delegateParams, MediaType.APPLICATION_JSON),
-                                                         new GenericType<RestResponse<DelegateScripts>>() {});
-
-    verify(delegateService, atLeastOnce())
-        .getDelegateScripts(
-            delegateParams, subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl);
     assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull();
   }
 
