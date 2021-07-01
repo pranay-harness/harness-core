@@ -2,6 +2,7 @@ package io.harness.ngtriggers.eventmapper.filters.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ngtriggers.Constants.DOT_GIT;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_REPO;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.AWS_CODECOMMIT;
 import static io.harness.utils.IdentifierRefHelper.getFullyQualifiedIdentifierRefString;
@@ -42,7 +43,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -104,15 +104,31 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
     return mappingResponseBuilder.build();
   }
 
-  private HashSet<String> getUrls(Repository repository, String sourceRepoType) {
+  @VisibleForTesting
+  HashSet<String> getUrls(Repository repository, String sourceRepoType) {
     if (AWS_CODECOMMIT.name().equals(sourceRepoType)) {
       String[] arnTokens = repository.getId().split(":");
       String awsRepoUrl = format(AWS_CODECOMMIT_URL_PATTERN, arnTokens[3], arnTokens[5]);
       return new HashSet<>(Collections.singletonList(awsRepoUrl));
     }
 
-    return new HashSet<>(Arrays.asList(repository.getLink().toLowerCase(), repository.getHttpURL().toLowerCase(),
-        repository.getSshURL().toLowerCase()));
+    HashSet<String> urls = new HashSet<>();
+
+    String httpUrl = repository.getHttpURL().toLowerCase();
+    urls.add(httpUrl);
+    // Add url without .git, to handle case, where user entered url without .git on connector
+    if (httpUrl.endsWith(DOT_GIT)) {
+      urls.add(httpUrl.substring(0, httpUrl.length() - 4));
+    }
+    // Add url without .git, to handle case, where user entered url without .git on connector
+    String sshUrl = repository.getSshURL().toLowerCase();
+    if (sshUrl.endsWith(DOT_GIT)) {
+      urls.add(sshUrl.substring(0, sshUrl.length() - 4));
+    }
+    urls.add(sshUrl);
+    urls.add(repository.getLink().toLowerCase());
+
+    return urls;
   }
 
   private void evaluateWrapperForAccountLevelGitConnector(
