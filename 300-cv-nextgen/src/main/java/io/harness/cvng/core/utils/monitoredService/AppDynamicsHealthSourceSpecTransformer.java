@@ -19,11 +19,14 @@ public class AppDynamicsHealthSourceSpecTransformer
         "ConnectorRef should be same for List of all configs.");
     Preconditions.checkArgument(cvConfigs.stream().map(AppDynamicsCVConfig::getTierName).distinct().count() == 1,
         "Application tier name should be same for List of all configs.");
+    Preconditions.checkArgument(cvConfigs.stream().map(AppDynamicsCVConfig::getProductName).distinct().count() == 1,
+        "Application feature name should be same for List of all configs.");
 
     return AppDynamicsHealthSourceSpec.builder()
         .appdApplicationName(cvConfigs.get(0).getApplicationName())
         .connectorRef(cvConfigs.get(0).getConnectorIdentifier())
         .appdTierName(cvConfigs.get(0).getTierName())
+        .feature(cvConfigs.get(0).getProductName())
         .metricPacks(
             cvConfigs.stream().map(cv -> MetricPackDTO.toMetricPackDTO(cv.getMetricPack())).collect(Collectors.toSet()))
         .build();

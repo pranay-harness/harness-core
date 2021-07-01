@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
 import static io.harness.beans.FeatureName.HARNESS_TAGS;
+import static io.harness.beans.FeatureName.HELM_CHART_AS_ARTIFACT;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -485,6 +486,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       throw new InvalidRequestException("Service name cannot be " + GLOBAL_SERVICE_NAME_FOR_YAML, USER);
     }
 
+    if (Boolean.TRUE.equals(service.getArtifactFromManifest())
+        && !(service.getDeploymentType() == HELM || service.getDeploymentType() == KUBERNETES)) {
+      throw new InvalidRequestException(
+          "Artifact from Manifest flag can be set to true only for kubernetes and helm deployment types");
+    }
+
     // TODO: ASR: IMP: update the block below for artifact variables as service variable
     if (createdFromYaml) {
       if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
@@ -912,6 +919,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             .set(ServiceKeys.name, service.getName())
             .set(ServiceKeys.description, Optional.ofNullable(service.getDescription()).orElse(""))
             .set(ServiceKeys.keywords, keywords);
+
+    if (featureFlagService.isEnabled(HELM_CHART_AS_ARTIFACT, savedService.getAccountId())
+        && service.getArtifactFromManifest() != null) {
+      updateOperations.set(ServiceKeys.artifactFromManifest, service.getArtifactFromManifest());
+    }
 
     updateOperationsForHelmVersion(savedService, service, updateOperations);
     updateOperationsForCfCliVersion(savedService, service, updateOperations);
@@ -2705,7 +2717,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void createDefaultK8sManifests(Service service, boolean createdFromGit) {
-    if (createdFromGit || !service.isK8sV2()) {
+    if (createdFromGit || !service.isK8sV2() || Boolean.TRUE.equals(service.getArtifactFromManifest())) {
       return;
     }
 

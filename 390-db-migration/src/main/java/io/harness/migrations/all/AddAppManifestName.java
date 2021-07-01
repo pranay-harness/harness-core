@@ -12,6 +12,7 @@ import io.harness.persistence.HIterator;
 import software.wings.beans.Account;
 import software.wings.beans.Service;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ApplicationManifest.ApplicationManifestKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ApplicationManifestServiceImpl;
 import software.wings.service.intfc.ServiceResourceService;
@@ -25,7 +26,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 @Singleton
-@TargetModule(HarnessModule._390_DB_MIGRATION)
 @OwnedBy(CDC)
 public class AddAppManifestName implements Migration {
   private static final String DEBUG_LINE = "[APP_MANIFEST_NAME_ADDITION_MIGRATION]: ";
@@ -50,7 +50,7 @@ public class AddAppManifestName implements Migration {
   private void migrateApplicationManifestsForAccount(Account account) {
     try (HIterator<ApplicationManifest> applicationManifests =
              new HIterator<>(wingsPersistence.createQuery(ApplicationManifest.class)
-                                 .filter(ApplicationManifest.ApplicationManifestKeys.accountId, account.getUuid())
+                                 .filter(ApplicationManifestKeys.accountId, account.getUuid())
                                  .fetch())) {
       log.info(String.join(DEBUG_LINE, " Fetching application manifests for account", account.getAccountName(),
           "with Id", account.getUuid()));

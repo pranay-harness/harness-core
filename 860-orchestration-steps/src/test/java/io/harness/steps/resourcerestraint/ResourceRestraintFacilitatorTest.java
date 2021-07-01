@@ -1,7 +1,7 @@
 package io.harness.steps.resourcerestraint;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.pms.contracts.execution.ExecutionMode.ASYNC;
+import static io.harness.pms.contracts.execution.ExecutionMode.CONSTRAINT;
 import static io.harness.pms.contracts.execution.ExecutionMode.SYNC;
 import static io.harness.rule.OwnerRule.ALEXEI;
 
@@ -107,7 +107,7 @@ public class ResourceRestraintFacilitatorTest extends OrchestrationStepsTestBase
     FacilitatorResponse response =
         resourceRestraintFacilitator.facilitate(ambiance, stepElementParameters, parameters, null);
     assertThat(response).isNotNull();
-    assertThat(response.getExecutionMode()).isEqualTo(ASYNC);
+    assertThat(response.getExecutionMode()).isEqualTo(CONSTRAINT);
   }
 
   @Test

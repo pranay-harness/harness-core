@@ -67,6 +67,7 @@ import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.HelmChartConfig.HelmChartConfigBuilder;
 import software.wings.beans.HelmCommandFlagConfig;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -118,6 +119,8 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   public void setup() {
     Reflect.on(applicationManifestServiceImpl).set("wingsPersistence", persistence);
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+    when(serviceResourceService.get(any(), anyString(), eq(false)))
+        .thenReturn(Service.builder().isK8sV2(true).artifactFromManifest(false).build());
   }
 
   @Test
