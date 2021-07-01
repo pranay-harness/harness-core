@@ -34,6 +34,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 
 @Slf4j
 @OwnedBy(CDP)
@@ -44,14 +45,13 @@ public class TerraformDestroyTaskHandler extends TerraformAbstractTaskHandler {
   public TerraformTaskNGResponse executeTaskInternal(TerraformTaskNGParameters taskParameters, String delegateId,
       String taskId, LogCallback logCallback) throws IOException {
     GitStoreDelegateConfig confileFileGitStore = taskParameters.getConfigFile().getGitStoreDelegateConfig();
-    String scriptPath = confileFileGitStore.getPaths().get(0);
+    String scriptPath = FilenameUtils.normalize(confileFileGitStore.getPaths().get(0));
 
     if (isNotEmpty(confileFileGitStore.getBranch())) {
       logCallback.saveExecutionLog("Branch: " + confileFileGitStore.getBranch(), INFO, CommandExecutionStatus.RUNNING);
     }
 
-    logCallback.saveExecutionLog(
-        "Normalized Path: " + confileFileGitStore.getPaths().get(0), INFO, CommandExecutionStatus.RUNNING);
+    logCallback.saveExecutionLog("Normalized Path: " + scriptPath, INFO, CommandExecutionStatus.RUNNING);
 
     if (isNotEmpty(confileFileGitStore.getCommitId())) {
       logCallback.saveExecutionLog(
