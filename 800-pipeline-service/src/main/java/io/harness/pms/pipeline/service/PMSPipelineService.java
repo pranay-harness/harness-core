@@ -36,8 +36,8 @@ public interface PMSPipelineService {
   boolean delete(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, Long version);
 
-  Page<PipelineEntity> list(
-      Criteria criteria, Pageable pageable, String accountId, String orgIdentifier, String projectIdentifier);
+  Page<PipelineEntity> list(Criteria criteria, Pageable pageable, String accountId, String orgIdentifier,
+      String projectIdentifier, Boolean getDistinctFromBranches);
 
   StepCategory getSteps(String module, String category, String accountId);
 

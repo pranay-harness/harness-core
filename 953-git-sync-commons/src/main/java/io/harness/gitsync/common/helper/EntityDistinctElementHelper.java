@@ -24,10 +24,15 @@ import org.springframework.data.repository.support.PageableExecutionUtils;
 public class EntityDistinctElementHelper {
   public <T> Page<T> getDistinctElementPage(
       MongoTemplate mongoTemplate, Criteria criteria, Pageable pageable, String distinctKey, Class<T> entityClass) {
+    return getDistinctElementPage(mongoTemplate, criteria, pageable, entityClass, distinctKey);
+  }
+
+  public <T> Page<T> getDistinctElementPage(
+      MongoTemplate mongoTemplate, Criteria criteria, Pageable pageable, Class<T> entityClass, String... distinctKeys) {
     final MatchOperation matchStage = Aggregation.match(criteria);
     final GroupOperation groupOperation =
-        Aggregation.group(distinctKey).first(Aggregation.ROOT).as(EntityWithCountKeys.object);
-    final GroupOperation distinctGroupStage = Aggregation.group(distinctKey);
+        Aggregation.group(distinctKeys).first(Aggregation.ROOT).as(EntityWithCountKeys.object);
+    final GroupOperation distinctGroupStage = Aggregation.group(distinctKeys);
     final CountOperation totalStage = Aggregation.count().as(EntityWithCountKeys.total);
 
     final Aggregation aggregationForEntity = Aggregation.newAggregation(matchStage, groupOperation,
