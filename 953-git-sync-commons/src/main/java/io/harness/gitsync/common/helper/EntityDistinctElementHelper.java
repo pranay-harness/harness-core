@@ -30,9 +30,8 @@ public class EntityDistinctElementHelper {
     final GroupOperation distinctGroupStage = Aggregation.group(distinctKey);
     final CountOperation totalStage = Aggregation.count().as(EntityWithCountKeys.total);
 
-    final Aggregation aggregationForEntity =
-        Aggregation.newAggregation(Aggregation.skip(pageable.getPageNumber() * pageable.getPageSize()),
-            Aggregation.limit(pageable.getPageSize()), matchStage, groupOperation);
+    final Aggregation aggregationForEntity = Aggregation.newAggregation(matchStage, groupOperation,
+        Aggregation.skip(pageable.getPageNumber() * pageable.getPageSize()), Aggregation.limit(pageable.getPageSize()));
     final Aggregation aggregationForCount = Aggregation.newAggregation(matchStage, distinctGroupStage, totalStage);
     final String collectionName = mongoTemplate.getCollectionName(entityClass);
 
