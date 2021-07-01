@@ -37,6 +37,7 @@ import io.harness.migrations.all.AddAccountIdToWorkflowExecutionBaselines;
 import io.harness.migrations.all.AddAccountToCVFeedbackRecordMigration;
 import io.harness.migrations.all.AddAccountidToTimeSeriesMLScores;
 import io.harness.migrations.all.AddAnalysisStatusMigration;
+import io.harness.migrations.all.AddAppManifestName;
 import io.harness.migrations.all.AddArtifactIdentityMigration;
 import io.harness.migrations.all.AddCeFullTrialLicenseToCurrentAccounts;
 import io.harness.migrations.all.AddEnableIteratorsToGovernanceConfig;
@@ -331,6 +332,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(196, ExecuteWorkflowRollbackActionMigration.class))
         .add(Pair.of(197, DelegateNgDetailsToDelegateGroupMigration.class))
         .add(Pair.of(198, DefaultExperienceMigration.class))
+        .add(Pair.of(199, AddAppManifestName.class))
         .build();
   }
 }

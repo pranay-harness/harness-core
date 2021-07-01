@@ -111,6 +111,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Singleton
@@ -201,8 +202,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     ApplicationManifest.Yaml yaml =
         (ApplicationManifest.Yaml) yamlHandlerFactory.getYamlHandler(getYamlTypeFromAppManifest(applicationManifest))
             .toYaml(applicationManifest, appId);
-    return YamlHelper.getYamlRestResponse(
-        yamlGitSyncService, applicationManifest.getUuid(), accountId, yaml, INDEX_YAML);
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, applicationManifest.getUuid(), accountId, yaml,
+        StringUtils.isNotBlank(applicationManifest.getName()) ? applicationManifest.getName() + YAML_EXTENSION
+                                                              : INDEX_YAML);
   }
 
   @Override
