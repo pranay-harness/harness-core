@@ -1056,7 +1056,7 @@ public class DelegateServiceImpl implements DelegateService {
           "-Xmx" + (sizeDetails.getRam() / sizeDetails.getReplicas() - WATCHER_RAM_IN_MB - POD_BASE_RAM_IN_MB) + "m";
     }
 
-    ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
+    ScriptRuntimeParamMapInquiry scriptRuntimeParamMapInquiry =
         ScriptRuntimeParamMapInquiry.builder()
             .accountId(accountId)
             .version(version)
@@ -1064,27 +1064,9 @@ public class DelegateServiceImpl implements DelegateService {
             .verificationHost(verificationHost)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateXmx(delegateXmx)
-            .build());
+            .build();
 
-    DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
-    if (isNotEmpty(scriptParams)) {
-      String upgradeToVersion = scriptParams.get(UPGRADE_VERSION);
-      log.info("Upgrading delegate to version: {}", upgradeToVersion);
-      boolean doUpgrade;
-      if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
-        doUpgrade = true;
-      } else {
-        doUpgrade = !(Version.valueOf(version).equals(Version.valueOf(upgradeToVersion)));
-      }
-      delegateScripts.setDoUpgrade(doUpgrade);
-      delegateScripts.setVersion(upgradeToVersion);
-
-      delegateScripts.setStartScript(processTemplate(scriptParams, "start.sh.ftl"));
-      delegateScripts.setDelegateScript(processTemplate(scriptParams, "delegate.sh.ftl"));
-      delegateScripts.setStopScript(processTemplate(scriptParams, "stop.sh.ftl"));
-      delegateScripts.setSetupProxyScript(processTemplate(scriptParams, "setup-proxy.sh.ftl"));
-    }
-    return delegateScripts;
+    return getDelegateScripts(getJarAndScriptRunTimeParamMap(scriptRuntimeParamMapInquiry), version);
   }
 
   @Override
@@ -1101,7 +1083,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
     }
 
-    ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
+    ScriptRuntimeParamMapInquiry scriptRuntimeParamMapInquiry =
         ScriptRuntimeParamMapInquiry.builder()
             .accountId(accountId)
             .version(version)
@@ -1109,8 +1091,40 @@ public class DelegateServiceImpl implements DelegateService {
             .verificationHost(verificationHost)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateTokenName(delegateTokenName)
-            .build());
+            .build();
 
+    return getDelegateScripts(getJarAndScriptRunTimeParamMap(scriptRuntimeParamMapInquiry), version);
+  }
+
+  @Override
+  public DelegateScripts getDelegateScripts(DelegateParams delegateParams, String managerHost, String verificationHost)
+      throws IOException {
+    String delegateTokenName = EMPTY;
+    if (featureFlagService.isEnabled(FeatureName.USE_CUSTOM_DELEGATE_TOKENS, delegateParams.getAccountId())) {
+      DelegateTokenGlobalContextData delegateTokenGlobalContextData =
+          GlobalContextManager.get(DelegateTokenGlobalContextData.TOKEN_NAME);
+      if (delegateTokenGlobalContextData != null) {
+        delegateTokenName = delegateTokenGlobalContextData.getTokenName();
+      } else {
+        log.warn("DelegateTokenGlobalContextData was found null in getDelegateScripts()");
+      }
+    }
+    ScriptRuntimeParamMapInquiry scriptRuntimeParamMapInquiry =
+        ScriptRuntimeParamMapInquiry.builder()
+            .accountId(delegateParams.getAccountId())
+            .version(delegateParams.getVersion())
+            .managerHost(managerHost)
+            .verificationHost(verificationHost)
+            .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
+            .delegateTokenName(delegateTokenName)
+            .delegateName(delegateParams.getDelegateName())
+            .build();
+    return getDelegateScripts(
+        getJarAndScriptRunTimeParamMap(scriptRuntimeParamMapInquiry), delegateParams.getVersion());
+  }
+
+  private DelegateScripts getDelegateScripts(ImmutableMap<String, String> scriptParams, String version)
+      throws IOException {
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
     if (isNotEmpty(scriptParams)) {
       String upgradeToVersion = scriptParams.get(UPGRADE_VERSION);

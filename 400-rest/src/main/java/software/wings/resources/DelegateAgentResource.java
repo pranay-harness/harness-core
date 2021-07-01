@@ -392,6 +392,19 @@ public class DelegateAgentResource {
   }
 
   @DelegateAuth
+  @POST
+  @Path("delegateScripts")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DelegateScripts> delegateScripts(
+      @Context HttpServletRequest request, DelegateParams delegateParams) throws IOException {
+    try (AutoLogContext ignore1 = new AccountLogContext(delegateParams.getAccountId(), OVERRIDE_ERROR)) {
+      return new RestResponse<>(delegateService.getDelegateScripts(delegateParams,
+          subdomainUrlHelper.getManagerUrl(request, delegateParams.getAccountId()), getVerificationUrl(request)));
+    }
+  }
+
+  @DelegateAuth
   @GET
   @Path("{delegateId}/task-events")
   @Timed

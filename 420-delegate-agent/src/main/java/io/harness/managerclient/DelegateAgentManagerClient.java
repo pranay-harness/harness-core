@@ -89,6 +89,9 @@ public interface DelegateAgentManagerClient {
   Call<RestResponse<DelegateScripts>> getDelegateScripts(
       @Query("accountId") String accountId, @Query("delegateVersion") String delegateVersion);
 
+  @POST("agent/delegates/delegateScripts")
+  Call<RestResponse<DelegateScripts>> delegateScripts(@Body DelegateParams delegateParams);
+
   @GET("agent/infra-download/delegate-auth/delegate/logging-token")
   Call<RestResponse<AccessTokenBean>> getLoggingToken(@Query("accountId") String accountId);
 
