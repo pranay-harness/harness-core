@@ -1,5 +1,7 @@
 package io.harness.plancreator.pipeline;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
@@ -10,6 +12,7 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -24,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfig> {
   @Override
   public String getStartingNodeId(PipelineInfoConfig field) {
@@ -41,8 +45,8 @@ public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfi
     }
 
     dependencies.put(stagesYamlNode.getNode().getUuid(), stagesYamlNode);
-    responseMap.put(
-        stagesYamlNode.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependencies).build());
+    responseMap.put(stagesYamlNode.getNode().getUuid(),
+        PlanCreationResponse.builder().dependencies(DependenciesUtils.toDependenciesProto(dependencies)).build());
     return responseMap;
   }
 

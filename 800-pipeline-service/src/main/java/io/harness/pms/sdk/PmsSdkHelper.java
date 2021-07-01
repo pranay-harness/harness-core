@@ -1,7 +1,10 @@
 package io.harness.pms.sdk;
 
 import io.harness.ModuleType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
@@ -16,6 +19,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 @Slf4j
 public class PmsSdkHelper {
@@ -62,5 +66,28 @@ public class PmsSdkHelper {
             })
             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     return !EmptyPredicate.isEmpty(filteredDependencies);
+  }
+
+  public boolean containsSupportedDependencyByYamlPath(PlanCreatorServiceInfo serviceInfo, Dependencies dependencies) {
+    if (dependencies == null || EmptyPredicate.isEmpty(dependencies.getDependenciesMap())) {
+      return false;
+    }
+
+    Map<String, Set<String>> supportedTypes = serviceInfo.getSupportedTypes();
+    return dependencies.getDependenciesMap()
+        .entrySet()
+        .stream()
+        .filter(entry -> {
+          try {
+            YamlField field = YamlField.fromYamlPath(dependencies.getYaml(), entry.getValue());
+            return PlanCreatorUtils.supportsField(supportedTypes, field);
+          } catch (Exception e) {
+            log.error("Invalid yaml field", e);
+            return false;
+          }
+        })
+        .map(Map.Entry::getKey)
+        .findFirst()
+        .isPresent();
   }
 }

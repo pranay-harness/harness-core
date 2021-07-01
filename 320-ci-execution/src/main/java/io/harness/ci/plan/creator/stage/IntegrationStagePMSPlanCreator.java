@@ -34,6 +34,7 @@ import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -89,13 +90,15 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
     try {
       String jsonString = JsonPipelineUtils.writeJsonString(modifiedExecutionPlan);
       JsonNode jsonNode = JsonPipelineUtils.getMapper().readTree(jsonString);
-      YamlNode modifiedExecutionNode = new YamlNode(jsonNode, parentNode);
-      dependenciesNodeMap.put(executionField.getNode().getUuid(), new YamlField(EXECUTION, modifiedExecutionNode));
+      YamlNode modifiedExecutionNode = new YamlNode(EXECUTION, jsonNode, parentNode);
+      dependenciesNodeMap.put(executionField.getNode().getUuid(), new YamlField(modifiedExecutionNode));
     } catch (IOException e) {
       throw new InvalidRequestException("Invalid yaml", e);
     }
-    planCreationResponseMap.put(
-        executionField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
+    planCreationResponseMap.put(executionField.getNode().getUuid(),
+        PlanCreationResponse.builder()
+            .dependencies(DependenciesUtils.toDependenciesProto(dependenciesNodeMap))
+            .build());
 
     BuildStatusUpdateParameter buildStatusUpdateParameter = obtainBuildStatusUpdateParameter(ctx, stageElementConfig);
     PlanNode specPlanNode = getSpecPlanNode(specField,

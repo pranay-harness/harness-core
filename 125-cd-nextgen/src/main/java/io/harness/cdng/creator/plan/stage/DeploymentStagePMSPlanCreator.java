@@ -22,6 +22,7 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.utilities.ResourceConstraintUtility;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -131,8 +132,10 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
 
     if (!allowSimultaneousDeployments && rcYamlField != null) {
       dependenciesNodeMap.put(rcYamlField.getNode().getUuid(), rcYamlField);
-      planCreationResponseMap.put(
-          rcYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
+      planCreationResponseMap.put(rcYamlField.getNode().getUuid(),
+          PlanCreationResponse.builder()
+              .dependencies(DependenciesUtils.toDependenciesProto(dependenciesNodeMap))
+              .build());
     }
 
     // Add dependency for execution
@@ -153,7 +156,7 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
       return null;
     }
     JsonNode resourceConstraintJsonNode = ResourceConstraintUtility.getResourceConstraintJsonNode(resourceUnit);
-    return new YamlField("step", new YamlNode(resourceConstraintJsonNode, infraNode.getParentNode()));
+    return new YamlField(new YamlNode("step", resourceConstraintJsonNode, infraNode.getParentNode()));
   }
 
   @Nullable
