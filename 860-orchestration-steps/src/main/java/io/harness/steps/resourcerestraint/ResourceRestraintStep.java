@@ -7,7 +7,6 @@ import io.harness.beans.shared.ResourceRestraint;
 import io.harness.beans.shared.RestraintService;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.execution.AsyncExecutableMode;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
@@ -73,10 +72,7 @@ public class ResourceRestraintStep
       StepInputPackage inputPackage, PassThroughData passThroughData) {
     ResourceRestraintPassThroughData restraintPassThroughData = (ResourceRestraintPassThroughData) passThroughData;
 
-    return AsyncExecutableResponse.newBuilder()
-        .addCallbackIds(restraintPassThroughData.getConsumerId())
-        .setMode(AsyncExecutableMode.RESOURCE_WAITING_MODE)
-        .build();
+    return AsyncExecutableResponse.newBuilder().addCallbackIds(restraintPassThroughData.getConsumerId()).build();
   }
 
   @Override

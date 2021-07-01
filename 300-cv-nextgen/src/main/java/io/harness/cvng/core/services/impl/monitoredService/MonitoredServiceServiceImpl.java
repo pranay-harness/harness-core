@@ -161,6 +161,9 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       String serviceIdentifier, String envIdentifier) {
     MonitoredService monitoredService =
         getMonitoredService(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
+    if (monitoredService == null) {
+      return null;
+    }
     return get(accountId, orgIdentifier, projectIdentifier, monitoredService.getIdentifier());
   }
 

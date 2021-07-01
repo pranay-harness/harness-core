@@ -45,13 +45,13 @@ public class HealthSourceServiceImpl implements HealthSourceService {
   @Override
   public void checkIfAlreadyPresent(
       String accountId, String orgIdentifier, String projectIdentifier, Set<HealthSource> healthSources) {
-    healthSources.forEach(healthSourceInfo -> {
+    healthSources.forEach(healthSource -> {
       List<CVConfig> saved =
-          cvConfigService.list(accountId, orgIdentifier, projectIdentifier, healthSourceInfo.getIdentifier());
+          cvConfigService.list(accountId, orgIdentifier, projectIdentifier, healthSource.getIdentifier());
       if (saved != null && saved.size() > 0) {
         throw new DuplicateFieldException(String.format(
             "Already Existing configs for Monitored Service  with identifier %s and orgIdentifier %s and projectIdentifier %s",
-            healthSourceInfo.getIdentifier(), orgIdentifier, projectIdentifier));
+            healthSource.getIdentifier(), orgIdentifier, projectIdentifier));
       }
     });
   }

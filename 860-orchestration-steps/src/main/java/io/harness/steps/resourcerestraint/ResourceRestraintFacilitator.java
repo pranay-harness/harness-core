@@ -34,7 +34,6 @@ import io.harness.steps.resourcerestraint.utils.ResourceRestraintUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -57,8 +56,7 @@ public class ResourceRestraintFacilitator implements Facilitator {
   public FacilitatorResponse facilitate(
       Ambiance ambiance, StepParameters stepParameters, byte[] parameters, StepInputPackage inputPackage) {
     StepElementParameters stepElementParameters = (StepElementParameters) stepParameters;
-    Duration waitDuration = facilitatorUtils.extractWaitDurationFromDefaultParams(parameters);
-    FacilitatorResponseBuilder responseBuilder = FacilitatorResponse.builder().initialWait(waitDuration);
+    FacilitatorResponseBuilder responseBuilder = FacilitatorResponse.builder();
 
     ResourceRestraintSpecParameters specParameters = (ResourceRestraintSpecParameters) stepElementParameters.getSpec();
     final ResourceRestraint resourceRestraint = Preconditions.checkNotNull(
@@ -94,7 +92,7 @@ public class ResourceRestraintFacilitator implements Facilitator {
       log.error("Exception on ResourceRestraintStep for id [{}]", AmbianceUtils.obtainCurrentRuntimeId(ambiance), e);
     }
 
-    return responseBuilder.executionMode(ExecutionMode.ASYNC)
+    return responseBuilder.executionMode(ExecutionMode.CONSTRAINT)
         .passThroughData(ResourceRestraintPassThroughData.builder().consumerId(consumerId).build())
         .build();
   }
