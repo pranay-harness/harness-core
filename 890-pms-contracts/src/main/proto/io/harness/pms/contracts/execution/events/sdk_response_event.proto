@@ -40,7 +40,6 @@ message FacilitatorResponseRequest {
 }
 
 message AddExecutableResponseRequest {
-  io.harness.pms.contracts.execution.Status status = 2;
   io.harness.pms.contracts.execution.ExecutableResponse executableResponse = 3;
 }
 

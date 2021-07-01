@@ -6,7 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutableResponse;
-import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
 import io.harness.pms.contracts.execution.events.AdviserResponseRequest;
 import io.harness.pms.contracts.execution.events.EventErrorRequest;
@@ -57,10 +56,10 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
   }
 
   @Override
-  public void addExecutableResponse(@NonNull String planExecutionId, @NonNull String nodeExecutionId, Status status,
-      ExecutableResponse executableResponse) {
+  public void addExecutableResponse(
+      @NonNull String planExecutionId, @NonNull String nodeExecutionId, ExecutableResponse executableResponse) {
     AddExecutableResponseRequest executableResponseRequest =
-        AddExecutableResponseRequest.newBuilder().setExecutableResponse(executableResponse).setStatus(status).build();
+        AddExecutableResponseRequest.newBuilder().setExecutableResponse(executableResponse).build();
 
     SdkResponseEventProto sdkResponseEvent = SdkResponseEventProto.newBuilder()
                                                  .setSdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)

@@ -6,7 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutableResponse;
-import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.events.SpawnChildRequest;
 import io.harness.pms.contracts.execution.events.SpawnChildrenRequest;
@@ -26,8 +25,8 @@ public interface SdkNodeExecutionService {
   void suspendChainExecution(
       String planExecutionId, String currentNodeExecutionId, SuspendChainRequest suspendChainRequest);
 
-  void addExecutableResponse(@NonNull String planExecutionId, @NonNull String nodeExecutionId, Status status,
-      ExecutableResponse executableResponse);
+  void addExecutableResponse(
+      @NonNull String planExecutionId, @NonNull String nodeExecutionId, ExecutableResponse executableResponse);
 
   default void handleStepResponse(
       String planExecutionId, @NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse) {

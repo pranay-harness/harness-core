@@ -28,18 +28,6 @@ message AsyncExecutableResponse {
   repeated string callbackIds = 1;
   repeated string logKeys = 2;
   repeated string units = 3;
-  AsyncExecutableMode mode = 4;
-}
-
-enum AsyncExecutableMode {
-  // Step is shown as running while waiting for async callback to complete
-  RUNNING_MODE = 0;
-
-  // Step is shown as waiting on approval while waiting for async callback to complete
-  APPROVAL_WAITING_MODE = 1;
-
-  // Step is shown as waiting on resource while waiting for async callback to complete
-  RESOURCE_WAITING_MODE = 2;
 }
 
 message ChildExecutableResponse {
