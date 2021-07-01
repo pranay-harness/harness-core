@@ -33,7 +33,6 @@ public class CEYamlServiceImplTest extends CategoryTest {
   private static final String PROJECT_IDENTIFIER = "pId";
 
   private static final String HARNESS_HOST = "hHost";
-  private static final String API_KEY = "aKey";
   private static final String SERVER_NAME = "sName";
 
   private static final String SERVICE_NAME = "env-admin";
@@ -59,7 +58,6 @@ public class CEYamlServiceImplTest extends CategoryTest {
         K8sClusterSetupRequest.builder()
             .connectorIdentifier(CONNECTOR_IDENTIFIER)
             .featuresEnabled(ImmutableList.of(CEFeatures.VISIBILITY, CEFeatures.OPTIMIZATION))
-            .apiKey(API_KEY)
             .orgIdentifier(ORG_IDENTIFIER)
             .projectIdentifier(PROJECT_IDENTIFIER)
             .build();
@@ -91,7 +89,6 @@ public class CEYamlServiceImplTest extends CategoryTest {
         K8sClusterSetupRequest.builder()
             .connectorIdentifier(CONNECTOR_IDENTIFIER)
             .featuresEnabled(ImmutableList.of(CEFeatures.VISIBILITY, CEFeatures.OPTIMIZATION))
-            .apiKey(API_KEY)
             .orgIdentifier(ORG_IDENTIFIER)
             .projectIdentifier(PROJECT_IDENTIFIER)
             .build();
@@ -136,7 +133,6 @@ public class CEYamlServiceImplTest extends CategoryTest {
     assertThat(yamlContent).doesNotContain(CONNECTOR_IDENTIFIER);
     assertThat(yamlContent).doesNotContain(ACCOUNT_IDENTIFIER);
     assertThat(yamlContent).doesNotContain(HARNESS_HOST);
-    assertThat(yamlContent).doesNotContain(API_KEY);
     assertThat(yamlContent).doesNotContain(SERVER_NAME);
   }
 
@@ -147,7 +143,6 @@ public class CEYamlServiceImplTest extends CategoryTest {
     final K8sClusterSetupRequest request = K8sClusterSetupRequest.builder()
                                                .connectorIdentifier(CONNECTOR_IDENTIFIER)
                                                .featuresEnabled(ImmutableList.of(CEFeatures.OPTIMIZATION))
-                                               .apiKey(API_KEY)
                                                .orgIdentifier(ORG_IDENTIFIER)
                                                .projectIdentifier(PROJECT_IDENTIFIER)
                                                .build();
@@ -175,7 +170,6 @@ public class CEYamlServiceImplTest extends CategoryTest {
     assertThat(yamlContent).contains(CONNECTOR_IDENTIFIER);
     assertThat(yamlContent).contains(ACCOUNT_IDENTIFIER);
     assertThat(yamlContent).contains(HARNESS_HOST);
-    assertThat(yamlContent).contains(API_KEY);
     assertThat(yamlContent).contains(SERVER_NAME);
   }
 }
