@@ -242,7 +242,8 @@ public class NgUserServiceImpl implements NgUserService {
   public List<UserMetadataDTO> getUserMetadata(List<String> userIds) {
     return userMetadataRepository.findAll(Criteria.where(UserMembershipKeys.userId).in(userIds), Pageable.unpaged())
         .map(UserMetadataMapper::toDTO)
-        .toList();
+        .stream()
+        .collect(toList());
   }
 
   @Override
