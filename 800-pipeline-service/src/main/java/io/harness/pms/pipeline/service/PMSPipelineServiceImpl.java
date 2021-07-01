@@ -19,6 +19,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidYamlException;
 import io.harness.exception.ScmException;
 import io.harness.gitsync.helpers.GitContextHelper;
+import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.observer.Subject;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
@@ -57,6 +58,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private VariableCreatorMergeService variableCreatorMergeService;
   @Inject private PMSPipelineServiceHelper pmsPipelineServiceHelper;
   @Inject private PMSPipelineServiceStepHelper pmsPipelineServiceStepHelper;
+  @Inject private GitSyncSdkService gitSyncSdkService;
   @Inject @Getter private final Subject<PipelineActionObserver> pipelineSubject = new Subject<>();
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
@@ -219,9 +221,13 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public Page<PipelineEntity> list(
-      Criteria criteria, Pageable pageable, String accountId, String orgIdentifier, String projectIdentifier) {
-    return pmsPipelineRepository.findAll(criteria, pageable, accountId, orgIdentifier, projectIdentifier);
+  public Page<PipelineEntity> list(Criteria criteria, Pageable pageable, String accountId, String orgIdentifier,
+      String projectIdentifier, Boolean getDistinctFromBranches) {
+    if (Boolean.TRUE.equals(getDistinctFromBranches)
+        && gitSyncSdkService.isGitSyncEnabled(accountId, orgIdentifier, projectIdentifier)) {
+      return pmsPipelineRepository.findAll(criteria, pageable, accountId, orgIdentifier, projectIdentifier, true);
+    }
+    return pmsPipelineRepository.findAll(criteria, pageable, accountId, orgIdentifier, projectIdentifier, false);
   }
 
   @Override

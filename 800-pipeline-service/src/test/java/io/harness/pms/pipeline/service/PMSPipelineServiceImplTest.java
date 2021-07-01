@@ -248,7 +248,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
     Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));
 
     List<PipelineEntity> list =
-        pmsPipelineService.list(criteria, pageable, accountId, ORG_IDENTIFIER, PROJ_IDENTIFIER).getContent();
+        pmsPipelineService.list(criteria, pageable, accountId, ORG_IDENTIFIER, PROJ_IDENTIFIER, null).getContent();
 
     assertThat(list.size()).isEqualTo(1);
     PipelineEntity queriedPipelineEntity = list.get(0);
