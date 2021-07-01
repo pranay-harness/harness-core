@@ -5,7 +5,7 @@
 # > cp <ti-binary-path>  product/ci/ti-service/ti
 # > docker build -t harness/ti-service:valpha-0.1 -f product/ci/ti-service/Dockerfile product/ci/
 
-FROM us.gcr.io/platform-205701/alpine:safe-alpine3.12-sec1096-apm
+FROM us.gcr.io/platform-205701/alpine:safe-alpine3.12-sec1338-apm
 
 #copy migrate binary
 RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.14.1/migrate.linux-amd64.tar.gz | tar xvz && cp migrate.linux-amd64 /opt/harness/migrate

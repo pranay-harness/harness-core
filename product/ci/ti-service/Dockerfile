@@ -5,7 +5,7 @@
 # > cp <ti-binary-path>  product/ci/ti-service/ti
 # > docker build -t harness/ti-service:valpha-0.1 -f product/ci/ti-service/Dockerfile product/ci/
 
-FROM harness/alpine:safe-alpine3.12-sec1096
+FROM harness/alpine:safe-alpine3.12-sec1338
 
 #copy migrate binary
 RUN mkdir /opt/harness
