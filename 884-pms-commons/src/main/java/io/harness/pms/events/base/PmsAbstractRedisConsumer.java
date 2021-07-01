@@ -20,7 +20,7 @@ import javax.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListener> implements Runnable {
+public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListener> implements PmsRedisConsumer {
   private static final int WAIT_TIME_IN_SECONDS = 10;
   private static final String CACHE_KEY = "%s_%s";
   private final Consumer redisConsumer;

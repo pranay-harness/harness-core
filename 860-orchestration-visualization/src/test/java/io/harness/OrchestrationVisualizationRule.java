@@ -190,7 +190,7 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
       cacheConfigBuilder.cacheBackend(NOOP);
     }
     modules.add(PmsSdkModule.getInstance(sdkConfig));
-    modules.add(OrchestrationVisualizationModule.getInstance());
+    modules.add(OrchestrationVisualizationModule.getInstance(null));
     return modules;
   }
 
