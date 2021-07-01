@@ -7,6 +7,7 @@ import static io.harness.validation.Validator.notEmptyCheck;
 
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
+import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
@@ -42,6 +43,7 @@ import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.delegate.task.terraform.TerraformVarFileInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.mappers.SecretManagerConfigMapper;
+import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ngpipeline.common.AmbianceHelper;
@@ -92,6 +94,30 @@ public class TerraformStepHelper {
   @Inject private GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
   @Inject private FileServiceClientFactory fileService;
   @Named("PRIVILEGED") @Inject private SecretManagerClientService secretManagerClientService;
+
+  public static List<EntityDetail> prepareEntityDetailsForVarFiles(
+      String accountId, String orgIdentifier, String projectIdentifier, Map<String, TerraformVarFile> varFiles) {
+    List<EntityDetail> entityDetailList = new ArrayList<>();
+
+    if (EmptyPredicate.isNotEmpty(varFiles)) {
+      for (Map.Entry<String, TerraformVarFile> varFileEntry : varFiles.entrySet()) {
+        if (varFileEntry.getValue().getType().equals(TerraformVarFileTypes.Remote)) {
+          String connectorRef = ((RemoteTerraformVarFileSpec) varFileEntry.getValue().getSpec())
+                                    .getStore()
+                                    .getSpec()
+                                    .getConnectorReference()
+                                    .getValue();
+          IdentifierRef identifierRef =
+              IdentifierRefHelper.getIdentifierRef(connectorRef, accountId, orgIdentifier, projectIdentifier);
+          EntityDetail entityDetail =
+              EntityDetail.builder().type(EntityType.CONNECTORS).entityRef(identifierRef).build();
+          entityDetailList.add(entityDetail);
+        }
+      }
+    }
+
+    return entityDetailList;
+  }
 
   public String generateFullIdentifier(String provisionerIdentifier, Ambiance ambiance) {
     if (Pattern.matches(NGRegexValidatorConstants.IDENTIFIER_PATTERN, provisionerIdentifier)) {
