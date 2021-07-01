@@ -12,6 +12,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.queue.Queuable;
 import io.harness.queue.WithMonitoring;
 
@@ -45,7 +46,7 @@ public class OrchestrationEvent extends Queuable implements WithMonitoring {
   @NotNull Ambiance ambiance;
   String serviceName;
   Status status;
-  String resolvedStepParameters;
+  StepParameters resolvedStepParameters;
 
   @NotNull OrchestrationEventType eventType;
   @Getter @Setter @NonFinal @CreatedDate Long createdAt;

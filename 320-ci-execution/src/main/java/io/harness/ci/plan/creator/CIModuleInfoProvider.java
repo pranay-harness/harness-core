@@ -26,7 +26,6 @@ import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
 import io.harness.pms.sdk.execution.beans.StageModuleInfo;
-import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.states.LiteEngineTaskStep;
 import io.harness.stateutils.buildstate.ConnectorUtils;
@@ -65,8 +64,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     Ambiance ambiance = event.getAmbiance();
     BaseNGAccess baseNGAccess = retrieveBaseNGAccess(ambiance);
     try {
-      StepElementParameters stepElementParameters =
-          RecastOrchestrationUtils.fromDocumentJson(event.getResolvedStepParameters(), StepElementParameters.class);
+      StepElementParameters stepElementParameters = (StepElementParameters) event.getResolvedStepParameters();
       LiteEngineTaskStepInfo liteEngineTaskStepInfo = (LiteEngineTaskStepInfo) stepElementParameters.getSpec();
 
       if (liteEngineTaskStepInfo == null) {
