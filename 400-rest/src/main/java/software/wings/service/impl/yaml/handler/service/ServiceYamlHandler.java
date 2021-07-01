@@ -96,7 +96,8 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
                                   .configVariables(nameValuePairList)
                                   .applicationStack(applicationStack)
                                   .helmVersion(helmVersion)
-                                  .cfCliVersion(cfCliVersion);
+                                  .cfCliVersion(cfCliVersion)
+                                  .artifactFromManifest(service.getArtifactFromManifest());
     if (isNotBlank(service.getDeploymentTypeTemplateId())) {
       yamlBuilder.deploymentTypeTemplateUri(
           customDeploymentTypeService.fetchDeploymentTemplateUri(service.getDeploymentTypeTemplateId()));
@@ -159,6 +160,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     currentService.setName(serviceName);
     currentService.setDescription(yaml.getDescription());
     currentService.setConfigMapYaml(yaml.getConfigMapYaml());
+    currentService.setArtifactFromManifest(yaml.getArtifactFromManifest());
 
     if (isNotBlank(yaml.getDeploymentTypeTemplateUri())) {
       currentService.setDeploymentTypeTemplateId(

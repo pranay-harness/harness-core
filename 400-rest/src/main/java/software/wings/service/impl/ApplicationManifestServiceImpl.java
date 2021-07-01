@@ -11,6 +11,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
+import static software.wings.beans.appmanifest.AppManifestKind.VALUES;
 import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.appmanifest.StoreType.CUSTOM;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
@@ -112,8 +113,8 @@ import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 
@@ -250,14 +251,36 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   }
 
   @Override
-  public ApplicationManifest getManifestByServiceId(String appId, String serviceId) {
+  public ApplicationManifest getAppManifestByName(
+      String appId, String envId, String serviceId, String appManifestName) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationKeys.appId, appId)
                                            .filter(ApplicationManifestKeys.serviceId, serviceId)
                                            .filter(ApplicationManifestKeys.envId, null)
-                                           .filter(ApplicationManifestKeys.kind, AppManifestKind.K8S_MANIFEST);
+                                           .filter(ApplicationManifestKeys.name, appManifestName);
 
     return query.get();
+  }
+
+  @Override
+  public ApplicationManifest getManifestByServiceId(String appId, String serviceId) {
+    List<ApplicationManifest> applicationManifests = getManifestsByServiceId(appId, serviceId, K8S_MANIFEST);
+    if (isNotEmpty(applicationManifests)) {
+      return applicationManifests.get(0);
+    }
+    return null;
+  }
+
+  @Override
+  public List<ApplicationManifest> getManifestsByServiceId(String appId, String serviceId, AppManifestKind kind) {
+    Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
+                                           .filter(ApplicationKeys.appId, appId)
+                                           .filter(ApplicationManifestKeys.serviceId, serviceId)
+                                           .filter(ApplicationManifestKeys.envId, null)
+                                           .filter(ApplicationManifestKeys.kind, kind)
+                                           .order(Sort.descending(ApplicationManifest.CREATED_AT));
+
+    return query.asList();
   }
 
   @Override
@@ -567,47 +590,71 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     validateApplicationManifest(applicationManifest);
     sanitizeApplicationManifestConfigs(applicationManifest);
 
+    final String appId = applicationManifest.getAppId();
+    final String accountId = appService.getAccountIdByAppId(appId);
+    Service service = null;
+    if (isNotEmpty(applicationManifest.getServiceId())) {
+      service = serviceResourceService.get(applicationManifest.getAppId(), applicationManifest.getServiceId(), false);
+      notNullCheck(
+          "Service" + applicationManifest.getServiceId() + " linked with the app manifest doesn't exist", service);
+    }
+
+    if (service != null && featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId)
+        && Boolean.TRUE.equals(service.getArtifactFromManifest())) {
+      if (!(applicationManifest.getStoreType() == HelmChartRepo || applicationManifest.getKind() == VALUES)) {
+        throw new InvalidRequestException(
+            "Application Manifest should be of kind Helm Chart from Helm Repo for Service with artifact from manifest enabled",
+            USER);
+      }
+
+      if (applicationManifest.getHelmChartConfig() != null
+          && ExpressionEvaluator.containsVariablePattern(applicationManifest.getHelmChartConfig().getChartName())) {
+        throw new InvalidRequestException(
+            "Chart name cannot contain expression when artifactFromManifest is enabled", USER);
+      }
+    }
+
+    if (service != null && Boolean.TRUE.equals(service.getArtifactFromManifest())
+        && applicationManifest.getStoreType() == HelmChartRepo) {
+      applicationManifest.setPollForChanges(true);
+    }
+
     if (isCreate && exists(applicationManifest)) {
-      StringBuilder builder = new StringBuilder();
-      builder.append("App Manifest already exists for app ")
-          .append(applicationManifest.getAppId())
-          .append(" with kind ")
-          .append(applicationManifest.getKind());
+      if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId) && service != null
+          && Boolean.TRUE.equals(service.getArtifactFromManifest())) {
+        if (existsWithName(applicationManifest)) {
+          throw new InvalidRequestException(
+              String.format("Application Manifest with name %s already exists in Service %s",
+                  applicationManifest.getName(), service.getName()),
+              USER);
+        }
+      } else {
+        StringBuilder builder = new StringBuilder();
+        builder.append("App Manifest already exists for app ")
+            .append(applicationManifest.getAppId())
+            .append(" with kind ")
+            .append(applicationManifest.getKind());
 
-      if (isNotBlank(applicationManifest.getServiceId())) {
-        builder.append(", serviceId ").append(applicationManifest.getServiceId());
+        if (isNotBlank(applicationManifest.getServiceId())) {
+          builder.append(", serviceId ").append(applicationManifest.getServiceId());
+        }
+
+        if (isNotBlank(applicationManifest.getEnvId())) {
+          builder.append(", envId ").append(applicationManifest.getEnvId());
+        }
+
+        throw new InvalidRequestException(builder.toString(), USER);
       }
-
-      if (isNotBlank(applicationManifest.getEnvId())) {
-        builder.append(", envId ").append(applicationManifest.getEnvId());
-      }
-
-      throw new InvalidRequestException(builder.toString(), USER);
     }
     if (!isCreate) {
       resetReadOnlyProperties(applicationManifest);
     }
-
-    String appId = applicationManifest.getAppId();
-    String accountId = appService.getAccountIdByAppId(appId);
 
     if (isEmpty(applicationManifest.getAccountId())) {
       applicationManifest.setAccountId(accountId);
     }
 
     ApplicationManifest oldAppManifest = isCreate ? null : getById(appId, applicationManifest.getUuid());
-    // TODO: this block of code to be removed when app manifest UI changes hit prod
-    if (applicationManifest.getStoreType() == StoreType.HelmChartRepo
-        && applicationManifest.getHelmChartConfig() != null
-        && Boolean.TRUE.equals(applicationManifest.getPollForChanges())) {
-      String chartName = applicationManifest.getHelmChartConfig().getChartName();
-      String serviceName =
-          serviceResourceService.getName(applicationManifest.getAppId(), applicationManifest.getServiceId());
-      applicationManifest.setName(StringUtils.join(serviceName, "_", chartName));
-      if (ExpressionEvaluator.containsVariablePattern(chartName)) {
-        applicationManifest.setValidationMessage(VARIABLE_EXPRESSIONS_ERROR);
-      }
-    }
 
     ApplicationManifest savedApplicationManifest =
         wingsPersistence.saveAndGet(ApplicationManifest.class, applicationManifest);
@@ -625,6 +672,17 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   boolean exists(ApplicationManifest applicationManifest) {
     ApplicationManifest appManifest = getAppManifest(applicationManifest.getAppId(), applicationManifest.getEnvId(),
         applicationManifest.getServiceId(), applicationManifest.getKind());
+
+    return appManifest != null;
+  }
+
+  @VisibleForTesting
+  boolean existsWithName(ApplicationManifest applicationManifest) {
+    if (applicationManifest.getName() == null) {
+      return false;
+    }
+    ApplicationManifest appManifest = getAppManifestByName(applicationManifest.getAppId(),
+        applicationManifest.getEnvId(), applicationManifest.getServiceId(), applicationManifest.getName());
 
     return appManifest != null;
   }
@@ -928,6 +986,10 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       throw new InvalidRequestException("Helm repository cannot be empty.", USER);
     }
 
+    if (applicationManifest.getEnvId() == null && isBlank(helmChartConfig.getChartName())) {
+      throw new InvalidRequestException("Chart name cannot be empty when helm repository is selected", USER);
+    }
+
     if (isNotBlank(helmChartConfig.getChartUrl())) {
       throw new InvalidRequestException("Chart url cannot be used.", USER);
     }
@@ -1212,13 +1274,11 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
   @Override
   public ApplicationManifest getByServiceId(String appId, String serviceId, AppManifestKind kind) {
-    Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
-                                           .filter(ApplicationKeys.appId, appId)
-                                           .filter(ApplicationManifestKeys.serviceId, serviceId)
-                                           .filter(ApplicationManifestKeys.envId, null)
-                                           .filter(ApplicationManifestKeys.kind, kind);
-
-    return query.get();
+    List<ApplicationManifest> applicationManifests = getManifestsByServiceId(appId, serviceId, kind);
+    if (isNotEmpty(applicationManifests)) {
+      return applicationManifests.get(0);
+    }
+    return null;
   }
 
   @Override
