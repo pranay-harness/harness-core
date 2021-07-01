@@ -14,7 +14,6 @@ java_library(
         "//920-delegate-agent-beans:module",
         "//930-delegate-tasks:module",
         "//940-secret-manager-client:module",
-        "//950-cg-ng-shared-orchestration-beans:module",
         "//954-connector-beans:module",
         "//970-api-services-beans:module",
         "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",

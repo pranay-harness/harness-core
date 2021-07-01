@@ -6,7 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.serializer.DelegateTasksRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.SMCoreKryoRegistrar;
-import io.harness.serializer.morphia.CgNgSharedOrchestrationBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.SMCoreMorphiaRegistrar;
 
 import com.google.common.collect.ImmutableSet;
@@ -29,6 +28,5 @@ public class SMCoreRegistrars {
           .addAll(DelegateTasksRegistrars.morphiaRegistrars)
           .add(SMCoreMorphiaRegistrar.class)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
-          .add(CgNgSharedOrchestrationBeansMorphiaRegistrar.class)
           .build();
 }
