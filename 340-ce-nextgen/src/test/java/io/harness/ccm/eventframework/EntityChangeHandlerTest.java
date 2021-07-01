@@ -17,6 +17,7 @@ import io.harness.ccm.cluster.NGClusterRecordHandler;
 import io.harness.ccm.commons.entities.ClusterRecord;
 import io.harness.ccm.perpetualtask.K8sWatchTaskResourceClient;
 import io.harness.connector.ConnectorInfoDTO;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
@@ -25,6 +26,7 @@ import io.harness.rule.Owner;
 
 import com.google.protobuf.StringValue;
 import java.io.IOException;
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -82,10 +84,22 @@ public class EntityChangeHandlerTest extends CategoryTest {
                         .build();
     doReturn(ConnectorInfoDTO.builder()
                  .name(NAME)
-                 .connectorConfig(CEKubernetesClusterConfigDTO.builder().connectorRef(CONNECTOR_REF).build())
+                 .connectorConfig(CEKubernetesClusterConfigDTO.builder()
+                                      .featuresEnabled(Collections.singletonList(CEFeatures.VISIBILITY))
+                                      .connectorRef(CONNECTOR_REF)
+                                      .build())
                  .build())
         .when(entityChangeHandler)
-        .getConnectorConfigDTO(ACCOUNT_ID, CE_K8S_CONNECTOR_ID, "", "");
+        .getConnectorConfigDTO(entityChangeDTO);
+    doReturn(ConnectorInfoDTO.builder()
+                 .name(NAME)
+                 .connectorConfig(CEKubernetesClusterConfigDTO.builder()
+                                      .featuresEnabled(Collections.singletonList(CEFeatures.VISIBILITY))
+                                      .connectorRef(CONNECTOR_REF)
+                                      .build())
+                 .build())
+        .when(entityChangeHandler)
+        .getConnectorConfigDTO(baseK8sEntityChangeDTO);
   }
 
   @Test
@@ -135,7 +149,7 @@ public class EntityChangeHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
-  public void handleUpdateEventCEK8sConnector() throws Exception {
+  public void handleUpdateEventCEK8sConnectorVisibilityEnabledAndNoUpdatesInCEFeatures() throws Exception {
     when(clusterRecordHandler.handleNewCEK8sConnectorCreate(any())).thenReturn(clusterRecord);
     when(k8sWatchTaskResourceClient.reset(any(), any(), any())).thenReturn(booleanResponseCall);
     ResponseDTO<Boolean> responseDTO = ResponseDTO.newResponse(true);
@@ -156,6 +170,68 @@ public class EntityChangeHandlerTest extends CategoryTest {
     assertThat(accountIdCaptor.getValue()).isEqualTo(ACCOUNT_ID);
     assertThat(taskIdCaptor.getValue()).isEqualTo(TASK_ID);
     assertThat(k8sEventCollectionBundle.getClusterName()).isEqualTo(NAME);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void handleUpdateEventCEK8sConnectorVisibilityEnabledAndDisabledOnUpdate() throws Exception {
+    doReturn(ConnectorInfoDTO.builder()
+                 .name(NAME)
+                 .connectorConfig(CEKubernetesClusterConfigDTO.builder()
+                                      .featuresEnabled(Collections.singletonList(CEFeatures.OPTIMIZATION))
+                                      .connectorRef(CONNECTOR_REF)
+                                      .build())
+                 .build())
+        .when(entityChangeHandler)
+        .getConnectorConfigDTO(entityChangeDTO);
+
+    clusterRecord.setPerpetualTaskId(TASK_ID);
+    when(clusterRecordHandler.getClusterRecord(ACCOUNT_ID, CE_K8S_CONNECTOR_ID)).thenReturn(clusterRecord);
+    when(clusterRecordHandler.deleteClusterRecord(any(), any())).thenReturn(true);
+    doReturn(true).when(entityChangeHandler).deletePerpetualTask(clusterRecord, TASK_ID);
+
+    entityChangeHandler.handleCEK8sUpdate(entityChangeDTO);
+
+    ArgumentCaptor<String> accountIdCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> ceK8sConnectorIdCaptor = ArgumentCaptor.forClass(String.class);
+
+    verify(clusterRecordHandler).deleteClusterRecord(accountIdCaptor.capture(), ceK8sConnectorIdCaptor.capture());
+
+    assertThat(accountIdCaptor.getValue()).isEqualTo(ACCOUNT_ID);
+    assertThat(ceK8sConnectorIdCaptor.getValue()).isEqualTo(CE_K8S_CONNECTOR_ID);
+  }
+
+  @Test
+  @Owner(developers = ROHIT)
+  @Category(UnitTests.class)
+  public void handleUpdateEventCEK8sConnectorVisibilityDisabledAndEnabledOnUpdate() throws Exception {
+    doReturn(ConnectorInfoDTO.builder()
+                 .name(NAME)
+                 .connectorConfig(CEKubernetesClusterConfigDTO.builder()
+                                      .featuresEnabled(Collections.singletonList(CEFeatures.VISIBILITY))
+                                      .connectorRef(CONNECTOR_REF)
+                                      .build())
+                 .build())
+        .when(entityChangeHandler)
+        .getConnectorConfigDTO(entityChangeDTO);
+    when(clusterRecordHandler.getClusterRecord(ACCOUNT_ID, CE_K8S_CONNECTOR_ID)).thenReturn(null);
+    when(clusterRecordHandler.handleNewCEK8sConnectorCreate(any())).thenReturn(clusterRecord);
+    when(clusterRecordHandler.attachPerpetualTask(any(), any())).thenReturn(null);
+    when(k8sWatchTaskResourceClient.create(any(), any())).thenReturn(responseDTOCall);
+    ResponseDTO<String> responseDTO = ResponseDTO.newResponse(TASK_ID);
+    Response<ResponseDTO<String>> response = Response.success(responseDTO);
+    when(responseDTOCall.execute()).thenReturn(response);
+
+    entityChangeHandler.handleCEK8sUpdate(entityChangeDTO);
+    ArgumentCaptor<K8sEventCollectionBundle> k8sEventCollectionBundleArgumentCaptor =
+        ArgumentCaptor.forClass(K8sEventCollectionBundle.class);
+    ArgumentCaptor<String> accountIdCaptor = ArgumentCaptor.forClass(String.class);
+    verify(k8sWatchTaskResourceClient)
+        .create(accountIdCaptor.capture(), k8sEventCollectionBundleArgumentCaptor.capture());
+    K8sEventCollectionBundle k8sEventCollectionBundle = k8sEventCollectionBundleArgumentCaptor.getValue();
+    assertThat(accountIdCaptor.getValue()).isEqualTo(ACCOUNT_ID);
+    assertThat(k8sEventCollectionBundle.getClusterName()).isEqualTo(CLUSTER_NAME);
   }
 
   @Test

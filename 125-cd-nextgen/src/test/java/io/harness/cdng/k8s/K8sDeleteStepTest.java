@@ -149,7 +149,7 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
                                               .build();
 
     StepResponse response =
-        deleteStep.finalizeExecution(ambiance, stepElementParameters, null, () -> k8sDeployResponse);
+        deleteStep.finalizeExecutionWithSecurityContext(ambiance, stepElementParameters, null, () -> k8sDeployResponse);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
@@ -168,7 +168,7 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
                                               .build();
 
     StepResponse response =
-        deleteStep.finalizeExecution(ambiance, stepElementParameters, null, () -> k8sDeployResponse);
+        deleteStep.finalizeExecutionWithSecurityContext(ambiance, stepElementParameters, null, () -> k8sDeployResponse);
     assertThat(response.getStatus()).isEqualTo(Status.FAILED);
     assertThat(response.getFailureInfo().getErrorMessage()).isEqualTo("Execution failed.");
   }
@@ -191,13 +191,16 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
     doReturn(helmFetchValuesFailed).when(k8sStepHelper).handleHelmValuesFetchFailure(helmValuesPassThroughData);
     doReturn(stepException).when(k8sStepHelper).handleStepExceptionFailure(stepExceptionPassThroughData);
 
-    assertThat(deleteStep.finalizeExecution(ambiance, stepElementParameters, gitFetchPassThroughData, () -> null))
+    assertThat(deleteStep.finalizeExecutionWithSecurityContext(
+                   ambiance, stepElementParameters, gitFetchPassThroughData, () -> null))
         .isSameAs(gitFetchValuesFailed);
 
-    assertThat(deleteStep.finalizeExecution(ambiance, stepElementParameters, helmValuesPassThroughData, () -> null))
+    assertThat(deleteStep.finalizeExecutionWithSecurityContext(
+                   ambiance, stepElementParameters, helmValuesPassThroughData, () -> null))
         .isSameAs(helmFetchValuesFailed);
 
-    assertThat(deleteStep.finalizeExecution(ambiance, stepElementParameters, stepExceptionPassThroughData, () -> null))
+    assertThat(deleteStep.finalizeExecutionWithSecurityContext(
+                   ambiance, stepElementParameters, stepExceptionPassThroughData, () -> null))
         .isSameAs(stepException);
   }
 
@@ -243,7 +246,7 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
 
     doReturn(stepResponse).when(k8sStepHelper).handleTaskException(ambiance, executionPassThroughData, thrownException);
 
-    StepResponse response = deleteStep.finalizeExecution(
+    StepResponse response = deleteStep.finalizeExecutionWithSecurityContext(
         ambiance, stepElementParameters, executionPassThroughData, () -> { throw thrownException; });
 
     assertThat(response).isEqualTo(stepResponse);

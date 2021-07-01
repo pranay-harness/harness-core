@@ -14,6 +14,7 @@ import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
+import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static java.lang.Boolean.FALSE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -28,9 +29,12 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
+import io.harness.beans.Scope.ScopeKeys;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.DefaultOrganization;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
@@ -48,6 +52,8 @@ import io.harness.ng.core.events.ProjectUpdateEvent;
 import io.harness.ng.core.remote.ProjectMapper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.ng.core.user.entities.UserMembership;
+import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.remote.client.NGRestUtils;
@@ -56,6 +62,7 @@ import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.PrincipalType;
+import io.harness.utils.PageUtils;
 import io.harness.utils.ScopeUtils;
 
 import com.google.common.collect.Lists;
@@ -219,6 +226,35 @@ public class ProjectServiceImpl implements ProjectService {
       String accountIdentifier, @OrgIdentifier String orgIdentifier, @ProjectIdentifier String projectIdentifier) {
     return projectRepository.findByAccountIdentifierAndOrgIdentifierAndIdentifierAndDeletedNot(
         accountIdentifier, orgIdentifier, projectIdentifier, true);
+  }
+
+  @Override
+  public PageResponse<ProjectDTO> listProjectsForUser(String userId, String accountId, PageRequest pageRequest) {
+    Criteria criteria = Criteria.where(UserMembershipKeys.userId)
+                            .is(userId)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
+                            .is(accountId)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
+                            .exists(true)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
+                            .exists(true);
+    Page<UserMembership> userMembershipPage = ngUserService.listUserMemberships(criteria, Pageable.unpaged());
+    List<UserMembership> userMembershipList = userMembershipPage.getContent();
+
+    Criteria projectCriteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountId);
+    List<Criteria> criteriaList = new ArrayList<>();
+    for (UserMembership userMembership : userMembershipList) {
+      Scope scope = userMembership.getScope();
+      criteriaList.add(Criteria.where(ProjectKeys.orgIdentifier)
+                           .is(scope.getOrgIdentifier())
+                           .and(ProjectKeys.identifier)
+                           .is(scope.getProjectIdentifier())
+                           .and(ProjectKeys.deleted)
+                           .is(false));
+    }
+    projectCriteria.orOperator(criteriaList.toArray(new Criteria[criteriaList.size()]));
+    Page<Project> projectsPage = projectRepository.findAll(projectCriteria, PageUtils.getPageRequest(pageRequest));
+    return getNGPageResponse(projectsPage.map(ProjectMapper::writeDTO));
   }
 
   @Override

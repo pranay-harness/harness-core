@@ -21,7 +21,6 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.resume.NodeResumeEvent;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.events.base.PmsEventCategory;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
@@ -87,7 +86,7 @@ public class RedisNodeResumeEventPublisherTest extends OrchestrationTestBase {
                                           .build();
 
     verify(eventSender)
-        .sendEvent(nodeResumeEvent.toByteString(), PmsEventCategory.NODE_RESUME,
-            nodeExecution.getNode().getServiceName(), AmbianceUtils.getAccountId(nodeExecution.getAmbiance()), true);
+        .sendEvent(nodeExecution.getAmbiance(), nodeResumeEvent.toByteString(), PmsEventCategory.NODE_RESUME,
+            nodeExecution.getNode().getServiceName(), true);
   }
 }

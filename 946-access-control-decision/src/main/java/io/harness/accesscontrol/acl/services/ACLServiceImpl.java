@@ -9,7 +9,6 @@ import static io.harness.exception.WingsException.USER;
 
 import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.daos.ACLDAO;
-import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.clients.AccessCheckRequestDTO;
 import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlDTO;
@@ -173,35 +172,5 @@ public class ACLServiceImpl implements ACLService {
           Principal.of(fromSecurityPrincipalType(contextPrincipal.getType()), contextPrincipal.getName());
     }
     return checkForAccessInternal(principalToCheckPermissions, permissions);
-  }
-
-  @Override
-  public long saveAll(List<ACL> acls) {
-    return aclDAO.saveAll(acls);
-  }
-
-  @Override
-  public long deleteByRoleAssignment(String roleAssignmentId) {
-    return aclDAO.deleteByRoleAssignment(roleAssignmentId);
-  }
-
-  @Override
-  public List<ACL> getByUserGroup(String scope, String userGroupIdentifier) {
-    return aclDAO.getByUserGroup(scope, userGroupIdentifier);
-  }
-
-  @Override
-  public List<ACL> getByRole(String scope, String roleIdentifier, boolean managed) {
-    return aclDAO.getByRole(scope, roleIdentifier, managed);
-  }
-
-  @Override
-  public List<ACL> getByResourceGroup(String scope, String resourceGroupIdentifier, boolean managed) {
-    return aclDAO.getByResourceGroup(scope, resourceGroupIdentifier, managed);
-  }
-
-  @Override
-  public List<ACL> getByRoleAssignment(String roleAssignmentId) {
-    return aclDAO.getByRoleAssignment(roleAssignmentId);
   }
 }

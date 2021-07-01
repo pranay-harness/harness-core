@@ -6,8 +6,6 @@ import static io.harness.pms.sdk.core.execution.events.node.facilitate.Facilitat
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.shared.ResourceRestraint;
-import io.harness.beans.shared.RestraintService;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintUnit;
 import io.harness.distribution.constraint.Consumer;
@@ -27,14 +25,15 @@ import io.harness.pms.sdk.core.execution.events.node.facilitate.FacilitatorRespo
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
+import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance.ResourceRestraintInstanceKeys;
+import io.harness.steps.resourcerestraint.service.ResourceRestraintInstanceService;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintRegistry;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
 import io.harness.steps.resourcerestraint.utils.ResourceRestraintUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -47,8 +46,8 @@ public class ResourceRestraintFacilitator implements Facilitator {
   public static final FacilitatorType FACILITATOR_TYPE =
       FacilitatorType.newBuilder().setType(RESOURCE_RESTRAINT).build();
 
+  @Inject private ResourceRestraintInstanceService resourceRestraintInstanceService;
   @Inject private ResourceRestraintService resourceRestraintService;
-  @Inject private RestraintService restraintService;
   @Inject private ResourceRestraintRegistry resourceRestraintRegistry;
   @Inject private PmsEngineExpressionService pmsEngineExpressionService;
   @Inject private FacilitatorUtils facilitatorUtils;
@@ -57,18 +56,17 @@ public class ResourceRestraintFacilitator implements Facilitator {
   public FacilitatorResponse facilitate(
       Ambiance ambiance, StepParameters stepParameters, byte[] parameters, StepInputPackage inputPackage) {
     StepElementParameters stepElementParameters = (StepElementParameters) stepParameters;
-    Duration waitDuration = facilitatorUtils.extractWaitDurationFromDefaultParams(parameters);
-    FacilitatorResponseBuilder responseBuilder = FacilitatorResponse.builder().initialWait(waitDuration);
+    FacilitatorResponseBuilder responseBuilder = FacilitatorResponse.builder();
 
     ResourceRestraintSpecParameters specParameters = (ResourceRestraintSpecParameters) stepElementParameters.getSpec();
     final ResourceRestraint resourceRestraint = Preconditions.checkNotNull(
-        restraintService.getByNameAndAccountId(specParameters.getName(), AmbianceUtils.getAccountId(ambiance)));
-    final Constraint constraint = resourceRestraintService.createAbstraction(resourceRestraint);
+        resourceRestraintService.getByNameAndAccountId(specParameters.getName(), AmbianceUtils.getAccountId(ambiance)));
+    final Constraint constraint = resourceRestraintInstanceService.createAbstraction(resourceRestraint);
     String releaseEntityId = ResourceRestraintUtils.getReleaseEntityId(specParameters, ambiance.getPlanExecutionId());
 
     int permits = specParameters.getPermits();
     if (AcquireMode.ENSURE == specParameters.getAcquireMode()) {
-      permits -= resourceRestraintService.getAllCurrentlyAcquiredPermits(
+      permits -= resourceRestraintInstanceService.getAllCurrentlyAcquiredPermits(
           specParameters.getHoldingScope().getScope(), releaseEntityId);
     }
 
@@ -94,7 +92,7 @@ public class ResourceRestraintFacilitator implements Facilitator {
       log.error("Exception on ResourceRestraintStep for id [{}]", AmbianceUtils.obtainCurrentRuntimeId(ambiance), e);
     }
 
-    return responseBuilder.executionMode(ExecutionMode.ASYNC)
+    return responseBuilder.executionMode(ExecutionMode.CONSTRAINT)
         .passThroughData(ResourceRestraintPassThroughData.builder().consumerId(consumerId).build())
         .build();
   }
@@ -104,8 +102,8 @@ public class ResourceRestraintFacilitator implements Facilitator {
     Map<String, Object> constraintContext = new HashMap<>();
     constraintContext.put(ResourceRestraintInstanceKeys.releaseEntityType, stepParameters.getHoldingScope().getScope());
     constraintContext.put(ResourceRestraintInstanceKeys.releaseEntityId, releaseEntityId);
-    constraintContext.put(
-        ResourceRestraintInstanceKeys.order, resourceRestraintService.getMaxOrder(resourceRestraint.getUuid()) + 1);
+    constraintContext.put(ResourceRestraintInstanceKeys.order,
+        resourceRestraintInstanceService.getMaxOrder(resourceRestraint.getUuid()) + 1);
 
     return constraintContext;
   }

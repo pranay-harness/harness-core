@@ -36,8 +36,8 @@ public class FacilitatorEventHandler extends PmsBaseEventHandler<FacilitatorEven
   protected Map<String, String> extractMetricContext(FacilitatorEvent message) {
     return ImmutableMap.<String, String>builder()
         .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
-        .put("projectIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
-        .put("orgIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
+        .put("orgIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
+        .put("projectIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
         .build();
   }
 
@@ -78,12 +78,12 @@ public class FacilitatorEventHandler extends PmsBaseEventHandler<FacilitatorEven
       }
       if (currFacilitatorResponse == null) {
         log.info("Calculated Facilitator response is null. Returning response Successful false");
-        sdkNodeExecutionService.handleFacilitationResponse(event.getNodeExecutionId(), event.getNotifyId(),
-            FacilitatorResponseProto.newBuilder().setIsSuccessful(false).build());
+        sdkNodeExecutionService.handleFacilitationResponse(ambiance.getPlanExecutionId(), event.getNodeExecutionId(),
+            event.getNotifyId(), FacilitatorResponseProto.newBuilder().setIsSuccessful(false).build());
         return;
       }
-      sdkNodeExecutionService.handleFacilitationResponse(event.getNodeExecutionId(), event.getNotifyId(),
-          FacilitatorResponseMapper.toFacilitatorResponseProto(currFacilitatorResponse));
+      sdkNodeExecutionService.handleFacilitationResponse(ambiance.getPlanExecutionId(), event.getNodeExecutionId(),
+          event.getNotifyId(), FacilitatorResponseMapper.toFacilitatorResponseProto(currFacilitatorResponse));
       log.info("Facilitation Event Handled Successfully");
     } catch (Exception ex) {
       log.error("Error while facilitating execution", ex);

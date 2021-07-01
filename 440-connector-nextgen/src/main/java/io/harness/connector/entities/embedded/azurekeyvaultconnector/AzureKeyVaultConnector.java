@@ -31,6 +31,7 @@ public class AzureKeyVaultConnector extends Connector {
   String clientId;
   String tenantId;
   String vaultName;
+  String secretKeyRef;
   String subscription;
   boolean isDefault;
 

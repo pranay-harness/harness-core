@@ -13,8 +13,8 @@ import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.pms.PmsFeatureFlagService;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.start.NodeStartEvent;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
@@ -49,7 +49,6 @@ public class NodeStartHelper {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private TimeoutEngine timeoutEngine;
   @Inject private TimeoutRegistry timeoutRegistry;
-  @Inject private PmsFeatureFlagService pmsFeatureFlagService;
 
   public void startNode(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
     ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
@@ -58,14 +57,13 @@ public class NodeStartHelper {
       log.info("Not Proceeding with Execution : {}", check.getReason());
       return;
     }
-    NodeExecution nodeExecution = prepareNodeExecutionForInvocation(ambiance);
+    NodeExecution nodeExecution = prepareNodeExecutionForInvocation(ambiance, facilitatorResponse.getExecutionMode());
     log.info("Sending NodeExecution START event");
     sendEvent(nodeExecution, facilitatorResponse.getPassThroughDataBytes());
   }
 
   private void sendEvent(NodeExecution nodeExecution, ByteString passThroughData) {
     String serviceName = nodeExecution.getNode().getServiceName();
-    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
     NodeStartEvent nodeStartEvent = NodeStartEvent.newBuilder()
                                         .setAmbiance(nodeExecution.getAmbiance())
                                         .addAllRefObjects(nodeExecution.getNode().getRebObjectsList())
@@ -74,17 +72,31 @@ public class NodeStartHelper {
                                             nodeExecution.getResolvedStepParameters().toJson())))
                                         .setMode(nodeExecution.getMode())
                                         .build();
-    eventSender.sendEvent(nodeStartEvent.toByteString(), PmsEventCategory.NODE_START, serviceName, accountId, true);
+    eventSender.sendEvent(
+        nodeExecution.getAmbiance(), nodeStartEvent.toByteString(), PmsEventCategory.NODE_START, serviceName, true);
   }
 
-  private NodeExecution prepareNodeExecutionForInvocation(Ambiance ambiance) {
+  private NodeExecution prepareNodeExecutionForInvocation(Ambiance ambiance, ExecutionMode executionMode) {
     NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     return Preconditions.checkNotNull(nodeExecutionService.updateStatusWithOps(
-        AmbianceUtils.obtainCurrentRuntimeId(ambiance), Status.RUNNING, ops -> {
+        AmbianceUtils.obtainCurrentRuntimeId(ambiance), calculateStatusFromMode(executionMode), ops -> {
           if (!ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
             setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, registerTimeouts(nodeExecution));
           }
         }, EnumSet.noneOf(Status.class)));
+  }
+
+  private Status calculateStatusFromMode(ExecutionMode executionMode) {
+    switch (executionMode) {
+      case CONSTRAINT:
+        return Status.RESOURCE_WAITING;
+      case APPROVAL:
+        return Status.APPROVAL_WAITING;
+      case ASYNC:
+        return Status.ASYNC_WAITING;
+      default:
+        return Status.RUNNING;
+    }
   }
 
   private List<String> registerTimeouts(NodeExecution nodeExecution) {

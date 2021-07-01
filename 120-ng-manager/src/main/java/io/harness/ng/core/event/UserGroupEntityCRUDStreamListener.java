@@ -1,0 +1,120 @@
+package io.harness.ng.core.event;
+
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACCOUNT_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
+
+import static org.apache.commons.lang3.StringUtils.stripToNull;
+
+import io.harness.beans.Scope;
+import io.harness.eventsframework.consumer.Message;
+import io.harness.eventsframework.entity_crud.account.AccountEntityChangeDTO;
+import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
+import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
+import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.api.UserGroupService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.protobuf.InvalidProtocolBufferException;
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Singleton
+public class UserGroupEntityCRUDStreamListener implements MessageListener {
+  private final UserGroupService userGroupService;
+
+  @Inject
+  public UserGroupEntityCRUDStreamListener(UserGroupService userGroupService) {
+    this.userGroupService = userGroupService;
+  }
+
+  @Override
+  public boolean handleMessage(Message message) {
+    if (message != null && message.hasMessage()) {
+      Map<String, String> metadataMap = message.getMessage().getMetadataMap();
+      if (metadataMap != null && metadataMap.get(ENTITY_TYPE) != null) {
+        String entityType = metadataMap.get(ENTITY_TYPE);
+        switch (entityType) {
+          case ACCOUNT_ENTITY:
+            return processAccountChangeEvent(message);
+          case ORGANIZATION_ENTITY:
+            return processOrganizationChangeEvent(message);
+          case PROJECT_ENTITY:
+            return processProjectChangeEvent(message);
+          default:
+        }
+      }
+    }
+    return true;
+  }
+
+  private boolean processAccountChangeEvent(Message message) {
+    AccountEntityChangeDTO accountEntityChangeDTO;
+    try {
+      accountEntityChangeDTO = AccountEntityChangeDTO.parseFrom(message.getMessage().getData());
+    } catch (InvalidProtocolBufferException e) {
+      throw new InvalidRequestException(
+          String.format("Exception in unpacking AccountEntityChangeDTO for key %s", message.getId()), e);
+    }
+    String action = message.getMessage().getMetadataMap().get(ACTION);
+    if (action != null && action.equals(DELETE_ACTION)) {
+      Scope scope = Scope.builder().accountIdentifier(stripToNull(accountEntityChangeDTO.getAccountId())).build();
+      return processDeleteEvent(scope);
+    }
+    return true;
+  }
+
+  private boolean processOrganizationChangeEvent(Message message) {
+    OrganizationEntityChangeDTO organizationEntityChangeDTO;
+    try {
+      organizationEntityChangeDTO = OrganizationEntityChangeDTO.parseFrom(message.getMessage().getData());
+    } catch (InvalidProtocolBufferException e) {
+      throw new InvalidRequestException(
+          String.format("Exception in unpacking EntityChangeDTO for key %s", message.getId()), e);
+    }
+    String action = message.getMessage().getMetadataMap().get(ACTION);
+    if (action != null && action.equals(DELETE_ACTION)) {
+      Scope scope = Scope.builder()
+                        .accountIdentifier(stripToNull(organizationEntityChangeDTO.getAccountIdentifier()))
+                        .orgIdentifier(stripToNull(organizationEntityChangeDTO.getIdentifier()))
+                        .build();
+      return processDeleteEvent(scope);
+    }
+    return true;
+  }
+
+  private boolean processProjectChangeEvent(Message message) {
+    ProjectEntityChangeDTO projectEntityChangeDTO;
+    try {
+      projectEntityChangeDTO = ProjectEntityChangeDTO.parseFrom(message.getMessage().getData());
+    } catch (InvalidProtocolBufferException e) {
+      throw new InvalidRequestException(
+          String.format("Exception in unpacking ProjectEntityChangeDTO for key %s", message.getId()), e);
+    }
+    String action = message.getMessage().getMetadataMap().get(ACTION);
+    if (action != null && action.equals(DELETE_ACTION)) {
+      Scope scope = Scope.builder()
+                        .accountIdentifier(stripToNull(projectEntityChangeDTO.getAccountIdentifier()))
+                        .orgIdentifier(stripToNull(projectEntityChangeDTO.getOrgIdentifier()))
+                        .projectIdentifier(stripToNull(projectEntityChangeDTO.getIdentifier()))
+                        .build();
+      return processDeleteEvent(scope);
+    }
+    return true;
+  }
+
+  private boolean processDeleteEvent(Scope scope) {
+    try {
+      userGroupService.deleteByScope(scope);
+    } catch (Exception e) {
+      log.error("Could not process scope delete event for user group. Exception", e);
+      return false;
+    }
+    return true;
+  }
+}

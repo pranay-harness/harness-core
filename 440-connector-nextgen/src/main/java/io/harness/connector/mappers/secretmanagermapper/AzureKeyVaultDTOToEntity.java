@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.azurekeyvaultconnector.AzureKeyVaultConnector;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultConnectorDTO;
+import io.harness.encryption.SecretRefHelper;
 
 @OwnedBy(PL)
 public class AzureKeyVaultDTOToEntity
@@ -17,6 +18,7 @@ public class AzureKeyVaultDTOToEntity
         .clientId(connectorDTO.getClientId())
         .tenantId(connectorDTO.getTenantId())
         .vaultName(connectorDTO.getVaultName())
+        .secretKeyRef(SecretRefHelper.getSecretConfigString(connectorDTO.getSecretKey()))
         .subscription(connectorDTO.getSubscription())
         .azureEnvironmentType(connectorDTO.getAzureEnvironmentType())
         .build();

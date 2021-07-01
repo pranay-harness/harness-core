@@ -27,7 +27,6 @@ import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
-import java.util.Collections;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -68,7 +67,8 @@ public class TaskChainStrategy extends ProgressableStrategy {
       } catch (Exception e) {
         stepResponse = strategyHelper.handleException(e);
       }
-      sdkNodeExecutionService.handleStepResponse(nodeExecutionId, StepResponseMapper.toStepResponseProto(stepResponse));
+      sdkNodeExecutionService.handleStepResponse(
+          ambiance.getPlanExecutionId(), nodeExecutionId, StepResponseMapper.toStepResponseProto(stepResponse), null);
     } else {
       try {
         TaskChainResponse chainResponse =
@@ -76,8 +76,8 @@ public class TaskChainStrategy extends ProgressableStrategy {
                 chainDetails.getPassThroughData(), buildResponseDataSupplier(resumePackage.getResponseDataMap()));
         handleResponse(ambiance, stepParameters, chainResponse);
       } catch (Exception e) {
-        sdkNodeExecutionService.handleStepResponse(
-            nodeExecutionId, StepResponseMapper.toStepResponseProto(strategyHelper.handleException(e)));
+        sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(), nodeExecutionId,
+            StepResponseMapper.toStepResponseProto(strategyHelper.handleException(e)));
       }
     }
   }
@@ -87,7 +87,15 @@ public class TaskChainStrategy extends ProgressableStrategy {
     String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     if (taskChainResponse.isChainEnd() && taskChainResponse.getTaskRequest() == null) {
       TaskChainExecutable taskChainExecutable = extractStep(ambiance);
-      sdkNodeExecutionService.addExecutableResponse(nodeExecutionId, Status.NO_OP,
+      StepResponse stepResponse = null;
+      try {
+        stepResponse = taskChainExecutable.finalizeExecution(
+            ambiance, stepParameters, taskChainResponse.getPassThroughData(), () -> null);
+      } catch (Exception e) {
+        stepResponse = strategyHelper.handleException(e);
+      }
+      sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(), nodeExecutionId,
+          StepResponseMapper.toStepResponseProto(stepResponse),
           ExecutableResponse.newBuilder()
               .setTaskChain(TaskChainExecutableResponse.newBuilder()
                                 .setChainEnd(true)
@@ -96,16 +104,7 @@ public class TaskChainStrategy extends ProgressableStrategy {
                                 .addAllLogKeys(CollectionUtils.emptyIfNull(taskChainResponse.getLogKeys()))
                                 .addAllUnits(CollectionUtils.emptyIfNull(taskChainResponse.getUnits()))
                                 .build())
-              .build(),
-          Collections.emptyList());
-      StepResponse stepResponse = null;
-      try {
-        stepResponse = taskChainExecutable.finalizeExecution(
-            ambiance, stepParameters, taskChainResponse.getPassThroughData(), () -> null);
-      } catch (Exception e) {
-        stepResponse = strategyHelper.handleException(e);
-      }
-      sdkNodeExecutionService.handleStepResponse(nodeExecutionId, StepResponseMapper.toStepResponseProto(stepResponse));
+              .build());
       return;
     }
     TaskRequest taskRequest = taskChainResponse.getTaskRequest();
@@ -124,13 +123,12 @@ public class TaskChainStrategy extends ProgressableStrategy {
                     .build())
             .build();
     QueueTaskRequest queueTaskRequest = QueueTaskRequest.newBuilder()
-                                            .setNodeExecutionId(nodeExecutionId)
                                             .putAllSetupAbstractions(ambiance.getSetupAbstractionsMap())
                                             .setTaskRequest(taskRequest)
                                             .setExecutableResponse(executableResponse)
                                             .setStatus(Status.TASK_WAITING)
                                             .build();
-    sdkNodeExecutionService.queueTaskRequest(queueTaskRequest);
+    sdkNodeExecutionService.queueTaskRequest(ambiance.getPlanExecutionId(), nodeExecutionId, queueTaskRequest);
   }
 
   @Override

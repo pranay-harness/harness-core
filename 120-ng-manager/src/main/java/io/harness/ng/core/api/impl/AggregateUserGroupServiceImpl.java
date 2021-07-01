@@ -24,8 +24,8 @@ import io.harness.ng.core.dto.AggregateACLRequest;
 import io.harness.ng.core.dto.RoleAssignmentMetadataDTO;
 import io.harness.ng.core.dto.UserGroupAggregateDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.user.entities.UserGroup;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.remote.mapper.UserMetadataMapper;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.utils.UserGroupMapper;
@@ -89,7 +89,7 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
     Map<String, UserMetadataDTO> userMetadataMap =
         ngUserService.listCurrentGenUsers(accountIdentifier, UserFilterNG.builder().userIds(userIdentifiers).build())
             .stream()
-            .map(UserMetadataMapper::writeDTO)
+            .map(UserMetadataMapper::toDTO)
             .collect(Collectors.toMap(UserMetadataDTO::getUuid, Function.identity()));
 
     return PageUtils.getNGPageResponse(userGroupPageResponse.map(userGroup -> {
@@ -148,7 +148,7 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
             .listCurrentGenUsers(
                 accountIdentifier, UserFilterNG.builder().userIds(new ArrayList<>(userIdentifiers)).build())
             .stream()
-            .map(UserMetadataMapper::writeDTO)
+            .map(UserMetadataMapper::toDTO)
             .collect(Collectors.toMap(UserMetadataDTO::getUuid, Function.identity()));
 
     return userGroups.stream()
@@ -186,7 +186,7 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
     List<UserMetadataDTO> users =
         ngUserService.listCurrentGenUsers(accountIdentifier, UserFilterNG.builder().userIds(userIdentifiers).build())
             .stream()
-            .map(UserMetadataMapper::writeDTO)
+            .map(UserMetadataMapper::toDTO)
             .collect(toList());
 
     return UserGroupAggregateDTO.builder()

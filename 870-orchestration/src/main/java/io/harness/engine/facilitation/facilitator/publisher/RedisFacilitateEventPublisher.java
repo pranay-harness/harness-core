@@ -7,7 +7,6 @@ import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.facilitators.FacilitatorEvent;
 import io.harness.pms.events.base.PmsEventCategory;
-import io.harness.pms.execution.utils.AmbianceUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -31,8 +30,7 @@ public class RedisFacilitateEventPublisher implements FacilitateEventPublisher {
                                  .build();
 
     String serviceName = nodeExecution.getNode().getServiceName();
-    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
     return eventSender.sendEvent(
-        event.toByteString(), PmsEventCategory.FACILITATOR_EVENT, serviceName, accountId, true);
+        nodeExecution.getAmbiance(), event.toByteString(), PmsEventCategory.FACILITATOR_EVENT, serviceName, true);
   }
 }

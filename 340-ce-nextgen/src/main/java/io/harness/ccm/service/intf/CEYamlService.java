@@ -11,8 +11,8 @@ public interface CEYamlService {
   String CLOUD_COST_K8S_CLUSTER_SETUP = "cloudCostK8sClusterSetup";
 
   @Deprecated // use unifiedCloudCostK8sClusterYaml
-  File downloadCostOptimisationYaml(String accountId, String connectorIdentifier, String apiKey, String harnessHost,
-      String serverName) throws IOException;
+  File downloadCostOptimisationYaml(String accountId, String connectorIdentifier, String harnessHost, String serverName)
+      throws IOException;
 
   String unifiedCloudCostK8sClusterYaml(@NonNull String accountId, String harnessHost, String serverName,
       @NonNull K8sClusterSetupRequest k8sClusterSetupRequest) throws IOException;

@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.gcpkmsconnector.GcpKmsConnector;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
+import io.harness.encryption.SecretRefHelper;
 
 @OwnedBy(PL)
 public class GcpKmsDTOToEntity implements ConnectorDTOToEntityMapper<GcpKmsConnectorDTO, GcpKmsConnector> {
@@ -17,6 +18,7 @@ public class GcpKmsDTOToEntity implements ConnectorDTOToEntityMapper<GcpKmsConne
         .keyRing(connectorDTO.getKeyRing())
         .keyName(connectorDTO.getKeyName())
         .isDefault(connectorDTO.isDefault())
+        .credentialsRef(SecretRefHelper.getSecretConfigString(connectorDTO.getCredentials()))
         .harnessManaged(connectorDTO.isHarnessManaged())
         .build();
   }

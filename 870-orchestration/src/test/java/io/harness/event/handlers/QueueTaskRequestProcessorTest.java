@@ -26,7 +26,6 @@ import io.harness.pms.contracts.execution.TaskExecutableResponse;
 import io.harness.pms.contracts.execution.TaskExecutableResponse.Builder;
 import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
-import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
@@ -95,7 +94,6 @@ public class QueueTaskRequestProcessorTest extends OrchestrationTestBase {
 
     QueueTaskRequest queueTaskRequest =
         QueueTaskRequest.newBuilder()
-            .setNodeExecutionId(nodeExecutionId)
             .setTaskRequest(TaskRequest.newBuilder().setTaskCategory(TaskCategory.DELEGATE_TASK_V2).build())
             .setStatus(TASK_WAITING)
             .setExecutableResponse(ExecutableResponse.newBuilder().setTask(taskBuilder.build()).build())
@@ -103,10 +101,8 @@ public class QueueTaskRequestProcessorTest extends OrchestrationTestBase {
 
     queueTaskResponseHandler.handleEvent(SdkResponseEventProto.newBuilder()
                                              .setSdkResponseEventType(SdkResponseEventType.QUEUE_TASK)
-                                             .setSdkResponseEventRequest(SdkResponseEventRequest.newBuilder()
-                                                                             .setQueueTaskRequest(queueTaskRequest)
-                                                                             .setNodeExecutionId(nodeExecutionId)
-                                                                             .buildPartial())
+                                             .setQueueTaskRequest(queueTaskRequest)
+                                             .setNodeExecutionId(nodeExecutionId)
                                              .build());
 
     verify(nodeExecutionService)

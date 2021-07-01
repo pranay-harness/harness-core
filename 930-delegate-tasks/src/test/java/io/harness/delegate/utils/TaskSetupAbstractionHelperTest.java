@@ -8,9 +8,7 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
-import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptionConfig;
 
@@ -19,14 +17,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 @OwnedBy(PL)
 public class TaskSetupAbstractionHelperTest extends CategoryTest {
-  @Mock private FeatureFlagService featureFlagService;
   @Inject @InjectMocks private TaskSetupAbstractionHelper taskSetupAbstractionHelper;
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
@@ -43,12 +39,9 @@ public class TaskSetupAbstractionHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void getOwnerTest() {
     validateOwner(true, orgOwner, projectOwner);
-    validateOwner(false, null, null);
   }
 
   private void validateOwner(boolean featureFlagEnabled, String orgOwner, String projectOwner) {
-    doReturn(featureFlagEnabled).when(featureFlagService).isEnabled(FeatureName.DELEGATE_OWNERS, accountId);
-
     EncryptionConfig encryptionConfig = Mockito.mock(EncryptionConfig.class);
     // FF: <input>; Account level
     doReturn(accountId).when(encryptionConfig).getAccountId();

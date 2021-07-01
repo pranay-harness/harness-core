@@ -33,8 +33,8 @@ public class ProgressEventHandler extends PmsBaseEventHandler<ProgressEvent> {
   protected Map<String, String> extractMetricContext(ProgressEvent message) {
     return ImmutableMap.<String, String>builder()
         .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
-        .put("projectIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
-        .put("orgIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
+        .put("orgIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
+        .put("projectIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
         .build();
   }
 

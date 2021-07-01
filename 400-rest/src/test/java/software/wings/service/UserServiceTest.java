@@ -804,7 +804,7 @@ public class UserServiceTest extends WingsBaseTest {
 
     userService.update(user);
     Query<User> userQuery = wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, user.getUuid());
-    verify(wingsPersistence).findAndModify(userQuery, updateOperations, HPersistence.returnNewOptions);
+    verify(wingsPersistence).findAndModify(userQuery, updateOperations, HPersistence.returnOldOptions);
     verify(cache).remove(USER_ID);
   }
 
@@ -821,7 +821,7 @@ public class UserServiceTest extends WingsBaseTest {
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
     updateOperations.set(UserKeys.name, USER_NAME);
     Query<User> userQuery = wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, user.getUuid());
-    verify(wingsPersistence).findAndModify(userQuery, updateOperations, HPersistence.returnNewOptions);
+    verify(wingsPersistence).findAndModify(userQuery, updateOperations, HPersistence.returnOldOptions);
     verify(cache).remove(USER_ID);
   }
 
@@ -847,7 +847,7 @@ public class UserServiceTest extends WingsBaseTest {
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
     updateOperations.unset(UserKeys.name);
     Query<User> query = wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, user.getUuid());
-    verify(wingsPersistence).findAndModify(query, updateOperations, HPersistence.returnNewOptions);
+    verify(wingsPersistence).findAndModify(query, updateOperations, HPersistence.returnOldOptions);
     verify(cache).remove(USER_ID);
   }
 

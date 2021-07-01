@@ -61,7 +61,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
     if (chainDetails.isShouldEnd()) {
       StepResponse stepResponse = childChainExecutable.finalizeExecution(
           ambiance, resumePackage.getStepParameters(), chainDetails.getPassThroughData(), accumulatedResponse);
-      sdkNodeExecutionService.handleStepResponse(
+      sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(),
           AmbianceUtils.obtainCurrentRuntimeId(ambiance), StepResponseMapper.toStepResponseProto(stepResponse));
     } else {
       ChildChainExecutableResponse chainResponse =
@@ -85,13 +85,9 @@ public class ChildChainStrategy implements ExecuteStrategy {
   }
 
   private void executeChild(Ambiance ambiance, ChildChainExecutableResponse childChainResponse) {
-    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
-    SpawnChildRequest spawnChildRequest = SpawnChildRequest.newBuilder()
-                                              .setPlanExecutionId(ambiance.getPlanExecutionId())
-                                              .setNodeExecutionId(nodeExecutionId)
-                                              .setChildChain(childChainResponse)
-                                              .build();
-    sdkNodeExecutionService.spawnChild(spawnChildRequest);
+    SpawnChildRequest spawnChildRequest = SpawnChildRequest.newBuilder().setChildChain(childChainResponse).build();
+    sdkNodeExecutionService.spawnChild(
+        ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance), spawnChildRequest);
   }
 
   private void suspendChain(Ambiance ambiance, ChildChainExecutableResponse childChainResponse) {
@@ -105,9 +101,8 @@ public class ChildChainStrategy implements ExecuteStrategy {
                 .status(SUSPENDED)
                 .description("Ignoring Execution as next child found to be null")
                 .build()));
-    sdkNodeExecutionService.suspendChainExecution(currentLevel.getRuntimeId(),
+    sdkNodeExecutionService.suspendChainExecution(ambiance.getPlanExecutionId(), currentLevel.getRuntimeId(),
         SuspendChainRequest.newBuilder()
-            .setNodeExecutionId(currentLevel.getRuntimeId())
             .setExecutableResponse(ExecutableResponse.newBuilder().setChildChain(childChainResponse).build())
             .setIsError(false)
             .putAllResponse(responseBytes)

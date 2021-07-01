@@ -103,7 +103,6 @@ public class CIExecutionConstants {
   public static final String HARNESS_SERVICE_ARGS = "HARNESS_SERVICE_ARGS";
 
   public static final String HARNESS_WORKSPACE = "HARNESS_WORKSPACE";
-  public static final String HARNESS_SECRETS_LIST = "HARNESS_SECRETS_LIST";
 
   // Deprecated
   public static final List<String> SH_COMMAND = Collections.unmodifiableList(Arrays.asList("sh", "-c", "--"));

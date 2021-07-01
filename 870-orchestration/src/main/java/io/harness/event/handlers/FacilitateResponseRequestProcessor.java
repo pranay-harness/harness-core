@@ -24,13 +24,13 @@ public class FacilitateResponseRequestProcessor implements SdkResponseProcessor 
   @Override
   public void handleEvent(SdkResponseEventProto event) {
     log.info("Starting to process facilitation response");
-    FacilitatorResponseRequest request = event.getSdkResponseEventRequest().getFacilitatorResponseRequest();
+    FacilitatorResponseRequest request = event.getFacilitatorResponseRequest();
     FacilitatorResponseProto facilitatorResponseProto = request.getFacilitatorResponse();
     if (facilitatorResponseProto.getIsSuccessful()) {
-      orchestrationEngine.facilitateExecution(request.getNodeExecutionId(), facilitatorResponseProto);
+      orchestrationEngine.facilitateExecution(event.getNodeExecutionId(), facilitatorResponseProto);
     } else {
       StepResponseProto stepResponseProto = StepResponseProto.newBuilder().setStatus(Status.FAILED).build();
-      orchestrationEngine.handleStepResponse(request.getNodeExecutionId(), stepResponseProto);
+      orchestrationEngine.handleStepResponse(event.getNodeExecutionId(), stepResponseProto);
     }
   }
 }

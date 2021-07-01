@@ -1,8 +1,5 @@
 package io.harness.accesscontrol.acl.repositories;
 
-import static io.harness.accesscontrol.acl.models.ACL.RESOURCE_GROUP_IDENTIFIER_KEY;
-import static io.harness.accesscontrol.acl.models.ACL.ROLE_IDENTIFIER_KEY;
-import static io.harness.accesscontrol.acl.models.ACL.USER_GROUP_IDENTIFIER_KEY;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
@@ -71,37 +68,6 @@ public abstract class BaseACLRepositoryImpl implements ACLRepository {
       }
       throw ex;
     }
-  }
-
-  @Override
-  public List<ACL> findByUserGroup(String scopeIdentifier, String userGroupIdentifier) {
-    Criteria criteria = Criteria.where(USER_GROUP_IDENTIFIER_KEY).is(userGroupIdentifier);
-    criteria.and(ACLKeys.scopeIdentifier).is(scopeIdentifier);
-    return mongoTemplate.find(new Query(criteria), ACL.class, getCollectionName());
-  }
-
-  @Override
-  public List<ACL> findByRole(String scopeIdentifier, String identifier, boolean managed) {
-    Criteria criteria = Criteria.where(ROLE_IDENTIFIER_KEY).is(identifier);
-    if (!managed) {
-      criteria.and(ACLKeys.scopeIdentifier).is(scopeIdentifier);
-    }
-    return mongoTemplate.find(new Query(criteria), ACL.class, getCollectionName());
-  }
-
-  @Override
-  public List<ACL> findByResourceGroup(String scopeIdentifier, String identifier, boolean managed) {
-    Criteria criteria = Criteria.where(RESOURCE_GROUP_IDENTIFIER_KEY).is(identifier);
-    if (!managed) {
-      criteria.and(ACLKeys.scopeIdentifier).is(scopeIdentifier);
-    }
-    return mongoTemplate.find(new Query(criteria), ACL.class, getCollectionName());
-  }
-
-  @Override
-  public List<ACL> getByRoleAssignmentId(String id) {
-    return mongoTemplate.find(
-        new Query(Criteria.where(ACLKeys.roleAssignmentId).is(id)), ACL.class, getCollectionName());
   }
 
   @Override

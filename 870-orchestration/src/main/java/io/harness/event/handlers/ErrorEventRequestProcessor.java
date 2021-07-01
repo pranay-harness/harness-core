@@ -18,7 +18,7 @@ public class ErrorEventRequestProcessor implements SdkResponseProcessor {
 
   @Override
   public void handleEvent(SdkResponseEventProto event) {
-    EventErrorRequest request = event.getSdkResponseEventRequest().getEventErrorRequest();
+    EventErrorRequest request = event.getEventErrorRequest();
     waitNotifyEngine.doneWith(request.getEventNotifyId(),
         FailureResponseData.builder()
             .errorMessage(request.getFailureInfo().getErrorMessage())

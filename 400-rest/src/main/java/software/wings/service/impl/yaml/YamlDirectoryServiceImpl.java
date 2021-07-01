@@ -1225,8 +1225,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     return folder;
   }
 
-  private FolderNode generateApplicationManifestNodeForService(
-      String accountId, Service service, DirectoryPath servicePath) {
+  @VisibleForTesting
+  FolderNode generateApplicationManifestNodeForService(String accountId, Service service, DirectoryPath servicePath) {
     DirectoryPath applicationManifestPath = getApplicationManifestDirectoryPath(service, servicePath);
 
     String manifestFolderName = getApplicationManifestFolderName(service);
@@ -1236,22 +1236,53 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     DirectoryPath manifestFilePath = applicationManifestPath.clone().add(MANIFEST_FILE_FOLDER);
 
-    ApplicationManifest applicationManifest = getApplicationManifestByService(service);
-    if (applicationManifest != null) {
-      applicationManifestFolder.addChild(new ServiceLevelYamlNode(accountId, applicationManifest.getUuid(),
-          service.getAppId(), service.getUuid(), INDEX_YAML, ApplicationManifest.class,
-          applicationManifestPath.clone().add(INDEX_YAML), yamlGitSyncService, Type.APPLICATION_MANIFEST));
+    if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId)) {
+      List<ApplicationManifest> applicationManifests =
+          applicationManifestService.getManifestsByServiceId(service.getAppId(), service.getUuid(),
+              isAzureAppServiceDeploymentType(service) ? AZURE_APP_SERVICE_MANIFEST : K8S_MANIFEST);
+      if (isNotEmpty(applicationManifests)) {
+        for (ApplicationManifest applicationManifest : applicationManifests) {
+          if (applicationManifest != null) {
+            String yamlFileName = getApplicationManifestYamlName(applicationManifest);
+            applicationManifestFolder.addChild(new ServiceLevelYamlNode(accountId, applicationManifest.getUuid(),
+                service.getAppId(), service.getUuid(), yamlFileName, ApplicationManifest.class,
+                applicationManifestPath.clone().add(yamlFileName), yamlGitSyncService, Type.APPLICATION_MANIFEST));
 
-      if (StoreType.Local == applicationManifest.getStoreType()) {
-        FolderNode manifestFileFolder =
-            generateManifestFileFolderNode(accountId, service, applicationManifest, manifestFilePath);
-        applicationManifestFolder.addChild(manifestFileFolder);
+            if (StoreType.Local == applicationManifest.getStoreType()) {
+              FolderNode manifestFileFolder =
+                  generateManifestFileFolderNode(accountId, service, applicationManifest, manifestFilePath);
+              applicationManifestFolder.addChild(manifestFileFolder);
+            }
+          }
+        }
       }
 
-      return applicationManifestFolder;
+      if (isNotEmpty(applicationManifestFolder.getChildren())) {
+        return applicationManifestFolder;
+      }
+    } else {
+      ApplicationManifest applicationManifest = getApplicationManifestByService(service);
+      if (applicationManifest != null) {
+        String yamlFileName = getApplicationManifestYamlName(applicationManifest);
+        applicationManifestFolder.addChild(new ServiceLevelYamlNode(accountId, applicationManifest.getUuid(),
+            service.getAppId(), service.getUuid(), yamlFileName, ApplicationManifest.class,
+            applicationManifestPath.clone().add(yamlFileName), yamlGitSyncService, Type.APPLICATION_MANIFEST));
+
+        if (StoreType.Local == applicationManifest.getStoreType()) {
+          FolderNode manifestFileFolder =
+              generateManifestFileFolderNode(accountId, service, applicationManifest, manifestFilePath);
+          applicationManifestFolder.addChild(manifestFileFolder);
+        }
+        return applicationManifestFolder;
+      }
     }
 
     return null;
+  }
+
+  @NotNull
+  private String getApplicationManifestYamlName(ApplicationManifest applicationManifest) {
+    return applicationManifest.getName() != null ? applicationManifest.getName() + YAML_EXTENSION : INDEX_YAML;
   }
 
   @NotNull

@@ -483,6 +483,9 @@
         },
         {
           "type": "object",
+          "required": [
+            "kmsArn"
+          ],
           "properties": {
             "credential": {
               "$ref": "#/definitions/AwsKmsConnectorCredential"
@@ -637,6 +640,7 @@
           "type": "object",
           "required": [
             "clientId",
+            "secretKey",
             "subscription",
             "tenantId",
             "vaultName"
@@ -1934,12 +1938,12 @@
         },
         {
           "type": "object",
+          "required": [
+            "credentials"
+          ],
           "properties": {
             "credentials": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "type": "string"
             },
             "default": {
               "type": "boolean"

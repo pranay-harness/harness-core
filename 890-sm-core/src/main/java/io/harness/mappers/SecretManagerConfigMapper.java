@@ -29,6 +29,9 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(PL)
 public class SecretManagerConfigMapper {
   public static SecretManagerConfig fromDTO(SecretManagerConfigDTO dto) {
+    if (null == dto) {
+      return null;
+    }
     switch (dto.getEncryptionType()) {
       case VAULT:
         return VaultConfigMapper.fromDTO((VaultConfigDTO) dto);

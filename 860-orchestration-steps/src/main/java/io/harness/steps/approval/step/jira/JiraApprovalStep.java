@@ -8,7 +8,6 @@ import io.harness.exception.JiraStepException;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.AsyncExecutableWithRollback;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.execution.AsyncExecutableMode;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -40,7 +39,6 @@ public class JiraApprovalStep extends AsyncExecutableWithRollback {
     approvalInstance = (JiraApprovalInstance) approvalInstanceService.save(approvalInstance);
     return AsyncExecutableResponse.newBuilder()
         .addCallbackIds(approvalInstance.getId())
-        .setMode(AsyncExecutableMode.APPROVAL_WAITING_MODE)
         .addAllLogKeys(CollectionUtils.emptyIfNull(
             StepUtils.generateLogKeys(StepUtils.generateLogAbstractions(ambiance), Collections.emptyList())))
         .build();

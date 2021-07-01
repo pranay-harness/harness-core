@@ -41,7 +41,6 @@ import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
-import io.harness.serializer.ProtoUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -174,8 +173,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
                             .setAmbiance(nodeExecution.getAmbiance())
                             .setStatus(nodeExecution.getStatus())
                             .setEventType(OrchestrationEventType.NODE_EXECUTION_START)
-                            .setServiceName(nodeExecution.getNode().getServiceName())
-                            .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()));
+                            .setServiceName(nodeExecution.getNode().getServiceName());
 
       if (nodeExecution.getResolvedStepParameters() != null) {
         builder.setStepParameters(
@@ -381,7 +379,6 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
                                .setStepParameters(ByteString.copyFromUtf8(emptyIfNull(stepParametersJson)))
                                .setEventType(orchestrationEventType)
                                .setServiceName(nodeExecution.getNode().getServiceName())
-                               .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
                                .setTriggerPayload(triggerPayload);
 
     updateEventIfCausedByAutoAbortThroughTrigger(nodeExecution, orchestrationEventType, eventBuilder);
@@ -410,9 +407,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
         }
 
         List<NodeExecution> nodeExecutionsAbortedThroughTrigger =
-            allChildrenWithStatusInAborted.stream()
-                .filter(execution -> isAbortedThroughTrigger(execution))
-                .collect(Collectors.toList());
+            allChildrenWithStatusInAborted.stream().filter(this::isAbortedThroughTrigger).collect(Collectors.toList());
         if (isNotEmpty(nodeExecutionsAbortedThroughTrigger)) {
           eventBuilder.addTags(AUTO_ABORT_PIPELINE_THROUGH_TRIGGER);
         }
@@ -421,11 +416,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   private boolean isAbortedThroughTrigger(NodeExecution nodeExecution) {
-    return nodeExecution.getInterruptHistories()
-        .stream()
-        .filter(interruptEffect -> isIssuedByTrigger(interruptEffect))
-        .findAny()
-        .isPresent();
+    return nodeExecution.getInterruptHistories().stream().anyMatch(this::isIssuedByTrigger);
   }
 
   private boolean isIssuedByTrigger(InterruptEffect interruptEffect) {

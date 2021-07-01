@@ -9,6 +9,7 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.Collections;
 import java.util.List;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -36,6 +37,6 @@ public class LocalConnectorDTO extends ConnectorConfigDTO {
 
   @Override
   public List<DecryptableEntity> getDecryptableEntities() {
-    return null;
+    return Collections.singletonList(this);
   }
 }

@@ -38,11 +38,11 @@ import io.harness.ng.core.entities.NotificationSettingConfig;
 import io.harness.ng.core.events.UserGroupCreateEvent;
 import io.harness.ng.core.events.UserGroupDeleteEvent;
 import io.harness.ng.core.events.UserGroupUpdateEvent;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserGroup;
 import io.harness.ng.core.user.entities.UserGroup.UserGroupKeys;
 import io.harness.ng.core.user.remote.dto.UserFilter;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.notification.NotificationChannelType;
 import io.harness.outbox.api.OutboxService;
@@ -214,6 +214,20 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
+  public boolean deleteByScope(Scope scope) {
+    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      Criteria criteria =
+          createScopeCriteria(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier());
+      List<UserGroup> deleteUserGroups = userGroupRepository.deleteAll(criteria);
+      if (isNotEmpty(deleteUserGroups)) {
+        deleteUserGroups.forEach(userGroup
+            -> outboxService.save(new UserGroupDeleteEvent(userGroup.getAccountIdentifier(), toDTO(userGroup))));
+      }
+      return true;
+    }));
+  }
+
+  @Override
   public boolean checkMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String userGroupIdentifier, String userIdentifier) {
     UserGroup existingUserGroup = getOrThrow(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
@@ -233,14 +247,14 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public void addUserToUserGroups(String accountIdentifier, UserInfo userInfo, List<UserGroup> userGroups) {
+  public void addUserToUserGroups(String accountIdentifier, String userId, List<UserGroup> userGroups) {
     if (isEmpty(userGroups)) {
       return;
     }
 
     for (UserGroup userGroup : userGroups) {
-      if (!checkMember(accountIdentifier, null, null, userGroup.getIdentifier(), userInfo.getUuid())) {
-        addMember(accountIdentifier, null, null, userGroup.getIdentifier(), userInfo.getUuid());
+      if (!checkMember(accountIdentifier, null, null, userGroup.getIdentifier(), userId)) {
+        addMember(accountIdentifier, null, null, userGroup.getIdentifier(), userId);
       }
     }
   }
@@ -387,9 +401,13 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   private void validateScopeMembership(UserGroup userGroup) {
-    Set<String> filteredUserIds = ngUserService.filterUsersWithScopeMembership(userGroup.getUsers(),
-        userGroup.getAccountIdentifier(), userGroup.getOrgIdentifier(), userGroup.getProjectIdentifier());
-    Sets.SetView<String> invalidUserIds = Sets.difference(new HashSet<>(userGroup.getUsers()), filteredUserIds);
+    Scope scope = Scope.builder()
+                      .accountIdentifier(userGroup.getAccountIdentifier())
+                      .orgIdentifier(userGroup.getOrgIdentifier())
+                      .projectIdentifier(userGroup.getProjectIdentifier())
+                      .build();
+    List<String> userIds = ngUserService.listUserIds(scope);
+    Sets.SetView<String> invalidUserIds = Sets.difference(new HashSet<>(userGroup.getUsers()), new HashSet<>(userIds));
     if (isNotEmpty(invalidUserIds)) {
       throw new InvalidArgumentsException(getInvalidUserMessage(invalidUserIds));
     }

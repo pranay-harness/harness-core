@@ -187,7 +187,10 @@
           "type": "string"
         },
         "type": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "Service"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",

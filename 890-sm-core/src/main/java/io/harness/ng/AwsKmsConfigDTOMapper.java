@@ -60,9 +60,11 @@ public class AwsKmsConfigDTOMapper {
   }
 
   private static BaseAwsKmsConfigDTO buildBaseProperties(AwsKmsConnectorDTO awsKmsConnectorDTO) {
+    char[] decryptedValue = awsKmsConnectorDTO.getKmsArn().getDecryptedValue();
+    final String kmsArn = decryptedValue == null ? null : String.valueOf(decryptedValue);
     return BaseAwsKmsConfigDTO.builder()
         .region(awsKmsConnectorDTO.getRegion())
-        .kmsArn(awsKmsConnectorDTO.getKmsArn())
+        .kmsArn(kmsArn)
         .credential(populateCredentials(awsKmsConnectorDTO))
         .credentialType(awsKmsConnectorDTO.getCredential().getCredentialType())
         .build();
@@ -89,9 +91,15 @@ public class AwsKmsConfigDTOMapper {
   }
 
   private static AwsKmsCredentialSpecConfig buildManualConfig(AwsKmsCredentialSpecManualConfigDTO configDTO) {
+    final String accessKey = configDTO.getAccessKey().getDecryptedValue() == null
+        ? null
+        : String.valueOf(configDTO.getAccessKey().getDecryptedValue());
+    final String secretKey = configDTO.getSecretKey().getDecryptedValue() == null
+        ? null
+        : String.valueOf(configDTO.getSecretKey().getDecryptedValue());
     return AwsKmsManualCredentialConfig.builder()
-        .accessKey(configDTO.getAccessKey())
-        .secretKey(configDTO.getSecretKey())
+        .accessKey(String.valueOf(accessKey))
+        .secretKey(String.valueOf(secretKey))
         .build();
   }
 

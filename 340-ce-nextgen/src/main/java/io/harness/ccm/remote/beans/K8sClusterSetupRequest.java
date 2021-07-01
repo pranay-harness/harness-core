@@ -13,8 +13,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class K8sClusterSetupRequest {
-  String apiKey;
-
   @NotEmpty List<CEFeatures> featuresEnabled;
 
   String connectorIdentifier;

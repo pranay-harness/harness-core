@@ -83,6 +83,7 @@ public class EndNodeExecutionHelper {
   }
 
   public NodeExecution handleStepResponsePreAdviser(NodeExecution nodeExecution, StepResponseProto stepResponse) {
+    log.info("Handling Step response before calling advisers");
     return transactionUtils.performTransaction(() -> processStepResponsePreAdvisers(nodeExecution, stepResponse));
   }
 
@@ -90,6 +91,8 @@ public class EndNodeExecutionHelper {
     List<StepOutcomeRef> outcomeRefs = handleOutcomes(
         nodeExecution.getAmbiance(), stepResponse.getStepOutcomesList(), stepResponse.getGraphOutcomesList());
 
+    log.info(
+        "Trying to update nodeExecution status from {} to {}", nodeExecution.getStatus(), stepResponse.getStatus());
     return nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), stepResponse.getStatus(), ops -> {
       setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
       setUnset(ops, NodeExecutionKeys.outcomeRefs, outcomeRefs);

@@ -126,6 +126,10 @@ aeriform("//420-delegate-service:module")
 
 aeriform("//420-delegate-service:tests")
 
+aeriform("//425-verification-commons:module")
+
+aeriform("//425-verification-commons:tests")
+
 aeriform("//430-cv-nextgen-commons:module")
 
 aeriform("//430-cv-nextgen-commons:tests")
@@ -262,6 +266,8 @@ aeriform("//925-access-control-service:module")
 
 aeriform("//925-access-control-service:tests")
 
+aeriform("//925-watcher-beans:module")
+
 aeriform("//930-delegate-tasks:module")
 
 aeriform("//930-delegate-tasks:tests")
@@ -383,6 +389,8 @@ aeriform("//953-git-sync-commons:module")
 aeriform("//954-connector-beans:module")
 
 aeriform("//954-connector-beans:tests")
+
+aeriform("//954-feature-flag-sdk:module")
 
 aeriform("//955-account-mgmt:module")
 

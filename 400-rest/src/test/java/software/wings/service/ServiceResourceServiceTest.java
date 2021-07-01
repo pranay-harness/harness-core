@@ -3256,4 +3256,15 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(mockWingsPersistence).createUpdateOperations(Service.class);
     verify(updateOperations).set("isK8sV2", true);
   }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorWhenArtifactFromManifestEnabledForWrongDeploymentType() {
+    Service service =
+        Service.builder().name(SERVICE_NAME).deploymentType(DeploymentType.SSH).artifactFromManifest(true).build();
+    assertThatThrownBy(() -> spyServiceResourceService.save(service, false, false))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Artifact from Manifest flag can be set to true only for kubernetes and helm deployment types");
+  }
 }

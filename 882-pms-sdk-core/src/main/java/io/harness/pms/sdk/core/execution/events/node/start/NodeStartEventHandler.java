@@ -46,8 +46,8 @@ public class NodeStartEventHandler extends PmsBaseEventHandler<NodeStartEvent> {
   protected Map<String, String> extractMetricContext(NodeStartEvent message) {
     return ImmutableMap.<String, String>builder()
         .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
-        .put("projectIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
-        .put("orgIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
+        .put("orgIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
+        .put("projectIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
         .build();
   }
   @Override
@@ -78,7 +78,8 @@ public class NodeStartEventHandler extends PmsBaseEventHandler<NodeStartEvent> {
       log.info("Successfully handled NodeStart event");
     } catch (Exception ex) {
       log.error("Error while handle NodeStart event", ex);
-      sdkNodeExecutionService.handleStepResponse(AmbianceUtils.obtainCurrentRuntimeId(nodeStartEvent.getAmbiance()),
+      sdkNodeExecutionService.handleStepResponse(nodeStartEvent.getAmbiance().getPlanExecutionId(),
+          AmbianceUtils.obtainCurrentRuntimeId(nodeStartEvent.getAmbiance()),
           NodeExecutionUtils.constructStepResponse(ex));
     }
   }

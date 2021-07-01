@@ -102,14 +102,12 @@ public class NGMigrationServiceImpl implements NGMigrationService {
               serviceName, microservice);
         }
       }
-    } catch (Exception e) {
-      log.error("[Migration] - {} : Migration failed.", microservice, e);
     }
   }
 
   private void runMigrationsInner(boolean isBackground, int currentVersion, int maxVersion,
       Map<Integer, Class<? extends NGMigration>> migrations, MigrationDetails migrationDetail,
-      Class<? extends NGSchema> schemaClass, String serviceName, Microservice microservice) throws Exception {
+      Class<? extends NGSchema> schemaClass, String serviceName, Microservice microservice) {
     if (currentVersion < maxVersion) {
       if (isBackground) {
         runBackgroundMigrations(
@@ -131,7 +129,7 @@ public class NGMigrationServiceImpl implements NGMigrationService {
 
   private void runForegroundMigrations(int currentVersion, int maxVersion,
       Map<Integer, Class<? extends NGMigration>> migrations, MigrationDetails migrationDetail,
-      Class<? extends NGSchema> schemaClass, String serviceName) throws Exception {
+      Class<? extends NGSchema> schemaClass, String serviceName) {
     doMigration(false, currentVersion, maxVersion, migrations, migrationDetail.getMigrationTypeName(), schemaClass,
         serviceName);
   }
@@ -158,7 +156,7 @@ public class NGMigrationServiceImpl implements NGMigrationService {
   @VisibleForTesting
   void doMigration(boolean isBackground, int currentVersion, int maxVersion,
       Map<Integer, Class<? extends NGMigration>> migrations, MigrationType migrationTypeName,
-      Class<? extends NGSchema> schemaClass, String serviceName) throws Exception {
+      Class<? extends NGSchema> schemaClass, String serviceName) {
     log.info("[Migration] - {} : Updating {} version from {} to {}", serviceName, migrationTypeName, currentVersion,
         maxVersion);
 
@@ -168,21 +166,23 @@ public class NGMigrationServiceImpl implements NGMigrationService {
       }
       Class<? extends NGMigration> migration = migrations.get(i);
       log.info("[Migration] - {} : Migrating {} to version {} ...", serviceName, migrationTypeName, i);
-      try {
-        injector.getInstance(migration).migrate();
-      } catch (Exception ex) {
-        if (isBackground) {
+      if (isBackground) {
+        try {
+          injector.getInstance(migration).migrate();
+          log.info("[Migration] - {} : {} completed", serviceName, migrationTypeName);
+        } catch (Exception ex) {
           log.error("[Migration] - {} : Error while running migration {}", serviceName, migration.getSimpleName(), ex);
           break;
-        } else {
-          throw new Exception("Error while running migration", ex);
         }
+      } else {
+        injector.getInstance(migration).migrate();
       }
 
       Update update = new Update().set(NGSchemaKeys.migrationDetails + "." + migrationTypeName, i);
       mongoTemplate.updateFirst(new Query(), update, schemaClass);
+      if (!isBackground) {
+        log.info("[Migration] - {} : {} completed", serviceName, migrationTypeName);
+      }
     }
-
-    log.info("[Migration] - {} : {} complete", serviceName, migrationTypeName);
   }
 }

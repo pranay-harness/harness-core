@@ -38,7 +38,7 @@ public class OrchestrationVisualizationModule extends AbstractModule {
   @Singleton
   @Named("OrchestrationVisualizationExecutorService")
   public ExecutorService orchestrationVisualizationExecutorService() {
-    return ThreadPool.create(5, 10, 10, TimeUnit.SECONDS,
+    return ThreadPool.create(4, 8, 10, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("OrchestrationVisualizationExecutorService-%d").build());
   }
 }

@@ -212,6 +212,9 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
         long startTime = startTimestampList.get(metricIndex).toInstant().toEpochMilli();
         long oneHourMillis = Duration.ofHours(1).toMillis();
 
+        if (null == settingId) {
+          settingId = clusterId;
+        }
         InstanceUtilizationData utilizationData =
             InstanceUtilizationData.builder()
                 .accountId(accountId)

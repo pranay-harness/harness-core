@@ -31,6 +31,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -41,7 +42,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.internal.util.collections.Sets;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.transaction.support.TransactionTemplate;
 import retrofit2.Call;
@@ -97,20 +97,14 @@ public class UserGroupServiceImplTest extends CategoryTest {
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessageContaining("The following users are not valid: [u1, u2, u3]");
 
-    doReturn(Sets.newSet("u1", "u2"))
-        .when(ngUserService)
-        .filterUsersWithScopeMembership(users, userGroupDTO.getAccountIdentifier(), userGroupDTO.getOrgIdentifier(),
-            userGroupDTO.getProjectIdentifier());
+    doReturn(Arrays.asList("u1", "u2")).when(ngUserService).listUserIds(any());
 
     // Users with all valid users with few memberships
     assertThatThrownBy(() -> userGroupService.create(userGroupDTO))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessageContaining("The following user is not valid: [u3]");
 
-    doReturn(Sets.newSet("u1", "u2", "u3"))
-        .when(ngUserService)
-        .filterUsersWithScopeMembership(users, userGroupDTO.getAccountIdentifier(), userGroupDTO.getOrgIdentifier(),
-            userGroupDTO.getProjectIdentifier());
+    doReturn(Arrays.asList("u1", "u2", "u3")).when(ngUserService).listUserIds(any());
 
     // Users with all valid users with all memberships
     userGroupService.create(userGroupDTO);
@@ -175,7 +169,7 @@ public class UserGroupServiceImplTest extends CategoryTest {
     doReturn(userClientResponseMock).when(userClient).listUsers(any(), any());
     when(userClientResponseMock.execute()).thenReturn(Response.success(new RestResponse<>(userInfos)));
 
-    doReturn(Sets.newSet("u1", "u2")).when(ngUserService).filterUsersWithScopeMembership(any(), any(), any(), any());
+    doReturn(Arrays.asList("u1", "u2")).when(ngUserService).listUserIds(any());
 
     userGroupService.addMember(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, userGroupIdentifier, "u1");
     assertThat(users.size()).isEqualTo(1);
