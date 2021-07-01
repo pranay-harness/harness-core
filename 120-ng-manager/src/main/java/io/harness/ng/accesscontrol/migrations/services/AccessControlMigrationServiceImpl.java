@@ -22,13 +22,11 @@ import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
-import io.harness.ng.core.user.entities.UserMembership;
-import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
@@ -211,7 +209,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   }
 
   private void assignViewerRoleToUsers(Scope scope) {
-    Set<String> users = getUsersInScope(scope);
+    Set<String> users = new HashSet<>(getUsersInScope(scope));
     if (users.isEmpty()) {
       return;
     }
@@ -257,7 +255,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   }
 
   private void assignAdminRoleToUsers(Scope scope) {
-    Set<String> users = getUsersInScope(scope);
+    Set<String> users = new HashSet<>(getUsersInScope(scope));
     if (users.isEmpty()) {
       return;
     }
@@ -361,16 +359,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
         .getContent();
   }
 
-  private Set<String> getUsersInScope(Scope scope) {
-    return ngUserService
-        .listUserMemberships(Criteria.where(UserMembershipKeys.scopes + ".accountIdentifier")
-                                 .is(scope.getAccountIdentifier())
-                                 .and(UserMembershipKeys.scopes + ".orgIdentifier")
-                                 .is(scope.getOrgIdentifier())
-                                 .and(UserMembershipKeys.scopes + ".projectIdentifier")
-                                 .is(scope.getProjectIdentifier()))
-        .stream()
-        .map(UserMembership::getUserId)
-        .collect(Collectors.toSet());
+  private List<String> getUsersInScope(Scope scope) {
+    return ngUserService.listUserIds(scope);
   }
 }

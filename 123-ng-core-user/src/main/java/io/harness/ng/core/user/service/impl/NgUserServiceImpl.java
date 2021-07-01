@@ -3,7 +3,6 @@ package io.harness.ng.core.user.service.impl;
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
@@ -26,26 +25,26 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.UserGroupService;
-import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
-import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.events.AddCollaboratorEvent;
 import io.harness.ng.core.events.RemoveCollaboratorEvent;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
-import io.harness.ng.core.remote.ProjectMapper;
+import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.entities.UserGroup;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
+import io.harness.ng.core.user.entities.UserMetadata;
+import io.harness.ng.core.user.entities.UserMetadata.UserMetadataKeys;
 import io.harness.ng.core.user.remote.dto.UserFilter;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
+import io.harness.ng.core.user.remote.mapper.UserMetadataMapper;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.user.spring.UserMembershipRepository;
-import io.harness.security.SourcePrincipalContextBuilder;
-import io.harness.security.dto.PrincipalType;
+import io.harness.repositories.user.spring.UserMetadataRepository;
 import io.harness.user.remote.UserClient;
 import io.harness.user.remote.UserFilterNG;
 import io.harness.utils.PageUtils;
@@ -63,7 +62,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
@@ -73,7 +71,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Singleton
@@ -94,6 +91,8 @@ public class NgUserServiceImpl implements NgUserService {
   private final TransactionTemplate transactionTemplate;
   private final OutboxService outboxService;
   private final UserGroupService userGroupService;
+  private final UserMetadataRepository userMetadataRepository;
+  private final ProjectService projectService;
 
   private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
 
@@ -101,13 +100,15 @@ public class NgUserServiceImpl implements NgUserService {
   public NgUserServiceImpl(UserClient userClient, UserMembershipRepository userMembershipRepository,
       @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient,
       @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, OutboxService outboxService,
-      UserGroupService userGroupService) {
+      UserGroupService userGroupService, UserMetadataRepository userMetadataRepository, ProjectService projectService) {
     this.userClient = userClient;
     this.userMembershipRepository = userMembershipRepository;
     this.accessControlAdminClient = accessControlAdminClient;
     this.transactionTemplate = transactionTemplate;
     this.outboxService = outboxService;
     this.userGroupService = userGroupService;
+    this.userMetadataRepository = userMetadataRepository;
+    this.projectService = projectService;
   }
 
   @Override
@@ -121,54 +122,65 @@ public class NgUserServiceImpl implements NgUserService {
 
   @Override
   public PageResponse<UserMetadataDTO> listUsers(Scope scope, PageRequest pageRequest, UserFilter userFilter) {
-    Criteria criteria = Criteria.where(UserMembershipKeys.scopes)
-                            .elemMatch(Criteria.where(ScopeKeys.accountIdentifier)
-                                           .is(scope.getAccountIdentifier())
-                                           .and(ScopeKeys.orgIdentifier)
-                                           .is(scope.getOrgIdentifier())
-                                           .and(ScopeKeys.projectIdentifier)
-                                           .is(scope.getProjectIdentifier()));
+    Criteria userMembershipCriteria = Criteria.where(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
+                                          .is(scope.getAccountIdentifier())
+                                          .and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
+                                          .is(scope.getOrgIdentifier())
+                                          .and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
+                                          .is(scope.getProjectIdentifier());
+    Criteria userMetadataCriteria = new Criteria();
     if (userFilter != null) {
       if (isNotBlank(userFilter.getSearchTerm())) {
-        criteria.orOperator(Criteria.where(UserMembershipKeys.name).regex(userFilter.getSearchTerm(), "i"),
-            Criteria.where(UserMembershipKeys.emailId).regex(userFilter.getSearchTerm(), "i"));
+        userMetadataCriteria.orOperator(Criteria.where(UserMetadataKeys.name).regex(userFilter.getSearchTerm(), "i"),
+            Criteria.where(UserMetadataKeys.email).regex(userFilter.getSearchTerm(), "i"));
       }
       if (userFilter.getIdentifiers() != null) {
-        criteria.and(UserMembershipKeys.userId).in(userFilter.getIdentifiers());
+        userMembershipCriteria.and(UserMembershipKeys.userId).in(userFilter.getIdentifiers());
       }
     }
-    Page<UserMembership> userMembershipPage = userMembershipRepository.findAll(criteria, getPageRequest(pageRequest));
-    List<UserMetadataDTO> users = userMembershipPage.getContent()
-                                      .stream()
-                                      .map(userMembership
-                                          -> UserMetadataDTO.builder()
-                                                 .uuid(userMembership.getUserId())
-                                                 .email(userMembership.getEmailId())
-                                                 .name(userMembership.getName())
-                                                 .build())
-                                      .collect(toList());
-    return PageUtils.getNGPageResponse(userMembershipPage, users);
+    Page<String> userMembershipPage =
+        userMembershipRepository.findAllUserIds(userMembershipCriteria, Pageable.unpaged());
+    if (userMembershipPage.isEmpty()) {
+      return PageResponse.getEmptyPageResponse(pageRequest);
+    }
+
+    userMetadataCriteria.and(UserMetadataKeys.userId).in(userMembershipPage.getContent());
+    Page<UserMetadata> userMetadataPage =
+        userMetadataRepository.findAll(userMetadataCriteria, getPageRequest(pageRequest));
+
+    return PageUtils.getNGPageResponse(userMetadataPage.map(UserMetadataMapper::toDTO));
   }
 
   @Override
   public List<String> listUserIds(Scope scope) {
-    Criteria criteria = Criteria.where(UserMembershipKeys.scopes)
-                            .elemMatch(Criteria.where(ScopeKeys.accountIdentifier)
-                                           .is(scope.getAccountIdentifier())
-                                           .and(ScopeKeys.orgIdentifier)
-                                           .is(scope.getOrgIdentifier())
-                                           .and(ScopeKeys.projectIdentifier)
-                                           .is(scope.getProjectIdentifier()));
+    Criteria criteria = Criteria.where(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
+                            .is(scope.getAccountIdentifier())
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
+                            .is(scope.getOrgIdentifier())
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
+                            .is(scope.getProjectIdentifier());
     return userMembershipRepository.findAllUserIds(criteria, Pageable.unpaged()).getContent();
   }
 
   @Override
-  public List<UserMembership> listUserMemberships(Criteria criteria) {
-    return userMembershipRepository.findAll(criteria);
+  public List<UserMetadataDTO> listUsers(Scope scope) {
+    List<String> userIds = listUserIds(scope);
+    return getUserMetadata(userIds);
   }
 
-  public Optional<UserInfo> getUserFromEmail(String email) {
-    return RestClientUtils.getResponse(userClient.getUserByEmailId(email));
+  public Optional<UserMetadataDTO> getUserByEmail(String email, boolean fetchFromCurrentGen) {
+    if (!fetchFromCurrentGen) {
+      Optional<UserMetadata> user = userMetadataRepository.findDistinctByEmail(email);
+      return user.map(UserMetadataMapper::toDTO);
+    } else {
+      Optional<UserInfo> userInfo = RestClientUtils.getResponse(userClient.getUserByEmailId(email));
+      UserMetadataDTO userMetadataDTO =
+          userInfo
+              .map(user
+                  -> UserMetadataDTO.builder().uuid(user.getUuid()).name(user.getName()).email(user.getEmail()).build())
+              .orElse(null);
+      return Optional.ofNullable(userMetadataDTO);
+    }
   }
 
   @Override
@@ -208,39 +220,34 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
-  public Optional<UserMembership> getUserMembership(String userId) {
-    return userMembershipRepository.findDistinctByUserId(userId);
+  public Optional<UserMembership> getUserMembership(String userId, Scope scope) {
+    Criteria criteria = Criteria.where(UserMetadataKeys.userId)
+                            .is(userId)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
+                            .is(scope.getAccountIdentifier())
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
+                            .is(scope.getOrgIdentifier())
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
+                            .is(scope.getProjectIdentifier());
+    UserMembership userMemberships = userMembershipRepository.findOne(criteria);
+    return Optional.ofNullable(userMemberships);
   }
 
   @Override
   public Optional<UserMetadataDTO> getUserMetadata(String userId) {
-    Optional<UserMembership> userMembershipOptional = getUserMembership(userId);
-    if (!userMembershipOptional.isPresent()) {
-      return Optional.empty();
-    }
-    UserMembership userMembership = userMembershipOptional.get();
-    UserMetadataDTO user = UserMetadataDTO.builder()
-                               .uuid(userMembership.getUuid())
-                               .email(userMembership.getEmailId())
-                               .name(userMembership.getName())
-                               .build();
-    if (user.getName() == null) {
-      Optional<UserInfo> userInfo = getUserById(userId);
-      if (!userInfo.isPresent()) {
-        return Optional.of(user);
-      }
-      String username = userInfo.get().getName();
-      user.setName(username);
-      userMembership.setName(username);
-      Update update = new Update().set(UserMembershipKeys.name, username);
-      update(userId, update);
-    }
-    return Optional.of(user);
+    return userMetadataRepository.findDistinctByUserId(userId).map(UserMetadataMapper::toDTO);
   }
 
   @Override
   public List<UserMetadataDTO> getUserMetadata(List<String> userIds) {
-    return userMembershipRepository.getUserMetadata(Criteria.where(UserMembershipKeys.userId).in(userIds));
+    return userMetadataRepository.findAll(Criteria.where(UserMembershipKeys.userId).in(userIds), Pageable.unpaged())
+        .map(UserMetadataMapper::toDTO)
+        .toList();
+  }
+
+  @Override
+  public Page<UserMembership> listUserMemberships(Criteria criteria, Pageable pageable) {
+    return userMembershipRepository.findAll(criteria, pageable);
   }
 
   @Override
@@ -298,7 +305,7 @@ public class NgUserServiceImpl implements NgUserService {
   @Override
   public void addUserToScope(
       String userId, Scope scope, boolean addUserToParentScope, UserMembershipUpdateSource source) {
-    ensureUserMembership(userId);
+    ensureUserMetadata(userId);
     addUserToScopeInternal(userId, source, scope, getDefaultRoleIdentifier(scope));
     // Adding user to the account for sign in flow to work
     addUserToCG(userId, scope);
@@ -319,21 +326,18 @@ public class NgUserServiceImpl implements NgUserService {
     return ACCOUNT_VIEWER;
   }
 
-  private void ensureUserMembership(String userId) {
-    Optional<UserMembership> userMembershipOptional = getUserMembership(userId);
-    if (userMembershipOptional.isPresent()) {
+  private void ensureUserMetadata(String userId) {
+    Optional<UserMetadata> userMetadataOpt = userMetadataRepository.findDistinctByUserId(userId);
+    if (userMetadataOpt.isPresent()) {
       return;
     }
     Optional<UserInfo> userInfoOptional = getUserById(userId);
     UserInfo userInfo = userInfoOptional.orElseThrow(
         () -> new InvalidRequestException(String.format("User with id %s doesn't exists", userId)));
-    UserMembership userMembership = UserMembership.builder()
-                                        .userId(userInfo.getUuid())
-                                        .name(userInfo.getName())
-                                        .emailId(userInfo.getEmail())
-                                        .build();
+    UserMetadata userMetadata =
+        UserMetadata.builder().userId(userInfo.getUuid()).name(userInfo.getName()).email(userInfo.getEmail()).build();
     try {
-      userMembershipRepository.save(userMembership);
+      userMetadataRepository.save(userMetadata);
     } catch (DuplicateKeyException e) {
       log.info(
           "DuplicateKeyException while creating usermembership for user id {}. This race condition is benign", userId);
@@ -360,18 +364,20 @@ public class NgUserServiceImpl implements NgUserService {
 
   private UserMembership addUserToScopeInternal(
       String userId, UserMembershipUpdateSource source, Scope scope, String roleIdentifier) {
-    Optional<UserMembership> userMembershipOpt = getUserMembership(userId);
-    UserMembership userMembership =
-        userMembershipOpt.orElseThrow(() -> new IllegalStateException("Usermembership doesn't exist for " + userId));
-    if (!userMembership.getScopes().contains(scope)) {
-      Update update = new Update().push(UserMembershipKeys.scopes, scope);
-      String email = userMembership.getEmailId();
-      userMembership = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-        UserMembership updatedUserMembership = userMembershipRepository.update(userId, update);
-        outboxService.save(new AddCollaboratorEvent(scope.getAccountIdentifier(), scope, email, userId, source));
-        return updatedUserMembership;
-      }));
-    }
+    Optional<UserMetadata> userMetadata = userMetadataRepository.findDistinctByUserId(userId);
+    String publicIdentifier = userMetadata.map(UserMetadata::getEmail).orElse(userId);
+    UserMembership savedUserMembership =
+        Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+          UserMembership userMembership = UserMembership.builder().userId(userId).scope(scope).build();
+          try {
+            userMembershipRepository.save(userMembership);
+            outboxService.save(
+                new AddCollaboratorEvent(scope.getAccountIdentifier(), scope, publicIdentifier, userId, source));
+          } catch (DuplicateKeyException e) {
+            //  This is benign. Move on.
+          }
+          return userMembership;
+        }));
 
     try {
       RoleAssignmentDTO roleAssignmentDTO = RoleAssignmentDTO.builder()
@@ -390,12 +396,10 @@ public class NgUserServiceImpl implements NgUserService {
        *  It's expected that user will already have this roleassignment.
        */
     }
-    return userMembership;
+    return savedUserMembership;
   }
 
-  @Override
   public void addUserToCG(String userId, Scope scope) {
-    log.info("Adding user {} to account {}", userId, scope.getAccountIdentifier());
     try {
       RestClientUtils.getResponse(userClient.addUserToAccount(userId, scope.getAccountIdentifier()));
     } catch (Exception e) {
@@ -415,23 +419,18 @@ public class NgUserServiceImpl implements NgUserService {
 
   @Override
   public boolean isUserAtScope(String userId, Scope scope) {
-    Optional<UserMembership> userMembershipOpt = getUserMembership(userId);
-    return userMembershipOpt.map(userMembership -> userMembership.getScopes().contains(scope)).orElse(false);
-  }
-
-  @Override
-  public boolean update(String userId, Update update) {
-    return userMembershipRepository.update(userId, update) != null;
+    Optional<UserMembership> userMembershipOpt = getUserMembership(userId, scope);
+    return userMembershipOpt.isPresent();
   }
 
   @Override
   public boolean removeUserFromScope(String userId, Scope scope, UserMembershipUpdateSource source) {
-    Optional<UserMembership> userMembershipOptional = getUserMembership(userId);
+    Optional<UserMembership> userMembershipOptional = getUserMembership(userId, scope);
     if (!userMembershipOptional.isPresent()) {
       return false;
     }
     UserMembership userMembership = userMembershipOptional.get();
-    if (!UserMembershipUpdateSource.SYSTEM.equals(source) && isUserPartOfChildScope(userMembership, scope)) {
+    if (!UserMembershipUpdateSource.SYSTEM.equals(source) && isUserPartOfChildScope(userId, scope)) {
       throw new InvalidRequestException(getDeleteUserErrorMessage(scope));
     }
     if (ScopeUtils.isAccountScope(scope)) {
@@ -442,50 +441,20 @@ public class NgUserServiceImpl implements NgUserService {
       }
     }
 
-    List<Scope> scopes = userMembership.getScopes();
-    if (!scopes.contains(scope)) {
-      return true;
-    }
-    scopes.remove(scope);
-    Update update = new Update().pull(UserMembershipKeys.scopes, scope);
+    Optional<UserMetadata> userMetadata = userMetadataRepository.findDistinctByUserId(userId);
+    String publicIdentifier = userMetadata.map(UserMetadata::getEmail).orElse(userId);
     Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-      UserMembership updatedUserMembership = userMembershipRepository.update(userId, update);
-      outboxService.save(new RemoveCollaboratorEvent(
-          scope.getAccountIdentifier(), scope, userMembership.getEmailId(), userId, source));
-      return updatedUserMembership;
+      userMembershipRepository.delete(userMembership);
+      outboxService.save(
+          new RemoveCollaboratorEvent(scope.getAccountIdentifier(), scope, publicIdentifier, userId, source));
+      return userMembership;
     }));
-    boolean isUserRemovedFromAccount =
-        scopes.stream().noneMatch(scope1 -> scope1.getAccountIdentifier().equals(scope.getAccountIdentifier()));
-    if (isUserRemovedFromAccount) {
+
+    UserMembership anotherMembership =
+        userMembershipRepository.findOne(Criteria.where(UserMetadataKeys.userId).is(userId));
+    if (anotherMembership == null) {
       RestClientUtils.getResponse(userClient.safeDeleteUser(userId, scope.getAccountIdentifier()));
     }
-    return true;
-  }
-
-  @Override
-  public boolean removeUserFromAccount(String userId, String accountIdentifier) {
-    Optional<UserMembership> userMembershipOptional = getUserMembership(userId);
-    if (!userMembershipOptional.isPresent()) {
-      return true;
-    }
-    UserMembership userMembership = userMembershipOptional.get();
-    List<Scope> scopesInsideAccount = userMembership.getScopes()
-                                          .stream()
-                                          .filter(scope -> accountIdentifier.equals(scope.getAccountIdentifier()))
-                                          .collect(Collectors.toList());
-    scopesInsideAccount.forEach(scope -> removeUserFromScope(userId, scope, SYSTEM));
-    return true;
-  }
-
-  @Override
-  public boolean removeUser(String userId) {
-    Optional<UserMembership> userMembershipOptional = getUserMembership(userId);
-    if (!userMembershipOptional.isPresent()) {
-      return true;
-    }
-    List<Scope> scopes = userMembershipOptional.get().getScopes();
-    scopes.forEach(scope -> removeUserFromScope(userId, scope, SYSTEM));
-    userMembershipRepository.delete(userMembershipOptional.get());
     return true;
   }
 
@@ -501,50 +470,32 @@ public class NgUserServiceImpl implements NgUserService {
                                    .toLowerCase()));
   }
 
-  private boolean isUserPartOfChildScope(UserMembership userMembership, Scope scope) {
+  private boolean isUserPartOfChildScope(String userId, Scope scope) {
     if (!isBlank(scope.getProjectIdentifier())) {
       return false;
     }
     if (!isBlank(scope.getOrgIdentifier())) {
-      return userMembership.getScopes().stream().anyMatch(scope1
-          -> scope.getOrgIdentifier().equals(scope1.getOrgIdentifier()) && !isBlank(scope1.getProjectIdentifier()));
+      Criteria criteria = Criteria.where(UserMetadataKeys.userId)
+                              .is(userId)
+                              .and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
+                              .is(scope.getAccountIdentifier())
+                              .and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
+                              .is(scope.getOrgIdentifier())
+                              .and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
+                              .exists(true);
+      return userMembershipRepository.findOne(criteria) != null;
     }
-    return userMembership.getScopes().stream().anyMatch(scope1
-        -> scope.getAccountIdentifier().equals(scope1.getAccountIdentifier()) && !isBlank(scope1.getOrgIdentifier()));
-  }
-
-  @Override
-  public Set<String> filterUsersWithScopeMembership(List<String> userIds, String accountIdentifier,
-      @Nullable String orgIdentifier, @Nullable String projectIdentifier) {
-    return userMembershipRepository.filterUsersWithMembership(
-        userIds, accountIdentifier, orgIdentifier, projectIdentifier);
-  }
-
-  @Override
-  public Page<ProjectDTO> listProjects(String accountId, PageRequest pageRequest) {
-    Optional<String> userId = getUserIdentifierFromSecurityContext();
-    if (userId.isPresent()) {
-      Pageable pageable = PageUtils.getPageRequest(pageRequest);
-      List<Project> projects = userMembershipRepository.findProjectList(userId.get(), accountId, pageable);
-      List<ProjectDTO> projectDTOList = projects.stream().map(ProjectMapper::writeDTO).collect(Collectors.toList());
-      return new PageImpl<>(
-          projectDTOList, pageable, userMembershipRepository.getProjectCount(userId.get(), accountId));
-    } else {
-      throw new IllegalStateException("user login required");
-    }
+    Criteria criteria = Criteria.where(UserMetadataKeys.userId)
+                            .is(userId)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
+                            .is(scope.getAccountIdentifier())
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
+                            .exists(true);
+    return userMembershipRepository.findOne(criteria) != null;
   }
 
   @Override
   public boolean isUserPasswordSet(String accountIdentifier, String email) {
     return RestClientUtils.getResponse(userClient.isUserPasswordSet(accountIdentifier, email));
-  }
-
-  private Optional<String> getUserIdentifierFromSecurityContext() {
-    Optional<String> userId = Optional.empty();
-    if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
-        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
-      userId = Optional.of(SourcePrincipalContextBuilder.getSourcePrincipal().getName());
-    }
-    return userId;
   }
 }

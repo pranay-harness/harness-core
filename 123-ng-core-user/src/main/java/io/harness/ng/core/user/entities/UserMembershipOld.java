@@ -1,11 +1,13 @@
 package io.harness.ng.core.user.entities;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static lombok.AccessLevel.NONE;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
-import io.harness.beans.Scope.ScopeKeys;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -15,17 +17,18 @@ import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 import java.util.List;
+import javax.validation.Valid;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -34,37 +37,36 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @FieldNameConstants(innerTypeName = "UserMembershipKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity(value = "userMembershipsV2", noClassnameStored = true)
-@Document("userMembershipsV2")
-@TypeAlias("userMembershipsV2")
+@Entity(value = "userMemberships", noClassnameStored = true)
+@Document("userMemberships")
+@TypeAlias("userMemberships")
 @StoreIn(DbAliases.NG_MANAGER)
 @OwnedBy(PL)
-public class UserMembership implements PersistentRegularIterable, PersistentEntity {
+public class UserMembershipOld implements PersistentRegularIterable, PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("uniqueUserMembershipV2UserAccountOrgProject")
-                 .field(UserMembershipKeys.userId)
-                 .field(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
-                 .field(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
-                 .field(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
-                 .unique(true)
+                 .name("userMembershipAccountOrgProject")
+                 .field(UserMembershipKeys.scopes + "."
+                     + "accountIdentifier")
+                 .field(UserMembershipKeys.scopes + "."
+                     + "orgIdentifier")
+                 .field(UserMembershipKeys.scopes + "."
+                     + "projectIdentifier")
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("userMembershipV2AccountOrgProjectList")
-                 .field(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
-                 .field(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
-                 .field(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
+                 .name("uniqueUserMembershipUserId")
+                 .field(UserMembershipKeys.userId)
+                 .unique(true)
                  .build())
         .build();
   }
 
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotEmpty String userId;
-  Scope scope;
-
-  @CreatedDate Long createdAt;
-  @LastModifiedDate Long lastModifiedAt;
+  @NotEmpty String emailId;
+  String name;
+  @Getter(NONE) @Valid @Builder.Default List<Scope> scopes = new ArrayList<>();
   @Version Long version;
 
   @FdIndex private Long nextIteration;
@@ -82,6 +84,10 @@ public class UserMembership implements PersistentRegularIterable, PersistentEnti
   @JsonIgnore
   @Override
   public String getUuid() {
-    return this.uuid;
+    return this.userId;
+  }
+
+  public List<Scope> getScopes() {
+    return isEmpty(scopes) ? new ArrayList<>() : scopes;
   }
 }

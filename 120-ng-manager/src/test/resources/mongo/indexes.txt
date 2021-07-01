@@ -815,6 +815,10 @@ userInvites {"name": "createdAt_1", "background": true} {"createdAt": 1}
 userMemberships {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 userMemberships {"name": "uniqueUserMembershipUserId", "unique": true} {"userId": 1}
 userMemberships {"name": "userMembershipAccountOrgProject", "background": true} {"scopes.accountIdentifier": 1, "scopes.orgIdentifier": 1, "scopes.projectIdentifier": 1}
+userMembershipsV2 {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
+userMembershipsV2 {"name": "uniqueUserMembershipV2UserAccountOrgProject", "unique": true} {"userId": 1, "scope.accountIdentifier": 1, "scope.orgIdentifier": 1, "scope.projectIdentifier": 1}
+userMembershipsV2 {"name": "userMembershipV2AccountOrgProjectList", "background": true} {"scope.accountIdentifier": 1, "scope.orgIdentifier": 1, "scope.projectIdentifier": 1}
+userMetadata {"name": "uniqueUserMetadataEmailId", "unique": true} {"email": 1}
 userProjectMaps {"name": "accountOrgProjectMapIdx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
 userProjectMaps {"name": "uniqueUserProjectMap", "unique": true} {"userId": 1, "accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
 userProjectMaps {"name": "userProjectMapMigrationIdx", "background": true} {"moved": 1, "tries": 1}
