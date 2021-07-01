@@ -6,11 +6,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.execution.AsyncExecutableMode;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
-import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.AsyncSdkProgressCallback;
 import io.harness.pms.sdk.core.execution.AsyncSdkResumeCallback;
@@ -70,8 +68,8 @@ public class AsyncStrategy extends ProgressableStrategy {
     }
     // TODO : This is the last use of add executable response need to remove it as causing issues. Find a way to remove
     // this
-    sdkNodeExecutionService.addExecutableResponse(ambiance.getPlanExecutionId(), nodeExecutionId,
-        extractStatus(response), ExecutableResponse.newBuilder().setAsync(response).build());
+    sdkNodeExecutionService.addExecutableResponse(
+        ambiance.getPlanExecutionId(), nodeExecutionId, ExecutableResponse.newBuilder().setAsync(response).build());
 
     AsyncSdkResumeCallback callback = AsyncSdkResumeCallback.builder()
                                           .planExecutionId(ambiance.getPlanExecutionId())
@@ -91,14 +89,5 @@ public class AsyncStrategy extends ProgressableStrategy {
   @Override
   public AsyncExecutable extractStep(Ambiance ambiance) {
     return (AsyncExecutable) stepRegistry.obtain(AmbianceUtils.getCurrentStepType(ambiance));
-  }
-
-  private Status extractStatus(AsyncExecutableResponse response) {
-    if (response.getMode() == AsyncExecutableMode.APPROVAL_WAITING_MODE) {
-      return Status.APPROVAL_WAITING;
-    } else if (response.getMode() == AsyncExecutableMode.RESOURCE_WAITING_MODE) {
-      return Status.RESOURCE_WAITING;
-    }
-    return Status.ASYNC_WAITING;
   }
 }

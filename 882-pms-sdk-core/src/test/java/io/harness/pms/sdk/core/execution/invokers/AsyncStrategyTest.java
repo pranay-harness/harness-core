@@ -1,7 +1,6 @@
 package io.harness.pms.sdk.core.execution.invokers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.pms.contracts.execution.Status.ASYNC_WAITING;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,7 +12,6 @@ import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse.ResponseCase;
 import io.harness.pms.contracts.execution.ExecutionMode;
-import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
@@ -78,13 +76,12 @@ public class AsyncStrategyTest extends PmsSdkCoreTestBase {
 
     ArgumentCaptor<String> planExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> nodeExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<Status> statusCaptor = ArgumentCaptor.forClass(Status.class);
     ArgumentCaptor<ExecutableResponse> responseArgumentCaptor = ArgumentCaptor.forClass(ExecutableResponse.class);
 
     asyncStrategy.start(invokerPackage);
     Mockito.verify(sdkNodeExecutionService, Mockito.times(1))
-        .addExecutableResponse(planExecutionIdCaptor.capture(), nodeExecutionIdCaptor.capture(), statusCaptor.capture(),
-            responseArgumentCaptor.capture());
+        .addExecutableResponse(
+            planExecutionIdCaptor.capture(), nodeExecutionIdCaptor.capture(), responseArgumentCaptor.capture());
 
     ArgumentCaptor<AsyncSdkResumeCallback> notifyCallbackArgumentCaptor =
         ArgumentCaptor.forClass(AsyncSdkResumeCallback.class);
@@ -106,7 +103,6 @@ public class AsyncStrategyTest extends PmsSdkCoreTestBase {
                        .toByteArray());
 
     assertThat(nodeExecutionIdCaptor.getValue()).isEqualTo(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    assertThat(statusCaptor.getValue()).isEqualTo(ASYNC_WAITING);
 
     ExecutableResponse executableResponse = responseArgumentCaptor.getValue();
     assertThat(executableResponse.getResponseCase()).isEqualTo(ResponseCase.ASYNC);

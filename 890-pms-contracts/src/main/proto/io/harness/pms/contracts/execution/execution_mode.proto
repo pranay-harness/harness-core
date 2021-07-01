@@ -17,4 +17,8 @@ enum ExecutionMode {
   CHILD = 7;
 
   SKIP = 8;
+
+  APPROVAL = 9;
+
+  CONSTRAINT = 10;
 }
