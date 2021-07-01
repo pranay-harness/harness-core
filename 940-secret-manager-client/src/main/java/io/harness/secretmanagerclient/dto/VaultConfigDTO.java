@@ -32,4 +32,5 @@ public class VaultConfigDTO extends SecretManagerConfigDTO {
   private String secretId;
   private int secretEngineVersion;
   private String namespace;
+  private boolean engineManuallyEntered;
 }

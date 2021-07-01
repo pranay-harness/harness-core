@@ -9,11 +9,14 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.azure.AzureEnvironmentType;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretReference;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.base.Preconditions;
-import java.util.ArrayList;
+import io.swagger.annotations.ApiModelProperty;
+import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -32,7 +35,7 @@ import lombok.ToString;
 @JsonInclude(Include.NON_NULL)
 public class AzureKeyVaultConnectorDTO extends ConnectorConfigDTO {
   @NotNull private String clientId;
-  private String secretKey;
+  @SecretReference @ApiModelProperty(dataType = "string") @NotNull private SecretRefData secretKey;
   @NotNull private String tenantId;
   @NotNull private String vaultName;
   @NotNull private String subscription;
@@ -42,7 +45,7 @@ public class AzureKeyVaultConnectorDTO extends ConnectorConfigDTO {
 
   @Override
   public List<DecryptableEntity> getDecryptableEntities() {
-    return new ArrayList<>();
+    return Collections.singletonList(this);
   }
 
   @Override

@@ -1,14 +1,18 @@
 package io.harness.connector.services;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.filter.dto.FilterPropertiesDTO;
 
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(DX)
 public interface ConnectorFilterService {
   Criteria createCriteriaFromConnectorFilter(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String searchTerm, ConnectorType type, ConnectorCategory category);
+      String searchTerm, ConnectorType type, ConnectorCategory category, ConnectorCategory sourceCategory);
 
   Criteria createCriteriaFromConnectorListQueryParams(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String filterIdentifier, String searchTerm, FilterPropertiesDTO filterProperties,

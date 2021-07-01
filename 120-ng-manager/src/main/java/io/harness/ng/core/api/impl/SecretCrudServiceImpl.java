@@ -2,6 +2,7 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.connector.ConnectorCategory.SECRET_MANAGER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
@@ -13,9 +14,11 @@ import static io.harness.secretmanagerclient.SecretType.SecretFile;
 import static io.harness.secretmanagerclient.SecretType.SecretText;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.ConnectorCategory;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
@@ -171,7 +174,8 @@ public class SecretCrudServiceImpl implements SecretCrudService {
   @Override
   public PageResponse<SecretResponseWrapper> list(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, List<String> identifiers, List<SecretType> secretTypes,
-      boolean includeSecretsFromEverySubScope, String searchTerm, int page, int size) {
+      boolean includeSecretsFromEverySubScope, String searchTerm, int page, int size,
+      ConnectorCategory sourceCategory) {
     Criteria criteria = Criteria.where(SecretKeys.accountIdentifier).is(accountIdentifier);
     if (!includeSecretsFromEverySubScope) {
       criteria.and(SecretKeys.orgIdentifier).is(orgIdentifier).and(SecretKeys.projectIdentifier).is(projectIdentifier);
@@ -183,8 +187,15 @@ public class SecretCrudServiceImpl implements SecretCrudService {
         }
       }
     }
+
     if (isNotEmpty(secretTypes)) {
       criteria = criteria.and(SecretKeys.type).in(secretTypes);
+      if (null != sourceCategory && SECRET_MANAGER == sourceCategory) {
+        criteria = criteria.andOperator(where(SecretKeys.secretSpec + ".secretManagerIdentifier").exists(true),
+            where(SecretKeys.secretSpec + ".secretManagerIdentifier").in(HARNESS_SECRET_MANAGER_IDENTIFIER));
+      }
+    } else {
+      criteria = criteria.and(SecretKeys.secretSpec + ".secretManagerIdentifier").exists(true);
     }
     if (!StringUtils.isEmpty(searchTerm)) {
       criteria = criteria.orOperator(
@@ -199,6 +210,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
     if (Objects.nonNull(identifiers) && !identifiers.isEmpty()) {
       criteria.and(SecretKeys.identifier).in(identifiers);
     }
+
     Page<Secret> secrets = ngSecretService.list(criteria, page, size);
     return PageUtils.getNGPageResponse(
         secrets, secrets.getContent().stream().map(this::getResponseWrapper).collect(Collectors.toList()));

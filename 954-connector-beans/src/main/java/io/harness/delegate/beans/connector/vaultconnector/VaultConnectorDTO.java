@@ -10,13 +10,17 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretReference;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.AccessType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.annotations.ApiModelProperty;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -33,7 +37,7 @@ import lombok.ToString;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
 public class VaultConnectorDTO extends ConnectorConfigDTO {
-  private String authToken;
+  @SecretReference @ApiModelProperty(dataType = "string") private SecretRefData authToken;
   private String basePath;
   private String vaultUrl;
   private boolean isReadOnly;
@@ -41,7 +45,7 @@ public class VaultConnectorDTO extends ConnectorConfigDTO {
   private boolean secretEngineManuallyConfigured;
   private String secretEngineName;
   private String appRoleId;
-  private String secretId;
+  @SecretReference @ApiModelProperty(dataType = "string") private SecretRefData secretId;
   private boolean isDefault;
   private int secretEngineVersion;
 
@@ -51,7 +55,7 @@ public class VaultConnectorDTO extends ConnectorConfigDTO {
 
   @Override
   public List<DecryptableEntity> getDecryptableEntities() {
-    return null;
+    return Collections.singletonList(this);
   }
 
   @Override

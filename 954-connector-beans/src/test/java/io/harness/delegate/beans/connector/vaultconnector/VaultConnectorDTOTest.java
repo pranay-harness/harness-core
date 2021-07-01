@@ -9,6 +9,7 @@ import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
@@ -22,7 +23,7 @@ public class VaultConnectorDTOTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidate() {
     VaultConnectorDTO vaultConnectorDTO = VaultConnectorDTO.builder()
-                                              .authToken(randomAlphabetic(10))
+                                              .authToken(SecretRefHelper.createSecretRef(randomAlphabetic(10)))
                                               .vaultUrl("https://localhost:9090")
                                               .basePath("harness")
                                               .isReadOnly(false)
@@ -33,6 +34,7 @@ public class VaultConnectorDTOTest extends CategoryTest {
                                               .renewalIntervalMinutes(10)
                                               .build();
     vaultConnectorDTO.validate();
+
     try {
       vaultConnectorDTO.setSecretEngineVersion(0);
       vaultConnectorDTO.validate();

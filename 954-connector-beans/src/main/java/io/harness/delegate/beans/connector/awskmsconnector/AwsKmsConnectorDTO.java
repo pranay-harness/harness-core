@@ -2,21 +2,26 @@ package io.harness.delegate.beans.connector.awskmsconnector;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType.MANUAL_CONFIG;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretReference;
 import io.harness.exception.InvalidRequestException;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.base.Preconditions;
+import io.swagger.annotations.ApiModelProperty;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -35,13 +40,14 @@ import lombok.ToString;
 public class AwsKmsConnectorDTO extends ConnectorConfigDTO {
   @Valid AwsKmsConnectorCredentialDTO credential;
 
-  private String kmsArn;
+  @SecretReference @ApiModelProperty(dataType = "string") @NotNull SecretRefData kmsArn;
   private String region;
   private boolean isDefault;
   @JsonIgnore private boolean harnessManaged;
 
   @Builder
-  public AwsKmsConnectorDTO(String kmsArn, String region, AwsKmsConnectorCredentialDTO credential, boolean isDefault) {
+  public AwsKmsConnectorDTO(
+      SecretRefData kmsArn, String region, AwsKmsConnectorCredentialDTO credential, boolean isDefault) {
     this.kmsArn = kmsArn;
     this.region = region;
     this.credential = credential;
@@ -50,7 +56,14 @@ public class AwsKmsConnectorDTO extends ConnectorConfigDTO {
 
   @Override
   public List<DecryptableEntity> getDecryptableEntities() {
-    return new ArrayList<>();
+    List<DecryptableEntity> decryptableEntities = new ArrayList<>();
+    decryptableEntities.add(this);
+    if (credential.getCredentialType() == MANUAL_CONFIG) {
+      AwsKmsCredentialSpecManualConfigDTO awsKmsManualCredentials =
+          (AwsKmsCredentialSpecManualConfigDTO) credential.getConfig();
+      decryptableEntities.add(awsKmsManualCredentials);
+    }
+    return decryptableEntities;
   }
 
   @Override
@@ -91,10 +104,10 @@ public class AwsKmsConnectorDTO extends ConnectorConfigDTO {
   }
 
   private void validateManualConfig(AwsKmsCredentialSpecManualConfigDTO config) {
-    if (isEmpty(config.getAccessKey())) {
+    if (isEmpty(config.getAccessKey().getIdentifier())) {
       throw new InvalidRequestException("Access key cannot be empty.", INVALID_REQUEST, USER);
     }
-    if (isEmpty(config.getSecretKey())) {
+    if (isEmpty(config.getSecretKey().getIdentifier())) {
       throw new InvalidRequestException("Secret key cannot be empty.", INVALID_REQUEST, USER);
     }
   }
