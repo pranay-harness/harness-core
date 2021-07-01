@@ -123,6 +123,7 @@ spec:
                 type: string
             type: object
           status:
+            x-kubernetes-preserve-unknown-fields: true
             description: AutoStoppingRuleStatus defines the observed state of AutoStoppingRule
             type: object
         type: object
@@ -203,7 +204,10 @@ data:
           endpoints:
           - lb_endpoints:
             - endpoint:
-                hostname: sName
+                address:
+                  socket_address:
+                    address: sName
+                    port_value: 80
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -296,8 +300,6 @@ spec:
           value: cId
         - name: REMOTE_ACCOUNT_ID
           value: aId
-        - name: HARNESS_TOKEN
-          value: aKey
         ports:
         - containerPort: 18000
       imagePullSecrets:

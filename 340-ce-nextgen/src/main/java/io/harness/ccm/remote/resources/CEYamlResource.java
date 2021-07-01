@@ -56,13 +56,13 @@ public class CEYamlResource {
   @ApiOperation(value = "Get Cost Optimisation Yaml", nickname = "getCostOptimisationYamlTemplate")
   @Deprecated // use 'io.harness.ccm.remote.resources.CEYamlResource.cloudCostK8sClusterSetup'
   public Response generateCostOptimisationYaml(@Context HttpServletRequest request,
-      @QueryParam("accountId") String accountId, @QueryParam("connectorIdentifier") String connectorIdentifier,
-      String apiKey) throws IOException {
+      @QueryParam("accountId") String accountId, @QueryParam("connectorIdentifier") String connectorIdentifier)
+      throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       String serverName = request.getServerName();
       String harnessHost = request.getScheme() + "://" + serverName;
       File yamlFile =
-          ceYamlService.downloadCostOptimisationYaml(accountId, connectorIdentifier, apiKey, harnessHost, serverName);
+          ceYamlService.downloadCostOptimisationYaml(accountId, connectorIdentifier, harnessHost, serverName);
       return Response.ok(yamlFile)
           .header(CONTENT_TRANSFER_ENCODING, BINARY)
           .type("text/plain; charset=UTF-8")
@@ -72,7 +72,7 @@ public class CEYamlResource {
   }
 
   @POST
-  @Path(CLOUD_COST_K8S_CLUSTER_SETUP + DOT_YAML)
+  @Path(CLOUD_COST_K8S_CLUSTER_SETUP)
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get k8s cluster setup yaml based on features enabled", nickname = CLOUD_COST_K8S_CLUSTER_SETUP)
