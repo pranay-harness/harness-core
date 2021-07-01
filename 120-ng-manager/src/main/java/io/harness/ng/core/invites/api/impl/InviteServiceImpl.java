@@ -46,12 +46,12 @@ import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.invites.dto.RoleBinding;
 import io.harness.ng.core.invites.dto.RoleBinding.RoleBindingKeys;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.notification.channeldetails.EmailChannel;
 import io.harness.notification.channeldetails.EmailChannel.EmailChannelBuilder;
@@ -201,7 +201,7 @@ public class InviteServiceImpl implements InviteService {
   }
 
   private boolean checkIfUserAlreadyAdded(Invite invite) {
-    Optional<UserInfo> userOptional = ngUserService.getUserFromEmail(invite.getEmail());
+    Optional<UserMetadataDTO> userOptional = ngUserService.getUserByEmail(invite.getEmail(), false);
     return userOptional
         .filter(user
             -> ngUserService.isUserAtScope(user.getUuid(),
@@ -380,11 +380,16 @@ public class InviteServiceImpl implements InviteService {
     }
 
     Invite invite = inviteOptional.get();
-    Optional<UserInfo> ngUserOpt = ngUserService.getUserFromEmail(invite.getEmail());
+    Optional<UserMetadataDTO> ngUserOpt = ngUserService.getUserByEmail(invite.getEmail(), true);
+    UserInfo userInfo =
+        ngUserOpt
+            .map(user -> UserInfo.builder().uuid(user.getUuid()).name(user.getName()).email(user.getEmail()).build())
+            .orElse(null);
+
     markInviteApproved(invite);
     return InviteAcceptResponse.builder()
         .response(InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED)
-        .userInfo(ngUserOpt.orElse(null))
+        .userInfo(userInfo)
         .accountIdentifier(invite.getAccountIdentifier())
         .orgIdentifier(invite.getOrgIdentifier())
         .projectIdentifier(invite.getProjectIdentifier())
@@ -578,9 +583,9 @@ public class InviteServiceImpl implements InviteService {
     }
     Invite invite = inviteOpt.get();
     String email = invite.getEmail();
-    Optional<UserInfo> userOpt = ngUserService.getUserFromEmail(email);
+    Optional<UserMetadataDTO> userOpt = ngUserService.getUserByEmail(email, true);
     Preconditions.checkState(userOpt.isPresent(), "Illegal state: user doesn't exists");
-    UserInfo user = userOpt.get();
+    UserMetadataDTO user = userOpt.get();
     Scope scope = Scope.builder()
                       .accountIdentifier(invite.getAccountIdentifier())
                       .orgIdentifier(invite.getOrgIdentifier())

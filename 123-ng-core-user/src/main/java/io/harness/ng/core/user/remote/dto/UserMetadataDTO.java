@@ -1,4 +1,4 @@
-package io.harness.ng.core.invites.dto;
+package io.harness.ng.core.user.remote.dto;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 

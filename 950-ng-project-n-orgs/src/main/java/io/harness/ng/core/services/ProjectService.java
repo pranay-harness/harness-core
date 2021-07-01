@@ -3,6 +3,8 @@ package io.harness.ng.core.services;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Project;
@@ -21,6 +23,8 @@ public interface ProjectService {
   Optional<Project> get(String accountIdentifier, String orgIdentifier, String identifier);
 
   Project update(String accountIdentifier, String orgIdentifier, String identifier, ProjectDTO project);
+
+  PageResponse<ProjectDTO> listProjectsForUser(String userId, String accountId, PageRequest pageRequest);
 
   /**
    * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
