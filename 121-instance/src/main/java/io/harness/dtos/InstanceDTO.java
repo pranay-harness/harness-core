@@ -27,6 +27,7 @@ public class InstanceDTO {
   String serviceName;
   String infrastructureMappingId;
   String infraMappingType;
+  String connectorId;
   ArtifactDetails primaryArtifact;
   String lastDeployedById;
   String lastDeployedByName;
