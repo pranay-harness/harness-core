@@ -16,8 +16,6 @@ import static org.mockito.Mockito.when;
 import io.harness.OrchestrationStepsTestBase;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.shared.ResourceConstraint;
-import io.harness.beans.shared.RestraintService;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintId;
@@ -33,7 +31,9 @@ import io.harness.rule.Owner;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
 import io.harness.steps.resourcerestraint.beans.HoldingScope;
 import io.harness.steps.resourcerestraint.beans.HoldingScope.HoldingScopeBuilder;
+import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
+import io.harness.steps.resourcerestraint.service.ResourceRestraintInstanceService;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintService;
 
 import com.google.inject.Inject;
@@ -50,28 +50,28 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
   private static final String RESOURCE_UNIT = generateUuid();
   private static final HoldingScope HOLDING_SCOPE = HoldingScopeBuilder.aPlan().build();
 
+  @Mock private ResourceRestraintInstanceService resourceRestraintInstanceService;
   @Mock private ResourceRestraintService resourceRestraintService;
-  @Mock private RestraintService restraintService;
   @Inject @InjectMocks private ResourceRestraintStep resourceRestraintStep;
 
   @Before
   public void setUp() {
-    ResourceConstraint resourceConstraint = ResourceConstraint.builder()
-                                                .accountId(generateUuid())
-                                                .capacity(1)
-                                                .strategy(Constraint.Strategy.FIFO)
-                                                .uuid(generateUuid())
-                                                .build();
+    ResourceRestraint resourceConstraint = ResourceRestraint.builder()
+                                               .accountId(generateUuid())
+                                               .capacity(1)
+                                               .strategy(Constraint.Strategy.FIFO)
+                                               .uuid(generateUuid())
+                                               .build();
     ConstraintId constraintId = new ConstraintId(RESOURCE_RESTRAINT_ID);
-    when(restraintService.getByNameAndAccountId(any(), any())).thenReturn(resourceConstraint);
-    when(restraintService.get(any(), any())).thenReturn(resourceConstraint);
+    when(resourceRestraintService.getByNameAndAccountId(any(), any())).thenReturn(resourceConstraint);
+    when(resourceRestraintService.get(any(), any())).thenReturn(resourceConstraint);
     doReturn(Constraint.builder()
                  .id(constraintId)
                  .spec(Constraint.Spec.builder().limits(1).strategy(Constraint.Strategy.FIFO).build())
                  .build())
-        .when(resourceRestraintService)
+        .when(resourceRestraintInstanceService)
         .createAbstraction(any());
-    doReturn(ResourceRestraintInstance.builder().build()).when(resourceRestraintService).save(any());
+    doReturn(ResourceRestraintInstance.builder().build()).when(resourceRestraintInstanceService).save(any());
   }
 
   @Test
@@ -102,7 +102,7 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                                            .releaseEntityType(holdingScope.getScope())
                                            .releaseEntityId(holdingScope.getNodeSetupId())
                                            .build()))
-        .when(resourceRestraintService)
+        .when(resourceRestraintInstanceService)
         .getAllByRestraintIdAndResourceUnitAndStates(any(), any(), any());
     AsyncExecutableResponse asyncExecutableResponse =
         resourceRestraintStep.executeAsync(ambiance, stepElementParameters, stepInputPackage,
@@ -159,15 +159,15 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                                                          .build();
     StepElementParameters stepElementParameters = StepElementParameters.builder().spec(specParameters).build();
 
-    doNothing().when(resourceRestraintService).updateBlockedConstraints(any());
+    doNothing().when(resourceRestraintInstanceService).updateBlockedConstraints(any());
 
     StepResponse stepResponse = resourceRestraintStep.handleAsyncResponse(ambiance, stepElementParameters, null);
 
     assertThat(stepResponse).isNotNull();
     assertThat(stepResponse.getStatus()).isEqualTo(SUCCEEDED);
 
-    verify(restraintService).getByNameAndAccountId(any(), any());
-    verify(resourceRestraintService).updateBlockedConstraints(any());
+    verify(resourceRestraintService).getByNameAndAccountId(any(), any());
+    verify(resourceRestraintInstanceService).updateBlockedConstraints(any());
   }
 
   @Test
@@ -189,12 +189,13 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                                                          .build();
     StepElementParameters stepElementParameters = StepElementParameters.builder().spec(specParameters).build();
 
-    when(resourceRestraintService.finishInstance(any(), any())).thenReturn(ResourceRestraintInstance.builder().build());
+    when(resourceRestraintInstanceService.finishInstance(any(), any()))
+        .thenReturn(ResourceRestraintInstance.builder().build());
 
     resourceRestraintStep.handleAbort(
         ambiance, stepElementParameters, AsyncExecutableResponse.newBuilder().addCallbackIds(generateUuid()).build());
 
-    verify(resourceRestraintService).finishInstance(any(), any());
+    verify(resourceRestraintInstanceService).finishInstance(any(), any());
   }
 
   @Test
@@ -216,7 +217,8 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
                                                          .build();
     StepElementParameters stepElementParameters = StepElementParameters.builder().spec(specParameters).build();
 
-    when(resourceRestraintService.finishInstance(any(), any())).thenThrow(new InvalidRequestException("Exception"));
+    when(resourceRestraintInstanceService.finishInstance(any(), any()))
+        .thenThrow(new InvalidRequestException("Exception"));
 
     assertThatThrownBy(()
                            -> resourceRestraintStep.handleAbort(ambiance, stepElementParameters,
@@ -224,6 +226,6 @@ public class ResourceRestraintStepTest extends OrchestrationStepsTestBase {
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageStartingWith("Exception");
 
-    verify(resourceRestraintService, only()).finishInstance(any(), any());
+    verify(resourceRestraintInstanceService, only()).finishInstance(any(), any());
   }
 }

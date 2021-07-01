@@ -13,6 +13,7 @@ import io.harness.steps.barriers.beans.BarrierOutcome;
 import io.harness.steps.cf.FlagConfigurationStepParameters;
 import io.harness.steps.fork.ForkStepParameters;
 import io.harness.steps.resourcerestraint.ResourceRestraintSpecParameters;
+import io.harness.steps.resourcerestraint.beans.ResourceRestraint;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintInstance;
 import io.harness.steps.resourcerestraint.beans.ResourceRestraintOutcome;
 import io.harness.steps.section.SectionStepParameters;
@@ -26,6 +27,7 @@ public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
     set.add(BarrierExecutionInstance.class);
+    set.add(ResourceRestraint.class);
     set.add(ResourceRestraintInstance.class);
     set.add(ApprovalInstance.class);
     set.add(HarnessApprovalInstance.class);

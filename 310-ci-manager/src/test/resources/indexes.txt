@@ -57,8 +57,6 @@ notifyQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 notifyQueue {"name": "waitInstanceId_1", "unique": true} {"waitInstanceId": 1}
 notifyResponses {"name": "createdAt_1", "background": true} {"createdAt": 1}
 notifyResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-orchestrationEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
-orchestrationEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 outboxEvents {"name": "blocked_createdAt_nextUnblockAttemptAt_outbox_Idx", "background": true} {"blocked": 1, "createdAt": 1, "nextUnblockAttemptAt": 1}
 outboxEvents {"name": "eventType_blocked_outbox_Idx", "background": true} {"eventType": 1, "blocked": 1}
 pipelineExecutionSummary {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
@@ -68,8 +66,6 @@ primaryVersion {"name": "lastUpdatedAt_1", "background": true} {"lastUpdatedAt":
 progressUpdate {"name": "correlation", "background": true} {"correlationId": 1, "createdAt": -1}
 progressUpdate {"name": "createdAt_1", "background": true} {"createdAt": 1}
 progressUpdate {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-resourceConstraint {"name": "createdAt_1", "background": true} {"createdAt": 1}
-resourceConstraint {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1}
 secretChangeLogs {"name": "acctEncryptedDataIdx", "background": true} {"accountId": 1, "encryptedDataId": 1}
 secretChangeLogs {"name": "createdAt_1", "background": true} {"createdAt": 1}
 secretManagers {"name": "accountId_1", "background": true} {"accountId": 1}
