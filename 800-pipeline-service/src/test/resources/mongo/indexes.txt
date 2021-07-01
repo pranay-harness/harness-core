@@ -82,8 +82,6 @@ notifyResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds
 orchestrationEventLog {"name": "createdAt", "background": true} {"createdAt": 1}
 orchestrationEventLog {"name": "planExecutionId_createdAt", "background": true} {"planExecutionId": 1, "createdAt": 1}
 orchestrationEventLog {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-orchestrationEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
-orchestrationEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 outboxEvents {"name": "blocked_createdAt_nextUnblockAttemptAt_outbox_Idx", "background": true} {"blocked": 1, "createdAt": 1, "nextUnblockAttemptAt": 1}
 outboxEvents {"name": "eventType_blocked_outbox_Idx", "background": true} {"eventType": 1, "blocked": 1}
 outcomeInstances {"name": "unique_levelRuntimeIdUniqueIdx", "unique": true} {"planExecutionId": 1, "levelRuntimeIdIdx": 1, "name": 1}
@@ -115,14 +113,14 @@ primaryVersion {"name": "lastUpdatedAt_1", "background": true} {"lastUpdatedAt":
 progressUpdate {"name": "correlation", "background": true} {"correlationId": 1, "createdAt": -1}
 progressUpdate {"name": "createdAt_1", "background": true} {"createdAt": 1}
 progressUpdate {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-resourceConstraint {"name": "createdAt_1", "background": true} {"createdAt": 1}
-resourceConstraint {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1}
 resourceRestraintInstances {"name": "createdAt_1", "background": true} {"createdAt": 1}
 resourceRestraintInstances {"name": "next_iteration_idx", "background": true} {"state": 1, "nextIteration": 1}
 resourceRestraintInstances {"name": "releaseEntityType_releaseEntityId_idx", "background": true} {"releaseEntityType": 1, "releaseEntityId": 1}
 resourceRestraintInstances {"name": "resourceRestraintId_order_idx", "background": true} {"resourceRestraintId": 1, "order": 1}
 resourceRestraintInstances {"name": "resourceRestraintId_resourceUnit_order_idx", "unique": true} {"resourceRestraintId": 1, "resourceUnit": 1, "order": 1}
 resourceRestraintInstances {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+resourceRestraints {"name": "createdAt_1", "background": true} {"createdAt": 1}
+resourceRestraints {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1}
 secretChangeLogs {"name": "acctEncryptedDataIdx", "background": true} {"accountId": 1, "encryptedDataId": 1}
 secretChangeLogs {"name": "createdAt_1", "background": true} {"createdAt": 1}
 secretManagers {"name": "accountId_1", "background": true} {"accountId": 1}

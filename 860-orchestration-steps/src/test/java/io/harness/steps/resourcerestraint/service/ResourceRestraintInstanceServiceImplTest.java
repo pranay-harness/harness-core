@@ -12,6 +12,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationStepsTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -40,14 +42,15 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase {
+@OwnedBy(HarnessTeam.PIPELINE)
+public class ResourceRestraintInstanceServiceImplTest extends OrchestrationStepsTestBase {
   private static final String PLAN = "PLAN";
   private static final String OTHER = "OTHER";
   @Inject private ResourceRestraintInstanceRepository restraintInstanceRepository;
 
   @Mock private PlanExecutionService planExecutionService;
   @Mock private NodeExecutionService nodeExecutionService;
-  @Inject @InjectMocks private ResourceRestraintService resourceRestraintService;
+  @Inject @InjectMocks private ResourceRestraintInstanceService resourceRestraintInstanceService;
 
   @Test
   @Owner(developers = ALEXEI)
@@ -63,7 +66,7 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase
                                              .state(ACTIVE)
                                              .build();
 
-    ResourceRestraintInstance savedInstance = resourceRestraintService.save(instance);
+    ResourceRestraintInstance savedInstance = resourceRestraintInstanceService.save(instance);
     assertThat(savedInstance).isNotNull();
   }
 
@@ -81,11 +84,11 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase
                                              .resourceRestraintId(generateUuid())
                                              .state(BLOCKED)
                                              .build();
-    ResourceRestraintInstance savedInstance = resourceRestraintService.save(instance);
+    ResourceRestraintInstance savedInstance = resourceRestraintInstanceService.save(instance);
     assertThat(savedInstance).isNotNull();
 
-    ResourceRestraintInstance updatedInstance =
-        resourceRestraintService.activateBlockedInstance(savedInstance.getUuid(), savedInstance.getResourceUnit());
+    ResourceRestraintInstance updatedInstance = resourceRestraintInstanceService.activateBlockedInstance(
+        savedInstance.getUuid(), savedInstance.getResourceUnit());
     assertThat(updatedInstance).isNotNull();
     assertThat(updatedInstance.getState()).isEqualTo(ACTIVE);
   }
@@ -104,11 +107,11 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase
                                              .resourceRestraintId(generateUuid())
                                              .state(BLOCKED)
                                              .build();
-    ResourceRestraintInstance savedInstance = resourceRestraintService.save(instance);
+    ResourceRestraintInstance savedInstance = resourceRestraintInstanceService.save(instance);
     assertThat(savedInstance).isNotNull();
 
     assertThatThrownBy(
-        () -> resourceRestraintService.activateBlockedInstance(generateUuid(), savedInstance.getResourceUnit()))
+        () -> resourceRestraintInstanceService.activateBlockedInstance(generateUuid(), savedInstance.getResourceUnit()))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageStartingWith("Cannot find ResourceRestraintInstance with id");
   }
@@ -127,11 +130,11 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase
                                              .resourceRestraintId(generateUuid())
                                              .state(ACTIVE)
                                              .build();
-    ResourceRestraintInstance savedInstance = resourceRestraintService.save(instance);
+    ResourceRestraintInstance savedInstance = resourceRestraintInstanceService.save(instance);
     assertThat(savedInstance).isNotNull();
 
     ResourceRestraintInstance updatedInstance =
-        resourceRestraintService.finishInstance(savedInstance.getUuid(), savedInstance.getResourceUnit());
+        resourceRestraintInstanceService.finishInstance(savedInstance.getUuid(), savedInstance.getResourceUnit());
     assertThat(updatedInstance).isNotNull();
     assertThat(updatedInstance.getState()).isEqualTo(FINISHED);
   }
@@ -150,10 +153,11 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase
                                              .resourceRestraintId(generateUuid())
                                              .state(ACTIVE)
                                              .build();
-    ResourceRestraintInstance savedInstance = resourceRestraintService.save(instance);
+    ResourceRestraintInstance savedInstance = resourceRestraintInstanceService.save(instance);
     assertThat(savedInstance).isNotNull();
 
-    assertThatThrownBy(() -> resourceRestraintService.finishInstance(generateUuid(), savedInstance.getResourceUnit()))
+    assertThatThrownBy(
+        () -> resourceRestraintInstanceService.finishInstance(generateUuid(), savedInstance.getResourceUnit()))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageStartingWith("Cannot find ResourceRestraintInstance with id");
   }
@@ -167,7 +171,7 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase
 
     when(planExecutionService.get(any())).thenReturn(PlanExecution.builder().status(Status.SUCCEEDED).build());
 
-    boolean isUpdated = resourceRestraintService.updateActiveConstraintsForInstance(instance);
+    boolean isUpdated = resourceRestraintInstanceService.updateActiveConstraintsForInstance(instance);
     assertThat(isUpdated).isTrue();
 
     Optional<ResourceRestraintInstance> updatedInstance = restraintInstanceRepository.findById(instance.getUuid());
@@ -184,7 +188,7 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase
 
     when(planExecutionService.get(any())).thenThrow(new InvalidRequestException(""));
 
-    boolean isUpdated = resourceRestraintService.updateActiveConstraintsForInstance(instance);
+    boolean isUpdated = resourceRestraintInstanceService.updateActiveConstraintsForInstance(instance);
     assertThat(isUpdated).isFalse();
   }
 
@@ -213,7 +217,7 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase
                         .status(Status.SUCCEEDED)
                         .build());
 
-    boolean isUpdated = resourceRestraintService.updateActiveConstraintsForInstance(instance);
+    boolean isUpdated = resourceRestraintInstanceService.updateActiveConstraintsForInstance(instance);
     assertThat(isUpdated).isTrue();
 
     Optional<ResourceRestraintInstance> updatedInstance = restraintInstanceRepository.findById(instance.getUuid());
@@ -230,7 +234,7 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase
 
     when(nodeExecutionService.getByPlanNodeUuid(any(), any())).thenThrow(new InvalidRequestException(""));
 
-    boolean isUpdated = resourceRestraintService.updateActiveConstraintsForInstance(instance);
+    boolean isUpdated = resourceRestraintInstanceService.updateActiveConstraintsForInstance(instance);
     assertThat(isUpdated).isFalse();
   }
 
@@ -241,8 +245,9 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase
   public void shouldGetAllByRestraintIdAndResourceUnitAndStates() {
     ResourceRestraintInstance instance = saveInstance(ACTIVE, PLAN);
 
-    List<ResourceRestraintInstance> instances = resourceRestraintService.getAllByRestraintIdAndResourceUnitAndStates(
-        instance.getResourceRestraintId(), instance.getResourceUnit(), Lists.newArrayList(ACTIVE));
+    List<ResourceRestraintInstance> instances =
+        resourceRestraintInstanceService.getAllByRestraintIdAndResourceUnitAndStates(
+            instance.getResourceRestraintId(), instance.getResourceUnit(), Lists.newArrayList(ACTIVE));
 
     assertThat(instances).isNotEmpty();
     assertThat(instances.size()).isEqualTo(1);
@@ -258,7 +263,7 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase
     ResourceRestraintInstance instance = saveInstance(resourceRestraintId, ACTIVE, PLAN, 1);
     saveInstance(resourceRestraintId, ACTIVE, PLAN, 2);
 
-    int maxOrder = resourceRestraintService.getMaxOrder(instance.getResourceRestraintId());
+    int maxOrder = resourceRestraintInstanceService.getMaxOrder(instance.getResourceRestraintId());
     assertThat(maxOrder).isEqualTo(2);
   }
 
@@ -271,7 +276,7 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase
     ResourceRestraintInstance instance = saveInstance(releaseEntityId);
     saveInstance(releaseEntityId);
 
-    int maxOrder = resourceRestraintService.getAllCurrentlyAcquiredPermits(
+    int maxOrder = resourceRestraintInstanceService.getAllCurrentlyAcquiredPermits(
         instance.getReleaseEntityType(), instance.getReleaseEntityId());
     assertThat(maxOrder).isEqualTo(2);
   }
@@ -302,7 +307,7 @@ public class ResourceRestraintServiceImplTest extends OrchestrationStepsTestBase
                                              .resourceRestraintId(resourceRestraintId)
                                              .state(state)
                                              .build();
-    ResourceRestraintInstance savedInstance = resourceRestraintService.save(instance);
+    ResourceRestraintInstance savedInstance = resourceRestraintInstanceService.save(instance);
     assertThat(savedInstance).isNotNull();
 
     return savedInstance;

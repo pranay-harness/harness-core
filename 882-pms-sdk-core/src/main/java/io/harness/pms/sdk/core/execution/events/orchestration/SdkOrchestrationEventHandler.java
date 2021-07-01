@@ -17,7 +17,6 @@ import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
-import io.harness.serializer.ProtoUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -82,7 +81,6 @@ public class SdkOrchestrationEventHandler extends PmsBaseEventHandler<Orchestrat
     return io.harness.pms.sdk.core.events.OrchestrationEvent.builder()
         .eventType(event.getEventType())
         .ambiance(event.getAmbiance())
-        .createdAt(ProtoUtils.timestampToUnixMillis(event.getCreatedAt()))
         .status(event.getStatus())
         .resolvedStepParameters(
             RecastOrchestrationUtils.fromDocumentJson(event.getStepParameters().toStringUtf8(), StepParameters.class))
