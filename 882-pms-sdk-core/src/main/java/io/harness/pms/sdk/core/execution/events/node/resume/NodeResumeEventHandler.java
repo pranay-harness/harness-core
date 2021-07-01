@@ -57,20 +57,20 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
   protected Map<String, String> extractMetricContext(NodeResumeEvent message) {
     return ImmutableMap.<String, String>builder()
         .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
-        .put("projectIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
-        .put("orgIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
+        .put("orgIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
+        .put("projectIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
         .build();
   }
 
   @Override
   protected String getMetricPrefix(NodeResumeEvent message) {
-    return "progress_event";
+    return "resume_event";
   }
 
   @Override
   @NonNull
   protected Map<String, String> extraLogProperties(NodeResumeEvent event) {
-    return ImmutableMap.<String, String>builder().put("eventType", NodeExecutionEventType.PROGRESS.name()).build();
+    return ImmutableMap.<String, String>builder().put("eventType", NodeExecutionEventType.RESUME.name()).build();
   }
 
   @Override
