@@ -18,8 +18,8 @@ service PlanCreationService {
 }
 
 message PlanCreationBlobRequest {
-  map<string, YamlFieldBlob> dependencies = 1;
   map<string, PlanCreationContextValue> context = 4;
+  Dependencies deps = 5;
 }
 
 message PlanCreationResponse {
@@ -31,10 +31,10 @@ message PlanCreationResponse {
 
 message PlanCreationBlobResponse {
   map<string, PlanNodeProto> nodes = 1;
-  map<string, YamlFieldBlob> dependencies = 2;
   string startingNodeId = 3;
   map<string, PlanCreationContextValue> context = 4;
   GraphLayoutInfo graphLayoutInfo = 5;
+  Dependencies deps = 6;
 }
 
 message GraphLayoutInfo {
@@ -110,4 +110,9 @@ message SetupMetadata {
 
 message VariablesCreationMetadata {
   bytes gitSyncBranchContext = 1;
+}
+
+message Dependencies {
+  string yaml = 1;
+  map<string, string> dependencies = 2;
 }

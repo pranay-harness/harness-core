@@ -1,18 +1,21 @@
 package io.harness.pms.plan.creation;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.contracts.plan.YamlFieldBlob;
 
 import java.util.HashMap;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 public class PlanCreationBlobResponseUtils {
   public void merge(PlanCreationBlobResponse.Builder builder, PlanCreationBlobResponse other) {
@@ -20,7 +23,7 @@ public class PlanCreationBlobResponseUtils {
       return;
     }
     addNodes(builder, other.getNodesMap());
-    addDependencies(builder, other.getDependenciesMap());
+    addDependencies(builder, other.getDeps());
     mergeStartingNodeId(builder, other.getStartingNodeId());
     mergeContext(builder, other.getContextMap());
     mergeLayoutNodeInfo(builder, other);
@@ -42,24 +45,26 @@ public class PlanCreationBlobResponseUtils {
   }
 
   public void addNode(PlanCreationBlobResponse.Builder builder, PlanNodeProto newNode) {
-    // TODO: Add logic to update only if newNode has a more recent version.
     builder.putNodes(newNode.getUuid(), newNode);
-    builder.removeDependencies(newNode.getUuid());
+    removeDependency(builder, newNode.getUuid());
   }
 
-  public void addDependencies(PlanCreationBlobResponse.Builder builder, Map<String, YamlFieldBlob> fieldBlobs) {
-    if (EmptyPredicate.isEmpty(fieldBlobs)) {
+  public void addDependencies(PlanCreationBlobResponse.Builder builder, Dependencies deps) {
+    if (deps == null || EmptyPredicate.isEmpty(deps.getDependenciesMap())) {
       return;
     }
-    fieldBlobs.forEach((key, value) -> addDependency(builder, key, value));
+    deps.getDependenciesMap().forEach((key, value) -> addDependency(builder, key, value));
   }
 
-  public void addDependency(PlanCreationBlobResponse.Builder builder, String nodeId, YamlFieldBlob fieldBlob) {
+  public void addDependency(PlanCreationBlobResponse.Builder builder, String nodeId, String path) {
     if (builder.containsNodes(nodeId)) {
       return;
     }
+    builder.setDeps(builder.getDeps().toBuilder().putDependencies(nodeId, path).build());
+  }
 
-    builder.putDependencies(nodeId, fieldBlob);
+  public void removeDependency(PlanCreationBlobResponse.Builder builder, String nodeId) {
+    builder.setDeps(builder.getDeps().toBuilder().removeDependencies(nodeId).build());
   }
 
   public void mergeStartingNodeId(PlanCreationBlobResponse.Builder builder, String otherStartingNodeId) {
