@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface CVConfigToHealthSourceTransformer<C extends CVConfig, T extends HealthSourceSpec> {
   default T transform(List<? extends CVConfig> cvConfigGroup) {
-    Preconditions.checkArgument(isNotEmpty(cvConfigGroup), "List of cvConfigs can not empty");
+    Preconditions.checkArgument(isNotEmpty(cvConfigGroup), "List of cvConfigs can not empty.");
     Preconditions.checkArgument(cvConfigGroup.stream().map(CVConfig::getIdentifier).distinct().count() == 1,
         "Group ID should be same for List of all configs.");
     List<C> typedCVConfig = (List<C>) cvConfigGroup;
