@@ -14,9 +14,6 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 @OwnedBy(HarnessTeam.DX)
 public interface GitFileLocationRepository
     extends PagingAndSortingRepository<GitFileLocation, String>, GitFileLocationRepositoryCustom {
-  Optional<GitFileLocation> findByProjectIdAndOrganizationIdAndAccountIdAndEntityTypeAndEntityIdentifier(
-      String projectId, String orgId, String accountId, String entityType, String entityId);
-
   long countByProjectIdAndOrganizationIdAndAccountIdAndScopeAndEntityType(
       String projectId, String orgId, String accountId, Scope scope, String entityType);
 
