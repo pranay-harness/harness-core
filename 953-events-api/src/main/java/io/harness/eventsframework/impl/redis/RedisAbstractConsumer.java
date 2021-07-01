@@ -43,6 +43,11 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
     initConsumerGroup(topicName, redisConfig, maxProcessingTime, batchSize);
   }
 
+  public RedisAbstractConsumer(String topicName, String groupName, @NotNull RedissonClient redissonClient,
+      Duration maxProcessingTime, int batchSize) {
+    super(topicName, groupName);
+    initConsumerGroup(topicName, redissonClient, maxProcessingTime, batchSize);
+  }
   public RedisAbstractConsumer(String topicName, String groupName, String consumerName, RedisConfig redisConfig,
       Duration maxProcessingTime, int batchSize) {
     super(topicName, groupName, consumerName);
@@ -56,6 +61,21 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
         RedisUtils.getDeadLetterStream(getTopicName(), redissonClient, redisConfig.getEnvNamespace());
     this.maxProcessingTime = maxProcessingTime;
     this.batchSize = batchSize;
+    RetryConfig retryConfig =
+        RetryConfig.custom().intervalFunction(IntervalFunction.ofExponentialBackoff(1000, 1.5)).maxAttempts(5).build();
+
+    this.retry = Retry.of("redisConsumer:" + topicName, retryConfig);
+    createConsumerGroup();
+  }
+
+  private void initConsumerGroup(
+      String topicName, RedissonClient redissonClient, Duration maxProcessingTime, int batchSize) {
+    this.redissonClient = redissonClient;
+    this.stream = RedisUtils.getStream(getTopicName(), redissonClient, "");
+    this.deadLetterQueue = RedisUtils.getDeadLetterStream(getTopicName(), redissonClient, "");
+    this.maxProcessingTime = maxProcessingTime;
+    this.batchSize = batchSize;
+
     RetryConfig retryConfig =
         RetryConfig.custom().intervalFunction(IntervalFunction.ofExponentialBackoff(1000, 1.5)).maxAttempts(5).build();
 

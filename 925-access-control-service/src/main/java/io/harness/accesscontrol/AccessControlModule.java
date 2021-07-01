@@ -58,6 +58,7 @@ import io.harness.concurrent.HTimeLimiter;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
+import io.harness.eventsframework.impl.redis.RedisUtils;
 import io.harness.ff.FeatureFlagClientModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
@@ -93,6 +94,7 @@ import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.redisson.api.RedissonClient;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @OwnedBy(PL)
@@ -132,36 +134,44 @@ public class AccessControlModule extends AbstractModule {
   }
 
   @Provides
-  @Named(ENTITY_CRUD)
-  public Consumer getEntityCrudConsumer() {
+  @Named("eventsFrameworkRedissonClient")
+  @Singleton
+  public RedissonClient getRedissonClient() {
     RedisConfig redisConfig = config.getEventsConfig().getRedisConfig();
+    return RedisUtils.getClient(redisConfig);
+  }
+
+  @Provides
+  @Named(ENTITY_CRUD)
+  @Singleton
+  public Consumer getEntityCrudConsumer(@Named("eventsFrameworkRedissonClient") RedissonClient redissonClient) {
     if (!config.getEventsConfig().isEnabled()) {
       return NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME);
     }
-    return RedisConsumer.of(ENTITY_CRUD, ACCESS_CONTROL_SERVICE.getServiceId(), redisConfig,
+    return RedisConsumer.of(ENTITY_CRUD, ACCESS_CONTROL_SERVICE.getServiceId(), redissonClient,
         ENTITY_CRUD_MAX_PROCESSING_TIME, ENTITY_CRUD_READ_BATCH_SIZE);
   }
 
   @Provides
   @Named(FEATURE_FLAG_STREAM)
-  public Consumer getFeatureFlagConsumer() {
-    RedisConfig redisConfig = config.getEventsConfig().getRedisConfig();
+  @Singleton
+  public Consumer getFeatureFlagConsumer(@Named("eventsFrameworkRedissonClient") RedissonClient redissonClient) {
     if (!config.getEventsConfig().isEnabled()) {
       return NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME);
     }
     return RedisConsumer.of(
-        FEATURE_FLAG_STREAM, ACCESS_CONTROL_SERVICE.getServiceId(), redisConfig, Duration.ofMinutes(10), 3);
+        FEATURE_FLAG_STREAM, ACCESS_CONTROL_SERVICE.getServiceId(), redissonClient, Duration.ofMinutes(10), 3);
   }
 
   @Provides
   @Named(USERMEMBERSHIP)
-  public Consumer getUserMembershipConsumer() {
-    RedisConfig redisConfig = config.getEventsConfig().getRedisConfig();
+  @Singleton
+  public Consumer getUserMembershipConsumer(@Named("eventsFrameworkRedissonClient") RedissonClient redissonClient) {
     if (!config.getEventsConfig().isEnabled()) {
       return NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME);
     }
     return RedisConsumer.of(
-        USERMEMBERSHIP, ACCESS_CONTROL_SERVICE.getServiceId(), redisConfig, Duration.ofMinutes(10), 3);
+        USERMEMBERSHIP, ACCESS_CONTROL_SERVICE.getServiceId(), redissonClient, Duration.ofMinutes(10), 3);
   }
 
   @Provides
