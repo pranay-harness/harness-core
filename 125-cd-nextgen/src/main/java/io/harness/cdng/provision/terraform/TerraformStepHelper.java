@@ -119,7 +119,12 @@ public class TerraformStepHelper {
     validateGitStoreConfig(gitStoreConfig);
     String connectorId = gitStoreConfig.getConnectorRef().getValue();
     ConnectorInfoDTO connectorDTO = k8sStepHelper.getConnector(connectorId, ambiance);
-    String validationMessage = String.format("Invalid type for manifestType: [%s]", identifier);
+    String validationMessage = "";
+    if (identifier.equals(TerraformStepHelper.TF_CONFIG_FILES)) {
+      validationMessage = "Config Files";
+    } else {
+      validationMessage = String.format("Var Files with identifier: %s", identifier);
+    }
     // TODO: fix manifest part, remove k8s dependency
     k8sStepHelper.validateManifest(store.getKind(), connectorDTO, validationMessage);
     GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
