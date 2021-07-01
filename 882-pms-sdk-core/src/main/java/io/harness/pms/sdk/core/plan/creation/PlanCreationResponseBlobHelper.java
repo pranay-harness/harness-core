@@ -1,18 +1,20 @@
 package io.harness.pms.sdk.core.plan.creation;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.mappers.PlanNodeProtoMapper;
-import io.harness.pms.yaml.YamlField;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 public class PlanCreationResponseBlobHelper {
   @Inject PlanNodeProtoMapper planNodeProtoMapper;
@@ -25,10 +27,8 @@ public class PlanCreationResponseBlobHelper {
           (k, v) -> newNodes.put(k, planNodeProtoMapper.toPlanNodeProtoWithDecoratedFields(v)));
       finalBlobResponseBuilder.putAllNodes(newNodes);
     }
-    if (EmptyPredicate.isNotEmpty(planCreationResponse.getDependencies())) {
-      for (Map.Entry<String, YamlField> dependency : planCreationResponse.getDependencies().entrySet()) {
-        finalBlobResponseBuilder.putDependencies(dependency.getKey(), dependency.getValue().toFieldBlob());
-      }
+    if (planCreationResponse.getDependencies() != null) {
+      finalBlobResponseBuilder.setDeps(planCreationResponse.getDependencies());
     }
     if (EmptyPredicate.isNotEmpty(planCreationResponse.getStartingNodeId())) {
       finalBlobResponseBuilder.setStartingNodeId(planCreationResponse.getStartingNodeId());
