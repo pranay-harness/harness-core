@@ -44,7 +44,7 @@ public final class DelegateProfile implements PersistentEntity, UuidAware, Creat
                  .field(DelegateProfileKeys.name)
                  .field(DelegateProfileKeys.owner)
                  .unique(true)
-                 .name("uniqueName")
+                 .name("uniqueDelegateProfileName")
                  .build())
         .add(CompoundMongoIndex.builder()
                  .field(DelegateProfileKeys.accountId)
