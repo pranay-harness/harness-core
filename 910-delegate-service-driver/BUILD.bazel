@@ -1,5 +1,23 @@
 load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/macros.bzl", "run_analysis")
+
+shared_deps = [
+    "//920-delegate-service-beans:module",
+    "//950-wait-engine:module",
+    "//955-delegate-beans:module",
+    "//970-grpc:module",
+    "@maven//:com_google_code_findbugs_annotations",
+    "@maven//:com_google_inject_guice",
+    "@maven//:io_fabric8_fabric8_utils",
+    "@maven//:io_grpc_grpc_core",
+    "@maven//:io_grpc_grpc_netty_shaded",
+    "@maven//:org_apache_commons_commons_collections4",
+    "@maven//:org_apache_commons_commons_lang3",
+    "@maven//:org_mongodb_morphia_morphia",
+    "@maven//:org_slf4j_slf4j_api",
+    "//:lombok",
+]
 
 java_library(
     name = "module",
@@ -7,22 +25,30 @@ java_library(
     resources = [
     ],
     visibility = ["//visibility:public"],
+    deps = shared_deps,
+)
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
     deps = [
+        ":module",
         "//:lombok",
-        "//920-delegate-service-beans:module",
-        "//950-wait-engine:module",
-        "//955-delegate-beans:module",
-        "//970-grpc:module",
-        "@maven//:com_google_code_findbugs_annotations",
-        "@maven//:com_google_inject_guice",
-        "@maven//:io_fabric8_fabric8_utils",
-        "@maven//:io_grpc_grpc_core",
-        "@maven//:io_grpc_grpc_netty_shaded",
-        "@maven//:org_apache_commons_commons_collections4",
-        "@maven//:org_apache_commons_commons_lang3",
-        "@maven//:org_mongodb_morphia_morphia",
-        "@maven//:org_slf4j_slf4j_api",
+        "//960-persistence:supporter-test",
+        "//990-commons-test:module",
+        "@maven//:commons_codec_commons_codec",
+        "@maven//:commons_logging_commons_logging",
+        "@maven//:de_bwaldvogel_mongo_java_server",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_api_mockito",
+        "@maven//:org_powermock_powermock_module_junit4",
     ],
 )
+
+run_tests()
 
 run_analysis()
