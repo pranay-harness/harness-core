@@ -59,6 +59,7 @@ public class Instance {
 
   private String infrastructureMappingId;
   private String infraMappingType;
+  private String connectorId;
 
   private ArtifactDetails primaryArtifact;
 

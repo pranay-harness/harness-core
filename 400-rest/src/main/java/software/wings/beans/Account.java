@@ -764,6 +764,7 @@ public class Account extends Base implements PersistentRegularIterable {
     public static final String ceLicenseInfo = "ceLicenseInfo";
     public static final String isHarnessSupportAccessAllowed = "isHarnessSupportAccessAllowed";
     public static final String resourceLookupSyncIteration = "resourceLookupSyncIteration";
+    public static final String instanceStatsMetricsPublisherInteration = "instanceStatsMetricsPublisherIteration";
     public static final String DELEGATE_CONFIGURATION_DELEGATE_VERSIONS =
         delegateConfiguration + "." + DelegateConfigurationKeys.delegateVersions;
   }
