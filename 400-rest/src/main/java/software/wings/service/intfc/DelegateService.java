@@ -85,6 +85,9 @@ public interface DelegateService extends OwnedByAccount {
   DelegateScripts getDelegateScripts(String accountId, String version, String managerHost, String verificationHost)
       throws IOException;
 
+  DelegateScripts getDelegateScripts(DelegateParams delegateParams, String managerHost, String verificationHost)
+      throws IOException;
+
   String getLatestDelegateVersion(String accountId);
 
   File downloadScripts(String managerHost, String verificationServiceUrl, String accountId, String delegateName,
