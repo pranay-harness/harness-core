@@ -10,6 +10,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//910-delegate-service-driver:module",
         "//920-delegate-agent-beans:module",
         "//930-delegate-tasks:module",
         "//940-secret-manager-client:module",
