@@ -58,6 +58,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.utils.IdentifierRefHelper;
 import io.harness.validation.Validator;
+import io.harness.validator.NGRegexValidatorConstants;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -72,6 +73,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.query.Sort;
@@ -92,9 +94,14 @@ public class TerraformStepHelper {
   @Named("PRIVILEGED") @Inject private SecretManagerClientService secretManagerClientService;
 
   public String generateFullIdentifier(String provisionerIdentifier, Ambiance ambiance) {
-    return String.format("%s/%s/%s/%s", AmbianceHelper.getAccountId(ambiance),
-        AmbianceHelper.getOrgIdentifier(ambiance), AmbianceHelper.getProjectIdentifier(ambiance),
-        provisionerIdentifier);
+    if (Pattern.matches(NGRegexValidatorConstants.IDENTIFIER_PATTERN, provisionerIdentifier)) {
+      return String.format("%s/%s/%s/%s", AmbianceHelper.getAccountId(ambiance),
+          AmbianceHelper.getOrgIdentifier(ambiance), AmbianceHelper.getProjectIdentifier(ambiance),
+          provisionerIdentifier);
+    } else {
+      throw new InvalidRequestException(String.format(
+          "Provisioner Identifier cannot contain special characters or spaces: [%s]", provisionerIdentifier));
+    }
   }
 
   private void validateGitStoreConfig(GitStoreConfig gitStoreConfig) {
