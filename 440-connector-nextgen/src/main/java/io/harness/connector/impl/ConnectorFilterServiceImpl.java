@@ -1,6 +1,8 @@
 package io.harness.connector.impl;
 
+import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.connector.ConnectorCategory.SECRET_MANAGER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.encryption.Scope.ACCOUNT;
@@ -250,7 +252,8 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
   }
 
   public Criteria createCriteriaFromConnectorFilter(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String searchTerm, ConnectorType connectorType, ConnectorCategory category) {
+      String projectIdentifier, String searchTerm, ConnectorType connectorType, ConnectorCategory category,
+      ConnectorCategory sourceCategory) {
     Criteria criteria = new Criteria();
     criteria.and(ConnectorKeys.accountIdentifier).is(accountIdentifier);
     criteria.orOperator(where(ConnectorKeys.deleted).exists(false), where(ConnectorKeys.deleted).is(false));
@@ -263,7 +266,9 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
     if (category != null) {
       criteria.and(ConnectorKeys.categories).in(category);
     }
-
+    if (sourceCategory != null && SECRET_MANAGER == sourceCategory) {
+      criteria.and(ConnectorKeys.identifier).in(HARNESS_SECRET_MANAGER_IDENTIFIER);
+    }
     if (isNotBlank(searchTerm)) {
       Criteria seachCriteria = new Criteria().orOperator(where(ConnectorKeys.name).regex(searchTerm, "i"),
           where(NGCommonEntityConstants.IDENTIFIER_KEY).regex(searchTerm, "i"),

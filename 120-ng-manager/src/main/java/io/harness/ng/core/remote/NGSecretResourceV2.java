@@ -15,6 +15,7 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
+import io.harness.connector.ConnectorCategory;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
@@ -160,6 +161,7 @@ public class NGSecretResourceV2 {
       @QueryParam("type") SecretType secretType,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam("types") List<SecretType> secretTypes,
+      @QueryParam("source_category") ConnectorCategory sourceCategory,
       @QueryParam(INCLUDE_SECRETS_FROM_EVERY_SUB_SCOPE) @DefaultValue("false") boolean includeSecretsFromEverySubScope,
       @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size) {
@@ -170,7 +172,7 @@ public class NGSecretResourceV2 {
       secretTypes.add(secretType);
     }
     return ResponseDTO.newResponse(ngSecretService.list(accountIdentifier, orgIdentifier, projectIdentifier,
-        identifiers, secretTypes, includeSecretsFromEverySubScope, searchTerm, page, size));
+        identifiers, secretTypes, includeSecretsFromEverySubScope, searchTerm, page, size, sourceCategory));
   }
 
   @GET

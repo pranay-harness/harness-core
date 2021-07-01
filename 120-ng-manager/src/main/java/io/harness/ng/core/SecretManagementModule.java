@@ -3,6 +3,10 @@ package io.harness.ng.core;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.impl.NGConnectorSecretManagerServiceImpl;
+import io.harness.connector.impl.NGVaultServiceImpl;
+import io.harness.connector.services.NGConnectorSecretManagerService;
+import io.harness.connector.services.NGVaultService;
 import io.harness.ng.core.api.NGEncryptedDataService;
 import io.harness.ng.core.api.NGSecretActivityService;
 import io.harness.ng.core.api.NGSecretManagerService;
@@ -18,6 +22,8 @@ import io.harness.ng.core.dao.NGEncryptedDataDao;
 import io.harness.ng.core.dao.impl.NGEncryptedDaoServiceImpl;
 import io.harness.secrets.SecretsFileService;
 
+import software.wings.service.impl.security.NGEncryptorService;
+import software.wings.service.impl.security.NGEncryptorServiceImpl;
 import software.wings.service.intfc.FileService;
 
 import com.google.inject.AbstractModule;
@@ -30,10 +36,13 @@ public class SecretManagementModule extends AbstractModule {
     bind(SecretsFileService.class).to(NGSecretsFileServiceImpl.class);
     bind(NGEncryptedDataDao.class).to(NGEncryptedDaoServiceImpl.class);
     bind(NGEncryptedDataService.class).to(NGEncryptedDataServiceImpl.class);
+    bind(NGConnectorSecretManagerService.class).to(NGConnectorSecretManagerServiceImpl.class);
     bind(NGSecretManagerService.class).to(NGSecretManagerServiceImpl.class);
     bind(NGSecretServiceV2.class).to(NGSecretServiceV2Impl.class);
     bind(SecretCrudService.class).to(SecretCrudServiceImpl.class);
     bind(NGSecretActivityService.class).to(NGSecretActivityServiceImpl.class);
+    bind(NGEncryptorService.class).to(NGEncryptorServiceImpl.class);
+    bind(NGVaultService.class).to(NGVaultServiceImpl.class);
   }
 
   private void registerRequiredBindings() {

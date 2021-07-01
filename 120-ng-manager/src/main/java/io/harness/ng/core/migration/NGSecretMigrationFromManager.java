@@ -4,6 +4,7 @@ import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.ng.core.migration.NGSecretManagerMigration.BATCH_SIZE;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 import static io.harness.secretmanagerclient.SecretType.SSHKey;
 import static io.harness.secretmanagerclient.SecretType.SecretFile;
@@ -13,6 +14,7 @@ import static io.harness.security.encryption.EncryptionType.KMS;
 import static io.harness.security.encryption.EncryptionType.LOCAL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.connector.services.NGConnectorSecretManagerService;
 import io.harness.data.encoding.EncodingUtils;
 import io.harness.migration.NGMigration;
 import io.harness.ng.core.api.NGEncryptedDataService;
@@ -42,7 +44,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +54,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.util.CloseableIterator;
 
 @Slf4j
 @OwnedBy(PL)
@@ -69,34 +71,41 @@ public class NGSecretMigrationFromManager implements NGMigration {
   private final SecretsFileService secretsFileService;
   private final SecretRepository secretRepository;
   private final NGEncryptedDataService encryptedDataService;
+  private final NGConnectorSecretManagerService ngConnectorSecretManagerService;
 
   @Inject
   public NGSecretMigrationFromManager(MongoTemplate mongoTemplate, SecretManagerClient secretManagerClient,
       NGEncryptedDataDao encryptedDataDao, SecretsFileService secretsFileService, SecretRepository secretRepository,
-      NGEncryptedDataService encryptedDataService) {
+      NGEncryptedDataService encryptedDataService, NGConnectorSecretManagerService ngConnectorSecretManagerService) {
     this.mongoTemplate = mongoTemplate;
     this.secretManagerClient = secretManagerClient;
     this.encryptedDataDao = encryptedDataDao;
     this.secretsFileService = secretsFileService;
     this.secretRepository = secretRepository;
     this.encryptedDataService = encryptedDataService;
+    this.ngConnectorSecretManagerService = ngConnectorSecretManagerService;
   }
 
   @Override
   public void migrate() {
     Criteria criteria = Criteria.where(SecretKeys.migratedFromManager).ne(Boolean.TRUE);
-    List<Secret> secrets = mongoTemplate.find(new Query(criteria), Secret.class);
-    secrets.forEach(this::handleWithCare);
+    CloseableIterator<Secret> iterator = runQueryWithBatch(criteria, BATCH_SIZE);
+    while (iterator.hasNext()) {
+      Secret secret = iterator.next();
+      handleWithCare(secret);
+    }
   }
 
   private void handleWithCare(Secret secret) {
     try {
       Failsafe.with(retryPolicy).run(() -> handle(secret));
     } catch (Exception exception) {
-      log.error(String.format(
-          "Unexpected error occurred during migration of secret with account %s, org %s, project %s and identifier %s",
-          secret.getAccountIdentifier(), secret.getOrgIdentifier(), secret.getProjectIdentifier(),
-          secret.getIdentifier()));
+      log.error(
+          String.format(
+              "[NGSecretMigrationFromManager] Unexpected error occurred during migration of secret with account %s, org %s, project %s and identifier %s",
+              secret.getAccountIdentifier(), secret.getOrgIdentifier(), secret.getProjectIdentifier(),
+              secret.getIdentifier()),
+          exception);
     }
   }
 
@@ -114,7 +123,7 @@ public class NGSecretMigrationFromManager implements NGMigration {
         }
         if (encryptedData == null) {
           log.info(String.format(
-              "Secret with accountIdentifier: %s, orgIdentifier: %s, projectIdentifier: %s and identifier: %s could not be migrated because Encrypted Data entry not found in manager",
+              "[NGSecretMigrationFromManager] Secret with accountIdentifier: %s, orgIdentifier: %s, projectIdentifier: %s and identifier: %s could not be migrated because Encrypted Data entry not found in manager",
               secret.getAccountIdentifier(), secret.getOrgIdentifier(), secret.getProjectIdentifier(),
               secret.getIdentifier()));
           secret.setMigratedFromManager(true);
@@ -152,7 +161,7 @@ public class NGSecretMigrationFromManager implements NGMigration {
     secret.setMigratedFromManager(true);
     secretRepository.save(secret);
     log.info(String.format(
-        "Secret with accountIdentifier: %s, orgIdentifier: %s, projectIdentifier: %s and identifier: %s successfully migrated from manager",
+        "[NGSecretMigrationFromManager] Secret with accountIdentifier: %s, orgIdentifier: %s, projectIdentifier: %s and identifier: %s successfully migrated from manager",
         secret.getAccountIdentifier(), secret.getOrgIdentifier(), secret.getProjectIdentifier(),
         secret.getIdentifier()));
   }
@@ -196,8 +205,8 @@ public class NGSecretMigrationFromManager implements NGMigration {
 
   private NGEncryptedData getDummyEncryptedData(Secret secret) {
     SecretManagerConfigDTO secretManagerConfigDTO =
-        getResponse(secretManagerClient.getSecretManager(getSecretManagerIdentifier(secret),
-            secret.getAccountIdentifier(), secret.getOrgIdentifier(), secret.getProjectIdentifier(), true));
+        ngConnectorSecretManagerService.getUsingIdentifier(secret.getAccountIdentifier(), secret.getOrgIdentifier(),
+            secret.getProjectIdentifier(), getSecretManagerIdentifier(secret), true);
     if (secretManagerConfigDTO == null) {
       return null;
     }
@@ -247,5 +256,11 @@ public class NGSecretMigrationFromManager implements NGMigration {
         .base64Encoded(encryptedDataMigrationDTO.isBase64Encoded())
         .type(encryptedDataMigrationDTO.getType())
         .build();
+  }
+
+  private CloseableIterator<Secret> runQueryWithBatch(Criteria criteria, int batchSize) {
+    Query query = new Query(criteria);
+    query.cursorBatchSize(batchSize);
+    return mongoTemplate.stream(query, Secret.class);
   }
 }

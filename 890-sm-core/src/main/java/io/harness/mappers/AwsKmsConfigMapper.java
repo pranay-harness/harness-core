@@ -51,6 +51,7 @@ public class AwsKmsConfigMapper {
   @NotNull
   private static void populateKmsConfig(KmsConfig kmsConfig, BaseAwsKmsConfigDTO baseAwsKmsConfigDTO) {
     kmsConfig.setKmsArn(baseAwsKmsConfigDTO.getKmsArn());
+    kmsConfig.setRegion(baseAwsKmsConfigDTO.getRegion());
     kmsConfig.setAssumeStsRoleOnDelegate(false);
     kmsConfig.setAssumeIamRoleOnDelegate(false);
 

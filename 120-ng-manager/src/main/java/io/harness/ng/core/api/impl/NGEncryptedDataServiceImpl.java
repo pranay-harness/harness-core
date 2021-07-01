@@ -10,7 +10,6 @@ import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.remote.client.RestClientUtils.getResponse;
 import static io.harness.secretmanagerclient.SecretType.SecretFile;
 import static io.harness.secretmanagerclient.SecretType.SecretText;
 import static io.harness.secretmanagerclient.ValueType.Inline;
@@ -24,6 +23,7 @@ import static io.harness.security.encryption.SecretManagerType.VAULT;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.SecretManagerConfig;
+import io.harness.connector.services.NGConnectorSecretManagerService;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryptors.KmsEncryptorsRegistry;
@@ -83,19 +83,20 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
   private final KmsEncryptorsRegistry kmsEncryptorsRegistry;
   private final VaultEncryptorsRegistry vaultEncryptorsRegistry;
   private final SecretsFileService secretsFileService;
-  private final SecretManagerClient secretManagerClient;
   private final GlobalEncryptDecryptClient globalEncryptDecryptClient;
+  private final NGConnectorSecretManagerService ngConnectorSecretManagerService;
 
   @Inject
   public NGEncryptedDataServiceImpl(NGEncryptedDataDao encryptedDataDao, KmsEncryptorsRegistry kmsEncryptorsRegistry,
       VaultEncryptorsRegistry vaultEncryptorsRegistry, SecretsFileService secretsFileService,
-      SecretManagerClient secretManagerClient, GlobalEncryptDecryptClient globalEncryptDecryptClient) {
+      SecretManagerClient secretManagerClient, GlobalEncryptDecryptClient globalEncryptDecryptClient,
+      NGConnectorSecretManagerService ngConnectorSecretManagerService) {
     this.encryptedDataDao = encryptedDataDao;
     this.kmsEncryptorsRegistry = kmsEncryptorsRegistry;
     this.vaultEncryptorsRegistry = vaultEncryptorsRegistry;
     this.secretsFileService = secretsFileService;
-    this.secretManagerClient = secretManagerClient;
     this.globalEncryptDecryptClient = globalEncryptDecryptClient;
+    this.ngConnectorSecretManagerService = ngConnectorSecretManagerService;
   }
 
   @Override
@@ -473,6 +474,7 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
             // get secret manager with which this was secret was encrypted
             SecretManagerConfigDTO secretManager = getSecretManager(
                 accountIdentifier, orgIdentifier, projectIdentifier, encryptedData.getSecretManagerIdentifier(), false);
+
             if (secretManager != null) {
               EncryptionConfig encryptionConfig = SecretManagerConfigMapper.fromDTO(secretManager);
               EncryptedRecordData encryptedRecordData;
@@ -557,8 +559,8 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     if (identifier == null) {
       return getLocalEncryptionConfig(accountIdentifier);
     }
-    return getResponse(secretManagerClient.getSecretManager(
-        identifier, accountIdentifier, orgIdentifier, projectIdentifier, maskSecrets));
+    return ngConnectorSecretManagerService.getUsingIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, maskSecrets);
   }
 
   private boolean isReadOnlySecretManager(SecretManagerConfigDTO secretManager) {

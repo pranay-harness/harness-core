@@ -185,9 +185,10 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   }
 
   public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category) {
+      String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category,
+      ConnectorCategory sourceCategory) {
     Criteria criteria = filterService.createCriteriaFromConnectorFilter(
-        accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category);
+        accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category, sourceCategory);
     Pageable pageable = PageUtils.getPageRequest(
         PageRequest.builder()
             .pageIndex(page)
@@ -376,7 +377,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
             existingConnector.getIdentifier());
         newConnector.setHeartbeatPerpetualTaskId(
             connectorHeartbeatTaskId == null ? null : connectorHeartbeatTaskId.getId());
-      } else {
+      } else if (existingConnector.getHeartbeatPerpetualTaskId() != null) {
         connectorHeartbeatService.resetPerpetualTask(
             accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
         newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
