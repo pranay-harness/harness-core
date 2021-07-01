@@ -1133,10 +1133,18 @@ public class GitClientV2Impl implements GitClientV2 {
   }
 
   private void setPathsForCheckout(List<String> filePaths, CheckoutCommand checkoutCommand) {
-    if (filePaths.size() == 1 && filePaths.get(0).equals("")) {
+    if (filePaths.size() == 1 && (filePaths.get(0).equals("") || filePaths.get(0).equals("/"))) {
       checkoutCommand.setAllPaths(true);
     } else {
-      filePaths.forEach(checkoutCommand::addPath);
+      filePaths.stream().map(this::getNormalRelativePath).forEach(checkoutCommand::addPath);
+    }
+  }
+
+  private String getNormalRelativePath(String path) {
+    if (path.charAt(0) == '/') {
+      return path.substring(1);
+    } else {
+      return path;
     }
   }
 
