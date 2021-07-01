@@ -5,6 +5,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfo;
+import io.harness.morphia.CgOrchestrationBeansMorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CIBeansKryoRegistrar;
 import io.harness.serializer.morphia.CIBeansMorphiaRegistrar;
@@ -40,6 +41,7 @@ public class CiBeansRegistrars {
           .addAll(OrchestrationStepsModuleRegistrars.morphiaRegistrars)
           .add(CIBeansMorphiaRegistrar.class)
           .add(YamlMorphiaRegistrar.class)
+          .add(CgOrchestrationBeansMorphiaRegistrar.class)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =

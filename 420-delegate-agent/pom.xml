@@ -14,15 +14,15 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>425-verification-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>430-cv-nextgen-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
+		<dependency>
+			<groupId>software.wings</groupId>
+			<artifactId>930-cg-verification-beans</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
             <groupId>software.wings</groupId>
             <artifactId>980-commons</artifactId>
             <version>${project.parent.version}</version>

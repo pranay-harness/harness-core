@@ -7,7 +7,6 @@ HarnessTeam = "DEL"
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
 ] + [
-    "//425-verification-commons:module",
     "//430-cv-nextgen-commons:module",
     "//460-capability:module",
     "//470-alert:module",
@@ -15,6 +14,7 @@ shared_dependencies = [
     "//910-delegate-service-driver:module",
     "//920-delegate-agent-beans:module",
     "//920-delegate-service-beans:module",
+    "//930-cg-verification-beans:module",
     "//940-feature-flag:module",
     "//945-ng-audit-client:module",
     "//948-access-control-sdk:module",

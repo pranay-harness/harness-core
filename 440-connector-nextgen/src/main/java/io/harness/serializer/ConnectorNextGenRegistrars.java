@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
 import io.harness.filter.serializer.FiltersRegistrars;
 import io.harness.gitsync.serializer.GitSyncSdkRegistrar;
+import io.harness.morphia.CgOrchestrationBeansMorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.ConnectorNextGenKryoRegistrar;
 import io.harness.serializer.morphia.ConnectorMorphiaClassesRegistrar;
@@ -50,6 +51,7 @@ public class ConnectorNextGenRegistrars {
           .addAll(GitSyncSdkRegistrar.morphiaRegistrars)
           .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
           .addAll(OutboxEventRegistrars.morphiaRegistrars)
+          .add(CgOrchestrationBeansMorphiaRegistrar.class)
           .build();
 
   public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =

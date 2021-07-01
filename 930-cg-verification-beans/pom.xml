@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>425-verification-commons</artifactId>
+    <artifactId>930-cg-verification-beans</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -54,7 +54,7 @@
             <groupId>software.wings</groupId>
             <artifactId>870-cg-orchestration</artifactId>
             <version>${project.parent.version}</version>
-        </dependency>        
+        </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>940-cg-audit-service</artifactId>

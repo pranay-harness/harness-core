@@ -750,85 +750,85 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>425-verification-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>430-cv-nextgen-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
+		<dependency>
             <groupId>software.wings</groupId>
             <artifactId>450-ce-views</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
+		<dependency>
             <groupId>software.wings</groupId>
             <artifactId>460-capability</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
+		<dependency>
             <groupId>software.wings</groupId>
             <artifactId>490-ce-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
+		<dependency>
             <groupId>software.wings</groupId>
             <artifactId>860-orchestration-steps</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
+		<dependency>
             <groupId>software.wings</groupId>
             <artifactId>860-orchestration-visualization</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
+		<dependency>
             <groupId>software.wings</groupId>
             <artifactId>870-cg-orchestration</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
+		<dependency>
             <groupId>software.wings</groupId>
             <artifactId>870-orchestration</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
+		<dependency>
             <groupId>software.wings</groupId>
             <artifactId>874-orchestration-delay</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
+		<dependency>
             <groupId>software.wings</groupId>
             <artifactId>878-pipeline-service-utilities</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
+		<dependency>
             <groupId>software.wings</groupId>
             <artifactId>879-pms-sdk</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
+		<dependency>
             <groupId>software.wings</groupId>
             <artifactId>890-sm-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
+		<dependency>
             <groupId>software.wings</groupId>
             <artifactId>910-delegate-service-driver</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
+		<dependency>
             <groupId>software.wings</groupId>
             <artifactId>920-delegate-agent-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
+		<dependency>
             <groupId>software.wings</groupId>
             <artifactId>920-delegate-service-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
+		<dependency>
+			<groupId>software.wings</groupId>
+			<artifactId>930-cg-verification-beans</artifactId>
+			<version>${project.parent.version}</version>
+		</dependency>
+		<dependency>
             <groupId>software.wings</groupId>
             <artifactId>930-ng-core-clients</artifactId>
             <version>${project.parent.version}</version>

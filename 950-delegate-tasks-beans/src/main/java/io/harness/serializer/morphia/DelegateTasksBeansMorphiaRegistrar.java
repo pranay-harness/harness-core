@@ -40,6 +40,8 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.ng.core.models.Secret;
 
+import software.wings.metrics.TimeSeriesMetricDefinition;
+
 import java.util.Set;
 
 @BreakDependencyOn("io.harness.capability.CapabilityRequirement")
@@ -90,5 +92,6 @@ public class DelegateTasksBeansMorphiaRegistrar implements MorphiaRegistrar {
     h.put("delegate.task.artifacts.gcr.GcrArtifactDelegateResponse", GcrArtifactDelegateResponse.class);
     h.put("delegate.task.gcp.request.GcpValidationRequest", GcpValidationRequest.class);
     h.put("delegate.task.gcp.response.GcpValidationTaskResponse", GcpValidationTaskResponse.class);
+    h.put("metrics.TimeSeriesMetricDefinition", TimeSeriesMetricDefinition.class);
   }
 }
