@@ -104,7 +104,6 @@ public class AggregatorSecondarySyncController extends AggregatorBaseSyncControl
       }
     } catch (InterruptedException e) {
       log.warn("Secondary sync has been interrupted. Exiting", e);
-      Thread.currentThread().interrupt();
     } catch (Exception e) {
       log.error("Secondary sync failed due to exception ", e);
     } finally {
@@ -139,8 +138,11 @@ public class AggregatorSecondarySyncController extends AggregatorBaseSyncControl
   private void stopDebeziumEngine(DebeziumEngine<ChangeEvent<String, String>> debeziumEngine) {
     try {
       debeziumEngine.close();
+      TimeUnit.SECONDS.sleep(10);
     } catch (IOException exception) {
       log.error("Failed to close debezium engine", exception);
+    } catch (InterruptedException e) {
+      log.warn("Interrupted while waiting for debezium engine to close", e);
     }
   }
 
