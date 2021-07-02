@@ -65,7 +65,6 @@ import retrofit2.Call;
 public class CustomLogDataCollectionTaskTest extends CategoryTest {
   CustomLogDataCollectionInfo dataCollectionInfo;
   @Mock private LogAnalysisStoreService logAnalysisStoreService;
-  @Mock private DelegateLogService delegateLogService;
   @Mock private ScheduledFuture future;
   @Mock private EncryptionService encryptionService;
   @Mock private RequestExecutor requestExecutor;
@@ -98,7 +97,6 @@ public class CustomLogDataCollectionTaskTest extends CategoryTest {
   private void setupMocks() throws Exception {
     when(future.cancel(anyBoolean())).thenReturn(true);
     FieldUtils.writeField(dataCollectionTask, "future", future, true);
-    FieldUtils.writeField(dataCollectionTask, "delegateLogService", delegateLogService, true);
     FieldUtils.writeField(dataCollectionTask, "logAnalysisStoreService", logAnalysisStoreService, true);
     FieldUtils.writeField(dataCollectionTask, "encryptionService", encryptionService, true);
     FieldUtils.writeField(dataCollectionTask, "requestExecutor", requestExecutor, true);
@@ -153,7 +151,6 @@ public class CustomLogDataCollectionTaskTest extends CategoryTest {
     Map<String, Map<String, ResponseMapper>> logDefinition = new HashMap<>();
     logDefinition.put(searchUrl, responseMappers);
     setup(logDefinition, new HashSet<>(Arrays.asList("test.hostname.2", "test.hostname.22", "test.hostname.12")));
-    doNothing().when(delegateLogService).save(anyString(), any(ThirdPartyApiCallLog.class));
     when(logAnalysisStoreService.save(any(StateType.class), anyString(), anyString(), anyString(), anyString(),
              anyString(), anyString(), anyString(), anyString(), any(List.class)))
         .thenReturn(true);
@@ -222,7 +219,6 @@ public class CustomLogDataCollectionTaskTest extends CategoryTest {
     dataCollectionTask = new CustomLogDataCollectionTask(
         DelegateTaskPackage.builder().delegateId(generateUuid()).data(taskData).build(), null, null, null);
     setupMocks();
-    doNothing().when(delegateLogService).save(anyString(), any(ThirdPartyApiCallLog.class));
     when(logAnalysisStoreService.save(any(StateType.class), anyString(), anyString(), anyString(), anyString(),
              anyString(), anyString(), anyString(), anyString(), any(List.class)))
         .thenReturn(true);
@@ -283,7 +279,6 @@ public class CustomLogDataCollectionTaskTest extends CategoryTest {
     Map<String, Map<String, ResponseMapper>> logDefinition = new HashMap<>();
     logDefinition.put(searchUrl, responseMappers);
     setup(logDefinition, new HashSet<>(Arrays.asList("test.hostname.2", "test.hostname.22", "test.hostname.12")));
-    doNothing().when(delegateLogService).save(anyString(), any(ThirdPartyApiCallLog.class));
     when(logAnalysisStoreService.save(any(StateType.class), anyString(), anyString(), anyString(), anyString(),
              anyString(), anyString(), anyString(), anyString(), any(List.class)))
         .thenReturn(true);
@@ -339,7 +334,6 @@ public class CustomLogDataCollectionTaskTest extends CategoryTest {
     Map<String, Map<String, ResponseMapper>> logDefinition = new HashMap<>();
     logDefinition.put(searchUrl, responseMappers);
     setup(logDefinition, new HashSet<>(Arrays.asList("test.hostname.2", "test.hostname.22", "test.hostname.12")));
-    doNothing().when(delegateLogService).save(anyString(), any(ThirdPartyApiCallLog.class));
 
     when(logAnalysisStoreService.save(any(StateType.class), anyString(), anyString(), anyString(), anyString(),
              anyString(), anyString(), anyString(), anyString(), any(List.class)))
@@ -414,7 +408,6 @@ public class CustomLogDataCollectionTaskTest extends CategoryTest {
     Map<String, Map<String, ResponseMapper>> logDefinition = new HashMap<>();
     logDefinition.put(searchUrl, responseMappers);
     setup(logDefinition, new HashSet<>(Arrays.asList("test.hostname.2", "test.hostname.22", "test.hostname.12")));
-    doNothing().when(delegateLogService).save(anyString(), any(ThirdPartyApiCallLog.class));
     when(logAnalysisStoreService.save(any(StateType.class), anyString(), anyString(), anyString(), anyString(),
              anyString(), anyString(), anyString(), anyString(), any(List.class)))
         .thenThrow(new IOException("This is bad"))
