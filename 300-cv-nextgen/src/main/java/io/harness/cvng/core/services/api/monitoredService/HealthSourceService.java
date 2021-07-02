@@ -7,11 +7,17 @@ import java.util.Set;
 
 public interface HealthSourceService {
   void create(String accountId, String orgIdentifier, String projectIdentifier, String environmentRef,
-      String serviceRef, Set<HealthSource> healthSources);
-  void checkIfAlreadyPresent(
-      String accountId, String orgIdentifier, String projectIdentifier, Set<HealthSource> healthSources);
-  Set<HealthSource> get(String accountId, String orgIdentifier, String projectIdentifier, List<String> identifiers);
-  void delete(String accountId, String orgIdentifier, String projectIdentifier, List<String> identifiers);
+      String serviceRef, String nameSpaceIdentifier, Set<HealthSource> healthSources);
+  void checkIfAlreadyPresent(String accountId, String orgIdentifier, String projectIdentifier,
+      String nameSpaceIdentifier, Set<HealthSource> healthSources);
+  Set<HealthSource> get(String accountId, String orgIdentifier, String projectIdentifier, String nameSpaceIdentifier,
+      List<String> identifiers);
+  void delete(String accountId, String orgIdentifier, String projectIdentifier, String nameSpaceIdentifier,
+      List<String> identifiers);
   void update(String accountId, String orgIdentifier, String projectIdentifier, String environmentRef,
-      String serviceRef, Set<HealthSource> healthSource);
+      String serviceRef, String nameSpaceIdentifier, Set<HealthSource> healthSource);
+
+  static String getNameSpacedIdentifier(String nameSpace, String identifier) {
+    return nameSpace + "." + identifier;
+  }
 }

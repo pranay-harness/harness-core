@@ -31,55 +31,62 @@ public class HealthSourceServiceImpl implements HealthSourceService {
 
   @Override
   public void create(String accountId, String orgIdentifier, String projectIdentifier, String environmentRef,
-      String serviceRef, Set<HealthSource> healthSources) {
+      String serviceRef, String nameSpaceIdentifier, Set<HealthSource> healthSources) {
     healthSources.forEach(healthSource -> {
       CVConfigUpdateResult cvConfigUpdateResult = healthSource.getSpec().getCVConfigUpdateResult(accountId,
-          orgIdentifier, projectIdentifier, environmentRef, serviceRef, healthSource.getIdentifier(),
+          orgIdentifier, projectIdentifier, environmentRef, serviceRef,
+          HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, healthSource.getIdentifier()),
           healthSource.getName(), Collections.emptyList(), metricPackService);
       cvConfigService.save(cvConfigUpdateResult.getAdded());
       monitoringSourcePerpetualTaskService.createTask(accountId, orgIdentifier, projectIdentifier,
-          healthSource.getSpec().getConnectorRef(), healthSource.getIdentifier());
+          healthSource.getSpec().getConnectorRef(),
+          HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, healthSource.getIdentifier()));
     });
   }
 
   @Override
-  public void checkIfAlreadyPresent(
-      String accountId, String orgIdentifier, String projectIdentifier, Set<HealthSource> healthSources) {
+  public void checkIfAlreadyPresent(String accountId, String orgIdentifier, String projectIdentifier,
+      String nameSpaceIdentifier, Set<HealthSource> healthSources) {
     healthSources.forEach(healthSource -> {
-      List<CVConfig> saved =
-          cvConfigService.list(accountId, orgIdentifier, projectIdentifier, healthSource.getIdentifier());
+      List<CVConfig> saved = cvConfigService.list(accountId, orgIdentifier, projectIdentifier,
+          HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, healthSource.getIdentifier()));
       if (saved != null && saved.size() > 0) {
         throw new DuplicateFieldException(String.format(
             "Already Existing configs for Monitored Service  with identifier %s and orgIdentifier %s and projectIdentifier %s",
-            healthSource.getIdentifier(), orgIdentifier, projectIdentifier));
+            HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, healthSource.getIdentifier()),
+            orgIdentifier, projectIdentifier));
       }
     });
   }
 
   @Override
-  public Set<HealthSource> get(
-      String accountId, String orgIdentifier, String projectIdentifier, List<String> identifiers) {
+  public Set<HealthSource> get(String accountId, String orgIdentifier, String projectIdentifier,
+      String nameSpaceIdentifier, List<String> identifiers) {
     Set<HealthSource> healthSources = new HashSet<>();
-    identifiers.forEach(
-        identifier -> healthSources.add(transformCVConfigs(accountId, orgIdentifier, projectIdentifier, identifier)));
+    identifiers.forEach(identifier
+        -> healthSources.add(
+            transformCVConfigs(accountId, orgIdentifier, projectIdentifier, nameSpaceIdentifier, identifier)));
     return healthSources;
   }
 
   @Override
-  public void delete(String accountId, String orgIdentifier, String projectIdentifier, List<String> identifiers) {
-    identifiers.forEach(
-        identifier -> cvConfigService.deleteByIdentifier(accountId, orgIdentifier, projectIdentifier, identifier));
+  public void delete(String accountId, String orgIdentifier, String projectIdentifier, String nameSpaceIdentifier,
+      List<String> identifiers) {
+    identifiers.forEach(identifier
+        -> cvConfigService.deleteByIdentifier(accountId, orgIdentifier, projectIdentifier,
+            HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, identifier)));
   }
 
   @Override
   public void update(String accountId, String orgIdentifier, String projectIdentifier, String environmentRef,
-      String serviceRef, Set<HealthSource> healthSources) {
+      String serviceRef, String nameSpaceIdentifier, Set<HealthSource> healthSources) {
     healthSources.forEach(healthSource -> {
-      List<CVConfig> saved =
-          cvConfigService.list(accountId, orgIdentifier, projectIdentifier, healthSource.getIdentifier());
-      CVConfigUpdateResult cvConfigUpdateResult =
-          healthSource.getSpec().getCVConfigUpdateResult(accountId, orgIdentifier, projectIdentifier, environmentRef,
-              serviceRef, healthSource.getIdentifier(), healthSource.getName(), saved, metricPackService);
+      List<CVConfig> saved = cvConfigService.list(accountId, orgIdentifier, projectIdentifier,
+          HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, healthSource.getIdentifier()));
+      CVConfigUpdateResult cvConfigUpdateResult = healthSource.getSpec().getCVConfigUpdateResult(accountId,
+          orgIdentifier, projectIdentifier, environmentRef, serviceRef,
+          HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, healthSource.getIdentifier()),
+          healthSource.getName(), saved, metricPackService);
       cvConfigUpdateResult.getDeleted().forEach(cvConfig -> cvConfigService.delete(cvConfig.getUuid()));
       cvConfigService.update(cvConfigUpdateResult.getUpdated());
       cvConfigService.save(cvConfigUpdateResult.getAdded());
@@ -87,11 +94,13 @@ public class HealthSourceServiceImpl implements HealthSourceService {
   }
 
   private HealthSource transformCVConfigs(
-      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
-    List<CVConfig> cvConfigs = cvConfigService.list(accountId, orgIdentifier, projectIdentifier, identifier);
+      String accountId, String orgIdentifier, String projectIdentifier, String nameSpaceIdentifier, String identifier) {
+    List<CVConfig> cvConfigs = cvConfigService.list(accountId, orgIdentifier, projectIdentifier,
+        HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, identifier));
     Preconditions.checkNotNull(cvConfigs,
         String.format("CVConfigs are not present for identifier %s, orgIdentifier %s and projectIdentifier %s",
-            identifier, orgIdentifier, projectIdentifier));
+            HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, identifier), orgIdentifier,
+            projectIdentifier));
 
     CVConfigToHealthSourceTransformer<CVConfig, HealthSourceSpec> cvConfigToHealthSourceTransformer =
         injector.getInstance(
@@ -100,7 +109,7 @@ public class HealthSourceServiceImpl implements HealthSourceService {
     return HealthSource.builder()
         .name(cvConfigs.get(0).getMonitoringSourceName())
         .type(dataSourceTypeMonitoredServiceDataSourceTypeMap.get(cvConfigs.get(0).getType()))
-        .identifier(cvConfigs.get(0).getIdentifier())
+        .identifier(identifier)
         .spec(cvConfigToHealthSourceTransformer.transformToHealthSourceConfig(cvConfigs))
         .build();
   }
