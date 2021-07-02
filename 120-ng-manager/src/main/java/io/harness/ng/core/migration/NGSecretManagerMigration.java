@@ -588,9 +588,13 @@ public class NGSecretManagerMigration implements NGMigration {
                                   .orgIdentifier(orgIdentifier)
                                   .spec(secretTextSpecDTO)
                                   .build();
-
-    SecretResponseWrapper secretResponseWrapper = secretCrudService.create(accountIdentifier, secretDTOV2);
-    return new SecretRefData(secretResponseWrapper.getSecret().getIdentifier(), secretScope, decryptedValue);
+    Optional<SecretResponseWrapper> secretOptional =
+        secretCrudService.get(accountIdentifier, orgIdentifier, projectIdentifier, secretIdentifier);
+    if (secretOptional.isPresent()) {
+      return new SecretRefData(secretIdentifier, secretScope, decryptedValue);
+    }
+    secretCrudService.create(accountIdentifier, secretDTOV2);
+    return new SecretRefData(secretIdentifier, secretScope, decryptedValue);
   }
 
   private String getDefaultHarnessSecretManagerName(EncryptionType encryptionType) {
