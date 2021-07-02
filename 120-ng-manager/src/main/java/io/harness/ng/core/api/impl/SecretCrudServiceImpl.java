@@ -190,12 +190,10 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
     if (isNotEmpty(secretTypes)) {
       criteria = criteria.and(SecretKeys.type).in(secretTypes);
-      if (null != sourceCategory && SECRET_MANAGER == sourceCategory) {
-        criteria = criteria.andOperator(where(SecretKeys.secretSpec + ".secretManagerIdentifier").exists(true),
-            where(SecretKeys.secretSpec + ".secretManagerIdentifier").in(HARNESS_SECRET_MANAGER_IDENTIFIER));
-      }
-    } else {
-      criteria = criteria.and(SecretKeys.secretSpec + ".secretManagerIdentifier").exists(true);
+    }
+    if (SECRET_MANAGER == sourceCategory) {
+      criteria = criteria.orOperator(where(SecretKeys.secretSpec + ".secretManagerIdentifier").exists(false),
+          where(SecretKeys.secretSpec + ".secretManagerIdentifier").is(HARNESS_SECRET_MANAGER_IDENTIFIER));
     }
     if (!StringUtils.isEmpty(searchTerm)) {
       criteria = criteria.orOperator(
