@@ -34,6 +34,7 @@ import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.ng.core.utils.NGUtils;
 import io.harness.observer.Subject;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateCache;
@@ -50,6 +51,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
+import io.dropwizard.jersey.validation.JerseyViolationException;
 import io.fabric8.utils.Strings;
 import java.util.List;
 import java.util.Optional;
@@ -198,9 +200,27 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
   @Override
   public DelegateProfile add(DelegateProfile delegateProfile) {
+    if (Strings.isNullOrBlank(delegateProfile.getIdentifier())) {
+      delegateProfile.setIdentifier(identifierFromName(delegateProfile.getName()));
+    }
+    if (delegateProfile.isNg()) {
+      try {
+        NGUtils.validate(delegateProfile);
+      } catch (JerseyViolationException exception) {
+        throw new InvalidRequestException("Identifier " + delegateProfile.getIdentifier()
+            + " did not pass validation checks: "
+            + exception.getConstraintViolations()
+                  .stream()
+                  .map(i -> i.getMessage())
+                  .reduce("", (i, j) -> i + " <" + j + "> "));
+      }
+    }
     if (Strings.isNotBlank(delegateProfile.getIdentifier())
-        && !isValidIdentifier(delegateProfile.getAccountId(), delegateProfile.getIdentifier())) {
-      throw new InvalidRequestException("The identifier is invalid. Could not add delegate profile.");
+        && identifierExists(
+            delegateProfile.getAccountId(), delegateProfile.getOwner(), delegateProfile.getIdentifier())) {
+      throw new InvalidRequestException(
+          "The identifier already exists. Could not add delegate profile with identifier: "
+          + delegateProfile.getIdentifier());
     }
 
     persistence.save(delegateProfile);
@@ -229,6 +249,10 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
       publishDelegateProfileChangeEventViaEventFramework(delegateProfile, DELETE_ACTION);
     }
+  }
+
+  private String identifierFromName(String delegateName) {
+    return "_" + delegateName.replaceAll("[^a-zA-Z0-9_$]", "_");
   }
 
   private void publishDelegateProfileChangeEventViaEventFramework(DelegateProfile delegateProfile, String action) {
@@ -375,12 +399,16 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   }
 
   @VisibleForTesting
-  public boolean isValidIdentifier(String accountId, String proposedIdentifier) {
-    Query<DelegateProfile> result = persistence.createQuery(DelegateProfile.class)
-                                        .filter(DelegateKeys.accountId, accountId)
-                                        .field(DelegateProfileKeys.identifier)
-                                        .equalIgnoreCase(proposedIdentifier);
-
-    return result.get() == null;
+  public boolean identifierExists(String accountId, DelegateEntityOwner owner, String proposedIdentifier) {
+    Query<DelegateProfile> result = owner != null ? persistence.createQuery(DelegateProfile.class)
+                                                        .filter(DelegateKeys.accountId, accountId)
+                                                        .filter(DelegateKeys.owner_identifier, owner.getIdentifier())
+                                                        .field(DelegateProfileKeys.identifier)
+                                                        .equalIgnoreCase(proposedIdentifier)
+                                                  : persistence.createQuery(DelegateProfile.class)
+                                                        .filter(DelegateKeys.accountId, accountId)
+                                                        .field(DelegateProfileKeys.identifier)
+                                                        .equalIgnoreCase(proposedIdentifier);
+    return result.get() != null;
   }
 }
