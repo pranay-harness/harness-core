@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -52,6 +53,8 @@ public class DelegateGroup implements PersistentEntity, UuidAware {
   private DelegateSizeDetails sizeDetails;
 
   private K8sConfigDetails k8sConfigDetails;
+
+  private Set<String> tags;
 
   @Builder.Default private DelegateGroupStatus status = DelegateGroupStatus.ENABLED;
 
