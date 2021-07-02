@@ -49,6 +49,7 @@ import io.harness.queue.QueuePublisher;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
+import software.wings.beans.Base;
 import software.wings.beans.Event.Type;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
@@ -129,6 +130,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   private static final String REPOSITORY_NAME = "repositoryName";
   private static final String BUCKET_NAME = "bucketName";
   public static final String VARIABLE_EXPRESSIONS_ERROR = "Variable expressions are not allowed in app manifest name";
+  private static final String APP_MANIFEST_NAME = "appManifestName";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
@@ -260,6 +262,22 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
                                            .filter(ApplicationManifestKeys.name, appManifestName);
 
     return query.get();
+  }
+
+  @Override
+  public Map<String, String> getNamesForIds(String appId, Set<String> appManifestIds) {
+    List<ApplicationManifest> appManifests = wingsPersistence.createQuery(ApplicationManifest.class)
+                                                 .filter(ApplicationKeys.appId, appId)
+                                                 .field(ApplicationManifest.ID)
+                                                 .in(appManifestIds)
+                                                 .project(ApplicationManifestKeys.name, true)
+                                                 .asList();
+
+    if (isEmpty(appManifests)) {
+      return new HashMap<>();
+    }
+
+    return appManifests.stream().collect(Collectors.toMap(Base::getUuid, ApplicationManifest::getName));
   }
 
   @Override
@@ -466,6 +484,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     properties.put(REPOSITORY_NAME, settingAttribute.getName());
     properties.put(BUCKET_NAME, getBucketName(helmRepoConfig));
     properties.put(CHART_NAME, helmChartConfig.getChartName());
+    properties.put(APP_MANIFEST_NAME, applicationManifest.getName());
     return properties;
   }
 
@@ -642,7 +661,6 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         if (isNotBlank(applicationManifest.getEnvId())) {
           builder.append(", envId ").append(applicationManifest.getEnvId());
         }
-
         throw new InvalidRequestException(builder.toString(), USER);
       }
     }
@@ -655,7 +673,6 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
 
     ApplicationManifest oldAppManifest = isCreate ? null : getById(appId, applicationManifest.getUuid());
-
     ApplicationManifest savedApplicationManifest =
         wingsPersistence.saveAndGet(ApplicationManifest.class, applicationManifest);
 

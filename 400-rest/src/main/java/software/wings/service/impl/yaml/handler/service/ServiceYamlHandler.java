@@ -98,6 +98,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
                                   .helmVersion(helmVersion)
                                   .cfCliVersion(cfCliVersion)
                                   .artifactFromManifest(service.getArtifactFromManifest());
+
     if (isNotBlank(service.getDeploymentTypeTemplateId())) {
       yamlBuilder.deploymentTypeTemplateUri(
           customDeploymentTypeService.fetchDeploymentTemplateUri(service.getDeploymentTypeTemplateId()));

@@ -243,6 +243,7 @@ import software.wings.service.impl.workflow.queuing.WorkflowConcurrencyHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -413,6 +414,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private HelmChartService helmChartService;
   @Inject private StateInspectionService stateInspectionService;
+  @Inject private ApplicationManifestService applicationManifestService;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -2131,6 +2133,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                     .collect(toList());
 
     List<HelmChart> helmCharts = helmChartService.listByIds(accountId, helmChartIds);
+    helmCharts.forEach(helmChart
+        -> helmChart.setMetadata(applicationManifestService.fetchAppManifestProperties(
+            helmChart.getAppId(), helmChart.getApplicationManifestId())));
 
     if (helmCharts == null || helmChartIds.size() != helmCharts.size()) {
       log.error("helmChartIds from executionArgs contains invalid helmCharts");
