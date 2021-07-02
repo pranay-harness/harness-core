@@ -24,7 +24,7 @@ public class GitSyncEntityDTO {
   private EntityType entityType;
   private String entityIdentifier;
   private String gitConnectorId;
-  @JsonProperty("repositoryName") private String repo;
+  private String repoUrl;
   private String branch;
   private String folderPath;
   private String entityGitPath;
