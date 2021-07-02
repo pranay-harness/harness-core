@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.graphql.QLCEViewAggregation;
 import io.harness.ccm.views.graphql.QLCEViewEntityStatsDataPoint;
 import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
+import io.harness.ccm.views.graphql.QLCEViewGridData;
 import io.harness.ccm.views.graphql.QLCEViewGroupBy;
 import io.harness.ccm.views.graphql.QLCEViewSortCriteria;
 import io.harness.ccm.views.graphql.QLCEViewTrendInfo;
@@ -30,4 +31,21 @@ public interface ViewsBillingService {
       List<QLCEViewAggregation> aggregateFunction, String cloudProviderTableName);
 
   List<String> getColumnsForTable(BigQuery bigQuery, String informationSchemaView, String table);
+
+  boolean isClusterPerspective(List<QLCEViewFilterWrapper> filters);
+
+  // For NG perspective queries
+  QLCEViewGridData getEntityStatsDataPointsNg(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
+      List<QLCEViewGroupBy> groupBy, List<QLCEViewAggregation> aggregateFunction, List<QLCEViewSortCriteria> sort,
+      String cloudProviderTableName, Integer limit, Integer offset, String accountId, boolean getCostTrend);
+
+  List<String> getFilterValueStatsNg(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
+      String cloudProviderTableName, Integer limit, Integer offset, String accountId);
+
+  QLCEViewTrendInfo getTrendStatsDataNg(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
+      List<QLCEViewAggregation> aggregateFunction, String cloudProviderTableName, String accountId);
+
+  TableResult getTimeSeriesStatsNg(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
+      List<QLCEViewGroupBy> groupBy, List<QLCEViewAggregation> aggregateFunction, List<QLCEViewSortCriteria> sort,
+      String cloudProviderTableName, String accountId, boolean includeOthers);
 }

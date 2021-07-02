@@ -1,5 +1,8 @@
 package io.harness.ccm.graphql.core.perspectives;
 
+import static io.harness.ccm.views.utils.ClusterTableKeys.DEFAULT_STRING_VALUE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.ID_SEPARATOR;
+
 import io.harness.ccm.graphql.dto.common.DataPoint;
 import io.harness.ccm.graphql.dto.common.DataPoint.DataPointBuilder;
 import io.harness.ccm.graphql.dto.common.Reference;
@@ -36,14 +39,18 @@ public class PerspectiveTimeSeriesHelper {
       DataPointBuilder dataPointBuilder = DataPoint.builder();
       Timestamp startTimeTruncatedTimestamp = null;
       Double value = Double.valueOf(0);
+      String id = DEFAULT_STRING_VALUE;
+      String stringValue = DEFAULT_STRING_VALUE;
+      String type = DEFAULT_STRING_VALUE;
       for (Field field : fields) {
         switch (field.getType().getStandardType()) {
           case TIMESTAMP:
             startTimeTruncatedTimestamp = Timestamp.ofTimeMicroseconds(row.get(field.getName()).getTimestampValue());
             break;
           case STRING:
-            String stringValue = fetchStringValue(row, field);
-            dataPointBuilder.key(Reference.builder().id(stringValue).name(stringValue).type(field.getName()).build());
+            stringValue = fetchStringValue(row, field);
+            type = field.getName();
+            id = getUpdatedId(id, stringValue);
             break;
           case FLOAT64:
             value += getNumericValue(row, field);
@@ -52,7 +59,7 @@ public class PerspectiveTimeSeriesHelper {
             break;
         }
       }
-
+      dataPointBuilder.key(Reference.builder().id(id).name(stringValue).type(type).build());
       dataPointBuilder.value(getRoundedDoubleValue(value));
       List<DataPoint> dataPoints = new ArrayList<>();
       if (timeSeriesDataPointsMap.containsKey(startTimeTruncatedTimestamp)) {
@@ -152,5 +159,9 @@ public class PerspectiveTimeSeriesHelper {
     List<String> topNElementIds = new ArrayList<>();
     list.forEach(entry -> topNElementIds.add(entry.getKey()));
     return topNElementIds;
+  }
+
+  private String getUpdatedId(String id, String newField) {
+    return id.equals(DEFAULT_STRING_VALUE) ? newField : id + ID_SEPARATOR + newField;
   }
 }

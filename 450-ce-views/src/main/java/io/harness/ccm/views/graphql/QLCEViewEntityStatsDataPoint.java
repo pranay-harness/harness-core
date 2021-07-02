@@ -1,6 +1,7 @@
 package io.harness.ccm.views.graphql;
 
-import io.leangen.graphql.annotations.GraphQLNonNull;
+import io.harness.ccm.views.entities.ClusterData;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
@@ -10,7 +11,10 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class QLCEViewEntityStatsDataPoint {
-  @GraphQLNonNull String name;
-  @GraphQLNonNull Number cost;
+  String name;
+  String id;
+  Number cost;
   Number costTrend;
+  boolean isClusterPerspective;
+  ClusterData clusterData;
 }
