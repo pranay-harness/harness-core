@@ -26,13 +26,6 @@ public class FilterCreationResponse {
   @Default List<EntityDetailProtoDTO> referredEntities = new ArrayList<>();
   @Default List<String> stageNames = new ArrayList<>();
 
-  public void addResolvedDependencies(Map<String, YamlField> resolvedDependencies) {
-    if (EmptyPredicate.isEmpty(resolvedDependencies)) {
-      return;
-    }
-    resolvedDependencies.values().forEach(this::addResolvedDependency);
-  }
-
   public void addReferredEntities(List<EntityDetailProtoDTO> refferedEntities) {
     if (EmptyPredicate.isEmpty(refferedEntities)) {
       return;

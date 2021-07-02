@@ -16,6 +16,7 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
@@ -47,7 +48,7 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
     Level level = AmbianceUtils.obtainCurrentLevel(ambiance);
     Status status = event.getStatus();
     try {
-      if (gitBuildStatusUtility.shouldSendStatus(level.getGroup())) {
+      if (gitBuildStatusUtility.shouldSendStatus(level.getStepType().getStepCategory())) {
         log.info("Received event with status {} to update git status for stage {}, planExecutionId {}", status,
             level.getIdentifier(), ambiance.getPlanExecutionId());
         if (isAutoAbortThroughTrigger(event)) {
@@ -66,7 +67,7 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
           format("Failed to clean pod after retrying {} times"));
 
       Failsafe.with(retryPolicy).run(() -> {
-        if (Objects.equals(level.getGroup(), StepOutcomeGroup.STAGE.name()) && isFinalStatus(status)) {
+        if (level.getStepType().getStepCategory() == StepCategory.STAGE && isFinalStatus(status)) {
           CIK8CleanupTaskParams cik8CleanupTaskParams = podCleanupUtility.buildAndfetchCleanUpParameters(ambiance);
 
           log.info("Received event with status {} to clean podName {}, planExecutionId {}, stage {}", status,
@@ -81,6 +82,7 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
                                                         .taskParameters(cik8CleanupTaskParams)
                                                         .taskDescription("CI cleanup pod task")
                                                         .build();
+
           String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest, Duration.ZERO);
           log.info("Submitted cleanup request with taskId {} for podName {}, planExecutionId {}, stage {}", taskId,
               cik8CleanupTaskParams.getPodNameList(), ambiance.getPlanExecutionId(), level.getIdentifier());
