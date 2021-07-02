@@ -159,8 +159,9 @@ public class BillingDataServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void readBillingData() throws SQLException {
     mockResultSet();
-    List<InstanceBillingData> instanceBillingData = billingDataService.read(
-        ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS), Instant.ofEpochMilli(END_TIME_MILLIS), 500, 0);
+    List<InstanceBillingData> instanceBillingData =
+        billingDataService.read(ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS),
+            Instant.ofEpochMilli(END_TIME_MILLIS), 500, 0, BatchJobType.CLUSTER_DATA_TO_BIG_QUERY);
     assertThat(instanceBillingData.size()).isEqualTo(1);
   }
 

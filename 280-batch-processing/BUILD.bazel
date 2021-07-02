@@ -45,6 +45,7 @@ shared_dependencies = [
     "@maven//:org_jetbrains_kotlin_kotlin_stdlib",
     "@maven//:org_mongodb_mongo_java_driver",
     "@maven//:org_springframework_batch_spring_batch_core",
+    "@maven//:org_springframework_batch_spring_batch_infrastructure",
     "@maven//:org_springframework_boot_spring_boot_autoconfigure",
     "@maven//:org_springframework_boot_spring_boot_starter_batch",
     "@maven//:org_springframework_data_spring_data_mongodb",
