@@ -60,7 +60,6 @@ func New(endpoint, password string, enableTLS bool, certPath string, log *zap.Su
 		opt.TLSConfig = &tls.Config{RootCAs: roots}
 	}
 	consumerOpts := redisqueue.ConsumerOptions{
-		GroupName:         "TestIntelligence",
 		RedisOptions:      &opt,
 		VisibilityTimeout: 60 * time.Second,
 		BlockingTimeout:   5 * time.Second,
