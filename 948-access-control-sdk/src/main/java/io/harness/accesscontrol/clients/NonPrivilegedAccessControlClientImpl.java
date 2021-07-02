@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 
 @OwnedBy(HarnessTeam.PL)
 @NoArgsConstructor
-public class NonPrivilegedAccessControlClientImpl extends PrivilegedAccessControlClientImpl {
+public class NonPrivilegedAccessControlClientImpl extends AbstractAccessControlClient implements AccessControlClient {
   @Inject
   public NonPrivilegedAccessControlClientImpl(
       @Named("NON_PRIVILEGED") AccessControlHttpClient accessControlHttpClient) {
