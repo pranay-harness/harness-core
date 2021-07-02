@@ -417,7 +417,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   public List<YamlGitConfigDTO> getByRepo(String repo) {
     List<YamlGitConfigDTO> yamlGitConfigDTOs = new ArrayList<>();
 
-    Set<YamlGitConfig> yamlGitConfigs = new HashSet<>(yamlGitConfigRepository.findByRepo(repo));
+    List<YamlGitConfig> yamlGitConfigs = yamlGitConfigRepository.findByRepoOrderByCreatedAtDesc(repo);
     yamlGitConfigs.forEach(
         yamlGitConfig -> yamlGitConfigDTOs.add(YamlGitConfigMapper.toYamlGitConfigDTO(yamlGitConfig)));
     return yamlGitConfigDTOs;

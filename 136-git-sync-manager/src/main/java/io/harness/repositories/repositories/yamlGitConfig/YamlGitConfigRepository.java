@@ -30,5 +30,5 @@ public interface YamlGitConfigRepository extends CrudRepository<YamlGitConfig, S
 
   Boolean existsByRepo(String repo);
 
-  List<YamlGitConfig> findByRepo(String repo);
+  List<YamlGitConfig> findByRepoOrderByCreatedAtDesc(String repo);
 }
