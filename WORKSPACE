@@ -69,9 +69,9 @@ gazelle_dependencies()
 
 http_archive(
     name = "com_github_query_builder_generator",
-    sha256 = "e9b3500c6003581d79bebff5b4735f3ac854a3d61831f30ef7b31a0d1867a347",
-    strip_prefix = "query-builder-generator-0.1.21",
-    urls = ["https://github.com/wings-software/query-builder-generator/archive/refs/tags/v0.1.21.zip"],
+    sha256 = "7f6a7b4dc2d038e5a3e205aa1ac24e30659c9506c48105040732f3ff189c437f",
+    strip_prefix = "query-builder-generator-0.1.22",
+    urls = ["https://github.com/wings-software/query-builder-generator/archive/refs/tags/v0.1.22.zip"],
 )
 
 # Add a go repository
