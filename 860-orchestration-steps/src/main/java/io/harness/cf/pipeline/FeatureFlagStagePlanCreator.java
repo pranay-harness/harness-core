@@ -13,7 +13,6 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.steps.common.NGSectionStep;
@@ -41,10 +40,8 @@ public class FeatureFlagStagePlanCreator extends ChildrenPlanCreator<StageElemen
     }
     dependenciesNodeMap.put(executionField.getNode().getUuid(), executionField);
 
-    planCreationResponseMap.put(executionField.getNode().getUuid(),
-        PlanCreationResponse.builder()
-            .dependencies(DependenciesUtils.toDependenciesProto(dependenciesNodeMap))
-            .build());
+    planCreationResponseMap.put(
+        executionField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
     return planCreationResponseMap;
   }
 

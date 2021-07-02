@@ -6,9 +6,10 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.InvalidYamlException;
 import io.harness.exception.UnexpectedException;
 import io.harness.manage.ManagedExecutorService;
-import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
@@ -20,6 +21,7 @@ import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationService
 import io.harness.pms.contracts.plan.VariablesCreationBlobRequest;
 import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
 import io.harness.pms.contracts.plan.VariablesCreationResponse;
+import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
@@ -78,8 +80,21 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
       StreamObserver<io.harness.pms.contracts.plan.PlanCreationResponse> responseObserver) {
     io.harness.pms.contracts.plan.PlanCreationResponse planCreationResponse;
     try {
+      Map<String, YamlFieldBlob> dependencyBlobs = request.getDependenciesMap();
+      Map<String, YamlField> initialDependencies = new HashMap<>();
+      if (EmptyPredicate.isNotEmpty(dependencyBlobs)) {
+        try {
+          for (Map.Entry<String, YamlFieldBlob> entry : dependencyBlobs.entrySet()) {
+            initialDependencies.put(entry.getKey(), YamlField.fromFieldBlob(entry.getValue()));
+          }
+        } catch (Exception e) {
+          log.error("Invalid YAML found in dependency blobs", e);
+          throw new InvalidRequestException("Invalid YAML found in dependency blobs", e);
+        }
+      }
+
       PlanCreationResponse finalResponse =
-          createPlanForDependenciesRecursive(request.getDeps(), request.getContextMap());
+          createPlanForDependenciesRecursive(initialDependencies, request.getContextMap());
       if (EmptyPredicate.isNotEmpty(finalResponse.getErrorMessages())) {
         planCreationResponse =
             io.harness.pms.contracts.plan.PlanCreationResponse.newBuilder()
@@ -103,10 +118,10 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
   }
 
   private PlanCreationResponse createPlanForDependenciesRecursive(
-      Dependencies initialDependencies, Map<String, PlanCreationContextValue> context) {
+      Map<String, YamlField> initialDependencies, Map<String, PlanCreationContextValue> context) {
+    // TODO: Add patch version before sending the response back
     PlanCreationResponse finalResponse = PlanCreationResponse.builder().build();
-    if (EmptyPredicate.isEmpty(planCreators) || initialDependencies == null
-        || EmptyPredicate.isEmpty(initialDependencies.getDependenciesMap())) {
+    if (EmptyPredicate.isEmpty(planCreators) || EmptyPredicate.isEmpty(initialDependencies)) {
       return finalResponse;
     }
 
@@ -120,54 +135,30 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
 
     try (PmsGitSyncBranchContextGuard ignore =
              pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(gitSyncBranchContext, true)) {
-      Dependencies dependencies = initialDependencies.toBuilder().build();
-      while (!dependencies.getDependenciesMap().isEmpty()) {
-        dependencies = createPlanForDependencies(ctx, finalResponse, dependencies);
-        dependencies = removeInitialDependencies(dependencies, initialDependencies);
+      Map<String, YamlField> dependencies = new HashMap<>(initialDependencies);
+      while (!dependencies.isEmpty()) {
+        createPlanForDependencies(ctx, finalResponse, dependencies);
+        initialDependencies.keySet().forEach(dependencies::remove);
       }
     }
 
-    if (finalResponse.getDependencies() != null
-        && EmptyPredicate.isNotEmpty(finalResponse.getDependencies().getDependenciesMap())) {
-      finalResponse.setDependencies(removeInitialDependencies(finalResponse.getDependencies(), initialDependencies));
+    if (EmptyPredicate.isNotEmpty(finalResponse.getDependencies())) {
+      initialDependencies.keySet().forEach(k -> finalResponse.getDependencies().remove(k));
     }
     return finalResponse;
   }
 
-  private Dependencies removeInitialDependencies(Dependencies dependencies, Dependencies initialDependencies) {
-    if (initialDependencies == null || EmptyPredicate.isEmpty(initialDependencies.getDependenciesMap())) {
-      return dependencies;
-    }
-    if (dependencies == null || EmptyPredicate.isEmpty(dependencies.getDependenciesMap())) {
-      return dependencies;
+  private void createPlanForDependencies(
+      PlanCreationContext ctx, PlanCreationResponse finalResponse, Map<String, YamlField> dependencies) {
+    if (EmptyPredicate.isEmpty(dependencies)) {
+      return;
     }
 
-    Dependencies.Builder builder = dependencies.toBuilder();
-    initialDependencies.getDependenciesMap().keySet().forEach(builder::removeDependencies);
-    return builder.build();
-  }
-
-  private Dependencies createPlanForDependencies(
-      PlanCreationContext ctx, PlanCreationResponse finalResponse, Dependencies dependencies) {
-    if (dependencies == null || EmptyPredicate.isEmpty(dependencies.getDependenciesMap())) {
-      return dependencies;
-    }
-
-    String yaml = dependencies.getYaml();
-    List<Map.Entry<String, String>> dependenciesList = new ArrayList<>(dependencies.getDependenciesMap().entrySet());
+    List<YamlField> dependenciesList = new ArrayList<>(dependencies.values());
+    dependencies.clear();
     CompletableFutures<PlanCreationResponse> completableFutures = new CompletableFutures<>(executor);
-    for (Map.Entry<String, String> entry : dependenciesList) {
-      String fieldYamlPath = entry.getValue();
+    for (YamlField field : dependenciesList) {
       completableFutures.supplyAsync(() -> {
-        YamlField field;
-        try {
-          field = YamlField.fromYamlPath(yaml, fieldYamlPath);
-        } catch (IOException e) {
-          String message = format("Invalid yaml path [%s] during execution plan creation", fieldYamlPath);
-          log.error(message, e);
-          return PlanCreationResponse.builder().errorMessage(message).build();
-        }
-
         Optional<PartialPlanCreator<?>> planCreatorOptional = findPlanCreator(planCreators, field);
         if (!planCreatorOptional.isPresent()) {
           return null;
@@ -184,9 +175,8 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
           } catch (IOException e) {
             // YamlUtils.getErrorNodePartialFQN() uses exception path to build FQN
             log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(field.getNode(), e)), e);
-            return PlanCreationResponse.builder()
-                .errorMessage(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(field.getNode(), e)))
-                .build();
+            throw new InvalidYamlException(
+                format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(field.getNode(), e)), e);
           }
         }
 
@@ -211,16 +201,14 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
               .collect(Collectors.toList());
       if (EmptyPredicate.isNotEmpty(errorMessages)) {
         finalResponse.setErrorMessages(errorMessages);
-        return dependencies.toBuilder().clearDependencies().build();
+        return;
       }
 
-      Map<String, String> newDependencies = new HashMap<>();
       for (int i = 0; i < dependenciesList.size(); i++) {
-        Map.Entry<String, String> entry = dependenciesList.get(i);
-        String fieldYamlPath = entry.getValue();
+        YamlField field = dependenciesList.get(i);
         PlanCreationResponse response = planCreationResponses.get(i);
         if (response == null) {
-          finalResponse.addDependency(yaml, entry.getKey(), fieldYamlPath);
+          finalResponse.addDependency(field);
           continue;
         }
 
@@ -228,12 +216,12 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
         finalResponse.mergeContext(response.getContextMap());
         finalResponse.mergeLayoutNodeInfo(response.getGraphLayoutResponse());
         finalResponse.mergeStartingNodeId(response.getStartingNodeId());
-        if (response.getDependencies() != null
-            && EmptyPredicate.isNotEmpty(response.getDependencies().getDependenciesMap())) {
-          newDependencies.putAll(response.getDependencies().getDependenciesMap());
+        if (EmptyPredicate.isNotEmpty(response.getDependencies())) {
+          for (YamlField childField : response.getDependencies().values()) {
+            dependencies.put(childField.getNode().getUuid(), childField);
+          }
         }
       }
-      return dependencies.toBuilder().clearDependencies().putAllDependencies(newDependencies).build();
     } catch (Exception ex) {
       log.error(format("Unexpected plan creation error: %s", ex.getMessage()), ex);
       throw new UnexpectedException(format("Unexpected plan creation error: %s", ex.getMessage()), ex);
