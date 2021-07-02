@@ -1,12 +1,10 @@
 package io.harness.pms.sdk.core.plan.creation.beans;
 
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.yaml.YamlField;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,12 +13,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
 
-@OwnedBy(HarnessTeam.PIPELINE)
 @Data
 @Builder
 public class PlanCreationResponse {
   @Singular Map<String, PlanNode> nodes;
-  Dependencies dependencies;
+  @Singular Map<String, YamlField> dependencies;
   @Singular("contextMap") Map<String, PlanCreationContextValue> contextMap;
   GraphLayoutResponse graphLayoutResponse;
 
@@ -70,17 +67,18 @@ public class PlanCreationResponse {
       nodes = new HashMap<>(nodes);
     }
 
+    // TODO: Add logic to update only if newNode has a more recent version.
     nodes.put(newNode.getUuid(), newNode);
     if (dependencies != null) {
-      dependencies = dependencies.toBuilder().removeDependencies(newNode.getUuid()).build();
+      dependencies.remove(newNode.getUuid());
     }
   }
 
-  public void addDependencies(Dependencies deps) {
-    if (deps == null || EmptyPredicate.isEmpty(deps.getDependenciesMap())) {
+  public void addDependencies(Map<String, YamlField> fields) {
+    if (EmptyPredicate.isEmpty(fields)) {
       return;
     }
-    deps.getDependenciesMap().forEach((key, value) -> addDependency(deps.getYaml(), key, value));
+    fields.values().forEach(this::addDependency);
   }
 
   public void putContextValue(String key, PlanCreationContextValue value) {
@@ -96,17 +94,18 @@ public class PlanCreationResponse {
     contextMap.put(key, value);
   }
 
-  public void addDependency(String yaml, String nodeId, String yamlPath) {
-    if ((dependencies != null && dependencies.getDependenciesMap().containsKey(nodeId))
-        || (nodes != null && nodes.containsKey(nodeId))) {
+  public void addDependency(YamlField field) {
+    String nodeId = field.getNode().getUuid();
+    if ((dependencies != null && dependencies.containsKey(nodeId)) || (nodes != null && nodes.containsKey(nodeId))) {
       return;
     }
 
     if (dependencies == null) {
-      dependencies = Dependencies.newBuilder().setYaml(yaml).putDependencies(nodeId, yamlPath).build();
-      return;
+      dependencies = new HashMap<>();
+    } else if (!(dependencies instanceof HashMap)) {
+      dependencies = new HashMap<>(dependencies);
     }
-    dependencies = dependencies.toBuilder().putDependencies(nodeId, yamlPath).build();
+    dependencies.put(nodeId, field);
   }
 
   public void mergeStartingNodeId(String otherStartingNodeId) {

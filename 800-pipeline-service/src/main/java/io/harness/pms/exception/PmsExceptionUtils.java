@@ -1,12 +1,9 @@
 package io.harness.pms.exception;
 
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.exception.FilterCreatorException;
 import io.harness.exception.PlanCreatorException;
-import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.yaml.YamlField;
@@ -19,17 +16,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
-@OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 public class PmsExceptionUtils {
   public String getUnresolvedDependencyErrorMessage(Collection<YamlFieldBlob> yamlFieldBlobs) throws IOException {
     return String.format("Following Nodes could not be parsed: %s.",
         getYamlNodeErrorInfo(yamlFieldBlobs).stream().map(JsonUtils::asJson).collect(Collectors.joining(",")));
-  }
-
-  public String getUnresolvedDependencyPathsErrorMessage(Dependencies dependencies) {
-    return String.format(
-        "Following yaml paths could not be parsed: %s", String.join(",", dependencies.getDependenciesMap().values()));
   }
 
   private List<YamlNodeErrorInfo> getYamlNodeErrorInfo(Collection<YamlFieldBlob> yamlFieldBlobs) throws IOException {
