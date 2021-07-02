@@ -56,6 +56,8 @@ public class QueriesTest extends DelegateServiceTestBase {
       expectedQueries.add(currentQuery.toString());
     }
     expectedQueries.sort(String::compareTo);
-    assertThat(indexedQueriesCanonicalForm).isEqualTo(expectedQueries);
+    assertThat(indexedQueriesCanonicalForm)
+        .as("\n" + String.join("\n", indexedQueriesCanonicalForm) + "\n")
+        .isEqualTo(expectedQueries);
   }
 }
