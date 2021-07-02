@@ -184,6 +184,7 @@ import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.serializer.kryo.KryoConverterFactory;
 import io.harness.service.DelegateServiceDriverModule;
+import io.harness.service.InstanceModule;
 import io.harness.signup.SignupModule;
 import io.harness.telemetry.AbstractTelemetryModule;
 import io.harness.telemetry.TelemetryConfiguration;
@@ -441,6 +442,7 @@ public class NextGenModule extends AbstractModule {
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId(),
         this.appConfig.isEnableAudit()));
     install(new NotificationClientModule(appConfig.getNotificationClientConfiguration()));
+    install(new InstanceModule());
 
     install(new ProviderModule() {
       @Provides

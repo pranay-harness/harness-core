@@ -18,6 +18,7 @@ shared_dependencies = [
 ] + [
     "//:lombok",
     "//121-access-control-migration:module",
+    "//121-instance:module",
     "//122-ng-authentication-settings:module",
     "//123-ng-core-user:module",
     "//125-cd-nextgen:module",

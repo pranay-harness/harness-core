@@ -59,6 +59,7 @@ public class NextGenRegistrars {
           .add(ServiceAccountMorphiaRegistrars.class)
           .add(NGMorphiaRegistrars.class)
           .add(FeedbackMorphiaRegistrars.class)
+          .addAll(InstanceRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =
