@@ -20,6 +20,7 @@ import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -41,12 +42,17 @@ import org.springframework.data.annotation.TypeAlias;
 @OwnedBy(CDC)
 public class OpenshiftManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
-  @Wither @JsonProperty("store") StoreConfigWrapper store;
+  @Wither
+  @JsonProperty("store")
+  @ApiModelProperty(dataType = "io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper")
+  @SkipAutoEvaluation
+  ParameterField<StoreConfigWrapper> store;
+
   @Wither @YamlSchemaTypes({string, bool}) @SkipAutoEvaluation ParameterField<Boolean> skipResourceVersioning;
 
   @Override
   public StoreConfig getStoreConfig() {
-    return this.store.getSpec();
+    return this.store.getValue().getSpec();
   }
 
   @Override
@@ -58,9 +64,10 @@ public class OpenshiftManifest implements ManifestAttributes, Visitable {
   public ManifestAttributes applyOverrides(ManifestAttributes overrideConfig) {
     OpenshiftManifest openshiftManifest = (OpenshiftManifest) overrideConfig;
     OpenshiftManifest resultantManifest = this;
-    if (openshiftManifest.getStore() != null) {
-      StoreConfigWrapper storeConfigOverride = openshiftManifest.getStore();
-      resultantManifest = resultantManifest.withStore(store.applyOverrides(storeConfigOverride));
+    if (openshiftManifest.getStore() != null && openshiftManifest.getStore().getValue() != null) {
+      StoreConfigWrapper storeConfigOverride = openshiftManifest.getStore().getValue();
+      resultantManifest = resultantManifest.withStore(
+          ParameterField.createValueField(store.getValue().applyOverrides(storeConfigOverride)));
     }
     if (openshiftManifest.getSkipResourceVersioning() != null) {
       resultantManifest = resultantManifest.withSkipResourceVersioning(openshiftManifest.getSkipResourceVersioning());
@@ -72,7 +79,7 @@ public class OpenshiftManifest implements ManifestAttributes, Visitable {
   @Override
   public ManifestAttributeStepParameters getManifestAttributeStepParameters() {
     return new OpenshiftManifestStepParameters(
-        identifier, StoreConfigWrapperParameters.fromStoreConfigWrapper(store), skipResourceVersioning);
+        identifier, StoreConfigWrapperParameters.fromStoreConfigWrapper(store.getValue()), skipResourceVersioning);
   }
 
   @Value

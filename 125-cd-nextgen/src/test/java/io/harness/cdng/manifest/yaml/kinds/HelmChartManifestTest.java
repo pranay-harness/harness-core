@@ -34,7 +34,7 @@ public class HelmChartManifestTest extends CategoryTest {
     HelmChartManifest original = HelmChartManifest.builder()
                                      .helmVersion(HelmVersion.V3)
                                      .skipResourceVersioning(ParameterField.createValueField(true))
-                                     .store(originalStoreConfig)
+                                     .store(ParameterField.createValueField(originalStoreConfig))
                                      .commandFlags(Arrays.asList(HelmManifestCommandFlag.builder()
                                                                      .commandType(Version)
                                                                      .flag(ParameterField.createValueField("--version"))
@@ -49,7 +49,7 @@ public class HelmChartManifestTest extends CategoryTest {
         HelmChartManifest.builder()
             .helmVersion(HelmVersion.V2)
             .skipResourceVersioning(ParameterField.createValueField(false))
-            .store(overrideStoreConfig)
+            .store(ParameterField.createValueField(overrideStoreConfig))
             .commandFlags(Arrays.asList(HelmManifestCommandFlag.builder()
                                             .commandType(Template)
                                             .flag(ParameterField.createValueField("--template"))
@@ -66,7 +66,7 @@ public class HelmChartManifestTest extends CategoryTest {
 
     assertThat(original.getHelmVersion()).isEqualTo(HelmVersion.V3);
     assertThat(original.getSkipResourceVersioning().getValue()).isTrue();
-    assertThat(original.getStore()).isEqualTo(originalStoreConfig);
+    assertThat(original.getStore().getValue()).isEqualTo(originalStoreConfig);
     assertThat(original.getCommandFlags().stream().map(HelmManifestCommandFlag::getCommandType))
         .containsExactlyInAnyOrder(Version, Fetch);
     assertThat(original.getCommandFlags().stream().map(HelmManifestCommandFlag::getFlag).map(ParameterField::getValue))
@@ -74,7 +74,7 @@ public class HelmChartManifestTest extends CategoryTest {
 
     assertThat(override.getHelmVersion()).isEqualTo(HelmVersion.V2);
     assertThat(override.getSkipResourceVersioning().getValue()).isFalse();
-    assertThat(override.getStore()).isEqualTo(overrideStoreConfig);
+    assertThat(override.getStore().getValue()).isEqualTo(overrideStoreConfig);
     assertThat(override.getCommandFlags().stream().map(HelmManifestCommandFlag::getCommandType))
         .containsExactlyInAnyOrder(Template, Fetch);
     assertThat(override.getCommandFlags().stream().map(HelmManifestCommandFlag::getFlag).map(ParameterField::getValue))
@@ -82,7 +82,7 @@ public class HelmChartManifestTest extends CategoryTest {
 
     assertThat(result.getHelmVersion()).isEqualTo(HelmVersion.V2);
     assertThat(result.getSkipResourceVersioning().getValue()).isFalse();
-    assertThat(result.getStore()).isEqualTo(overrideStoreConfig);
+    assertThat(result.getStore().getValue()).isEqualTo(overrideStoreConfig);
     assertThat(result.getCommandFlags().stream().map(HelmManifestCommandFlag::getCommandType))
         .containsExactlyInAnyOrder(Template, Fetch);
     assertThat(result.getCommandFlags().stream().map(HelmManifestCommandFlag::getFlag).map(ParameterField::getValue))
@@ -97,7 +97,7 @@ public class HelmChartManifestTest extends CategoryTest {
     HelmChartManifest original =
         HelmChartManifest.builder()
             .skipResourceVersioning(ParameterField.createValueField(true))
-            .store(storeConfig)
+            .store(ParameterField.createValueField(storeConfig))
             .helmVersion(HelmVersion.V3)
             .commandFlags(Arrays.asList(HelmManifestCommandFlag.builder()
                                             .commandType(Template)
