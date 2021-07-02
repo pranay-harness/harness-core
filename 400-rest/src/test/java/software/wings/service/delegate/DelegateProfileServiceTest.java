@@ -1,4 +1,4 @@
-package software.wings.service;
+package software.wings.service.delegate;
 
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;

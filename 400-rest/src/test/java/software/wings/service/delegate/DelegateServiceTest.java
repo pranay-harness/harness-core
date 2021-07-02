@@ -1,4 +1,4 @@
-package software.wings.service;
+package software.wings.service.delegate;
 
 import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
@@ -1775,6 +1775,7 @@ public class DelegateServiceTest extends WingsBaseTest {
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
+          .as(expectedStartFilepath)
           .isEqualTo(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedStartFilepath)))
                          .replaceAll("8888", "" + port));
 
@@ -1785,6 +1786,7 @@ public class DelegateServiceTest extends WingsBaseTest {
       buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
+          .as(expectedDelegateFilepath)
           .isEqualTo(
               CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedDelegateFilepath)))
                   .replaceAll("8888", "" + port));
@@ -1795,10 +1797,12 @@ public class DelegateServiceTest extends WingsBaseTest {
 
       buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
+
+      String expectedFile = "/expectedStopOpenJdk.sh";
       assertThat(new String(buffer))
-          .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStopOpenJdk.sh")))
-                  .replaceAll("8888", "" + port));
+          .as(expectedFile)
+          .isEqualTo(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedFile)))
+                         .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/setup-proxy.sh");
