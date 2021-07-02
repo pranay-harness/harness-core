@@ -28,6 +28,7 @@ java_library(
         "//970-grpc:module",
         "@jira_client//jar",
         "@maven//:com_google_guava_guava",
+        "@maven//:org_awaitility_awaitility",
     ],
 )
 
