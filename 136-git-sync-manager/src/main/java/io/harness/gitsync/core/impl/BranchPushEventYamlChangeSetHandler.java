@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest.GitToHarnessFileProcessingRequestBuilder;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus;
@@ -25,6 +26,7 @@ import io.harness.gitsync.common.service.GitToHarnessProgressService;
 import io.harness.gitsync.common.service.ScmOrchestratorService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorService;
+import io.harness.gitsync.core.beans.GetFilesInDiffResponseDTO;
 import io.harness.gitsync.core.dtos.GitCommitDTO;
 import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
 import io.harness.gitsync.core.service.GitCommitService;
@@ -135,13 +137,10 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
     List<GitDiffResultFileDTO> prFilesTobeProcessed = null;
     try {
       Set<String> rootFolderList = YamlGitConfigHelper.getRootFolderList(yamlGitConfigDTOList);
-      // Fetch files that have changed b/w push event commit id and the local commit id
-      List<GitDiffResultFileDTO> prFiles = getDiffFilesUsingSCM(yamlChangeSetDTO, yamlGitConfigDTOList.get(0));
-      // We need to process only those files which are in root folders
-      prFilesTobeProcessed = getFilePathsToBeProcessed(rootFolderList, prFiles);
-
-      gitFileChangeDTOList = getAllFileContent(yamlChangeSetDTO, yamlGitConfigDTOList.get(0), prFilesTobeProcessed);
-
+      GetFilesInDiffResponseDTO filesFromDiffResponse =
+          getFilesFromDiff(yamlGitConfigDTOList, yamlChangeSetDTO, rootFolderList);
+      gitFileChangeDTOList = filesFromDiffResponse.getGitFileChangeDTOList();
+      prFilesTobeProcessed = filesFromDiffResponse.getPrFilesTobeProcessed();
       // TODO adding logs to debug an issue, remove after use
       StringBuilder gitFileChangeDTOListAsString = new StringBuilder("diff files :: ");
       gitFileChangeDTOList.forEach(
@@ -164,6 +163,40 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
         .gitDiffResultFileDTOList(prFilesTobeProcessed)
         .progressRecord(gitToHarnessProgressRecord)
         .build();
+  }
+
+  private GetFilesInDiffResponseDTO getFilesFromDiff(
+      List<YamlGitConfigDTO> yamlGitConfigDTOList, YamlChangeSetDTO yamlChangeSetDTO, Set<String> rootFolderList) {
+    List<GitFileChangeDTO> fileChanges = new ArrayList<>();
+    int yamlGitConfigsCount = yamlGitConfigDTOList.size();
+    for (int i = 0; i < yamlGitConfigsCount; i++) {
+      YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigDTOList.get(i);
+      try {
+        log.info("Trying to get files using the yaml git config with the identifier {} in project {}",
+            yamlGitConfigDTO.getIdentifier(), yamlGitConfigDTO.getProjectIdentifier());
+        // Fetch files that have changed b/w push event commit id and the local commit id
+        List<GitDiffResultFileDTO> prFiles = getDiffFilesUsingSCM(yamlChangeSetDTO, yamlGitConfigDTO);
+        // We need to process only those files which are in root folders
+        List<GitDiffResultFileDTO> prFilesTobeProcessed = getFilePathsToBeProcessed(rootFolderList, prFiles);
+
+        List<GitFileChangeDTO> gitFileChangeDTOList =
+            getAllFileContent(yamlChangeSetDTO, yamlGitConfigDTO, prFilesTobeProcessed);
+        log.info("Completed get files using the yaml git config with the identifier {} in project {}",
+            yamlGitConfigDTO.getIdentifier(), yamlGitConfigDTO.getProjectIdentifier());
+        return GetFilesInDiffResponseDTO.builder()
+            .gitFileChangeDTOList(gitFileChangeDTOList)
+            .prFilesTobeProcessed(prFilesTobeProcessed)
+            .build();
+      } catch (Exception ex) {
+        log.error("Error doing get files using the yaml git config with the identifier {} in project {}",
+            yamlGitConfigDTO.getIdentifier(), yamlGitConfigDTO.getProjectIdentifier(), ex);
+        // If we are getting the exception for the last yaml git config too, then throw the exception
+        if (i == yamlGitConfigsCount - 1) {
+          throw ex;
+        }
+      }
+    }
+    throw new UnexpectedException("Could not get the diff between two files");
   }
 
   private GitToHarnessProcessMsvcStepResponse performProcessFilesInMsvcStep(
