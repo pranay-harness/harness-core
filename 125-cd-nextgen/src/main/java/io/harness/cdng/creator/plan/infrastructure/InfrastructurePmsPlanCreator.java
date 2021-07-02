@@ -32,7 +32,6 @@ import io.harness.pms.sdk.core.plan.PlanNode.PlanNodeBuilder;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.utilities.ResourceConstraintUtility;
-import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -187,8 +186,8 @@ public class InfrastructurePmsPlanCreator {
     for (YamlField stepYamlField : stepYamlFields) {
       Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
       stepYamlFieldMap.put(stepYamlField.getNode().getUuid(), stepYamlField);
-      responseMap.put(stepYamlField.getNode().getUuid(),
-          PlanCreationResponse.builder().dependencies(DependenciesUtils.toDependenciesProto(stepYamlFieldMap)).build());
+      responseMap.put(
+          stepYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(stepYamlFieldMap).build());
     }
 
     // Add Steps Node

@@ -58,7 +58,7 @@ public class GenericStepPMSFilterJsonCreatorTest extends CategoryTest {
 
     FilterCreationContext filterCreationContext =
         FilterCreationContext.builder()
-            .currentField(new YamlField(step1Node))
+            .currentField(new YamlField("test", step1Node))
             .setupMetadata(
                 SetupMetadata.newBuilder().setAccountId(ACCOUNT_ID).setOrgId(ORG_ID).setProjectId(PROJECT_ID).build())
             .build();

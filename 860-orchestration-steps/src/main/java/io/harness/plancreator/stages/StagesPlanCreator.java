@@ -1,7 +1,5 @@
 package io.harness.plancreator.stages;
 
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.plan.EdgeLayoutList;
@@ -15,7 +13,6 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
-import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -32,7 +29,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-@OwnedBy(HarnessTeam.PIPELINE)
 public class StagesPlanCreator extends ChildrenPlanCreator<StagesConfig> {
   @Override
   public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
@@ -42,10 +38,8 @@ public class StagesPlanCreator extends ChildrenPlanCreator<StagesConfig> {
     for (YamlField stageYamlField : stageYamlFields) {
       Map<String, YamlField> stageYamlFieldMap = new HashMap<>();
       stageYamlFieldMap.put(stageYamlField.getNode().getUuid(), stageYamlField);
-      responseMap.put(stageYamlField.getNode().getUuid(),
-          PlanCreationResponse.builder()
-              .dependencies(DependenciesUtils.toDependenciesProto(stageYamlFieldMap))
-              .build());
+      responseMap.put(
+          stageYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(stageYamlFieldMap).build());
     }
     return responseMap;
   }

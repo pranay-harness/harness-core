@@ -1,43 +1,36 @@
 package io.harness.pms.yaml;
 
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.serializer.JsonUtils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.protobuf.ByteString;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import javax.validation.constraints.NotNull;
 import lombok.Value;
 
-@OwnedBy(HarnessTeam.PIPELINE)
 @Value
 public class YamlField {
   private static final Charset CHARSET = Charset.forName(StandardCharsets.UTF_8.name());
 
+  String name;
   @NotNull YamlNode node;
 
   @JsonCreator
-  public YamlField(@JsonProperty("node") YamlNode node) {
+  public YamlField(@JsonProperty("name") String name, @JsonProperty("node") YamlNode node) {
+    this.name = name;
     this.node = node;
   }
 
-  public String getName() {
-    return node.getFieldName();
-  }
-
-  public String getYamlPath() {
-    return node.getYamlPath();
+  public YamlField(YamlNode node) {
+    this(null, node);
   }
 
   public YamlFieldBlob toFieldBlob() {
     YamlFieldBlob.Builder builder =
         YamlFieldBlob.newBuilder().setBlob(ByteString.copyFrom(JsonUtils.asJson(this), CHARSET));
-    String name = getName();
     if (name != null) {
       builder.setName(name);
     }
@@ -62,10 +55,5 @@ public class YamlField {
 
   public static YamlField fromFieldBlob(YamlFieldBlob fieldBlob) {
     return JsonUtils.asObject(fieldBlob.getBlob().toString(CHARSET), YamlField.class);
-  }
-
-  public static YamlField fromYamlPath(String yaml, String path) throws IOException {
-    YamlNode node = YamlNode.fromYamlPath(yaml, path);
-    return node == null ? null : new YamlField(node);
   }
 }
