@@ -510,6 +510,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       setKeyWords(service);
       checkAndSetHelmVersion(service);
       checkAndSetCfCliVersion(service);
+      checkAndSetServiceAsK8sV2(service);
       Service savedService =
           duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, service), "name", service.getName());
 
@@ -542,6 +543,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(savedService);
       return savedService;
     });
+  }
+
+  void checkAndSetServiceAsK8sV2(Service service) {
+    if (!service.isK8sV2() && KUBERNETES == service.getDeploymentType()) {
+      service.setK8sV2(true);
+    }
   }
 
   @Override
