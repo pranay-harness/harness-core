@@ -1,4 +1,4 @@
-package software.wings.service;
+package software.wings.service.delegate;
 
 import static io.harness.beans.Cd1SetupFields.APP_ID_FIELD;
 import static io.harness.beans.Cd1SetupFields.ENV_ID_FIELD;

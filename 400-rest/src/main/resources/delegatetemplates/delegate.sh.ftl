@@ -1,4 +1,4 @@
-<#include "common.sh.ftl">
+<#include "common.start.sh.ftl">
 
 if [ -z "$1" ]; then
   echo "This script is not meant to be executed directly. The watcher uses it to manage delegate processes."
@@ -100,11 +100,12 @@ if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
     echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
     curl $MANAGER_PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
   else
-    CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
-    if [[ $REMOTE_DELEGATE_VERSION != $CURRENT_VERSION ]]; then
+    DELEGATE_CURRENT_VERSION=$(jar_app_version delegate.jar)
+    if [[ $REMOTE_DELEGATE_VERSION != $DELEGATE_CURRENT_VERSION ]]; then
+      echo "The current version $DELEGATE_CURRENT_VERSION is not the same as the expected remote version $REMOTE_DELEGATE_VERSION"
       echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
-      mkdir -p backup.$CURRENT_VERSION
-      cp delegate.jar backup.$CURRENT_VERSION
+      mkdir -p backup.$DELEGATE_CURRENT_VERSION
+      cp delegate.jar backup.$DELEGATE_CURRENT_VERSION
       curl $MANAGER_PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
     fi
   fi
