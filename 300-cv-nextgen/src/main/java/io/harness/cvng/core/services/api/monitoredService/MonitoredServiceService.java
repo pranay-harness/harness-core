@@ -20,5 +20,5 @@ public interface MonitoredServiceService extends DeleteEntityByHandler<Monitored
   List<String> listEnvironments(String accountId, String orgIdentifier, String projectIdentifier);
 
   MonitoredServiceDTO createDefault(String accountId, String orgIdentifier, String projectIdentifier,
-      String environmentIdentifier, String serviceIdentifier);
+      String serviceIdentifier, String environmentIdentifier);
 }

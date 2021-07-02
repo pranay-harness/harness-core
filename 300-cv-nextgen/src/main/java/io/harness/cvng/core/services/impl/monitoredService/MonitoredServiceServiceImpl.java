@@ -55,13 +55,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       throw new InvalidRequestException(String.format(
           "Monitored Source Entity  with identifier %s, accountId %s, orgIdentifier %s and projectIdentifier %s  is not present",
           monitoredServiceDTO.getIdentifier(), accountId, monitoredServiceDTO.getOrgIdentifier(),
-          monitoredService.getProjectIdentifier()));
+          monitoredServiceDTO.getProjectIdentifier()));
     }
-    Preconditions.checkArgument(monitoredService.getOrgIdentifier().equals(monitoredServiceDTO.getOrgIdentifier()),
-        "orgIdentifier update is not allowed");
-    Preconditions.checkArgument(
-        monitoredService.getProjectIdentifier().equals(monitoredServiceDTO.getProjectIdentifier()),
-        "projectIdentifier update is not allowed");
     Preconditions.checkArgument(monitoredService.getServiceIdentifier().equals(monitoredServiceDTO.getServiceRef()),
         "serviceRef update is not allowed");
     Preconditions.checkArgument(
@@ -148,6 +143,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         .environmentRef(monitoredServiceEntity.getEnvironmentIdentifier())
         .serviceRef(monitoredServiceEntity.getServiceIdentifier())
         .type(monitoredServiceEntity.getType())
+        .description(monitoredServiceEntity.getDesc())
         .sources(Sources.builder()
                      .healthSources(healthSourceService.get(monitoredServiceEntity.getAccountId(),
                          monitoredServiceEntity.getOrgIdentifier(), monitoredServiceEntity.getProjectIdentifier(),
@@ -321,10 +317,10 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
 
   @Override
   public MonitoredServiceDTO createDefault(String accountId, String orgIdentifier, String projectIdentifier,
-      String environmentIdentifier, String serviceIdentifier) {
+      String serviceIdentifier, String environmentIdentifier) {
     MonitoredServiceDTO monitoredServiceDTO = MonitoredServiceDTO.builder()
-                                                  .name(serviceIdentifier + environmentIdentifier)
-                                                  .identifier(serviceIdentifier + environmentIdentifier)
+                                                  .name(serviceIdentifier + "_" + environmentIdentifier)
+                                                  .identifier(serviceIdentifier + "_" + environmentIdentifier)
                                                   .orgIdentifier(orgIdentifier)
                                                   .projectIdentifier(projectIdentifier)
                                                   .serviceRef(serviceIdentifier)
