@@ -836,6 +836,10 @@ if [[ "" != "$ACCESS_CONTROL_SECRET" ]]; then
   yq write -i $CONFIG_FILE accessControlClient.accessControlServiceSecret $ACCESS_CONTROL_SECRET
 fi
 
+if [[ "" != "$ENABLE_AUDIT" ]]; then
+  yq write -i $CONFIG_FILE enableAudit $ENABLE_AUDIT
+fi
+
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   IFS=',' read -ra SENTINEL_URLS <<< "$EVENTS_FRAMEWORK_REDIS_SENTINELS"
   INDEX=0
