@@ -69,7 +69,10 @@ public class BillingDataServiceImpl {
       "SELECT COUNT(*) as ENTRIESCOUNT, SUM(billingamount) as BILLINGAMOUNTSUM from BILLING_DATA WHERE ACCOUNTID = '%s' AND STARTTIME = '%s' ;";
 
   private static final String READER_QUERY =
-      "SELECT * FROM BILLING_DATA WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s' ORDER BY accountid, clusterid, instanceid OFFSET %s LIMIT %s;";
+      "SELECT * FROM %s WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s' ORDER BY accountid, clusterid, instanceid OFFSET %s LIMIT %s;";
+
+  public static final String DAILY_BILLING_DATA_TABLE = "BILLING_DATA";
+  public static final String HOURLY_BILLING_DATA_TABLE = "BILLING_DATA_HOURLY";
 
   private static final List<InstanceType> PREAGG_INSTANCES =
       ImmutableList.of(InstanceType.K8S_POD, InstanceType.ECS_CONTAINER_INSTANCE, InstanceType.ECS_TASK_EC2,
@@ -214,11 +217,17 @@ public class BillingDataServiceImpl {
   }
 
   public List<InstanceBillingData> read(
-      String accountId, Instant startTime, Instant endTime, int batchSize, int offset) {
+      String accountId, Instant startTime, Instant endTime, int batchSize, int offset, BatchJobType batchJobType) {
+    String query = "";
     try {
       if (timeScaleDBService.isValid()) {
-        String query =
-            String.format(READER_QUERY, accountId, startTime.toString(), endTime.toString(), offset, batchSize);
+        if (batchJobType.equals(BatchJobType.CLUSTER_DATA_TO_BIG_QUERY)) {
+          query = String.format(READER_QUERY, DAILY_BILLING_DATA_TABLE, accountId, startTime.toString(),
+              endTime.toString(), offset, batchSize);
+        } else if (batchJobType.equals(BatchJobType.CLUSTER_DATA_HOURLY_TO_BIG_QUERY)) {
+          query = String.format(READER_QUERY, HOURLY_BILLING_DATA_TABLE, accountId, startTime.toString(),
+              endTime.toString(), offset, batchSize);
+        }
 
         return getUtilizationDataFromTimescaleDB(query);
       } else {
@@ -230,6 +239,9 @@ public class BillingDataServiceImpl {
   }
 
   private List<InstanceBillingData> getUtilizationDataFromTimescaleDB(String query) {
+    if (query.equals("")) {
+      return null;
+    }
     ResultSet resultSet = null;
     List<InstanceBillingData> instanceBillingDataList = new ArrayList<>();
     int retryCount = 0;
