@@ -11,6 +11,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.engine.outputs.SweepingOutputException;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.GroupNotFoundException;
@@ -126,7 +127,7 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
         Level.newBuilder()
             .setRuntimeId(STEP_RUNTIME_ID)
             .setSetupId(STEP_SETUP_ID)
-            .setStepType(StepType.newBuilder().setType("SHELL_SCRIPT").build())
+            .setStepType(StepType.newBuilder().setType("SHELL_SCRIPT").setStepCategory(StepCategory.STEP).build())
             .build());
   }
 

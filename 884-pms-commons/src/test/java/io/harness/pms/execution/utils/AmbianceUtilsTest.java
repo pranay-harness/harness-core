@@ -9,6 +9,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.rule.Owner;
 
@@ -104,16 +105,18 @@ public class AmbianceUtilsTest extends CategoryTest {
   }
 
   private Ambiance buildAmbiance() {
-    Level phaseLevel = Level.newBuilder()
-                           .setRuntimeId(PHASE_RUNTIME_ID)
-                           .setSetupId(PHASE_SETUP_ID)
-                           .setStepType(StepType.newBuilder().setType("PHASE").build())
-                           .build();
-    Level sectionLevel = Level.newBuilder()
-                             .setRuntimeId(SECTION_RUNTIME_ID)
-                             .setSetupId(SECTION_SETUP_ID)
-                             .setStepType(StepType.newBuilder().setType("SECTION").build())
-                             .build();
+    Level phaseLevel =
+        Level.newBuilder()
+            .setRuntimeId(PHASE_RUNTIME_ID)
+            .setSetupId(PHASE_SETUP_ID)
+            .setStepType(StepType.newBuilder().setType("PHASE").setStepCategory(StepCategory.STEP).build())
+            .build();
+    Level sectionLevel =
+        Level.newBuilder()
+            .setRuntimeId(SECTION_RUNTIME_ID)
+            .setSetupId(SECTION_SETUP_ID)
+            .setStepType(StepType.newBuilder().setType("SECTION").setStepCategory(StepCategory.STEP).build())
+            .build();
     List<Level> levels = new ArrayList<>();
     levels.add(phaseLevel);
     levels.add(sectionLevel);

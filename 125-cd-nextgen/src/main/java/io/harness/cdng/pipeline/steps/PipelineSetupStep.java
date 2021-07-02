@@ -9,6 +9,7 @@ import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
@@ -24,8 +25,10 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PIPELINE)
 public class PipelineSetupStep
     implements SyncExecutable<CDPipelineSetupParameters>, ChildExecutable<CDPipelineSetupParameters> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.PIPELINE_SETUP.getName()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.PIPELINE_SETUP.getName())
+                                               .setStepCategory(StepCategory.PIPELINE)
+                                               .build();
 
   @Override
   public Class<CDPipelineSetupParameters> getStepParametersClass() {

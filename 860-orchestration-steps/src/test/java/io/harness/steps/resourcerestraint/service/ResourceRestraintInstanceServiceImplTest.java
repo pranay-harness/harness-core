@@ -26,6 +26,7 @@ import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.repositories.ResourceRestraintInstanceRepository;
 import io.harness.rule.Owner;
@@ -209,7 +210,8 @@ public class ResourceRestraintInstanceServiceImplTest extends OrchestrationSteps
                         .ambiance(ambiance)
                         .node(PlanNodeProto.newBuilder()
                                   .setUuid(generateUuid())
-                                  .setStepType(StepType.newBuilder().setType("DUMMY").build())
+                                  .setStepType(
+                                      StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
                                   .setName("dummy")
                                   .setIdentifier("dummy")
                                   .build())

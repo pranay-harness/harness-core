@@ -21,6 +21,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.SkipTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
@@ -36,8 +37,10 @@ import com.google.inject.Inject;
 
 @OwnedBy(HarnessTeam.CDP)
 public class K8sCanaryDeleteStep extends TaskExecutableWithRollbackAndRbac<K8sDeployResponse> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.K8S_CANARY_DELETE.getYamlType()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.K8S_CANARY_DELETE.getYamlType())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
   public static final String K8S_CANARY_DELETE_COMMAND_NAME = "Canary Delete";
   public static final String SKIP_K8S_CANARY_DELETE_STEP_EXECUTION =
       "No canary workload was deployed in the forward phase. Skipping delete canary workload in rollback.";

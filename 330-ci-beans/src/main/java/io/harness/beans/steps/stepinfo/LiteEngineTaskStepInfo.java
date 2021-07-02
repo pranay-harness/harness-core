@@ -12,6 +12,7 @@ import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.filters.WithConnectorRef;
 import io.harness.plancreator.execution.ExecutionElementConfig;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
@@ -49,8 +50,10 @@ public class LiteEngineTaskStepInfo implements CIStepInfo, WithConnectorRef {
   @JsonIgnore
   public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.LITE_ENGINE_TASK).build();
   @JsonIgnore
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(CIStepInfoType.LITE_ENGINE_TASK.getDisplayName()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(CIStepInfoType.LITE_ENGINE_TASK.getDisplayName())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
 
   @JsonIgnore int timeout = DEFAULT_TIMEOUT;
   @NotNull @EntityIdentifier private String identifier;

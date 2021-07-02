@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -19,7 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
 public class CISpecStep implements ChildExecutable<IntegrationStageStepParametersPMS> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType("CISPECPMS").build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType("CISPECPMS").setStepCategory(StepCategory.STEP).build();
   @Override
   public ChildExecutableResponse obtainChild(
       Ambiance ambiance, IntegrationStageStepParametersPMS stepParameters, StepInputPackage inputPackage) {

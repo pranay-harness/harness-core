@@ -22,6 +22,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
@@ -46,7 +47,8 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.CDC)
 @Slf4j
 public class ArtifactStep implements TaskExecutable<ArtifactStepParameters, ArtifactTaskResponse> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.ARTIFACT.getName()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(ExecutionNodeType.ARTIFACT.getName()).setStepCategory(StepCategory.STEP).build();
 
   // Default timeout of 1 minute.
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);

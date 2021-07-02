@@ -19,6 +19,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.data.Outcome;
@@ -48,8 +49,10 @@ import org.springframework.data.annotation.TypeAlias;
 @Slf4j
 @OwnedBy(HarnessTeam.CV)
 public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(CVNGStepType.CVNG_VERIFY.getDisplayName()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(CVNGStepType.CVNG_VERIFY.getDisplayName())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
   @Inject private ActivityService activityService;
   @Inject private CVNGStepTaskService cvngStepTaskService;
   @Inject private Clock clock;

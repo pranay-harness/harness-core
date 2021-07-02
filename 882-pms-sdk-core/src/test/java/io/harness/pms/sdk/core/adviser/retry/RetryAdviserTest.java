@@ -17,6 +17,7 @@ import io.harness.pms.contracts.commons.RepairActionCode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.AmbianceTestUtils;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
@@ -41,7 +42,8 @@ public class RetryAdviserTest extends PmsSdkCoreTestBase {
   public static final String NODE_SETUP_ID = generateUuid();
   public static final String NODE_NAME = generateUuid();
   public static final String NODE_IDENTIFIER = "DUMMY";
-  public static final StepType DUMMY_STEP_TYPE = StepType.newBuilder().setType("DUMMY").build();
+  public static final StepType DUMMY_STEP_TYPE =
+      StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build();
 
   @InjectMocks @Inject RetryAdviser retryAdviser;
 

@@ -27,6 +27,7 @@ import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.plan.TriggeredBy;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
@@ -52,7 +53,8 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Mock private EndNodeExecutionHelper endNodeExecutionHelper;
   @Inject @InjectMocks @Spy private OrchestrationEngine orchestrationEngine;
 
-  private static final StepType TEST_STEP_TYPE = StepType.newBuilder().setType("TEST_STEP_PLAN").build();
+  private static final StepType TEST_STEP_TYPE =
+      StepType.newBuilder().setType("TEST_STEP_PLAN").setStepCategory(StepCategory.STEP).build();
 
   private static final TriggeredBy triggeredBy =
       TriggeredBy.newBuilder().putExtraInfo("email", PRASHANT).setIdentifier(PRASHANT).setUuid(generateUuid()).build();
