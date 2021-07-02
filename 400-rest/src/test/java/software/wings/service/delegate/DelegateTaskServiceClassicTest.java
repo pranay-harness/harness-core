@@ -1,4 +1,4 @@
-package software.wings.service;
+package software.wings.service.delegate;
 
 import static io.harness.beans.DelegateTask.Status.ABORTED;
 import static io.harness.beans.DelegateTask.Status.ERROR;
