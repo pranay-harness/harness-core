@@ -415,7 +415,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       connectionHeartbeat = DelegateConnectionHeartbeat.builder()
                                 .delegateConnectionId(delegateConnectionId)
-                                .version(getVersion())
+                                .version(getVersionWithPatch())
                                 .location(Paths.get("").toAbsolutePath().toString())
                                 .build();
 
@@ -504,7 +504,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .delegateGroupId(delegateGroupId)
                                           .delegateProfileId(delegateProfile)
                                           .description(description)
-                                          .version(getVersion())
+                                          .version(getVersionWithPatch())
                                           .delegateType(DELEGATE_TYPE)
                                           //.proxy(set to true if there is a system proxy)
                                           .pollingModeEnabled(delegateConfiguration.isPollForTasks())
@@ -1450,7 +1450,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             statusData.put(DELEGATE_SELF_DESTRUCT, true);
           } else {
             statusData.put(DELEGATE_HEARTBEAT, clock.millis());
-            statusData.put(DELEGATE_VERSION, getVersion());
+            statusData.put(DELEGATE_VERSION, getVersionWithPatch());
             statusData.put(DELEGATE_IS_NEW, false);
             statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
             statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
@@ -1504,8 +1504,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           WATCHER_VERSION_MATCH_TIMEOUT / 1000L, watcherVersion, expectedVersion);
     }
 
-    boolean multiVersionRestartNeeded =
-        multiVersion && clock.millis() - startTime > WATCHER_VERSION_MATCH_TIMEOUT && !new File(getVersion()).exists();
+    boolean multiVersionRestartNeeded = multiVersion && clock.millis() - startTime > WATCHER_VERSION_MATCH_TIMEOUT
+        && !new File(getVersionWithPatch()).exists();
 
     if (heartbeatTimedOut || versionMatchTimedOut
         || (multiVersionRestartNeeded && multiVersionWatcherStarted.compareAndSet(false, true))) {
@@ -2326,7 +2326,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void removeDelegateVersionFromCapsule() {
     try {
-      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), getVersion(), upgradeVersion, "delegate-");
+      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), getVersionWithPatch(), upgradeVersion,
+          "delegate-");
     } catch (Exception ex) {
       log.error("Failed to clean delegate version [{}] from Capsule", upgradeVersion, ex);
     }
@@ -2343,6 +2344,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private String getVersion() {
     return versionInfoManager.getVersionInfo().getVersion();
+  }
+
+  private String getVersionWithPatch() {
+    return versionInfoManager.getFullVersion();
   }
 
   private void initiateSelfDestruct() {

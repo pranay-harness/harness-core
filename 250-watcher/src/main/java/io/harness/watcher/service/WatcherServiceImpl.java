@@ -62,6 +62,7 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.or;
 import static org.apache.commons.io.filefilter.FileFilterUtils.prefixFileFilter;
 import static org.apache.commons.io.filefilter.FileFilterUtils.suffixFileFilter;
 import static org.apache.commons.io.filefilter.FileFilterUtils.trueFileFilter;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.replace;
@@ -984,6 +985,13 @@ public class WatcherServiceImpl implements WatcherService {
     return 0;
   }
 
+  private String getDelegateVersionWithPatch(String delegateVersion) {
+    if (isNotBlank(delegateVersion)) {
+      return delegateVersion.substring(delegateVersion.lastIndexOf('.') + 1);
+    }
+    return EMPTY;
+  }
+
   private void downloadRunScripts(String directory, String version, boolean forceDownload) throws Exception {
     if (!forceDownload && new File(directory + File.separator + DELEGATE_SCRIPT).exists()) {
       return;
@@ -1038,7 +1046,7 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void downloadDelegateJar(String version) throws Exception {
-    String minorVersion = Integer.toString(getMinorVersion(version));
+    String minorVersion = getDelegateVersionWithPatch(version);
 
     File finalDestination = new File(version + "/delegate.jar");
     if (finalDestination.exists()) {
@@ -1055,7 +1063,7 @@ public class WatcherServiceImpl implements WatcherService {
     }
 
     String downloadUrl = restResponse.getResource();
-    log.info("Downloading delegate jar version {}", version);
+    log.info("Downloading delegate jar version {} and download url {}", version, downloadUrl);
     File downloadFolder = new File(version);
     if (!downloadFolder.exists()) {
       downloadFolder.mkdir();
