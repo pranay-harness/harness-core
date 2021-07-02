@@ -92,6 +92,7 @@ import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.Log;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
@@ -968,9 +969,13 @@ public class HelmDeployState extends State {
     HelmCommandFlag helmCommandFlag = null;
     if (appManifest != null) {
       helmCommandFlag = ApplicationManifestUtils.getHelmCommandFlags(appManifest.getHelmCommandFlag());
-      if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, context.getAccountId())
-          && applicationManifestUtils.isPollForChangesEnabled(appManifest)) {
-        applicationManifestUtils.applyHelmChartFromExecutionContext(appManifest, context, serviceElement.getUuid());
+      if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, context.getAccountId())) {
+        // replacing app manifest in case of artifact is from manifest
+        Service service = serviceResourceService.get(context.getAppId(), serviceElement.getUuid());
+        if (Boolean.TRUE.equals(service.getArtifactFromManifest())) {
+          appManifest =
+              applicationManifestUtils.getAppManifestFromFromExecutionContextHelmChart(context, service.getUuid());
+        }
       }
 
       switch (appManifest.getStoreType()) {

@@ -324,8 +324,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       return;
     }
 
-    helmChart.setMetadata(
-        applicationManifestService.fetchAppManifestProperties(appId, helmChart.getApplicationManifestId()));
+    if (isEmpty(helmChart.getMetadata())) {
+      helmChart.setMetadata(
+          applicationManifestService.fetchAppManifestProperties(appId, helmChart.getApplicationManifestId()));
+    }
     map.put(HELM_CHART, helmChart);
   }
 

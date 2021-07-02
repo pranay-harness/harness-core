@@ -60,8 +60,10 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -1168,6 +1170,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
         .thenReturn(Service.builder().isK8sV2(true).artifactFromManifest(true).build());
     when(featureFlagService.isEnabled(eq(FeatureName.HELM_CHART_AS_ARTIFACT), any())).thenReturn(true);
+
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder()
             .name(APP_MANIFEST_NAME)
@@ -1199,6 +1202,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
         .thenReturn(Service.builder().isK8sV2(true).artifactFromManifest(true).build());
+
     when(featureFlagService.isEnabled(eq(FeatureName.HELM_CHART_AS_ARTIFACT), any())).thenReturn(true);
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder()
@@ -1208,6 +1212,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
             .helmChartConfig(HelmChartConfig.builder().connectorId("connector").chartName("name").build())
             .kind(K8S_MANIFEST)
             .build();
+
     applicationManifest.setAppId(APP_ID);
     applicationManifestService.create(applicationManifest);
     ApplicationManifest applicationManifest2 = ApplicationManifest.builder()
@@ -1221,5 +1226,40 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage(
             "Application Manifest should be of kind Helm Chart from Helm Repo for Service with artifact from manifest enabled");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testGetNamesForIds() {
+    when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(Service.builder().isK8sV2(true).artifactFromManifest(true).build());
+    when(featureFlagService.isEnabled(eq(FeatureName.HELM_CHART_AS_ARTIFACT), anyString())).thenReturn(true);
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder()
+            .name(APP_MANIFEST_NAME + 2)
+            .serviceId(SERVICE_ID)
+            .storeType(StoreType.HelmChartRepo)
+            .kind(AppManifestKind.K8S_MANIFEST)
+            .helmChartConfig(HelmChartConfig.builder().chartName("name").connectorId(SETTING_ID).build())
+            .build();
+    applicationManifest.setAppId(APP_ID);
+    ApplicationManifest savedManifest = applicationManifestService.create(applicationManifest);
+    ApplicationManifest applicationManifest2 =
+        ApplicationManifest.builder()
+            .name(APP_MANIFEST_NAME)
+            .serviceId(SERVICE_ID)
+            .storeType(StoreType.HelmChartRepo)
+            .kind(AppManifestKind.K8S_MANIFEST)
+            .helmChartConfig(HelmChartConfig.builder().chartName("name").connectorId(SETTING_ID).build())
+            .build();
+    applicationManifest2.setAppId(APP_ID);
+    ApplicationManifest savedManifest2 = applicationManifestService.create(applicationManifest2);
+    Map<String, String> appManifestIdNames = applicationManifestService.getNamesForIds(
+        APP_ID, ImmutableSet.of(savedManifest.getUuid(), savedManifest2.getUuid()));
+    assertThat(appManifestIdNames).hasSize(2);
+    assertThat(appManifestIdNames.get(savedManifest.getUuid())).isEqualTo(APP_MANIFEST_NAME + 2);
+    assertThat(appManifestIdNames.get(savedManifest2.getUuid())).isEqualTo(APP_MANIFEST_NAME);
   }
 }

@@ -105,4 +105,6 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
   void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String applicationManifestId);
 
   ApplicationManifest getAppManifestByName(String appId, String envId, String serviceId, String appManifestName);
+
+  Map<String, String> getNamesForIds(String appId, Set<String> appManifestIds);
 }
