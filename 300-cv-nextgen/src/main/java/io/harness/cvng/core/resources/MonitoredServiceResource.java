@@ -60,7 +60,7 @@ public class MonitoredServiceResource {
       @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier,
       @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier) {
     return new RestResponse<>(monitoredServiceService.createDefault(
-        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier));
+        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, environmentIdentifier));
   }
 
   @PUT

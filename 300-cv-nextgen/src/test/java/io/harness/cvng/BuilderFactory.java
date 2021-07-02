@@ -3,6 +3,8 @@ package io.harness.cvng;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.cvng.beans.job.Sensitivity;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigBuilder;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -43,6 +45,15 @@ public class BuilderFactory {
         .startTime(clock.instant())
         .dataCollectionDelay(Duration.ofMinutes(2))
         .resolvedJob(getVerificationJob());
+  }
+
+  public AppDynamicsCVConfigBuilder appDynamicsCVConfigBuilder() {
+    return AppDynamicsCVConfig.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier());
   }
 
   private VerificationJob getVerificationJob() {

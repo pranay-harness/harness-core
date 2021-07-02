@@ -1,12 +1,12 @@
 package io.harness.cvng.core.beans.monitoredService;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KANHAIYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.monitoredService.HealthSource.CVConfigUpdateResult;
@@ -44,18 +44,21 @@ public class AppDynamicsHealthSourceSpecTest extends CvNextGenTestBase {
   String identifier;
   String name;
   List<MetricPackDTO> metricPackDTOS;
+  private BuilderFactory builderFactory;
 
   @Before
   public void setup() {
-    accountId = generateUuid();
-    orgIdentifier = "org";
-    projectIdentifier = "project";
+    builderFactory = BuilderFactory.getDefault();
+    accountId = builderFactory.getContext().getAccountId();
+    orgIdentifier = builderFactory.getContext().getOrgIdentifier();
+    projectIdentifier = builderFactory.getContext().getProjectIdentifier();
+    serviceIdentifier = builderFactory.getContext().getServiceIdentifier();
+    envIdentifier = builderFactory.getContext().getEnvIdentifier();
     applicationName = "appName";
     tierName = "tierName";
     feature = "Application Monitoring";
     connectorIdentifier = "connectorRef";
-    serviceIdentifier = "serviceRef";
-    envIdentifier = "envRef";
+
     identifier = "identifier";
     name = "some-name";
     metricPackDTOS = Arrays.asList(MetricPackDTO.builder().identifier(CVMonitoringCategory.ERRORS).build());
@@ -150,18 +153,14 @@ public class AppDynamicsHealthSourceSpecTest extends CvNextGenTestBase {
   }
 
   private CVConfig createCVConfig(MetricPack metricPack) {
-    return AppDynamicsCVConfig.builder()
-        .applicationName(applicationName)
-        .envIdentifier(envIdentifier)
-        .connectorIdentifier(connectorIdentifier)
-        .productName(feature)
-        .projectIdentifier(projectIdentifier)
-        .accountId(accountId)
-        .identifier(identifier)
-        .monitoringSourceName(name)
-        .serviceIdentifier(serviceIdentifier)
+    return builderFactory.appDynamicsCVConfigBuilder()
         .tierName(tierName)
+        .applicationName(applicationName)
         .metricPack(metricPack)
+        .connectorIdentifier(connectorIdentifier)
+        .monitoringSourceName(name)
+        .productName(feature)
+        .identifier(identifier)
         .build();
   }
 }
