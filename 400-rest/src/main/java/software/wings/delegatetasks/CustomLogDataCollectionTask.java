@@ -67,7 +67,6 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionTask {
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
   @Inject private RequestExecutor requestExecutor;
-  @Inject private DelegateLogService delegateLogService;
   private CustomLogDataCollectionInfo dataCollectionInfo;
   private Map<String, String> decryptedFields = new HashMap<>();
   private static final String DATADOG_API_MASK = "api_key=([^&]*)&application_key=([^&]*)";
@@ -247,20 +246,6 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
       return output;
     }
 
-    private String resolveDollarReferencesOfSecrets(String input) {
-      while (input.contains("${")) {
-        int startIndex = input.indexOf("${");
-        int endIndex = input.indexOf('}', startIndex);
-        String fieldName = input.substring(startIndex + 2, endIndex);
-        String headerBeforeIndex = input.substring(0, startIndex);
-        if (!decryptedFields.containsKey(fieldName)) {
-          // this could be a ${startTime}, so we're ignoring and moving on
-          continue;
-        }
-        input = headerBeforeIndex + decryptedFields.get(fieldName) + input.substring(endIndex + 1);
-      }
-      return input;
-    }
     private Map<String, String> getStringsToMask() {
       Map<String, String> maskFields = new HashMap<>();
       if (isNotEmpty(decryptedFields)) {
@@ -300,12 +285,11 @@ public class CustomLogDataCollectionTask extends AbstractDelegateDataCollectionT
         }
         String resolvedUrl =
             CustomDataCollectionUtils.resolvedUrl(url, host, startTime, endTime, dataCollectionInfo.getQuery());
-        resolvedUrl = resolveDollarReferencesOfSecrets(resolvedUrl);
+        resolvedUrl = CustomDataCollectionUtils.resolveDollarReferences(resolvedUrl, decryptedFields);
 
         String resolvedBodyStr =
             CustomDataCollectionUtils.resolvedUrl(bodyStr, host, startTime, endTime, dataCollectionInfo.getQuery());
-        String bodyToLog = resolvedBodyStr;
-        resolvedBodyStr = resolveDollarReferencesOfSecrets(resolvedBodyStr);
+        resolvedBodyStr = CustomDataCollectionUtils.resolveDollarReferences(resolvedBodyStr, decryptedFields);
         Map<String, Object> resolvedBody = isNotEmpty(resolvedBodyStr) ? new JSONObject(resolvedBodyStr).toMap() : null;
 
         Call<Object> request;
