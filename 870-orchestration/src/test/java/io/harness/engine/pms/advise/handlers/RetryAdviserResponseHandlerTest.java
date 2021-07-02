@@ -18,6 +18,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
@@ -51,18 +52,19 @@ public class RetryAdviserResponseHandlerTest extends OrchestrationTestBase {
 
     planExecutionService.save(PlanExecution.builder().uuid(PLAN_EXECUTION_ID).build());
 
-    nodeExecution = NodeExecution.builder()
-                        .uuid(NODE_EXECUTION_ID)
-                        .ambiance(ambiance)
-                        .node(PlanNodeProto.newBuilder()
-                                  .setUuid(NODE_SETUP_ID)
-                                  .setName("DUMMY")
-                                  .setIdentifier("dummy")
-                                  .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                  .build())
-                        .startTs(System.currentTimeMillis())
-                        .status(Status.FAILED)
-                        .build();
+    nodeExecution =
+        NodeExecution.builder()
+            .uuid(NODE_EXECUTION_ID)
+            .ambiance(ambiance)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(NODE_SETUP_ID)
+                      .setName("DUMMY")
+                      .setIdentifier("dummy")
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .build())
+            .startTs(System.currentTimeMillis())
+            .status(Status.FAILED)
+            .build();
     nodeExecutionService.save(nodeExecution);
     advise = RetryAdvise.newBuilder().setWaitInterval(0).setRetryNodeExecutionId(NODE_EXECUTION_ID).build();
   }

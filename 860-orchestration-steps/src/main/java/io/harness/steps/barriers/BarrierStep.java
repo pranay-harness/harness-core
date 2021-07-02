@@ -8,6 +8,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
@@ -29,7 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PIPELINE)
 @Slf4j
 public class BarrierStep implements AsyncExecutable<StepElementParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.BARRIER).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(StepSpecTypeConstants.BARRIER).setStepCategory(StepCategory.STEP).build();
 
   private static final String BARRIER = "barrier";
 

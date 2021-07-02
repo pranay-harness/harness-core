@@ -21,6 +21,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -250,7 +251,7 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
         PlanNodeProto.newBuilder()
             .setUuid(generateUuid())
             .setName(identifier + "n")
-            .setStepType(StepType.newBuilder().setType("DUMMY").build())
+            .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
             .setIdentifier(identifier)
             .setSkipExpressionChain(skipExpressionChain)
             .setStepParameters(RecastOrchestrationUtils.toDocumentJson(prepareStepParameters(paramValue)));

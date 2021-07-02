@@ -14,6 +14,7 @@ import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.rbac.PipelineRbacHelper;
@@ -31,7 +32,8 @@ import java.util.List;
 
 @OwnedBy(CDC)
 public class JiraCreateStep extends TaskExecutableWithRollbackAndRbac<JiraTaskNGResponse> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.JIRA_CREATE).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(StepSpecTypeConstants.JIRA_CREATE).setStepCategory(StepCategory.STEP).build();
 
   @Inject private JiraStepHelperService jiraStepHelperService;
   @Inject private PipelineRbacHelper pipelineRbacHelper;

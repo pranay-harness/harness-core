@@ -30,6 +30,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -98,18 +99,19 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
     planExecutionService.save(planExecution);
 
     // creating NodeExecution
-    NodeExecution dummyStart = NodeExecution.builder()
-                                   .uuid(generateUuid())
-                                   .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
-                                   .mode(ExecutionMode.SYNC)
-                                   .node(PlanNodeProto.newBuilder()
-                                             .setUuid(generateUuid())
-                                             .setName("name")
-                                             .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                             .setIdentifier("identifier1")
-                                             .build())
-                                   .status(Status.QUEUED)
-                                   .build();
+    NodeExecution dummyStart =
+        NodeExecution.builder()
+            .uuid(generateUuid())
+            .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
+            .mode(ExecutionMode.SYNC)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(generateUuid())
+                      .setName("name")
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .setIdentifier("identifier1")
+                      .build())
+            .status(Status.QUEUED)
+            .build();
     nodeExecutionService.save(dummyStart);
 
     // creating cached graph
@@ -158,18 +160,19 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
     planExecutionService.save(planExecution);
 
     // creating NodeExecution
-    NodeExecution dummyStart = NodeExecution.builder()
-                                   .uuid(generateUuid())
-                                   .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
-                                   .mode(ExecutionMode.SYNC)
-                                   .status(SUCCEEDED)
-                                   .node(PlanNodeProto.newBuilder()
-                                             .setUuid(generateUuid())
-                                             .setName("name")
-                                             .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                             .setIdentifier("identifier1")
-                                             .build())
-                                   .build();
+    NodeExecution dummyStart =
+        NodeExecution.builder()
+            .uuid(generateUuid())
+            .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
+            .mode(ExecutionMode.SYNC)
+            .status(SUCCEEDED)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(generateUuid())
+                      .setName("name")
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .setIdentifier("identifier1")
+                      .build())
+            .build();
     nodeExecutionService.save(dummyStart);
 
     // creating cached graph

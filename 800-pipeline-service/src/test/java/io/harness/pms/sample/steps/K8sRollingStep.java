@@ -2,6 +2,7 @@ package io.harness.pms.sample.steps;
 
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.plan.MapStepParameters;
 import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
@@ -14,7 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class K8sRollingStep implements SyncExecutable<MapStepParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType("k8sRolling").build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType("k8sRolling").setStepCategory(StepCategory.STEP).build();
 
   @Override
   public Class<MapStepParameters> getStepParametersClass() {

@@ -22,6 +22,7 @@ import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
@@ -39,8 +40,10 @@ import java.util.List;
 
 @OwnedBy(HarnessTeam.CDP)
 public class K8sDeleteStep extends TaskChainExecutableWithRollbackAndRbac implements K8sStepExecutor {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.K8S_DELETE.getYamlType()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.K8S_DELETE.getYamlType())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
   public static final String K8S_DELETE_COMMAND_NAME = "Delete";
 
   @Inject private OutcomeService outcomeService;

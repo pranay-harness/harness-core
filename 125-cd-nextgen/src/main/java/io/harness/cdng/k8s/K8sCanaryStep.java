@@ -25,6 +25,7 @@ import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -42,8 +43,10 @@ import java.util.List;
 
 @OwnedBy(CDP)
 public class K8sCanaryStep extends TaskChainExecutableWithRollbackAndRbac implements K8sStepExecutor {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.K8S_CANARY.getYamlType()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.K8S_CANARY.getYamlType())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
   private final String K8S_CANARY_DEPLOY_COMMAND_NAME = "Canary Deploy";
 
   @Inject private K8sStepHelper k8sStepHelper;

@@ -12,6 +12,7 @@ import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
@@ -26,7 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(CI)
 public class IntegrationStageStep implements ChildExecutable<IntegrationStageStepParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType("INTEGRATION_STAGE_STEP").build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType("INTEGRATION_STAGE_STEP").setStepCategory(StepCategory.STAGE).build();
   public static final String CHILD_PLAN_START_NODE = "io/harness/beans/execution";
 
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;

@@ -7,6 +7,7 @@ import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.AsyncExecutableWithRollback;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -24,7 +25,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 public class HarnessApprovalStep extends AsyncExecutableWithRollback {
   public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(StepSpecTypeConstants.HARNESS_APPROVAL).build();
+      StepType.newBuilder().setType(StepSpecTypeConstants.HARNESS_APPROVAL).setStepCategory(StepCategory.STEP).build();
 
   @Inject private ApprovalInstanceService approvalInstanceService;
   @Inject private ApprovalNotificationHandler approvalNotificationHandler;

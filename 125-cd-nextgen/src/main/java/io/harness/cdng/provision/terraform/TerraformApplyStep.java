@@ -26,6 +26,7 @@ import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollbackAn
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.rbac.PipelineRbacHelper;
@@ -50,8 +51,10 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.CDP)
 @Slf4j
 public class TerraformApplyStep extends TaskExecutableWithRollbackAndRbac<TerraformTaskNGResponse> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.TERRAFORM_APPLY.getYamlType()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.TERRAFORM_APPLY.getYamlType())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
 
   @Inject private KryoSerializer kryoSerializer;
   @Inject private TerraformStepHelper helper;

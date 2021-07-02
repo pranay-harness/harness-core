@@ -9,6 +9,7 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
@@ -36,7 +37,8 @@ public class BuildStepInfo implements CIStepInfo {
 
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.BUILD).build();
   @JsonIgnore
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.BUILD.getDisplayName()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.BUILD.getDisplayName()).setStepCategory(StepCategory.STEP).build();
 
   @JsonIgnore @Builder.Default int timeout = DEFAULT_TIMEOUT;
 

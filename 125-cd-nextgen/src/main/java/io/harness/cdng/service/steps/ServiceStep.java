@@ -20,6 +20,7 @@ import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.rbac.PipelineRbacHelper;
@@ -40,7 +41,8 @@ import java.util.Set;
 
 @OwnedBy(HarnessTeam.CDC)
 public class ServiceStep implements SyncExecutable<ServiceStepParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.SERVICE.getName()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(ExecutionNodeType.SERVICE.getName()).setStepCategory(StepCategory.STEP).build();
 
   @Inject private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
   @Inject @Named("PRIVILEGED") private AccessControlClient accessControlClient;

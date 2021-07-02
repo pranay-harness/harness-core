@@ -39,6 +39,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -72,8 +73,10 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 public class ShellScriptStep extends TaskExecutableWithRollback<ShellScriptTaskResponseNG> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.SHELL_SCRIPT.getYamlType()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.SHELL_SCRIPT.getYamlType())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
 
   @Inject private KryoSerializer kryoSerializer;
   @Inject private SecretCrudService secretCrudService;

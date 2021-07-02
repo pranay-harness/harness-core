@@ -15,6 +15,7 @@ import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -30,7 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(CI)
 public class BuildStatusStep implements TaskExecutable<BuildStatusUpdateParameter, BuildStatusPushResponse> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType("COMMIT_STATUS").build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType("COMMIT_STATUS").setStepCategory(StepCategory.STEP).build();
   private static final int socketTimeoutMillis = 10000;
   @Inject GitClientHelper gitClientHelper;
   @Inject private ConnectorUtils connectorUtils;

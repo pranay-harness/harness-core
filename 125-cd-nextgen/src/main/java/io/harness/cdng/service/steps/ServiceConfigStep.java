@@ -13,6 +13,7 @@ import io.harness.logstreaming.NGLogCallback;
 import io.harness.ngpipeline.artifact.bean.ArtifactsOutcome;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
@@ -36,8 +37,10 @@ import java.util.Map;
 
 @OwnedBy(HarnessTeam.CDC)
 public class ServiceConfigStep implements ChildExecutable<ServiceConfigStepParameters> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.SERVICE_CONFIG.getName()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.SERVICE_CONFIG.getName())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
 
   @Inject private ServiceStepsHelper serviceStepsHelper;
   @Inject private OutcomeService outcomeService;

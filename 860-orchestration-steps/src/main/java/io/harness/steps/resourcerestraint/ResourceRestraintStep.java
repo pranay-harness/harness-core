@@ -7,6 +7,7 @@ import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
@@ -32,8 +33,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ResourceRestraintStep
     implements SyncExecutable<StepElementParameters>, AsyncExecutable<StepElementParameters> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(StepSpecTypeConstants.RESOURCE_CONSTRAINT).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(StepSpecTypeConstants.RESOURCE_CONSTRAINT)
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
 
   @Inject private ResourceRestraintInstanceService resourceRestraintInstanceService;
   @Inject private ResourceRestraintService resourceRestraintService;

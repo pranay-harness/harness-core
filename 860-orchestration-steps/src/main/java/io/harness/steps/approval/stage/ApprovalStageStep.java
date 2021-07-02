@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.common.StageElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -20,7 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.CDC)
 @Slf4j
 public class ApprovalStageStep implements ChildExecutable<StageElementParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.APPROVAL_STAGE).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(OrchestrationStepTypes.APPROVAL_STAGE).setStepCategory(StepCategory.STAGE).build();
 
   @Override
   public Class<StageElementParameters> getStepParametersClass() {

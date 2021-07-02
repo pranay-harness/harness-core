@@ -20,6 +20,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.SkipTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
@@ -37,8 +38,10 @@ import com.google.inject.Inject;
 
 @OwnedBy(CDP)
 public class K8sBGSwapServicesStep extends TaskExecutableWithRollbackAndRbac<K8sDeployResponse> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.K8S_BG_SWAP_SERVICES.getYamlType()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.K8S_BG_SWAP_SERVICES.getYamlType())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
   public static final String K8S_BG_SWAP_SERVICES_COMMAND_NAME = "Blue/Green Swap Services";
   public static final String SKIP_BG_SWAP_SERVICES_STEP_EXECUTION =
       "Services were not swapped in the forward phase. Skipping swapping in rollback.";

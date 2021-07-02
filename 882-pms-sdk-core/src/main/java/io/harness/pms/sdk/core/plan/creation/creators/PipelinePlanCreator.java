@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.plan.MapStepParameters;
@@ -60,7 +61,7 @@ public class PipelinePlanCreator extends ChildrenPlanCreator<YamlField> {
     PlanNode node = PlanNode.builder()
                         .uuid(uuid)
                         .identifier("stages-" + yamlNode.getIdentifier())
-                        .stepType(StepType.newBuilder().setType("stages").build())
+                        .stepType(StepType.newBuilder().setType("stages").setStepCategory(StepCategory.STAGES).build())
                         .name("stages")
                         .stepParameters(new MapStepParameters("childrenNodeIds",
                             stageYamlFields.stream().map(el -> el.getNode().getUuid()).collect(Collectors.toList())))
@@ -86,7 +87,7 @@ public class PipelinePlanCreator extends ChildrenPlanCreator<YamlField> {
     return PlanNode.builder()
         .uuid(yamlNode.getUuid())
         .identifier(yamlNode.getIdentifier())
-        .stepType(StepType.newBuilder().setType("pipeline").build())
+        .stepType(StepType.newBuilder().setType("pipeline").setStepCategory(StepCategory.PIPELINE).build())
         .name(yamlNode.getNameOrIdentifier())
         .stepParameters(new MapStepParameters("childrenNodeIds", childrenNodeIds))
         .facilitatorObtainment(FacilitatorObtainment.newBuilder()

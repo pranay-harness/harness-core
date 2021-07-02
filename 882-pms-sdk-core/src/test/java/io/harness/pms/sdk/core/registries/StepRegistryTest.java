@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.category.element.UnitTests;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.sdk.core.steps.Step;
@@ -27,7 +28,7 @@ public class StepRegistryTest extends PmsSdkCoreTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestRegistry() {
-    StepType stepType = StepType.newBuilder().setType("DUMMY_TEST").build();
+    StepType stepType = StepType.newBuilder().setType("DUMMY_TEST").setStepCategory(StepCategory.STEP).build();
     stepRegistry.register(stepType, new DummyStep());
     Step step = stepRegistry.obtain(stepType);
     assertThat(step).isNotNull();
@@ -35,7 +36,8 @@ public class StepRegistryTest extends PmsSdkCoreTestBase {
     assertThatThrownBy(() -> stepRegistry.register(stepType, new DummyStep()))
         .isInstanceOf(DuplicateRegistryException.class);
 
-    assertThatThrownBy(() -> stepRegistry.obtain(StepType.newBuilder().setType("RANDOM").build()))
+    assertThatThrownBy(
+        () -> stepRegistry.obtain(StepType.newBuilder().setType("RANDOM").setStepCategory(StepCategory.STEP).build()))
         .isInstanceOf(UnregisteredKeyAccessException.class);
   }
 
