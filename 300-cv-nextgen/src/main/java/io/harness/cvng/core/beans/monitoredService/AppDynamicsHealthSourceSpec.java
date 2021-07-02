@@ -18,12 +18,14 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.Value;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @SuperBuilder
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AppDynamicsHealthSourceSpec extends HealthSourceSpec {
   @NotNull String connectorRef;

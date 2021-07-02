@@ -9,9 +9,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import java.util.List;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 @SuperBuilder
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSubTypes({ @JsonSubTypes.Type(value = AppDynamicsHealthSourceSpec.class, name = "AppDynamics") })
 public abstract class HealthSourceSpec {
