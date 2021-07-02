@@ -49,7 +49,12 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("helmChartManifest")
 public class HelmChartManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
-  @Wither @JsonProperty("store") StoreConfigWrapper store;
+  @Wither
+  @JsonProperty("store")
+  @ApiModelProperty(dataType = "io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper")
+  @SkipAutoEvaluation
+  ParameterField<StoreConfigWrapper> store;
+
   @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) @SkipAutoEvaluation ParameterField<String> chartName;
   @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) @SkipAutoEvaluation ParameterField<String> chartVersion;
   @Wither HelmVersion helmVersion;
@@ -60,9 +65,10 @@ public class HelmChartManifest implements ManifestAttributes, Visitable {
   public ManifestAttributes applyOverrides(ManifestAttributes overrideConfig) {
     HelmChartManifest helmChartManifest = (HelmChartManifest) overrideConfig;
     HelmChartManifest resultantManifest = this;
-    if (helmChartManifest.getStore() != null) {
-      StoreConfigWrapper storeConfigOverride = helmChartManifest.getStore();
-      resultantManifest = resultantManifest.withStore(store.applyOverrides(storeConfigOverride));
+    if (helmChartManifest.getStore() != null && helmChartManifest.getStore().getValue() != null) {
+      StoreConfigWrapper storeConfigOverride = helmChartManifest.getStore().getValue();
+      resultantManifest = resultantManifest.withStore(
+          ParameterField.createValueField(store.getValue().applyOverrides(storeConfigOverride)));
     }
 
     if (!ParameterField.isNull(helmChartManifest.getChartName())) {
@@ -90,7 +96,7 @@ public class HelmChartManifest implements ManifestAttributes, Visitable {
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
-    children.add(YAMLFieldNameConstants.STORE, store);
+    children.add(YAMLFieldNameConstants.STORE, store.getValue());
     return children;
   }
 
@@ -101,13 +107,14 @@ public class HelmChartManifest implements ManifestAttributes, Visitable {
 
   @Override
   public StoreConfig getStoreConfig() {
-    return this.store.getSpec();
+    return this.store.getValue().getSpec();
   }
 
   @Override
   public ManifestAttributeStepParameters getManifestAttributeStepParameters() {
-    return new HelmChartManifestStepParameters(identifier, StoreConfigWrapperParameters.fromStoreConfigWrapper(store),
-        chartName, chartVersion, helmVersion, skipResourceVersioning, commandFlags);
+    return new HelmChartManifestStepParameters(identifier,
+        StoreConfigWrapperParameters.fromStoreConfigWrapper(store.getValue()), chartName, chartVersion, helmVersion,
+        skipResourceVersioning, commandFlags);
   }
 
   @Value

@@ -101,6 +101,12 @@ public class ManifestStep implements SyncExecutable<ManifestStepParameters> {
   }
 
   private void getConnector(ManifestAttributes manifestAttributes, Ambiance ambiance) {
+    // In some cases (eg. in k8s manifests) we're skipping auto evaluation, in this case we can skip connector
+    // validation for now. It will be done when all expression will be resolved
+    if (manifestAttributes.getStoreConfig().getConnectorReference().isExpression()) {
+      return;
+    }
+
     if (ParameterField.isNull(manifestAttributes.getStoreConfig().getConnectorReference())) {
       throw new InvalidRequestException(
           "Connector ref field not present in manifest with identifier " + manifestAttributes.getIdentifier());
