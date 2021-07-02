@@ -5,6 +5,7 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.BOJANA;
+import static io.harness.rule.OwnerRule.PRAKHAR;
 import static io.harness.rule.OwnerRule.TMACARI;
 
 import static software.wings.beans.CloudFormationSourceType.GIT;
@@ -296,6 +297,8 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     assertThat(request.getData()).isEqualTo(WingsTestConstants.TEMPLATE_BODY);
     assertThat(request.getCreateType()).isEqualTo(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY);
     assertThat(request.getCustomStackName()).isEqualTo("customStackName");
+    assertThat(request.getCapabilities()).isNull();
+    assertThat(request.getTags()).isNull();
   }
 
   @Test
@@ -632,5 +635,36 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     assertThat(request.getCommandType()).isEqualTo(CloudFormationCommandRequest.CloudFormationCommandType.CREATE_STACK);
     assertThat(request.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(request.getAwsConfig()).isEqualTo(awsConfig);
+  }
+
+  @Test
+  @Owner(developers = PRAKHAR)
+  @Category(UnitTests.class)
+  public void buildDelegateTaskProvisionByBodyWithTagsAndCapabilities() {
+    CloudFormationInfrastructureProvisioner provisioner = CloudFormationInfrastructureProvisioner.builder()
+                                                              .sourceType(TEMPLATE_BODY.name())
+                                                              .templateBody(WingsTestConstants.TEMPLATE_BODY)
+                                                              .build();
+    state.customStackName = "customStackName";
+    state.useCustomStackName = true;
+    state.setAddTags(true);
+    String tags =
+        "[{\r\n\t\"key\": \"tagKey1\",\r\n\t\"value\": \"tagValue1\"\r\n}, {\r\n\t\"key\": \"tagKey2\",\r\n\t\"value\": \"tagValue2\"\r\n}]";
+    state.setTags(tags);
+    state.setSpecifyCapabilities(true);
+    List<String> capabilities = Collections.singletonList("CAPABILITY_AUTO_EXPAND");
+    state.setCapabilities(capabilities);
+    state.buildAndQueueDelegateTask(mockContext, provisioner, awsConfig, ACTIVITY_ID);
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    verifyDelegateTask(delegateTask, true);
+    CloudFormationCreateStackRequest request =
+        (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
+    assertThat(request.getData()).isEqualTo(WingsTestConstants.TEMPLATE_BODY);
+    assertThat(request.getCreateType()).isEqualTo(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY);
+    assertThat(request.getCustomStackName()).isEqualTo("customStackName");
+    assertThat(request.getCapabilities()).isEqualTo(capabilities);
+    assertThat(request.getTags()).isEqualTo(tags);
   }
 }
