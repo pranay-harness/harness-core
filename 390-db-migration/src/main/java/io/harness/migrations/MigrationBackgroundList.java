@@ -60,6 +60,7 @@ import io.harness.migrations.all.CreateNgPrimaryProfileForExistingAccounts;
 import io.harness.migrations.all.CreatePrimiryProfileForAllAccounts;
 import io.harness.migrations.all.DefaultExperienceMigration;
 import io.harness.migrations.all.DelegateNgDetailsToDelegateGroupMigration;
+import io.harness.migrations.all.DelegateProfileIdentifierMigration;
 import io.harness.migrations.all.DelegateTokenMigration;
 import io.harness.migrations.all.DelegatesWithoutGroupMigration;
 import io.harness.migrations.all.DelegatesWithoutProfileMigration;
@@ -333,6 +334,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(197, DelegateNgDetailsToDelegateGroupMigration.class))
         .add(Pair.of(198, DefaultExperienceMigration.class))
         .add(Pair.of(199, AddAppManifestName.class))
+        .add(Pair.of(200, DelegateProfileIdentifierMigration.class))
         .build();
   }
 }

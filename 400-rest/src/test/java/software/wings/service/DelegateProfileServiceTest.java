@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.MARKOM;
 import static io.harness.rule.OwnerRule.NICOLAS;
 import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.SANJA;
+import static io.harness.rule.OwnerRule.VLAD;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static software.wings.beans.Account.Builder.anAccount;
@@ -78,6 +79,8 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   public static final String ACCOUNT_NAME = "ACCOUNT_NAME";
   public static final String ACCOUNT_KEY = "ACCOUNT_KEY";
   public static final String TEST_IDENTIFIER = "testIdentifier";
+  private static final String ORG = "org";
+  private static final String ORG_PRO = "org/pro";
 
   @Mock private Subject<DelegateProfileObserver> delegateProfileSubject;
   @Mock private AuditServiceHelper auditServiceHelper;
@@ -107,6 +110,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   public void setup() throws IllegalAccessException {
     initMocks(this);
     FieldUtils.writeField(delegateProfileService, "delegateProfileSubject", delegateProfileSubject, true);
+    persistence.getDatastore(DelegateProfile.class).ensureIndexes(DelegateProfile.class);
   }
 
   @Test
@@ -665,7 +669,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
 
     persistence.save(delegateProfile);
 
-    assertThat(delegateProfileService.isValidIdentifier(ACCOUNT_ID, TEST_IDENTIFIER + "_1")).isTrue();
+    assertThat(delegateProfileService.identifierExists(ACCOUNT_ID, null, TEST_IDENTIFIER + "_1")).isFalse();
   }
 
   @Test
@@ -677,7 +681,32 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
 
     persistence.save(delegateProfile);
 
-    assertThat(delegateProfileService.isValidIdentifier(ACCOUNT_ID, TEST_IDENTIFIER)).isFalse();
+    assertThat(delegateProfileService.identifierExists(ACCOUNT_ID, null, TEST_IDENTIFIER)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void shouldIdentifierExistWhenOwnerNull() {
+    DelegateProfile delegateProfile =
+        createDelegateProfileBuilder().uuid(generateUuid()).identifier(TEST_IDENTIFIER).build();
+
+    persistence.save(delegateProfile);
+
+    assertThat(delegateProfileService.identifierExists(ACCOUNT_ID, null, TEST_IDENTIFIER)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void shouldIdentifierExistWithOwner() {
+    DelegateEntityOwner owner = DelegateEntityOwner.builder().identifier(ORG_PRO).build();
+    DelegateProfile delegateProfile =
+        createDelegateProfileBuilder().uuid(generateUuid()).identifier(TEST_IDENTIFIER).owner(owner).build();
+
+    persistence.save(delegateProfile);
+
+    assertThat(delegateProfileService.identifierExists(ACCOUNT_ID, owner, TEST_IDENTIFIER)).isTrue();
   }
 
   @Test
@@ -698,5 +727,184 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
 
     assertThat(delegatesForProfile).isNotNull();
     assertThat(delegatesForProfile.size()).isEqualTo(1);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void testShouldAddProfileWithExistingIdentifier() {
+    String profileName = "testProfileName";
+    String profileIdentifier = "testProfileIdentifier";
+    String accountId = generateUuid();
+
+    DelegateProfile delegateProfile1 =
+        createDelegateProfileBuilder().accountId(accountId).name(profileName).identifier(profileIdentifier).build();
+    DelegateProfile delegateProfile2 =
+        createDelegateProfileBuilder().accountId(accountId).name(profileName).identifier(profileIdentifier).build();
+
+    delegateProfileService.add(delegateProfile1);
+    delegateProfileService.add(delegateProfile2);
+  }
+
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void testShouldAddProfileWithSameAccountAndName() {
+    String profileName = "testProfileName";
+    String profileIdentifier1 = "_123";
+    String profileIdentifier2 = "_1234";
+    String accountId = generateUuid();
+
+    DelegateProfile delegateProfile1 =
+        createDelegateProfileBuilder().accountId(accountId).name(profileName).identifier(profileIdentifier1).build();
+    DelegateProfile delegateProfile2 =
+        createDelegateProfileBuilder().accountId(accountId).name(profileName).identifier(profileIdentifier2).build();
+
+    delegateProfileService.add(delegateProfile1);
+    delegateProfileService.add(delegateProfile2);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void testShouldAddProfileWithEmptyIdentifier() {
+    String profileName = "testProfileName";
+    String profileIdentifier = "";
+    String accountId = generateUuid();
+
+    DelegateProfile delegateProfile =
+        createDelegateProfileBuilder().accountId(accountId).name(profileName).identifier(profileIdentifier).build();
+
+    delegateProfileService.add(delegateProfile);
+    delegateProfileService.add(delegateProfile);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void testShouldAddProfileWithNoIdentifier() {
+    String profileName = "testProfileName";
+    String accountId = generateUuid();
+
+    DelegateProfile delegateProfile = createDelegateProfileBuilder().accountId(accountId).name(profileName).build();
+
+    delegateProfileService.add(delegateProfile);
+    delegateProfileService.add(delegateProfile);
+  }
+
+  @Test
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void testShouldAddProfileWithOwner() {
+    String accountId = generateUuid();
+    String identifier = "";
+    DelegateEntityOwner owner1 = DelegateEntityOwner.builder().identifier(ORG).build();
+    DelegateEntityOwner owner2 = DelegateEntityOwner.builder().identifier(ORG_PRO).build();
+
+    DelegateProfile delegateProfile1 =
+        createDelegateProfileBuilder().accountId(accountId).identifier(identifier).owner(owner1).build();
+
+    DelegateProfile delegateProfile2 =
+        createDelegateProfileBuilder().accountId(accountId).identifier(identifier).owner(owner2).build();
+
+    delegateProfileService.add(delegateProfile1);
+    delegateProfileService.add(delegateProfile2);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void testShouldAddProfileWithTheSameOwner() {
+    String identifier = "identifier";
+    String accountId = generateUuid();
+    DelegateEntityOwner owner1 = DelegateEntityOwner.builder().identifier(ORG_PRO).build();
+    DelegateEntityOwner owner2 = DelegateEntityOwner.builder().identifier(ORG_PRO).build();
+
+    DelegateProfile delegateProfile1 =
+        createDelegateProfileBuilder().accountId(accountId).identifier(identifier).owner(owner1).build();
+
+    DelegateProfile delegateProfile2 =
+        createDelegateProfileBuilder().accountId(accountId).identifier(identifier).owner(owner2).build();
+
+    delegateProfileService.add(delegateProfile1);
+    delegateProfileService.add(delegateProfile2);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void testShouldAddProfileWithTheSameOwnerNoIdentifier() {
+    String accountId = generateUuid();
+    DelegateEntityOwner owner1 = DelegateEntityOwner.builder().identifier(ORG_PRO).build();
+    DelegateEntityOwner owner2 = DelegateEntityOwner.builder().identifier(ORG_PRO).build();
+
+    DelegateProfile delegateProfile1 = createDelegateProfileBuilder().accountId(accountId).owner(owner1).build();
+
+    DelegateProfile delegateProfile2 = createDelegateProfileBuilder().accountId(accountId).owner(owner2).build();
+
+    delegateProfileService.add(delegateProfile1);
+    delegateProfileService.add(delegateProfile2);
+  }
+
+  @Test
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void shouldAddProfileWithoutOwnerAndWithOwner() {
+    String accountId = generateUuid();
+    DelegateEntityOwner owner = DelegateEntityOwner.builder().identifier(ORG_PRO).build();
+    String identifier = "_123";
+
+    DelegateProfile delegateProfile1 =
+        createDelegateProfileBuilder().accountId(accountId).identifier(identifier).build();
+
+    DelegateProfile delegateProfile2 =
+        createDelegateProfileBuilder().accountId(accountId).owner(owner).identifier(identifier).build();
+
+    delegateProfileService.add(delegateProfile1);
+    delegateProfileService.add(delegateProfile2);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void shouldAddSameProfilesWithoutOwners() {
+    String accountId = generateUuid();
+    String identifier = "_123";
+
+    DelegateProfile delegateProfile1 =
+        createDelegateProfileBuilder().accountId(accountId).identifier(identifier).build();
+
+    DelegateProfile delegateProfile2 =
+        createDelegateProfileBuilder().accountId(accountId).identifier(identifier).build();
+
+    delegateProfileService.add(delegateProfile1);
+    delegateProfileService.add(delegateProfile2);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void shouldAddProfileWithNameSibling() {
+    String accountId = generateUuid();
+    String name1 = "name_1";
+    String name2 = "name-1";
+
+    DelegateProfile delegateProfile1 = createDelegateProfileBuilder().accountId(accountId).name(name1).build();
+
+    DelegateProfile delegateProfile2 = createDelegateProfileBuilder().accountId(accountId).name(name2).build();
+
+    delegateProfileService.add(delegateProfile1);
+    delegateProfileService.add(delegateProfile2);
+  }
+
+  @Test
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void shouldAddProfileWithIllegalCharactersInName() {
+    String accountId = generateUuid();
+    String name = "1 ~`!@#$%^&*()_-+={}[]|\\:;\"'<>,.?///";
+
+    DelegateProfile delegateProfile = createDelegateProfileBuilder().accountId(accountId).name(name).ng(true).build();
+
+    delegateProfileService.add(delegateProfile);
   }
 }

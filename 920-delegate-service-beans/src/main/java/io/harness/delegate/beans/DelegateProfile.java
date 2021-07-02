@@ -4,6 +4,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -52,6 +53,13 @@ public final class DelegateProfile implements PersistentEntity, UuidAware, Creat
                  .field(DelegateProfileKeys.owner)
                  .name("byAcctNgOwner")
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_identification")
+                 .unique(true)
+                 .field(DelegateProfileKeys.accountId)
+                 .field(DelegateProfileKeys.owner)
+                 .field(DelegateProfileKeys.identifier)
+                 .build())
         .build();
   }
 
@@ -78,7 +86,7 @@ public final class DelegateProfile implements PersistentEntity, UuidAware, Creat
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
 
-  private String identifier;
+  @EntityIdentifier private String identifier;
 
   // Will be used for NG to hold information about who owns the record, Org or Project or account, if the field is
   // empty
