@@ -230,6 +230,11 @@ public class EnvironmentServiceImpl implements EnvironmentService {
     }
   }
 
+  @Override
+  public List<Environment> listAccess(Criteria criteria) {
+    return environmentRepository.findAllRunTimeAccess(criteria);
+  }
+
   private void checkThatEnvironmentIsNotReferredByOthers(Environment environment) {
     List<EntityDetail> referredByEntities;
     IdentifierRef identifierRef = IdentifierRef.builder()
