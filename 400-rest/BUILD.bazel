@@ -294,7 +294,6 @@ shared_dependencies = [
     "@maven//:commons_net_commons_net",
     "@maven//:commons_pool_commons_pool",
     "@maven//:commons_validator_commons_validator",
-    "@maven//:de_bwaldvogel_mongo_java_server",
     "@maven//:de_danielbechler_java_object_diff",
     "@maven//:de_javakaffee_kryo_serializers",
     "@maven//:de_jkeylockmanager_jkeylockmanager",

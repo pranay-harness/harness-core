@@ -13,8 +13,6 @@ shared_dependencies = [
     "//970-rbac-core:module",
     "//:lombok",
     "@maven//:com_openpojo_openpojo",
-    "@maven//:de_bwaldvogel_mongo_java_server_core",
-    "@maven//:de_bwaldvogel_mongo_java_server_memory_backend",
     "@maven//:io_prometheus_simpleclient_servlet",
 ]
 
