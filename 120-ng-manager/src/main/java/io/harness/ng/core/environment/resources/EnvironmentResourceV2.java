@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.pms.rbac.NGResourceType.ENVIRONMENT;
 import static io.harness.rbac.CDNGRbacPermissions.ENVIRONMENT_CREATE_PERMISSION;
+import static io.harness.rbac.CDNGRbacPermissions.ENVIRONMENT_RUNTIME_PERMISSION;
 import static io.harness.rbac.CDNGRbacPermissions.ENVIRONMENT_UPDATE_PERMISSION;
 import static io.harness.rbac.CDNGRbacPermissions.ENVIRONMENT_VIEW_PERMISSION;
 import static io.harness.utils.PageUtils.getNGPageResponse;
@@ -20,6 +21,8 @@ import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ProjectIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.AccessControlDTO;
+import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
@@ -35,6 +38,7 @@ import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.environment.mappers.EnvironmentMapper;
 import io.harness.ng.core.environment.services.EnvironmentService;
 import io.harness.ng.core.utils.CoreCriteriaUtils;
+import io.harness.rbac.CDNGRbacUtility;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.utils.PageUtils;
 
@@ -43,8 +47,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -186,5 +192,50 @@ public class EnvironmentResourceV2 {
     Page<EnvironmentResponse> environmentList =
         environmentService.list(criteria, pageRequest).map(EnvironmentMapper::toResponseWrapper);
     return ResponseDTO.newResponse(getNGPageResponse(environmentList));
+  }
+
+  @GET
+  @Path("/list/access")
+  @ApiOperation(value = "Gets environment access list", nickname = "getEnvironmentAccessList")
+  public ResponseDTO<List<EnvironmentResponse>> listAccessEnvironment(@QueryParam("page") @DefaultValue("0") int page,
+      @QueryParam("size") @DefaultValue("100") int size,
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @QueryParam("envIdentifiers") List<String> envIdentifiers, @QueryParam("sort") List<String> sort) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgIdentifier, projectIdentifier),
+        Resource.of(ENVIRONMENT, null), ENVIRONMENT_RUNTIME_PERMISSION, "Unauthorized to list environments");
+    Criteria criteria = CoreCriteriaUtils.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);
+
+    if (isNotEmpty(envIdentifiers)) {
+      criteria.and(EnvironmentKeys.identifier).in(envIdentifiers);
+    }
+
+    List<EnvironmentResponse> environmentList = environmentService.listAccess(criteria)
+                                                    .stream()
+                                                    .map(EnvironmentMapper::toResponseWrapper)
+                                                    .collect(Collectors.toList());
+
+    List<PermissionCheckDTO> permissionCheckDTOS = environmentList.stream()
+                                                       .map(CDNGRbacUtility::environmentResponseToPermissionCheckDTO)
+                                                       .collect(Collectors.toList());
+    List<AccessControlDTO> accessControlList =
+        accessControlClient.checkForAccess(permissionCheckDTOS).getAccessControlList();
+    return ResponseDTO.newResponse(filterEnvironmentResponseByPermissionAndId(accessControlList, environmentList));
+  }
+
+  private List<EnvironmentResponse> filterEnvironmentResponseByPermissionAndId(
+      List<AccessControlDTO> accessControlList, List<EnvironmentResponse> environmentList) {
+    List<EnvironmentResponse> filteredAccessControlDtoList = new ArrayList<>();
+    for (int i = 0; i < accessControlList.size(); i++) {
+      AccessControlDTO accessControlDTO = accessControlList.get(i);
+      EnvironmentResponse environmentResponse = environmentList.get(i);
+      if (accessControlDTO.isPermitted()
+          && environmentResponse.getEnvironment().getIdentifier() == accessControlDTO.getResourceIdentifier()) {
+        filteredAccessControlDtoList.add(environmentResponse);
+      }
+    }
+    return filteredAccessControlDtoList;
   }
 }

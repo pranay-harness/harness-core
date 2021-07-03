@@ -22,6 +22,8 @@ public interface ServiceEntityService {
 
   Page<ServiceEntity> list(Criteria criteria, Pageable pageable);
 
+  List<ServiceEntity> listRunTimePermission(Criteria criteria);
+
   boolean delete(
       String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, Long version);
 

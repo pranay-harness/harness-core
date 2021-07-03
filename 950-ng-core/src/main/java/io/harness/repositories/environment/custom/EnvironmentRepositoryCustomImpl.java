@@ -71,6 +71,12 @@ public class EnvironmentRepositoryCustomImpl implements EnvironmentRepositoryCus
         .get(() -> mongoTemplate.updateFirst(query, updateOperationsForDelete, Environment.class));
   }
 
+  @Override
+  public List<Environment> findAllRunTimeAccess(Criteria criteria) {
+    Query query = new Query(criteria);
+    return mongoTemplate.find(query, Environment.class);
+  }
+
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
     return new RetryPolicy<>()
         .handle(OptimisticLockingFailureException.class)
