@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.dtos.InstanceDTO;
 import io.harness.mappers.InstanceMapper;
+import io.harness.models.CountByEnvType;
 import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
 import io.harness.repositories.instance.InstanceRepository;
@@ -71,5 +72,15 @@ public class InstanceServiceImpl implements InstanceService {
       long timestampInMs, int limit) {
     return instanceRepository.getActiveInstancesByServiceIdEnvIdAndBuildIds(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, envId, buildIds, timestampInMs, limit);
+  }
+
+  /*
+    Returns breakup of active service instances by envType
+  */
+  @Override
+  public AggregationResults<CountByEnvType> getActiveServiceInstanceCountBreakdown(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
+    return instanceRepository.getActiveServiceInstanceCountBreakdown(
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs);
   }
 }

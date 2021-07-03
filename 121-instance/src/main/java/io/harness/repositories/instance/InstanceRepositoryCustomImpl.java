@@ -7,6 +7,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.entities.instance.Instance;
 import io.harness.entities.instance.Instance.InstanceKeys;
+import io.harness.models.CountByEnvType;
 import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
 import io.harness.models.constants.InstanceSyncConstants;
@@ -135,6 +136,30 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
 
     return mongoTemplate.aggregate(
         newAggregation(matchStage, group, projection), Instance.class, InstancesByBuildId.class);
+  }
+
+  /*
+    Returns breakup of active service instances by envType
+  */
+  @Override
+  public AggregationResults<CountByEnvType> getActiveServiceInstanceCountBreakdown(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
+    Criteria criteria =
+        getCriteriaForActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier, timestampInMs)
+            .and(InstanceKeys.serviceId)
+            .is(serviceId);
+
+    MatchOperation matchStage = Aggregation.match(criteria);
+    GroupOperation groupEnvId = group(InstanceKeys.envType).count().as(InstanceSyncConstants.COUNT);
+
+    ProjectionOperation projection = Aggregation.project()
+                                         .andExpression(InstanceSyncConstants.ID)
+                                         .as(InstanceKeys.envType)
+                                         .andExpression(InstanceSyncConstants.COUNT)
+                                         .as(InstanceSyncConstants.COUNT);
+
+    return mongoTemplate.aggregate(
+        newAggregation(matchStage, groupEnvId, projection), Instance.class, CountByEnvType.class);
   }
 
   /*
