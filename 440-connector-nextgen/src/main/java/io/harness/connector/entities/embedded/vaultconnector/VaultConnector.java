@@ -49,6 +49,13 @@ public class VaultConnector extends Connector implements PersistentRegularIterab
   @Getter(AccessLevel.NONE) String basePath;
   @Setter @NonFinal Long renewedAt;
 
+  public long getRenewedAt() {
+    if (renewedAt == null) {
+      return 0;
+    }
+    return renewedAt;
+  }
+
   public long getRenewalIntervalMinutes() {
     if (renewalIntervalMinutes == null) {
       return 0;
