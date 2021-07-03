@@ -1773,14 +1773,6 @@ maven_install(
             ],
         ),
         maven.artifact(
-            group = "de.bwaldvogel",
-            artifact = "mongo-java-server",
-            version = "1.34.0",
-            exclusions = [
-                "io.netty:netty-transport",
-            ],
-        ),
-        maven.artifact(
             group = "org.clojure",
             artifact = "clojure",
             version = "1.9.0",
@@ -1807,6 +1799,9 @@ maven_install(
         maven_test_artifact("com.github.tomakehurst:wiremock-jre8-standalone:2.27.2"),
         maven_test_artifact("com.icegreen:greenmail:1.5.0"),
         maven_test_artifact("com.squareup.okhttp3:mockwebxxxxxxxx3.6.0"),
+        maven_test_artifact("de.bwaldvogel:mongo-java-server-core:1.34.0"),
+        maven_test_artifact("de.bwaldvogel:mongo-java-server-memory-backend:1.34.0"),
+        maven_test_artifact("de.bwaldvogel:mongo-java-xxxxxxxx1.34.0"),
         maven_test_artifact("de.flapdoodle.embed:de.flapdoodle.embed.mongo:2.0.3"),
         maven_test_artifact("de.flapdoodle.embed:de.flapdoodle.embed.process:2.0.3"),
         maven_test_artifact("io.dropwizard:dropwizard-testing:1.3.24"),
