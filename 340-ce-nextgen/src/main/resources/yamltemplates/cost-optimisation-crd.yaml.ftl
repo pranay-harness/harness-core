@@ -71,6 +71,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: as-controller-config
+  namespace: harness-autostopping
 data:
   envoy.yaml: >
     admin:
@@ -143,7 +144,7 @@ metadata:
   labels:
     app: ascontroller
   name: ascontroller
-  namespace: default
+  namespace: harness-autostopping
 spec:
   replicas: 1
   revisionHistoryLimit: 10
@@ -190,7 +191,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ascontroller
-  namespace: default
+  namespace: harness-autostopping
 spec:
   ports:
   - port: 80
@@ -219,7 +220,7 @@ spec:
     spec:
       containers:
       - name: harness-operator
-        image: registry.gitlab.com/lightwing/lightwing/operator:latest
+        image: navaneethknharness/autostopping-operator:latest
         imagePullPolicy: Always
         env:
         - name: HARNESS_API
@@ -230,8 +231,6 @@ spec:
           value: ${accountId}
         ports:
         - containerPort: 18000
-      imagePullSecrets:
-      - name: gitlab-auth
       serviceAccountName: harness-autostopping-sa
 ---
 apiVersion: v1
@@ -286,15 +285,13 @@ spec:
     spec:
       containers:
       - name: harness-progress
-        image: registry.gitlab.com/lightwing/lightwing/httpproxy:latest
+        image: navaneethknharness/autostopping-progress:latest
         imagePullPolicy: Always
         env:
         - name: HARNESS_API_URL
           value: "${harnessHostname}/gateway/lw/api/"
         ports:
         - containerPort: 8093
-      imagePullSecrets:
-      - name: gitlab-auth
 ---
 apiVersion: v1
 kind: Service
