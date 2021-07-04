@@ -14,7 +14,6 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.joor.Reflect.on;
 
 import io.harness.PersistenceTestBase;
-import io.harness.category.element.StressTests;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.TestRegularIterableEntity.RegularIterableEntityKeys;
 import io.harness.maintenance.MaintenanceGuard;
@@ -26,6 +25,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.rule.Owner;
 import io.harness.threading.Morpheus;
+import io.harness.threading.Poller;
 import io.harness.threading.ThreadPool;
 
 import com.google.inject.Inject;
@@ -62,7 +62,7 @@ public class PersistenceRegularIteratorTest extends PersistenceTestBase {
             .fieldName(RegularIterableEntityKeys.nextIteration)
             .targetInterval(ofSeconds(10))
             .acceptableNoAlertDelay(ofSeconds(1))
-            .maximumDelayForCheck(ofSeconds(5))
+            .maximumDelayForCheck(ofSeconds(25))
             .acceptableExecutionTime(ofMillis(10))
             .executorService(executorService)
             .semaphore(new Semaphore(10))
@@ -111,35 +111,50 @@ public class PersistenceRegularIteratorTest extends PersistenceTestBase {
 
   @Test
   @Owner(developers = GEORGE)
-  @Category(StressTests.class)
-  public void testPumpWakeup() throws IOException {
-    testWakeup(iterator(PUMP));
+  @Category(UnitTests.class)
+  public void testLoopWakeup() throws IOException {
+    MongoPersistenceIterator<TestRegularIterableEntity, MorphiaFilterExpander<TestRegularIterableEntity>> iterator =
+        iterator(LOOP);
+
+    executorService.submit(() -> iterator.process());
+
+    try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
+      TestRegularIterableEntity entity =
+          TestRegularIterableEntity.builder().uuid(generateUuid()).nextIteration(currentTimeMillis() + 500).build();
+      persistence.save(entity);
+
+      iterator.wakeup();
+
+      Poller.pollFor(ofSeconds(5), ofMillis(10), () -> {
+        TestRegularIterableEntity updatedEntity = persistence.get(TestRegularIterableEntity.class, entity.getUuid());
+        return updatedEntity.getNextIteration() > entity.getNextIteration();
+      });
+
+      TestRegularIterableEntity updatedEntity = persistence.get(TestRegularIterableEntity.class, entity.getUuid());
+      assertThat(updatedEntity.getNextIteration()).isGreaterThan(entity.getNextIteration());
+    }
   }
 
   @Test
   @Owner(developers = GEORGE)
-  @Category(StressTests.class)
-  public void testLoopWakeup() throws IOException {
-    testWakeup(iterator(LOOP));
-  }
+  @Category(UnitTests.class)
+  public void testPumpWakeup() {
+    MongoPersistenceIterator<TestRegularIterableEntity, MorphiaFilterExpander<TestRegularIterableEntity>> iterator =
+        iterator(PUMP);
 
-  private void testWakeup(PersistenceIterator<TestRegularIterableEntity> iterator) {
     try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
       TestRegularIterableEntity entity =
-          TestRegularIterableEntity.builder().uuid(generateUuid()).nextIteration(currentTimeMillis() + 1000).build();
+          TestRegularIterableEntity.builder().uuid(generateUuid()).nextIteration(currentTimeMillis()).build();
       persistence.save(entity);
-
-      Future<?> future1 = executorService.submit(() -> iterator.process());
-
-      Morpheus.sleep(ofSeconds(2));
 
       iterator.wakeup();
 
-      Morpheus.sleep(ofSeconds(1));
-      future1.cancel(true);
+      Poller.pollFor(ofSeconds(5), ofMillis(10), () -> {
+        TestRegularIterableEntity updatedEntity = persistence.get(TestRegularIterableEntity.class, entity.getUuid());
+        return updatedEntity.getNextIteration() > entity.getNextIteration();
+      });
 
       TestRegularIterableEntity updatedEntity = persistence.get(TestRegularIterableEntity.class, entity.getUuid());
-
       assertThat(updatedEntity.getNextIteration()).isGreaterThan(entity.getNextIteration());
     }
   }
