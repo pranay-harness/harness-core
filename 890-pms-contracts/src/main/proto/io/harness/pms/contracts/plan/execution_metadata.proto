@@ -6,7 +6,6 @@ option java_multiple_files = true;
 
 import "io/harness/pms/contracts/plan/trigger_info.proto";
 import "io/harness/pms/contracts/plan/principal_info.proto";
-import "io/harness/pms/contracts/triggers/trigger_payload.proto";
 
 // next ID: 12
 message ExecutionMetadata {

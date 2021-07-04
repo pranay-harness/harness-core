@@ -326,8 +326,6 @@ aeriform("//948-access-control-sdk:tests")
 
 aeriform("//949-access-control-commons:module")
 
-aeriform("//950-cg-ng-shared-orchestration-beans:module")
-
 aeriform("//950-command-library-common:module")
 
 aeriform("//950-common-entities:module")

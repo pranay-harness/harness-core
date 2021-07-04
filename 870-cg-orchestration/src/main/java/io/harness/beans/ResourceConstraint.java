@@ -1,10 +1,9 @@
-package io.harness.beans.shared;
+package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -47,7 +46,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ResourceConstraint implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
-                                           UpdatedByAware, AccountAccess, ResourceRestraint {
+                                           UpdatedByAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -73,9 +72,4 @@ public class ResourceConstraint implements PersistentEntity, UuidAware, CreatedA
   @Min(value = 1) @Max(value = 1000) private int capacity;
   private Constraint.Strategy strategy;
   private boolean harnessOwned;
-
-  @Override
-  public String getClaimant() {
-    return accountId;
-  }
 }

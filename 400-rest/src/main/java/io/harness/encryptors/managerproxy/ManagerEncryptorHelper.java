@@ -1,8 +1,8 @@
 package io.harness.encryptors.managerproxy;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.beans.shared.tasks.NgSetupFields.NG;
-import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
+import static io.harness.delegate.beans.NgSetupFields.NG;
+import static io.harness.delegate.beans.NgSetupFields.OWNER;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 

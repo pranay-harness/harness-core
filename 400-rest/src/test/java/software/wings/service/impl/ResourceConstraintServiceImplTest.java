@@ -22,8 +22,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
-import io.harness.beans.shared.ResourceConstraint;
-import io.harness.beans.shared.ResourceConstraint.ResourceConstraintKeys;
+import io.harness.beans.ResourceConstraint;
+import io.harness.beans.ResourceConstraint.ResourceConstraintKeys;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.distribution.constraint.Consumer.State;

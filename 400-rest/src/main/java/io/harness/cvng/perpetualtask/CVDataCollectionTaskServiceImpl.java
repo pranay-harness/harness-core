@@ -1,9 +1,9 @@
 package io.harness.cvng.perpetualtask;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
-import static io.harness.beans.shared.tasks.NgSetupFields.NG;
-import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.NgSetupFields.NG;
+import static io.harness.delegate.beans.NgSetupFields.OWNER;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
