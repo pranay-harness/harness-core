@@ -1,28 +1,31 @@
 package software.wings.resources;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
-import com.google.inject.Inject;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
+
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.rest.RestResponse;
-import io.swagger.annotations.Api;
+
 import software.wings.beans.NameValuePair;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AwsHelperResourceService;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
+import io.swagger.annotations.Api;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 /**
  * Created by sgurubelli on 7/16/17.
