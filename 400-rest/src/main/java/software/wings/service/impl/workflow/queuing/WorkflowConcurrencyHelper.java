@@ -17,7 +17,7 @@ import static software.wings.sm.StateType.SHELL_SCRIPT_PROVISION;
 import static software.wings.sm.StateType.TERRAFORM_PROVISION;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.shared.ResourceConstraint;
+import io.harness.beans.ResourceConstraint;
 
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;

@@ -6,7 +6,6 @@ shared_dependencies = [
     "//955-delegate-beans:module",
     "//874-orchestration-delay:module",
     "//950-wait-engine:module",
-    "//950-cg-ng-shared-orchestration-beans:module",
     "//950-delegate-tasks-beans:module",
     "//959-cg-beans:module",
     "@maven//:com_esotericsoftware_kryo",

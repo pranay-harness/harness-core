@@ -91,7 +91,6 @@ java_binary(
         "//948-access-control-admin-client:module",
         "//948-access-control-sdk:module",
         "//949-access-control-commons:module",
-        "//950-cg-ng-shared-orchestration-beans:module",
         "//950-command-library-common:module",
         "//950-common-entities:module",
         "//950-delegate-tasks-beans:module",
