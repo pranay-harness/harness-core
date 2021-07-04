@@ -13,7 +13,7 @@ import io.harness.entities.instance.Instance;
 import io.harness.models.BuildsByEnvironment;
 import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
-import io.harness.models.dashboard.InstanceCountDetailsBase;
+import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeBase;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.repositories.instance.InstanceRepository;
 import io.harness.rule.Owner;
@@ -180,10 +180,11 @@ public class InstanceDashboardServiceTest extends InstancesTestBase {
       instanceRepository.save(createDummyInstance(envId, buildId, envType));
     });
 
-    InstanceCountDetailsBase instanceCountDetailsBase = instanceDashboardService.getActiveServiceInstanceCountBreakdown(
-        ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SERVICE_IDENTIFIER, 5);
-    assertThat(instanceCountDetailsBase.getTotalInstances()).isEqualTo(mockList.size());
-    assertThat(instanceCountDetailsBase.getNonProdInstances()).isEqualTo(3);
-    assertThat(instanceCountDetailsBase.getProdInstances()).isEqualTo(1);
+    InstanceCountDetailsByEnvTypeBase instanceCountDetailsByEnvTypeBase =
+        instanceDashboardService.getActiveServiceInstanceCountBreakdown(
+            ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SERVICE_IDENTIFIER, 5);
+    assertThat(instanceCountDetailsByEnvTypeBase.getTotalInstances()).isEqualTo(mockList.size());
+    assertThat(instanceCountDetailsByEnvTypeBase.getNonProdInstances()).isEqualTo(3);
+    assertThat(instanceCountDetailsByEnvTypeBase.getProdInstances()).isEqualTo(1);
   }
 }

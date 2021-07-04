@@ -10,7 +10,7 @@ import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
 import io.harness.models.constants.InstanceSyncConstants;
 import io.harness.models.dashboard.InstanceCountDetails;
-import io.harness.models.dashboard.InstanceCountDetailsBase;
+import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeBase;
 import io.harness.models.dashboard.InstanceCountDetailsByService;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.service.instanceService.InstanceService;
@@ -143,10 +143,11 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
   }
 
   /*
-    Returns breakup of active service instances by envType
+    Returns breakup of active instances by envType at a given timestamp for specified accountIdentifier,
+    projectIdentifier, orgIdentifier and serviceId
   */
   @Override
-  public InstanceCountDetailsBase getActiveServiceInstanceCountBreakdown(
+  public InstanceCountDetailsByEnvTypeBase getActiveServiceInstanceCountBreakdown(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
     Map<EnvironmentType, Integer> envTypeVsInstanceCountMap = new HashMap<>();
     instanceService
@@ -156,7 +157,7 @@ public class InstanceDashboardServiceImpl implements InstanceDashboardService {
         .forEach(countByEnvType -> {
           envTypeVsInstanceCountMap.put(countByEnvType.getEnvType(), countByEnvType.getCount());
         });
-    return InstanceCountDetailsBase.builder().envTypeVsInstanceCountMap(envTypeVsInstanceCountMap).build();
+    return InstanceCountDetailsByEnvTypeBase.builder().envTypeVsInstanceCountMap(envTypeVsInstanceCountMap).build();
   }
 
   // ----------------------------- PRIVATE METHODS -----------------------------
