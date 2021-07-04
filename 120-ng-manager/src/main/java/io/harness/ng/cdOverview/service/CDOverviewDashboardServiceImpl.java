@@ -6,6 +6,7 @@ import static io.harness.NGDateUtils.getNumberOfDays;
 import static io.harness.NGDateUtils.getStartTimeOfNextDay;
 import static io.harness.NGDateUtils.getStartTimeOfPreviousInterval;
 import static io.harness.NGDateUtils.getStartTimeOfTheDayAsEpoch;
+import static io.harness.event.timeseries.processor.utils.DateUtils.getCurrentTime;
 import static io.harness.ng.core.activityhistory.dto.TimeGroupType.DAY;
 import static io.harness.ng.core.activityhistory.dto.TimeGroupType.HOUR;
 
@@ -15,6 +16,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cd.NGPipelineSummaryCDConstants;
 import io.harness.cd.NGServiceConstants;
 import io.harness.exception.UnknownEnumTypeException;
+import io.harness.models.EnvBuildInstanceCount;
+import io.harness.models.InstancesByBuildId;
+import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeBase;
+import io.harness.ng.cdOverview.dto.BuildIdAndInstanceCount;
 import io.harness.ng.cdOverview.dto.DashboardDeploymentActiveFailedRunningInfo;
 import io.harness.ng.cdOverview.dto.DashboardWorkloadDeployment;
 import io.harness.ng.cdOverview.dto.Deployment;
@@ -24,10 +29,13 @@ import io.harness.ng.cdOverview.dto.DeploymentInfo;
 import io.harness.ng.cdOverview.dto.DeploymentStatusInfo;
 import io.harness.ng.cdOverview.dto.DeploymentStatusInfoList;
 import io.harness.ng.cdOverview.dto.EntityStatusDetails;
+import io.harness.ng.cdOverview.dto.EnvBuildIdAndInstanceCountInfo;
+import io.harness.ng.cdOverview.dto.EnvBuildIdAndInstanceCountInfoList;
 import io.harness.ng.cdOverview.dto.ExecutionDeployment;
 import io.harness.ng.cdOverview.dto.ExecutionDeploymentInfo;
 import io.harness.ng.cdOverview.dto.HealthDeploymentDashboard;
 import io.harness.ng.cdOverview.dto.HealthDeploymentInfo;
+import io.harness.ng.cdOverview.dto.InstancesByBuildIdList;
 import io.harness.ng.cdOverview.dto.LastWorkloadInfo;
 import io.harness.ng.cdOverview.dto.ServiceDeployment;
 import io.harness.ng.cdOverview.dto.ServiceDeploymentInfo;
@@ -48,6 +56,7 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.pms.execution.ExecutionStatus;
+import io.harness.service.instancedashboardservice.InstanceDashboardService;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -75,6 +84,7 @@ import org.apache.commons.lang3.tuple.Pair;
 public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardService {
   @Inject TimeScaleDBService timeScaleDBService;
   @Inject ServiceEntityService serviceEntityService;
+  @Inject InstanceDashboardService instanceDashboardService;
 
   private String tableNameCD = "pipeline_execution_summary_cd";
   private String tableNameServiceAndInfra = "service_infra_info";
@@ -1135,5 +1145,69 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
   public long getStartingDateEpochValue(long epochValue, long startInterval) {
     return epochValue - epochValue % DAY_IN_MS;
+  }
+
+  /*
+    Returns break down of instance count for various environment type for given account+org+project+service
+  */
+  @Override
+  public InstanceCountDetailsByEnvTypeBase getActiveServiceInstanceCountBreakdown(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId) {
+    return instanceDashboardService.getActiveServiceInstanceCountBreakdown(
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId, getCurrentTime());
+  }
+
+  /*
+    Returns a list of buildId and instance counts for various environments for given account+org+project+service
+  */
+  @Override
+  public EnvBuildIdAndInstanceCountInfoList getEnvBuildInstanceCountByServiceId(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId) {
+    Map<String, List<BuildIdAndInstanceCount>> envIdToBuildMap = new HashMap<>();
+    Map<String, String> envIdToEnvNameMap = new HashMap<>();
+
+    List<EnvBuildInstanceCount> envBuildInstanceCounts = instanceDashboardService.getEnvBuildInstanceCountByServiceId(
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId, getCurrentTime());
+
+    envBuildInstanceCounts.forEach(envBuildInstanceCount -> {
+      final String envId = envBuildInstanceCount.getEnvId();
+      final String envName = envBuildInstanceCount.getEnvName();
+      final String buildId = envBuildInstanceCount.getTag();
+      final int count = envBuildInstanceCount.getCount();
+      envIdToBuildMap.putIfAbsent(envId, new ArrayList<>());
+
+      BuildIdAndInstanceCount buildIdAndInstanceCount =
+          BuildIdAndInstanceCount.builder().buildId(buildId).count(count).build();
+      envIdToBuildMap.get(envId).add(buildIdAndInstanceCount);
+
+      envIdToEnvNameMap.putIfAbsent(envId, envName);
+    });
+
+    List<EnvBuildIdAndInstanceCountInfo> envBuildIdAndInstanceCountInfoList = new ArrayList<>();
+    envIdToBuildMap.forEach((envId, buildIdAndInstanceCountList) -> {
+      EnvBuildIdAndInstanceCountInfo envBuildIdAndInstanceCountInfo =
+          EnvBuildIdAndInstanceCountInfo.builder()
+              .envId(envId)
+              .envName(envIdToEnvNameMap.getOrDefault(envId, ""))
+              .buildIdAndInstanceCountList(buildIdAndInstanceCountList)
+              .build();
+      envBuildIdAndInstanceCountInfoList.add(envBuildIdAndInstanceCountInfo);
+    });
+
+    return EnvBuildIdAndInstanceCountInfoList.builder()
+        .envBuildIdAndInstanceCountInfoList(envBuildIdAndInstanceCountInfoList)
+        .build();
+  }
+
+  /*
+    Returns list of instances for each build id for given account+org+project+service+env
+  */
+  @Override
+  public InstancesByBuildIdList getActiveInstancesByServiceIdEnvIdAndBuildIds(String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String serviceId, String envId, List<String> buildIds) {
+    List<InstancesByBuildId> instancesByBuildIdList =
+        instanceDashboardService.getActiveInstancesByServiceIdEnvIdAndBuildIds(
+            accountIdentifier, orgIdentifier, projectIdentifier, serviceId, envId, buildIds, getCurrentTime());
+    return InstancesByBuildIdList.builder().instancesByBuildIdList(instancesByBuildIdList).build();
   }
 }

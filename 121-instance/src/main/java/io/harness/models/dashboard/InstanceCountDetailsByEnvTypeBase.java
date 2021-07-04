@@ -9,7 +9,7 @@ import lombok.Builder;
 
 @Builder
 @OwnedBy(HarnessTeam.DX)
-public class InstanceCountDetailsBase {
+public class InstanceCountDetailsByEnvTypeBase {
   private Map<EnvironmentType, Integer> envTypeVsInstanceCountMap;
 
   public Integer getNonProdInstances() {

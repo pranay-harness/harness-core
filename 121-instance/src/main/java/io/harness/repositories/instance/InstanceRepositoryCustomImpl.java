@@ -139,7 +139,8 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
   }
 
   /*
-    Returns breakup of active service instances by envType
+    Returns breakup of active instances by envType at a given timestamp for specified accountIdentifier,
+    projectIdentifier, orgIdentifier and serviceId
   */
   @Override
   public AggregationResults<CountByEnvType> getActiveServiceInstanceCountBreakdown(

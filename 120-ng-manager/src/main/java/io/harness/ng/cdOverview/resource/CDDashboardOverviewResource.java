@@ -11,10 +11,13 @@ import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cd.NGServiceConstants;
+import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeBase;
 import io.harness.ng.cdOverview.dto.DashboardDeploymentActiveFailedRunningInfo;
 import io.harness.ng.cdOverview.dto.DashboardWorkloadDeployment;
+import io.harness.ng.cdOverview.dto.EnvBuildIdAndInstanceCountInfoList;
 import io.harness.ng.cdOverview.dto.ExecutionDeploymentInfo;
 import io.harness.ng.cdOverview.dto.HealthDeploymentDashboard;
+import io.harness.ng.cdOverview.dto.InstancesByBuildIdList;
 import io.harness.ng.cdOverview.dto.ServiceDeploymentInfoDTO;
 import io.harness.ng.cdOverview.dto.ServiceDeploymentListInfo;
 import io.harness.ng.cdOverview.dto.ServiceDetailsInfoDTO;
@@ -34,6 +37,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -192,5 +196,46 @@ public class CDDashboardOverviewResource {
       @NotNull @QueryParam(NGResourceFilterConstants.TIME_GROUP_BY_TYPE) TimeGroupType timeGroupType) {
     return ResponseDTO.newResponse(cdOverviewDashboardService.getServicesGrowthTrend(
         accountIdentifier, orgIdentifier, projectIdentifier, startInterval, endInterval, timeGroupType));
+  }
+
+  @GET
+  @Path("/getInstanceCountDetailsByService")
+  @ApiOperation(value = "Get active service instance count breakdown by env type",
+      nickname = "getActiveServiceInstanceCountBreakdown")
+  public ResponseDTO<InstanceCountDetailsByEnvTypeBase>
+  getActiveServiceInstanceCountBreakdown(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.SERVICE_KEY) String serviceId) {
+    return ResponseDTO.newResponse(cdOverviewDashboardService.getActiveServiceInstanceCountBreakdown(
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId));
+  }
+
+  @GET
+  @Path("/getEnvBuildInstanceCountByService")
+  @ApiOperation(
+      value = "Get list of unique environment and build ids with instance count", nickname = "getEnvBuildInstanceCount")
+  public ResponseDTO<EnvBuildIdAndInstanceCountInfoList>
+  getEnvBuildInstanceCount(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.SERVICE_KEY) String serviceId) {
+    return ResponseDTO.newResponse(cdOverviewDashboardService.getEnvBuildInstanceCountByServiceId(
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId));
+  }
+
+  @GET
+  @Path("/getInstancesByServiceEnvAndBuilds")
+  @ApiOperation(value = "Get list of buildId and instances", nickname = "getActiveInstancesByServiceIdEnvIdAndBuildIds")
+  public ResponseDTO<InstancesByBuildIdList> getActiveInstancesByServiceIdEnvIdAndBuildIds(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.SERVICE_KEY) String serviceId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ENVIRONMENT_KEY) String envId,
+      @NotNull @QueryParam(NGCommonEntityConstants.BUILDS_KEY) List<String> buildIds) {
+    return ResponseDTO.newResponse(cdOverviewDashboardService.getActiveInstancesByServiceIdEnvIdAndBuildIds(
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId, envId, buildIds));
   }
 }
