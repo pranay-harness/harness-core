@@ -6,12 +6,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateInfo;
 import io.harness.beans.EdgeList;
 import io.harness.beans.ExecutionGraph;
-import io.harness.beans.ExecutionNode;
 import io.harness.beans.ExecutionNodeAdjacencyList;
 import io.harness.dto.GraphDelegateSelectionLogParams;
-import io.harness.dto.GraphVertexDTO;
 import io.harness.dto.OrchestrationGraphDTO;
-import io.harness.pms.execution.ExecutionStatus;
 import io.harness.serializer.JsonUtils;
 
 import java.util.List;
@@ -26,31 +23,6 @@ import org.bson.Document;
 @Slf4j
 @OwnedBy(PIPELINE)
 public class ExecutionGraphMapper {
-  public ExecutionNode toExecutionNode(GraphVertexDTO graphVertex) {
-    //    String basefqn = PlanExecutionUtils.getFQNUsingLevels(graphVertex.getAmbiance().getLevels());
-    return ExecutionNode.builder()
-        .endTs(graphVertex.getEndTs())
-        .failureInfo(graphVertex.getFailureInfo())
-        .skipInfo(graphVertex.getSkipInfo())
-        .nodeRunInfo(graphVertex.getNodeRunInfo())
-        .stepParameters(extractDocumentStepParameters(graphVertex.getStepParameters()))
-        .name(graphVertex.getName())
-        //        .baseFqn(basefqn)
-        .outcomes(graphVertex.getOutcomes())
-        .startTs(graphVertex.getStartTs())
-        .endTs(graphVertex.getEndTs())
-        .identifier(graphVertex.getIdentifier())
-        .status(ExecutionStatus.getExecutionStatus(graphVertex.getStatus()))
-        .stepType(graphVertex.getStepType())
-        .uuid(graphVertex.getUuid())
-        //        .setupId(graphVertex.getPlanNodeId())
-        .executableResponses(graphVertex.getExecutableResponses())
-        .unitProgresses(graphVertex.getUnitProgresses())
-        .progressData(graphVertex.getProgressData())
-        //        .delegateInfoList(mapDelegateSelectionLogParamsToDelegateInfo(graphVertex.getGraphDelegateSelectionLogParams()))
-        .interruptHistories(graphVertex.getInterruptHistories())
-        .build();
-  }
 
   private List<DelegateInfo> mapDelegateSelectionLogParamsToDelegateInfo(
       List<GraphDelegateSelectionLogParams> delegateSelectionLogParams) {
