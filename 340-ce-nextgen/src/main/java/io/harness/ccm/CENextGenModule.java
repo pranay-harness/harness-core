@@ -21,8 +21,10 @@ import io.harness.ccm.commons.service.impl.ClusterRecordServiceImpl;
 import io.harness.ccm.commons.service.intf.ClusterRecordService;
 import io.harness.ccm.eventframework.ConnectorEntityCRUDStreamListener;
 import io.harness.ccm.perpetualtask.K8sWatchTaskResourceClientModule;
+import io.harness.ccm.service.impl.AWSOrganizationHelperServiceImpl;
 import io.harness.ccm.service.impl.AwsEntityChangeEventServiceImpl;
 import io.harness.ccm.service.impl.CEYamlServiceImpl;
+import io.harness.ccm.service.intf.AWSOrganizationHelperService;
 import io.harness.ccm.service.intf.AwsEntityChangeEventService;
 import io.harness.ccm.service.intf.CEYamlService;
 import io.harness.ccm.views.service.CEReportScheduleService;
@@ -202,6 +204,7 @@ public class CENextGenModule extends AbstractModule {
     bind(ViewCustomFieldService.class).to(ViewCustomFieldServiceImpl.class);
     bind(CEReportScheduleService.class).to(CEReportScheduleServiceImpl.class);
     bind(QueryStatsPrinter.class).toInstance(HExecuteListener.getInstance());
+    bind(AWSOrganizationHelperService.class).to(AWSOrganizationHelperServiceImpl.class);
 
     registerEventsFrameworkMessageListeners();
 
