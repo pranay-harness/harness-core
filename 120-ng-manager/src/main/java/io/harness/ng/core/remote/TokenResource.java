@@ -6,12 +6,17 @@ import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
 import static io.harness.NGResourceFilterConstants.IDENTIFIERS;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ng.accesscontrol.PlatformPermissions.MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
+import io.harness.ng.accesscontrol.PlatformResourceTypes;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.OrgIdentifier;
@@ -25,6 +30,7 @@ import io.harness.ng.core.dto.TokenAggregateDTO;
 import io.harness.ng.core.dto.TokenDTO;
 import io.harness.ng.core.dto.TokenFilterDTO;
 import io.harness.ng.core.entities.Token.TokenKeys;
+import io.harness.security.annotations.InternalApi;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -65,37 +71,67 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 public class TokenResource {
   @Inject private TokenService tokenService;
+  @Inject private AccessControlClient accessControlClient;
 
   @POST
   @ApiOperation(value = "Create token", nickname = "createToken")
   public ResponseDTO<String> createToken(@Valid TokenDTO tokenDTO) {
-    String token = tokenService.createToken(tokenDTO);
-    return ResponseDTO.newResponse(token);
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(), tokenDTO.getProjectIdentifier()),
+        Resource.of(PlatformResourceTypes.SERVICEACCOUNT, tokenDTO.getParentIdentifier()),
+        MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION);
+    return ResponseDTO.newResponse(tokenService.createToken(tokenDTO));
   }
 
   @PUT
   @Path("{identifier}")
   @ApiOperation(value = "Update token", nickname = "updateToken")
   public ResponseDTO<TokenDTO> updateToken(@PathParam("identifier") String identifier, @Valid TokenDTO tokenDTO) {
-    TokenDTO token = tokenService.updateToken(tokenDTO);
-    return ResponseDTO.newResponse(token);
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(), tokenDTO.getProjectIdentifier()),
+        Resource.of(PlatformResourceTypes.SERVICEACCOUNT, tokenDTO.getParentIdentifier()),
+        MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION);
+    return ResponseDTO.newResponse(tokenService.updateToken(tokenDTO));
   }
 
   @DELETE
   @Path("{identifier}")
   @ApiOperation(value = "Delete token", nickname = "deleteToken")
-  public ResponseDTO<Boolean> deleteToken(@PathParam("identifier") String identifier) {
-    boolean isDeleted = tokenService.revokeToken(identifier);
-    return ResponseDTO.newResponse(isDeleted);
+  public ResponseDTO<Boolean> deleteToken(@PathParam("identifier") String identifier,
+      @NotNull @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Optional @QueryParam(PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @NotNull @QueryParam("apiKeyType") ApiKeyType apiKeyType,
+      @NotNull @QueryParam("parentIdentifier") String parentIdentifier,
+      @NotNull @QueryParam("apiKeyIdentifier") String apiKeyIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(PlatformResourceTypes.SERVICEACCOUNT, parentIdentifier), MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION);
+    return ResponseDTO.newResponse(tokenService.revokeToken(accountIdentifier, orgIdentifier, projectIdentifier,
+        apiKeyType, parentIdentifier, apiKeyIdentifier, identifier));
+  }
+
+  @GET
+  @InternalApi
+  @ApiOperation(value = "Get token", nickname = "getToken")
+  public ResponseDTO<TokenDTO> getToken(@QueryParam("tokenId") String tokenId) {
+    return ResponseDTO.newResponse(tokenService.getToken(tokenId, true));
   }
 
   @POST
   @Path("rotate/{identifier}")
   @ApiOperation(value = "Rotate token", nickname = "rotateToken")
-  public ResponseDTO<String> rotateToken(
-      @PathParam("identifier") String identifier, @QueryParam("rotateTimestamp") Long rotateTimestamp) {
-    String token = tokenService.rotateToken(identifier, Instant.ofEpochMilli(rotateTimestamp));
-    return ResponseDTO.newResponse(token);
+  public ResponseDTO<String> rotateToken(@PathParam("identifier") String identifier,
+      @QueryParam("rotateTimestamp") Long rotateTimestamp,
+      @NotNull @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Optional @QueryParam(PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @NotNull @QueryParam("apiKeyType") ApiKeyType apiKeyType,
+      @NotNull @QueryParam("parentIdentifier") String parentIdentifier,
+      @NotNull @QueryParam("apiKeyIdentifier") String apiKeyIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(PlatformResourceTypes.SERVICEACCOUNT, parentIdentifier), MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION);
+    return ResponseDTO.newResponse(tokenService.rotateToken(accountIdentifier, orgIdentifier, projectIdentifier,
+        apiKeyType, parentIdentifier, apiKeyIdentifier, identifier, Instant.ofEpochMilli(rotateTimestamp)));
   }
 
   @GET

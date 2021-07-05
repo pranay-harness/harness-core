@@ -36,6 +36,7 @@ import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.serializer.morphia.ResourceGroupSerializer;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
+import io.harness.token.TokenClientModule;
 import io.harness.version.VersionModule;
 
 import com.google.common.collect.ImmutableMap;
@@ -122,6 +123,9 @@ public class ResourceGroupServiceModule extends AbstractModule {
     }
     install(new TransactionOutboxModule(DEFAULT_OUTBOX_POLL_CONFIGURATION, RESOUCE_GROUP_SERVICE.getServiceId(),
         appConfig.getResoureGroupServiceConfig().isExportMetricsToStackDriver()));
+
+    install(new TokenClientModule(this.appConfig.getServiceHttpClientConfig(),
+        this.appConfig.getPlatformSecrets().getNgManagerServiceSecret(), RESOUCE_GROUP_SERVICE.getServiceId()));
   }
 
   @Provides

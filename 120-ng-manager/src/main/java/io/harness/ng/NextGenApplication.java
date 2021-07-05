@@ -99,6 +99,7 @@ import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
+import io.harness.token.remote.TokenClient;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -529,12 +530,14 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerAuthFilters(NextGenConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.isEnableAuth()) {
-      registerNextGenAuthFilter(configuration, environment);
+      registerNextGenAuthFilter(
+          configuration, environment, injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED"))));
       registerInternalApiAuthFilter(configuration, environment);
     }
   }
 
-  private void registerNextGenAuthFilter(NextGenConfiguration configuration, Environment environment) {
+  private void registerNextGenAuthFilter(
+      NextGenConfiguration configuration, Environment environment, TokenClient tokenClient) {
     Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate =
         (getAuthenticationExemptedRequestsPredicate().negate())
             .and((getAuthFilterPredicate(InternalApi.class)).negate());
@@ -543,7 +546,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     serviceToSecretMapping.put(
         IDENTITY_SERVICE.getServiceId(), configuration.getNextGenConfig().getJwtIdentityServiceSecret());
     serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getNextGenConfig().getNgManagerServiceSecret());
-    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
+    environment.jersey().register(
+        new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping, tokenClient));
   }
 
   private void registerInternalApiAuthFilter(NextGenConfiguration configuration, Environment environment) {

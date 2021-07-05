@@ -13,6 +13,7 @@ import static io.harness.platform.resourcegroup.ResourceGroupServiceSetup.RESOUR
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.AuthorizationServiceHeader;
 import io.harness.GodInjector;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.health.HealthService;
@@ -38,12 +39,16 @@ import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.PublicApi;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
+import io.harness.token.TokenClientModule;
+import io.harness.token.remote.TokenClient;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -75,6 +80,7 @@ import org.glassfish.jersey.server.model.Resource;
 @OwnedBy(PL)
 public class PlatformApplication extends Application<PlatformConfiguration> {
   private static final String APPLICATION_NAME = "Platform Microservice";
+  public static final String PLATFORM_SERVICE = "PlatformService";
 
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -129,11 +135,16 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
           Guice.createInjector(new AuditServiceModule(appConfig), new MetricRegistryModule(metricRegistry)));
     }
 
+    godInjector.put(PLATFORM_SERVICE,
+        Guice.createInjector(new TokenClientModule(appConfig.getServiceHttpClientConfig(),
+            appConfig.getPlatformSecrets().getNgManagerServiceSecret(),
+            AuthorizationServiceHeader.PLATFORM_SERVICE.getServiceId())));
+
     registerCommonResources(appConfig, environment, godInjector);
     registerCorsFilter(appConfig, environment);
     registerJerseyProviders(environment);
     registerJerseyFeatures(environment);
-    registerAuthFilters(appConfig, environment);
+    registerAuthFilters(appConfig, environment, godInjector);
     registerRequestContextFilter(environment);
 
     new NotificationServiceSetup().setup(
@@ -213,14 +224,15 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     environment.jersey().register(new RequestContextFilter());
   }
 
-  private void registerAuthFilters(PlatformConfiguration configuration, Environment environment) {
+  private void registerAuthFilters(PlatformConfiguration configuration, Environment environment, GodInjector injector) {
     if (configuration.isEnableAuth()) {
-      registerNextGenAuthFilter(configuration, environment);
+      registerNextGenAuthFilter(configuration, environment, injector);
       registerInternalApiAuthFilter(configuration, environment);
     }
   }
 
-  private void registerNextGenAuthFilter(PlatformConfiguration configuration, Environment environment) {
+  private void registerNextGenAuthFilter(
+      PlatformConfiguration configuration, Environment environment, GodInjector injector) {
     Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate =
         (getAuthenticationExemptedRequestsPredicate().negate())
             .and((getAuthFilterPredicate(InternalApi.class)).negate());
@@ -229,7 +241,8 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     serviceToSecretMapping.put(
         IDENTITY_SERVICE.getServiceId(), configuration.getPlatformSecrets().getJwtIdentityServiceSecret());
     serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getPlatformSecrets().getNgManagerServiceSecret());
-    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
+    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping,
+        injector.get(PLATFORM_SERVICE).getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
   }
 
   private void registerInternalApiAuthFilter(PlatformConfiguration configuration, Environment environment) {

@@ -5,6 +5,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
+import io.harness.mongo.CollationLocale;
+import io.harness.mongo.CollationStrength;
+import io.harness.mongo.index.Collation;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.NGAccountAccess;
@@ -54,7 +57,10 @@ public class ApiKey implements PersistentEntity, UuidAware, NGAccountAccess, NGO
                  .field(ApiKeyKeys.projectIdentifier)
                  .field(ApiKeyKeys.identifier)
                  .field(ApiKeyKeys.parentIdentifier)
+                 .field(ApiKeyKeys.apiKeyType)
                  .unique(true)
+                 .collation(
+                     Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
                  .build(),
             CompoundMongoIndex.builder()
                 .name("list_keys_idx")

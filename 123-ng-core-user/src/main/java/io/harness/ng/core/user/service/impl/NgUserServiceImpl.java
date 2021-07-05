@@ -1,5 +1,6 @@
 package io.harness.ng.core.user.service.impl;
 
+import static io.harness.accesscontrol.principals.PrincipalType.SERVICE_ACCOUNT;
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -249,6 +250,23 @@ public class NgUserServiceImpl implements NgUserService {
   @Override
   public Page<UserMembership> listUserMemberships(Criteria criteria, Pageable pageable) {
     return userMembershipRepository.findAll(criteria, pageable);
+  }
+
+  @Override
+  public void addServiceAccountToScope(
+      String serviceAccountId, Scope scope, String roleIdentifier, UserMembershipUpdateSource source) {
+    List<RoleAssignmentDTO> roleAssignmentDTOs = new ArrayList<>(1);
+    if (!StringUtils.isBlank(roleIdentifier)) {
+      RoleAssignmentDTO roleAssignmentDTO =
+          RoleAssignmentDTO.builder()
+              .roleIdentifier(roleIdentifier)
+              .disabled(false)
+              .principal(PrincipalDTO.builder().type(SERVICE_ACCOUNT).identifier(serviceAccountId).build())
+              .resourceGroupIdentifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
+              .build();
+      roleAssignmentDTOs.add(roleAssignmentDTO);
+    }
+    createRoleAssignments(serviceAccountId, scope, roleAssignmentDTOs);
   }
 
   @Override

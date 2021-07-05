@@ -28,6 +28,7 @@ shared_dependencies = [
     "//940-primary-version-manager:module",
     "//950-telemetry:module",
     "//958-ng-file-service-sdk:module",
+    "//965-api-key-filter:module",
     "//product/ci/scm/proto:ciscm_java_proto",
     "@jira_client//jar",
     "@maven//:aopalliance_aopalliance",

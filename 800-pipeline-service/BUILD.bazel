@@ -51,6 +51,7 @@ java_binary(
         "//960-notification-beans:module",
         "//960-persistence:module",
         "//960-yaml-sdk:module",
+        "//965-api-key-filter:module",
         "//980-commons:module",
         "//product/ci/scm/proto:ciscm_java_proto",
         "@maven//:ch_qos_logback_logback_access",

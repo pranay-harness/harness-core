@@ -62,6 +62,7 @@ import io.harness.timescaledb.JooqModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.metrics.HExecuteListener;
 import io.harness.timescaledb.metrics.QueryStatsPrinter;
+import io.harness.token.TokenClientModule;
 import io.harness.version.VersionModule;
 import io.harness.waiter.AbstractWaiterModule;
 import io.harness.waiter.WaiterConfiguration;
@@ -176,6 +177,9 @@ public class CENextGenModule extends AbstractModule {
         configuration.getNgManagerServiceSecret(), CE_NEXT_GEN.getServiceId()));
     install(new K8sWatchTaskResourceClientModule(
         configuration.getManagerClientConfig(), configuration.getNgManagerServiceSecret(), CE_NEXT_GEN.getServiceId()));
+    install(new TokenClientModule(configuration.getNgManagerClientConfig(), configuration.getNgManagerServiceSecret(),
+        CE_NEXT_GEN.getServiceId()));
+
     install(new SecretNGManagerClientModule(configuration.getNgManagerClientConfig(),
         configuration.getNgManagerServiceSecret(), CE_NEXT_GEN.getServiceId()));
     install(VersionModule.getInstance());

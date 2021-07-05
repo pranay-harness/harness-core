@@ -515,7 +515,7 @@ newRelicMetricRecords {"name": "stateExIdx", "background": true} {"stateExecutio
 newRelicMetricRecords {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 newRelicMetricRecords {"name": "workflowExIdx", "background": true} {"workflowExecutionId": 1, "groupName": 1, "dataCollectionMinute": -1}
 ngApiKeys {"name": "list_keys_idx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "parentIdentifier": 1}
-ngApiKeys {"name": "unique_idx", "unique": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1, "parentIdentifier": 1}
+ngApiKeys {"name": "unique_idx", "unique": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1, "parentIdentifier": 1, "apiKeyType": 1}
 ngEncryptedRecords {"name": "uniqueNGEncryptedDataIdx", "unique": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
 ngGcsFileMetadata {"name": "accountId_1", "background": true} {"accountId": 1}
 ngGcsFileMetadata {"name": "entityId_1", "background": true} {"entityId": 1}
@@ -631,7 +631,7 @@ serverlessInstance {"name": "serverless_instance_index5", "background": true} {"
 serverlessInstance {"name": "serverless_instance_index7", "background": true} {"accountId": 1, "isDeleted": 1}
 serverlessInstance {"name": "serverless_instance_index8", "background": true} {"appId": 1, "serviceId": 1, "isDeleted": 1}
 serviceAccounts {"name": "list_accounts_idx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
-serviceAccounts {"name": "unique_idx", "unique": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
+serviceAccounts {"name": "unique_idx", "unique": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
 serviceCommands {"name": "accountId_1", "background": true} {"accountId": 1}
 serviceCommands {"name": "appId_1", "background": true} {"appId": 1}
 serviceCommands {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -781,8 +781,9 @@ timeseriesTransactionThresholds {"name": "accountId_1", "background": true} {"ac
 timeseriesTransactionThresholds {"name": "appId_1", "background": true} {"appId": 1}
 timeseriesTransactionThresholds {"name": "createdAt_1", "background": true} {"createdAt": 1}
 timeseriesTransactionThresholds {"name": "timeseriesThresholdsQueryIndex", "background": true} {"appId": 1, "serviceId": 1, "stateType": 1, "groupName": 1, "transactionName": 1, "metricName": 1, "cvConfigId": 1, "thresholdType": 1}
-tokens {"name": "identifier_1", "background": true} {"identifier": 1}
+tokens {"name": "encodedPassword_1", "background": true} {"encodedPassword": 1}
 tokens {"name": "list_tokens_idx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "apiKeyType": 1, "parentIdentifier": 1, "apiKeyIdentifier": 1}
+tokens {"name": "unique_idx", "unique": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1, "apiKeyType": 1, "parentIdentifier": 1, "apiKeyIdentifier": 1}
 tokens {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 triggerExecutions {"name": "accountId_1", "background": true} {"accountId": 1}
 triggerExecutions {"name": "appId_1", "background": true} {"appId": 1}

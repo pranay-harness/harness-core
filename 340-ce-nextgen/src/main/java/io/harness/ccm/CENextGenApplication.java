@@ -32,6 +32,7 @@ import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
+import io.harness.token.remote.TokenClient;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,7 +40,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
+import com.google.inject.name.Names;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.ConfigurationSourceProvider;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
@@ -145,7 +148,7 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
     // create collection and indexes
     injector.getInstance(HPersistence.class);
 
-    registerAuthFilters(configuration, environment);
+    registerAuthFilters(configuration, environment, injector);
     registerJerseyFeatures(environment);
     registerCorsFilter(configuration, environment);
     registerResources(environment, injector);
@@ -188,7 +191,7 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
     environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
-  private void registerAuthFilters(CENextGenConfiguration configuration, Environment environment) {
+  private void registerAuthFilters(CENextGenConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.isEnableAuth()) {
       Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
           -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
@@ -199,7 +202,8 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
       serviceToSecretMapping.put(AuthorizationServiceHeader.BEARER.getServiceId(), configuration.getJwtAuthSecret());
       serviceToSecretMapping.put(
           AuthorizationServiceHeader.DEFAULT.getServiceId(), configuration.getNgManagerServiceSecret());
-      environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
+      environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping,
+          injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
     }
   }
 

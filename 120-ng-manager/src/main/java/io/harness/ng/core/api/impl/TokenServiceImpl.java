@@ -11,6 +11,7 @@ import static org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder.B
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.AccountOrgProjectValidator;
 import io.harness.ng.core.api.ApiKeyService;
@@ -25,7 +26,10 @@ import io.harness.ng.core.entities.Token.TokenKeys;
 import io.harness.ng.core.events.TokenCreateEvent;
 import io.harness.ng.core.events.TokenDeleteEvent;
 import io.harness.ng.core.events.TokenUpdateEvent;
+import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ng.core.mapper.TokenDTOMapper;
+import io.harness.ng.core.user.UserInfo;
+import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.ng.core.spring.TokenRepository;
 import io.harness.security.SourcePrincipalContextBuilder;
@@ -60,6 +64,7 @@ public class TokenServiceImpl implements TokenService {
   @Inject private OutboxService outboxService;
   @Inject private AccountOrgProjectValidator accountOrgProjectValidator;
   @Inject @Named(OUTBOX_TRANSACTION_TEMPLATE) private TransactionTemplate transactionTemplate;
+  @Inject private NgUserService ngUserService;
 
   private static final String deliminator = ".";
 
@@ -70,19 +75,18 @@ public class TokenServiceImpl implements TokenService {
     String randomString = RandomStringUtils.random(20, 0, 0, true, true, null, new SecureRandom());
     PasswordEncoder passwordEncoder = new BCryptPasswordEncoder($2A, 10);
     String tokenString = passwordEncoder.encode(randomString);
-    String identifier = passwordEncoder.encode(tokenString);
     ApiKey apiKey = apiKeyService.getApiKey(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(),
         tokenDTO.getProjectIdentifier(), tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(),
         tokenDTO.getApiKeyIdentifier());
-    tokenDTO.setIdentifier(identifier);
     Token token = TokenDTOMapper.getTokenFromDTO(tokenDTO, apiKey.getDefaultTimeToExpireToken());
+    token.setEncodedPassword(tokenString);
     validate(token);
     Token newToken = Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
       Token savedToken = tokenRepository.save(token);
       outboxService.save(new TokenCreateEvent(TokenDTOMapper.getDTOFromToken(savedToken)));
       return savedToken;
     }));
-    return newToken.getUuid() + deliminator + tokenString;
+    return newToken.getUuid() + deliminator + randomString;
   }
 
   private void validateTokenRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
@@ -94,6 +98,15 @@ public class TokenServiceImpl implements TokenService {
     }
     validateParentIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier);
     apiKeyService.getApiKey(
+        accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, apiKeyIdentifier);
+  }
+
+  private void validateUpdateTokenRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      ApiKeyType apiKeyType, String parentIdentifier, String apiKeyIdentifier, TokenDTO tokenDTO) {
+    if (tokenDTO.getScheduledExpireTime() != null) {
+      throw new InvalidRequestException("Rotated tokens cannot be updated", USER_SRE);
+    }
+    validateTokenRequest(
         accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, apiKeyIdentifier);
   }
 
@@ -122,26 +135,58 @@ public class TokenServiceImpl implements TokenService {
   }
 
   @Override
-  public boolean revokeToken(String tokenIdentifier) {
-    Optional<Token> optionalToken = tokenRepository.findByIdentifier(tokenIdentifier);
-    Preconditions.checkState(optionalToken.isPresent(), "No token present with identifier: " + tokenIdentifier);
+  public boolean revokeToken(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      ApiKeyType apiKeyType, String parentIdentifier, String apiKeyIdentifier, String identifier) {
+    Optional<Token> optionalToken =
+        tokenRepository
+            .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndApiKeyIdentifierAndIdentifier(
+                accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, apiKeyIdentifier,
+                identifier);
+    Preconditions.checkState(optionalToken.isPresent(), "No token present with identifier: " + identifier);
     return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
-      long deleted = tokenRepository.deleteByIdentifier(tokenIdentifier);
-      if (deleted > 0) {
-        outboxService.save(new TokenDeleteEvent(TokenDTOMapper.getDTOFromToken(optionalToken.get())));
-        return true;
-      } else {
-        return false;
-      }
+      tokenRepository.deleteById(optionalToken.get().getUuid());
+      outboxService.save(new TokenDeleteEvent(TokenDTOMapper.getDTOFromToken(optionalToken.get())));
+      return true;
     }));
   }
 
   @Override
-  public String rotateToken(String tokenIdentifier, Instant scheduledExpireTime) {
-    Optional<Token> optionalToken = tokenRepository.findByIdentifier(tokenIdentifier);
-    Preconditions.checkState(optionalToken.isPresent(), "No token present with identifier: " + tokenIdentifier);
+  public TokenDTO getToken(String tokenId, boolean withEncodedPassword) {
+    Optional<Token> optionalToken = tokenRepository.findById(tokenId);
+    if (optionalToken.isPresent()) {
+      TokenDTO tokenDTO = optionalToken.map(TokenDTOMapper::getDTOFromToken).orElse(null);
+      if (withEncodedPassword) {
+        tokenDTO.setEncodedPassword(optionalToken.get().getEncodedPassword());
+      }
+      if (ApiKeyType.USER == tokenDTO.getApiKeyType()) {
+        Optional<UserInfo> optionalUserInfo = ngUserService.getUserById(tokenDTO.getParentIdentifier());
+        if (optionalUserInfo.isPresent()) {
+          UserInfo userInfo = optionalUserInfo.get();
+          tokenDTO.setEmail(userInfo.getEmail());
+          tokenDTO.setUsername(userInfo.getName());
+          return tokenDTO;
+        }
+      } else {
+        return tokenDTO;
+      }
+    }
+    return null;
+  }
+
+  @Override
+  public String rotateToken(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      ApiKeyType apiKeyType, String parentIdentifier, String apiKeyIdentifier, String identifier,
+      Instant scheduledExpireTime) {
+    Optional<Token> optionalToken =
+        tokenRepository
+            .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndApiKeyIdentifierAndIdentifier(
+                accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, apiKeyIdentifier,
+                identifier);
+    Preconditions.checkState(optionalToken.isPresent(), "No token present with identifier: " + identifier);
     Token token = optionalToken.get();
     TokenDTO oldToken = TokenDTOMapper.getDTOFromToken(token);
+    String oldIdentifier = token.getIdentifier();
+    token.setIdentifier("rotated_" + RandomStringUtils.randomAlphabetic(15));
     token.setScheduledExpireTime(scheduledExpireTime);
     token.setValidUntil(new Date(token.getExpiryTimestamp().toEpochMilli()));
     Token newToken = Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
@@ -151,14 +196,21 @@ public class TokenServiceImpl implements TokenService {
       return savedToken;
     }));
     TokenDTO rotatedTokenDTO = TokenDTOMapper.getDTOFromTokenForRotation(newToken);
+    rotatedTokenDTO.setIdentifier(oldIdentifier);
     return createToken(rotatedTokenDTO);
   }
 
   @Override
   public TokenDTO updateToken(TokenDTO tokenDTO) {
-    validateTokenRequest(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(), tokenDTO.getProjectIdentifier(),
-        tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(), tokenDTO.getApiKeyIdentifier());
-    Optional<Token> optionalToken = tokenRepository.findByIdentifier(tokenDTO.getIdentifier());
+    validateUpdateTokenRequest(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(),
+        tokenDTO.getProjectIdentifier(), tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(),
+        tokenDTO.getApiKeyIdentifier(), tokenDTO);
+    Optional<Token> optionalToken =
+        tokenRepository
+            .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndApiKeyIdentifierAndIdentifier(
+                tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(), tokenDTO.getProjectIdentifier(),
+                tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier(), tokenDTO.getApiKeyIdentifier(),
+                tokenDTO.getIdentifier());
     Preconditions.checkState(
         optionalToken.isPresent(), "No token present with identifier: " + tokenDTO.getIdentifier());
     Token token = optionalToken.get();
@@ -167,6 +219,8 @@ public class TokenServiceImpl implements TokenService {
     token.setValidFrom(Instant.ofEpochMilli(tokenDTO.getValidFrom()));
     token.setValidTo(Instant.ofEpochMilli(tokenDTO.getValidTo()));
     token.setValidUntil(new Date(token.getExpiryTimestamp().toEpochMilli()));
+    token.setDescription(tokenDTO.getDescription());
+    token.setTags(TagMapper.convertToList(tokenDTO.getTags()));
     validate(token);
 
     return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {

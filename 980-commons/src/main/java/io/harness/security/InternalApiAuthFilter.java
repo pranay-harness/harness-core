@@ -22,4 +22,13 @@ public class InternalApiAuthFilter extends JWTAuthenticationFilter {
       Map<String, JWTTokenHandler> serviceToJWTTokenHandlerMapping, Map<String, String> serviceToSecretMapping) {
     super(predicate, serviceToJWTTokenHandlerMapping, serviceToSecretMapping);
   }
+
+  @Override
+  public void filter(ContainerRequestContext containerRequestContext) {
+    if (!super.testRequestPredicate(containerRequestContext)) {
+      // Predicate testing failed with the current request context
+      return;
+    }
+    super.filter(containerRequestContext);
+  }
 }

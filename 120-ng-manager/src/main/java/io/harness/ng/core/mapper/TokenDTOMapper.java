@@ -18,6 +18,8 @@ public class TokenDTOMapper {
     TokenBuilder tokenBuilder = Token.builder()
                                     .identifier(dto.getIdentifier())
                                     .name(dto.getName())
+                                    .description(dto.getDescription())
+                                    .tags(TagMapper.convertToList(dto.getTags()))
                                     .apiKeyIdentifier(dto.getApiKeyIdentifier())
                                     .parentIdentifier(dto.getParentIdentifier())
                                     .apiKeyType(dto.getApiKeyType())
@@ -41,7 +43,9 @@ public class TokenDTOMapper {
     return TokenDTO.builder()
         .identifier(token.getIdentifier())
         .name(token.getName())
-        .validFrom(token.getScheduledExpireTime().toEpochMilli())
+        .description(token.getDescription())
+        .tags(TagMapper.convertToMap(token.getTags()))
+        .validFrom(Instant.now().toEpochMilli())
         .validTo(token.getValidTo().toEpochMilli())
         .apiKeyIdentifier(token.getApiKeyIdentifier())
         .parentIdentifier(token.getParentIdentifier())
@@ -62,11 +66,13 @@ public class TokenDTOMapper {
         .parentIdentifier(token.getParentIdentifier())
         .apiKeyType(token.getApiKeyType())
         .accountIdentifier(token.getAccountIdentifier())
-        .orgIdentifier(token.getAccountIdentifier())
+        .orgIdentifier(token.getOrgIdentifier())
         .projectIdentifier(token.getProjectIdentifier())
         .scheduledExpireTime(
             token.getScheduledExpireTime() != null ? token.getScheduledExpireTime().toEpochMilli() : null)
         .valid(token.isValid())
+        .description(token.getDescription())
+        .tags(TagMapper.convertToMap(token.getTags()))
         .build();
   }
 }

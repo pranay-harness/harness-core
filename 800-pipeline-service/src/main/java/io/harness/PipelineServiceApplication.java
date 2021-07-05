@@ -119,6 +119,7 @@ import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMo
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.timeout.TimeoutEngine;
+import io.harness.token.remote.TokenClient;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -408,7 +409,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
       serviceToSecretMapping.put(
           AuthorizationServiceHeader.IDENTITY_SERVICE.getServiceId(), config.getJwtIdentityServiceSecret());
       serviceToSecretMapping.put(AuthorizationServiceHeader.DEFAULT.getServiceId(), config.getNgManagerServiceSecret());
-      environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
+      environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping,
+          injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
     }
   }
 

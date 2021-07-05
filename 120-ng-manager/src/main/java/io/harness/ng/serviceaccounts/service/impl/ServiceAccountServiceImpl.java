@@ -122,11 +122,12 @@ public class ServiceAccountServiceImpl implements ServiceAccountService {
     validateUpdateServiceAccountRequest(
         accountIdentifier, orgIdentifier, projectIdentifier, identifier, requestDTO, serviceAccount);
     ServiceAccountDTO oldDTO = ServiceAccountDTOMapper.getDTOFromServiceAccount(serviceAccount);
-    serviceAccount.setName(requestDTO.getName());
-    serviceAccount.setDescription(requestDTO.getDescription());
-    validate(serviceAccount);
+    ServiceAccount newAccount = ServiceAccountDTOMapper.getServiceAccountFromDTO(requestDTO);
+    newAccount.setUuid(serviceAccount.getUuid());
+    newAccount.setCreatedAt(serviceAccount.getCreatedAt());
+    validate(newAccount);
     return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
-      ServiceAccount savedAccount = serviceAccountRepository.save(serviceAccount);
+      ServiceAccount savedAccount = serviceAccountRepository.save(newAccount);
       ServiceAccountDTO savedDTO = ServiceAccountDTOMapper.getDTOFromServiceAccount(savedAccount);
       outboxService.save(new ServiceAccountUpdateEvent(oldDTO, savedDTO));
       return savedDTO;
@@ -135,10 +136,11 @@ public class ServiceAccountServiceImpl implements ServiceAccountService {
 
   private void validateUpdateServiceAccountRequest(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String identifier, ServiceAccountDTO requestDTO, ServiceAccount serviceAccount) {
-    verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, requestDTO.getAccountIdentifier()),
-                               Pair.of(orgIdentifier, requestDTO.getOrgIdentifier()),
-                               Pair.of(projectIdentifier, requestDTO.getProjectIdentifier()),
-                               Pair.of(identifier, requestDTO.getIdentifier())),
+    verifyValuesNotChanged(
+        Lists.newArrayList(Pair.of(accountIdentifier, requestDTO.getAccountIdentifier()),
+            Pair.of(orgIdentifier, requestDTO.getOrgIdentifier()),
+            Pair.of(projectIdentifier, requestDTO.getProjectIdentifier()),
+            Pair.of(identifier, requestDTO.getIdentifier()), Pair.of(requestDTO.getEmail(), requestDTO.getEmail())),
         true);
     verifyValuesNotChanged(
         Lists.newArrayList(Pair.of(serviceAccount.getAccountIdentifier(), requestDTO.getAccountIdentifier()),
