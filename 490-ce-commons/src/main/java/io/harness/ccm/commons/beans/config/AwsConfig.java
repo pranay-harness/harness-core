@@ -15,6 +15,4 @@ public class AwsConfig {
   private String destinationBucket;
   private String harnessAwsAccountId;
   private String awsConnectorTemplate;
-  private String awsAccessKey;
-  private String awsSecretKey;
 }

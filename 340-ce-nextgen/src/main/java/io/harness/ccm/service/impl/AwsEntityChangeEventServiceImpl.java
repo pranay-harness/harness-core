@@ -41,7 +41,7 @@ public class AwsEntityChangeEventServiceImpl implements AwsEntityChangeEventServ
         CEAwsConnectorDTO ceAwsConnectorDTO =
             (CEAwsConnectorDTO) getConnectorConfigDTO(accountIdentifier, identifier).getConnectorConfig();
         List<CECloudAccount> awsAccounts = awsOrganizationHelperService.getAWSAccounts(
-            accountIdentifier, identifier, ceAwsConnectorDTO, awsConfig.getAwsAccessKey(), awsConfig.getAwsSecretKey());
+            accountIdentifier, identifier, ceAwsConnectorDTO, awsConfig.getAccessKey(), awsConfig.getAccessKey());
         for (CECloudAccount account : awsAccounts) {
           cloudAccountDao.create(account);
         }
