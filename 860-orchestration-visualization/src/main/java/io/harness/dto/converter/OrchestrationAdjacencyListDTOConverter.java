@@ -16,7 +16,7 @@ public class OrchestrationAdjacencyListDTOConverter {
   public OrchestrationAdjacencyListDTO convertFrom(OrchestrationAdjacencyListInternal adjacencyListInternal) {
     return OrchestrationAdjacencyListDTO.builder()
         .graphVertexMap(adjacencyListInternal.getGraphVertexMap().entrySet().stream().collect(
-            Collectors.toMap(Map.Entry::getKey, m -> GraphVertexDTOConverter.toGraphVertexDTO.apply(m.getValue()))))
+            Collectors.toMap(Map.Entry::getKey, m -> ExecutionNodeConverter.toGraphVertexDTO.apply(m.getValue()))))
         .adjacencyMap(adjacencyListInternal.getAdjacencyMap().entrySet().stream().collect(Collectors.toMap(
             Map.Entry::getKey, edgeListInternal -> EdgeListConverter.convertFrom(edgeListInternal.getValue()))))
         .build();

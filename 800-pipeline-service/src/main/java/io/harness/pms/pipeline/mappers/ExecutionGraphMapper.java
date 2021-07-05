@@ -12,7 +12,6 @@ import io.harness.dto.GraphDelegateSelectionLogParams;
 import io.harness.dto.GraphVertexDTO;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.plan.execution.PlanExecutionUtils;
 import io.harness.serializer.JsonUtils;
 
 import java.util.List;
@@ -77,7 +76,7 @@ public class ExecutionGraphMapper {
       -> ExecutionGraph.builder()
              .rootNodeId(orchestrationGraph.getRootNodeIds().get(0))
              .nodeMap(orchestrationGraph.getAdjacencyList().getGraphVertexMap().entrySet().stream().collect(
-                 Collectors.toMap(Map.Entry::getKey, entry -> toExecutionNode(entry.getValue()))))
+                 Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue())))
              .nodeAdjacencyListMap(orchestrationGraph.getAdjacencyList().getAdjacencyMap().entrySet().stream().collect(
                  Collectors.toMap(Map.Entry::getKey, entry -> toExecutionNodeAdjacencyList.apply(entry.getValue()))))
              .build();
@@ -86,7 +85,7 @@ public class ExecutionGraphMapper {
     return ExecutionGraph.builder()
         .rootNodeId(orchestrationGraph.getRootNodeIds().isEmpty() ? null : orchestrationGraph.getRootNodeIds().get(0))
         .nodeMap(orchestrationGraph.getAdjacencyList().getGraphVertexMap().entrySet().stream().collect(
-            Collectors.toMap(Map.Entry::getKey, entry -> toExecutionNode(entry.getValue()))))
+            Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue())))
         .nodeAdjacencyListMap(orchestrationGraph.getAdjacencyList().getAdjacencyMap().entrySet().stream().collect(
             Collectors.toMap(Map.Entry::getKey, entry -> toExecutionNodeAdjacencyList.apply(entry.getValue()))))
         .build();

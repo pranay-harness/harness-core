@@ -6,7 +6,7 @@ import static guru.nidi.graphviz.model.Factory.mutNode;
 import static guru.nidi.graphviz.model.Factory.to;
 
 import io.harness.beans.EdgeList;
-import io.harness.dto.GraphVertexDTO;
+import io.harness.beans.ExecutionNode;
 import io.harness.dto.OrchestrationAdjacencyListDTO;
 import io.harness.dto.OrchestrationGraphDTO;
 
@@ -64,7 +64,7 @@ public class GraphVisualizer {
         .stream()
         .filter(entry -> nodeIds.contains(entry.getKey()))
         .forEach(entry -> {
-          GraphVertexDTO graphVertex = graph.getAdjacencyList().getGraphVertexMap().get(entry.getKey());
+          ExecutionNode graphVertex = graph.getAdjacencyList().getGraphVertexMap().get(entry.getKey());
           MutableNode node = mutNode(graphVertex.getName(), true)
                                  .attrs()
                                  .add(new MapAttributes<>().add("ID", entry.getKey()),
@@ -88,7 +88,7 @@ public class GraphVisualizer {
   }
 
   private void addLinksToGraph(MutableGraph mutableGraph, OrchestrationGraphDTO orchestrationGraph) {
-    Map<String, GraphVertexDTO> graphVertexMap = orchestrationGraph.getAdjacencyList().getGraphVertexMap();
+    Map<String, ExecutionNode> graphVertexMap = orchestrationGraph.getAdjacencyList().getGraphVertexMap();
     List<MutableNode> nodes = new ArrayList<>(mutableGraph.nodes());
     nodes.forEach(node -> {
       EdgeList edgeList = orchestrationGraph.getAdjacencyList().getAdjacencyMap().get(node.attrs().get("ID"));
@@ -114,13 +114,13 @@ public class GraphVisualizer {
       return;
     }
 
-    LinkedList<GraphVertexDTO> queue = new LinkedList<>();
+    LinkedList<ExecutionNode> queue = new LinkedList<>();
     queue.add(adjacencyList.getGraphVertexMap().get(nodeId));
 
-    Set<GraphVertexDTO> visited = new HashSet<>();
+    Set<ExecutionNode> visited = new HashSet<>();
 
     while (!queue.isEmpty()) {
-      GraphVertexDTO graphVertex = queue.removeFirst();
+      ExecutionNode graphVertex = queue.removeFirst();
 
       if (visited.contains(graphVertex)) {
         continue;
@@ -136,14 +136,14 @@ public class GraphVisualizer {
       }
 
       for (String child : childIds) {
-        GraphVertexDTO nextVertex = adjacencyList.getGraphVertexMap().get(child);
+        ExecutionNode nextVertex = adjacencyList.getGraphVertexMap().get(child);
         if (!visited.contains(nextVertex)) {
           queue.add(nextVertex);
         }
       }
 
       if (nextId != null) {
-        GraphVertexDTO nextVertex = adjacencyList.getGraphVertexMap().get(nextId);
+        ExecutionNode nextVertex = adjacencyList.getGraphVertexMap().get(nextId);
         if (!visited.contains(nextVertex)) {
           queue.add(nextVertex);
         }
@@ -157,7 +157,7 @@ public class GraphVisualizer {
 
   private void depthFirstTraversalInternal(
       String nodeId, OrchestrationAdjacencyListDTO adjacencyList, Set<String> visited) {
-    GraphVertexDTO graphVertex = adjacencyList.getGraphVertexMap().get(nodeId);
+    ExecutionNode graphVertex = adjacencyList.getGraphVertexMap().get(nodeId);
     if (graphVertex == null) {
       return;
     }

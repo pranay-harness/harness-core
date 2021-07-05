@@ -8,6 +8,7 @@ import static org.mockito.Matchers.any;
 
 import io.harness.OrchestrationVisualizationTestBase;
 import io.harness.beans.EdgeList;
+import io.harness.beans.ExecutionNode;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.converter.GraphVertexConverter;
@@ -15,7 +16,6 @@ import io.harness.beans.internal.EdgeListInternal;
 import io.harness.beans.internal.OrchestrationAdjacencyListInternal;
 import io.harness.cache.SpringMongoStore;
 import io.harness.category.element.UnitTests;
-import io.harness.dto.GraphVertexDTO;
 import io.harness.dto.OrchestrationAdjacencyListDTO;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.events.OrchestrationEventEmitter;
@@ -257,7 +257,7 @@ public class GraphGenerationServiceImplTest extends OrchestrationVisualizationTe
     OrchestrationAdjacencyListDTO orchestrationAdjacencyListDTO = graphResponse.getAdjacencyList();
     assertThat(orchestrationAdjacencyListDTO).isNotNull();
 
-    Map<String, GraphVertexDTO> graphVertexMapResponse = orchestrationAdjacencyListDTO.getGraphVertexMap();
+    Map<String, ExecutionNode> graphVertexMapResponse = orchestrationAdjacencyListDTO.getGraphVertexMap();
     assertThat(graphVertexMapResponse).isNotEmpty();
     assertThat(graphVertexMapResponse.size()).isEqualTo(2);
 
