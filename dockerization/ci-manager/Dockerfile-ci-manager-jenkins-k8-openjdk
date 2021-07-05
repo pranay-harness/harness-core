@@ -1,5 +1,5 @@
 # to be used when building in Jenkins
-FROM harness/openjdk8:x86_64-alpine-jre8u242-b08
+FROM harness/manager-openjdk-8u242:x86_64-alpine-jre8u242-b08
 
 # Add the capsule JAR and ci-manager-config.yml
 COPY alpn-boot-8.1.13.v20181017.jar /opt/harness/
