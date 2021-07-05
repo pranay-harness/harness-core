@@ -34,4 +34,7 @@ public class TestVerificationJobSpec extends VerificationJobSpec {
     return TestVerificationJob.builder().sensitivity(
         RuntimeParameter.builder().isRuntimeParam(false).value(sensitivity.getValue()).build());
   }
+
+  @Override
+  protected void validateParams() {}
 }

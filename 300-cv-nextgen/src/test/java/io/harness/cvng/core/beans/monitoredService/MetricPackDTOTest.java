@@ -21,7 +21,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class metricPackDTOTest extends CvNextGenTestBase {
+public class MetricPackDTOTest extends CvNextGenTestBase {
   MetricPackDTO metricPackDTO;
   @Inject MetricPackService metricPackService;
   String orgIdentifier;

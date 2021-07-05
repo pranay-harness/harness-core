@@ -133,8 +133,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     MonitoredService monitoredServiceEntity =
         getMonitoredService(accountId, orgIdentifier, projectIdentifier, identifier);
     if (monitoredServiceEntity == null) {
-      throw new InvalidRequestException(String.format(
-          "Monitored Source Entity  with identifier %s and accountId %s is not present", identifier, accountId));
+      throw new InvalidRequestException(
+          String.format("Monitored Source Entity with identifier %s is not present", identifier));
     }
     return MonitoredServiceDTO.builder()
         .name(monitoredServiceEntity.getName())

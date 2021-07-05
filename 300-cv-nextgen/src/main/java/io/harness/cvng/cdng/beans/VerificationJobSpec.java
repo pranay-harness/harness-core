@@ -11,6 +11,7 @@ import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobB
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.google.common.base.Preconditions;
 import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
@@ -41,4 +42,25 @@ public abstract class VerificationJobSpec {
     return verificationJobBuilder.duration(RuntimeParameter.builder().value(duration.getValue()).build());
   }
   @ApiModelProperty(hidden = true) protected abstract VerificationJobBuilder verificationJobBuilder();
+  public void validate() {
+    validateDuration();
+    validateParams();
+  }
+
+  private void validateDuration() {
+    if (duration.getValue() != null) {
+      Preconditions.checkState(!duration.getValue().isEmpty(), "Value can not be empty");
+      if (duration.getValue().charAt(duration.getValue().length() - 1) != 'm') {
+        throw new IllegalArgumentException("duration should end with m, ex: 5m, 10m etc.");
+      }
+      String number = duration.getValue().substring(0, duration.getValue().length() - 1);
+      try {
+        Integer.parseInt(number);
+      } catch (NumberFormatException numberFormatException) {
+        throw new IllegalArgumentException(
+            "can not parse duration please check format for duration., ex: 5m, 10m etc.", numberFormatException);
+      }
+    }
+  }
+  protected abstract void validateParams();
 }
