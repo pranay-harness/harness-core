@@ -1,10 +1,13 @@
 package io.harness.changehandlers;
 
+import static java.util.Arrays.asList;
+
 import io.harness.changestreamsframework.ChangeEvent;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 
 import com.mongodb.DBObject;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ProjectsChangeDataHandler extends AbstractChangeDataHandler {
@@ -50,5 +53,10 @@ public class ProjectsChangeDataHandler extends AbstractChangeDataHandler {
     }
 
     return columnValueMapping;
+  }
+
+  @Override
+  public List<String> getPrimaryKeys() {
+    return asList("id");
   }
 }
