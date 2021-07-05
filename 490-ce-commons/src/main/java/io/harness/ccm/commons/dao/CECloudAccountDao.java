@@ -1,6 +1,7 @@
 package io.harness.ccm.commons.dao;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
+import static io.harness.ccm.commons.entities.billing.CECloudAccount.CECloudAccountKeys;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.entities.billing.CECloudAccount;
@@ -28,27 +29,27 @@ public class CECloudAccountDao {
 
   public List<CECloudAccount> getByMasterAccountId(String accountId, String settingId, String infraMasterAccountId) {
     return hPersistence.createQuery(CECloudAccount.class)
-        .field(CECloudAccount.CECloudAccountKeys.accountId)
+        .field(CECloudAccountKeys.accountId)
         .equal(accountId)
-        .field(CECloudAccount.CECloudAccountKeys.infraMasterAccountId)
+        .field(CECloudAccountKeys.infraMasterAccountId)
         .equal(infraMasterAccountId)
-        .field(CECloudAccount.CECloudAccountKeys.masterAccountSettingId)
+        .field(CECloudAccountKeys.masterAccountSettingId)
         .equal(settingId)
         .asList();
   }
 
   public List<CECloudAccount> getByAWSAccountId(String harnessAccountId) {
     return hPersistence.createQuery(CECloudAccount.class)
-        .field(CECloudAccount.CECloudAccountKeys.accountId)
+        .field(CECloudAccountKeys.accountId)
         .equal(harnessAccountId)
         .asList();
   }
 
   public List<CECloudAccount> getBySettingId(String harnessAccountId, String masterAccountSettingId) {
     return hPersistence.createQuery(CECloudAccount.class)
-        .field(CECloudAccount.CECloudAccountKeys.accountId)
+        .field(CECloudAccountKeys.accountId)
         .equal(harnessAccountId)
-        .field(CECloudAccount.CECloudAccountKeys.masterAccountSettingId)
+        .field(CECloudAccountKeys.masterAccountSettingId)
         .equal(masterAccountSettingId)
         .asList();
   }
