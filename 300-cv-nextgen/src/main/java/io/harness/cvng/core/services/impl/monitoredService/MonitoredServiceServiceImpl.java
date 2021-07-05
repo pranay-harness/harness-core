@@ -8,6 +8,7 @@ import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Sources;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListDTO;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
 import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.entities.MonitoredService.MonitoredServiceKeys;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
@@ -36,7 +37,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   @Inject HPersistence hPersistence;
 
   @Override
-  public void create(String accountId, MonitoredServiceDTO monitoredServiceDTO) {
+  public MonitoredServiceResponse create(String accountId, MonitoredServiceDTO monitoredServiceDTO) {
     validate(monitoredServiceDTO);
     checkIfAlreadyPresent(accountId, monitoredServiceDTO);
     if (monitoredServiceDTO.getSources() != null) {
@@ -46,10 +47,12 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
           monitoredServiceDTO.getSources().getHealthSources());
     }
     saveMonitoredServiceEntity(accountId, monitoredServiceDTO);
+    return get(accountId, monitoredServiceDTO.getOrgIdentifier(), monitoredServiceDTO.getProjectIdentifier(),
+        monitoredServiceDTO.getIdentifier());
   }
 
   @Override
-  public void update(String accountId, MonitoredServiceDTO monitoredServiceDTO) {
+  public MonitoredServiceResponse update(String accountId, MonitoredServiceDTO monitoredServiceDTO) {
     MonitoredService monitoredService = getMonitoredService(accountId, monitoredServiceDTO.getOrgIdentifier(),
         monitoredServiceDTO.getProjectIdentifier(), monitoredServiceDTO.getIdentifier());
     if (monitoredService == null) {
@@ -66,6 +69,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     validate(monitoredServiceDTO);
     updateHealthSources(monitoredService, monitoredServiceDTO);
     updateMonitoredService(monitoredService, monitoredServiceDTO);
+    return get(accountId, monitoredServiceDTO.getOrgIdentifier(), monitoredServiceDTO.getProjectIdentifier(),
+        monitoredServiceDTO.getIdentifier());
   }
 
   private void updateMonitoredService(MonitoredService monitoredService, MonitoredServiceDTO monitoredServiceDTO) {
@@ -117,7 +122,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   }
 
   @Override
-  public void delete(String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
+  public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
     MonitoredService monitoredService = getMonitoredService(accountId, orgIdentifier, projectIdentifier, identifier);
     if (monitoredService == null) {
       throw new InvalidRequestException(String.format(
@@ -125,36 +130,44 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     }
     healthSourceService.delete(accountId, orgIdentifier, projectIdentifier, monitoredService.getIdentifier(),
         monitoredService.getHealthSourceIdentifiers());
-    hPersistence.delete(monitoredService);
+    return hPersistence.delete(monitoredService);
   }
 
   @Override
-  public MonitoredServiceDTO get(String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
+  public MonitoredServiceResponse get(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
     MonitoredService monitoredServiceEntity =
         getMonitoredService(accountId, orgIdentifier, projectIdentifier, identifier);
     if (monitoredServiceEntity == null) {
       throw new InvalidRequestException(
           String.format("Monitored Source Entity with identifier %s is not present", identifier));
     }
-    return MonitoredServiceDTO.builder()
-        .name(monitoredServiceEntity.getName())
-        .identifier(monitoredServiceEntity.getIdentifier())
-        .orgIdentifier(monitoredServiceEntity.getOrgIdentifier())
-        .projectIdentifier(monitoredServiceEntity.getProjectIdentifier())
-        .environmentRef(monitoredServiceEntity.getEnvironmentIdentifier())
-        .serviceRef(monitoredServiceEntity.getServiceIdentifier())
-        .type(monitoredServiceEntity.getType())
-        .description(monitoredServiceEntity.getDesc())
-        .sources(Sources.builder()
-                     .healthSources(healthSourceService.get(monitoredServiceEntity.getAccountId(),
-                         monitoredServiceEntity.getOrgIdentifier(), monitoredServiceEntity.getProjectIdentifier(),
-                         monitoredServiceEntity.getIdentifier(), monitoredServiceEntity.getHealthSourceIdentifiers()))
-                     .build())
+    MonitoredServiceDTO monitoredServiceDTO =
+        MonitoredServiceDTO.builder()
+            .name(monitoredServiceEntity.getName())
+            .identifier(monitoredServiceEntity.getIdentifier())
+            .orgIdentifier(monitoredServiceEntity.getOrgIdentifier())
+            .projectIdentifier(monitoredServiceEntity.getProjectIdentifier())
+            .environmentRef(monitoredServiceEntity.getEnvironmentIdentifier())
+            .serviceRef(monitoredServiceEntity.getServiceIdentifier())
+            .type(monitoredServiceEntity.getType())
+            .description(monitoredServiceEntity.getDesc())
+            .sources(
+                Sources.builder()
+                    .healthSources(healthSourceService.get(monitoredServiceEntity.getAccountId(),
+                        monitoredServiceEntity.getOrgIdentifier(), monitoredServiceEntity.getProjectIdentifier(),
+                        monitoredServiceEntity.getIdentifier(), monitoredServiceEntity.getHealthSourceIdentifiers()))
+                    .build())
+            .build();
+    return MonitoredServiceResponse.builder()
+        .monitoredService(monitoredServiceDTO)
+        .createdAt(monitoredServiceEntity.getCreatedAt())
+        .lastModifiedAt(monitoredServiceEntity.getLastUpdatedAt())
         .build();
   }
 
   @Override
-  public MonitoredServiceDTO get(String accountId, String orgIdentifier, String projectIdentifier,
+  public MonitoredServiceResponse get(String accountId, String orgIdentifier, String projectIdentifier,
       String serviceIdentifier, String envIdentifier) {
     MonitoredService monitoredService =
         getMonitoredService(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
@@ -162,6 +175,18 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       return null;
     }
     return get(accountId, orgIdentifier, projectIdentifier, monitoredService.getIdentifier());
+  }
+
+  @Override
+  public MonitoredServiceDTO getMonitoredServiceDTO(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
+    return get(accountId, orgIdentifier, projectIdentifier, identifier).getMonitoredServiceDTO();
+  }
+
+  @Override
+  public MonitoredServiceDTO getMonitoredServiceDTO(String accountId, String orgIdentifier, String projectIdentifier,
+      String serviceIdentifier, String envIdentifier) {
+    return get(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier).getMonitoredServiceDTO();
   }
 
   private MonitoredService getMonitoredService(
@@ -318,7 +343,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   }
 
   @Override
-  public MonitoredServiceDTO createDefault(String accountId, String orgIdentifier, String projectIdentifier,
+  public MonitoredServiceResponse createDefault(String accountId, String orgIdentifier, String projectIdentifier,
       String serviceIdentifier, String environmentIdentifier) {
     MonitoredServiceDTO monitoredServiceDTO = MonitoredServiceDTO.builder()
                                                   .name(serviceIdentifier + "_" + environmentIdentifier)
@@ -337,7 +362,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       monitoredServiceDTO.setIdentifier(monitoredServiceDTO.getIdentifier() + "_" + generateUuid().substring(0, 7));
       saveMonitoredServiceEntity(accountId, monitoredServiceDTO);
     }
-    return monitoredServiceDTO;
+    return get(accountId, orgIdentifier, projectIdentifier, monitoredServiceDTO.getIdentifier());
   }
 
   private MonitoredServiceListDTO toMonitorServiceListDTO(MonitoredService monitoredService) {

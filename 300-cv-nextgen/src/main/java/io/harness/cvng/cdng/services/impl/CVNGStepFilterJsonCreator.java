@@ -42,7 +42,7 @@ public class CVNGStepFilterJsonCreator extends GenericStepPMSFilterJsonCreator {
     // This is handling the case when the monitoring service is defined. Runtime case needs to be handled separately
     // https://harness.atlassian.net/browse/CDNG-10512
     if (!NGExpressionUtils.isRuntimeOrExpressionField(cvngStepInfo.getMonitoredServiceRef().getValue())) {
-      MonitoredServiceDTO monitoredServiceDTO = monitoredServiceService.get(
+      MonitoredServiceDTO monitoredServiceDTO = monitoredServiceService.getMonitoredServiceDTO(
           accountIdentifier, orgIdentifier, projectIdentifier, cvngStepInfo.getMonitoredServiceRef().getValue());
       monitoredServiceDTO.getSources().getHealthSources().forEach(healthSource -> {
         String connectorIdentifier = healthSource.getSpec().getConnectorRef();

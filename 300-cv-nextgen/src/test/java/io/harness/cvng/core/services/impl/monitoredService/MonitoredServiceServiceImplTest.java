@@ -164,7 +164,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   public void testCreate_monitoredServiceWithEmptyHealthSources() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
     monitoredServiceDTO.setSources(MonitoredServiceDTO.Sources.builder().build());
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    MonitoredServiceDTO savedMonitoredServiceDTO =
+        monitoredServiceService.create(accountId, monitoredServiceDTO).getMonitoredServiceDTO();
+    assertThat(savedMonitoredServiceDTO).isEqualTo(monitoredServiceDTO);
     MonitoredService monitoredService =
         hPersistence.createQuery(MonitoredService.class)
             .filter(MonitoredServiceKeys.identifier, monitoredServiceDTO.getIdentifier())
@@ -178,7 +180,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testCreate_monitoredServiceNonEmptyHealthSources() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    MonitoredServiceDTO savedMonitoredServiceDTO =
+        monitoredServiceService.create(accountId, monitoredServiceDTO).getMonitoredServiceDTO();
+    assertThat(savedMonitoredServiceDTO).isEqualTo(monitoredServiceDTO);
     MonitoredService monitoredService =
         hPersistence.createQuery(MonitoredService.class)
             .filter(MonitoredServiceKeys.identifier, monitoredServiceDTO.getIdentifier())
@@ -210,7 +214,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
     monitoredServiceService.create(accountId, monitoredServiceDTO);
     MonitoredServiceDTO getMonitoredServiceDTO =
-        monitoredServiceService.get(accountId, orgIdentifier, projectIdentifier, monitoredServiceIdentifier);
+        monitoredServiceService.get(accountId, orgIdentifier, projectIdentifier, monitoredServiceIdentifier)
+            .getMonitoredServiceDTO();
     assertThat(monitoredServiceDTO).isEqualTo(getMonitoredServiceDTO);
   }
 
@@ -229,8 +234,10 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   public void testGet_usingServiceEnvironment() {
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
     monitoredServiceService.create(accountId, monitoredServiceDTO);
-    MonitoredServiceDTO getMonitoredServiceDTO = monitoredServiceService.get(
-        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, environmentIdentifier);
+    MonitoredServiceDTO getMonitoredServiceDTO =
+        monitoredServiceService
+            .get(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, environmentIdentifier)
+            .getMonitoredServiceDTO();
     assertThat(monitoredServiceDTO).isEqualTo(getMonitoredServiceDTO);
   }
 
@@ -249,7 +256,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     List<CVConfig> cvConfigs = cvConfigService.list(accountId, orgIdentifier, projectIdentifier,
         HealthSourceService.getNameSpacedIdentifier(monitoredServiceIdentifier, healthSourceIdentifier));
     assertThat(cvConfigs.size()).isEqualTo(1);
-    monitoredServiceService.delete(accountId, orgIdentifier, projectIdentifier, monitoredServiceIdentifier);
+    boolean isDeleted =
+        monitoredServiceService.delete(accountId, orgIdentifier, projectIdentifier, monitoredServiceIdentifier);
+    assertThat(isDeleted).isEqualTo(true);
     monitoredService = hPersistence.createQuery(MonitoredService.class)
                            .filter(MonitoredServiceKeys.identifier, monitoredServiceDTO.getIdentifier())
                            .get();
@@ -385,8 +394,10 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = KANHAIYA)
   @Category(UnitTests.class)
   public void testCreateDefault() {
-    MonitoredServiceDTO monitoredServiceDTO = monitoredServiceService.createDefault(
-        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, environmentIdentifier);
+    MonitoredServiceDTO monitoredServiceDTO =
+        monitoredServiceService
+            .createDefault(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, environmentIdentifier)
+            .getMonitoredServiceDTO();
     assertThat(monitoredServiceDTO.getName()).isEqualTo(serviceIdentifier + "_" + environmentIdentifier);
     assertThat(monitoredServiceDTO.getIdentifier()).isEqualTo(serviceIdentifier + "_" + environmentIdentifier);
     assertThat(monitoredServiceDTO.getOrgIdentifier()).isEqualTo(orgIdentifier);
@@ -441,7 +452,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     monitoredServiceService.create(accountId, monitoredServiceDTO);
     monitoredServiceDTO.setName("new-name");
     monitoredServiceDTO.setDescription("new-description");
-    monitoredServiceService.update(accountId, monitoredServiceDTO);
+    MonitoredServiceDTO savedMonitoredServiceDTO =
+        monitoredServiceService.update(accountId, monitoredServiceDTO).getMonitoredServiceDTO();
+    assertThat(savedMonitoredServiceDTO).isEqualTo(monitoredServiceDTO);
     MonitoredService monitoredService = hPersistence.createQuery(MonitoredService.class)
                                             .filter(MonitoredServiceKeys.identifier, monitoredServiceIdentifier)
                                             .get();
@@ -466,7 +479,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
         HealthSourceService.getNameSpacedIdentifier(monitoredServiceIdentifier, healthSourceIdentifier));
     assertThat(cvConfigs.size()).isEqualTo(1);
     monitoredServiceDTO.getSources().setHealthSources(null);
-    monitoredServiceService.update(accountId, monitoredServiceDTO);
+    MonitoredServiceDTO savedMonitoredServiceDTO =
+        monitoredServiceService.update(accountId, monitoredServiceDTO).getMonitoredServiceDTO();
+    assertThat(savedMonitoredServiceDTO).isEqualTo(monitoredServiceDTO);
     monitoredService = hPersistence.createQuery(MonitoredService.class)
                            .filter(MonitoredServiceKeys.identifier, monitoredServiceDTO.getIdentifier())
                            .get();
@@ -498,7 +513,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     HealthSource healthSource = createHealthSource(CVMonitoringCategory.PERFORMANCE);
     healthSource.setIdentifier("new-healthSource-identifier");
     monitoredServiceDTO.getSources().getHealthSources().add(healthSource);
-    monitoredServiceService.update(accountId, monitoredServiceDTO);
+    MonitoredServiceDTO savedMonitoredServiceDTO =
+        monitoredServiceService.update(accountId, monitoredServiceDTO).getMonitoredServiceDTO();
+    assertThat(savedMonitoredServiceDTO).isEqualTo(monitoredServiceDTO);
     monitoredService = hPersistence.createQuery(MonitoredService.class)
                            .filter(MonitoredServiceKeys.identifier, monitoredServiceDTO.getIdentifier())
                            .get();
@@ -538,7 +555,10 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     HealthSourceSpec healthSourceSpec = createHealthSourceSpec(CVMonitoringCategory.PERFORMANCE);
     monitoredServiceDTO.getSources().getHealthSources().iterator().next().setSpec(healthSourceSpec);
 
-    monitoredServiceService.update(accountId, monitoredServiceDTO);
+    MonitoredServiceDTO savedMonitoredServiceDTO =
+        monitoredServiceService.update(accountId, monitoredServiceDTO).getMonitoredServiceDTO();
+    assertThat(savedMonitoredServiceDTO).isEqualTo(monitoredServiceDTO);
+
     monitoredService = hPersistence.createQuery(MonitoredService.class)
                            .filter(MonitoredServiceKeys.identifier, monitoredServiceDTO.getIdentifier())
                            .get();

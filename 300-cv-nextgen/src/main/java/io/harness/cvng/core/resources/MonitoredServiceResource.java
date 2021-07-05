@@ -5,6 +5,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListDTO;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -43,10 +44,9 @@ public class MonitoredServiceResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "saves monitored service data", nickname = "saveMonitoredService")
-  public RestResponse<Void> saveMonitoredService(@NotNull @QueryParam("accountId") String accountId,
+  public RestResponse<MonitoredServiceResponse> saveMonitoredService(@NotNull @QueryParam("accountId") String accountId,
       @NotNull @Valid @Body MonitoredServiceDTO monitoredServiceDTO) {
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
-    return new RestResponse<>(null);
+    return new RestResponse<>(monitoredServiceService.create(accountId, monitoredServiceDTO));
   }
 
   @POST
@@ -54,7 +54,7 @@ public class MonitoredServiceResource {
   @ExceptionMetered
   @Path("/create-default")
   @ApiOperation(value = "created default monitored service", nickname = "createDefaultMonitoredService")
-  public RestResponse<MonitoredServiceDTO> createDefaultMonitoredService(
+  public RestResponse<MonitoredServiceResponse> createDefaultMonitoredService(
       @NotNull @QueryParam("accountId") String accountId, @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier,
@@ -68,14 +68,13 @@ public class MonitoredServiceResource {
   @ExceptionMetered
   @Path("{identifier}")
   @ApiOperation(value = "updates monitored service data", nickname = "updateMonitoredService")
-  public RestResponse<Void> updateMonitoredService(@NotNull @PathParam("identifier") String identifier,
-      @NotNull @QueryParam("accountId") String accountId,
+  public RestResponse<MonitoredServiceResponse> updateMonitoredService(
+      @NotNull @PathParam("identifier") String identifier, @NotNull @QueryParam("accountId") String accountId,
       @NotNull @Valid @Body MonitoredServiceDTO monitoredServiceDTO) {
     Preconditions.checkArgument(identifier.equals(monitoredServiceDTO.getIdentifier()),
         String.format(
             "Identifier %s does not match with path identifier %s", monitoredServiceDTO.getIdentifier(), identifier));
-    monitoredServiceService.update(accountId, monitoredServiceDTO);
-    return new RestResponse<>(null);
+    return new RestResponse<>(monitoredServiceService.update(accountId, monitoredServiceDTO));
   }
 
   @GET
@@ -96,7 +95,7 @@ public class MonitoredServiceResource {
   @ExceptionMetered
   @Path("{identifier}")
   @ApiOperation(value = "get monitored service data ", nickname = "getMonitoredService")
-  public ResponseDTO<MonitoredServiceDTO> get(@NotNull @PathParam("identifier") String identifier,
+  public ResponseDTO<MonitoredServiceResponse> get(@NotNull @PathParam("identifier") String identifier,
       @NotNull @QueryParam("accountId") String accountId, @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
     return ResponseDTO.newResponse(
@@ -109,7 +108,7 @@ public class MonitoredServiceResource {
   @Path("/service-environment")
   @ApiOperation(value = "get monitored service data from service and env ref",
       nickname = "getMonitoredServiceFromServiceAndEnvironment")
-  public ResponseDTO<MonitoredServiceDTO>
+  public ResponseDTO<MonitoredServiceResponse>
   getMonitoredServiceFromServiceAndEnvironment(@NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
@@ -124,11 +123,10 @@ public class MonitoredServiceResource {
   @ExceptionMetered
   @Path("{identifier}")
   @ApiOperation(value = "delete monitored service data ", nickname = "deleteMonitoredService")
-  public RestResponse<Void> delete(@NotNull @PathParam("identifier") String identifier,
+  public RestResponse<Boolean> delete(@NotNull @PathParam("identifier") String identifier,
       @NotNull @QueryParam("accountId") String accountId, @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
-    monitoredServiceService.delete(accountId, orgIdentifier, projectIdentifier, identifier);
-    return new RestResponse<>(null);
+    return new RestResponse<>(monitoredServiceService.delete(accountId, orgIdentifier, projectIdentifier, identifier));
   }
 
   @GET
