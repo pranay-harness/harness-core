@@ -318,6 +318,10 @@ public class PermissionAttribute {
      */
     EXECUTE_WORKFLOW_ROLLBACK,
     /**
+     * Allow Deployments during Freeze
+     */
+    ALLOW_DEPLOYMENT_DURING_FREEZE,
+    /**
      * default action.
      */
     DEFAULT

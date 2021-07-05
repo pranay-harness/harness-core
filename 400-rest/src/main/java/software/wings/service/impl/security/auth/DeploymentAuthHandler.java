@@ -5,6 +5,7 @@ import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.validation.Validator.notNullCheck;
 
+import static software.wings.security.PermissionAttribute.Action.ALLOW_DEPLOYMENT_DURING_FREEZE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELINE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW_ROLLBACK;
@@ -131,6 +132,12 @@ public class DeploymentAuthHandler {
   public void authorizeWorkflowExecution(String appId, String entityId) {
     List<PermissionAttribute> permissionAttributeList = new ArrayList<>();
     permissionAttributeList.add(new PermissionAttribute(DEPLOYMENT, EXECUTE_WORKFLOW));
+    authorize(permissionAttributeList, Collections.singletonList(appId), entityId);
+  }
+
+  public void authorizeDeploymentDuringFreeze(String appId, String entityId) {
+    List<PermissionAttribute> permissionAttributeList = new ArrayList<>();
+    permissionAttributeList.add(new PermissionAttribute(DEPLOYMENT, ALLOW_DEPLOYMENT_DURING_FREEZE));
     authorize(permissionAttributeList, Collections.singletonList(appId), entityId);
   }
 

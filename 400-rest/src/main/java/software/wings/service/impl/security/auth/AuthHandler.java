@@ -346,8 +346,9 @@ public class AuthHandler {
   private void attachPermission(Map<String, AppPermissionSummary> appPermissionMap,
       Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap, Set<String> appIds,
       PermissionType permissionType, Filter entityFilter, Set<Action> actions) {
-    final HashSet<Action> fixedEntityActions = Sets.newHashSet(Action.READ, Action.UPDATE, Action.DELETE,
-        Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW, Action.EXECUTE_WORKFLOW_ROLLBACK);
+    final HashSet<Action> fixedEntityActions =
+        Sets.newHashSet(Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW,
+            Action.EXECUTE_WORKFLOW_ROLLBACK, Action.ALLOW_DEPLOYMENT_DURING_FREEZE);
     appIds.forEach(appId -> {
       AppPermissionSummary appPermissionSummary = appPermissionMap.get(appId);
       if (appPermissionSummary == null) {
@@ -547,8 +548,9 @@ public class AuthHandler {
       Map<String, AppPermissionSummary> appPermissionMap,
       Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap, Set<String> appIds,
       PermissionType permissionType, Filter entityFilter, Set<Action> actions) {
-    final HashSet<Action> fixedEntityActions = Sets.newHashSet(Action.READ, Action.UPDATE, Action.DELETE,
-        Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW, Action.EXECUTE_WORKFLOW_ROLLBACK);
+    final HashSet<Action> fixedEntityActions =
+        Sets.newHashSet(Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW,
+            Action.EXECUTE_WORKFLOW_ROLLBACK, Action.ALLOW_DEPLOYMENT_DURING_FREEZE);
     appIds.forEach(appId -> {
       AppPermissionSummary appPermissionSummary = appPermissionMap.get(appId);
       if (appPermissionSummary == null) {
@@ -1585,7 +1587,7 @@ public class AuthHandler {
 
   private Set<Action> getAllActions() {
     return Sets.newHashSet(Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE_WORKFLOW,
-        Action.EXECUTE_WORKFLOW_ROLLBACK, Action.EXECUTE_PIPELINE);
+        Action.EXECUTE_WORKFLOW_ROLLBACK, Action.EXECUTE_PIPELINE, Action.ALLOW_DEPLOYMENT_DURING_FREEZE);
   }
 
   private Set<Action> getAllNonDeploymentActions() {

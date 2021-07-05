@@ -124,6 +124,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
@@ -1209,7 +1210,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     String accountId = appService.getAccountIdByAppId(appId);
 
     User user = UserThreadLocal.get();
-    if (trigger == null && user != null) {
+    boolean shouldAuthorizeExecution = trigger == null && user != null;
+    if (shouldAuthorizeExecution) {
       deploymentAuthHandler.authorizePipelineExecution(appId, pipelineId);
       if (isNotEmpty(pipeline.getEnvIds())) {
         pipeline.getEnvIds().forEach(s -> authService.checkIfUserAllowedToDeployPipelineToEnv(appId, s));
@@ -1234,7 +1236,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 ? PipelineServiceHelper.getEnvironmentIdsForParallelIndex(pipeline, 1)
                 : pipeline.getEnvIds()),
         environmentService, featureFlagService);
-    deploymentFreezeChecker.check(accountId);
+    if (shouldAuthorizeExecution) {
+      overrideDeploymentFreezeOrPerformChecks(appId, pipelineId, accountId, deploymentFreezeChecker);
+    } else {
+      deploymentFreezeChecker.check(accountId);
+    }
 
     if (isEmpty(pipeline.getPipelineStages())) {
       throw new WingsException("You can not deploy an empty pipeline.", WingsException.USER);
@@ -1368,7 +1374,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     envId = resolveEnvId != null ? resolveEnvId : envId;
     User user = UserThreadLocal.get();
     // The workflow execution is direct workflow execution and not in Pipeline or trigger.
-    if (trigger == null && user != null && isEmpty(pipelineExecutionId)) {
+    boolean isDirectExecution = trigger == null && user != null && isEmpty(pipelineExecutionId);
+    if (isDirectExecution) {
       deploymentAuthHandler.authorizeWorkflowExecution(appId, workflowId);
       authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, envId);
     }
@@ -1386,7 +1393,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
         new DeploymentCtx(appId, isNotEmpty(envId) ? Collections.singletonList(envId) : Collections.emptyList()),
         environmentService, featureFlagService);
-    deploymentFreezeChecker.check(accountId);
+    if (isDirectExecution) {
+      overrideDeploymentFreezeOrPerformChecks(appId, workflowId, accountId, deploymentFreezeChecker);
+    } else {
+      deploymentFreezeChecker.check(accountId);
+    }
     checkPreDeploymentConditions(accountId, appId);
 
     workflow.setOrchestrationWorkflow(
@@ -1418,6 +1429,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         workflowExecutionUpdate, stdParams, trigger, null, workflow);
   }
 
+  private void overrideDeploymentFreezeOrPerformChecks(
+      String appId, String entityId, String accountId, PreDeploymentChecker deploymentFreezeChecker) {
+    try {
+      deploymentAuthHandler.authorizeDeploymentDuringFreeze(appId, entityId);
+    } catch (AccessDeniedException e) {
+      log.info("User can not override deployment freezes. Performing deployment freeze checks...");
+      deploymentFreezeChecker.check(accountId);
+    }
+  }
   /*
   Rolling type workflow does not support k8s-v1 type of service
    */
@@ -2509,7 +2529,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                     pipeline, parallelIndexToResume)
                 : pipeline.getEnvIds()),
         environmentService, featureFlagService);
-    deploymentFreezeChecker.check(accountId);
+    overrideDeploymentFreezeOrPerformChecks(appId, pipeline.getUuid(), accountId, deploymentFreezeChecker);
     WorkflowExecution currWorkflowExecution =
         triggerPipelineExecution(appId, pipeline, prevWorkflowExecution.getExecutionArgs(), null, null,
             prevWorkflowExecution.getPipelineResumeId() != null ? prevWorkflowExecution.getPipelineResumeId()
@@ -2799,7 +2819,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
         new DeploymentCtx(appId, Collections.singletonList(envId)), environmentService, featureFlagService);
-    deploymentFreezeChecker.check(accountId);
+    overrideDeploymentFreezeOrPerformChecks(appId, workflowId, accountId, deploymentFreezeChecker);
 
     // Not including instance limit and deployment limit check as it is a emergency rollback
     accountExpirationChecker.check(accountId);
@@ -3403,7 +3423,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           new DeploymentCtx(
               appId, envIdInStage != null ? Collections.singletonList(envIdInStage) : Collections.emptyList()),
           environmentService, featureFlagService);
-      deploymentFreezeChecker.check(pipelineExecution.getAccountId());
+      User user = UserThreadLocal.get();
+      if (user != null) {
+        overrideDeploymentFreezeOrPerformChecks(
+            appId, pipelineId, pipelineExecution.getAccountId(), deploymentFreezeChecker);
+      } else {
+        deploymentFreezeChecker.check(pipelineExecution.getAccountId());
+      }
     }
     List<String> extraVars = new ArrayList<>();
     List<String> runtimeKeys =
