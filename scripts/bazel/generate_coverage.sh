@@ -47,7 +47,7 @@ bazel coverage -s -k --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
 //${MODULE_NAME}/...
 
 echo "Generating HTML Coverage Report..."
-genhtml bazel-out/_coverage/_coverage_report.dat -o ${MODULE_COVERAGE_DIR}
+genhtml `bazel info output_path`/_coverage/_coverage_report.dat -o ${MODULE_COVERAGE_DIR}
 if [ "$?" -eq 0 ];then
   echo -e "Combined HTML Report Generated: ${MODULE_COVERAGE_DIR}/index.html \n \
           Run: \"open ${MODULE_COVERAGE_DIR}/index.html\" to see report in browser."
