@@ -38,7 +38,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,9 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.CI)
 public class CILiteEngineStepGroupUtils {
   private static final String LITE_ENGINE_TASK = "liteEngineTask";
-  private static final String BUILD_NUMBER = "buildnumber";
   @Inject private LiteEngineTaskStepGenerator liteEngineTaskStepGenerator;
-  private static final SecureRandom random = new SecureRandom();
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
 
   public List<ExecutionWrapperConfig> createExecutionWrapperWithLiteEngineSteps(StageElementConfig stageElementConfig,

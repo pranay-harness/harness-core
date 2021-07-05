@@ -29,8 +29,6 @@ import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.inputset.WebhookTriggerExecutionInputSet;
 import io.harness.beans.outcomes.DependencyOutcome;
 import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
-import io.harness.beans.stages.IntegrationStage;
-import io.harness.beans.stages.IntegrationStageStepParameters;
 import io.harness.beans.steps.outcome.CIStepOutcome;
 import io.harness.beans.steps.outcome.StepArtifacts;
 import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
@@ -84,7 +82,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(BuildEnvSetupStepInfo.class, 100003);
     kryo.register(CIPipelineSetupParameters.class, 100004);
     kryo.register(CleanupStepInfo.class, 100005);
-    kryo.register(IntegrationStageStepParameters.class, 100007);
     kryo.register(LiteEngineTaskStepInfo.class, 100008);
     kryo.register(RunStepInfo.class, 100011);
     kryo.register(TestStepInfo.class, 100013);
@@ -92,7 +89,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(BuildStandardVariables.class, 100015);
     kryo.register(CIExecutionArgs.class, 100016);
     kryo.register(BuildNumberDetails.class, 100017);
-    kryo.register(IntegrationStage.class, 100018);
     kryo.register(CustomVariable.class, 100023);
     kryo.register(K8BuildJobEnvInfo.class, 100024);
     kryo.register(K8BuildJobEnvInfo.PodsSetupInfo.class, 100025);

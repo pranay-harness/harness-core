@@ -8,7 +8,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.beans.stages.IntegrationStageStepParameters;
+import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.category.element.UnitTests;
 import io.harness.execution.NodeExecution;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
@@ -269,14 +269,13 @@ public class GitBuildStatusUtilityTest extends CIExecutionTestBase {
   }
 
   private StepParameters getNodeExecutionStepParameters() {
-    return IntegrationStageStepParameters.builder()
+    return IntegrationStageStepParametersPMS.builder()
         .buildStatusUpdateParameter(BuildStatusUpdateParameter.builder()
                                         .state("error")
                                         .sha("sha")
                                         .identifier("identifier")
                                         .desc("desc")
                                         .build())
-        .integrationStage(null)
         .build();
   }
 }

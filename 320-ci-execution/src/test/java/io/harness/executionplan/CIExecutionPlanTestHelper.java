@@ -44,7 +44,6 @@ import io.harness.beans.execution.WebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.script.ScriptInfo;
-import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
@@ -113,10 +112,8 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.yaml.core.ExecutionElement;
 import io.harness.yaml.core.ParallelStepElement;
-import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
-import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.Connector;
 import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.core.variables.SecretNGVariable;
@@ -942,7 +939,7 @@ public class CIExecutionPlanTestHelper {
   }
 
   public NgPipelineEntity getCIPipeline() {
-    NgPipeline ngPipeline = NgPipeline.builder().stages(getStages()).build();
+    NgPipeline ngPipeline = NgPipeline.builder().build();
     return NgPipelineEntity.builder()
         .identifier("testPipelineIdentifier")
         .orgIdentifier("orgIdentifier")
@@ -950,10 +947,6 @@ public class CIExecutionPlanTestHelper {
         .accountId("accountId")
         .ngPipeline(ngPipeline)
         .build();
-  }
-
-  private List<StageElementWrapper> getStages() {
-    return new ArrayList<>(singletonList(getIntegrationStageElement()));
   }
 
   public Connector getConnector() {
@@ -983,20 +976,6 @@ public class CIExecutionPlanTestHelper {
     return K8sDirectInfraYaml.builder()
         .type(Infrastructure.Type.KUBERNETES_DIRECT)
         .spec(K8sDirectInfraYamlSpec.builder().connectorRef("testKubernetesCluster").namespace("testNamespace").build())
-        .build();
-  }
-  public StageElement getIntegrationStageElement() {
-    return StageElement.builder().identifier("intStageIdentifier").stageType(getIntegrationStage()).build();
-  }
-
-  public IntegrationStage getIntegrationStage() {
-    return IntegrationStage.builder()
-        .identifier("intStageIdentifier")
-        .workingDirectory("/harness")
-        .execution(getExecutionElement())
-        .infrastructure(getInfrastructure())
-        .customVariables(getCustomVariables())
-        .dependencies(Collections.singletonList(getServiceDependencyElement()))
         .build();
   }
 

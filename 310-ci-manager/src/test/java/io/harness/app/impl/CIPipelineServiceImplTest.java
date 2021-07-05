@@ -5,24 +5,17 @@ import static io.harness.rule.OwnerRule.SHUBHAM;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.app.beans.dto.CIPipelineFilterDTO;
-import io.harness.beans.stages.IntegrationStage;
-import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
-import io.harness.ngpipeline.pipeline.mappers.PipelineDtoMapper;
 import io.harness.ngpipeline.pipeline.service.NGPipelineServiceImpl;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.repositories.pipeline.spring.NgPipelineRepository;
 import io.harness.rule.Owner;
-import io.harness.yaml.core.ExecutionElement;
-import io.harness.yaml.core.StageElement;
-import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import java.util.Arrays;
@@ -34,7 +27,6 @@ import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -75,63 +67,6 @@ public class CIPipelineServiceImplTest extends CIManagerTestBase {
         .projectIdentifier(PROJECT_ID)
         .tags(Arrays.asList(TAG))
         .build();
-  }
-
-  @Test
-  @Owner(developers = ALEKSANDAR)
-  @Category(UnitTests.class)
-  public void createPipelineFromYAML() {
-    ArgumentCaptor<NgPipelineEntity> pipelineCaptor = ArgumentCaptor.forClass(NgPipelineEntity.class);
-    when(ngPipelineRepository.save(any(NgPipelineEntity.class))).thenReturn(pipeline);
-    when(ngPipelineRepository.findById("testId")).thenReturn(Optional.ofNullable(pipeline));
-
-    ngPipelineService.create(PipelineDtoMapper.toPipelineEntity(ACCOUNT_ID, ORG_ID, PROJECT_ID, inputYaml));
-
-    verify(ngPipelineRepository).save(pipelineCaptor.capture());
-    NgPipelineEntity ngPipelineEntity = pipelineCaptor.getValue();
-    assertThat(ngPipelineEntity).isNotNull();
-    assertThat(ngPipelineEntity.getIdentifier()).isEqualTo("cipipeline");
-
-    assertThat(ngPipelineEntity.getNgPipeline().getStages()).hasSize(1);
-    assertThat(ngPipelineEntity.getNgPipeline().getStages().get(0)).isInstanceOf(StageElement.class);
-    StageElement stageElement = (StageElement) ngPipelineEntity.getNgPipeline().getStages().get(0);
-
-    IntegrationStage integrationStage = (IntegrationStage) stageElement.getStageType();
-    assertThat(integrationStage.getIdentifier()).isEqualTo("masterBuildUpload");
-    assertThat(integrationStage.getGitConnector()).isNotNull();
-    assertThat(integrationStage.getInfrastructure()).isNotNull();
-    assertThat(integrationStage.getContainer()).isNotNull();
-    assertThat(integrationStage.getCustomVariables()).isNotNull();
-
-    ExecutionElement execution = integrationStage.getExecution();
-    assertThat(execution).isNotNull();
-
-    // Assert runTests spec
-    StepElement stepElement = (StepElement) execution.getSteps().get(3);
-    assertThat(stepElement.getType()).isEqualTo("RunTests");
-    assertThat(stepElement.getIdentifier()).isEqualTo("runUnitTestsIntelligently");
-    RunTestsStepInfo runTestsStepInfo = (RunTestsStepInfo) stepElement.getStepSpecType();
-    assertThat(runTestsStepInfo.getArgs()).isEqualTo("echo \"Running test\"");
-    assertThat(runTestsStepInfo.getBuildTool()).isEqualTo("maven");
-    assertThat(runTestsStepInfo.getLanguage()).isEqualTo("java");
-
-    assertThat(execution.getSteps()).hasSize(4);
-  }
-
-  @Test
-  @Owner(developers = ALEKSANDAR)
-  @Category(UnitTests.class)
-  public void createPipeline() {
-    ArgumentCaptor<NgPipelineEntity> pipelineCaptor = ArgumentCaptor.forClass(NgPipelineEntity.class);
-    when(ngPipelineRepository.save(any(NgPipelineEntity.class))).thenReturn(pipeline);
-    when(ngPipelineRepository.findById("testId")).thenReturn(Optional.ofNullable(pipeline));
-
-    ngPipelineService.create(PipelineDtoMapper.toPipelineEntity(ACCOUNT_ID, ORG_ID, PROJECT_ID, inputYaml));
-
-    verify(ngPipelineRepository).save(pipelineCaptor.capture());
-    NgPipelineEntity pipelineEntity = pipelineCaptor.getValue();
-    assertThat(pipelineEntity.getIdentifier()).isEqualTo("cipipeline");
-    assertThat(pipelineEntity.getNgPipeline().getDescription().getValue()).isEqualTo("testDescription");
   }
 
   @Test
