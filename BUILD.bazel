@@ -59,7 +59,6 @@ java_library(
 modules = [
     "//110-change-data-capture",
     "//120-ng-manager",
-    "//121-access-control-migration",
     "//122-ng-authentication-settings",
     "//123-ng-core-user",
     "//125-cd-nextgen",
