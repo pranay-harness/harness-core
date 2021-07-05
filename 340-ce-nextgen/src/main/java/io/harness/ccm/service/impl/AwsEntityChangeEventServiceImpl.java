@@ -4,6 +4,8 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CREATE
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.CENextGenConfiguration;
 import io.harness.ccm.commons.beans.config.AwsConfig;
 import io.harness.ccm.commons.dao.CECloudAccountDao;
@@ -27,6 +29,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CE)
 public class AwsEntityChangeEventServiceImpl implements AwsEntityChangeEventService {
   @Inject ConnectorResourceClient connectorResourceClient;
   @Inject AWSOrganizationHelperService awsOrganizationHelperService;

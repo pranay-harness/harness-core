@@ -2,6 +2,8 @@ package io.harness.ccm.service.impl;
 
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.entities.billing.CECloudAccount;
 import io.harness.ccm.service.intf.AWSOrganizationHelperService;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
@@ -26,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CE)
 public class AWSOrganizationHelperServiceImpl implements AWSOrganizationHelperService {
   private static final String ceAWSRegion = AWS_DEFAULT_REGION;
 
