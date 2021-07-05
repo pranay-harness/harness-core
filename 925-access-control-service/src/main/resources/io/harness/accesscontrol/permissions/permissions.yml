@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: permissionsConfiguration
-version: 3
+version: 4
 permissions:
   - identifier: core_project_delete
     name: Delete Project
@@ -379,7 +379,7 @@ permissions:
       - organization
       - project
   - identifier: core_serviceaccount_manageapikey
-    name: CRUD for API keys & tokens scoped under a particular Service Account
+    name: Manage API keys for Service Account
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
