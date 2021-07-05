@@ -12,8 +12,10 @@ import lombok.Value;
 @Builder
 public class DeploymentStatusInfo {
   private String name;
+  private String pipelineIdentifier;
   private long startTs;
   private long endTs;
   private String status;
+  private String planExecutionId;
   private List<ServiceDeploymentInfo> serviceInfoList;
 }

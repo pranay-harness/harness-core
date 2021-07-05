@@ -90,9 +90,9 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   private String tableNameServiceAndInfra = "service_infra_info";
   private List<String> failedStatusList = Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(),
       ExecutionStatus.EXPIRED.name(), ExecutionStatus.IGNOREFAILED.name(), ExecutionStatus.ERRORED.name());
-  private List<String> activeStatusList =
-      Arrays.asList(ExecutionStatus.RUNNING.name(), ExecutionStatus.ASYNCWAITING.name(),
-          ExecutionStatus.TASKWAITING.name(), ExecutionStatus.TIMEDWAITING.name(), ExecutionStatus.PAUSED.name());
+  private List<String> activeStatusList = Arrays.asList(ExecutionStatus.RUNNING.name(),
+      ExecutionStatus.ASYNCWAITING.name(), ExecutionStatus.TASKWAITING.name(), ExecutionStatus.TIMEDWAITING.name(),
+      ExecutionStatus.PAUSED.name(), ExecutionStatus.PAUSING.name());
   private List<String> pendingStatusList = Arrays.asList(ExecutionStatus.INTERVENTIONWAITING.name(),
       ExecutionStatus.APPROVALWAITING.name(), ExecutionStatus.WAITING.name(), ExecutionStatus.RESOURCEWAITING.name());
   private static final int MAX_RETRY_COUNT = 5;
@@ -205,7 +205,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
   public String queryBuilderStatus(
       String accountId, String orgId, String projectId, long days, List<String> statusList) {
-    String selectStatusQuery = "select id,name,startts,endTs,status from " + tableNameCD + " where ";
+    String selectStatusQuery =
+        "select id,name,pipelineidentifier,startts,endTs,status,planexecutionid from " + tableNameCD + " where ";
     StringBuilder totalBuildSqlBuilder = new StringBuilder();
     totalBuildSqlBuilder.append(selectStatusQuery);
 
@@ -442,15 +443,15 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
            PreparedStatement statement = connection.prepareStatement(queryServiceTag)) {
         resultSet = statement.executeQuery();
         while (resultSet != null && resultSet.next()) {
-          String planExecutionId = resultSet.getString("pipeline_execution_summary_cd_id");
+          String pipeline_execution_summary_cd_id = resultSet.getString("pipeline_execution_summary_cd_id");
           String service_name = resultSet.getString("service_name");
           String tag = resultSet.getString("tag");
-          if (serviceTagMap.containsKey(planExecutionId)) {
-            serviceTagMap.get(planExecutionId).add(getServiceDeployment(service_name, tag));
+          if (serviceTagMap.containsKey(pipeline_execution_summary_cd_id)) {
+            serviceTagMap.get(pipeline_execution_summary_cd_id).add(getServiceDeployment(service_name, tag));
           } else {
             List<ServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
             serviceDeploymentInfos.add(getServiceDeployment(service_name, tag));
-            serviceTagMap.put(planExecutionId, serviceDeploymentInfos);
+            serviceTagMap.put(pipeline_execution_summary_cd_id, serviceDeploymentInfos);
           }
         }
         successfulOperation = true;
@@ -823,10 +824,12 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   }
 
   public DeploymentStatusInfoList queryCalculatorDeploymentInfo(String queryStatus) {
-    List<String> planExecutionIdList = new ArrayList<>();
+    List<String> objectIdList = new ArrayList<>();
     List<String> namePipelineList = new ArrayList<>();
     List<Long> startTs = new ArrayList<>();
     List<Long> endTs = new ArrayList<>();
+    List<String> planExecutionIdList = new ArrayList<>();
+    List<String> identifierList = new ArrayList<>();
     List<String> deploymentStatus = new ArrayList<>();
 
     int totalTries = 0;
@@ -837,7 +840,9 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
            PreparedStatement statement = connection.prepareStatement(queryStatus)) {
         resultSet = statement.executeQuery();
         while (resultSet != null && resultSet.next()) {
-          planExecutionIdList.add(resultSet.getString("id"));
+          objectIdList.add(resultSet.getString("id"));
+          planExecutionIdList.add(resultSet.getString("planexecutionid"));
+          identifierList.add(resultSet.getString("pipelineidentifier"));
           namePipelineList.add(resultSet.getString("name"));
           startTs.add(Long.valueOf(resultSet.getString("startts")));
           deploymentStatus.add(resultSet.getString("status"));
@@ -855,20 +860,24 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       }
     }
     return DeploymentStatusInfoList.builder()
-        .planExecutionIdList(planExecutionIdList)
+        .objectIdList(objectIdList)
         .deploymentStatus(deploymentStatus)
         .endTs(endTs)
         .namePipelineList(namePipelineList)
         .startTs(startTs)
+        .pipelineIdentifierList(identifierList)
+        .planExecutionIdList(planExecutionIdList)
         .build();
   }
 
   public List<DeploymentStatusInfo> getDeploymentStatusInfo(String queryStatus, String queryServiceNameTagId) {
-    List<String> planExecutionIdList = new ArrayList<>();
+    List<String> objectIdList = new ArrayList<>();
     List<String> namePipelineList = new ArrayList<>();
     List<Long> startTs = new ArrayList<>();
     List<Long> endTs = new ArrayList<>();
     List<String> deploymentStatus = new ArrayList<>();
+    List<String> planExecutionIdList = new ArrayList<>();
+    List<String> pipelineIdentifierList = new ArrayList<>();
 
     HashMap<String, List<ServiceDeploymentInfo>> serviceTagMap = new HashMap<>();
 
@@ -876,20 +885,24 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     deploymentStatus = deploymentStatusInfoList.getDeploymentStatus();
     endTs = deploymentStatusInfoList.getEndTs();
     namePipelineList = deploymentStatusInfoList.getNamePipelineList();
-    planExecutionIdList = deploymentStatusInfoList.getPlanExecutionIdList();
+    objectIdList = deploymentStatusInfoList.getObjectIdList();
     startTs = deploymentStatusInfoList.getStartTs();
+    planExecutionIdList = deploymentStatusInfoList.getPlanExecutionIdList();
+    pipelineIdentifierList = deploymentStatusInfoList.getPipelineIdentifierList();
 
     String queryServiceTag = queryBuilderServiceTag(queryServiceNameTagId);
 
     serviceTagMap = queryCalculatorServiceTagMag(queryServiceTag);
 
     List<DeploymentStatusInfo> statusInfo = new ArrayList<>();
-    for (int i = 0; i < planExecutionIdList.size(); i++) {
-      String planExecutionId = planExecutionIdList.get(i);
+    for (int i = 0; i < objectIdList.size(); i++) {
+      String objectId = objectIdList.get(i);
       long startTime = startTs.get(i);
       long endTime = endTs.get(i);
-      statusInfo.add(this.getDeploymentStatusInfoObject(
-          namePipelineList.get(i), startTime, endTime, deploymentStatus.get(i), serviceTagMap.get(planExecutionId)));
+      String pipelineIdentifier = pipelineIdentifierList.get(i);
+      String planExecutionId = planExecutionIdList.get(i);
+      statusInfo.add(this.getDeploymentStatusInfoObject(namePipelineList.get(i), pipelineIdentifier, planExecutionId,
+          startTime, endTime, deploymentStatus.get(i), serviceTagMap.get(objectId)));
     }
     return statusInfo;
   }
@@ -921,10 +934,12 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         .build();
   }
 
-  private DeploymentStatusInfo getDeploymentStatusInfoObject(
-      String name, Long startTime, Long endTime, String status, List<ServiceDeploymentInfo> serviceDeploymentInfos) {
+  private DeploymentStatusInfo getDeploymentStatusInfoObject(String name, String identfier, String planExecutionId,
+      Long startTime, Long endTime, String status, List<ServiceDeploymentInfo> serviceDeploymentInfos) {
     return DeploymentStatusInfo.builder()
         .name(name)
+        .pipelineIdentifier(identfier)
+        .planExecutionId(planExecutionId)
         .startTs(startTime)
         .endTs(endTime)
         .status(status)
