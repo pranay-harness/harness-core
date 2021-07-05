@@ -8,6 +8,7 @@ import io.harness.beans.FileContentBatchResponse;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.impl.ConnectorErrorMessagesHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
@@ -22,6 +23,7 @@ import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.helper.FileBatchResponseMapper;
 import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.helper.PRFileListMapper;
+import io.harness.gitsync.common.helper.UserProfileHelper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
@@ -48,8 +50,9 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
   public ScmManagerFacilitatorServiceImpl(ScmClient scmClient,
       @Named("connectorDecoratorService") ConnectorService connectorService,
       ConnectorErrorMessagesHelper connectorErrorMessagesHelper, YamlGitConfigService yamlGitConfigService,
-      DecryptGitApiAccessHelper decryptGitApiAccessHelper, GitSyncConnectorHelper gitSyncConnectorHelper) {
-    super(connectorService, connectorErrorMessagesHelper, yamlGitConfigService);
+      DecryptGitApiAccessHelper decryptGitApiAccessHelper, GitSyncConnectorHelper gitSyncConnectorHelper,
+      UserProfileHelper userProfileHelper) {
+    super(connectorService, connectorErrorMessagesHelper, yamlGitConfigService, userProfileHelper);
     this.scmClient = scmClient;
     this.gitSyncConnectorHelper = gitSyncConnectorHelper;
     this.decryptGitApiAccessHelper = decryptGitApiAccessHelper;
@@ -80,11 +83,16 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
   }
 
   @Override
-  public CreatePRDTO createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String yamlGitConfigRef, GitPRCreateRequest gitCreatePRRequest) {
+  public CreatePRDTO createPullRequest(GitPRCreateRequest gitCreatePRRequest) {
     // since project level ref = ref
+    YamlGitConfigDTO yamlGitConfigDTO =
+        getYamlGitConfigDTO(gitCreatePRRequest.getAccountIdentifier(), gitCreatePRRequest.getOrgIdentifier(),
+            gitCreatePRRequest.getProjectIdentifier(), gitCreatePRRequest.getYamlGitConfigRef());
+    ConnectorResponseDTO connectorResponseDTO =
+        getConnectorResponseDTO(yamlGitConfigDTO, gitCreatePRRequest.getAccountIdentifier());
+    checkAndSetUserFromUserProfile(gitCreatePRRequest.isUseUserFromToken(), yamlGitConfigDTO, connectorResponseDTO);
     ScmConnector decryptScmConnector = gitSyncConnectorHelper.getDecryptedConnector(
-        yamlGitConfigRef, projectIdentifier, orgIdentifier, accountIdentifier);
+        yamlGitConfigDTO, gitCreatePRRequest.getAccountIdentifier(), connectorResponseDTO);
     CreatePRResponse createPRResponse;
     try {
       createPRResponse = scmClient.createPullRequest(decryptScmConnector, gitCreatePRRequest);
