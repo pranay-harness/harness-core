@@ -28,7 +28,7 @@ public class SetupUsageDetailProtoToRestMapper {
     if (SetupUsageDetailType.isReferredByPipeline(setupUsageDetailProtoDTO.getType())) {
       return EntityReferredByPipelineSetupUsageDetail.builder()
           .identifier(setupUsageDetailProtoDTO.getEntityInPipelineDetail().getIdentifier())
-          .type(String.valueOf(setupUsageDetailProtoDTO.getEntityInPipelineDetail().getType()))
+          .referenceType(String.valueOf(setupUsageDetailProtoDTO.getEntityInPipelineDetail().getType()))
           .build();
     }
     return null;
