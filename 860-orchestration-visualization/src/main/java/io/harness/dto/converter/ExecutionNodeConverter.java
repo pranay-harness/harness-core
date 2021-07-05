@@ -47,6 +47,9 @@ public class ExecutionNodeConverter {
 
   private List<DelegateInfo> mapDelegateSelectionLogParamsToDelegateInfo(
       List<GraphDelegateSelectionLogParams> delegateSelectionLogParams) {
+    if (delegateSelectionLogParams == null) {
+      return null;
+    }
     return delegateSelectionLogParams.stream()
         .filter(param -> param.getSelectionLogParams() != null)
         .map(ExecutionNodeConverter::getDelegateInfoForUI)
