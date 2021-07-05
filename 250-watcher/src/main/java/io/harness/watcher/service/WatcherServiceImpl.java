@@ -997,15 +997,19 @@ public class WatcherServiceImpl implements WatcherService {
       return;
     }
 
+    String versionWithoutPatch = substringBefore(version.substring(version.lastIndexOf(".") + 1), "-");
+
     RestResponse<DelegateScripts> restResponse = null;
     if (isBlank(delegateSize)) {
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
-          () -> SafeHttpCall.execute(managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version)));
+          ()
+              -> SafeHttpCall.execute(
+                  managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), versionWithoutPatch)));
     } else {
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
-              -> SafeHttpCall.execute(
-                  managerClient.getDelegateScriptsNg(watcherConfiguration.getAccountId(), version, delegateSize)));
+              -> SafeHttpCall.execute(managerClient.getDelegateScriptsNg(
+                  watcherConfiguration.getAccountId(), versionWithoutPatch, delegateSize)));
     }
 
     if (restResponse == null) {
