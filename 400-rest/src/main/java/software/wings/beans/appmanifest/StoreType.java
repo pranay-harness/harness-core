@@ -8,5 +8,6 @@ public enum StoreType {
   KustomizeSourceRepo,
   OC_TEMPLATES,
   CUSTOM,
-  CUSTOM_OPENSHIFT_TEMPLATE
+  CUSTOM_OPENSHIFT_TEMPLATE,
+  ValuesYamlFromHelmRepo
 }

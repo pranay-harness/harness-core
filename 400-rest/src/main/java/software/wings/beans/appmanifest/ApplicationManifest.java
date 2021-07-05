@@ -66,6 +66,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
   private KustomizeConfig kustomizeConfig;
   private CustomSourceConfig customSourceConfig;
   @Nullable private HelmCommandFlagConfig helmCommandFlag;
+  private String helmValuesYamlFilePaths;
 
   private Boolean pollForChanges;
   @Transient private String serviceName;
