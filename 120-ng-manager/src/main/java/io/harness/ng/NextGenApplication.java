@@ -61,6 +61,7 @@ import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.handler.NGVaultSecretManagerRenewalHandler;
+import io.harness.ng.core.migration.NGBeanMigrationProvider;
 import io.harness.ng.core.migration.ProjectMigrationProvider;
 import io.harness.ng.core.user.service.impl.UserProjectMigrationService;
 import io.harness.ng.migration.NGCoreMigrationProvider;
@@ -318,6 +319,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           { add(NGCoreMigrationProvider.class); } // Add all migration provider classes here
           { add(ProjectMigrationProvider.class); }
           { add(UserMembershipMigrationProvider.class); }
+          { add(NGBeanMigrationProvider.class); }
         })
         .build();
   }

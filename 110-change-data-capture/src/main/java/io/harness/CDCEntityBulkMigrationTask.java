@@ -21,6 +21,7 @@ import org.bson.types.ObjectId;
 @Slf4j
 public class CDCEntityBulkMigrationTask<T extends PersistentEntity> implements Callable<Boolean> {
   private ChangeHandler changeHandler;
+  private Class entityType;
   private Document document;
   private String tableName;
   private String[] fields;
@@ -32,6 +33,7 @@ public class CDCEntityBulkMigrationTask<T extends PersistentEntity> implements C
     ChangeEvent changeEvent = ChangeEvent.builder()
                                   .fullDocument(dbObject)
                                   .changeType(ChangeType.INSERT)
+                                  .entityType(entityType)
                                   .uuid(getUuidFromDocument(document))
                                   .build();
     return changeHandler.handleChange(changeEvent, Strings.toLowerCase(tableName), fields);

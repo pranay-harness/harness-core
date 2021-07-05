@@ -28,6 +28,7 @@ public class PipelineCoreMigrationProvider implements MigrationProvider {
   public List<Class<? extends MigrationDetails>> getMigrationDetailsList() {
     return new ArrayList<Class<? extends MigrationDetails>>() {
       { add(PipelineCoreMigrationDetails.class); }
+      { add(PipelineCoreTimeScaleMigrationDetails.class); }
     };
   }
 }

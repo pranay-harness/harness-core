@@ -5,7 +5,12 @@ load("//:tools/bazel/macros.bzl", "run_analysis")
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    data = ["//:resource"],
+    resources = ["//950-ng-project-n-orgs/src/resources:resource"],
     visibility = ["//visibility:public"],
+    runtime_deps = [
+        "//950-ng-project-n-orgs/src/resources",
+    ],
     deps = [
         "//:lombok",
         "//958-migration-sdk:module",
