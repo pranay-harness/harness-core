@@ -1,6 +1,5 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KANHAIYA;
 
 import static java.util.stream.Collectors.toList;
@@ -9,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
@@ -48,6 +48,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Inject CVConfigService cvConfigService;
   @Inject MonitoredServiceService monitoredServiceService;
   @Inject HPersistence hPersistence;
+  private BuilderFactory builderFactory;
   String healthSourceName;
   String healthSourceIdentifier;
   String accountId;
@@ -65,15 +66,16 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
 
   @Before
   public void setup() {
+    builderFactory = BuilderFactory.getDefault();
     healthSourceName = "healthSourceName";
     healthSourceIdentifier = "healthSourceIdentifier";
-    accountId = generateUuid();
-    orgIdentifier = "org";
-    projectIdentifier = "project";
-    environmentIdentifier = "env";
-    serviceIdentifier = "service";
+    accountId = builderFactory.getContext().getAccountId();
+    orgIdentifier = builderFactory.getContext().getOrgIdentifier();
+    projectIdentifier = builderFactory.getContext().getProjectIdentifier();
+    environmentIdentifier = builderFactory.getContext().getEnvIdentifier();
+    serviceIdentifier = builderFactory.getContext().getServiceIdentifier();
     feature = "Application Monitoring";
-    connectorIdentifier = "connectorIdentifier";
+    connectorIdentifier = BuilderFactory.CONNECTOR_IDENTIFIER;
     applicationName = "applicationName";
     appTierName = "appTierName";
     metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
@@ -197,8 +199,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     assertThatThrownBy(
         () -> monitoredServiceService.get(accountId, orgIdentifier, projectIdentifier, monitoredServiceIdentifier))
         .isInstanceOf(InvalidRequestException.class)
-        .hasMessage(String.format("Monitored Source Entity  with identifier %s and accountId %s is not present",
-            monitoredServiceIdentifier, accountId));
+        .hasMessage(
+            String.format("Monitored Source Entity with identifier %s is not present", monitoredServiceIdentifier));
   }
 
   @Test
@@ -551,15 +553,11 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   }
 
   MonitoredServiceDTO createMonitoredServiceDTO() {
-    return MonitoredServiceDTO.builder()
+    return builderFactory.monitoredServiceDTOBuilder()
         .identifier(monitoredServiceIdentifier)
-        .name(monitoredServiceName)
-        .orgIdentifier(orgIdentifier)
-        .projectIdentifier(projectIdentifier)
-        .type(MonitoredServiceType.APPLICATION)
-        .description(description)
         .serviceRef(serviceIdentifier)
         .environmentRef(environmentIdentifier)
+        .name(monitoredServiceName)
         .sources(
             MonitoredServiceDTO.Sources.builder()
                 .healthSources(
