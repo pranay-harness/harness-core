@@ -1,5 +1,7 @@
 package io.harness.batch.processing.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.batch.processing.BatchProcessingException;
 import io.harness.batch.processing.ccm.AzureStorageSyncRecord;
 import io.harness.batch.processing.config.AzureStorageSyncConfig;
@@ -93,13 +95,20 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
       // Run the azcopy tool to do the sync
       String storageAccountUrl =
           String.format(AZURE_STORAGE_URL_FORMAT, azureStorageSyncRecord.getStorageAccountName(), AZURE_STORAGE_SUFFIX);
-      sourcePath = String.join("/", storageAccountUrl, azureStorageSyncRecord.getContainerName(),
-                       azureStorageSyncRecord.getDirectoryName())
-          + "?" + sourceSasToken;
+      if (azureStorageSyncRecord.getReportName() != null && isNotEmpty(azureStorageSyncRecord.getReportName())) {
+        sourcePath = String.join("/", storageAccountUrl, azureStorageSyncRecord.getContainerName(),
+                         azureStorageSyncRecord.getDirectoryName(), azureStorageSyncRecord.getReportName())
+            + "?" + sourceSasToken;
+      } else {
+        sourcePath = String.join("/", storageAccountUrl, azureStorageSyncRecord.getContainerName(),
+                         azureStorageSyncRecord.getDirectoryName())
+            + "?" + sourceSasToken;
+      }
       storageAccountUrl = String.format(
           AZURE_STORAGE_URL_FORMAT, azureStorageSyncConfig.getAzureStorageAccountName(), AZURE_STORAGE_SUFFIX);
       destinationPath = String.join("/", storageAccountUrl, azureStorageSyncConfig.getAzureStorageContainerName(),
-                            azureStorageSyncRecord.getAccountId(), azureStorageSyncRecord.getSettingId())
+                            azureStorageSyncRecord.getAccountId(), azureStorageSyncRecord.getSettingId(),
+                            azureStorageSyncRecord.getTenantId())
           + "?" + destinationSasToken;
       final ArrayList<String> cmd = Lists.newArrayList("azcopy", "sync", sourcePath, destinationPath, "--recursive");
       // TODO: Remove below info logging for security reasons
@@ -159,13 +168,16 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
   public ProcessResult trySyncStorage(ArrayList<String> cmd)
       throws InterruptedException, TimeoutException, IOException {
     log.info("Running the azcopy sync command...");
-    return getProcessExecutor()
-        .command(cmd)
-        .timeout(SYNC_TIMEOUT_MINUTES, TimeUnit.MINUTES)
-        .redirectError(Slf4jStream.of(log).asError())
-        .redirectOutput(Slf4jStream.of(log).asInfo())
-        .exitValue(0)
-        .execute();
+    ProcessResult pr = getProcessExecutor()
+                           .command(cmd)
+                           .timeout(SYNC_TIMEOUT_MINUTES, TimeUnit.MINUTES)
+                           .redirectError(Slf4jStream.of(log).asError())
+                           .redirectOutput(Slf4jStream.of(log).asInfo())
+                           .exitValue(0)
+                           .readOutput(true)
+                           .execute();
+    log.info(pr.getOutput().getUTF8());
+    return pr;
   }
 
   ProcessExecutor getProcessExecutor() {

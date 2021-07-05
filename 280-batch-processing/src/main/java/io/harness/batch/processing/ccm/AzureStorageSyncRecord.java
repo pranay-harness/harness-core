@@ -17,4 +17,5 @@ public class AzureStorageSyncRecord {
   String storageAccountName;
   String subscriptionId;
   String tenantId;
+  String reportName;
 }

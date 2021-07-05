@@ -111,13 +111,16 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
   public ProcessResult trySyncBucket(ArrayList<String> cmd, ImmutableMap<String, String> roleEnvVariables)
       throws InterruptedException, TimeoutException, IOException {
     log.info("Running the s3 sync command...");
-    return getProcessExecutor()
-        .command(cmd)
-        .environment(roleEnvVariables)
-        .timeout(SYNC_TIMEOUT_MINUTES, TimeUnit.MINUTES)
-        .redirectError(Slf4jStream.of(log).asError())
-        .exitValue(0)
-        .execute();
+    ProcessResult pr = getProcessExecutor()
+                           .command(cmd)
+                           .environment(roleEnvVariables)
+                           .timeout(SYNC_TIMEOUT_MINUTES, TimeUnit.MINUTES)
+                           .redirectError(Slf4jStream.of(log).asError())
+                           .exitValue(0)
+                           .readOutput(true)
+                           .execute();
+    log.info(pr.getOutput().getUTF8());
+    return pr;
   }
 
   ProcessExecutor getProcessExecutor() {
