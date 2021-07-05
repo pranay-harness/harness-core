@@ -366,7 +366,7 @@ public class NgUserServiceImpl implements NgUserService {
     Optional<UserMetadata> userMetadata = userMetadataRepository.findDistinctByUserId(userId);
     String publicIdentifier = userMetadata.map(UserMetadata::getEmail).orElse(userId);
 
-    Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+    Failsafe.with(transactionRetryPolicy).get(() -> {
       UserMembership userMembership = null;
       try {
         userMembership = userMembershipRepository.save(UserMembership.builder().userId(userId).scope(scope).build());
@@ -378,7 +378,7 @@ public class NgUserServiceImpl implements NgUserService {
             new AddCollaboratorEvent(scope.getAccountIdentifier(), scope, publicIdentifier, userId, source));
       }
       return userMembership;
-    }));
+    });
 
     try {
       RoleAssignmentDTO roleAssignmentDTO = RoleAssignmentDTO.builder()
