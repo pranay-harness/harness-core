@@ -21,6 +21,7 @@ import io.harness.remote.client.NGRestUtils;
 import com.amazonaws.services.organizations.model.AWSOrganizationsNotInUseException;
 import com.amazonaws.services.organizations.model.AccessDeniedException;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +44,7 @@ public class AwsEntityChangeEventServiceImpl implements AwsEntityChangeEventServ
         CEAwsConnectorDTO ceAwsConnectorDTO =
             (CEAwsConnectorDTO) getConnectorConfigDTO(accountIdentifier, identifier).getConnectorConfig();
         log.info("CEAwsConnectorDTO: {}", ceAwsConnectorDTO);
-        List<CECloudAccount> awsAccounts;
+        List<CECloudAccount> awsAccounts = new ArrayList<>();
         try {
           awsAccounts = awsOrganizationHelperService.getAWSAccounts(
               accountIdentifier, identifier, ceAwsConnectorDTO, awsConfig.getAccessKey(), awsConfig.getAccessKey());
