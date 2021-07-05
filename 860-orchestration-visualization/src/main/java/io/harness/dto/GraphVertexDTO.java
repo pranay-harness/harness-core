@@ -2,19 +2,15 @@ package io.harness.dto;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.RepresentationStrategy;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.logging.UnitProgress;
 import io.harness.pms.contracts.execution.ExecutableResponse;
-import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
-import io.harness.pms.contracts.steps.SkipType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import lombok.Builder;
