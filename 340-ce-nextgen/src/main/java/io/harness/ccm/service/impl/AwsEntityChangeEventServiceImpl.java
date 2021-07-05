@@ -18,6 +18,8 @@ import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.remote.client.NGRestUtils;
 
+import com.amazonaws.services.organizations.model.AWSOrganizationsNotInUseException;
+import com.amazonaws.services.organizations.model.AccessDeniedException;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Optional;
@@ -40,9 +42,21 @@ public class AwsEntityChangeEventServiceImpl implements AwsEntityChangeEventServ
       case CREATE_ACTION:
         CEAwsConnectorDTO ceAwsConnectorDTO =
             (CEAwsConnectorDTO) getConnectorConfigDTO(accountIdentifier, identifier).getConnectorConfig();
-        List<CECloudAccount> awsAccounts = awsOrganizationHelperService.getAWSAccounts(
-            accountIdentifier, identifier, ceAwsConnectorDTO, awsConfig.getAccessKey(), awsConfig.getAccessKey());
+        log.info("CEAwsConnectorDTO: {}", ceAwsConnectorDTO);
+        List<CECloudAccount> awsAccounts;
+        try {
+          awsAccounts = awsOrganizationHelperService.getAWSAccounts(
+              accountIdentifier, identifier, ceAwsConnectorDTO, awsConfig.getAccessKey(), awsConfig.getAccessKey());
+          log.info("Number of AWS Accounts: {}", awsAccounts.size());
+        } catch (AWSOrganizationsNotInUseException ex) {
+          log.info(
+              "AWSOrganizationsNotInUseException for AWS Connector:[%s], {}", ceAwsConnectorDTO.getAwsAccountId(), ex);
+        } catch (AccessDeniedException accessDeniedException) {
+          log.info("AccessDeniedException for AWS Connector:[%s], {}", ceAwsConnectorDTO.getAwsAccountId(),
+              accessDeniedException);
+        }
         for (CECloudAccount account : awsAccounts) {
+          log.info("Inserting CECloudAccount: {}", account);
           cloudAccountDao.create(account);
         }
         break;

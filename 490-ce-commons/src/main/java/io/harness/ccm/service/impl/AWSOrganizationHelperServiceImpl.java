@@ -1,4 +1,5 @@
 package io.harness.ccm.service.impl;
+
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
 import io.harness.ccm.commons.entities.billing.CECloudAccount;
@@ -19,7 +20,6 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
@@ -58,14 +58,9 @@ public class AWSOrganizationHelperServiceImpl implements AWSOrganizationHelperSe
 
   public List<Account> listAwsAccounts(
       CrossAccountAccessDTO crossAccountAccess, String awsAccessKey, String awsSecretKey) {
-    try {
-      AWSOrganizationsClient awsOrganizationsClient =
-          getAWSOrganizationsClient(crossAccountAccess, awsAccessKey, awsSecretKey);
-      return listAwsAccounts(awsOrganizationsClient);
-    } catch (Exception ex) {
-      log.error("Error while getting accounts", ex);
-    }
-    return Collections.emptyList();
+    AWSOrganizationsClient awsOrganizationsClient =
+        getAWSOrganizationsClient(crossAccountAccess, awsAccessKey, awsSecretKey);
+    return listAwsAccounts(awsOrganizationsClient);
   }
 
   public static String getAccountIdFromArn(String arn) {
