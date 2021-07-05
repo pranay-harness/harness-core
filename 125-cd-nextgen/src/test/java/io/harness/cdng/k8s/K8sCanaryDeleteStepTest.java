@@ -229,4 +229,29 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
     assertThatThrownBy(() -> canaryDeleteStep.obtainTask(ambiance, stepElementParameters, stepInputPackage))
         .hasMessageContaining(K8S_CANARY_STEP_MISSING);
   }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testObtainTaskNoCanaryWorkloadDeployedInRollback() {
+    Ambiance rollback =
+        Ambiance.newBuilder()
+            .addLevels(Level.newBuilder()
+                           .setStepType(StepType.newBuilder().setType("ROLLBACK_OPTIONAL_CHILD_CHAIN").build())
+                           .build())
+            .build();
+
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(K8sCanaryDeleteStepParameters.infoBuilder().build()).build();
+
+    doReturn(OptionalSweepingOutput.builder().found(false).build())
+        .when(executionSweepingOutputService)
+        .resolveOptional(
+            rollback, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME));
+
+    TaskRequest result = canaryDeleteStep.obtainTask(rollback, stepElementParameters, stepInputPackage);
+
+    assertThat(result.getSkipTaskRequest()).isNotNull();
+    assertThat(result.getSkipTaskRequest().getMessage()).isEqualTo(SKIP_K8S_CANARY_DELETE_STEP_EXECUTION);
+  }
 }
