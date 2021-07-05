@@ -9,6 +9,7 @@ import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.connector.impl.ConnectorErrorMessagesHelper;
 import io.harness.connector.services.ConnectorService;
@@ -34,6 +35,7 @@ import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.gitsync.common.helper.FileBatchResponseMapper;
 import io.harness.gitsync.common.helper.PRFileListMapper;
+import io.harness.gitsync.common.helper.UserProfileHelper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.ng.beans.PageRequest;
@@ -69,8 +71,9 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
   @Inject
   public ScmDelegateFacilitatorServiceImpl(@Named("connectorDecoratorService") ConnectorService connectorService,
       ConnectorErrorMessagesHelper connectorErrorMessagesHelper, YamlGitConfigService yamlGitConfigService,
-      SecretManagerClientService secretManagerClientService, DelegateGrpcClientWrapper delegateGrpcClientWrapper) {
-    super(connectorService, connectorErrorMessagesHelper, yamlGitConfigService);
+      SecretManagerClientService secretManagerClientService, DelegateGrpcClientWrapper delegateGrpcClientWrapper,
+      UserProfileHelper userProfileHelper) {
+    super(connectorService, connectorErrorMessagesHelper, yamlGitConfigService, userProfileHelper);
     this.secretManagerClientService = secretManagerClientService;
     this.delegateGrpcClientWrapper = delegateGrpcClientWrapper;
   }
@@ -125,16 +128,20 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
   }
 
   @Override
-  public CreatePRDTO createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String yamlGitConfigRef, GitPRCreateRequest gitCreatePRRequest) {
+  public CreatePRDTO createPullRequest(GitPRCreateRequest gitCreatePRRequest) {
     YamlGitConfigDTO yamlGitConfigDTO =
-        getYamlGitConfigDTO(accountIdentifier, orgIdentifier, projectIdentifier, yamlGitConfigRef);
+        getYamlGitConfigDTO(gitCreatePRRequest.getAccountIdentifier(), gitCreatePRRequest.getOrgIdentifier(),
+            gitCreatePRRequest.getProjectIdentifier(), gitCreatePRRequest.getYamlGitConfigRef());
     final IdentifierRef gitConnectorIdentifierRef =
         getConnectorIdentifierRef(yamlGitConfigDTO.getAccountIdentifier(), yamlGitConfigDTO.getOrganizationIdentifier(),
             yamlGitConfigDTO.getProjectIdentifier(), yamlGitConfigDTO.getGitConnectorRef());
-    final ScmConnector scmConnector = getScmConnector(gitConnectorIdentifierRef);
+    ConnectorResponseDTO connectorResponseDTO =
+        getConnectorResponseDTO(yamlGitConfigDTO, gitCreatePRRequest.getAccountIdentifier());
+    checkAndSetUserFromUserProfile(gitCreatePRRequest.isUseUserFromToken(), yamlGitConfigDTO, connectorResponseDTO);
+    final ScmConnector scmConnector = (ScmConnector) connectorResponseDTO.getConnector().getConnectorConfig();
     scmConnector.setUrl(yamlGitConfigDTO.getRepo());
-    final BaseNGAccess baseNGAccess = getBaseNGAccess(accountIdentifier, orgIdentifier, projectIdentifier);
+    final BaseNGAccess baseNGAccess = getBaseNGAccess(gitConnectorIdentifierRef.getAccountIdentifier(),
+        gitConnectorIdentifierRef.getOrgIdentifier(), gitConnectorIdentifierRef.getProjectIdentifier());
     final DecryptableEntity apiAccessDecryptableEntity =
         GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmConnector);
     final List<EncryptedDataDetail> encryptionDetails =
@@ -146,9 +153,10 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
                                           .encryptedDataDetails(encryptionDetails)
                                           .build();
     final Map<String, String> ngTaskSetupAbstractionsWithOwner =
-        getNGTaskSetupAbstractionsWithOwner(accountIdentifier, orgIdentifier, projectIdentifier);
+        getNGTaskSetupAbstractionsWithOwner(gitConnectorIdentifierRef.getAccountIdentifier(),
+            gitConnectorIdentifierRef.getOrgIdentifier(), gitConnectorIdentifierRef.getProjectIdentifier());
     DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
-                                                  .accountId(accountIdentifier)
+                                                  .accountId(gitConnectorIdentifierRef.getAccountIdentifier())
                                                   .taskSetupAbstractions(ngTaskSetupAbstractionsWithOwner)
                                                   .taskType(TaskType.SCM_PULL_REQUEST_TASK.name())
                                                   .taskParameters(scmPRTaskParams)

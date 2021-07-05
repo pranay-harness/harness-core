@@ -26,8 +26,7 @@ public interface ScmClientFacilitatorService {
   GitFileContent getFileContent(String yamlGitConfigIdentifier, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String filePath, String branch, String commitId);
 
-  CreatePRDTO createPullRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String yamlGitConfigRef, GitPRCreateRequest gitCreatePRRequest);
+  CreatePRDTO createPullRequest(GitPRCreateRequest gitCreatePRRequest);
 
   List<GitFileChangeDTO> listFilesOfBranches(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String yamlGitConfigIdentifier, Set<String> foldersList, String branchName);

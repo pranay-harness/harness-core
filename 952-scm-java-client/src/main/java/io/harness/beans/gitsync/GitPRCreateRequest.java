@@ -8,6 +8,7 @@ import io.harness.data.validator.Trimmed;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
+import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Value
@@ -17,4 +18,9 @@ public class GitPRCreateRequest {
   @NotEmpty @NotNull @Trimmed String sourceBranch;
   @NotEmpty @NotNull @Trimmed String targetBranch;
   @NotEmpty @NotNull @Trimmed String title;
+  @NotNull String yamlGitConfigRef;
+  @NotBlank String accountIdentifier;
+  String orgIdentifier;
+  String projectIdentifier;
+  boolean useUserFromToken;
 }
