@@ -5,6 +5,7 @@ import io.harness.gitsync.beans.YamlDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -39,6 +40,12 @@ public class MonitoredServiceDTO implements YamlDTO {
         return Collections.emptySet();
       }
       return healthSources;
+    }
+    public void addHealthSource(HealthSource healthSource) {
+      if (healthSources == null) {
+        healthSources = new HashSet<>();
+      }
+      healthSources.add(healthSource);
     }
   }
 }

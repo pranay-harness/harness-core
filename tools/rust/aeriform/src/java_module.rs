@@ -161,6 +161,7 @@ fn populate_srcs(name: &str, dependencies: &MultiMap<String, String>) -> HashMap
         .lines()
         .par_bridge()
         .map(|line| line.to_string())
+        .filter(|ln| ln.ends_with(".java"))
         .map(|line| line.replace(prefix, directory))
         .map(|line| (class(&line), line))
         .map(|tuple| {

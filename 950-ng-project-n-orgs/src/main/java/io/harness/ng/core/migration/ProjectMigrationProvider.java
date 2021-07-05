@@ -23,6 +23,7 @@ public class ProjectMigrationProvider implements MigrationProvider {
   public List<Class<? extends MigrationDetails>> getMigrationDetailsList() {
     return new ArrayList<Class<? extends MigrationDetails>>() {
       { add(ProjectMigrationDetails.class); }
+      { add(ProjectTimeScaleMigrationDetails.class); }
     };
   }
 }

@@ -2776,6 +2776,10 @@ public class DelegateServiceImpl implements DelegateService {
     K8sConfigDetails k8sConfigDetails =
         delegateSetupDetails != null ? delegateSetupDetails.getK8sConfigDetails() : null;
 
+    Set<String> tags = delegateSetupDetails != null && isNotEmpty(delegateSetupDetails.getTags())
+        ? delegateSetupDetails.getTags()
+        : null;
+
     DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgIdentifier, projectIdentifier);
 
     Query<DelegateGroup> query = this.persistence.createQuery(DelegateGroup.class)
@@ -2798,6 +2802,7 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, DelegateGroupKeys.description, description);
     setUnset(updateOperations, DelegateGroupKeys.delegateConfigurationId, delegateConfigurationId);
     setUnset(updateOperations, DelegateGroupKeys.sizeDetails, sizeDetails);
+    setUnset(updateOperations, DelegateGroupKeys.tags, tags);
 
     DelegateGroup delegateGroup = persistence.upsert(query, updateOperations, HPersistence.upsertReturnNewOptions);
     outboxService.save(

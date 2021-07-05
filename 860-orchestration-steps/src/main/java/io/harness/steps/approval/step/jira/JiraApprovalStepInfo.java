@@ -8,10 +8,10 @@ import io.harness.filters.WithConnectorRef;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.steps.StepSpecTypeConstants;
+import io.harness.steps.approval.ApprovalFacilitator;
 import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapper;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -44,7 +44,7 @@ public class JiraApprovalStepInfo implements PMSStepInfo, WithConnectorRef {
 
   @Override
   public String getFacilitatorType() {
-    return OrchestrationFacilitatorType.ASYNC;
+    return ApprovalFacilitator.APPROVAL_FACILITATOR;
   }
 
   @Override

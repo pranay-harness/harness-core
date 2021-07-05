@@ -58,9 +58,9 @@ public class CDDashboardApisTest {
 
   private List<String> failedStatusList = Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(),
       ExecutionStatus.EXPIRED.name(), ExecutionStatus.IGNOREFAILED.name(), ExecutionStatus.ERRORED.name());
-  private List<String> activeStatusList =
-      Arrays.asList(ExecutionStatus.RUNNING.name(), ExecutionStatus.ASYNCWAITING.name(),
-          ExecutionStatus.TASKWAITING.name(), ExecutionStatus.TIMEDWAITING.name(), ExecutionStatus.PAUSED.name());
+  private List<String> activeStatusList = Arrays.asList(ExecutionStatus.RUNNING.name(),
+      ExecutionStatus.ASYNCWAITING.name(), ExecutionStatus.TASKWAITING.name(), ExecutionStatus.TIMEDWAITING.name(),
+      ExecutionStatus.PAUSED.name(), ExecutionStatus.PAUSING.name());
   private List<String> pendingStatusList = Arrays.asList(ExecutionStatus.INTERVENTIONWAITING.name(),
       ExecutionStatus.APPROVALWAITING.name(), ExecutionStatus.WAITING.name(), ExecutionStatus.RESOURCEWAITING.name());
 
@@ -545,9 +545,12 @@ public class CDDashboardApisTest {
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
   public void testGetDeploymentActiveFailedRunningInfo() {
-    List<String> planExecutionIdListFailure = Arrays.asList("11", "12", "13", "14", "15", "16", "17", "18");
+    List<String> objectIdListFailure = Arrays.asList("11", "12", "13", "14", "15", "16", "17", "18");
     List<String> namePipelineListFailure =
         Arrays.asList("name1", "name2", "name3", "name4", "name5", "name1", "name2", "name3");
+    List<String> identifier = Arrays.asList("name1", "name2", "name3", "name4", "name5", "name1", "name2", "name3");
+    List<String> planExecutionList =
+        Arrays.asList("planId1", "planId2", "planId3", "planId4", "planId5", "planId1", "planId2", "planId3");
     List<Long> startTsFailure = Arrays.asList(1619626802000L, 1619885951000L, 1619885925000L, 1619799469000L,
         1619885815000L, 1619972127000L, 1619799299000L, 1619885632000L);
     List<Long> endTsFailure = Arrays.asList(1622218802000L, 1622564351000L, 1622564325000L, 1622391469000L,
@@ -557,17 +560,23 @@ public class CDDashboardApisTest {
         failedStatusList.get(2), failedStatusList.get(0));
 
     DeploymentStatusInfoList deploymentStatusInfoListFailure = DeploymentStatusInfoList.builder()
-                                                                   .planExecutionIdList(planExecutionIdListFailure)
+                                                                   .objectIdList(objectIdListFailure)
                                                                    .startTs(startTsFailure)
                                                                    .namePipelineList(namePipelineListFailure)
                                                                    .endTs(endTsFailure)
+                                                                   .pipelineIdentifierList(identifier)
+                                                                   .planExecutionIdList(planExecutionList)
                                                                    .deploymentStatus(deploymentStatusFailure)
                                                                    .build();
 
     // active list
-    List<String> planExecutionIdListActive = Arrays.asList("21", "22", "23", "24", "25", "26", "27", "28");
+    List<String> objectIdListActive = Arrays.asList("21", "22", "23", "24", "25", "26", "27", "28");
     List<String> namePipelineListActive =
         Arrays.asList("name1", "name2", "name3", "name4", "name5", "name1", "name2", "name3");
+    List<String> identifierActive =
+        Arrays.asList("name1", "name2", "name3", "name4", "name5", "name1", "name2", "name3");
+    List<String> planExecutionListActive =
+        Arrays.asList("planId1", "planId2", "planId3", "planId4", "planId5", "planId1", "planId2", "planId3");
     List<Long> startTsActive = Arrays.asList(1619626802000L, 1619885951000L, 1619885925000L, 1619799469000L,
         1619885815000L, 1619972127000L, 1619799299000L, 1619885632000L);
     List<Long> endTsActive = Arrays.asList(1622218802000L, 1622564351000L, 1622564325000L, 1622391469000L,
@@ -577,17 +586,23 @@ public class CDDashboardApisTest {
         activeStatusList.get(1), activeStatusList.get(0));
 
     DeploymentStatusInfoList deploymentStatusInfoListActive = DeploymentStatusInfoList.builder()
-                                                                  .planExecutionIdList(planExecutionIdListActive)
+                                                                  .objectIdList(objectIdListActive)
                                                                   .startTs(startTsActive)
                                                                   .namePipelineList(namePipelineListActive)
                                                                   .endTs(endTsActive)
+                                                                  .planExecutionIdList(planExecutionListActive)
+                                                                  .pipelineIdentifierList(identifierActive)
                                                                   .deploymentStatus(deploymentStatusActive)
                                                                   .build();
 
     // pending list
-    List<String> planExecutionIdListPending = Arrays.asList("31", "32", "33", "34", "35", "36", "37", "38");
+    List<String> objectIdListPending = Arrays.asList("31", "32", "33", "34", "35", "36", "37", "38");
     List<String> namePipelineListPending =
         Arrays.asList("name1", "name2", "name3", "name4", "name5", "name1", "name2", "name3");
+    List<String> identifierPending =
+        Arrays.asList("name1", "name2", "name3", "name4", "name5", "name1", "name2", "name3");
+    List<String> planExecutionListPending =
+        Arrays.asList("planId1", "planId2", "planId3", "planId4", "planId5", "planId1", "planId2", "planId3");
     List<Long> startTsPending = Arrays.asList(1619626802000L, 1619885951000L, 1619885925000L, 1619799469000L,
         1619885815000L, 1619972127000L, 1619799299000L, 1619885632000L);
     List<Long> endTsPending = Arrays.asList(1622218802000L, 1622564351000L, 1622564325000L, 1622391469000L,
@@ -596,10 +611,12 @@ public class CDDashboardApisTest {
         pendingStatusList.get(0), pendingStatusList.get(1), pendingStatusList.get(0), pendingStatusList.get(0),
         pendingStatusList.get(1), pendingStatusList.get(0));
     DeploymentStatusInfoList deploymentStatusInfoListPending = DeploymentStatusInfoList.builder()
-                                                                   .planExecutionIdList(planExecutionIdListPending)
+                                                                   .objectIdList(objectIdListPending)
                                                                    .startTs(startTsPending)
                                                                    .namePipelineList(namePipelineListPending)
                                                                    .endTs(endTsPending)
+                                                                   .pipelineIdentifierList(identifierPending)
+                                                                   .planExecutionIdList(planExecutionListPending)
                                                                    .deploymentStatus(deploymentStatusPending)
                                                                    .build();
 
@@ -674,6 +691,8 @@ public class CDDashboardApisTest {
     List<DeploymentStatusInfo> failureStatusInfo = new ArrayList<>();
     failureStatusInfo.add(DeploymentStatusInfo.builder()
                               .name("name1")
+                              .pipelineIdentifier("name1")
+                              .planExecutionId("planId1")
                               .startTs(1619626802000L)
                               .endTs(1622218802000L)
                               .status(failedStatusList.get(0))
@@ -681,12 +700,16 @@ public class CDDashboardApisTest {
                               .build());
     failureStatusInfo.add(DeploymentStatusInfo.builder()
                               .name("name2")
+                              .pipelineIdentifier("name2")
+                              .planExecutionId("planId2")
                               .startTs(1619885951000L)
                               .endTs(1622564351000L)
                               .status(failedStatusList.get(1))
                               .build());
     failureStatusInfo.add(DeploymentStatusInfo.builder()
                               .name("name3")
+                              .pipelineIdentifier("name3")
+                              .planExecutionId("planId3")
                               .startTs(1619885925000L)
                               .endTs(1622564325000L)
                               .status(failedStatusList.get(0))
@@ -694,12 +717,16 @@ public class CDDashboardApisTest {
                               .build());
     failureStatusInfo.add(DeploymentStatusInfo.builder()
                               .name("name4")
+                              .pipelineIdentifier("name4")
+                              .planExecutionId("planId4")
                               .startTs(1619799469000l)
                               .endTs(1622391469000L)
                               .status(failedStatusList.get(1))
                               .build());
     failureStatusInfo.add(DeploymentStatusInfo.builder()
                               .name("name5")
+                              .pipelineIdentifier("name5")
+                              .planExecutionId("planId5")
                               .startTs(1619885815000L)
                               .endTs(1622564215000L)
                               .status(failedStatusList.get(0))
@@ -707,18 +734,24 @@ public class CDDashboardApisTest {
                               .build());
     failureStatusInfo.add(DeploymentStatusInfo.builder()
                               .name("name1")
+                              .pipelineIdentifier("name1")
+                              .planExecutionId("planId1")
                               .startTs(1619972127000L)
                               .endTs(1622650527000L)
                               .status(failedStatusList.get(2))
                               .build());
     failureStatusInfo.add(DeploymentStatusInfo.builder()
                               .name("name2")
+                              .pipelineIdentifier("name2")
+                              .planExecutionId("planId2")
                               .startTs(1619799299000L)
                               .endTs(1622391299000L)
                               .status(failedStatusList.get(2))
                               .build());
     failureStatusInfo.add(DeploymentStatusInfo.builder()
                               .name("name3")
+                              .pipelineIdentifier("name3")
+                              .planExecutionId("planId3")
                               .startTs(1619885632000L)
                               .endTs(1622564032000L)
                               .status(failedStatusList.get(0))
@@ -728,48 +761,64 @@ public class CDDashboardApisTest {
     List<DeploymentStatusInfo> activeStatusInfo = new ArrayList<>();
     activeStatusInfo.add(DeploymentStatusInfo.builder()
                              .name("name1")
+                             .pipelineIdentifier("name1")
+                             .planExecutionId("planId1")
                              .startTs(1619626802000L)
                              .endTs(1622218802000L)
                              .status(activeStatusList.get(0))
                              .build());
     activeStatusInfo.add(DeploymentStatusInfo.builder()
                              .name("name2")
+                             .pipelineIdentifier("name2")
+                             .planExecutionId("planId2")
                              .startTs(1619885951000L)
                              .endTs(1622564351000L)
                              .status(activeStatusList.get(1))
                              .build());
     activeStatusInfo.add(DeploymentStatusInfo.builder()
                              .name("name3")
+                             .pipelineIdentifier("name3")
+                             .planExecutionId("planId3")
                              .startTs(1619885925000L)
                              .endTs(1622564325000L)
                              .status(activeStatusList.get(0))
                              .build());
     activeStatusInfo.add(DeploymentStatusInfo.builder()
                              .name("name4")
+                             .pipelineIdentifier("name4")
+                             .planExecutionId("planId4")
                              .startTs(1619799469000L)
                              .endTs(1622391469000L)
                              .status(activeStatusList.get(1))
                              .build());
     activeStatusInfo.add(DeploymentStatusInfo.builder()
                              .name("name5")
+                             .pipelineIdentifier("name5")
+                             .planExecutionId("planId5")
                              .startTs(1619885815000L)
                              .endTs(1622564215000L)
                              .status(activeStatusList.get(0))
                              .build());
     activeStatusInfo.add(DeploymentStatusInfo.builder()
                              .name("name1")
+                             .pipelineIdentifier("name1")
+                             .planExecutionId("planId1")
                              .startTs(1619972127000L)
                              .endTs(1622650527000L)
                              .status(activeStatusList.get(0))
                              .build());
     activeStatusInfo.add(DeploymentStatusInfo.builder()
                              .name("name2")
+                             .pipelineIdentifier("name2")
+                             .planExecutionId("planId2")
                              .startTs(1619799299000L)
                              .endTs(1622391299000L)
                              .status(activeStatusList.get(1))
                              .build());
     activeStatusInfo.add(DeploymentStatusInfo.builder()
                              .name("name3")
+                             .pipelineIdentifier("name3")
+                             .planExecutionId("planId3")
                              .startTs(1619885632000L)
                              .endTs(1622564032000L)
                              .status(activeStatusList.get(0))
@@ -779,48 +828,64 @@ public class CDDashboardApisTest {
     List<DeploymentStatusInfo> pendingStatusInfo = new ArrayList<>();
     pendingStatusInfo.add(DeploymentStatusInfo.builder()
                               .name("name1")
+                              .pipelineIdentifier("name1")
+                              .planExecutionId("planId1")
                               .startTs(1619626802000L)
                               .endTs(1622218802000L)
                               .status(pendingStatusList.get(0))
                               .build());
     pendingStatusInfo.add(DeploymentStatusInfo.builder()
                               .name("name2")
+                              .pipelineIdentifier("name2")
+                              .planExecutionId("planId2")
                               .startTs(1619885951000L)
                               .endTs(1622564351000L)
                               .status(pendingStatusList.get(1))
                               .build());
     pendingStatusInfo.add(DeploymentStatusInfo.builder()
                               .name("name3")
+                              .pipelineIdentifier("name3")
+                              .planExecutionId("planId3")
                               .startTs(1619885925000L)
                               .endTs(1622564325000L)
                               .status(pendingStatusList.get(0))
                               .build());
     pendingStatusInfo.add(DeploymentStatusInfo.builder()
                               .name("name4")
+                              .pipelineIdentifier("name4")
+                              .planExecutionId("planId4")
                               .startTs(1619799469000L)
                               .endTs(1622391469000L)
                               .status(pendingStatusList.get(1))
                               .build());
     pendingStatusInfo.add(DeploymentStatusInfo.builder()
                               .name("name5")
+                              .pipelineIdentifier("name5")
+                              .planExecutionId("planId5")
                               .startTs(1619885815000L)
                               .endTs(1622564215000L)
                               .status(pendingStatusList.get(0))
                               .build());
     pendingStatusInfo.add(DeploymentStatusInfo.builder()
                               .name("name1")
+                              .pipelineIdentifier("name1")
+                              .planExecutionId("planId1")
                               .startTs(1619972127000L)
                               .endTs(1622650527000L)
                               .status(pendingStatusList.get(0))
                               .build());
     pendingStatusInfo.add(DeploymentStatusInfo.builder()
                               .name("name2")
+                              .pipelineIdentifier("name2")
+                              .planExecutionId("planId2")
                               .startTs(1619799299000L)
                               .endTs(1622391299000L)
                               .status(pendingStatusList.get(1))
                               .build());
     pendingStatusInfo.add(DeploymentStatusInfo.builder()
                               .name("name3")
+                              .pipelineIdentifier("name3")
+                              .planExecutionId("planId3")
                               .startTs(1619885632000L)
                               .endTs(1622564032000L)
                               .status(pendingStatusList.get(0))

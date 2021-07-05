@@ -1,11 +1,10 @@
 package io.harness.generator;
 
-import static io.harness.beans.shared.ResourceConstraint.builder;
+import static io.harness.beans.ResourceConstraint.builder;
 import static io.harness.govern.Switch.unhandled;
 
-import io.harness.beans.shared.ResourceConstraint;
-import io.harness.beans.shared.ResourceConstraint.ResourceConstraintBuilder;
-import io.harness.beans.shared.RestraintService;
+import io.harness.beans.ResourceConstraint;
+import io.harness.beans.ResourceConstraint.ResourceConstraintBuilder;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.harness.generator.AccountGenerator.Accounts;
 import io.harness.generator.OwnerManager.Owners;
@@ -26,7 +25,6 @@ public class ResourceConstraintGenerator {
   @Inject AccountGenerator accountGenerator;
 
   @Inject ResourceConstraintService resourceConstraintService;
-  @Inject RestraintService restraintService;
   @Inject WingsPersistence wingsPersistence;
 
   public enum ResourceConstraints { GENERIC_ASAP_TEST, GENERIC_FIFO_TEST }
@@ -111,6 +109,6 @@ public class ResourceConstraintGenerator {
     final ResourceConstraint finalResourceConstraint = builder.build();
 
     return GeneratorUtils.suppressDuplicateException(
-        () -> restraintService.save(finalResourceConstraint), () -> exists(finalResourceConstraint));
+        () -> resourceConstraintService.save(finalResourceConstraint), () -> exists(finalResourceConstraint));
   }
 }

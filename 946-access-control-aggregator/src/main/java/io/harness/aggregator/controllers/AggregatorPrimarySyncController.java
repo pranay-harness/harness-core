@@ -69,16 +69,18 @@ public class AggregatorPrimarySyncController extends AggregatorBaseSyncControlle
 
     } catch (InterruptedException e) {
       log.warn("Thread interrupted, stopping primary aggregator sync", e);
-      Thread.currentThread().interrupt();
     } catch (Exception e) {
       log.error("Primary sync stopped due to exception", e);
     } finally {
       try {
         if (debeziumEngine != null) {
           debeziumEngine.close();
+          TimeUnit.SECONDS.sleep(10);
         }
       } catch (IOException exception) {
         log.error("Failed to close debezium engine", exception);
+      } catch (InterruptedException e) {
+        log.warn("Interrupted while waiting for debezium engine to close", e);
       }
     }
   }

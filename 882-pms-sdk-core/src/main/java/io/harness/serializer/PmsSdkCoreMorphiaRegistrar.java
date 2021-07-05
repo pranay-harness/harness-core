@@ -8,7 +8,6 @@ import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.data.StepTransput;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.execution.AsyncSdkProgressCallback;
 import io.harness.pms.sdk.core.execution.AsyncSdkResumeCallback;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -23,7 +22,6 @@ public class PmsSdkCoreMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Outcome.class);
     set.add(StepTransput.class);
     set.add(PassThroughData.class);
-    set.add(OrchestrationEvent.class);
     set.add(PipelineViewObject.class);
     set.add(ExecutionSweepingOutput.class);
   }

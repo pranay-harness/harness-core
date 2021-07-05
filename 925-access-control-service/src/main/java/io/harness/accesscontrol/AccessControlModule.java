@@ -73,6 +73,7 @@ import io.harness.serializer.morphia.PrimaryVersionManagerMorphiaRegistrar;
 import io.harness.serviceaccount.ServiceAccountClientModule;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
+import io.harness.token.TokenClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.usermembership.UserMembershipClientModule;
 
@@ -214,6 +215,10 @@ public class AccessControlModule extends AbstractModule {
 
     install(new AuditClientModule(config.getAuditClientConfig(), config.getDefaultServiceSecret(),
         ACCESS_CONTROL_SERVICE.getServiceId(), config.isEnableAudit()));
+
+    install(new TokenClientModule(config.getServiceAccountClientConfiguration().getServiceAccountServiceConfig(),
+        config.getServiceAccountClientConfiguration().getServiceAccountServiceSecret(),
+        ACCESS_CONTROL_SERVICE.getServiceId()));
 
     install(AccessControlPreferenceModule.getInstance());
     install(

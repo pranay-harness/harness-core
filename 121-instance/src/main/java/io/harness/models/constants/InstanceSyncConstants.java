@@ -10,8 +10,9 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 @OwnedBy(HarnessTeam.DX)
 public final class InstanceSyncConstants {
-  public static final String HARNESS_ACCOUNT_ID = "accountId";
-  public static final String HARNESS_APPLICATION_ID = "applicationId";
+  public static final String HARNESS_ACCOUNT_IDENTIFIER = "accountIdentifier";
+  public static final String HARNESS_ORG_IDENTIFIER = "orgIdentifier";
+  public static final String HARNESS_PROJECT_IDENTIFIER = "projectIdentifier";
   public static final String HARNESS_ENV_ID = "environmentId";
   public static final String INFRASTRUCTURE_MAPPING_ID = "infrastructureMappingId";
   public static final String INFRASTRUCTURE_MAPPING_DETAILS = "infrastructureMappingDetails";

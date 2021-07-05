@@ -1,5 +1,6 @@
 package io.harness.pms.triggers;
 
+import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
@@ -52,6 +53,8 @@ import io.harness.product.ci.scm.proto.PullRequest;
 import io.harness.product.ci.scm.proto.PullRequestHook;
 import io.harness.product.ci.scm.proto.PushHook;
 import io.harness.product.ci.scm.proto.User;
+import io.harness.security.SecurityContextBuilder;
+import io.harness.security.dto.ServicePrincipal;
 import io.harness.serializer.ProtoUtils;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -126,6 +129,8 @@ public class TriggerExecutionHelper {
       planExecutionMetadataBuilder.processedYaml(YamlUtils.injectUuid(pipelineYaml));
       planExecutionMetadataBuilder.triggerPayload(triggerPayload);
 
+      // Set Principle user as pipeline service.
+      SecurityContextBuilder.setContext(new ServicePrincipal(PIPELINE_SERVICE.getServiceId()));
       pmsYamlSchemaService.validateYamlSchema(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
           ngTriggerEntity.getProjectIdentifier(), pipelineYaml);
 

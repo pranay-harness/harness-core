@@ -42,7 +42,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     if (monitoredServiceDTO.getSources() != null) {
       healthSourceService.create(accountId, monitoredServiceDTO.getOrgIdentifier(),
           monitoredServiceDTO.getProjectIdentifier(), monitoredServiceDTO.getEnvironmentRef(),
-          monitoredServiceDTO.getServiceRef(), monitoredServiceDTO.getSources().getHealthSources());
+          monitoredServiceDTO.getServiceRef(), monitoredServiceDTO.getIdentifier(),
+          monitoredServiceDTO.getSources().getHealthSources());
     }
     saveMonitoredServiceEntity(accountId, monitoredServiceDTO);
   }
@@ -55,13 +56,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       throw new InvalidRequestException(String.format(
           "Monitored Source Entity  with identifier %s, accountId %s, orgIdentifier %s and projectIdentifier %s  is not present",
           monitoredServiceDTO.getIdentifier(), accountId, monitoredServiceDTO.getOrgIdentifier(),
-          monitoredService.getProjectIdentifier()));
+          monitoredServiceDTO.getProjectIdentifier()));
     }
-    Preconditions.checkArgument(monitoredService.getOrgIdentifier().equals(monitoredServiceDTO.getOrgIdentifier()),
-        "orgIdentifier update is not allowed");
-    Preconditions.checkArgument(
-        monitoredService.getProjectIdentifier().equals(monitoredServiceDTO.getProjectIdentifier()),
-        "projectIdentifier update is not allowed");
     Preconditions.checkArgument(monitoredService.getServiceIdentifier().equals(monitoredServiceDTO.getServiceRef()),
         "serviceRef update is not allowed");
     Preconditions.checkArgument(
@@ -100,7 +96,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
                                               .filter(identifier -> !currentHealthSourcesMap.containsKey(identifier))
                                               .collect(Collectors.toList());
     healthSourceService.delete(monitoredService.getAccountId(), monitoredServiceDTO.getOrgIdentifier(),
-        monitoredServiceDTO.getProjectIdentifier(), toBeDeletedIdentifiers);
+        monitoredServiceDTO.getProjectIdentifier(), monitoredServiceDTO.getIdentifier(), toBeDeletedIdentifiers);
 
     Set<HealthSource> toBeCreatedHealthSources = new HashSet<>();
     Set<HealthSource> toBeUpdatedHealthSources = new HashSet<>();
@@ -114,10 +110,10 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     });
     healthSourceService.create(monitoredService.getAccountId(), monitoredServiceDTO.getOrgIdentifier(),
         monitoredServiceDTO.getProjectIdentifier(), monitoredService.getEnvironmentIdentifier(),
-        monitoredService.getServiceIdentifier(), toBeCreatedHealthSources);
+        monitoredService.getServiceIdentifier(), monitoredServiceDTO.getIdentifier(), toBeCreatedHealthSources);
     healthSourceService.update(monitoredService.getAccountId(), monitoredServiceDTO.getOrgIdentifier(),
         monitoredServiceDTO.getProjectIdentifier(), monitoredService.getEnvironmentIdentifier(),
-        monitoredService.getServiceIdentifier(), toBeUpdatedHealthSources);
+        monitoredService.getServiceIdentifier(), monitoredServiceDTO.getIdentifier(), toBeUpdatedHealthSources);
   }
 
   @Override
@@ -127,8 +123,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       throw new InvalidRequestException(String.format(
           "Monitored Source Entity  with identifier %s and accountId %s is not present", identifier, accountId));
     }
-    healthSourceService.delete(
-        accountId, orgIdentifier, projectIdentifier, monitoredService.getHealthSourceIdentifiers());
+    healthSourceService.delete(accountId, orgIdentifier, projectIdentifier, monitoredService.getIdentifier(),
+        monitoredService.getHealthSourceIdentifiers());
     hPersistence.delete(monitoredService);
   }
 
@@ -137,8 +133,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     MonitoredService monitoredServiceEntity =
         getMonitoredService(accountId, orgIdentifier, projectIdentifier, identifier);
     if (monitoredServiceEntity == null) {
-      throw new InvalidRequestException(String.format(
-          "Monitored Source Entity  with identifier %s and accountId %s is not present", identifier, accountId));
+      throw new InvalidRequestException(
+          String.format("Monitored Source Entity with identifier %s is not present", identifier));
     }
     return MonitoredServiceDTO.builder()
         .name(monitoredServiceEntity.getName())
@@ -148,10 +144,11 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         .environmentRef(monitoredServiceEntity.getEnvironmentIdentifier())
         .serviceRef(monitoredServiceEntity.getServiceIdentifier())
         .type(monitoredServiceEntity.getType())
+        .description(monitoredServiceEntity.getDesc())
         .sources(Sources.builder()
                      .healthSources(healthSourceService.get(monitoredServiceEntity.getAccountId(),
                          monitoredServiceEntity.getOrgIdentifier(), monitoredServiceEntity.getProjectIdentifier(),
-                         monitoredServiceEntity.getHealthSourceIdentifiers()))
+                         monitoredServiceEntity.getIdentifier(), monitoredServiceEntity.getHealthSourceIdentifiers()))
                      .build())
         .build();
   }
@@ -161,6 +158,9 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       String serviceIdentifier, String envIdentifier) {
     MonitoredService monitoredService =
         getMonitoredService(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
+    if (monitoredService == null) {
+      return null;
+    }
     return get(accountId, orgIdentifier, projectIdentifier, monitoredService.getIdentifier());
   }
 
@@ -211,7 +211,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     }
     if (monitoredServiceDTO.getSources() != null) {
       healthSourceService.checkIfAlreadyPresent(accountId, monitoredServiceDTO.getOrgIdentifier(),
-          monitoredServiceDTO.getProjectIdentifier(), monitoredServiceDTO.getSources().getHealthSources());
+          monitoredServiceDTO.getProjectIdentifier(), monitoredServiceDTO.getIdentifier(),
+          monitoredServiceDTO.getSources().getHealthSources());
     }
   }
 
@@ -318,10 +319,10 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
 
   @Override
   public MonitoredServiceDTO createDefault(String accountId, String orgIdentifier, String projectIdentifier,
-      String environmentIdentifier, String serviceIdentifier) {
+      String serviceIdentifier, String environmentIdentifier) {
     MonitoredServiceDTO monitoredServiceDTO = MonitoredServiceDTO.builder()
-                                                  .name(serviceIdentifier + environmentIdentifier)
-                                                  .identifier(serviceIdentifier + environmentIdentifier)
+                                                  .name(serviceIdentifier + "_" + environmentIdentifier)
+                                                  .identifier(serviceIdentifier + "_" + environmentIdentifier)
                                                   .orgIdentifier(orgIdentifier)
                                                   .projectIdentifier(projectIdentifier)
                                                   .serviceRef(serviceIdentifier)

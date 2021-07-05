@@ -186,6 +186,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowStepMeta;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifestSummary;
 import software.wings.beans.appmanifest.HelmChart;
@@ -2483,23 +2484,35 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return service.getName();
   }
 
-  private ApplicationManifestSummary prepareApplicationManifestSummary(
+  private List<ApplicationManifestSummary> prepareApplicationManifestSummary(
       String serviceId, String accountId, String appId, WorkflowExecution workflowExecution) {
-    ApplicationManifest applicationManifest = applicationManifestService.getManifestByServiceId(appId, serviceId);
-    if (applicationManifest == null || applicationManifest.getHelmChartConfig() == null) {
+    List<ApplicationManifest> applicationManifests =
+        applicationManifestService.getManifestsByServiceId(appId, serviceId, AppManifestKind.K8S_MANIFEST);
+    if (isEmpty(applicationManifests)) {
       return null;
     }
-    HelmChart lastCollectedHelmChart =
-        helmChartService.getLastCollectedManifest(accountId, applicationManifest.getUuid());
-    Optional<HelmChart> helmChartOptional = (workflowExecution != null && workflowExecution.getHelmCharts() != null)
-        ? workflowExecution.getHelmCharts().stream().filter(chart -> serviceId.equals(chart.getServiceId())).findFirst()
-        : Optional.empty();
-    return ApplicationManifestSummary.builder()
-        .appManifestId(applicationManifest.getUuid())
-        .settingId(applicationManifest.getHelmChartConfig().getConnectorId())
-        .defaultManifest(helmChartOptional.map(ManifestSummary::prepareSummaryFromHelmChart).orElse(null))
-        .lastCollectedManifest(ManifestSummary.prepareSummaryFromHelmChart(lastCollectedHelmChart))
-        .build();
+    List<ApplicationManifestSummary> applicationManifestSummaryList = new ArrayList<>();
+    for (ApplicationManifest applicationManifest : applicationManifests) {
+      if (applicationManifest == null || applicationManifest.getHelmChartConfig() == null) {
+        return null;
+      }
+      HelmChart lastCollectedHelmChart =
+          helmChartService.getLastCollectedManifest(accountId, applicationManifest.getUuid());
+      Optional<HelmChart> helmChartOptional = (workflowExecution != null && workflowExecution.getHelmCharts() != null)
+          ? workflowExecution.getHelmCharts()
+                .stream()
+                .filter(chart -> serviceId.equals(chart.getServiceId()))
+                .findFirst()
+          : Optional.empty();
+      applicationManifestSummaryList.add(
+          ApplicationManifestSummary.builder()
+              .appManifestId(applicationManifest.getUuid())
+              .settingId(applicationManifest.getHelmChartConfig().getConnectorId())
+              .defaultManifest(helmChartOptional.map(ManifestSummary::prepareSummaryFromHelmChart).orElse(null))
+              .lastCollectedManifest(ManifestSummary.prepareSummaryFromHelmChart(lastCollectedHelmChart))
+              .build());
+    }
+    return applicationManifestSummaryList;
   }
 
   @VisibleForTesting
@@ -2547,10 +2560,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private boolean isHelmChartPresentInAppManifest(
       Optional<HelmChart> requiredHelmChart, String serviceId, String appId) {
     if (requiredHelmChart.isPresent()) {
-      List<HelmChart> presentHelmCharts =
-          helmChartService.listHelmChartsForService(appId, serviceId, new PageRequest<>());
-      return presentHelmCharts.stream().anyMatch(
-          helmChart -> requiredHelmChart.get().getUuid().equals(helmChart.getUuid()));
+      Map<String, List<HelmChart>> presentHelmCharts =
+          helmChartService.listHelmChartsForService(appId, serviceId, null, new PageRequest<>());
+      return presentHelmCharts.values()
+          .stream()
+          .flatMap(Collection::stream)
+          .anyMatch(helmChart -> requiredHelmChart.get().getUuid().equals(helmChart.getUuid()));
     }
     return false;
   }

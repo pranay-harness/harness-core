@@ -38,8 +38,8 @@ public class CEYamlServiceImpl implements CEYamlService {
 
   @Override
   @Deprecated
-  public File downloadCostOptimisationYaml(String accountId, String connectorIdentifier, String apiKey,
-      String harnessHost, String serverName) throws IOException {
+  public File downloadCostOptimisationYaml(
+      String accountId, String connectorIdentifier, String harnessHost, String serverName) throws IOException {
     final String costOptimisationFileName = "cost-optimisation-crd";
 
     ImmutableMap<String, String> scriptParams = ImmutableMap.<String, String>builder()
@@ -47,7 +47,6 @@ public class CEYamlServiceImpl implements CEYamlService {
                                                     .put("connectorIdentifier", connectorIdentifier)
                                                     .put("envoyHarnessHostname", serverName)
                                                     .put("harnessHostname", harnessHost)
-                                                    .put("APIToken", apiKey)
                                                     .build();
 
     File yaml = File.createTempFile(costOptimisationFileName, DOT_YAML);
@@ -71,15 +70,14 @@ public class CEYamlServiceImpl implements CEYamlService {
         yamlFileContent += "\n---\n";
       }
 
-      yamlFileContent += getK8sOptimisationYaml(
-          accountId, request.getConnectorIdentifier(), request.getApiKey(), harnessHost, serverName);
+      yamlFileContent += getK8sOptimisationYaml(accountId, request.getConnectorIdentifier(), harnessHost, serverName);
     }
 
     return yamlFileContent;
   }
 
   private String getK8sOptimisationYaml(@NonNull String accountId, @NonNull String connectorIdentifier,
-      @NonNull String apiKey, @NonNull String harnessHost, @NonNull String serverName) throws IOException {
+      @NonNull String harnessHost, @NonNull String serverName) throws IOException {
     final String costOptimisationFileName = "cost-optimisation-crd";
 
     ImmutableMap<String, String> scriptParams = ImmutableMap.<String, String>builder()
@@ -87,7 +85,6 @@ public class CEYamlServiceImpl implements CEYamlService {
                                                     .put("connectorIdentifier", connectorIdentifier)
                                                     .put("envoyHarnessHostname", serverName)
                                                     .put("harnessHostname", harnessHost)
-                                                    .put("APIToken", apiKey)
                                                     .build();
 
     return getProcessedYaml(costOptimisationFileName, scriptParams);

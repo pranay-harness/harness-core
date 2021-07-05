@@ -55,6 +55,28 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
+function jar_app_version() {
+  JAR=$1
+  if unzip -l $JAR | grep -q io/harness/versionInfo.yaml
+  then
+    VERSION=$(unzip -c $JAR io/harness/versionInfo.yaml | grep "^version " | cut -d ":" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
+  fi
+
+  if [ -z "$VERSION" ]
+  then
+    if unzip -l $JAR | grep -q main/resources-filtered/versionInfo.yaml
+    then
+      VERSION=$(unzip -c $JAR main/resources-filtered/versionInfo.yaml | grep "^version " | cut -d ":" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
+    fi
+  fi
+
+  if [ -z "$VERSION" ]
+  then
+    VERSION=$(unzip -c $JAR META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
+  fi
+  echo $VERSION
+}
+
 ULIM=$(ulimit -n)
 if [[ "$ULIM" == "unlimited" || $ULIM -lt 10000 ]]; then
   echo
@@ -183,8 +205,9 @@ if [ ! -e watcher.jar ]; then
   echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
   curl $MANAGER_PROXY_CURL -#k $REMOTE_WATCHER_URL -o watcher.jar
 else
-  WATCHER_CURRENT_VERSION=$(unzip -c watcher.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
+  WATCHER_CURRENT_VERSION=$(jar_app_version watcher.jar)
   if [[ $REMOTE_WATCHER_VERSION != $WATCHER_CURRENT_VERSION ]]; then
+    echo "The current version $WATCHER_CURRENT_VERSION is not the same as the expected remote version $REMOTE_WATCHER_VERSION"
     echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
     mkdir -p watcherBackup.$WATCHER_CURRENT_VERSION
     cp watcher.jar watcherBackup.$WATCHER_CURRENT_VERSION
@@ -205,8 +228,9 @@ if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
     echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
     curl $MANAGER_PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
   else
-    DELEGATE_CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
+    DELEGATE_CURRENT_VERSION=$(jar_app_version delegate.jar)
     if [[ $REMOTE_DELEGATE_VERSION != $DELEGATE_CURRENT_VERSION ]]; then
+      echo "The current version $DELEGATE_CURRENT_VERSION is not the same as the expected remote version $REMOTE_DELEGATE_VERSION"
       echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
       mkdir -p backup.$DELEGATE_CURRENT_VERSION
       cp delegate.jar backup.$DELEGATE_CURRENT_VERSION
@@ -263,9 +287,9 @@ export CAPSULE_CACHE_DIR="$DIR/.cache"
 
 if [[ $1 == "upgrade" ]]; then
   echo "Upgrade"
-  CURRENT_VERSION=$(unzip -c watcher.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
-  mkdir -p watcherBackup.$CURRENT_VERSION
-  cp watcher.jar watcherBackup.$CURRENT_VERSION
+  WATCHER_CURRENT_VERSION=$(jar_app_version watcher.jar)
+  mkdir -p watcherBackup.$WATCHER_CURRENT_VERSION
+  cp watcher.jar watcherBackup.$WATCHER_CURRENT_VERSION
   $JRE_BINARY $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Dwatchersourcedir="$DIR" -Xmx512m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -jar watcher.jar config-watcher.yml upgrade $2
 else
   if `pgrep -f "\-Dwatchersourcedir=$DIR"> /dev/null`; then

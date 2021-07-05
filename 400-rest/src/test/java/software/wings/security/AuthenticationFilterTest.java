@@ -45,6 +45,7 @@ import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.resources.AccountResource;
 import software.wings.resources.ApiKeyResource;
+import software.wings.resources.UserResourceNG;
 import software.wings.resources.secretsmanagement.SecretsResourceNG;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AuditService;
@@ -458,9 +459,9 @@ public class AuthenticationFilterTest extends CategoryTest {
   }
 
   private Method getMockResourceMethod() {
-    Class mockClass = SecretsResourceNG.class;
+    Class mockClass = UserResourceNG.class;
     try {
-      return mockClass.getMethod("get", String.class, String.class, String.class, String.class);
+      return mockClass.getMethod("getUser", String.class);
     } catch (NoSuchMethodException e) {
       return null;
     }

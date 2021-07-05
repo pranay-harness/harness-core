@@ -18,10 +18,10 @@ import io.harness.beans.Scope;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.RoleAssignmentMetadataDTO;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.remote.dto.UserAggregateDTO;
 import io.harness.ng.core.user.remote.dto.UserFilter;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.utils.PageUtils;
 

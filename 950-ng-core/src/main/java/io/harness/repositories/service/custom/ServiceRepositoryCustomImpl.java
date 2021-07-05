@@ -92,6 +92,12 @@ public class ServiceRepositoryCustomImpl implements ServiceRepositoryCustom {
     return mongoTemplate.count(query, ServiceEntity.class);
   }
 
+  @Override
+  public List<ServiceEntity> findAllRunTimePermission(Criteria criteria) {
+    Query query = new Query(criteria);
+    return mongoTemplate.find(query, ServiceEntity.class);
+  }
+
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
     return new RetryPolicy<>()
         .handle(OptimisticLockingFailureException.class)

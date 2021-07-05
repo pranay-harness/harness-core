@@ -15,6 +15,7 @@ import io.harness.beans.yaml.extended.CIShellType;
 import io.harness.beans.yaml.extended.ImagePullPolicy;
 import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.filters.WithConnectorRef;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
@@ -50,7 +51,8 @@ public class RunStepInfo implements CIStepInfo, WithConnectorRef {
 
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.RUN).build();
   @JsonIgnore
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.RUN.getDisplayName()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.RUN.getDisplayName()).setStepCategory(StepCategory.STEP).build();
 
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) private String identifier;
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) private String name;

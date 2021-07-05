@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.rule.OwnerRule.PRAKHAR;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 
@@ -26,12 +27,15 @@ import software.wings.service.intfc.AwsHelperResourceService;
 import software.wings.service.intfc.SettingsService;
 
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.cloudformation.model.Capability;
 import com.amazonaws.services.ec2.model.ResourceType;
 import com.google.inject.Inject;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -137,5 +141,14 @@ public class AwsHelperResourceServiceImplTest extends WingsBaseTest {
     doReturn(computeProviderSetting).when(settingsService).get("awsSettingId");
 
     assertThat(awsHelperResourceService.listBuckets("awsSettingId")).isEqualTo(buckets);
+  }
+
+  @Test
+  @Owner(developers = PRAKHAR)
+  @Category(UnitTests.class)
+  public void testListCloudformationCapabilities() {
+    List<String> expectedCapabilities =
+        Stream.of(Capability.values()).map(Capability::toString).collect(Collectors.toList());
+    assertThat(awsHelperResourceService.listCloudformationCapabilities()).isEqualTo(expectedCapabilities);
   }
 }

@@ -98,6 +98,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.NonNull;
 import org.apache.commons.lang3.tuple.Pair;
 
 @Singleton
@@ -474,9 +475,10 @@ public class ApplicationManifestUtils {
       throw new InvalidRequestException("Manifests not found for service.");
     }
 
+    // replacing app manifest in case artifact is from manifest
     if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, context.getAccountId())
-        && isPollForChangesEnabled(applicationManifest)) {
-      applyHelmChartFromExecutionContext(applicationManifest, context, service.getUuid());
+        && Boolean.TRUE.equals(service.getArtifactFromManifest())) {
+      return getAppManifestFromFromExecutionContextHelmChart(context, service.getUuid());
     }
 
     return applicationManifest;
@@ -544,6 +546,22 @@ public class ApplicationManifestUtils {
     });
   }
 
+  @NonNull
+  public ApplicationManifest getAppManifestFromFromExecutionContextHelmChart(
+      ExecutionContext context, String serviceId) {
+    HelmChart helmChart = ((DeploymentExecutionContext) context).getHelmChartForService(serviceId);
+    if (helmChart == null) {
+      throw new InvalidArgumentsException(Pair.of("helmChart", "to use helm chart as artifact"));
+    }
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getById(context.getAppId(), helmChart.getApplicationManifestId());
+    if (applicationManifest == null) {
+      throw new InvalidArgumentsException(Pair.of("applicationManifest", "required to use helm chart as artifact"));
+    }
+    applicationManifest.getHelmChartConfig().setChartVersion(helmChart.getVersion());
+    return applicationManifest;
+  }
+
   public void applyHelmChartFromExecutionContext(
       ApplicationManifest applicationManifest, ExecutionContext context, String serviceId) {
     if (HelmChartRepo == applicationManifest.getStoreType()) {
@@ -551,7 +569,6 @@ public class ApplicationManifestUtils {
       if (helmChart == null) {
         throw new InvalidArgumentsException(Pair.of("helmChart", "required when poll for changes enabled"));
       }
-
       applicationManifest.getHelmChartConfig().setChartVersion(helmChart.getVersion());
     }
   }

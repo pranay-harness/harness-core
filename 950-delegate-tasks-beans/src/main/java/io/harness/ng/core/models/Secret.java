@@ -1,9 +1,14 @@
 package io.harness.ng.core.models;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 
+import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.secretmanagerclient.SecretType;
@@ -22,12 +27,14 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "SecretKeys")
 @Entity(value = "secrets", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("secrets")
+@StoreIn(DbAliases.NG_MANAGER)
 public class Secret {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -75,4 +82,6 @@ public class Secret {
         .spec(Optional.ofNullable(getSecretSpec()).map(SecretSpec::toDTO).orElse(null))
         .build();
   }
+
+  @FdIndex Boolean migratedFromManager;
 }

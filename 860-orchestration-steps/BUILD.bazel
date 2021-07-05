@@ -15,7 +15,6 @@ java_library(
         "//870-yaml-beans:module",
         "//878-pipeline-service-utilities:module",
         "//940-notification-client:module",
-        "//950-cg-ng-shared-orchestration-beans:module",
         "//955-delegate-beans:module",
         "//960-continuous-features:module",
         "//960-notification-beans:module",

@@ -1,9 +1,9 @@
 package io.harness.ng.core.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.beans.shared.tasks.NgSetupFields.NG;
-import static io.harness.beans.shared.tasks.NgSetupFields.OWNER;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.NgSetupFields.NG;
+import static io.harness.delegate.beans.NgSetupFields.OWNER;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;

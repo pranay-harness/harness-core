@@ -47,7 +47,7 @@ appContainers {"name": "createdAt_1", "background": true} {"createdAt": 1}
 appContainers {"name": "unique_yaml", "unique": true} {"accountId": 1, "name": 1}
 applicationManifests {"name": "accountId_1", "background": true} {"accountId": 1}
 applicationManifests {"name": "appId_1", "background": true} {"appId": 1}
-applicationManifests {"name": "appManifestIdx", "unique": true} {"appId": 1, "envId": 1, "serviceId": 1, "kind": 1}
+applicationManifests {"name": "appManifestIdx2", "background": true} {"appId": 1, "envId": 1, "serviceId": 1, "kind": 1}
 applicationManifests {"name": "createdAt_1", "background": true} {"createdAt": 1}
 applications {"name": "appId_1", "background": true} {"appId": 1}
 applications {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -177,6 +177,7 @@ delegatePerpetualTaskUsageInsights {"name": "timestamp_1", "background": true} {
 delegateProfiles {"name": "byAcctNgOwner", "background": true} {"accountId": 1, "ng": 1, "owner": 1}
 delegateProfiles {"name": "createdAt_1", "background": true} {"createdAt": 1}
 delegateProfiles {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1, "owner": 1}
+delegateProfiles {"name": "unique_identification", "unique": true} {"accountId": 1, "owner": 1, "identifier": 1}
 delegateScopes {"name": "createdAt_1", "background": true} {"createdAt": 1}
 delegateScopes {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1}
 delegateSelectionLogRecords {"name": "selectionLogsGroup", "unique": true} {"accountId": 1, "taskId": 1, "message": 1, "groupId": 1}
@@ -502,8 +503,6 @@ notifyQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 notifyQueue {"name": "waitInstanceId_1", "unique": true} {"waitInstanceId": 1}
 notifyResponses {"name": "createdAt_1", "background": true} {"createdAt": 1}
 notifyResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-orchestrationEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
-orchestrationEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 outboxEvents {"name": "blocked_createdAt_nextUnblockAttemptAt_outbox_Idx", "background": true} {"blocked": 1, "createdAt": 1, "nextUnblockAttemptAt": 1}
 outboxEvents {"name": "eventType_blocked_outbox_Idx", "background": true} {"eventType": 1, "blocked": 1}
 pcfServiceSpecification {"name": "accountId_1", "background": true} {"accountId": 1}
@@ -571,7 +570,6 @@ secretUsageLogs {"name": "acctEncryptedDataIdx", "background": true} {"accountId
 secretUsageLogs {"name": "appId_1", "background": true} {"appId": 1}
 secretUsageLogs {"name": "createdAt_1", "background": true} {"createdAt": 1}
 secretUsageLogs {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
-secrets {"name": "unique_identification", "unique": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
 segmentGroupEventJobContexts {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 serverless-instance-stats {"name": "accountId_timestamp_unique_idx", "unique": true} {"accountId": 1, "timestamp": 1}
 serverless-instance-stats {"name": "createdAt_1", "background": true} {"createdAt": 1}

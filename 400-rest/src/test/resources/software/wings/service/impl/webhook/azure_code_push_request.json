@@ -1,0 +1,107 @@
+{
+  "subscriptionId": "5993a7c5-d613-47f6-b07f-8394fc0957c5",
+  "notificationId": 1,
+  "id": "53f626f4-a490-4719-81ca-58c1d84d3221",
+  "eventType": "git.push",
+  "publisherId": "tfs",
+  "message": {
+    "text": "user@harness.io pushed updates to azuretoharnesssync:main\r\n(https://dev.azure.com/harnessuser/azuretoharnesssync/_git/azuretoharnesssync/#version=GBmain)",
+    "html": "user@harness.io pushed updates to <a href=\"https://dev.azure.com/harnessuser/azuretoharnesssync/_git/azuretoharnesssync/\">azuretoharnesssync</a>:<a href=\"https://dev.azure.com/harnessuser/azuretoharnesssync/_git/azuretoharnesssync/#version=GBmain\">main</a>",
+    "markdown": "user@harness.io pushed updates to [azuretoharnesssync](https://dev.azure.com/harnessuser/azuretoharnesssync/_git/azuretoharnesssync/):[main](https://dev.azure.com/harnessuser/azuretoharnesssync/_git/azuretoharnesssync/#version=GBmain)"
+  },
+  "detailedMessage": {
+    "text": "user@harness.io pushed a commit to azuretoharnesssync:main\r\n - Harness IO Git Sync. e50bb12b (https://dev.azure.com/harnessuser/azuretoharnesssync/_git/azuretoharnesssync/commit/e50bb12bbedbfa7e13c03f31d0f7f9e7dd84887c)",
+    "html": "user@harness.io pushed a commit to <a href=\"https://dev.azure.com/harnessuser/azuretoharnesssync/_git/azuretoharnesssync/\">azuretoharnesssync</a>:<a href=\"https://dev.azure.com/harnessuser/azuretoharnesssync/_git/azuretoharnesssync/#version=GBmain\">main</a>\r\n<ul>\r\n<li>Harness IO Git Sync. <a href=\"https://dev.azure.com/harnessuser/azuretoharnesssync/_git/azuretoharnesssync/commit/e50bb12bbedbfa7e13c03f31d0f7f9e7dd84887c\">e50bb12b</a></li>\r\n</ul>",
+    "markdown": "user@harness.io pushed a commit to [azuretoharnesssync](https://dev.azure.com/harnessuser/azuretoharnesssync/_git/azuretoharnesssync/):[main](https://dev.azure.com/harnessuser/azuretoharnesssync/_git/azuretoharnesssync/#version=GBmain)\r\n* Harness IO Git Sync. [e50bb12b](https://dev.azure.com/harnessuser/azuretoharnesssync/_git/azuretoharnesssync/commit/e50bb12bbedbfa7e13c03f31d0f7f9e7dd84887c)"
+  },
+  "resource": {
+    "commits": [
+      {
+        "commitId": "e50bb12bbedbfa7e13c03f31d0f7f9e7dd84887c",
+        "author": {
+          "name": "Harness.io",
+          "email": "support@harness.io",
+          "date": "2021-06-21T15:13:58Z"
+        },
+        "committer": {
+          "name": "Harness.io",
+          "email": "support@harness.io",
+          "date": "2021-06-21T15:13:58Z"
+        },
+        "comment": "Harness IO Git Sync.\nADD: Setup/Applications/QEAzureApp/Index.yaml",
+        "url": "https://dev.azure.com/harnessuser/_apis/git/repositories/efc01c5d-fff5-42e7-904a-230f783a534e/commits/e50bb12bbedbfa7e13c03f31d0f7f9e7dd84887c"
+      }
+    ],
+    "refUpdates": [
+      {
+        "name": "refs/heads/main",
+        "oldObjectId": "eb0a9083301d1efe6daf8a7848a055d4e759a453",
+        "newObjectId": "e50bb12bbedbfa7e13c03f31d0f7f9e7dd84887c"
+      }
+    ],
+    "repository": {
+      "id": "efc01c5d-fff5-42e7-904a-230f783a534e",
+      "name": "azuretoharnesssync",
+      "url": "https://dev.azure.com/harnessuser/_apis/git/repositories/efc01c5d-fff5-42e7-904a-230f783a534e",
+      "project": {
+        "id": "6be01998-f2c6-45e9-992c-709bb11eff82",
+        "name": "azuretoharnesssync",
+        "url": "https://dev.azure.com/harnessuser/_apis/projects/6be01998-f2c6-45e9-992c-709bb11eff82",
+        "state": "wellFormed",
+        "visibility": "unchanged",
+        "lastUpdateTime": "0001-01-01T00:00:00"
+      },
+      "defaultBranch": "refs/heads/main",
+      "remoteUrl": "https://dev.azure.com/harnessuser/azuretoharnesssync/_git/azuretoharnesssync"
+    },
+    "pushedBy": {
+      "displayName": "user@harness.io",
+      "url": "https://spsprodsin1.vssps.visualstudio.com/A55cfa1cf-37ed-46cf-ad5f-d47998e0ce44/_apis/Identities/7a767f77-9dc7-655c-8779-5f0fd09e4da2",
+      "_links": {
+        "avatar": {
+          "href": "https://dev.azure.com/harnessuser/_apis/GraphProfile/MemberAvatars/msa.N2E3NjdmNzctOWRjNy03NTVjLTg3NzktNWYwZmQwOWU0ZGEy"
+        }
+      },
+      "id": "7a767f77-9dc7-655c-8779-5f0fd09e4da2",
+      "uniqueName": "user@harness.io",
+      "imageUrl": "https://dev.azure.com/harnessuser/_api/_common/identityImage?id=7a767f77-9dc7-655c-8779-5f0fd09e4da2",
+      "descriptor": "msa.N2E3NjdmNzctOWRjNy03NTVjLTg3NzktNWYwZmQwOWU0ZGEy"
+    },
+    "pushId": 2,
+    "date": "2021-06-21T15:14:01.8510871Z",
+    "url": "https://dev.azure.com/harnessuser/_apis/git/repositories/efc01c5d-fff5-42e7-904a-230f783a534e/pushes/2",
+    "_links": {
+      "self": {
+        "href": "https://dev.azure.com/harnessuser/_apis/git/repositories/efc01c5d-fff5-42e7-904a-230f783a534e/pushes/2"
+      },
+      "repository": {
+        "href": "https://dev.azure.com/harnessuser/6be01998-f2c6-45e9-992c-709bb11eff82/_apis/git/repositories/efc01c5d-fff5-42e7-904a-230f783a534e"
+      },
+      "commits": {
+        "href": "https://dev.azure.com/harnessuser/_apis/git/repositories/efc01c5d-fff5-42e7-904a-230f783a534e/pushes/2/commits"
+      },
+      "pusher": {
+        "href": "https://spsprodsin1.vssps.visualstudio.com/A55cfa1cf-37ed-46cf-ad5f-d47998e0ce44/_apis/Identities/7a767f77-9dc7-655c-8779-5f0fd09e4da2"
+      },
+      "refs": {
+        "href": "https://dev.azure.com/harnessuser/6be01998-f2c6-45e9-992c-709bb11eff82/_apis/git/repositories/efc01c5d-fff5-42e7-904a-230f783a534e/refs/heads/main"
+      }
+    }
+  },
+  "resourceVersion": "1.0",
+  "resourceContainers": {
+    "collection": {
+      "id": "879ba525-a1b9-4e9c-af4e-6e84e2110070",
+      "baseUrl": "https://dev.azure.com/harnessuser/"
+    },
+    "account": {
+      "id": "55cfa1cf-37ed-46cf-ad5f-d47998e0ce44",
+      "baseUrl": "https://dev.azure.com/harnessuser/"
+    },
+    "project": {
+      "id": "6be01998-f2c6-45e9-992c-709bb11eff82",
+      "baseUrl": "https://dev.azure.com/harnessuser/"
+    }
+  },
+  "createdDate": "2021-06-21T15:14:08.3644484Z"
+}

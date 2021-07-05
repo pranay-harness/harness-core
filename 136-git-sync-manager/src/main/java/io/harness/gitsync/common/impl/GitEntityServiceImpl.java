@@ -38,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.transport.URIish;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -238,9 +239,17 @@ public class GitEntityServiceImpl implements GitEntityService {
 
   @Override
   public GitSyncEntityDTO get(EntityReference entityReference, EntityType entityType, String branch) {
-    final Optional<GitFileLocation> gitFileLocation =
-        gitFileLocationRepository.findByEntityIdentifierFQNAndEntityTypeAndAccountIdAndBranch(
-            entityReference.getFullyQualifiedName(), entityType.name(), entityReference.getAccountIdentifier(), branch);
+    Optional<GitFileLocation> gitFileLocation;
+    try {
+      gitFileLocation = gitFileLocationRepository.findByEntityIdentifierFQNAndEntityTypeAndAccountIdAndBranch(
+          entityReference.getFullyQualifiedName(), entityType.name(), entityReference.getAccountIdentifier(), branch);
+    } catch (DuplicateKeyException ex) {
+      log.error("Error encountered while getting the git entity for {} in the branch {} in account {}",
+          entityReference.getFullyQualifiedName(), branch, entityReference.getAccountIdentifier(), ex);
+      throw new InvalidRequestException(
+          String.format("Multiple git entity records exists for the %s with the identifier %s",
+              entityType.getYamlName(), entityReference.getIdentifier()));
+    }
     return gitFileLocation.map(this::buildGitSyncEntityDTO).orElse(null);
   }
 

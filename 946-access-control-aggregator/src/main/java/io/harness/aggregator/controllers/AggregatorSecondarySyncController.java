@@ -90,6 +90,11 @@ public class AggregatorSecondarySyncController extends AggregatorBaseSyncControl
               debeziumEngine =
                   getEngine(aggregatorConfiguration.getDebeziumConfig(), accessControlDebeziumChangeConsumer);
               debeziumEngineFuture = executorService.submit(debeziumEngine);
+            } else if (syncStateOpt.isPresent() && isSecondarySyncRunning(syncStateOpt.get())) {
+              AccessControlDebeziumChangeConsumer accessControlDebeziumChangeConsumer = buildDebeziumChangeConsumer();
+              debeziumEngine =
+                  getEngine(aggregatorConfiguration.getDebeziumConfig(), accessControlDebeziumChangeConsumer);
+              debeziumEngineFuture = executorService.submit(debeziumEngine);
             }
           }
         }
@@ -99,7 +104,6 @@ public class AggregatorSecondarySyncController extends AggregatorBaseSyncControl
       }
     } catch (InterruptedException e) {
       log.warn("Secondary sync has been interrupted. Exiting", e);
-      Thread.currentThread().interrupt();
     } catch (Exception e) {
       log.error("Secondary sync failed due to exception ", e);
     } finally {
@@ -111,6 +115,10 @@ public class AggregatorSecondarySyncController extends AggregatorBaseSyncControl
 
   private boolean isSecondarySyncRequested(AggregatorSecondarySyncState aggregatorSecondarySyncState) {
     return SecondarySyncStatus.SECONDARY_SYNC_REQUESTED.equals(aggregatorSecondarySyncState.getSecondarySyncStatus());
+  }
+
+  private boolean isSecondarySyncRunning(AggregatorSecondarySyncState aggregatorSecondarySyncState) {
+    return SecondarySyncStatus.SECONDARY_SYNC_RUNNING.equals(aggregatorSecondarySyncState.getSecondarySyncStatus());
   }
 
   private void cleanUpAndBootstrapForBulkSync() {
@@ -130,8 +138,11 @@ public class AggregatorSecondarySyncController extends AggregatorBaseSyncControl
   private void stopDebeziumEngine(DebeziumEngine<ChangeEvent<String, String>> debeziumEngine) {
     try {
       debeziumEngine.close();
+      TimeUnit.SECONDS.sleep(10);
     } catch (IOException exception) {
       log.error("Failed to close debezium engine", exception);
+    } catch (InterruptedException e) {
+      log.warn("Interrupted while waiting for debezium engine to close", e);
     }
   }
 

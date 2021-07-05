@@ -2,7 +2,9 @@ package io.harness.ng.core.impl;
 
 import static io.harness.ModuleType.CD;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.KARAN;
 import static io.harness.utils.PageTestUtils.getPage;
 
@@ -15,6 +17,7 @@ import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -25,32 +28,42 @@ import static org.springframework.data.domain.Pageable.unpaged;
 import io.harness.CategoryTest;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.context.GlobalContext;
 import io.harness.exception.InvalidRequestException;
 import io.harness.manage.GlobalContextManager;
+import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.beans.ProjectsPerOrganizationCount;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
+import io.harness.ng.core.remote.ProjectMapper;
 import io.harness.ng.core.services.OrganizationService;
+import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.core.spring.ProjectRepository;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.rule.Owner;
+import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.SourcePrincipalContextData;
+import io.harness.security.dto.Principal;
+import io.harness.security.dto.PrincipalType;
 import io.harness.security.dto.UserPrincipal;
 
 import io.dropwizard.jersey.validation.JerseyViolationException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,6 +72,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
@@ -265,5 +279,41 @@ public class ProjectServiceImplTest extends CategoryTest {
     assertEquals(SortOperation.class, operations.get(1).getClass());
     assertEquals(GroupOperation.class, operations.get(2).getClass());
     assertEquals(ProjectionOperation.class, operations.get(3).getClass());
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testListProjects() {
+    String user = generateUuid();
+    Principal principal = mock(Principal.class);
+    when(principal.getType()).thenReturn(PrincipalType.USER);
+    when(principal.getName()).thenReturn(user);
+    SourcePrincipalContextBuilder.setSourcePrincipal(principal);
+    Project proj1 =
+        Project.builder().name("P1").accountIdentifier("accId1").orgIdentifier("orgId1").identifier("id1").build();
+    Project proj2 =
+        Project.builder().name("P2").accountIdentifier("accId1").orgIdentifier("orgId2").identifier("id2").build();
+    List<Project> projects = Arrays.asList(proj1, proj2);
+    UserMembership userMembership1 =
+        UserMembership.builder()
+            .userId(user)
+            .scope(Scope.builder().accountIdentifier("accId1").orgIdentifier("orgId1").projectIdentifier("id1").build())
+            .build();
+    UserMembership userMembership2 =
+        UserMembership.builder()
+            .userId(user)
+            .scope(Scope.builder().accountIdentifier("accId1").orgIdentifier("orgId2").projectIdentifier("id2").build())
+            .build();
+    doReturn(new PageImpl<>(Arrays.asList(userMembership1, userMembership2)))
+        .when(ngUserService)
+        .listUserMemberships(any(), any());
+    doReturn(projects).when(projectService).list(any());
+    doReturn(new PageImpl<>(projects, Pageable.unpaged(), 100)).when(projectRepository).findAll(any(), any());
+    PageResponse<ProjectDTO> projectsResponse =
+        projectService.listProjectsForUser(user, "account", PageRequest.builder().pageSize(2).pageIndex(0).build());
+    assertNotNull(projectsResponse);
+    assertEquals(
+        projectsResponse.getContent(), projects.stream().map(ProjectMapper::writeDTO).collect(Collectors.toList()));
   }
 }

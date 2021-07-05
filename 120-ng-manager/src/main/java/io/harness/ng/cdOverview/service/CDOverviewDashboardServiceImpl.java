@@ -6,6 +6,7 @@ import static io.harness.NGDateUtils.getNumberOfDays;
 import static io.harness.NGDateUtils.getStartTimeOfNextDay;
 import static io.harness.NGDateUtils.getStartTimeOfPreviousInterval;
 import static io.harness.NGDateUtils.getStartTimeOfTheDayAsEpoch;
+import static io.harness.event.timeseries.processor.utils.DateUtils.getCurrentTime;
 import static io.harness.ng.core.activityhistory.dto.TimeGroupType.DAY;
 import static io.harness.ng.core.activityhistory.dto.TimeGroupType.HOUR;
 
@@ -15,6 +16,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cd.NGPipelineSummaryCDConstants;
 import io.harness.cd.NGServiceConstants;
 import io.harness.exception.UnknownEnumTypeException;
+import io.harness.models.EnvBuildInstanceCount;
+import io.harness.models.InstancesByBuildId;
+import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeBase;
+import io.harness.ng.cdOverview.dto.BuildIdAndInstanceCount;
 import io.harness.ng.cdOverview.dto.DashboardDeploymentActiveFailedRunningInfo;
 import io.harness.ng.cdOverview.dto.DashboardWorkloadDeployment;
 import io.harness.ng.cdOverview.dto.Deployment;
@@ -24,10 +29,13 @@ import io.harness.ng.cdOverview.dto.DeploymentInfo;
 import io.harness.ng.cdOverview.dto.DeploymentStatusInfo;
 import io.harness.ng.cdOverview.dto.DeploymentStatusInfoList;
 import io.harness.ng.cdOverview.dto.EntityStatusDetails;
+import io.harness.ng.cdOverview.dto.EnvBuildIdAndInstanceCountInfo;
+import io.harness.ng.cdOverview.dto.EnvBuildIdAndInstanceCountInfoList;
 import io.harness.ng.cdOverview.dto.ExecutionDeployment;
 import io.harness.ng.cdOverview.dto.ExecutionDeploymentInfo;
 import io.harness.ng.cdOverview.dto.HealthDeploymentDashboard;
 import io.harness.ng.cdOverview.dto.HealthDeploymentInfo;
+import io.harness.ng.cdOverview.dto.InstancesByBuildIdList;
 import io.harness.ng.cdOverview.dto.LastWorkloadInfo;
 import io.harness.ng.cdOverview.dto.ServiceDeployment;
 import io.harness.ng.cdOverview.dto.ServiceDeploymentInfo;
@@ -48,6 +56,7 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.pms.execution.ExecutionStatus;
+import io.harness.service.instancedashboardservice.InstanceDashboardService;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -75,14 +84,15 @@ import org.apache.commons.lang3.tuple.Pair;
 public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardService {
   @Inject TimeScaleDBService timeScaleDBService;
   @Inject ServiceEntityService serviceEntityService;
+  @Inject InstanceDashboardService instanceDashboardService;
 
   private String tableNameCD = "pipeline_execution_summary_cd";
   private String tableNameServiceAndInfra = "service_infra_info";
   private List<String> failedStatusList = Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(),
       ExecutionStatus.EXPIRED.name(), ExecutionStatus.IGNOREFAILED.name(), ExecutionStatus.ERRORED.name());
-  private List<String> activeStatusList =
-      Arrays.asList(ExecutionStatus.RUNNING.name(), ExecutionStatus.ASYNCWAITING.name(),
-          ExecutionStatus.TASKWAITING.name(), ExecutionStatus.TIMEDWAITING.name(), ExecutionStatus.PAUSED.name());
+  private List<String> activeStatusList = Arrays.asList(ExecutionStatus.RUNNING.name(),
+      ExecutionStatus.ASYNCWAITING.name(), ExecutionStatus.TASKWAITING.name(), ExecutionStatus.TIMEDWAITING.name(),
+      ExecutionStatus.PAUSED.name(), ExecutionStatus.PAUSING.name());
   private List<String> pendingStatusList = Arrays.asList(ExecutionStatus.INTERVENTIONWAITING.name(),
       ExecutionStatus.APPROVALWAITING.name(), ExecutionStatus.WAITING.name(), ExecutionStatus.RESOURCEWAITING.name());
   private static final int MAX_RETRY_COUNT = 5;
@@ -195,7 +205,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
   public String queryBuilderStatus(
       String accountId, String orgId, String projectId, long days, List<String> statusList) {
-    String selectStatusQuery = "select id,name,startts,endTs,status from " + tableNameCD + " where ";
+    String selectStatusQuery =
+        "select id,name,pipelineidentifier,startts,endTs,status,planexecutionid from " + tableNameCD + " where ";
     StringBuilder totalBuildSqlBuilder = new StringBuilder();
     totalBuildSqlBuilder.append(selectStatusQuery);
 
@@ -432,15 +443,15 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
            PreparedStatement statement = connection.prepareStatement(queryServiceTag)) {
         resultSet = statement.executeQuery();
         while (resultSet != null && resultSet.next()) {
-          String planExecutionId = resultSet.getString("pipeline_execution_summary_cd_id");
+          String pipeline_execution_summary_cd_id = resultSet.getString("pipeline_execution_summary_cd_id");
           String service_name = resultSet.getString("service_name");
           String tag = resultSet.getString("tag");
-          if (serviceTagMap.containsKey(planExecutionId)) {
-            serviceTagMap.get(planExecutionId).add(getServiceDeployment(service_name, tag));
+          if (serviceTagMap.containsKey(pipeline_execution_summary_cd_id)) {
+            serviceTagMap.get(pipeline_execution_summary_cd_id).add(getServiceDeployment(service_name, tag));
           } else {
             List<ServiceDeploymentInfo> serviceDeploymentInfos = new ArrayList<>();
             serviceDeploymentInfos.add(getServiceDeployment(service_name, tag));
-            serviceTagMap.put(planExecutionId, serviceDeploymentInfos);
+            serviceTagMap.put(pipeline_execution_summary_cd_id, serviceDeploymentInfos);
           }
         }
         successfulOperation = true;
@@ -813,10 +824,12 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   }
 
   public DeploymentStatusInfoList queryCalculatorDeploymentInfo(String queryStatus) {
-    List<String> planExecutionIdList = new ArrayList<>();
+    List<String> objectIdList = new ArrayList<>();
     List<String> namePipelineList = new ArrayList<>();
     List<Long> startTs = new ArrayList<>();
     List<Long> endTs = new ArrayList<>();
+    List<String> planExecutionIdList = new ArrayList<>();
+    List<String> identifierList = new ArrayList<>();
     List<String> deploymentStatus = new ArrayList<>();
 
     int totalTries = 0;
@@ -827,7 +840,9 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
            PreparedStatement statement = connection.prepareStatement(queryStatus)) {
         resultSet = statement.executeQuery();
         while (resultSet != null && resultSet.next()) {
-          planExecutionIdList.add(resultSet.getString("id"));
+          objectIdList.add(resultSet.getString("id"));
+          planExecutionIdList.add(resultSet.getString("planexecutionid"));
+          identifierList.add(resultSet.getString("pipelineidentifier"));
           namePipelineList.add(resultSet.getString("name"));
           startTs.add(Long.valueOf(resultSet.getString("startts")));
           deploymentStatus.add(resultSet.getString("status"));
@@ -845,20 +860,24 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       }
     }
     return DeploymentStatusInfoList.builder()
-        .planExecutionIdList(planExecutionIdList)
+        .objectIdList(objectIdList)
         .deploymentStatus(deploymentStatus)
         .endTs(endTs)
         .namePipelineList(namePipelineList)
         .startTs(startTs)
+        .pipelineIdentifierList(identifierList)
+        .planExecutionIdList(planExecutionIdList)
         .build();
   }
 
   public List<DeploymentStatusInfo> getDeploymentStatusInfo(String queryStatus, String queryServiceNameTagId) {
-    List<String> planExecutionIdList = new ArrayList<>();
+    List<String> objectIdList = new ArrayList<>();
     List<String> namePipelineList = new ArrayList<>();
     List<Long> startTs = new ArrayList<>();
     List<Long> endTs = new ArrayList<>();
     List<String> deploymentStatus = new ArrayList<>();
+    List<String> planExecutionIdList = new ArrayList<>();
+    List<String> pipelineIdentifierList = new ArrayList<>();
 
     HashMap<String, List<ServiceDeploymentInfo>> serviceTagMap = new HashMap<>();
 
@@ -866,20 +885,24 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     deploymentStatus = deploymentStatusInfoList.getDeploymentStatus();
     endTs = deploymentStatusInfoList.getEndTs();
     namePipelineList = deploymentStatusInfoList.getNamePipelineList();
-    planExecutionIdList = deploymentStatusInfoList.getPlanExecutionIdList();
+    objectIdList = deploymentStatusInfoList.getObjectIdList();
     startTs = deploymentStatusInfoList.getStartTs();
+    planExecutionIdList = deploymentStatusInfoList.getPlanExecutionIdList();
+    pipelineIdentifierList = deploymentStatusInfoList.getPipelineIdentifierList();
 
     String queryServiceTag = queryBuilderServiceTag(queryServiceNameTagId);
 
     serviceTagMap = queryCalculatorServiceTagMag(queryServiceTag);
 
     List<DeploymentStatusInfo> statusInfo = new ArrayList<>();
-    for (int i = 0; i < planExecutionIdList.size(); i++) {
-      String planExecutionId = planExecutionIdList.get(i);
+    for (int i = 0; i < objectIdList.size(); i++) {
+      String objectId = objectIdList.get(i);
       long startTime = startTs.get(i);
       long endTime = endTs.get(i);
-      statusInfo.add(this.getDeploymentStatusInfoObject(
-          namePipelineList.get(i), startTime, endTime, deploymentStatus.get(i), serviceTagMap.get(planExecutionId)));
+      String pipelineIdentifier = pipelineIdentifierList.get(i);
+      String planExecutionId = planExecutionIdList.get(i);
+      statusInfo.add(this.getDeploymentStatusInfoObject(namePipelineList.get(i), pipelineIdentifier, planExecutionId,
+          startTime, endTime, deploymentStatus.get(i), serviceTagMap.get(objectId)));
     }
     return statusInfo;
   }
@@ -911,10 +934,12 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         .build();
   }
 
-  private DeploymentStatusInfo getDeploymentStatusInfoObject(
-      String name, Long startTime, Long endTime, String status, List<ServiceDeploymentInfo> serviceDeploymentInfos) {
+  private DeploymentStatusInfo getDeploymentStatusInfoObject(String name, String identfier, String planExecutionId,
+      Long startTime, Long endTime, String status, List<ServiceDeploymentInfo> serviceDeploymentInfos) {
     return DeploymentStatusInfo.builder()
         .name(name)
+        .pipelineIdentifier(identfier)
+        .planExecutionId(planExecutionId)
         .startTs(startTime)
         .endTs(endTime)
         .status(status)
@@ -1135,5 +1160,69 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
   public long getStartingDateEpochValue(long epochValue, long startInterval) {
     return epochValue - epochValue % DAY_IN_MS;
+  }
+
+  /*
+    Returns break down of instance count for various environment type for given account+org+project+service
+  */
+  @Override
+  public InstanceCountDetailsByEnvTypeBase getActiveServiceInstanceCountBreakdown(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId) {
+    return instanceDashboardService.getActiveServiceInstanceCountBreakdown(
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId, getCurrentTime());
+  }
+
+  /*
+    Returns a list of buildId and instance counts for various environments for given account+org+project+service
+  */
+  @Override
+  public EnvBuildIdAndInstanceCountInfoList getEnvBuildInstanceCountByServiceId(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId) {
+    Map<String, List<BuildIdAndInstanceCount>> envIdToBuildMap = new HashMap<>();
+    Map<String, String> envIdToEnvNameMap = new HashMap<>();
+
+    List<EnvBuildInstanceCount> envBuildInstanceCounts = instanceDashboardService.getEnvBuildInstanceCountByServiceId(
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId, getCurrentTime());
+
+    envBuildInstanceCounts.forEach(envBuildInstanceCount -> {
+      final String envId = envBuildInstanceCount.getEnvId();
+      final String envName = envBuildInstanceCount.getEnvName();
+      final String buildId = envBuildInstanceCount.getTag();
+      final int count = envBuildInstanceCount.getCount();
+      envIdToBuildMap.putIfAbsent(envId, new ArrayList<>());
+
+      BuildIdAndInstanceCount buildIdAndInstanceCount =
+          BuildIdAndInstanceCount.builder().buildId(buildId).count(count).build();
+      envIdToBuildMap.get(envId).add(buildIdAndInstanceCount);
+
+      envIdToEnvNameMap.putIfAbsent(envId, envName);
+    });
+
+    List<EnvBuildIdAndInstanceCountInfo> envBuildIdAndInstanceCountInfoList = new ArrayList<>();
+    envIdToBuildMap.forEach((envId, buildIdAndInstanceCountList) -> {
+      EnvBuildIdAndInstanceCountInfo envBuildIdAndInstanceCountInfo =
+          EnvBuildIdAndInstanceCountInfo.builder()
+              .envId(envId)
+              .envName(envIdToEnvNameMap.getOrDefault(envId, ""))
+              .buildIdAndInstanceCountList(buildIdAndInstanceCountList)
+              .build();
+      envBuildIdAndInstanceCountInfoList.add(envBuildIdAndInstanceCountInfo);
+    });
+
+    return EnvBuildIdAndInstanceCountInfoList.builder()
+        .envBuildIdAndInstanceCountInfoList(envBuildIdAndInstanceCountInfoList)
+        .build();
+  }
+
+  /*
+    Returns list of instances for each build id for given account+org+project+service+env
+  */
+  @Override
+  public InstancesByBuildIdList getActiveInstancesByServiceIdEnvIdAndBuildIds(String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String serviceId, String envId, List<String> buildIds) {
+    List<InstancesByBuildId> instancesByBuildIdList =
+        instanceDashboardService.getActiveInstancesByServiceIdEnvIdAndBuildIds(
+            accountIdentifier, orgIdentifier, projectIdentifier, serviceId, envId, buildIds, getCurrentTime());
+    return InstancesByBuildIdList.builder().instancesByBuildIdList(instancesByBuildIdList).build();
   }
 }

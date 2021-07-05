@@ -36,6 +36,9 @@ public class WebhookTriggerProcessorUtils {
       return convertPullRequestHook(prHook);
     } else if (parseWebhookResponse.hasPush()) {
       PushHook pushHook = parseWebhookResponse.getPush();
+      if (pushHook.getRef().startsWith("refs/tags/")) {
+        throw new InvalidRequestException("Tag event not supported", USER);
+      }
       return converPushHook(pushHook);
     } else {
       log.error("Unknown webhook event");

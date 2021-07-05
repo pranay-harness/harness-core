@@ -102,6 +102,7 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -938,6 +939,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
             .description("description")
             .delegateConfigurationId("delConfigId")
             .size(DelegateSize.LAPTOP)
+            .tags(ImmutableSet.of("tag1", "tag2"))
             .build());
 
     assertThat(returnedDelegateGroup).isNotNull();
@@ -949,6 +951,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     assertThat(returnedDelegateGroup.getDescription()).isEqualTo("description");
     assertThat(returnedDelegateGroup.getDelegateConfigurationId()).isEqualTo("delConfigId");
     assertThat(returnedDelegateGroup.getSizeDetails().getSize()).isEqualTo(DelegateSize.LAPTOP);
+    assertThat(returnedDelegateGroup.getTags()).containsExactlyInAnyOrder("tag1", "tag2");
     assertThat(returnedDelegateGroup.isNg()).isTrue();
 
     List<OutboxEvent> outboxEvents = outboxService.list(OutboxEventFilter.builder().maximumEventsPolled(100).build());
@@ -974,6 +977,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                        .description("description")
                        .delegateConfigurationId("delConfigId")
                        .size(DelegateSize.LAPTOP)
+                       .tags(ImmutableSet.of("tag1", "tag2"))
                        .build());
 
     // test delete event

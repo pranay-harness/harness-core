@@ -26,6 +26,7 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
 import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.rbac.PrincipalTypeProtoToPrincipalTypeMapper;
@@ -48,8 +49,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.CDC)
 public class InfrastructureSectionStep implements ChildExecutable<InfraSectionStepParameters> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.INFRASTRUCTURE_SECTION.getName()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.INFRASTRUCTURE_SECTION.getName())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
 
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject private EnvironmentService environmentService;

@@ -49,10 +49,13 @@ import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.PublicApi;
+import io.harness.token.remote.TokenClient;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -224,7 +227,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
   private void registerAuthFilters(
       AccessControlConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.isAuthEnabled()) {
-      registerAccessControlAuthFilter(configuration, environment);
+      registerAccessControlAuthFilter(configuration, environment, injector);
       registerInternalApiAuthFilter(configuration, environment);
     }
   }
@@ -238,7 +241,8 @@ public class AccessControlApplication extends Application<AccessControlConfigura
                     "/swagger.json"));
   }
 
-  private void registerAccessControlAuthFilter(AccessControlConfiguration configuration, Environment environment) {
+  private void registerAccessControlAuthFilter(
+      AccessControlConfiguration configuration, Environment environment, Injector injector) {
     Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate =
         (getAuthenticationExemptedRequestsPredicate().negate())
             .and((getAuthFilterPredicate(InternalApi.class)).negate());
@@ -254,7 +258,8 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     serviceToSecretMapping.put(PIPELINE_SERVICE.getServiceId(), configuration.getDefaultServiceSecret());
     serviceToSecretMapping.put(ACCESS_CONTROL_SERVICE.getServiceId(), configuration.getDefaultServiceSecret());
     serviceToSecretMapping.put(IDENTITY_SERVICE.getServiceId(), configuration.getIdentityServiceSecret());
-    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
+    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping,
+        injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
   }
 
   private void registerInternalApiAuthFilter(AccessControlConfiguration configuration, Environment environment) {

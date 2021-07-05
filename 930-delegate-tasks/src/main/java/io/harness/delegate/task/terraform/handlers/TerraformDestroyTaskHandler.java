@@ -2,12 +2,10 @@ package io.harness.delegate.task.terraform.handlers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.provision.TerraformConstants.TERRAFORM_BACKEND_CONFIGS_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_VARIABLES_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TF_VAR_FILES_DIR;
-import static io.harness.provision.TerraformConstants.TF_WORKING_DIR;
 
 import static java.lang.String.format;
 
@@ -18,7 +16,6 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.task.terraform.TerraformBaseHelper;
 import io.harness.delegate.task.terraform.TerraformTaskNGParameters;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.TerraformCommandExecutionException;
 import io.harness.git.model.GitBaseRequest;
 import io.harness.logging.CommandExecutionStatus;
@@ -33,7 +30,9 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 
 @Slf4j
 @OwnedBy(CDP)
@@ -41,17 +40,17 @@ public class TerraformDestroyTaskHandler extends TerraformAbstractTaskHandler {
   @Inject TerraformBaseHelper terraformBaseHelper;
 
   @Override
-  public TerraformTaskNGResponse executeTaskInternal(TerraformTaskNGParameters taskParameters, String delegateId,
-      String taskId, LogCallback logCallback) throws IOException {
+  public TerraformTaskNGResponse executeTaskInternal(
+      TerraformTaskNGParameters taskParameters, String delegateId, String taskId, LogCallback logCallback)
+      throws TerraformCommandExecutionException, IOException, TimeoutException, InterruptedException {
     GitStoreDelegateConfig confileFileGitStore = taskParameters.getConfigFile().getGitStoreDelegateConfig();
-    String scriptPath = confileFileGitStore.getPaths().get(0);
+    String scriptPath = FilenameUtils.normalize(confileFileGitStore.getPaths().get(0));
 
     if (isNotEmpty(confileFileGitStore.getBranch())) {
       logCallback.saveExecutionLog("Branch: " + confileFileGitStore.getBranch(), INFO, CommandExecutionStatus.RUNNING);
     }
 
-    logCallback.saveExecutionLog(
-        "Normalized Path: " + confileFileGitStore.getPaths().get(0), INFO, CommandExecutionStatus.RUNNING);
+    logCallback.saveExecutionLog("Normalized Path: " + scriptPath, INFO, CommandExecutionStatus.RUNNING);
 
     if (isNotEmpty(confileFileGitStore.getCommitId())) {
       logCallback.saveExecutionLog(
@@ -62,7 +61,7 @@ public class TerraformDestroyTaskHandler extends TerraformAbstractTaskHandler {
     GitBaseRequest gitBaseRequestForConfigFile = terraformBaseHelper.getGitBaseRequestForConfigFile(
         taskParameters.getAccountId(), confileFileGitStore, (GitConfigDTO) confileFileGitStore.getGitConfigDTO());
 
-    String baseDir = TF_WORKING_DIR + taskParameters.getEntityId();
+    String baseDir = terraformBaseHelper.getBaseDir(taskParameters.getEntityId());
 
     String scriptDirectory = terraformBaseHelper.fetchConfigFileAndPrepareScriptDir(gitBaseRequestForConfigFile,
         taskParameters.getAccountId(), taskParameters.getWorkspace(), taskParameters.getCurrentStateFileId(),
@@ -109,28 +108,13 @@ public class TerraformDestroyTaskHandler extends TerraformAbstractTaskHandler {
       String stateFileId = terraformBaseHelper.uploadTfStateFile(
           taskParameters.getAccountId(), delegateId, taskId, taskParameters.getEntityId(), tfStateFile);
 
-      logCallback.saveExecutionLog("\nDone \n", INFO, CommandExecutionStatus.SUCCESS);
+      logCallback.saveExecutionLog("\nDone executing scripts.\n", INFO, CommandExecutionStatus.RUNNING);
 
       return TerraformTaskNGResponse.builder()
           .commitIdForConfigFilesMap(commitIdToFetchedFilesMap)
           .encryptedTfPlan(taskParameters.getEncryptedTfPlan())
           .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
           .stateFileId(stateFileId)
-          .build();
-
-    } catch (TerraformCommandExecutionException terraformCommandExecutionException) {
-      log.warn("Failed to execute TerraformApplyStep", terraformCommandExecutionException);
-      logCallback.saveExecutionLog("Failed", ERROR, CommandExecutionStatus.FAILURE);
-      return TerraformTaskNGResponse.builder()
-          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage(ExceptionUtils.getMessage(terraformCommandExecutionException))
-          .build();
-    } catch (Exception exception) {
-      log.warn("Exception Occurred", exception);
-      logCallback.saveExecutionLog("Failed", ERROR, CommandExecutionStatus.FAILURE);
-      return TerraformTaskNGResponse.builder()
-          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage(ExceptionUtils.getMessage(exception))
           .build();
     }
   }

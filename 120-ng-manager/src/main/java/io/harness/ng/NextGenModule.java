@@ -53,6 +53,12 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.encryptors.Encryptors;
+import io.harness.encryptors.KmsEncryptor;
+import io.harness.encryptors.VaultEncryptor;
+import io.harness.encryptors.clients.AwsKmsEncryptor;
+import io.harness.encryptors.clients.GcpKmsEncryptor;
+import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -101,6 +107,8 @@ import io.harness.ng.core.api.impl.NGModulesServiceImpl;
 import io.harness.ng.core.api.impl.NGSecretServiceV2Impl;
 import io.harness.ng.core.api.impl.TokenServiceImpl;
 import io.harness.ng.core.api.impl.UserGroupServiceImpl;
+import io.harness.ng.core.encryptors.NGManagerKmsEncryptor;
+import io.harness.ng.core.encryptors.NGManagerVaultEncryptor;
 import io.harness.ng.core.entityactivity.event.EntityActivityCrudEventMessageListener;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageModule;
 import io.harness.ng.core.entitysetupusage.event.SetupUsageChangeEventMessageListener;
@@ -176,6 +184,7 @@ import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.serializer.kryo.KryoConverterFactory;
 import io.harness.service.DelegateServiceDriverModule;
+import io.harness.service.InstanceModule;
 import io.harness.signup.SignupModule;
 import io.harness.telemetry.AbstractTelemetryModule;
 import io.harness.telemetry.TelemetryConfiguration;
@@ -183,6 +192,7 @@ import io.harness.time.TimeModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
+import io.harness.token.TokenClientModule;
 import io.harness.user.UserClientModule;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
@@ -433,6 +443,9 @@ public class NextGenModule extends AbstractModule {
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId(),
         this.appConfig.isEnableAudit()));
     install(new NotificationClientModule(appConfig.getNotificationClientConfiguration()));
+    install(new InstanceModule());
+    install(new TokenClientModule(this.appConfig.getNgManagerClientConfig(),
+        this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
 
     install(new ProviderModule() {
       @Provides
@@ -556,6 +569,44 @@ public class NextGenModule extends AbstractModule {
     sourceCodeManagerMapBinder.addBinding(SCMType.AZURE_DEV_OPS).to(AzureDevOpsSCMMapper.class);
 
     registerEventsFrameworkMessageListeners();
+    registerEncryptors();
+  }
+
+  void registerEncryptors() {
+    binder()
+        .bind(VaultEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.HASHICORP_VAULT_ENCRYPTOR.getName()))
+        .to(NGManagerVaultEncryptor.class);
+
+    binder()
+        .bind(VaultEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.AZURE_VAULT_ENCRYPTOR.getName()))
+        .to(NGManagerVaultEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.AWS_KMS_ENCRYPTOR.getName()))
+        .to(NGManagerKmsEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.GCP_KMS_ENCRYPTOR.getName()))
+        .to(NGManagerKmsEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.LOCAL_ENCRYPTOR.getName()))
+        .to(LocalEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.GLOBAL_AWS_KMS_ENCRYPTOR.getName()))
+        .to(AwsKmsEncryptor.class);
+
+    binder()
+        .bind(KmsEncryptor.class)
+        .annotatedWith(Names.named(Encryptors.GLOBAL_GCP_KMS_ENCRYPTOR.getName()))
+        .to(GcpKmsEncryptor.class);
   }
 
   private void registerOutboxEventHandlers() {

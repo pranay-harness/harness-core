@@ -51,7 +51,6 @@ import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
-import io.harness.serializer.ProtoUtils;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -302,7 +301,6 @@ public class OrchestrationEngine {
                                .setEventType(OrchestrationEventType.ORCHESTRATION_END)
                                .setStatus(nodeExecution.getStatus())
                                .setStepParameters(ByteString.copyFromUtf8(emptyIfNull(stepParameters)))
-                               .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
                                .build());
     orchestrationEndSubject.fireInform(OrchestrationEndObxxxxxxxx:onEnd, ambiance);
   }

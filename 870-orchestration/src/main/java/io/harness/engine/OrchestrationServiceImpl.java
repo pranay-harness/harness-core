@@ -24,7 +24,6 @@ import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.triggers.TriggerPayload;
-import io.harness.serializer.ProtoUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -71,7 +70,6 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     eventEmitter.emitEvent(OrchestrationEvent.newBuilder()
                                .setAmbiance(ambiance)
                                .setEventType(OrchestrationEventType.ORCHESTRATION_START)
-                               .setCreatedAt(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
                                .setTriggerPayload(planExecutionMetadata.getTriggerPayload() != null
                                        ? planExecutionMetadata.getTriggerPayload()
                                        : TriggerPayload.newBuilder().build())

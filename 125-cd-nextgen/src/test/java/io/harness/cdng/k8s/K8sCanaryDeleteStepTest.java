@@ -31,6 +31,7 @@ import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -157,12 +158,14 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(K8sCanaryDeleteStepParameters.infoBuilder().build()).build();
 
-    Ambiance rollback =
-        Ambiance.newBuilder()
-            .addLevels(Level.newBuilder()
-                           .setStepType(StepType.newBuilder().setType("ROLLBACK_OPTIONAL_CHILD_CHAIN").build())
-                           .build())
-            .build();
+    Ambiance rollback = Ambiance.newBuilder()
+                            .addLevels(Level.newBuilder()
+                                           .setStepType(StepType.newBuilder()
+                                                            .setType("ROLLBACK_OPTIONAL_CHILD_CHAIN")
+                                                            .setStepCategory(StepCategory.STEP)
+                                                            .build())
+                                           .build())
+                            .build();
     doReturn(OptionalSweepingOutput.builder()
                  .found(true)
                  .output(K8sCanaryOutcome.builder().canaryWorkloadDeployed(false).build())
@@ -184,12 +187,14 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(K8sCanaryDeleteStepParameters.infoBuilder().build()).build();
 
-    Ambiance rollback =
-        Ambiance.newBuilder()
-            .addLevels(Level.newBuilder()
-                           .setStepType(StepType.newBuilder().setType("ROLLBACK_OPTIONAL_CHILD_CHAIN").build())
-                           .build())
-            .build();
+    Ambiance rollback = Ambiance.newBuilder()
+                            .addLevels(Level.newBuilder()
+                                           .setStepType(StepType.newBuilder()
+                                                            .setType("ROLLBACK_OPTIONAL_CHILD_CHAIN")
+                                                            .setStepCategory(StepCategory.STEP)
+                                                            .build())
+                                           .build())
+                            .build();
     doReturn(OptionalSweepingOutput.builder()
                  .found(true)
                  .output(K8sCanaryOutcome.builder().canaryWorkloadDeployed(true).build())
@@ -223,5 +228,30 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
 
     assertThatThrownBy(() -> canaryDeleteStep.obtainTask(ambiance, stepElementParameters, stepInputPackage))
         .hasMessageContaining(K8S_CANARY_STEP_MISSING);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testObtainTaskNoCanaryWorkloadDeployedInRollback() {
+    Ambiance rollback =
+        Ambiance.newBuilder()
+            .addLevels(Level.newBuilder()
+                           .setStepType(StepType.newBuilder().setType("ROLLBACK_OPTIONAL_CHILD_CHAIN").build())
+                           .build())
+            .build();
+
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(K8sCanaryDeleteStepParameters.infoBuilder().build()).build();
+
+    doReturn(OptionalSweepingOutput.builder().found(false).build())
+        .when(executionSweepingOutputService)
+        .resolveOptional(
+            rollback, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME));
+
+    TaskRequest result = canaryDeleteStep.obtainTask(rollback, stepElementParameters, stepInputPackage);
+
+    assertThat(result.getSkipTaskRequest()).isNotNull();
+    assertThat(result.getSkipTaskRequest().getMessage()).isEqualTo(SKIP_K8S_CANARY_DELETE_STEP_EXECUTION);
   }
 }

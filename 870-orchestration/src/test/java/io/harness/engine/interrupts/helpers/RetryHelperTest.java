@@ -27,6 +27,7 @@ import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.interrupts.IssuedBy;
 import io.harness.pms.contracts.interrupts.ManualIssuer;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.rule.Owner;
 
@@ -72,7 +73,7 @@ public class RetryHelperTest extends OrchestrationTestBase {
             .mode(ExecutionMode.TASK)
             .node(PlanNodeProto.newBuilder()
                       .setUuid(generateUuid())
-                      .setStepType(StepType.newBuilder().setType("DUMMY").build())
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
                       .build())
             .executableResponse(ExecutableResponse.newBuilder()
                                     .setTask(TaskExecutableResponse.newBuilder()

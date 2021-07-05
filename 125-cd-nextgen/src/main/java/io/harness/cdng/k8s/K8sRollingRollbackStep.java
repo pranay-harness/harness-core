@@ -21,6 +21,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.SkipTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -35,8 +36,10 @@ import com.google.inject.Inject;
 
 @OwnedBy(CDP)
 public class K8sRollingRollbackStep extends TaskExecutableWithRollbackAndRbac<K8sDeployResponse> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLBACK_ROLLING.getYamlType()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.K8S_ROLLBACK_ROLLING.getYamlType())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
   public static final String K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME = "Rolling Deployment Rollback";
 
   @Inject K8sStepHelper k8sStepHelper;

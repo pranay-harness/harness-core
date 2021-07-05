@@ -176,6 +176,7 @@ public class OwnerRule implements TestRule {
   public static final String TATHAGAT = "tathagat.chaurasiya";
   public static final String TMACARI = "tudor.macari";
   public static final String NAMAN = "naman.verma";
+  public static final String NAMAN_TALAYCHA = "naman.talaycha";
   public static final String DEEPAK_PUTHRAYA = "deepak.puthraya";
   public static final String LUCAS = "lucas.mari";
   public static final String NICOLAS = "nicolas.bantar";
@@ -189,6 +190,7 @@ public class OwnerRule implements TestRule {
   public static final String JASMEET = "jasmeet.saini";
   public static final String MUNISH = "munish.jalota";
   public static final String MEET = "rathod.meetsatish";
+  public static final String RIYASYASH = "riyas.yash";
 
   @Deprecated public static final String UNKNOWN = "unknown";
 
@@ -305,6 +307,7 @@ public class OwnerRule implements TestRule {
           .put(ARCHIT, defaultUserInfo(ARCHIT).slack("U012QGPR9N0").team(CDC).build())
           .put(IVAN, defaultUserInfo(IVAN).slack("U014BFQ9PJS").team(CDP).build())
           .put(TATHAGAT, defaultUserInfo(TATHAGAT).slack("U015DTMJLA2").team(CDP).build())
+          .put(NAMAN_TALAYCHA, defaultUserInfo(NAMAN_TALAYCHA).slack("U021UU5UT46").team(CDP).build())
           .put(SAHIL, defaultUserInfo(SAHIL).slack("U0141LFMEF8").team(CDP).build())
           .put(BOJANA, defaultUserInfo(BOJANA).slack("U014GS4NFLM").team(CDP).build())
           .put(LAZAR, defaultUserInfo(LAZAR).slack("U0150TB4LSK").team(DEL).build())
@@ -324,6 +327,7 @@ public class OwnerRule implements TestRule {
           .put(JASMEET, defaultUserInfo(JASMEET).slack("U01LAM57V5K").team(DX).build())
           .put(MUNISH, defaultUserInfo(MUNISH).slack("U01U6B4DF7U").team(CE).build())
           .put(MEET, defaultUserInfo(MEET).slack("U021LUASDL7").team(DX).build())
+          .put(RIYASYASH, defaultUserInfo(RIYASYASH).slack("U01EM1JJE0H").team(CE).build())
           .build();
 
   private static String prDeveloperId = findDeveloperId(System.getenv(GHPRB_PULL_AUTHOR_EMAIL));

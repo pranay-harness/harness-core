@@ -9,6 +9,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.steps.executables.ChildChainExecutable;
@@ -29,7 +30,8 @@ import java.util.Map;
 @OwnedBy(CDC)
 @TargetModule(HarnessModule._878_PIPELINE_SERVICE_UTILITIES)
 public class SectionChainStep implements ChildChainExecutable<SectionChainStepParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.SECTION_CHAIN).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(OrchestrationStepTypes.SECTION_CHAIN).setStepCategory(StepCategory.STEP).build();
 
   @Inject KryoSerializer kryoSerializer;
 

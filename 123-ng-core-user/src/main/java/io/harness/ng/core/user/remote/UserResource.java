@@ -24,7 +24,7 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
+import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.TwoFactorAuthMechanismInfo;
@@ -33,11 +33,14 @@ import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.remote.dto.UserAggregateDTO;
 import io.harness.ng.core.user.remote.dto.UserFilter;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.remote.mapper.UserMetadataMapper;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.userprofile.services.api.UserInfoService;
+import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.security.dto.PrincipalType;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
@@ -45,6 +48,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
@@ -83,6 +87,7 @@ import retrofit2.http.Body;
 public class UserResource {
   AggregateUserService aggregateUserService;
   NgUserService ngUserService;
+  ProjectService projectService;
   UserInfoService userInfoService;
   AccessControlClient accessControlClient;
 
@@ -125,7 +130,7 @@ public class UserResource {
       @QueryParam("searchString") @DefaultValue("") String searchString, @BeanParam PageRequest pageRequest) {
     Pageable pageable = getPageRequest(pageRequest);
     Page<UserInfo> users = ngUserService.listCurrentGenUsers(accountIdentifier, searchString, pageable);
-    return ResponseDTO.newResponse(PageUtils.getNGPageResponse(users.map(UserMetadataMapper::writeDTO)));
+    return ResponseDTO.newResponse(PageUtils.getNGPageResponse(users.map(UserMetadataMapper::toDTO)));
   }
 
   @GET
@@ -133,7 +138,11 @@ public class UserResource {
   @ApiOperation(value = "get user project information", nickname = "getUserProjectInfo")
   public ResponseDTO<PageResponse<ProjectDTO>> getUserProjectInfo(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest pageRequest) {
-    return ResponseDTO.newResponse(PageUtils.getNGPageResponse(ngUserService.listProjects(accountId, pageRequest)));
+    Optional<String> userId = getUserIdentifierFromSecurityContext();
+    if (!userId.isPresent()) {
+      return ResponseDTO.newResponse(PageResponse.getEmptyPageResponse(pageRequest));
+    }
+    return ResponseDTO.newResponse(projectService.listProjectsForUser(userId.get(), accountId, pageRequest));
   }
 
   @POST
@@ -242,5 +251,14 @@ public class UserResource {
                       .build();
     return ResponseDTO.newResponse(
         TRUE.equals(ngUserService.removeUserFromScope(userId, scope, UserMembershipUpdateSource.USER)));
+  }
+
+  public Optional<String> getUserIdentifierFromSecurityContext() {
+    Optional<String> userId = Optional.empty();
+    if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
+        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
+      userId = Optional.of(SourcePrincipalContextBuilder.getSourcePrincipal().getName());
+    }
+    return userId;
   }
 }

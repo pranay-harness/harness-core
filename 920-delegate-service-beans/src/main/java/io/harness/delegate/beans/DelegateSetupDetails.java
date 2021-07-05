@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.beans.YamlDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,4 +26,6 @@ public class DelegateSetupDetails implements YamlDTO {
   @NotNull private String delegateConfigurationId;
 
   private K8sConfigDetails k8sConfigDetails;
+
+  private Set<String> tags;
 }

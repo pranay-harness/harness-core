@@ -17,6 +17,7 @@ import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -42,8 +43,10 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.CF)
 @Slf4j
 public class FlagConfigurationStep implements SyncExecutable<StepElementParameters> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(OrchestrationStepTypes.FLAG_CONFIGURATION).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(OrchestrationStepTypes.FLAG_CONFIGURATION)
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
   private static String INFRASTRUCTURE_COMMAND_UNIT = "Execute";
   @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
   @Inject @Named("cfPipelineAPI") private CFApi cfApi;

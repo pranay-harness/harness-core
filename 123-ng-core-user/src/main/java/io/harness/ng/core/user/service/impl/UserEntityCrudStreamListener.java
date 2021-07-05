@@ -2,7 +2,6 @@ package io.harness.ng.core.user.service.impl;
 
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CREATE_ACTION;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.UPDATE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_ENTITY;
@@ -71,38 +70,10 @@ public class UserEntityCrudStreamListener implements MessageListener {
       log.error("UserId can't be null in the event consumed from entity crud stream");
       return true;
     }
-    switch (action) {
-      case CREATE_ACTION:
-        return handleUserAddedAction(userDTO);
-      case UPDATE_ACTION:
-        return handleUserUpdateAction(userDTO);
-      case DELETE_ACTION:
-        return handleUserDeletedAction(userDTO);
-      default:
-        return true;
-    }
-  }
-
-  private boolean handleUserAddedAction(UserDTO userDTO) {
-    if (userDTO.getNewAccountsUserAddedToList() != null) {
+    if ((action.equals(CREATE_ACTION) || action.equals(UPDATE_ACTION))
+        && userDTO.getNewAccountsUserAddedToList() != null) {
       addUserToAccounts(userDTO.getUserId(), userDTO.getNewAccountsUserAddedToList());
     }
-    return true;
-  }
-
-  private boolean handleUserUpdateAction(UserDTO userDTO) {
-    if (userDTO.getNewAccountsUserAddedToList() != null) {
-      addUserToAccounts(userDTO.getUserId(), userDTO.getNewAccountsUserAddedToList());
-    }
-    if (userDTO.getAccountsUserRemovedFromList() != null) {
-      userDTO.getAccountsUserRemovedFromList().forEach(
-          accountIdentifier -> ngUserService.removeUserFromAccount(userDTO.getUserId(), accountIdentifier));
-    }
-    return true;
-  }
-
-  private boolean handleUserDeletedAction(UserDTO userDTO) {
-    ngUserService.removeUser(userDTO.getUserId());
     return true;
   }
 

@@ -149,7 +149,6 @@ modules = [
     "//948-access-control-admin-client",
     "//948-access-control-sdk",
     "//949-access-control-commons",
-    "//950-cg-ng-shared-orchestration-beans",
     "//950-command-library-common",
     "//950-common-entities",
     "//950-delegate-tasks-beans",

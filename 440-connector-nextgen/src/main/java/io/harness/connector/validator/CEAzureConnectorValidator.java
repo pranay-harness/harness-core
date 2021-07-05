@@ -38,6 +38,8 @@ import org.springframework.stereotype.Service;
 public class CEAzureConnectorValidator extends AbstractConnectorValidator {
   private static final String AZURE_STORAGE_SUFFIX = "blob.core.windows.net";
   private static final String AZURE_STORAGE_URL_FORMAT = "https://%s.%s";
+  private static final String GENERIC_LOGGING_ERROR =
+      "Failed to validate accountIdentifier:{} orgIdentifier:{} projectIdentifier:{}";
 
   @Inject private CEAzureSetupConfig ceAzureSetupConfig;
 
@@ -93,7 +95,7 @@ public class CEAzureConnectorValidator extends AbstractConnectorValidator {
           .testedAt(Instant.now().toEpochMilli())
           .build();
     } catch (MsalServiceException ex) {
-      ConnectorValidationResult.builder()
+      return ConnectorValidationResult.builder()
           .status(ConnectivityStatus.FAILURE)
           .errors(ImmutableList.of(ErrorDetail.builder()
                                        .code(ex.statusCode())
@@ -105,13 +107,14 @@ public class CEAzureConnectorValidator extends AbstractConnectorValidator {
           .build();
     } catch (Exception ex) {
       if (ex.getCause() instanceof UnknownHostException) {
-        ConnectorValidationResult.builder()
+        return ConnectorValidationResult.builder()
             .status(ConnectivityStatus.FAILURE)
             .errorSummary("The specified storage account does not exist")
             .testedAt(Instant.now().toEpochMilli())
             .build();
       }
-      ConnectorValidationResult.builder()
+      log.error(GENERIC_LOGGING_ERROR, accountIdentifier, orgIdentifier, projectIdentifier, ex);
+      return ConnectorValidationResult.builder()
           .status(ConnectivityStatus.FAILURE)
           .errorSummary("Exception while validating billing export details")
           .testedAt(Instant.now().toEpochMilli())

@@ -95,6 +95,18 @@ public class WebhookParameters {
   public static final String GIT_LAB_PUSH_REPOSITORY_CLONE_HTTP = "${project.http_url}";
   public static final String GIT_LAB_PUSH_REPOSITORY_CLONE_SSH = "${project.ssh_url}";
 
+  // Azure Devops Push event suggestions
+  /* For Code Push Event */
+  public static final String AZURE_DEVOPS_CODE_PUSH_REF_BRANCH =
+      "${resource.refUpdates[0].name.split('refs/heads/')[1]}";
+  public static final String AZURE_DEVOPS_CODE_PUSH_COMMIT_ID = "${resource.commits[0].commitId}";
+  public static final String AZURE_DEVOPS_CODE_PUSH_REPOSITORY_FULL_NAME = "${resource.repository.name}";
+  /* For Pull request merged event */
+  public static final String AZURE_DEVOPS_PULL_REQUEST_MERGED_REF_BRANCH =
+      "${resource.targetRefName.split('refs/heads/')[1]}";
+  public static final String AZURE_DEVOPS_PULL_REQUEST_MERGED_COMMIT_ID = "${resource.lastMergeSourceCommit.commitId}";
+  public static final String AZURE_DEVOPS_PULL_REQUEST_MERGED_REPOSITORY_FULL_NAME = "${resource.repository.name}";
+
   public static List<String> bitBucketPullRequestExpressions() {
     List<String> prSuggestions = new ArrayList<>();
     prSuggestions.add(PULL_REQUEST_ID);

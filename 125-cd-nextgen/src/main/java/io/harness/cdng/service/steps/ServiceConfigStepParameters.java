@@ -21,6 +21,7 @@ public class ServiceConfigStepParameters implements StepParameters {
 
   String childNodeId;
 
+  // Todo(Alexei) Remove this when @RecastIgnore annotation is added
   @Override
   public String toViewJson() {
     return RecastOrchestrationUtils.toDocumentJson(

@@ -21,6 +21,7 @@ import io.harness.pms.contracts.execution.TaskExecutableResponse;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.progress.ProgressEvent;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -64,7 +65,7 @@ public class RedisProgressEventPublisherTest extends OrchestrationTestBase {
             .mode(ExecutionMode.ASYNC)
             .node(PlanNodeProto.newBuilder()
                       .setUuid(generateUuid())
-                      .setStepType(StepType.newBuilder().setType("DUMMY").build())
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
                       .setStepParameters(RecastOrchestrationUtils.toDocumentJson(sectionStepParams))
                       .setServiceName("DUMMY")
                       .build())

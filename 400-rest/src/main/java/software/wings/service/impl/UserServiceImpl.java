@@ -656,7 +656,7 @@ public class UserServiceImpl implements UserService {
     newAccounts.add(account);
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
     updateOperations.set(UserKeys.accounts, newAccounts);
-    updateUser(user, updateOperations);
+    updateUser(user.getUuid(), updateOperations);
   }
 
   @Override
@@ -716,7 +716,7 @@ public class UserServiceImpl implements UserService {
       UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
       updateOperations.set(UserKeys.name, user.getName());
       updateOperations.set(UserKeys.passwordHash, hashpw(new String(user.getPassword()), BCrypt.gensalt()));
-      updateUser(existingUser, updateOperations);
+      updateUser(existingUser.getUuid(), updateOperations);
       return existingUser;
     }
   }
@@ -2149,7 +2149,7 @@ public class UserServiceImpl implements UserService {
             "Auditing updation of User Profile for user={} in account={}", user.getUuid(), account.getAccountName());
       });
     }
-    return updateUser(user, updateOperations);
+    return updateUser(user.getUuid(), updateOperations);
   }
 
   @Override
@@ -2241,7 +2241,7 @@ public class UserServiceImpl implements UserService {
       updateOperations.set(UserKeys.lastLogin, user.getLastLogin());
     }
 
-    return updateUser(user, updateOperations);
+    return updateUser(user.getUuid(), updateOperations);
   }
 
   @Override
@@ -2433,21 +2433,19 @@ public class UserServiceImpl implements UserService {
       if (defaultAccountId != null) {
         updateOp.set(UserKeys.defaultAccountId, defaultAccountId);
       }
-      updateUser(user, updateOp);
+      updateUser(user.getUuid(), updateOp);
     });
     auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, user);
     log.info("Auditing deletion of user={} in account={}", user.getName(), accountId);
   }
 
   @Override
-  public User updateUser(User oldUser, UpdateOperations<User> updateOperations) {
-    if (oldUser.getUuid() == null) {
-      return null;
-    }
-    User updatedUser = wingsPersistence.findAndModify(
-        wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, oldUser.getUuid()), updateOperations,
-        HPersistence.returnNewOptions);
-    evictUserFromCache(oldUser.getUuid());
+  public User updateUser(String userId, UpdateOperations<User> updateOperations) {
+    User oldUser =
+        wingsPersistence.findAndModify(wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, userId),
+            updateOperations, HPersistence.returnOldOptions);
+    User updatedUser = wingsPersistence.createQuery(User.class).filter(BaseKeys.uuid, userId).get();
+    evictUserFromCache(userId);
     publishUserEvent(oldUser, updatedUser);
     return updatedUser;
   }
@@ -2836,7 +2834,7 @@ public class UserServiceImpl implements UserService {
     if (account != null) {
       updateOperations.addToSet(UserKeys.accounts, account.getUuid());
     }
-    updateUser(existingUser, updateOperations);
+    updateUser(existingUser.getUuid(), updateOperations);
   }
 
   private Account setupTrialAccount(String accountName, String companyName) {
@@ -3465,7 +3463,7 @@ public class UserServiceImpl implements UserService {
     updateOperations.set(UserKeys.accounts, newAccountsList);
     updateOperations.set(UserKeys.pendingAccounts, newPendingAccountsList);
     updateOperations.set(UserKeys.emailVerified, markEmailVerified);
-    updateUser(existingUser, updateOperations);
+    updateUser(existingUser.getUuid(), updateOperations);
   }
 
   private void markUserInviteComplete(UserInvite userInvite) {
@@ -3479,7 +3477,7 @@ public class UserServiceImpl implements UserService {
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
     updateOperations.set(UserKeys.name, userInvite.getName().trim());
     updateOperations.set(UserKeys.passwordHash, hashpw(new String(userInvite.getPassword()), BCrypt.gensalt()));
-    updateUser(existingUser, updateOperations);
+    updateUser(existingUser.getUuid(), updateOperations);
   }
 
   private String setupAccountBasedOnProduct(User user, UserInvite userInvite, MarketPlace marketPlace) {

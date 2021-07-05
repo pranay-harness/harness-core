@@ -5,11 +5,16 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretReference;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.annotations.ApiModelProperty;
+import java.util.Collections;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,13 +35,13 @@ public class GcpKmsConnectorDTO extends ConnectorConfigDTO {
   private String region;
   private String keyRing;
   private String keyName;
-  private char[] credentials;
+  @SecretReference @ApiModelProperty(dataType = "string") @NotNull SecretRefData credentials;
   private boolean isDefault;
   @JsonIgnore private boolean harnessManaged;
 
   @Builder
   public GcpKmsConnectorDTO(
-      String projectId, String region, String keyRing, String keyName, char[] credentials, boolean isDefault) {
+      String projectId, String region, String keyRing, String keyName, SecretRefData credentials, boolean isDefault) {
     this.projectId = projectId;
     this.region = region;
     this.keyRing = keyRing;
@@ -47,6 +52,6 @@ public class GcpKmsConnectorDTO extends ConnectorConfigDTO {
 
   @Override
   public List<DecryptableEntity> getDecryptableEntities() {
-    return null;
+    return Collections.singletonList(this);
   }
 }

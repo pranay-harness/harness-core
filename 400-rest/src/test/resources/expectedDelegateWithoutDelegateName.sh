@@ -55,6 +55,28 @@ while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
+function jar_app_version() {
+  JAR=$1
+  if unzip -l $JAR | grep -q io/harness/versionInfo.yaml
+  then
+    VERSION=$(unzip -c $JAR io/harness/versionInfo.yaml | grep "^version " | cut -d ":" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
+  fi
+
+  if [ -z "$VERSION" ]
+  then
+    if unzip -l $JAR | grep -q main/resources-filtered/versionInfo.yaml
+    then
+      VERSION=$(unzip -c $JAR main/resources-filtered/versionInfo.yaml | grep "^version " | cut -d ":" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
+    fi
+  fi
+
+  if [ -z "$VERSION" ]
+  then
+    VERSION=$(unzip -c $JAR META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
+  fi
+  echo $VERSION
+}
+
 if [ -z "$1" ]; then
   echo "This script is not meant to be executed directly. The watcher uses it to manage delegate processes."
   exit 0
@@ -153,11 +175,12 @@ if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
     echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
     curl $MANAGER_PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
   else
-    CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
-    if [[ $REMOTE_DELEGATE_VERSION != $CURRENT_VERSION ]]; then
+    DELEGATE_CURRENT_VERSION=$(jar_app_version delegate.jar)
+    if [[ $REMOTE_DELEGATE_VERSION != $DELEGATE_CURRENT_VERSION ]]; then
+      echo "The current version $DELEGATE_CURRENT_VERSION is not the same as the expected remote version $REMOTE_DELEGATE_VERSION"
       echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
-      mkdir -p backup.$CURRENT_VERSION
-      cp delegate.jar backup.$CURRENT_VERSION
+      mkdir -p backup.$DELEGATE_CURRENT_VERSION
+      cp delegate.jar backup.$DELEGATE_CURRENT_VERSION
       curl $MANAGER_PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
     fi
   fi

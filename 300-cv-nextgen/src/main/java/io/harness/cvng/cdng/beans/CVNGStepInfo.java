@@ -14,6 +14,7 @@ import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Preconditions;
 import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
 import java.util.List;
@@ -73,5 +74,10 @@ public class CVNGStepInfo implements CVStepInfoBase {
 
   private ParameterField<String> createExpressionField(String expression) {
     return ParameterField.createExpressionField(true, expression, null, true);
+  }
+
+  public void validate() {
+    Preconditions.checkNotNull(monitoredServiceRef, "monitoredServiceRef can not be null");
+    spec.validate();
   }
 }

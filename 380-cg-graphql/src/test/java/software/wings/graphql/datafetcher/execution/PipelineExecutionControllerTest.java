@@ -233,6 +233,29 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testReturnNullWhenEnvVariableMadeNonRuntime() throws Exception {
+    // Test case for getting env variable for pipelines with non runtime env variable
+
+    WorkflowExecution execution = WorkflowExecution.builder().executionArgs(ExecutionArgs.builder().build()).build();
+
+    Variable envNonRuntimeVar = buildVariable("env", ENVIRONMENT, false);
+    Pipeline pipeline = buildPipeline(null, envNonRuntimeVar);
+    when(environmentService.getEnvironmentByName(anyString(), eq("env")))
+        .thenReturn(Environment.Builder.anEnvironment().build());
+
+    assertThatThrownBy(
+        ()
+            -> pipelineExecutionController.resolveEnvId(execution, pipeline,
+                asList(QLVariableInput.builder()
+                           .name("env")
+                           .variableValue(QLVariableValue.builder().value("env").type(QLVariableValueType.NAME).build())
+                           .build())))
+        .hasMessage("Pipeline [null] has environment parameterized. However, the value not supplied");
+  }
+
+  @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void testEnvVariableNonTemplatized() {

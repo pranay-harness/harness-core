@@ -4,8 +4,11 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.logstreaming.CommandUnitProgress;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+import io.harness.delegate.beans.logstreaming.NGDelegateLogCallback;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sNGTaskResponse;
@@ -13,8 +16,12 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogCallback;
+import io.harness.logging.LogLevel;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,6 +36,7 @@ public abstract class K8sRequestHandler {
           executeTaskInternal(k8sDeployRequest, k8SDelegateTaskParams, logStreamingTaskClient, commandUnitsProgress);
     } catch (IOException ex) {
       logError(k8sDeployRequest, ex);
+      closeOpenCommandUnits(commandUnitsProgress, logStreamingTaskClient, ex);
       result = K8sDeployResponse.builder()
                    .commandExecutionStatus(CommandExecutionStatus.FAILURE)
                    .k8sNGTaskResponse(getTaskResponseOnFailure())
@@ -36,6 +44,7 @@ public abstract class K8sRequestHandler {
                    .build();
     } catch (TimeoutException ex) {
       logError(k8sDeployRequest, ex);
+      closeOpenCommandUnits(commandUnitsProgress, logStreamingTaskClient, ex);
       result = K8sDeployResponse.builder()
                    .commandExecutionStatus(CommandExecutionStatus.FAILURE)
                    .k8sNGTaskResponse(getTaskResponseOnFailure())
@@ -43,6 +52,7 @@ public abstract class K8sRequestHandler {
                    .build();
     } catch (InterruptedException ex) {
       logError(k8sDeployRequest, ex);
+      closeOpenCommandUnits(commandUnitsProgress, logStreamingTaskClient, ex);
       Thread.currentThread().interrupt();
       result = K8sDeployResponse.builder()
                    .commandExecutionStatus(CommandExecutionStatus.FAILURE)
@@ -51,6 +61,7 @@ public abstract class K8sRequestHandler {
                    .build();
     } catch (WingsException ex) {
       logError(k8sDeployRequest, ex);
+      closeOpenCommandUnits(commandUnitsProgress, logStreamingTaskClient, ex);
       result = K8sDeployResponse.builder()
                    .commandExecutionStatus(CommandExecutionStatus.FAILURE)
                    .k8sNGTaskResponse(getTaskResponseOnFailure())
@@ -58,6 +69,7 @@ public abstract class K8sRequestHandler {
                    .build();
     } catch (Exception ex) {
       logError(k8sDeployRequest, ex);
+      closeOpenCommandUnits(commandUnitsProgress, logStreamingTaskClient, ex);
       result = K8sDeployResponse.builder()
                    .commandExecutionStatus(CommandExecutionStatus.FAILURE)
                    .k8sNGTaskResponse(getTaskResponseOnFailure())
@@ -81,6 +93,28 @@ public abstract class K8sRequestHandler {
 
   protected K8sNGTaskResponse getTaskResponseOnFailure() {
     return null;
+  }
+
+  private void closeOpenCommandUnits(
+      CommandUnitsProgress commandUnitsProgress, ILogStreamingTaskClient logStreamingTaskClient, Throwable throwable) {
+    try {
+      LinkedHashMap<String, CommandUnitProgress> commandUnitProgressMap =
+          commandUnitsProgress.getCommandUnitProgressMap();
+      if (EmptyPredicate.isNotEmpty(commandUnitProgressMap)) {
+        for (Map.Entry<String, CommandUnitProgress> entry : commandUnitProgressMap.entrySet()) {
+          String commandUnitName = entry.getKey();
+          CommandUnitProgress progress = entry.getValue();
+          if (CommandExecutionStatus.RUNNING == progress.getStatus()) {
+            LogCallback logCallback =
+                new NGDelegateLogCallback(logStreamingTaskClient, commandUnitName, false, commandUnitsProgress);
+            logCallback.saveExecutionLog(
+                String.format("Failed: [%s].", ExceptionUtils.getMessage(throwable)), LogLevel.ERROR, FAILURE);
+          }
+        }
+      }
+    } catch (Exception ex) {
+      log.error("Exception while closing command units", ex);
+    }
   }
 
   private void logError(K8sDeployRequest k8sDeployRequest, Throwable ex) {

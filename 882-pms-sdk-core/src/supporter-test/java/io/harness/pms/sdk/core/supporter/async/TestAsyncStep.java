@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -18,7 +19,8 @@ import java.util.Map;
 
 @OwnedBy(PIPELINE)
 public class TestAsyncStep implements AsyncExecutable<TestStepParameters> {
-  public static final StepType ASYNC_STEP_TYPE = StepType.newBuilder().setType("TEST_STATE_PLAN_ASYNC").build();
+  public static final StepType ASYNC_STEP_TYPE =
+      StepType.newBuilder().setType("TEST_STATE_PLAN_ASYNC").setStepCategory(StepCategory.STEP).build();
 
   @Override
   public Class<TestStepParameters> getStepParametersClass() {

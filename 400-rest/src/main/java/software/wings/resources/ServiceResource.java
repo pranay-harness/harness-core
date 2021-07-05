@@ -50,6 +50,7 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
@@ -819,9 +820,11 @@ public class ServiceResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ)
-  public RestResponse<PageResponse<HelmChart>> getHelmChartVersions(@QueryParam("appId") String appId,
-      @PathParam("serviceId") String serviceId, @BeanParam PageRequest<HelmChart> pageRequest) {
-    return new RestResponse<>(helmChartService.listHelmChartsForService(appId, serviceId, pageRequest));
+  public RestResponse<Map<String, List<HelmChart>>> getHelmChartVersions(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @QueryParam("manifestSearchString") String manifestSearchString,
+      @BeanParam PageRequest<HelmChart> pageRequest) {
+    return new RestResponse<>(
+        helmChartService.listHelmChartsForService(appId, serviceId, manifestSearchString, pageRequest));
   }
 
   @PUT

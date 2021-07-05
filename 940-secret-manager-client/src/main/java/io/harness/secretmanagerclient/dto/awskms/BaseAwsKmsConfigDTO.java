@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 
 @OwnedBy(PL)
@@ -21,6 +22,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @ToString
 @EqualsAndHashCode
+@FieldNameConstants(innerTypeName = "BaseAwsKmsConfigDTOKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BaseAwsKmsConfigDTO {
   AwsKmsCredentialType credentialType;

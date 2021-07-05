@@ -23,6 +23,8 @@ import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
@@ -285,6 +287,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
         .when(ngSecretManagerService)
         .get(any(), any(), any(), any(), eq(true));
     when(vaultService.listSecretEngines(any())).thenReturn(new ArrayList<>());
+    SecretRefData authToken = new SecretRefData("dummy", Scope.ACCOUNT, "authToken".toCharArray());
     SecretManagerMetadataDTO secretManagerMetadataDTO = ngSecretManagerService.getMetadata("account",
         SecretManagerMetadataRequestDTO.builder()
             .encryptionType(EncryptionType.VAULT)
@@ -292,7 +295,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
             .spec(VaultMetadataRequestSpecDTO.builder()
                       .url("url")
                       .accessType(AccessType.TOKEN)
-                      .spec(VaultAuthTokenCredentialDTO.builder().authToken("authToken").build())
+                      .spec(VaultAuthTokenCredentialDTO.builder().authToken(authToken).build())
                       .build())
             .build());
     assertThat(secretManagerMetadataDTO).isNotNull();
@@ -309,6 +312,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
         .when(ngSecretManagerService)
         .get(any(), any(), any(), any(), eq(true));
     when(vaultService.listSecretEngines(any())).thenReturn(new ArrayList<>());
+    SecretRefData secretId = new SecretRefData("dummy", Scope.ACCOUNT, "secretId".toCharArray());
     SecretManagerMetadataDTO secretManagerMetadataDTO = ngSecretManagerService.getMetadata("account",
         SecretManagerMetadataRequestDTO.builder()
             .encryptionType(EncryptionType.VAULT)
@@ -316,7 +320,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
             .spec(VaultMetadataRequestSpecDTO.builder()
                       .url("url")
                       .accessType(AccessType.APP_ROLE)
-                      .spec(VaultAppRoleCredentialDTO.builder().appRoleId("appRoleId").secretId("secretId").build())
+                      .spec(VaultAppRoleCredentialDTO.builder().appRoleId("appRoleId").secretId(secretId).build())
                       .build())
             .build());
     assertThat(secretManagerMetadataDTO).isNotNull();
@@ -331,6 +335,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   public void testGetMetadata_ForNewVault() {
     doReturn(Optional.empty()).when(ngSecretManagerService).get(any(), any(), any(), any(), eq(true));
     when(vaultService.listSecretEngines(any())).thenReturn(new ArrayList<>());
+    SecretRefData secretId = new SecretRefData("dummy", Scope.ACCOUNT, "secretId".toCharArray());
     SecretManagerMetadataDTO secretManagerMetadataDTO = ngSecretManagerService.getMetadata("account",
         SecretManagerMetadataRequestDTO.builder()
             .encryptionType(EncryptionType.VAULT)
@@ -338,7 +343,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
             .spec(VaultMetadataRequestSpecDTO.builder()
                       .url("url")
                       .accessType(AccessType.APP_ROLE)
-                      .spec(VaultAppRoleCredentialDTO.builder().appRoleId("appRoleId").secretId("secretId").build())
+                      .spec(VaultAppRoleCredentialDTO.builder().appRoleId("appRoleId").secretId(secretId).build())
                       .build())
             .build());
     assertThat(secretManagerMetadataDTO).isNotNull();

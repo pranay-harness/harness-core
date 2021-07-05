@@ -69,9 +69,9 @@ gazelle_dependencies()
 
 http_archive(
     name = "com_github_query_builder_generator",
-    sha256 = "e9b3500c6003581d79bebff5b4735f3ac854a3d61831f30ef7b31a0d1867a347",
-    strip_prefix = "query-builder-generator-0.1.21",
-    urls = ["https://github.com/wings-software/query-builder-generator/archive/refs/tags/v0.1.21.zip"],
+    sha256 = "7f6a7b4dc2d038e5a3e205aa1ac24e30659c9506c48105040732f3ff189c437f",
+    strip_prefix = "query-builder-generator-0.1.22",
+    urls = ["https://github.com/wings-software/query-builder-generator/archive/refs/tags/v0.1.22.zip"],
 )
 
 # Add a go repository
@@ -1393,7 +1393,6 @@ plain_artifacts = [
     "net.i2p.crypto:eddsa:0.2.0",
     "net.java.dev.jna:jna-platform:5.5.0",
     "net.java.dev.jna:jna:5.5.0",
-    "net.javacrumbs.json-unit:json-unit-fluent:1.12.1",
     "net.jcip:jcip-annotations:1.0",
     "net.jodah:expiringmap:0.5.7",
     "net.jodah:failsafe:2.2.0",
@@ -1482,7 +1481,6 @@ plain_artifacts = [
     "org.atmosphere:atmosphere-runtime:2.4.32",
     "org.atmosphere:wasync:2.1.7",
     "org.atteo:evo-inflector:1.2.2",
-    "org.awaitility:awaitility:2.0.0",
     "org.bitbucket.b_c:jose4j:0.7.0",
     "org.bouncycastle:bcpg-jdk15on:1.64",
     "org.bouncycastle:bcpkix-jdk15on:1.64",
@@ -1775,14 +1773,6 @@ maven_install(
             ],
         ),
         maven.artifact(
-            group = "de.bwaldvogel",
-            artifact = "mongo-java-server",
-            version = "1.34.0",
-            exclusions = [
-                "io.netty:netty-transport",
-            ],
-        ),
-        maven.artifact(
             group = "org.clojure",
             artifact = "clojure",
             version = "1.9.0",
@@ -1809,6 +1799,9 @@ maven_install(
         maven_test_artifact("com.github.tomakehurst:wiremock-jre8-standalone:2.27.2"),
         maven_test_artifact("com.icegreen:greenmail:1.5.0"),
         maven_test_artifact("com.squareup.okhttp3:mockwebxxxxxxxx3.6.0"),
+        maven_test_artifact("de.bwaldvogel:mongo-java-server-core:1.34.0"),
+        maven_test_artifact("de.bwaldvogel:mongo-java-server-memory-backend:1.34.0"),
+        maven_test_artifact("de.bwaldvogel:mongo-java-xxxxxxxx1.34.0"),
         maven_test_artifact("de.flapdoodle.embed:de.flapdoodle.embed.mongo:2.0.3"),
         maven_test_artifact("de.flapdoodle.embed:de.flapdoodle.embed.process:2.0.3"),
         maven_test_artifact("io.dropwizard:dropwizard-testing:1.3.24"),
@@ -1816,7 +1809,9 @@ maven_install(
         maven_test_artifact("io.fabric8:mockwebxxxxxxxx0.1.0"),
         maven_test_artifact("io.grpc:grpc-testing:1.33.1"),
         maven_test_artifact("junit:junit:4.12"),
+        maven_test_artifact("net.javacrumbs.json-unit:json-unit-fluent:1.12.1"),
         maven_test_artifact("org.assertj:assertj-core:3.16.1"),
+        maven_test_artifact("org.awaitility:awaitility:2.0.0"),
         maven_test_artifact("org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-grizzly2:2.23.1"),
         maven_test_artifact("org.glassfish.jersey.test-framework.providers:jersey-test-framework-provider-inmemory:2.23.1"),
         maven_test_artifact("org.glassfish.jersey.test-framework:jersey-test-framework-core:2.23.1"),
@@ -5281,7 +5276,7 @@ container_pull(
     digest = "sha256:a568e8f557c055ce59215ccdb864e8a73ac7ff9deed260ae9ced82f0a86e42bb",
     registry = "us.gcr.io",
     repository = "platform-205701/alpine",
-    tag = "safe-alpine3.12-sec1096-apm",
+    tag = "safe-alpine3.12-sec1338-apm",
 )
 
 container_pull(
@@ -5289,7 +5284,7 @@ container_pull(
     digest = "sha256:8540a3afd5c6d43a9f6549f19f56abff42c7010265426c3c39ccc64d1d88a1c2",
     registry = "us.gcr.io",
     repository = "platform-205701/ubuntu",
-    tag = "safe-ubuntu18.04-sec1096",
+    tag = "safe-ubuntu18.04-sec1338",
 )
 
 load(

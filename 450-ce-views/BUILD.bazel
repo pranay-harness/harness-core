@@ -8,6 +8,9 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//490-ce-commons:module",
+        "//940-feature-flag:module",
+        "//956-feature-flag-beans:module",
         "//960-persistence:module",
         "//980-commons:module",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",

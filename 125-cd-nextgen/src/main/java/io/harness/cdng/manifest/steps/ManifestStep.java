@@ -22,6 +22,7 @@ import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -43,7 +44,8 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 public class ManifestStep implements SyncExecutable<ManifestStepParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.MANIFEST.getName()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(ExecutionNodeType.MANIFEST.getName()).setStepCategory(StepCategory.STEP).build();
 
   @Inject private ServiceStepsHelper serviceStepsHelper;
   @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
@@ -101,6 +103,12 @@ public class ManifestStep implements SyncExecutable<ManifestStepParameters> {
   }
 
   private void getConnector(ManifestAttributes manifestAttributes, Ambiance ambiance) {
+    // In some cases (eg. in k8s manifests) we're skipping auto evaluation, in this case we can skip connector
+    // validation for now. It will be done when all expression will be resolved
+    if (manifestAttributes.getStoreConfig().getConnectorReference().isExpression()) {
+      return;
+    }
+
     if (ParameterField.isNull(manifestAttributes.getStoreConfig().getConnectorReference())) {
       throw new InvalidRequestException(
           "Connector ref field not present in manifest with identifier " + manifestAttributes.getIdentifier());

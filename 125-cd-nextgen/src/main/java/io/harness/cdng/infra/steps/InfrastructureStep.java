@@ -40,6 +40,7 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -63,8 +64,10 @@ import java.util.Set;
 
 @OwnedBy(CDC)
 public class InfrastructureStep implements SyncExecutableWithRbac<Infrastructure> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.INFRASTRUCTURE.getName()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.INFRASTRUCTURE.getName())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
   private static String INFRASTRUCTURE_COMMAND_UNIT = "Execute";
 
   @Inject private EnvironmentService environmentService;

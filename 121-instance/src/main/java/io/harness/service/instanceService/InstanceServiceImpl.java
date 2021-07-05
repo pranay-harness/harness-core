@@ -2,7 +2,9 @@ package io.harness.service.instanceService;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.entities.instance.Instance;
+import io.harness.dtos.InstanceDTO;
+import io.harness.mappers.InstanceMapper;
+import io.harness.models.CountByEnvType;
 import io.harness.models.EnvBuildInstanceCount;
 import io.harness.models.InstancesByBuildId;
 import io.harness.repositories.instance.InstanceRepository;
@@ -19,23 +21,36 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 public class InstanceServiceImpl implements InstanceService {
   private final InstanceRepository instanceRepository;
 
+  @Override
+  public List<InstanceDTO> getActiveInstancesByAccount(String accountIdentifier, long timestamp) {
+    return InstanceMapper.toDTO(instanceRepository.getActiveInstancesByAccount(accountIdentifier, timestamp));
+  }
+
+  @Override
+  public List<InstanceDTO> getInstances(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String infrastructureMappingId) {
+    return InstanceMapper.toDTO(
+        instanceRepository.getInstances(accountIdentifier, orgIdentifier, projectIdentifier, infrastructureMappingId));
+  }
+
   /*
     Returns list of active instances for given account+org+project at given timestamp
   */
   @Override
-  public List<Instance> getActiveInstances(
+  public List<InstanceDTO> getActiveInstances(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, long timestampInMs) {
-    return instanceRepository.getActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier, timestampInMs);
+    return InstanceMapper.toDTO(
+        instanceRepository.getActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier, timestampInMs));
   }
 
   /*
     Returns list of active instances for given account+org+project+service at given timestamp
   */
   @Override
-  public List<Instance> getActiveInstancesByServiceId(
+  public List<InstanceDTO> getActiveInstancesByServiceId(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
-    return instanceRepository.getActiveInstancesByServiceId(
-        accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs);
+    return InstanceMapper.toDTO(instanceRepository.getActiveInstancesByServiceId(
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs));
   }
 
   /*
@@ -57,5 +72,16 @@ public class InstanceServiceImpl implements InstanceService {
       long timestampInMs, int limit) {
     return instanceRepository.getActiveInstancesByServiceIdEnvIdAndBuildIds(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, envId, buildIds, timestampInMs, limit);
+  }
+
+  /*
+    Returns breakup of active instances by envType at a given timestamp for specified accountIdentifier,
+    projectIdentifier, orgIdentifier and serviceId
+  */
+  @Override
+  public AggregationResults<CountByEnvType> getActiveServiceInstanceCountBreakdown(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
+    return instanceRepository.getActiveServiceInstanceCountBreakdown(
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs);
   }
 }

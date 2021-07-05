@@ -1,18 +1,14 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class CustomDataCollectionUtils {
   private static final String ISO_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+  private static final Pattern DOLLAR_REF_REGEX = Pattern.compile("\\$\\{(.*?)}");
 
   public static String resolveField(String string, String fieldToResolve, String value) {
     if (isEmpty(string)) {
@@ -71,24 +68,6 @@ public class CustomDataCollectionUtils {
     return result;
   }
 
-  public static Map<String, Object> resolveMap(
-      Map<String, Object> input, String host, long startTime, long endTime, String query) {
-    Map<String, Object> resolvedMap = new HashMap<>();
-    if (input == null) {
-      return resolvedMap;
-    }
-    input.forEach((key, value) -> {
-      Object resolvedObject = null;
-      if (value instanceof Map) {
-        resolvedObject = resolveMap((Map) value, host, startTime, endTime, query);
-      } else if (value instanceof String) {
-        resolvedObject = resolvedUrl((String) value, host, startTime, endTime, query);
-      }
-      resolvedMap.put(key, resolvedObject);
-    });
-    return resolvedMap;
-  }
-
   public static String getMaskedString(String stringToMask, String matcherPattern, List<String> stringsToReplace) {
     Pattern batchPattern = Pattern.compile(matcherPattern);
     Matcher matcher = batchPattern.matcher(stringToMask);
@@ -101,22 +80,19 @@ public class CustomDataCollectionUtils {
     return stringToMask;
   }
 
-  public static String getConcatenatedQuery(Set<String> queries, String separator) {
-    String concatenatedQuery = null;
-    if (isNotEmpty(queries) && isNotEmpty(separator)) {
-      StringBuilder hostQueryBuilder = new StringBuilder();
-      queries.forEach(host -> {
-        if (!hostQueryBuilder.toString().isEmpty()) {
-          hostQueryBuilder.append(separator);
-        }
-        hostQueryBuilder.append(host);
-      });
-      concatenatedQuery = hostQueryBuilder.toString();
-    } else if (isNotEmpty(queries) && queries.size() == 1) {
-      concatenatedQuery = new ArrayList<>(queries).get(0);
-    } else {
-      log.error("Incorrect combination of query and separator");
+  public static String resolveDollarReferences(String input, Map<String, String> replacements) {
+    StringBuilder stringBuilder = new StringBuilder();
+    Matcher matcher = DOLLAR_REF_REGEX.matcher(input);
+    int start = 0;
+    while (matcher.find()) {
+      String dollarVariableKey = matcher.group(1);
+      if (replacements.containsKey(dollarVariableKey)) {
+        stringBuilder.append(input, start, matcher.start());
+        stringBuilder.append(replacements.get(dollarVariableKey));
+        start = matcher.end();
+      }
     }
-    return concatenatedQuery;
+    stringBuilder.append(input, start, input.length());
+    return stringBuilder.toString();
   }
 }

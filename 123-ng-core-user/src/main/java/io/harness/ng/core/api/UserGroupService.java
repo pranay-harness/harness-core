@@ -8,10 +8,9 @@ import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
-import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserGroup;
 import io.harness.ng.core.user.remote.dto.UserFilter;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 
 import software.wings.beans.sso.SSOType;
 
@@ -50,7 +49,7 @@ public interface UserGroupService {
   UserGroup addMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String userGroupIdentifier, String userIdentifier);
 
-  void addUserToUserGroups(String accountIdentifier, UserInfo userInfo, List<UserGroup> userGroups);
+  void addUserToUserGroups(String accountIdentifier, String userId, List<UserGroup> userGroups);
 
   UserGroup removeMember(Scope scope, String userGroupIdentifier, String userIdentifier);
 

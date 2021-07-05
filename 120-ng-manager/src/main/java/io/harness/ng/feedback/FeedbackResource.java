@@ -39,6 +39,7 @@ public class FeedbackResource {
   public FeedbackResource(FeedbackService feedbackService) {
     this.feedbackService = feedbackService;
   }
+
   @POST
   @ApiOperation(value = "Saves Feedback", nickname = "saveFeedback")
   public ResponseDTO<Boolean> saveFeedback(
