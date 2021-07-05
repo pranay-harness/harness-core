@@ -156,8 +156,6 @@ public class K8BuildSetupUtils {
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
   private final int MAX_ATTEMPTS = 3;
 
-  private final String regexPattern = "^\\$\\{ngSecretManager.obtain\\(.*)\\}";
-
   public CIK8BuildTaskParams getCIk8BuildTaskParams(LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance,
       Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys) {
     K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
