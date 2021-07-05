@@ -202,7 +202,7 @@ public class GovernanceConfigYamlHandlerTest extends YamlHandlerTestBase {
     CustomEnvFilter environmentFilter = new CustomEnvFilter(
         EnvironmentFilterType.CUSTOM, testEnvs.stream().map(Environment::getUuid).collect(Collectors.toList()));
     CustomAppFilter applicationFilter = new CustomAppFilter(
-        BlackoutWindowFilterType.CUSTOM, environmentFilter, Collections.singletonList(testApp.getUuid()));
+        BlackoutWindowFilterType.CUSTOM, environmentFilter, Collections.singletonList(testApp.getUuid()), null);
 
     doReturn(testApp).when(appService).getAppByName(anyString(), anyString());
     doReturn(prodEnv).when(environmentService).getEnvironmentByName(eq(APP_ID), eq("prod"));
@@ -237,7 +237,7 @@ public class GovernanceConfigYamlHandlerTest extends YamlHandlerTestBase {
     AllEnvFilter environmentFilter = new AllEnvFilter(EnvironmentFilterType.ALL);
 
     CustomAppFilter applicationFilter = new CustomAppFilter(
-        BlackoutWindowFilterType.CUSTOM, environmentFilter, Collections.singletonList(testApp.getUuid()));
+        BlackoutWindowFilterType.CUSTOM, environmentFilter, Collections.singletonList(testApp.getUuid()), null);
 
     doReturn(testApp).when(appService).getAppByName(anyString(), anyString());
 
@@ -268,7 +268,7 @@ public class GovernanceConfigYamlHandlerTest extends YamlHandlerTestBase {
     AllProdEnvFilter environmentFilter = new AllProdEnvFilter(EnvironmentFilterType.ALL_PROD);
 
     CustomAppFilter applicationFilter = new CustomAppFilter(
-        BlackoutWindowFilterType.CUSTOM, environmentFilter, Collections.singletonList(testApp.getUuid()));
+        BlackoutWindowFilterType.CUSTOM, environmentFilter, Collections.singletonList(testApp.getUuid()), null);
 
     doReturn(testApp).when(appService).getAppByName(anyString(), anyString());
     doReturn(Collections.singletonList(testApp)).when(appService).getAppsByIds(any());
@@ -298,7 +298,7 @@ public class GovernanceConfigYamlHandlerTest extends YamlHandlerTestBase {
     AllNonProdEnvFilter environmentFilter = new AllNonProdEnvFilter(EnvironmentFilterType.ALL_NON_PROD);
 
     CustomAppFilter applicationFilter = new CustomAppFilter(
-        BlackoutWindowFilterType.CUSTOM, environmentFilter, Collections.singletonList(testApp.getUuid()));
+        BlackoutWindowFilterType.CUSTOM, environmentFilter, Collections.singletonList(testApp.getUuid()), null);
 
     doReturn(testApp).when(appService).getAppByName(anyString(), anyString());
     doReturn(Collections.singletonList(testApp)).when(appService).getAppsByIds(any());
@@ -328,7 +328,7 @@ public class GovernanceConfigYamlHandlerTest extends YamlHandlerTestBase {
     AllNonProdEnvFilter environmentFilter = new AllNonProdEnvFilter(EnvironmentFilterType.ALL_NON_PROD);
 
     CustomAppFilter applicationFilter = new CustomAppFilter(
-        BlackoutWindowFilterType.CUSTOM, environmentFilter, Collections.singletonList(testApp.getUuid()));
+        BlackoutWindowFilterType.CUSTOM, environmentFilter, Collections.singletonList(testApp.getUuid()), null);
 
     doReturn(testApp).when(appService).getAppByName(anyString(), anyString());
     doReturn(Collections.singletonList(testApp)).when(appService).getAppsByIds(any());
@@ -356,7 +356,7 @@ public class GovernanceConfigYamlHandlerTest extends YamlHandlerTestBase {
     Application testApp = Application.Builder.anApplication().name("test").uuid(APP_ID).environments(testEnvs).build();
 
     AllEnvFilter environmentFilter = new AllEnvFilter(EnvironmentFilterType.ALL);
-    AllAppFilter applicationFilter = new AllAppFilter(BlackoutWindowFilterType.ALL, environmentFilter);
+    AllAppFilter applicationFilter = new AllAppFilter(BlackoutWindowFilterType.ALL, environmentFilter, null);
 
     doReturn(testApp).when(appService).getAppByName(anyString(), anyString());
     doReturn(Collections.singletonList(testApp)).when(appService).getAppsByIds(any());
@@ -384,7 +384,7 @@ public class GovernanceConfigYamlHandlerTest extends YamlHandlerTestBase {
     Application testApp = Application.Builder.anApplication().name("test").uuid(APP_ID).environments(testEnvs).build();
 
     AllProdEnvFilter environmentFilter = new AllProdEnvFilter(EnvironmentFilterType.ALL_PROD);
-    AllAppFilter applicationFilter = new AllAppFilter(BlackoutWindowFilterType.ALL, environmentFilter);
+    AllAppFilter applicationFilter = new AllAppFilter(BlackoutWindowFilterType.ALL, environmentFilter, null);
 
     doReturn(testApp).when(appService).getAppByName(anyString(), anyString());
     doReturn(Collections.singletonList(testApp)).when(appService).getAppsByIds(any());
@@ -412,7 +412,7 @@ public class GovernanceConfigYamlHandlerTest extends YamlHandlerTestBase {
     Application testApp = Application.Builder.anApplication().name("test").uuid(APP_ID).environments(testEnvs).build();
 
     AllNonProdEnvFilter environmentFilter = new AllNonProdEnvFilter(EnvironmentFilterType.ALL_NON_PROD);
-    AllAppFilter applicationFilter = new AllAppFilter(BlackoutWindowFilterType.ALL, environmentFilter);
+    AllAppFilter applicationFilter = new AllAppFilter(BlackoutWindowFilterType.ALL, environmentFilter, null);
 
     doReturn(testApp).when(appService).getAppByName(anyString(), anyString());
     doReturn(Collections.singletonList(testApp)).when(appService).getAppsByIds(any());
@@ -536,7 +536,7 @@ public class GovernanceConfigYamlHandlerTest extends YamlHandlerTestBase {
     CustomEnvFilter environmentFilter = new CustomEnvFilter(
         EnvironmentFilterType.CUSTOM, testEnvs.stream().map(Environment::getUuid).collect(Collectors.toList()));
     CustomAppFilter applicationFilter = new CustomAppFilter(
-        BlackoutWindowFilterType.CUSTOM, environmentFilter, Collections.singletonList(testApp.getUuid()));
+        BlackoutWindowFilterType.CUSTOM, environmentFilter, Collections.singletonList(testApp.getUuid()), null);
 
     doReturn(testApp).when(appService).getAppByName(anyString(), anyString());
     doReturn(prodEnv).when(environmentService).getEnvironmentByName(eq(APP_ID), eq("prod"));

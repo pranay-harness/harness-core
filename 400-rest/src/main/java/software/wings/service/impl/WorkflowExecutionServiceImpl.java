@@ -1225,7 +1225,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         new DeploymentCtx(appId,
             featureFlagService.isEnabled(NEW_DEPLOYMENT_FREEZE, accountId)
                 ? PipelineServiceHelper.getEnvironmentIdsForParallelIndex(pipeline, 1)
-                : pipeline.getEnvIds()),
+                : pipeline.getEnvIds(),
+            getPipelineServiceIds(pipeline)),
         environmentService, featureFlagService);
     deploymentFreezeChecker.check(accountId);
 
@@ -1264,7 +1265,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     constructBarriers(pipeline, workflowExecution.getUuid());
 
-    // Do not remove this. Morphia referencing it by id and one object getting overridden by the other
+    // Do not remove this. Morphia referencing it by id and one object getting
+    // overridden by the other
     pipeline.setUuid(generateUuid() + "_embedded");
 
     PipelineExecution pipelineExecution =
@@ -1308,7 +1310,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 .build());
       });
       workflowExecution.setServiceExecutionSummaries(serviceExecutionSummaries);
-      workflowExecution.setServiceIds(pipeline.getServices().stream().map(Service::getUuid).collect(toList()));
+      workflowExecution.setServiceIds(getPipelineServiceIds(pipeline));
     }
     workflowExecution.setEnvIds(pipeline.getEnvIds());
     workflowExecution.setWorkflowIds(pipeline.getWorkflowIds());
@@ -1319,6 +1321,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     return triggerExecution(
         workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, trigger, pipeline, null);
+  }
+
+  private List<String> getPipelineServiceIds(Pipeline pipeline) {
+    if (isEmpty(pipeline.getServices())) {
+      return Collections.emptyList();
+    }
+    return pipeline.getServices().stream().map(Service::getUuid).collect(toList());
   }
 
   // validations to check is a deployment should be allowed or not
@@ -1377,7 +1386,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     // Doing this check here so that workflow is already fetched from databae.
     preDeploymentChecks.checkIfWorkflowUsingRestrictedFeatures(workflow);
     PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
-        new DeploymentCtx(appId, isNotEmpty(envId) ? Collections.singletonList(envId) : Collections.emptyList()),
+        new DeploymentCtx(appId, isNotEmpty(envId) ? Collections.singletonList(envId) : Collections.emptyList(),
+            getWorkflowServiceIds(workflow)),
         environmentService, featureFlagService);
     deploymentFreezeChecker.check(accountId);
     checkPreDeploymentConditions(accountId, appId);
@@ -1409,6 +1419,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     return triggerExecution(workflowExecution, stateMachine, new CanaryWorkflowExecutionAdvisor(),
         workflowExecutionUpdate, stdParams, trigger, null, workflow);
+  }
+
+  private List<String> getWorkflowServiceIds(Workflow workflow) {
+    if (isEmpty(workflow.getServices())) {
+      return Collections.emptyList();
+    }
+    return workflow.getServices().stream().map(Service::getUuid).collect(toList());
   }
 
   /*
@@ -2458,7 +2475,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             featureFlagService.isEnabled(NEW_DEPLOYMENT_FREEZE, accountId)
                 ? software.wings.service.impl.pipeline.PipelineServiceHelper.getEnvironmentIdsForParallelIndex(
                     pipeline, parallelIndexToResume)
-                : pipeline.getEnvIds()),
+                : pipeline.getEnvIds(),
+            getPipelineServiceIds(pipeline)),
         environmentService, featureFlagService);
     deploymentFreezeChecker.check(accountId);
     WorkflowExecution currWorkflowExecution =
@@ -2749,7 +2767,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     preDeploymentChecks.checkIfWorkflowUsingRestrictedFeatures(workflow);
 
     PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
-        new DeploymentCtx(appId, Collections.singletonList(envId)), environmentService, featureFlagService);
+        new DeploymentCtx(appId, Collections.singletonList(envId), getWorkflowServiceIds(workflow)), environmentService,
+        featureFlagService);
     deploymentFreezeChecker.check(accountId);
 
     // Not including instance limit and deployment limit check as it is a emergency rollback
@@ -3350,8 +3369,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         envIdInStage = wfVariables.get(envVarInStage.getName());
       }
       PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
-          new DeploymentCtx(
-              appId, envIdInStage != null ? Collections.singletonList(envIdInStage) : Collections.emptyList()),
+          new DeploymentCtx(appId,
+              envIdInStage != null ? Collections.singletonList(envIdInStage) : Collections.emptyList(),
+              getPipelineServiceIds(pipeline)),
           environmentService, featureFlagService);
       deploymentFreezeChecker.check(pipelineExecution.getAccountId());
     }

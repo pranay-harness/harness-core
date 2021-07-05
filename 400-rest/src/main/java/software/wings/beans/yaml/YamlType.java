@@ -54,6 +54,7 @@ import static software.wings.utils.Utils.generatePath;
 import io.harness.governance.ApplicationFilter;
 import io.harness.governance.EnvironmentFilter;
 import io.harness.governance.GovernanceFreezeConfig;
+import io.harness.governance.ServiceFilter;
 
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
@@ -514,7 +515,8 @@ public enum YamlType {
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, ANY), HarnessTag.class),
   CLOUD_PROVIDER_INFRASTRUCTURE(ObjectType.CLOUD_PROVIDER_INFRASTRUCTURE, "", "", CloudProviderInfrastructure.class),
   APPLICATION_FILTER(ObjectType.APPLICATION_FILTER, "", "", ApplicationFilter.class),
-  ENV_FILTER(ObjectType.ENVIRONMENT_FILTER, "", "", EnvironmentFilter.class);
+  ENV_FILTER(ObjectType.ENVIRONMENT_FILTER, "", "", EnvironmentFilter.class),
+  SERVICE_FILTER(ObjectType.SERVICE_FILTER, "", "", ServiceFilter.class);
 
   private String entityType;
   private String pathExpression;

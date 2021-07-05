@@ -27,6 +27,7 @@ import io.harness.governance.CustomEnvFilter;
 import io.harness.governance.DeploymentFreezeInfo;
 import io.harness.governance.EnvironmentFilter.EnvironmentFilterType;
 import io.harness.governance.GovernanceFreezeConfig;
+import io.harness.governance.ServiceFilter.ServiceFilterType;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
@@ -208,9 +209,10 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
         for (TimeRangeBasedFreezeConfig freezeConfig : governanceConfig.getTimeRangeBasedFreezeConfigs()) {
           if (isNotEmpty(freezeConfig.getAppSelections()) && freezeConfig.checkIfActive()) {
             freezeConfig.getAppSelections().forEach(appSelection -> {
-              if (appSelection.getFilterType() == BlackoutWindowFilterType.ALL
-                  || (appSelection.getFilterType() == BlackoutWindowFilterType.CUSTOM
-                      && ((CustomAppFilter) appSelection).getApps().contains(appId))) {
+              if ((appSelection.getFilterType() == BlackoutWindowFilterType.ALL
+                      || (appSelection.getFilterType() == BlackoutWindowFilterType.CUSTOM
+                          && ((CustomAppFilter) appSelection).getApps().contains(appId)))
+                  && areAllServicesFrozen(appSelection)) {
                 envIdsByWindow.merge(freezeConfig.getUuid(),
                     new HashSet<>(getEnvIdsFromAppSelection(appId, appSelection)), (prevEnvSet, newEnvSet) -> {
                       prevEnvSet.addAll(newEnvSet);
@@ -226,6 +228,11 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
     return Collections.emptyMap();
   }
 
+  private boolean areAllServicesFrozen(ApplicationFilter appSelection) {
+    return appSelection.getServiceSelection() == null
+        || appSelection.getServiceSelection().getFilterType() == ServiceFilterType.ALL;
+  }
+
   @Override
   public List<GovernanceFreezeConfig> getGovernanceFreezeConfigs(String accountId, List<String> deploymentFreezeIds) {
     GovernanceConfig governanceConfig = get(accountId);
@@ -238,7 +245,8 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
     return new ArrayList<>();
   }
 
-  private List<String> getEnvIdsFromAppSelection(String appId, ApplicationFilter appSelection) {
+  @Override
+  public List<String> getEnvIdsFromAppSelection(String appId, ApplicationFilter appSelection) {
     switch (appSelection.getEnvSelection().getFilterType()) {
       case ALL:
         return environmentService.getEnvIdsByApp(appId);

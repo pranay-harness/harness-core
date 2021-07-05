@@ -21,11 +21,14 @@ import lombok.NoArgsConstructor;
 })
 public abstract class ApplicationFilterYaml extends BaseYaml {
   private List<EnvironmentFilterYaml> envSelection;
+  private List<ServiceFilter.Yaml> serviceSelection;
   private BlackoutWindowFilterType filterType;
 
   public ApplicationFilterYaml(@JsonProperty("filterType") BlackoutWindowFilterType filterType,
-      @JsonProperty("envSelection") List<EnvironmentFilterYaml> envSelection) {
+      @JsonProperty("envSelection") List<EnvironmentFilterYaml> envSelection,
+      @JsonProperty("serviceSelection") List<ServiceFilter.Yaml> serviceSelection) {
     this.filterType = filterType;
     this.envSelection = envSelection;
+    this.serviceSelection = serviceSelection;
   }
 }

@@ -1,6 +1,9 @@
 package io.harness.governance;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
@@ -11,14 +14,16 @@ import lombok.EqualsAndHashCode;
 @JsonTypeName("CUSTOM")
 @Data
 @EqualsAndHashCode(callSuper = true)
+@JsonInclude(NON_NULL)
 public class CustomAppFilter extends ApplicationFilter {
   private List<String> apps;
 
   @JsonCreator
   @Builder
   public CustomAppFilter(@JsonProperty("filterType") BlackoutWindowFilterType blackoutWindowFilterType,
-      @JsonProperty("envSelection") EnvironmentFilter envSelection, @JsonProperty("apps") List<String> apps) {
-    super(blackoutWindowFilterType, envSelection);
+      @JsonProperty("envSelection") EnvironmentFilter envSelection, @JsonProperty("apps") List<String> apps,
+      @JsonProperty("serviceSelection") ServiceFilter serviceSelection) {
+    super(blackoutWindowFilterType, envSelection, serviceSelection);
     this.apps = apps;
   }
 
@@ -29,8 +34,9 @@ public class CustomAppFilter extends ApplicationFilter {
     private List<String> apps;
 
     @Builder
-    public Yaml(BlackoutWindowFilterType filterType, List<EnvironmentFilterYaml> envSelection, List<String> apps) {
-      super(filterType, envSelection);
+    public Yaml(BlackoutWindowFilterType filterType, List<EnvironmentFilterYaml> envSelection, List<String> apps,
+        List<ServiceFilter.Yaml> serviceSelection) {
+      super(filterType, envSelection, serviceSelection);
       setApps(apps);
     }
 
