@@ -63,6 +63,12 @@ public class K8sCanaryDeleteStep extends TaskExecutableWithRollbackAndRbac<K8sDe
         ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME));
 
     if (!optionalSweepingOutput.isFound()) {
+      if (StepUtils.isStepInRollbackSection(ambiance)) {
+        return TaskRequest.newBuilder()
+            .setSkipTaskRequest(SkipTaskRequest.newBuilder().setMessage(SKIP_K8S_CANARY_DELETE_STEP_EXECUTION).build())
+            .build();
+      }
+
       throw new InvalidRequestException(K8S_CANARY_STEP_MISSING, USER);
     }
 
