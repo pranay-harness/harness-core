@@ -258,6 +258,7 @@ public class InstanceServiceImpl implements InstanceService {
         final List<String> idList = deletedInstances.stream().map(Instance::getUuid).collect(Collectors.toList());
         log.error("Found some deleted instances that are being deleted again. accountId: [{}], instanceIds:[{}]",
             deletedInstances.get(0).getAccountId(), idList);
+        log.error("Instance Sync Delete Stack trace: " + Arrays.toString(Thread.currentThread().getStackTrace()));
       }
 
       Query<Instance> query = wingsPersistence.createQuery(Instance.class);
@@ -265,7 +266,6 @@ public class InstanceServiceImpl implements InstanceService {
       query.field(InstanceKeys.isDeleted).equal(false);
       result.set(result.get() && delete(query, currentTimeMillis));
     });
-    log.info("Instance Sync Delete Stack trace: " + Arrays.toString(Thread.currentThread().getStackTrace()));
     return result.get();
   }
 
