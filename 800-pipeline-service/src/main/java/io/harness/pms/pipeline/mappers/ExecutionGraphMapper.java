@@ -28,7 +28,7 @@ import org.bson.Document;
 @OwnedBy(PIPELINE)
 public class ExecutionGraphMapper {
   public ExecutionNode toExecutionNode(GraphVertexDTO graphVertex) {
-    String basefqn = PlanExecutionUtils.getFQNUsingLevels(graphVertex.getAmbiance().getLevels());
+    //    String basefqn = PlanExecutionUtils.getFQNUsingLevels(graphVertex.getAmbiance().getLevels());
     return ExecutionNode.builder()
         .endTs(graphVertex.getEndTs())
         .failureInfo(graphVertex.getFailureInfo())
@@ -36,7 +36,7 @@ public class ExecutionGraphMapper {
         .nodeRunInfo(graphVertex.getNodeRunInfo())
         .stepParameters(extractDocumentStepParameters(graphVertex.getStepParameters()))
         .name(graphVertex.getName())
-        .baseFqn(basefqn)
+        //        .baseFqn(basefqn)
         .outcomes(graphVertex.getOutcomes())
         .startTs(graphVertex.getStartTs())
         .endTs(graphVertex.getEndTs())
@@ -44,11 +44,11 @@ public class ExecutionGraphMapper {
         .status(ExecutionStatus.getExecutionStatus(graphVertex.getStatus()))
         .stepType(graphVertex.getStepType())
         .uuid(graphVertex.getUuid())
-        .setupId(graphVertex.getPlanNodeId())
+        //        .setupId(graphVertex.getPlanNodeId())
         .executableResponses(graphVertex.getExecutableResponses())
         .unitProgresses(graphVertex.getUnitProgresses())
         .progressData(graphVertex.getProgressData())
-        .delegateInfoList(mapDelegateSelectionLogParamsToDelegateInfo(graphVertex.getGraphDelegateSelectionLogParams()))
+        //        .delegateInfoList(mapDelegateSelectionLogParamsToDelegateInfo(graphVertex.getGraphDelegateSelectionLogParams()))
         .interruptHistories(graphVertex.getInterruptHistories())
         .build();
   }

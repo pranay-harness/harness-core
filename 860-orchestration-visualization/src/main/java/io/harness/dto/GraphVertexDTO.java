@@ -28,34 +28,21 @@ import org.bson.Document;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class GraphVertexDTO {
   String uuid;
-  AmbianceDTO ambiance;
-  String planNodeId;
   String identifier;
   String name;
   Long startTs;
   Long endTs;
-  Duration initialWaitDuration;
-  Long lastUpdatedAt;
   String stepType;
   Status status;
   FailureInfoDTO failureInfo;
   SkipInfo skipInfo;
   NodeRunInfo nodeRunInfo;
   Document stepParameters;
-  ExecutionMode mode;
 
-  List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParams;
   List<ExecutableResponse> executableResponses;
   List<InterruptEffect> interruptHistories;
   Map<String, Document> outcomes;
-  List<String> retryIds;
 
   List<UnitProgress> unitProgresses;
   Document progressData;
-
-  // skip
-  SkipType skipType;
-
-  // UI
-  RepresentationStrategy representationStrategy = RepresentationStrategy.CAMELCASE;
 }
