@@ -1253,7 +1253,9 @@ public class WatcherServiceImpl implements WatcherService {
         upgrade = false;
       } else {
         String watcherMetadata = Http.getResponseStringFromUrl(watcherConfiguration.getUpgradeCheckLocation(), 10, 10);
+        log.info("WATCHER METADATA: '{}'", watcherMetadata);
         latestVersion = substringBefore(watcherMetadata, " ").trim();
+        log.info("VERSION MATCH: '{}', '{}'", getVersion(), latestVersion);
         upgrade = !StringUtils.equals(getVersion(), latestVersion);
       }
       if (upgrade) {
