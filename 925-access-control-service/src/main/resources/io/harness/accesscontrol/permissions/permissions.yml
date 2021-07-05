@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: permissionsConfiguration
-version: 2
+version: 3
 permissions:
   - identifier: core_project_delete
     name: Delete Project
@@ -360,24 +360,32 @@ permissions:
     includeInAllRoles: true
     allowedScopeLevels:
       - account
+      - organization
+      - project
   - identifier: core_serviceaccount_edit
     name: Create or Edit ServiceAccount
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
       - account
+      - organization
+      - project
   - identifier: core_serviceaccount_delete
     name: Delete ServiceAccount
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
       - account
+      - organization
+      - project
   - identifier: core_serviceaccount_manageapikey
-    name: CRUD for API keys scoped under a particular Service Account
+    name: CRUD for API keys & tokens scoped under a particular Service Account
     status: ACTIVE
     includeInAllRoles: false
     allowedScopeLevels:
       - account
+      - organization
+      - project
   - identifier: core_authsetting_view
     name: View Auth setting
     status: ACTIVE

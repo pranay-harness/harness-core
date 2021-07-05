@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: rolesConfiguration
-version: 1
+version: 2
 roles:
     - identifier: _project_admin
       name: Project Admin
@@ -44,6 +44,10 @@ roles:
         - core_role_view
         - core_role_edit
         - core_role_delete
+        - core_serviceaccount_view
+        - core_serviceaccount_edit
+        - core_serviceaccount_delete
+        - core_serviceaccount_manageapikey
         - core_resourcegroup_view
         - core_resourcegroup_edit
         - core_resourcegroup_delete
@@ -110,6 +114,10 @@ roles:
         - core_role_view
         - core_role_edit
         - core_role_delete
+        - core_serviceaccount_view
+        - core_serviceaccount_edit
+        - core_serviceaccount_delete
+        - core_serviceaccount_manageapikey
         - core_resourcegroup_view
         - core_resourcegroup_edit
         - core_resourcegroup_delete
