@@ -58,7 +58,9 @@ public class PermitServiceImpl implements PermitService {
     try (AutoLogContext ignore = new PermitLogContext(permit, OVERRIDE_ERROR)) {
       return wingsPersistence.save(permit);
     } catch (DuplicateKeyException ex) {
-      log.info("Permit already exists");
+      if (log.isDebugEnabled()) {
+        log.debug("Permit already exists");
+      }
     } catch (Exception ex) {
       log.error("Unexpected error in issuing permit", ex);
     }
