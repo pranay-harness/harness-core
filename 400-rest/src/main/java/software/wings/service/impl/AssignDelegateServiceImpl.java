@@ -226,8 +226,10 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
         && Boolean.TRUE.equals(Boolean.valueOf(taskSetupAbstractions.get(NgSetupFields.NG)));
 
     if (featureFlagService.isNotEnabled(FeatureName.NG_CG_TASK_ASSIGNMENT_ISOLATION, delegate.getAccountId())) {
-      log.info(
-          "CG/NG delegate/task assignment isolation test. Is Delegate NG: {}, Is Task NG: {}", isDelegateNg, isTaskNg);
+      if (log.isDebugEnabled()) {
+        log.debug("CG/NG delegate/task assignment isolation test. Is Delegate NG: {}, Is Task NG: {}", isDelegateNg,
+            isTaskNg);
+      }
       return true;
     }
 
@@ -235,8 +237,10 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       return true;
     }
 
-    log.warn("CG/NG delegate/task assignment isolation check was negative. Is Delegate NG: {}, Is Task NG: {}",
-        isDelegateNg, isTaskNg);
+    if (log.isDebugEnabled()) {
+      log.debug("CG/NG delegate/task assignment isolation check was negative. Is Delegate NG: {}, Is Task NG: {}",
+          isDelegateNg, isTaskNg);
+    }
     return false;
   }
 
