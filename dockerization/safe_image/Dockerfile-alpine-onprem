@@ -1,0 +1,16 @@
+FROM adoptopenjdk/openjdk8:x86_64-alpine-jre8u242-b08
+
+RUN apk add --no-cache bash
+
+RUN set -x \
+    && wget https://github.com/mikefarah/yq/releases/download/3.3.2/yq_linux_amd64 -O /usr/bin/yq \
+    && chmod +x /usr/bin/yq
+
+RUN set -x \
+    && addgroup -g 1001 -S harness \
+    && adduser -S -u 1001 -G harness harness \
+    && mkdir /opt/harness \
+    && chown -R harness:harness /opt/harness \
+    && chmod 700 -R /opt/harness
+
+WORKDIR /opt/harness
