@@ -75,7 +75,7 @@ public class GraphVisualizer {
             MutableGraph cluster =
                 mutGraph().setCluster(true).setName(entry.getKey()).setDirected(true).setStrict(true);
             cluster.add(generateGraph(graph, entry.getValue().getEdges()));
-//            cluster.graphAttrs().add(Label.of(graphVertex.getMode().name()).justify(Label.Justification.RIGHT));
+            //            cluster.graphAttrs().add(Label.of(graphVertex.getMode().name()).justify(Label.Justification.RIGHT));
             cluster.addTo(mutableGraph);
           }
           if (!entry.getValue().getNextIds().isEmpty()) {
