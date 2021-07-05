@@ -58,6 +58,8 @@ public class AwsEntityChangeEventServiceImpl implements AwsEntityChangeEventServ
         } catch (AccessDeniedException accessDeniedException) {
           log.info("AccessDeniedException for AWS Connector:[%s], {}", ceAwsConnectorDTO.getAwsAccountId(),
               accessDeniedException);
+        } catch (Exception ex) {
+          log.info("Exception for AWS Connector:[%s], {}", ceAwsConnectorDTO.getAwsAccountId(), ex);
         }
         for (CECloudAccount account : awsAccounts) {
           log.info("Inserting CECloudAccount: {}", account);
