@@ -17,8 +17,10 @@ import org.springframework.data.domain.Pageable;
 @OwnedBy(PL)
 public interface TokenService {
   String createToken(TokenDTO tokenDTO);
-  boolean revokeToken(String tokenIdentifier);
-  String rotateToken(String tokenIdentifier, Instant scheduledExpireTime);
+  boolean revokeToken(String accountIdentifier, String orgIdentifier, String projectIdentifier, ApiKeyType apiKeyType,
+      String parentIdentifier, String apiKeyIdentifier, String identifier);
+  String rotateToken(String accountIdentifier, String orgIdentifier, String projectIdentifier, ApiKeyType apiKeyType,
+      String parentIdentifier, String apiKeyIdentifier, String identifier, Instant scheduledExpireTime);
   TokenDTO updateToken(TokenDTO tokenDTO);
 
   Map<String, Integer> getTokensPerApiKeyIdentifier(String accountIdentifier, String orgIdentifier,
@@ -32,4 +34,5 @@ public interface TokenService {
 
   long deleteAllByApiKeyIdentifier(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       ApiKeyType apiKeyType, String parentIdentifier, String apiKeyIdentifier);
+  TokenDTO getToken(String tokenId, boolean withEncodedPassword);
 }

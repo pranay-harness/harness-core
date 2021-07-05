@@ -155,18 +155,21 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   private void setupProject(Scope scope) {
-    String userId = null;
+    String principalId = null;
+    PrincipalType principalType = PrincipalType.USER;
     if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
-        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
-      userId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
+        && (SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER
+            || SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.SERVICE_ACCOUNT)) {
+      principalId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
+      principalType = SourcePrincipalContextBuilder.getSourcePrincipal().getType();
     }
-    if (Objects.isNull(userId)) {
+    if (Objects.isNull(principalId)) {
       throw new InvalidRequestException("User not found in security context");
     }
     try {
       createDefaultResourceGroup(scope);
-      assignProjectAdmin(scope, userId);
-      busyPollUntilProjectSetupCompletes(scope, userId);
+      assignProjectAdmin(scope, principalId, principalType);
+      busyPollUntilProjectSetupCompletes(scope, principalId);
     } catch (Exception e) {
       log.error("Failed to complete post project creation steps for [{}]", ScopeUtils.toString(scope));
     }
@@ -195,14 +198,35 @@ public class ProjectServiceImpl implements ProjectService {
     }
   }
 
-  private void assignProjectAdmin(Scope scope, String userId) {
-    ngUserService.addUserToScope(userId,
-        Scope.builder()
-            .accountIdentifier(scope.getAccountIdentifier())
-            .orgIdentifier(scope.getOrgIdentifier())
-            .projectIdentifier(scope.getProjectIdentifier())
-            .build(),
-        PROJECT_ADMIN_ROLE, SYSTEM);
+  private void assignProjectAdmin(Scope scope, String principalId, PrincipalType principalType) {
+    switch (principalType) {
+      case USER:
+        ngUserService.addUserToScope(principalId,
+            Scope.builder()
+                .accountIdentifier(scope.getAccountIdentifier())
+                .orgIdentifier(scope.getOrgIdentifier())
+                .projectIdentifier(scope.getProjectIdentifier())
+                .build(),
+            PROJECT_ADMIN_ROLE, SYSTEM);
+        break;
+      case SERVICE_ACCOUNT:
+        ngUserService.addServiceAccountToScope(principalId,
+            Scope.builder()
+                .accountIdentifier(scope.getAccountIdentifier())
+                .orgIdentifier(scope.getOrgIdentifier())
+                .projectIdentifier(scope.getProjectIdentifier())
+                .build(),
+            PROJECT_ADMIN_ROLE, SYSTEM);
+        break;
+      case API_KEY:
+      case SERVICE: {
+        throw new InvalidRequestException(
+            "Cannot assign principal" + principalId + "with type" + principalType + "to project");
+      }
+      default: {
+        throw new InvalidRequestException("Invalid  principal type" + principalType);
+      }
+    }
   }
 
   private void createDefaultResourceGroup(Scope scope) {

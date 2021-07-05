@@ -31,6 +31,7 @@ public class NGCommonEntityConstants {
   public static final String REPO_URL = "repoURL";
   public static final String PLAN_KEY = "planExecutionId";
   public static final String TYPE_KEY = "type";
+  public static final String TOKEN_KEY = "tokenId";
   public static final String REFERRED_ENTITY_TYPE = "referredEntityType";
   public static final String REFERRED_BY_ENTITY_TYPE = "referredByEntityType";
   public static final String MODULE_TYPE = "moduleType";

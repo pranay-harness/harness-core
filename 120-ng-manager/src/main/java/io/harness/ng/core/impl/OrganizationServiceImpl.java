@@ -118,19 +118,22 @@ public class OrganizationServiceImpl implements OrganizationService {
       // Default org is a special case. That is handled by default org service
       return;
     }
-    String userId = null;
+    String principalId = null;
+    PrincipalType principalType = PrincipalType.USER;
     if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
-        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
-      userId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
+        && (SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER
+            || SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.SERVICE_ACCOUNT)) {
+      principalId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
+      principalType = SourcePrincipalContextBuilder.getSourcePrincipal().getType();
     }
     // in case of default org identifier userprincipal will not be set in security context and that is okay
-    if (Objects.isNull(userId)) {
+    if (Objects.isNull(principalId)) {
       throw new InvalidRequestException("User not found in security context");
     }
     try {
       createDefaultResourceGroup(scope);
-      assignOrgAdmin(scope, userId);
-      busyPollUntilOrgSetupCompletes(scope, userId);
+      assignOrgAdmin(scope, principalId, principalType);
+      busyPollUntilOrgSetupCompletes(scope, principalId);
     } catch (Exception e) {
       log.error("Failed to complete post organization creation steps for [{}]", ScopeUtils.toString(scope));
     }
@@ -160,14 +163,35 @@ public class OrganizationServiceImpl implements OrganizationService {
     }
   }
 
-  private void assignOrgAdmin(Scope scope, String userId) {
-    ngUserService.addUserToScope(userId,
-        Scope.builder()
-            .accountIdentifier(scope.getAccountIdentifier())
-            .orgIdentifier(scope.getOrgIdentifier())
-            .projectIdentifier(scope.getProjectIdentifier())
-            .build(),
-        ORG_ADMIN_ROLE, SYSTEM);
+  private void assignOrgAdmin(Scope scope, String principalId, PrincipalType principalType) {
+    switch (principalType) {
+      case USER:
+        ngUserService.addUserToScope(principalId,
+            Scope.builder()
+                .accountIdentifier(scope.getAccountIdentifier())
+                .orgIdentifier(scope.getOrgIdentifier())
+                .projectIdentifier(scope.getProjectIdentifier())
+                .build(),
+            ORG_ADMIN_ROLE, SYSTEM);
+        break;
+      case SERVICE_ACCOUNT:
+        ngUserService.addServiceAccountToScope(principalId,
+            Scope.builder()
+                .accountIdentifier(scope.getAccountIdentifier())
+                .orgIdentifier(scope.getOrgIdentifier())
+                .projectIdentifier(scope.getProjectIdentifier())
+                .build(),
+            ORG_ADMIN_ROLE, SYSTEM);
+        break;
+      case API_KEY:
+      case SERVICE: {
+        throw new InvalidRequestException(
+            "Cannot assign principal" + principalId + "with type" + principalType + "to org");
+      }
+      default: {
+        throw new InvalidRequestException("Invalid  principal type" + principalType);
+      }
+    }
   }
 
   private void createDefaultResourceGroup(Scope scope) {

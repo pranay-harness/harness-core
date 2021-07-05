@@ -24,6 +24,7 @@ shared_dependencies = [
     "//960-notification-beans:module",
     "//960-notification-beans/src/main/proto:960_notification_beans_java_proto",
     "//960-persistence:module",
+    "//965-api-key-filter:module",
     "//970-api-services-beans:module",
     "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
     "//970-ng-commons:module",

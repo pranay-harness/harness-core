@@ -18,6 +18,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ng.core.AccountOrgProjectValidator;
 import io.harness.ng.core.api.ApiKeyService;
 import io.harness.ng.core.api.TokenService;
+import io.harness.ng.core.common.beans.ApiKeyType;
 import io.harness.ng.core.dto.TokenDTO;
 import io.harness.ng.core.entities.ApiKey;
 import io.harness.ng.core.entities.Token;
@@ -28,6 +29,8 @@ import io.harness.rule.Owner;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Optional;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -75,6 +78,8 @@ public class TokenServiceImplTest extends NgManagerTestBase {
                    .apiKeyIdentifier(randomAlphabetic(10))
                    .apiKeyType(SERVICE_ACCOUNT)
                    .scheduledExpireTime(Instant.now().toEpochMilli())
+                   .description("")
+                   .tags(new HashMap<>())
                    .build();
     token = Token.builder()
                 .scheduledExpireTime(Instant.now())
@@ -88,6 +93,8 @@ public class TokenServiceImplTest extends NgManagerTestBase {
                 .parentIdentifier(parentIdentifier)
                 .apiKeyIdentifier(randomAlphabetic(10))
                 .apiKeyType(SERVICE_ACCOUNT)
+                .description("")
+                .tags(new ArrayList<>())
                 .build();
     token.setUuid(generateUuid());
     when(accountOrgProjectValidator.isPresent(any(), any(), any())).thenReturn(true);
@@ -122,11 +129,14 @@ public class TokenServiceImplTest extends NgManagerTestBase {
     doReturn(apiKey).when(apiKeyService).getApiKey(any(), any(), any(), any(), any(), any());
     doReturn(Optional.of(TokenDTOMapper.getTokenFromDTO(tokenDTO, Duration.ofDays(2).toMillis())))
         .when(tokenRepository)
-        .findByIdentifier(any());
+        .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndApiKeyIdentifierAndIdentifier(
+            any(), any(), any(), any(), any(), any(), any());
     Token newToken = TokenDTOMapper.getTokenFromDTO(tokenDTO, Duration.ofDays(2).toMillis());
     newToken.setUuid(randomAlphabetic(10));
     doReturn(newToken).when(tokenRepository).save(any());
-    String tokenString = tokenService.rotateToken(identifier, Instant.now().plusMillis(1000));
+    String tokenString =
+        tokenService.rotateToken(accountIdentifier, orgIdentifier, projectIdentifier, ApiKeyType.SERVICE_ACCOUNT,
+            parentIdentifier, tokenDTO.getApiKeyIdentifier(), identifier, Instant.now().plusMillis(1000));
     assertThat(tokenString).startsWith(token.getUuid());
   }
 }

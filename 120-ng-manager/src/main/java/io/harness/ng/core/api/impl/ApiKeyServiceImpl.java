@@ -129,6 +129,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     ApiKeyDTO existingDTO = ApiKeyDTOMapper.getDTOFromApiKey(existingKey);
     ApiKey newKey = ApiKeyDTOMapper.getApiKeyFromDTO(apiKeyDTO);
     newKey.setUuid(existingKey.getUuid());
+    newKey.setCreatedAt(existingKey.getCreatedAt());
     return Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
       ApiKey savedApiKey = apiKeyRepository.save(newKey);
       ApiKeyDTO savedDTO = ApiKeyDTOMapper.getDTOFromApiKey(savedApiKey);
