@@ -129,6 +129,7 @@ public class AzureStorageSyncEventWriter extends EventWriter implements ItemWrit
                 .subscriptionId(ceAzureConnectorDTO.getSubscriptionId())
                 .storageAccountName(ceAzureConnectorDTO.getBillingExportSpec().getStorageAccountName())
                 .tenantId(ceAzureConnectorDTO.getTenantId())
+                .reportName(ceAzureConnectorDTO.getBillingExportSpec().getReportName())
                 .build();
         azureStorageSyncService.syncContainer(azureStorageSyncRecord);
       }
