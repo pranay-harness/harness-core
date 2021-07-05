@@ -1,10 +1,10 @@
 package io.harness.ccm.commons.dao;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
-import static io.harness.ccm.commons.entities.billing.CECloudAccount.CECloudAccountKeys;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.entities.billing.CECloudAccount;
+import io.harness.ccm.commons.entities.billing.CECloudAccount.CECloudAccountKeys;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
