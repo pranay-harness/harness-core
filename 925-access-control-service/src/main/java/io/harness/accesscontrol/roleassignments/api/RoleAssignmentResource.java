@@ -1,6 +1,7 @@
 package io.harness.accesscontrol.roleassignments.api;
 
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
+import static io.harness.accesscontrol.AccessControlPermissions.EDIT_SERVICEACCOUNT_PERMISSION;
 import static io.harness.accesscontrol.AccessControlPermissions.MANAGE_USERGROUP_PERMISSION;
 import static io.harness.accesscontrol.AccessControlPermissions.MANAGE_USER_PERMISSION;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
@@ -75,7 +76,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -142,24 +142,29 @@ public class RoleAssignmentResource {
   public ResponseDTO<PageResponse<RoleAssignmentResponseDTO>> get(
       @BeanParam PageRequest pageRequest, @BeanParam HarnessScopeParams harnessScopeParams) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
-    boolean hasAccessToUserRoleAssignments = checkViewPermission(harnessScopeParams, USER);
-    boolean hasAccessToUserGroupRoleAssignments = checkViewPermission(harnessScopeParams, USER_GROUP);
-    RoleAssignmentFilterBuilder builder = RoleAssignmentFilter.builder().scopeFilter(scopeIdentifier);
-    if (hasAccessToUserGroupRoleAssignments && hasAccessToUserRoleAssignments) {
-      builder.build();
-    } else if (hasAccessToUserGroupRoleAssignments) {
-      builder.principalTypeFilter(Sets.newHashSet(USER_GROUP));
-    } else if (hasAccessToUserRoleAssignments) {
-      builder.principalTypeFilter(Sets.newHashSet(USER));
-    } else {
-      throw new UnauthorizedException(
-          String.format(
-              "User not authorized to the view the role assignments. The user should have either %s or %s permission.",
-              AccessControlPermissions.VIEW_USER_PERMISSION, AccessControlPermissions.VIEW_USERGROUP_PERMISSION),
+    RoleAssignmentFilterBuilder roleAssignmentFilterBuilder =
+        RoleAssignmentFilter.builder().scopeFilter(scopeIdentifier);
+    Set<PrincipalType> principalTypes = Sets.newHashSet();
+
+    if (checkViewPermission(harnessScopeParams, USER)) {
+      principalTypes.add(USER);
+    }
+
+    if (checkViewPermission(harnessScopeParams, USER_GROUP)) {
+      principalTypes.add(USER_GROUP);
+    }
+
+    if (checkViewPermission(harnessScopeParams, SERVICE_ACCOUNT)) {
+      principalTypes.add(SERVICE_ACCOUNT);
+    }
+
+    if (principalTypes.isEmpty()) {
+      throw new UnauthorizedException("Current principal is not authorized to the view the role assignments",
           USER_NOT_AUTHORIZED, WingsException.USER);
     }
-    PageResponse<RoleAssignment> pageResponse =
-        roleAssignmentService.list(pageRequest, RoleAssignmentFilter.builder().scopeFilter(scopeIdentifier).build());
+
+    PageResponse<RoleAssignment> pageResponse = roleAssignmentService.list(
+        pageRequest, roleAssignmentFilterBuilder.principalTypeFilter(principalTypes).build());
     return ResponseDTO.newResponse(pageResponse.map(roleAssignmentDTOMapper::toResponseDTO));
   }
 
@@ -171,10 +176,7 @@ public class RoleAssignmentResource {
     Optional<RoleAssignmentFilter> filter =
         buildRoleAssignmentFilterWithPermissionFilter(harnessScopeParams, roleAssignmentFilter);
     if (!filter.isPresent()) {
-      throw new UnauthorizedException(
-          String.format(
-              "User not authorized to the view the role assignments. The user does not have either %s or %s permission.",
-              AccessControlPermissions.VIEW_USER_PERMISSION, AccessControlPermissions.VIEW_USERGROUP_PERMISSION),
+      throw new UnauthorizedException("Current principal is not authorized to the view the role assignments",
           USER_NOT_AUTHORIZED, WingsException.USER);
     }
     PageResponse<RoleAssignment> pageResponse = roleAssignmentService.list(pageRequest, filter.get());
@@ -190,10 +192,7 @@ public class RoleAssignmentResource {
     Optional<RoleAssignmentFilter> filter =
         buildRoleAssignmentFilterWithPermissionFilter(harnessScopeParams, roleAssignmentFilter);
     if (!filter.isPresent()) {
-      throw new UnauthorizedException(
-          String.format(
-              "User not authorized to the view the role assignments. The user does not have either %s or %s permission.",
-              AccessControlPermissions.VIEW_USER_PERMISSION, AccessControlPermissions.VIEW_USERGROUP_PERMISSION),
+      throw new UnauthorizedException("Current principal is not authorized to the view the role assignments",
           USER_NOT_AUTHORIZED, WingsException.USER);
     }
     PageRequest pageRequest = PageRequest.builder().pageSize(1000).build();
@@ -363,6 +362,15 @@ public class RoleAssignmentResource {
               harnessScopeParams.getProjectIdentifier()),
           Resource.of(AccessControlResourceTypes.USER, roleAssignment.getPrincipalIdentifier()),
           MANAGE_USER_PERMISSION);
+    } else if (SERVICE_ACCOUNT.equals(roleAssignment.getPrincipalType())) {
+      accessControlClient.checkForAccessOrThrow(
+          ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
+              harnessScopeParams.getProjectIdentifier()),
+          Resource.of(AccessControlResourceTypes.SERVICEACCOUNT, roleAssignment.getPrincipalIdentifier()),
+          EDIT_SERVICEACCOUNT_PERMISSION);
+    } else {
+      throw new InvalidRequestException(String.format(
+          "Role assignments for principalType %s cannot be changed", roleAssignment.getPrincipalType().toString()));
     }
   }
 
@@ -375,6 +383,11 @@ public class RoleAssignmentResource {
     } else if (USER_GROUP.equals(principalType)) {
       resourceType = AccessControlResourceTypes.USER_GROUP;
       permissionIdentifier = AccessControlPermissions.VIEW_USERGROUP_PERMISSION;
+    } else if (SERVICE_ACCOUNT.equals(principalType)) {
+      resourceType = AccessControlResourceTypes.SERVICEACCOUNT;
+      permissionIdentifier = AccessControlPermissions.VIEW_SERVICEACCOUNT_PERMISSION;
+    } else {
+      throw new InvalidRequestException("Invalid Principal type: " + principalType.toString());
     }
     return accessControlClient.hasAccess(ResourceScope.builder()
                                              .projectIdentifier(harnessScopeParams.getProjectIdentifier())
@@ -388,6 +401,7 @@ public class RoleAssignmentResource {
       HarnessScopeParams harnessScopeParams, RoleAssignmentFilterDTO roleAssignmentFilterDTO) {
     boolean hasAccessToUserRoleAssignments = checkViewPermission(harnessScopeParams, USER);
     boolean hasAccessToUserGroupRoleAssignments = checkViewPermission(harnessScopeParams, USER_GROUP);
+    boolean hasAccessToServiceAccountRoleAssignments = checkViewPermission(harnessScopeParams, SERVICE_ACCOUNT);
     Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
     RoleAssignmentFilter roleAssignmentFilter = fromDTO(scope.toString(), roleAssignmentFilterDTO);
     if (isNotEmpty(roleAssignmentFilter.getPrincipalFilter())) {
@@ -402,6 +416,11 @@ public class RoleAssignmentResource {
                          .filter(principal -> !USER.equals(principal.getPrincipalType()))
                          .collect(Collectors.toSet());
       }
+      if (!hasAccessToServiceAccountRoleAssignments) {
+        principals = principals.stream()
+                         .filter(principal -> !SERVICE_ACCOUNT.equals(principal.getPrincipalType()))
+                         .collect(Collectors.toSet());
+      }
       if (isEmpty(principals)) {
         return Optional.empty();
       }
@@ -413,17 +432,29 @@ public class RoleAssignmentResource {
       if (!hasAccessToUserRoleAssignments) {
         roleAssignmentFilter.getPrincipalTypeFilter().remove(USER);
       }
+      if (!hasAccessToServiceAccountRoleAssignments) {
+        roleAssignmentFilter.getPrincipalTypeFilter().remove(SERVICE_ACCOUNT);
+      }
       if (isEmpty(roleAssignmentFilter.getPrincipalTypeFilter())) {
         return Optional.empty();
       }
     } else {
-      if (!hasAccessToUserGroupRoleAssignments && !hasAccessToUserRoleAssignments) {
+      Set<PrincipalType> principalTypes = Sets.newHashSet();
+      if (checkViewPermission(harnessScopeParams, USER)) {
+        principalTypes.add(USER);
+      }
+
+      if (checkViewPermission(harnessScopeParams, USER_GROUP)) {
+        principalTypes.add(USER_GROUP);
+      }
+
+      if (checkViewPermission(harnessScopeParams, SERVICE_ACCOUNT)) {
+        principalTypes.add(SERVICE_ACCOUNT);
+      }
+
+      if (principalTypes.isEmpty()) {
         return Optional.empty();
-      } else if (!hasAccessToUserGroupRoleAssignments) {
-        Set<PrincipalType> principalTypes = Collections.singleton(USER);
-        roleAssignmentFilter.setPrincipalTypeFilter(principalTypes);
-      } else if (!hasAccessToUserRoleAssignments) {
-        Set<PrincipalType> principalTypes = Collections.singleton(USER_GROUP);
+      } else {
         roleAssignmentFilter.setPrincipalTypeFilter(principalTypes);
       }
     }
