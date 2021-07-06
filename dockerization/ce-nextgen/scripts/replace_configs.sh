@@ -51,7 +51,6 @@ replace_key_value awsConfig.secretKey "$AWS_SECRET_KEY"
 replace_key_value awsConfig.destinationBucket "$AWS_DESTINATION_BUCKET"
 replace_key_value awsConfig.harnessAwsAccountId "$AWS_ACCOUNT_ID"
 replace_key_value awsConfig.awsConnectorTemplate "$AWS_TEMPLATE_LINK"
-
 replace_key_value cfClientConfig.apiKey "$CF_CLIENT_API_KEY"
 replace_key_value cfClientConfig.configUrl "$CF_CLIENT_CONFIG_URL"
 replace_key_value cfClientConfig.eventUrl "$CF_CLIENT_EVENT_URL"
