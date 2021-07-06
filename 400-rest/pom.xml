@@ -750,11 +750,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>425-verification-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>430-cv-nextgen-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -828,6 +823,11 @@
             <artifactId>920-delegate-service-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>930-cg-verification-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>        
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>930-ng-core-clients</artifactId>
