@@ -36,7 +36,6 @@ import software.wings.service.intfc.AppService;
 import com.google.common.collect.ImmutableMap;
 import graphql.schema.DataFetchingEnvironment;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

@@ -88,7 +88,6 @@ public class DelegateServiceGrpcServerModule extends AbstractModule {
     // Service Interceptors
     Provider<Set<ServerInterceptor>> serverInterceptorsProvider =
         getProvider(Key.get(new TypeLiteral<Set<ServerInterceptor>>() {}));
-    ;
 
     Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class);
     List<Connector> connectors = delegateServiceConfig.getGrpcServerConfig().getConnectors();

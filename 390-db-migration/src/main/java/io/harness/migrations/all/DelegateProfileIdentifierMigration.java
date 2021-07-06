@@ -3,6 +3,7 @@ package io.harness.migrations.all;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateProfile;
+import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
@@ -39,13 +40,12 @@ public class DelegateProfileIdentifierMigration implements Migration {
   private void updateDelegateProfile(DelegateProfile profile) {
     try {
       log.info("Updating delegate profile.");
-      Query<DelegateProfile> profileQuery =
-          persistence.createQuery(DelegateProfile.class)
-              .filter(DelegateProfile.DelegateProfileKeys.uuid, profile.getUuid())
-              .filter(DelegateProfile.DelegateProfileKeys.accountId, profile.getAccountId());
+      Query<DelegateProfile> profileQuery = persistence.createQuery(DelegateProfile.class)
+                                                .filter(DelegateProfileKeys.uuid, profile.getUuid())
+                                                .filter(DelegateProfileKeys.accountId, profile.getAccountId());
       UpdateOperations<DelegateProfile> updateOperations =
           persistence.createUpdateOperations(DelegateProfile.class)
-              .set(DelegateProfile.DelegateProfileKeys.identifier, Utils.uuidToIdentifier(profile.getUuid()));
+              .set(DelegateProfileKeys.identifier, Utils.uuidToIdentifier(profile.getUuid()));
 
       persistence.findAndModify(profileQuery, updateOperations, new FindAndModifyOptions());
       log.info("Delegate profile updated successfully.");

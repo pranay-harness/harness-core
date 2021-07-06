@@ -15,7 +15,6 @@ import io.harness.rule.Owner;
 import software.wings.beans.HarnessTagLink;
 import software.wings.graphql.datafetcher.AuthRuleGraphQL;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
-import software.wings.graphql.schema.mutation.tag.QLAttachTagPayload;
 import software.wings.graphql.schema.mutation.tag.QLDetachTagPayload;
 import software.wings.graphql.schema.type.aggregation.QLEntityType;
 import software.wings.service.intfc.HarnessTagService;

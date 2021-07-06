@@ -12,6 +12,7 @@ import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
 
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.ScheduledTriggerJob;
 
@@ -38,7 +39,7 @@ public class AddEnableIteratorsToTriggers implements Migration {
     log.info(LOG_IDENTIFIER + "Running migration to add enableNextIterations to trigger config");
     int count = 0;
     try (HIterator<Trigger> triggerHIterator = new HIterator<>(wingsPersistence.createQuery(Trigger.class)
-                                                                   .field(Trigger.TriggerKeys.triggerConditionType)
+                                                                   .field(TriggerKeys.triggerConditionType)
                                                                    .equal("SCHEDULED")
                                                                    .fetch())) {
       while (triggerHIterator.hasNext()) {
@@ -63,7 +64,7 @@ public class AddEnableIteratorsToTriggers implements Migration {
       jobScheduler.pauseJob(trigger.getUuid(), ScheduledTriggerJob.GROUP);
 
       trigger.setNextIterations(new ArrayList<>());
-      List<Long> nextFireTime = trigger.recalculateNextIterations(Trigger.TriggerKeys.nextIterations, true, 0);
+      List<Long> nextFireTime = trigger.recalculateNextIterations(TriggerKeys.nextIterations, true, 0);
       if (!nextFireTime.isEmpty()) {
         // It automatically adds current timestamp when list is empty. This is not desired
         nextFireTime = nextFireTime.subList(1, nextFireTime.size());
@@ -71,11 +72,11 @@ public class AddEnableIteratorsToTriggers implements Migration {
 
       // Update the current trigger to use the IteratorsFramework
       Query<Trigger> query = wingsPersistence.createQuery(Trigger.class)
-                                 .filter(Trigger.TriggerKeys.uuid, trigger.getUuid())
-                                 .filter(Trigger.TriggerKeys.accountId, trigger.getAccountId());
+                                 .filter(TriggerKeys.uuid, trigger.getUuid())
+                                 .filter(TriggerKeys.accountId, trigger.getAccountId());
 
       UpdateOperations<Trigger> operations = wingsPersistence.createUpdateOperations(Trigger.class);
-      MongoUtils.setUnset(operations, Trigger.TriggerKeys.nextIterations, nextFireTime);
+      MongoUtils.setUnset(operations, TriggerKeys.nextIterations, nextFireTime);
       wingsPersistence.findAndModify(query, operations, returnNewOptions);
       log.info(
           LOG_IDENTIFIER + "Updated trigger with id {} for accountId {}", trigger.getUuid(), trigger.getAccountId());

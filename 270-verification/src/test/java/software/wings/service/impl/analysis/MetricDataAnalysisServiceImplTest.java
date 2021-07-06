@@ -2,7 +2,7 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.logging.Misc.*;
+import static io.harness.logging.Misc.replaceDotWithUnicode;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
