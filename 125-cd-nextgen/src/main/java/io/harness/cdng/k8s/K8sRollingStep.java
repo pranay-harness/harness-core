@@ -166,6 +166,7 @@ public class K8sRollingStep extends TaskChainExecutableWithRollbackAndRbac imple
                            .build())
           .build();
     } catch (Exception e) {
+      log.error("Error while processing K8s Task response: {}", e.getMessage(), e);
       return k8sStepHelper.handleTaskException(ambiance, k8sExecutionPassThroughData, e);
     }
   }
