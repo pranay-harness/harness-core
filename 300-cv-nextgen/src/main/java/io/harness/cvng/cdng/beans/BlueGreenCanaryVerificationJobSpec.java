@@ -4,9 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.cvng.verificationjob.entities.CanaryBlueGreenVerificationJob.CanaryBlueGreenVerificationJobBuilder;
-import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
-import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobBuilder;
 import io.harness.pms.yaml.ParameterField;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -28,11 +26,11 @@ public abstract class BlueGreenCanaryVerificationJobSpec extends VerificationJob
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH, value = "Example: 50, You can put max upto 50.")
   ParameterField<String> trafficSplitPercentage;
 
-  @Override
-  public VerificationJobBuilder verificationJobBuilder() {
-    CanaryBlueGreenVerificationJobBuilder canaryVerificationJobBuilder = CanaryVerificationJob.builder().sensitivity(
+  protected CanaryBlueGreenVerificationJobBuilder addFieldValues(
+      CanaryBlueGreenVerificationJobBuilder canaryVerificationJobBuilder) {
+    canaryVerificationJobBuilder.sensitivity(
         VerificationJob.RuntimeParameter.builder().isRuntimeParam(false).value(getSensitivity().getValue()).build());
-    if (getTrafficSplitPercentage().getValue() != null) {
+    if (getTrafficSplitPercentage() != null && getTrafficSplitPercentage().getValue() != null) {
       canaryVerificationJobBuilder =
           canaryVerificationJobBuilder.trafficSplitPercentageV2(VerificationJob.RuntimeParameter.builder()
                                                                     .isRuntimeParam(false)
@@ -43,5 +41,12 @@ public abstract class BlueGreenCanaryVerificationJobSpec extends VerificationJob
   }
 
   @Override
-  protected void validateParams() {}
+  protected void validateParams() {
+    if (getTrafficSplitPercentage() != null && getTrafficSplitPercentage().getValue() != null) {
+      int trafficSplitPercentage = Integer.parseInt(getTrafficSplitPercentage().getValue());
+      if (trafficSplitPercentage > 0 && trafficSplitPercentage <= 50) {
+        throw new IllegalArgumentException("trafficSplitPercentage needs to be between 1 to 50");
+      }
+    }
+  }
 }

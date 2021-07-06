@@ -180,13 +180,24 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   @Override
   public MonitoredServiceDTO getMonitoredServiceDTO(
       String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
-    return get(accountId, orgIdentifier, projectIdentifier, identifier).getMonitoredServiceDTO();
+    MonitoredServiceResponse monitoredServiceResponse = get(accountId, orgIdentifier, projectIdentifier, identifier);
+    if (monitoredServiceResponse == null) {
+      return null;
+    } else {
+      return monitoredServiceResponse.getMonitoredServiceDTO();
+    }
   }
 
   @Override
   public MonitoredServiceDTO getMonitoredServiceDTO(String accountId, String orgIdentifier, String projectIdentifier,
       String serviceIdentifier, String envIdentifier) {
-    return get(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier).getMonitoredServiceDTO();
+    MonitoredServiceResponse monitoredServiceResponse =
+        get(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
+    if (monitoredServiceResponse == null) {
+      return null;
+    } else {
+      return monitoredServiceResponse.getMonitoredServiceDTO();
+    }
   }
 
   private MonitoredService getMonitoredService(

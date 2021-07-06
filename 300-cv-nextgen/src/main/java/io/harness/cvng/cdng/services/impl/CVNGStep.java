@@ -9,6 +9,9 @@ import io.harness.cvng.cdng.beans.CVNGStepParameter;
 import io.harness.cvng.cdng.beans.CVNGStepType;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
+import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
+import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter;
 import io.harness.eraro.ErrorCode;
@@ -56,6 +59,7 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
   @Inject private ActivityService activityService;
   @Inject private CVNGStepTaskService cvngStepTaskService;
   @Inject private Clock clock;
+  @Inject private MonitoredServiceService monitoredServiceService;
   @Override
   public AsyncExecutableResponse executeAsync(Ambiance ambiance, CVNGStepParameter stepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData) {
@@ -64,18 +68,29 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
     String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
     String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
     validate(stepParameters);
+    String serviceIdentifier = stepParameters.getServiceIdentifier();
+    String envIdentifier = stepParameters.getEnvIdentifier();
     Instant startTime = clock.instant();
+    String monitoredServiceIdentifier = stepParameters.getMonitoredServiceRef().getValue();
+    MonitoredServiceDTO monitoredServiceDTO = monitoredServiceService.getMonitoredServiceDTO(
+        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
+    Preconditions.checkNotNull(monitoredServiceDTO, "No monitoredService is defined for service %s and env %s",
+        serviceIdentifier, envIdentifier);
+    Preconditions.checkState(monitoredServiceIdentifier != monitoredServiceDTO.getIdentifier(),
+        "Invalid monitored service identifier for service %s and env %s", serviceIdentifier, envIdentifier);
     VerificationJob verificationJob =
         stepParameters.getVerificationJobBuilder()
-            .serviceIdentifier(
-                RuntimeParameter.builder().value(stepParameters.getServiceIdentifier().getValue()).build())
-            .envIdentifier(RuntimeParameter.builder().value(stepParameters.getEnvIdentifier().getValue()).build())
+            .serviceIdentifier(RuntimeParameter.builder().value(serviceIdentifier).build())
+            .envIdentifier(RuntimeParameter.builder().value(envIdentifier).build())
             .projectIdentifier(projectIdentifier)
             .orgIdentifier(orgIdentifier)
             .accountId(accountId)
-            .monitoringSources(stepParameters.getHealthSources()
+            .monitoringSources(monitoredServiceDTO.getSources()
+                                   .getHealthSources()
                                    .stream()
-                                   .map(healthSource -> healthSource.getIdentifier().getValue())
+                                   .map(healthSource
+                                       -> HealthSourceService.getNameSpacedIdentifier(
+                                           monitoredServiceDTO.getIdentifier(), healthSource.getIdentifier()))
                                    .collect(Collectors.toList()))
             .build();
     DeploymentActivity deploymentActivity = DeploymentActivity.builder()
@@ -87,8 +102,8 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
     deploymentActivity.setOrgIdentifier(orgIdentifier);
     deploymentActivity.setAccountId(accountId);
     deploymentActivity.setProjectIdentifier(projectIdentifier);
-    deploymentActivity.setServiceIdentifier(stepParameters.getServiceIdentifier().getValue());
-    deploymentActivity.setEnvironmentIdentifier(stepParameters.getEnvIdentifier().getValue());
+    deploymentActivity.setServiceIdentifier(serviceIdentifier);
+    deploymentActivity.setEnvironmentIdentifier(envIdentifier);
     deploymentActivity.setActivityName(getActivityName(stepParameters));
     String activityUuid = activityService.register(deploymentActivity);
     CVNGStepTask cvngStepTask = CVNGStepTask.builder()
@@ -101,16 +116,12 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
   }
 
   private void validate(CVNGStepParameter stepParameters) {
-    Preconditions.checkNotNull(stepParameters.getServiceIdentifier().getValue(),
-        "Could not resolve expression for serviceRef. Please check your expression.");
-    Preconditions.checkNotNull(stepParameters.getEnvIdentifier().getValue(),
-        "Could not resolve expression for envRef. Please check your expression.");
     Preconditions.checkNotNull(stepParameters.getDeploymentTag().getValue(),
         "Could not resolve expression for deployment tag. Please check your expression.");
   }
 
   private String getActivityName(CVNGStepParameter stepParameters) {
-    return "CD Nextgen - " + stepParameters.getServiceIdentifier().getValue() + " - "
+    return "CD Nextgen - " + stepParameters.getServiceIdentifier() + " - "
         + stepParameters.getDeploymentTag().getValue();
   }
 

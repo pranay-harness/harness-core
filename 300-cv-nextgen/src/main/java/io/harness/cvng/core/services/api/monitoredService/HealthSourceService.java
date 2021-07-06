@@ -18,6 +18,6 @@ public interface HealthSourceService {
       String serviceRef, String nameSpaceIdentifier, Set<HealthSource> healthSource);
 
   static String getNameSpacedIdentifier(String nameSpace, String identifier) {
-    return nameSpace + "." + identifier;
+    return nameSpace + "/" + identifier;
   }
 }
