@@ -66,7 +66,6 @@ public class CVNGStepInfo implements CVStepInfoBase {
         .serviceIdentifier(createExpressionField(SERVICE_IDENTIFIER_EXPRESSION))
         .envIdentifier(createExpressionField(ENV_IDENTIFIER_EXPRESSION))
         .deploymentTag(spec.getDeploymentTag())
-        .healthSources(healthSources)
         .monitoredServiceRef(monitoredServiceRef)
         .verificationJobBuilder(spec.getVerificationJobBuilder())
         .build();
