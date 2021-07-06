@@ -37,12 +37,9 @@ public class AWSOrganizationHelperServiceImpl implements AWSOrganizationHelperSe
       String awsAccessKey, String awsSecretKey) {
     List<CECloudAccount> ceCloudAccounts = new ArrayList<>();
     CrossAccountAccessDTO crossAccountAccess = ceAwsConnectorDTO.getCrossAccountAccess();
-    log.info("Cross Account Access: {}", crossAccountAccess);
     List<Account> accountList = listAwsAccounts(crossAccountAccess, awsAccessKey, awsSecretKey);
     String masterAwsAccountId = getMasterAccountIdFromArn(crossAccountAccess.getCrossAccountRoleArn());
-    log.info("masterAwsAccountId: {}", masterAwsAccountId);
     String externalId = crossAccountAccess.getExternalId();
-    log.info("externalId: {}", externalId);
     accountList.forEach(account -> {
       String awsAccountId = getAccountIdFromArn(account.getArn());
       if (!awsAccountId.equals(masterAwsAccountId)) {
@@ -80,7 +77,6 @@ public class AWSOrganizationHelperServiceImpl implements AWSOrganizationHelperSe
   @VisibleForTesting
   AWSOrganizationsClient getAWSOrganizationsClient(
       CrossAccountAccessDTO crossAccountAccess, String awsAccessKey, String awsSecretKey) {
-    log.info("In getAWSOrganizationsClient");
     AWSSecurityTokenService awsSecurityTokenService = constructAWSSecurityTokenService(awsAccessKey, awsSecretKey);
     AWSOrganizationsClientBuilder builder = AWSOrganizationsClientBuilder.standard().withRegion(ceAWSRegion);
     AWSCredentialsProvider credentialsProvider =
@@ -90,12 +86,10 @@ public class AWSOrganizationHelperServiceImpl implements AWSOrganizationHelperSe
             .withStsClient(awsSecurityTokenService)
             .build();
     builder.withCredentials(credentialsProvider);
-    log.info("BUilsing AWSOrganizationsClient");
     return (AWSOrganizationsClient) builder.build();
   }
 
   public AWSSecurityTokenService constructAWSSecurityTokenService(String awsAccessKey, String awsSecretKey) {
-    log.info("In constructAWSSecurityTokenService");
     AWSCredentialsProvider awsCredentialsProvider =
         new AWSStaticCredentialsProvider(new BasicAWSCredentials(awsAccessKey, awsSecretKey));
     return AWSSecurityTokenServiceClientBuilder.standard()
@@ -105,7 +99,6 @@ public class AWSOrganizationHelperServiceImpl implements AWSOrganizationHelperSe
   }
 
   private List<Account> listAwsAccounts(AWSOrganizationsClient awsOrganizationsClient) {
-    log.info("In listAwsAccounts");
     List<Account> accountList = new ArrayList<>();
     String nextToken = null;
     ListAccountsRequest listAccountsRequest = new ListAccountsRequest();
@@ -113,7 +106,6 @@ public class AWSOrganizationHelperServiceImpl implements AWSOrganizationHelperSe
       listAccountsRequest.withNextToken(nextToken);
       ListAccountsResult listAccountsResult = awsOrganizationsClient.listAccounts(listAccountsRequest);
       accountList.addAll(listAccountsResult.getAccounts());
-      log.info("AccountsList: {}", accountList);
       nextToken = listAccountsResult.getNextToken();
     } while (nextToken != null);
     return accountList;
