@@ -3,6 +3,7 @@ package io.harness.ng.core.impl;
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.accesscontrol.PlatformPermissions.INVITE_PERMISSION_IDENTIFIER;
 import static io.harness.ng.core.remote.OrganizationMapper.toOrganization;
@@ -127,7 +128,7 @@ public class OrganizationServiceImpl implements OrganizationService {
       principalType = SourcePrincipalContextBuilder.getSourcePrincipal().getType();
     }
     // in case of default org identifier userprincipal will not be set in security context and that is okay
-    if (Objects.isNull(principalId)) {
+    if (isEmpty(principalId)) {
       throw new InvalidRequestException("User not found in security context");
     }
     try {

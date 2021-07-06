@@ -124,7 +124,7 @@ public class ResourceGroupServiceModule extends AbstractModule {
     install(new TransactionOutboxModule(DEFAULT_OUTBOX_POLL_CONFIGURATION, RESOUCE_GROUP_SERVICE.getServiceId(),
         appConfig.getResoureGroupServiceConfig().isExportMetricsToStackDriver()));
 
-    install(new TokenClientModule(this.appConfig.getServiceHttpClientConfig(),
+    install(new TokenClientModule(this.appConfig.getRbacServiceConfig(),
         this.appConfig.getPlatformSecrets().getNgManagerServiceSecret(), RESOUCE_GROUP_SERVICE.getServiceId()));
   }
 
