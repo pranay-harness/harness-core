@@ -228,6 +228,33 @@ public class ApplicationManifestUtils {
     return gitFetchFileConfigMap;
   }
 
+  public Map<String, List<String>> getHelmFetchTaskConfigMap(
+      ExecutionContext context, Application app, Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap) {
+    Map<String, List<String>> mapK8sValuesLocationToFilePaths = new HashMap<>();
+
+    for (Entry<K8sValuesLocation, ApplicationManifest> entry : applicationManifestMap.entrySet()) {
+      K8sValuesLocation k8sValuesLocation = entry.getKey();
+      ApplicationManifest applicationManifest = entry.getValue();
+
+      if (StoreType.ValuesYamlFromHelmRepo == applicationManifest.getStoreType()) {
+        // use env override if available. We do not support merge config at service and env for HelmChartConfig
+        Service service = fetchServiceFromContext(context);
+        if (service.isK8sV2() && StoreType.ValuesYamlFromHelmRepo == applicationManifest.getStoreType()) {
+          applicationManifest = getAppManifestByApplyingHelmChartOverride(context);
+        }
+
+        String renderedValuesYamlFilePaths = context.renderExpression(applicationManifest.getHelmValuesYamlFilePaths());
+        List<String> filePaths = Arrays.asList(renderedValuesYamlFilePaths.split(","))
+                                     .stream()
+                                     .map(path -> path.trim())
+                                     .collect(Collectors.toList());
+        mapK8sValuesLocationToFilePaths.put(k8sValuesLocation.name(), filePaths);
+      }
+    }
+
+    return mapK8sValuesLocationToFilePaths;
+  }
+
   private boolean isRemoteFetchRequiredForManifest(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     if (!appManifestMap.containsKey(K8sValuesLocation.Service)) {
       return true;

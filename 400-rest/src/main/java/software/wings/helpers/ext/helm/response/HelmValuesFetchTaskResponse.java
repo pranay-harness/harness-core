@@ -13,6 +13,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+import java.util.Map;
+
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -24,4 +27,5 @@ public class HelmValuesFetchTaskResponse implements DelegateTaskNotifyResponseDa
   private CommandExecutionStatus commandExecutionStatus;
 
   private String valuesFileContent;
+  private Map<String, List<String>> mapK8sValuesLocationToContent;
 }

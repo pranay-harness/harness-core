@@ -22,6 +22,7 @@ import software.wings.service.impl.ContainerServiceParams;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
@@ -46,6 +47,7 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAc
   @Expression(ALLOW_SECRETS) private String helmCommandFlags;
 
   private HelmChartConfigParams helmChartConfigTaskParams;
+  private Map<String, List<String>> mapK8sValuesLocationToFilePaths;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

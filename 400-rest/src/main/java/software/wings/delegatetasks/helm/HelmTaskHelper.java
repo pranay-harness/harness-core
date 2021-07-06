@@ -16,6 +16,7 @@ import static io.harness.helm.HelmConstants.WORKING_DIR_BASE;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -64,8 +65,10 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -154,9 +157,11 @@ public class HelmTaskHelper {
     unzipManifestFiles(destDir, zipInputStream);
   }
 
-  public String getValuesYamlFromChart(HelmChartConfigParams helmChartConfigParams, long timeoutInMillis,
-      HelmCommandFlag helmCommandFlag) throws Exception {
+  public Map<String, List<String>> getValuesYamlFromChart(HelmChartConfigParams helmChartConfigParams,
+      long timeoutInMillis, HelmCommandFlag helmCommandFlag, Map<String, List<String>> mapK8sValuesLocationToFilePaths)
+      throws Exception {
     String workingDirectory = createNewDirectoryAtPath(Paths.get(WORKING_DIR_BASE).toString());
+    Map<String, List<String>> mapK8sValuesLocationToContents = new HashMap<>();
 
     try {
       fetchChartFiles(helmChartConfigParams, workingDirectory, timeoutInMillis, helmCommandFlag);
@@ -172,9 +177,34 @@ public class HelmTaskHelper {
         }
       }
 
-      return new String(Files.readAllBytes(Paths.get(
-                            getChartDirectory(workingDirectory, helmChartConfigParams.getChartName()), VALUES_YAML)),
-          StandardCharsets.UTF_8);
+      if (isEmpty(mapK8sValuesLocationToFilePaths)) {
+        String fileContent = new String(
+            Files.readAllBytes(
+                Paths.get(getChartDirectory(workingDirectory, helmChartConfigParams.getChartName()), VALUES_YAML)),
+            StandardCharsets.UTF_8);
+        mapK8sValuesLocationToContents.put(VALUES_YAML, singletonList(fileContent));
+        return mapK8sValuesLocationToContents;
+      }
+
+      mapK8sValuesLocationToFilePaths.entrySet().stream().forEach(entry -> {
+        final List<String> valuesYamlContents = mapK8sValuesLocationToContents.containsKey(entry.getKey())
+            ? mapK8sValuesLocationToContents.get(entry.getKey())
+            : new ArrayList<>();
+
+        entry.getValue().forEach(filePath -> {
+          try {
+            String fileContent = new String(
+                Files.readAllBytes(
+                    Paths.get(getChartDirectory(workingDirectory, helmChartConfigParams.getChartName()), filePath)),
+                StandardCharsets.UTF_8);
+            valuesYamlContents.add(fileContent);
+          } catch (Exception ex) {
+            log.info(format("Required values.yaml file with path %s not found", filePath), ex);
+          }
+          mapK8sValuesLocationToContents.put(entry.getKey(), valuesYamlContents);
+        });
+      });
+      return mapK8sValuesLocationToContents;
     } catch (Exception ex) {
       log.info("values.yaml file not found", ex);
       return null;
