@@ -59,7 +59,7 @@ spec:
         harness.io/name: harness-delegate
     spec:
       containers:
-      - image: harness/delegate:latest
+      - image: harness/delegate:ng
         imagePullPolicy: Always
         name: harness-delegate-instance
         resources:
