@@ -298,6 +298,8 @@ aeriform("//940-resource-group-beans:module")
 
 aeriform("//940-secret-manager-client:module")
 
+aeriform("//945-account-mgmt:module")
+
 aeriform("//945-ng-audit-client:module")
 
 aeriform("//945-ng-audit-client:tests")
@@ -387,8 +389,6 @@ aeriform("//954-connector-beans:module")
 aeriform("//954-connector-beans:tests")
 
 aeriform("//954-feature-flag-sdk:module")
-
-aeriform("//955-account-mgmt:module")
 
 aeriform("//955-alert-beans:module")
 
