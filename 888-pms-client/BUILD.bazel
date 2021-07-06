@@ -50,7 +50,7 @@ java_library(
 java_library(
     name = "module",
     srcs = glob([
-        "src/main/**/*.java",
+        "src/main/java/**/*.java",
     ]),
     visibility = ["//visibility:public"],
     deps = [

@@ -14,7 +14,7 @@ filegroup(
 java_binary(
     name = "module",
     srcs = glob([
-        "src/main/**/*.java",
+        "src/main/java/**/*.java",
     ]),
     data = [":resource"],
     main_class = "software.wings.app.WingsApplication",

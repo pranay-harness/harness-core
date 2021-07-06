@@ -670,8 +670,8 @@ shared_dependencies = [
 java_library(
     name = "module",
     srcs = glob([
-        "src/main/**/*.java",
-        "src/generated/**/*.java",
+        "src/main/java/**/*.java",
+        "src/generated/java/**/*.java",
     ]),
     resources = [
         "//400-rest/src/main/resources:resource",
