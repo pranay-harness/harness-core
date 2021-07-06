@@ -999,21 +999,19 @@ public class WatcherServiceImpl implements WatcherService {
       return;
     }
 
-    String versionWithoutPatch = substringBefore(version.substring(version.lastIndexOf(".") + 1), "-");
+    // String versionWithoutPatch = substringBefore(version.substring(version.lastIndexOf(".") + 1), "-");
 
     RestResponse<DelegateScripts> restResponse = null;
     if (isBlank(delegateSize)) {
-      log.info(format("Calling getDelegateScripts with versionWithoutPatch %s", versionWithoutPatch));
+      log.info(format("Calling getDelegateScripts with versionWithoutPatch %s", version));
+      restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
+          () -> SafeHttpCall.execute(managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version)));
+    } else {
+      log.info(format("Calling getDelegateScriptsNg with versionWithoutPatch %s", version));
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
               -> SafeHttpCall.execute(
-                  managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), versionWithoutPatch)));
-    } else {
-      log.info(format("Calling getDelegateScriptsNg with versionWithoutPatch %s", versionWithoutPatch));
-      restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
-          ()
-              -> SafeHttpCall.execute(managerClient.getDelegateScriptsNg(
-                  watcherConfiguration.getAccountId(), versionWithoutPatch, delegateSize)));
+                  managerClient.getDelegateScriptsNg(watcherConfiguration.getAccountId(), version, delegateSize)));
     }
 
     if (restResponse == null) {
