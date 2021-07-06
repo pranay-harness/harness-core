@@ -787,8 +787,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     try {
       List<String> activeDelegates = retrieveActiveDelegates(delegateTask.getAccountId(), null);
 
-      log.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
-
       List<String> whitelistedDelegates = connectedWhitelistedDelegates(delegateTask);
       if (activeDelegates.isEmpty()) {
         errorMessage = "There were no active delegates to complete the task.";
