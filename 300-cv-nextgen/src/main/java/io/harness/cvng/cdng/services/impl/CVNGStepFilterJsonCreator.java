@@ -2,7 +2,6 @@ package io.harness.cvng.cdng.services.impl;
 
 import static io.harness.walktree.visitor.utilities.VisitorParentPathUtils.PATH_CONNECTOR;
 
-import io.harness.common.NGExpressionUtils;
 import io.harness.cvng.cdng.beans.CVNGStepInfo;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
@@ -41,7 +40,7 @@ public class CVNGStepFilterJsonCreator extends GenericStepPMSFilterJsonCreator {
     List<EntityDetailProtoDTO> result = new ArrayList<>();
     // This is handling the case when the monitoring service is defined. Runtime case needs to be handled separately
     // https://harness.atlassian.net/browse/CDNG-10512
-    if (!NGExpressionUtils.isRuntimeOrExpressionField(cvngStepInfo.getMonitoredServiceRef().getValue())) {
+    if (cvngStepInfo.getMonitoredServiceRef().getValue() != null) {
       MonitoredServiceDTO monitoredServiceDTO = monitoredServiceService.getMonitoredServiceDTO(
           accountIdentifier, orgIdentifier, projectIdentifier, cvngStepInfo.getMonitoredServiceRef().getValue());
       monitoredServiceDTO.getSources().getHealthSources().forEach(healthSource -> {

@@ -17,6 +17,7 @@ import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.contracts.plan.SetupMetadata;
 import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
+import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext.FilterCreationContextBuilder;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -95,6 +96,38 @@ public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
         .isEqualTo(orgIdentifier);
     assertThat(filterCreationResponse.getReferredEntities().get(0).getIdentifierRef().getAccountIdentifier().getValue())
         .isEqualTo(accountId);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testHandleNode_whenMonitoredServiceRefIsRuntimeOrExpression() throws IOException {
+    MonitoredServiceDTO monitoredServiceDTO = builderFactory.monitoredServiceDTOBuilder().build();
+    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    FilterCreationContextBuilder filterCreationContextBuilder =
+        FilterCreationContext.builder().setupMetadata(SetupMetadata.newBuilder()
+                                                          .setAccountId(accountId)
+                                                          .setOrgId(orgIdentifier)
+                                                          .setProjectId(projectIdentifier)
+                                                          .build());
+    FilterCreationResponse filterCreationResponse = cvngStepFilterJsonCreator.handleNode(
+        filterCreationContextBuilder.currentField(new YamlField(getYamlNode())).build(),
+        StepElementConfig.builder()
+            .stepSpecType(builderFactory.cvngStepInfoBuilder()
+                              .monitoredServiceRef(ParameterField.createExpressionField(true, "<+input>", null, true))
+                              .build())
+            .build());
+
+    assertThat(filterCreationResponse.getReferredEntities()).isEmpty();
+    filterCreationResponse = cvngStepFilterJsonCreator.handleNode(
+        filterCreationContextBuilder.currentField(new YamlField(getYamlNode())).build(),
+        StepElementConfig.builder()
+            .stepSpecType(builderFactory.cvngStepInfoBuilder()
+                              .monitoredServiceRef(ParameterField.createExpressionField(
+                                  true, "<+service.identifier>_<+env.identifier>", null, true))
+                              .build())
+            .build());
+    assertThat(filterCreationResponse.getReferredEntities()).isEmpty();
   }
 
   @Test
