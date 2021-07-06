@@ -16,7 +16,8 @@
                         {"name" : "id", "type" : "int"},
                         {"name" : "params", "type" : "string"},
                         {"name" : "class", "type" : "string"},
-                        {"name" : "type", "type" : "string"}
+                        {"name" : "type", "type" : "string"},
+                        {"name": "callsReflection", "type" : "boolean"}
                     ]
                 }
             }

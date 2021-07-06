@@ -3,6 +3,14 @@
 // takes avro decoded output and returns a Callgraph function. ToStringMap fn
 // takes a callgraph object as input and converts it in map[string]interface{} format
 // for avro encoding.
+
+// TODO: (Vistaar) Add UT for ensuring avro formatting is correct
+// Any changes made to the avro schema needs to be properly validated. This can be done
+// using a avro validator online. Also, the schema needs to be converted to a go file
+// using a tool like go-bindata.
+// go-bindata -o callgraph.go callgraph.avsc
+// Without this, none of the changes will take effect.
+
 package ti
 
 import (
@@ -21,12 +29,13 @@ func (cg *Callgraph) ToStringMap() map[string]interface{} {
 	var nodes, relations []interface{}
 	for _, v := range (*cg).Nodes {
 		data := map[string]interface{}{
-			"package": v.Package,
-			"method":  v.Method,
-			"id":      v.ID,
-			"params":  v.Params,
-			"class":   v.Class,
-			"type":    v.Type,
+			"package":         v.Package,
+			"method":          v.Method,
+			"id":              v.ID,
+			"params":          v.Params,
+			"class":           v.Class,
+			"type":            v.Type,
+			"callsReflection": v.CallsReflection,
 		}
 		nodes = append(nodes, data)
 	}
@@ -67,6 +76,8 @@ func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 							node.Params = v.(string)
 						case "class":
 							node.Class = v.(string)
+						case "callsReflection":
+							node.CallsReflection = v.(bool)
 						case "type":
 							node.Type = v.(string)
 						default:
@@ -112,12 +123,13 @@ func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 
 //Node type represents detail of node in callgraph
 type Node struct {
-	Package string
-	Method  string
-	ID      int
-	Params  string
-	Class   string
-	Type    string
+	Package         string
+	Method          string
+	ID              int
+	Params          string
+	Class           string
+	Type            string
+	CallsReflection bool
 }
 
 // Input is the go representation of each line in callgraph file

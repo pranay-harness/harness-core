@@ -367,6 +367,6 @@ func split(p []byte) []string {
 }
 
 func formatNudge(line *stream.Line, nudge logs.Nudge) error {
-	return fmt.Errorf("Found possible error on line %d\n. Log: %s\n. Possible error: %s\n. Possible resolution: %s.",
+	return fmt.Errorf("Found possible error on line %d.\n Log: %s.\n Possible error: %s.\n Possible resolution: %s.",
 		line.Number+1, line.Message, nudge.GetError(), nudge.GetResolution())
 }
