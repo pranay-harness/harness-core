@@ -58,7 +58,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
         expressionEvaluatorProvider.get(null, ambiance, EnumSet.of(NodeExecutionEntityType.OUTCOME), true);
     injector.injectMembers(evaluator);
     Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
-    return value == null ? null : ((Document) value).toJson();
+    return value == null ? null : RecastOrchestrationUtils.toJson(value);
   }
 
   @Override
@@ -76,7 +76,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
                                    .levels(ambiance.getLevelsList())
                                    .producedBy(producedBy)
                                    .name(name)
-                                   .outcome(RecastOrchestrationUtils.toDocumentFromJson(value))
+                                   .outcome(value == null ? null : Document.parse(value))
                                    .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))
                                    .build());
       return instance.getUuid();
@@ -149,7 +149,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     if (instance == null) {
       throw new OutcomeException(format("Could not resolve outcome with name '%s'", name));
     }
-    return RecastOrchestrationUtils.toDocumentJson(instance.getOutcome());
+    return RecastOrchestrationUtils.toJson(instance.getOutcome());
   }
 
   private String resolveUsingProducerSetupId(@NotNull Ambiance ambiance, @NotNull RefObject refObject) {
@@ -166,7 +166,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     if (EmptyPredicate.isEmpty(instances)) {
       throw new OutcomeException(format("Could not resolve outcome with name '%s'", name));
     }
-    return RecastOrchestrationUtils.toDocumentJson(instances.get(0).getOutcome());
+    return RecastOrchestrationUtils.toJson(instances.get(0).getOutcome());
   }
 
   @Override

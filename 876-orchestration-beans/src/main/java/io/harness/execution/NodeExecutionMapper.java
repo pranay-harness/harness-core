@@ -8,6 +8,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.interrupts.InterruptEffectProto;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.serializer.ProtoUtils;
 
 import java.util.Collections;
@@ -90,10 +91,10 @@ public class NodeExecutionMapper {
       builder.setInitialWaitDuration(ProtoUtils.javaDurationToDuration(nodeExecution.getInitialWaitDuration()));
     }
     if (nodeExecution.getResolvedStepParameters() != null) {
-      builder.setResolvedStepParameters(nodeExecution.getResolvedStepParameters().toJson());
+      builder.setResolvedStepParameters(RecastOrchestrationUtils.toJson(nodeExecution.getResolvedStepParameters()));
     }
     if (nodeExecution.getResolvedStepInputs() != null) {
-      builder.setResolvedStepInputs(nodeExecution.getResolvedStepInputs().toJson());
+      builder.setResolvedStepInputs(RecastOrchestrationUtils.toJson(nodeExecution.getResolvedStepInputs()));
     }
     if (nodeExecution.getNotifyId() != null) {
       builder.setNotifyId(nodeExecution.getNotifyId());

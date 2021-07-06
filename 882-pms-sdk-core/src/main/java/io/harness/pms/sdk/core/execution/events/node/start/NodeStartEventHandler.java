@@ -61,12 +61,11 @@ public class NodeStartEventHandler extends PmsBaseEventHandler<NodeStartEvent> {
       ExecutableProcessor processor = executableProcessorFactory.obtainProcessor(nodeStartEvent.getMode());
       StepInputPackage inputPackage =
           engineObtainmentHelper.obtainInputPackage(nodeStartEvent.getAmbiance(), nodeStartEvent.getRefObjectsList());
-      StepParameters stepParameters = RecastOrchestrationUtils.fromDocumentJson(
-          nodeStartEvent.getStepParameters().toStringUtf8(), StepParameters.class);
+      StepParameters stepParameters =
+          RecastOrchestrationUtils.fromJson(nodeStartEvent.getStepParameters().toStringUtf8(), StepParameters.class);
 
       String passThoughString = nodeStartEvent.getFacilitatorPassThoroughData().toStringUtf8();
-      PassThroughData passThroughData =
-          RecastOrchestrationUtils.fromDocumentJson(passThoughString, PassThroughData.class);
+      PassThroughData passThroughData = RecastOrchestrationUtils.fromJson(passThoughString, PassThroughData.class);
       processor.handleStart(InvokerPackage.builder()
                                 .ambiance(nodeStartEvent.getAmbiance())
                                 .inputPackage(inputPackage)

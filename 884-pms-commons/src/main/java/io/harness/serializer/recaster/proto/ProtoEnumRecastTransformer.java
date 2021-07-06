@@ -7,8 +7,8 @@ import io.harness.transformers.simplevalue.CustomValueTransformer;
 import io.harness.utils.RecastReflectionUtils;
 
 import com.google.protobuf.ProtocolMessageEnum;
+import java.util.Map;
 import lombok.SneakyThrows;
-import org.bson.Document;
 
 public class ProtoEnumRecastTransformer extends RecastTransformer implements CustomValueTransformer {
   @SneakyThrows
@@ -19,7 +19,7 @@ public class ProtoEnumRecastTransformer extends RecastTransformer implements Cus
       return null;
     }
 
-    Object decodedObject = RecastOrchestrationUtils.getEncodedValue((Document) fromObject);
+    Object decodedObject = RecastOrchestrationUtils.getEncodedValue((Map<String, Object>) fromObject);
 
     if (decodedObject == null) {
       return null;

@@ -29,7 +29,7 @@ public class InfrastructureStep implements SyncExecutable<InfrastructureStepPara
   @Override
   public StepResponse executeSync(Ambiance ambiance, InfrastructureStepParameters stepParameters,
       StepInputPackage inputPackage, PassThroughData passThroughData) {
-    log.info("Infrastructure Step parameters: {}", RecastOrchestrationUtils.toDocumentJson(stepParameters));
+    log.info("Infrastructure Step parameters: {}", RecastOrchestrationUtils.toJson(stepParameters));
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 }

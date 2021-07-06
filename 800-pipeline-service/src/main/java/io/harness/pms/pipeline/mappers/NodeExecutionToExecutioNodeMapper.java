@@ -12,6 +12,7 @@ import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.pipeline.utils.PmsExecutionUtils;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 
 import com.google.inject.Inject;
@@ -48,7 +49,7 @@ public class NodeExecutionToExecutioNodeMapper {
         .setupId(nodeExecution.getNode().getUuid())
         .name(nodeExecution.getNode().getName())
         .identifier(nodeExecution.getNode().getIdentifier())
-        .stepParameters(nodeExecution.getResolvedStepInputs())
+        .stepParameters(PmsExecutionUtils.extractToDocument(nodeExecution.getResolvedStepInputs()))
         .startTs(nodeExecution.getStartTs())
         .endTs(nodeExecution.getEndTs())
         .stepType(nodeExecution.getNode().getStepType().getType())
@@ -59,7 +60,7 @@ public class NodeExecutionToExecutioNodeMapper {
         .nodeRunInfo(nodeExecution.getNodeRunInfo())
         .executableResponses(nodeExecution.getExecutableResponses())
         .unitProgresses(nodeExecution.getUnitProgresses())
-        .progressData(nodeExecution.getProgressData())
+        .progressData(PmsExecutionUtils.extractToDocument(nodeExecution.getProgressData()))
         .outcomes(outcomes)
         .baseFqn(null)
         .delegateInfoList(delegateInfoList)

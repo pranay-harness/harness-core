@@ -34,7 +34,7 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
     SweepingOutputResolveBlobResponse resolve =
         PmsSdkGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::resolve,
             SweepingOutputResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
-    return RecastOrchestrationUtils.fromDocumentJson(resolve.getStepTransput(), ExecutionSweepingOutput.class);
+    return RecastOrchestrationUtils.fromJson(resolve.getStepTransput(), ExecutionSweepingOutput.class);
   }
 
   @Override
@@ -46,7 +46,7 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
   public String consume(Ambiance ambiance, String name, ExecutionSweepingOutput value, String groupName) {
     SweepingOutputConsumeBlobRequest.Builder builder =
         SweepingOutputConsumeBlobRequest.newBuilder().setAmbiance(ambiance).setName(name).setValue(
-            RecastOrchestrationUtils.toDocumentJson(value));
+            RecastOrchestrationUtils.toJson(value));
     if (EmptyPredicate.isNotEmpty(groupName)) {
       builder.setGroupName(groupName);
     }
@@ -62,7 +62,7 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
         PmsSdkGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::resolveOptional,
             SweepingOutputResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
     return OptionalSweepingOutput.builder()
-        .output(RecastOrchestrationUtils.fromDocumentJson(resolve.getStepTransput(), ExecutionSweepingOutput.class))
+        .output(RecastOrchestrationUtils.fromJson(resolve.getStepTransput(), ExecutionSweepingOutput.class))
         .found(resolve.getFound())
         .build();
   }

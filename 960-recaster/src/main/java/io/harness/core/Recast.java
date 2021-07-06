@@ -74,6 +74,7 @@ public class Recast {
   }
 
   public Map<String, Object> toMap(final Object entity) {
-    return new LinkedHashMap<>(recaster.toMap(entity));
+    Map<String, Object> map = recaster.toMap(entity);
+    return map == null ? null : new LinkedHashMap<>(map);
   }
 }

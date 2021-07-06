@@ -198,13 +198,13 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
 
     // creating outcome
     DummyVisualizationOutcome dummyVisualizationOutcome = new DummyVisualizationOutcome("outcome");
-    Document doc = RecastOrchestrationUtils.toDocument(dummyVisualizationOutcome);
+    Map<String, Object> doc = RecastOrchestrationUtils.toMap(dummyVisualizationOutcome);
     OutcomeInstance outcome =
         OutcomeInstance.builder()
             .planExecutionId(planExecution.getUuid())
             .producedBy(LevelUtils.buildLevelFromPlanNode(dummyStart.getUuid(), dummyStart.getNode()))
             .createdAt(System.currentTimeMillis())
-            .outcome(doc)
+            .outcome(new Document(doc))
             .build();
     mongoTemplate.insert(outcome);
 
@@ -221,7 +221,7 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
     assertThat(graphVertexMap.size()).isEqualTo(1);
     assertThat(graphVertexMap.get(dummyStart.getUuid()).getStatus()).isEqualTo(SUCCEEDED);
     assertThat(graphVertexMap.get(dummyStart.getUuid()).getOutcomeDocuments().values())
-        .containsExactlyInAnyOrder(RecastOrchestrationUtils.toDocument(dummyVisualizationOutcome));
+        .containsExactlyInAnyOrder(new Document(RecastOrchestrationUtils.toMap(dummyVisualizationOutcome)));
     assertThat(updatedGraph.getAdjacencyList().getAdjacencyMap().size()).isEqualTo(1);
     assertThat(updatedGraph.getStatus()).isEqualTo(planExecution.getStatus());
   }
@@ -238,8 +238,9 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
         .stepType(nodeExecution.getNode().getStepType().getType())
         .status(SUCCEEDED)
         .failureInfo(nodeExecution.getFailureInfo())
-        .stepParameters(
-            nodeExecution.getResolvedStepParameters() == null ? null : nodeExecution.getResolvedStepParameters())
+        .stepParameters(nodeExecution.getResolvedStepParameters() == null
+                ? null
+                : new Document(nodeExecution.getResolvedStepParameters()))
         .mode(nodeExecution.getMode())
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())

@@ -38,7 +38,7 @@ public class AsyncSdkProgressCallback implements ProgressCallback {
       executableProcessor.handleProgress(
           ProgressPackage.builder()
               .ambiance(ambiance)
-              .stepParameters(RecastOrchestrationUtils.fromDocumentJson(stepParamsJson, StepParameters.class))
+              .stepParameters(RecastOrchestrationUtils.fromJson(stepParamsJson, StepParameters.class))
               .progressData(progressData)
               .build());
     } catch (InvalidProtocolBufferException e) {

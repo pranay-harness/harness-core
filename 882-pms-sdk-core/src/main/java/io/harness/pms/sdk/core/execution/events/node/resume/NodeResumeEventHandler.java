@@ -117,7 +117,7 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
 
   private ResumePackage buildResumePackage(NodeResumeEvent event, Map<String, ResponseData> response) {
     StepParameters stepParameters =
-        RecastOrchestrationUtils.fromDocumentJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
+        RecastOrchestrationUtils.fromJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
 
     ResumePackageBuilder builder =
         ResumePackage.builder()

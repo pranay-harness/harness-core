@@ -6,12 +6,12 @@ import io.harness.expression.NotExpression;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.validation.InputSetValidator;
 
+import java.util.Map;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
-import org.bson.Document;
 
 @Getter
 @NoArgsConstructor
@@ -19,7 +19,7 @@ import org.bson.Document;
 public class ParameterDocumentField {
   @NotExpression private String expressionValue;
   private boolean expression;
-  @Setter private Document valueDoc;
+  @Setter private Map<String, Object> valueDoc;
   private String valueClass;
   private boolean typeString;
   private boolean skipAutoEvaluation;
@@ -32,9 +32,9 @@ public class ParameterDocumentField {
   private String responseField;
 
   @Builder
-  public ParameterDocumentField(String expressionValue, boolean expression, Document valueDoc, String valueClass,
-      boolean typeString, boolean skipAutoEvaluation, InputSetValidator inputSetValidator, boolean jsonResponseField,
-      String responseField) {
+  public ParameterDocumentField(String expressionValue, boolean expression, Map<String, Object> valueDoc,
+      String valueClass, boolean typeString, boolean skipAutoEvaluation, InputSetValidator inputSetValidator,
+      boolean jsonResponseField, String responseField) {
     this.expressionValue = expressionValue;
     this.expression = expression;
     this.valueDoc = valueDoc;
@@ -62,7 +62,7 @@ public class ParameterDocumentField {
   public void updateWithValue(Object newValue) {
     expression = false;
     expressionValue = null;
-    valueDoc = RecastOrchestrationUtils.toDocument(new ParameterFieldValueWrapper<>(newValue));
+    valueDoc = RecastOrchestrationUtils.toMap(new ParameterFieldValueWrapper<>(newValue));
   }
 
   public Object fetchFinalValue() {

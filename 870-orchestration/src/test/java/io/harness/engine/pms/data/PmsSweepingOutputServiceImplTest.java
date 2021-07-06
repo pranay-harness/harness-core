@@ -46,13 +46,13 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
     String testValueStep = "testStep";
 
     pmsSweepingOutputService.consume(ambianceSection, outputName,
-        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test(testValueSection).build()), null);
+        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueSection).build()), null);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
 
     pmsSweepingOutputService.consume(ambianceStep, outputName,
-        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test(testValueStep).build()), null);
+        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueStep).build()), null);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueStep);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
@@ -71,13 +71,13 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
     String testValueStep = "testStep";
 
     pmsSweepingOutputService.consumeInternal(ambianceSection, outputName,
-        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test(testValueSection).build()), 2);
+        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueSection).build()), 2);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
 
     pmsSweepingOutputService.consumeInternal(ambianceStep, outputName,
-        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test(testValueStep).build()), 0);
+        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueStep).build()), 0);
     validateResult(resolve(ambiancePhase, outputName), testValueStep);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
@@ -96,14 +96,13 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
     String testValueStep = "testStep";
 
     pmsSweepingOutputService.consume(ambianceSection, outputName,
-        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test(testValueSection).build()),
-        "SECTION");
+        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueSection).build()), "SECTION");
     validateResult(resolve(ambianceSection, outputName), testValueSection);
     validateResult(resolve(ambianceStep, outputName), testValueSection);
     assertThatThrownBy(() -> resolve(ambiancePhase, outputName)).isInstanceOf(SweepingOutputException.class);
 
     pmsSweepingOutputService.consume(ambianceStep, outputName,
-        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test(testValueStep).build()),
+        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test(testValueStep).build()),
         ResolverUtils.GLOBAL_GROUP_SCOPE);
     validateResult(resolve(ambiancePhase, outputName), testValueStep);
     validateResult(resolve(ambianceSection, outputName), testValueSection);
@@ -112,7 +111,7 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
     assertThatThrownBy(
         ()
             -> pmsSweepingOutputService.consume(ambianceSection, "randomOutputName",
-                RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test("randomTestValue").build()),
+                RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test("randomTestValue").build()),
                 "RANDOM"))
         .isInstanceOf(GroupNotFoundException.class);
   }

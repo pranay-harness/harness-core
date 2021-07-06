@@ -4,21 +4,23 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.core.Recast;
 import io.harness.core.Recaster;
+import io.harness.core.RecasterOptions;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exceptions.RecasterException;
 import io.harness.packages.HarnessPackages;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.serializer.JsonUtils;
 import io.harness.serializer.recaster.JsonObjectRecastTransformer;
 import io.harness.serializer.recaster.ParameterFieldRecastTransformer;
 import io.harness.serializer.recaster.proto.ProtoEnumRecastTransformer;
 import io.harness.serializer.recaster.proto.ProtoRecastTransformer;
 import io.harness.utils.RecastReflectionUtils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -26,17 +28,14 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
-import org.bson.json.JsonMode;
-import org.bson.json.JsonParseException;
-import org.bson.json.JsonWriterSettings;
 import org.json.JSONException;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 @Slf4j
 public class RecastOrchestrationUtils {
-  private static final Recast recast = new Recast();
+  private static final Recast recast =
+      new Recast(new Recaster(RecasterOptions.builder().workWithMaps(true).build()), new HashSet<>());
 
   static {
     recast.registerAliases(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS);
@@ -46,59 +45,75 @@ public class RecastOrchestrationUtils {
     recast.addTransformer(new ParameterFieldRecastTransformer());
   }
 
-  public <T> Document toDocument(T entity) {
-    return recast.toDocument(entity);
+  public <T> Map<String, Object> toMap(T entity) {
+    return recast.toMap(entity);
   }
 
-  public <T> String toDocumentJson(T entity) {
-    Document document = recast.toDocument(entity);
-    return document == null ? null : document.toJson();
+  public <T> String toJson(T entity) {
+    Map<String, Object> map = recast.toMap(entity);
+    return toJson(map);
   }
 
-  public Document toDocumentFromJson(String json) {
+  public String toJson(Map<String, Object> map) {
+    return toJsonInternal(map);
+  }
+
+  public Map<String, Object> fromJson(String json) {
     if (EmptyPredicate.isEmpty(json)) {
       return null;
     }
 
-    return Document.parse(json);
+    try {
+      return JsonUtils.asMap(json);
+    } catch (Exception e) {
+      throw new RecasterException("Cannot deserialize from json : " + json, e);
+    }
   }
 
-  public <T> T fromDocument(Document document, Class<T> entityClass) {
-    return recast.fromDocument(document, entityClass);
+  public <T> T fromMap(Map<String, Object> map, Class<T> entityClass) {
+    return recast.fromMap(map, entityClass);
   }
 
-  public <T> T fromDocumentJson(String json, Class<T> entityClass) {
+  public <T> T fromJson(String json, Class<T> entityClass) {
     if (EmptyPredicate.isEmpty(json)) {
       return null;
     }
 
-    return fromDocument(Document.parse(json), entityClass);
+    return fromMap(fromJson(json), entityClass);
   }
 
-  public Object getEncodedValue(Document doc) {
-    return doc.get(Recaster.ENCODED_VALUE);
+  public Object getEncodedValue(Map<String, Object> map) {
+    return map.get(Recaster.ENCODED_VALUE);
   }
 
-  public Object setEncodedValue(Document doc, Object newValue) {
-    return doc.put(Recaster.ENCODED_VALUE, newValue);
+  public Object setEncodedValue(Map<String, Object> map, Object newValue) {
+    return map.put(Recaster.ENCODED_VALUE, newValue);
   }
 
   public <T> String toSimpleJson(T entity) {
-    Document document = recast.toDocument(entity);
+    Map<String, Object> document = recast.toMap(entity);
     return toSimpleJson(document);
   }
 
-  public String toSimpleJson(Document document) {
+  public String toSimpleJson(Map<String, Object> document) {
     if (document == null) {
-      return new Document().toJson();
+      return "{}";
     }
     if (document.containsKey(Recaster.RECAST_CLASS_KEY)) {
       return traverse(document);
     }
-    return document.toJson(JsonWriterSettings.builder().outputMode(JsonMode.RELAXED).build());
+    return toJsonInternal(document);
   }
 
-  private String traverse(Document document) {
+  private <T> String toJsonInternal(T object) {
+    try {
+      return object == null ? null : JsonUtils.asJson(object);
+    } catch (Exception e) {
+      throw new RecasterException("Cannot serialize to json : " + object, e);
+    }
+  }
+
+  private String traverse(Map<String, Object> document) {
     for (Map.Entry<String, Object> entry : document.entrySet()) {
       if (entry.getKey().equals(Recaster.RECAST_CLASS_KEY)) {
         continue;
@@ -110,7 +125,7 @@ public class RecastOrchestrationUtils {
     }
     document.remove(Recaster.RECAST_CLASS_KEY);
 
-    return document.toJson(JsonWriterSettings.builder().outputMode(JsonMode.RELAXED).build());
+    return toJsonInternal(document);
   }
 
   private List<Object> traverseIterable(Iterable<Object> collection) {
@@ -126,8 +141,8 @@ public class RecastOrchestrationUtils {
     if (value == null) {
       return null;
     }
-    if (value instanceof Document) {
-      Document value1 = (Document) value;
+    if (value instanceof Map) {
+      Map<String, Object> value1 = (Map<String, Object>) value;
       if (isParameterField(value1)) {
         return handleParameterField(value1);
       }
@@ -138,21 +153,21 @@ public class RecastOrchestrationUtils {
     } else if (RecastReflectionUtils.implementsInterface(value.getClass(), Iterable.class)) {
       return traverseIterable((Iterable<Object>) value);
     } else if (needConversion(value.getClass())) {
-      value = RecastOrchestrationUtils.toDocument(value);
-      traverse((Document) value);
+      value = RecastOrchestrationUtils.toMap(value);
+      traverse((Map<String, Object>) value);
     }
     return value;
   }
 
-  private static Object handleEncodeValue(Document value1) {
+  private static Object handleEncodeValue(Map<String, Object> value1) {
     Object encodedValue = value1.get(Recaster.ENCODED_VALUE);
     if (encodedValue == null) {
       return null;
     }
     if (encodedValue instanceof String) {
       try {
-        return check(Document.parse((String) encodedValue));
-      } catch (JsonParseException ex) {
+        return check(fromJson((String) encodedValue));
+      } catch (RecasterException ex) {
         return value1.get(Recaster.ENCODED_VALUE);
       } catch (ClassCastException ex) {
         throw new JSONException("Cannot parse encoded value");
@@ -164,8 +179,8 @@ public class RecastOrchestrationUtils {
     return value1.get(Recaster.ENCODED_VALUE);
   }
 
-  private static boolean isParameterField(Document value1) {
-    String documentIdentifier = (String) RecastReflectionUtils.getDocumentIdentifier(value1);
+  private static boolean isParameterField(Map<String, Object> value1) {
+    String documentIdentifier = (String) RecastReflectionUtils.getIdentifier(value1);
     return documentIdentifier != null
         && (documentIdentifier.equals(ParameterField.class.getName())
             || documentIdentifier.equals(
@@ -174,8 +189,8 @@ public class RecastOrchestrationUtils {
   }
 
   @SuppressWarnings("unchecked")
-  private Object handleParameterField(Document value1) {
-    ParameterField<?> parameterField = RecastOrchestrationUtils.fromDocument(value1, ParameterField.class);
+  private Object handleParameterField(Map<String, Object> value1) {
+    ParameterField<?> parameterField = RecastOrchestrationUtils.fromMap(value1, ParameterField.class);
     Object jsonFieldValue = parameterField.getJsonFieldValue();
     if (jsonFieldValue == null) {
       return null;
@@ -183,24 +198,20 @@ public class RecastOrchestrationUtils {
     if (RecastReflectionUtils.implementsInterface(jsonFieldValue.getClass(), Iterable.class)) {
       return traverseIterable((Iterable<Object>) jsonFieldValue);
     } else {
-      return needConversion(jsonFieldValue.getClass()) ? RecastOrchestrationUtils.toDocument(jsonFieldValue)
+      return needConversion(jsonFieldValue.getClass()) ? RecastOrchestrationUtils.toMap(jsonFieldValue)
                                                        : jsonFieldValue;
     }
   }
 
   @SuppressWarnings("unchecked")
-  private String processEncodedValue(Document document) {
+  private String processEncodedValue(Map<String, Object> document) {
     Object encodedValue = document.get(Recaster.ENCODED_VALUE);
     if (encodedValue instanceof Collection) {
       List<Object> objects = traverseIterable((Iterable<Object>) encodedValue);
-      try {
-        return new ObjectMapper().writeValueAsString(objects);
-      } catch (JsonProcessingException e) {
-        log.error("Cannot serialize collection to Json", e);
-      }
+      return toJsonInternal(objects);
     }
-    if (encodedValue instanceof Document) {
-      return ((Document) encodedValue).toJson();
+    if (encodedValue instanceof Map) {
+      return toJsonInternal(encodedValue);
     }
     return encodedValue.toString();
   }

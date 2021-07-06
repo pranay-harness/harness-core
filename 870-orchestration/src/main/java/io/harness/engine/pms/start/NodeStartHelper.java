@@ -20,6 +20,7 @@ import io.harness.pms.contracts.execution.start.NodeStartEvent;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.serializer.KryoSerializer;
 import io.harness.timeout.TimeoutCallback;
@@ -64,14 +65,15 @@ public class NodeStartHelper {
 
   private void sendEvent(NodeExecution nodeExecution, ByteString passThroughData) {
     String serviceName = nodeExecution.getNode().getServiceName();
-    NodeStartEvent nodeStartEvent = NodeStartEvent.newBuilder()
-                                        .setAmbiance(nodeExecution.getAmbiance())
-                                        .addAllRefObjects(nodeExecution.getNode().getRebObjectsList())
-                                        .setFacilitatorPassThoroughData(passThroughData)
-                                        .setStepParameters(ByteString.copyFromUtf8(HarnessStringUtils.emptyIfNull(
-                                            nodeExecution.getResolvedStepParameters().toJson())))
-                                        .setMode(nodeExecution.getMode())
-                                        .build();
+    NodeStartEvent nodeStartEvent =
+        NodeStartEvent.newBuilder()
+            .setAmbiance(nodeExecution.getAmbiance())
+            .addAllRefObjects(nodeExecution.getNode().getRebObjectsList())
+            .setFacilitatorPassThoroughData(passThroughData)
+            .setStepParameters(ByteString.copyFromUtf8(HarnessStringUtils.emptyIfNull(
+                RecastOrchestrationUtils.toJson(nodeExecution.getResolvedStepParameters()))))
+            .setMode(nodeExecution.getMode())
+            .build();
     eventSender.sendEvent(
         nodeExecution.getAmbiance(), nodeStartEvent.toByteString(), PmsEventCategory.NODE_START, serviceName, true);
   }

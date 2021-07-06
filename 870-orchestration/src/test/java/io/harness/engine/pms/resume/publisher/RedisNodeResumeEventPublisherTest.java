@@ -62,7 +62,7 @@ public class RedisNodeResumeEventPublisherTest extends OrchestrationTestBase {
             .node(PlanNodeProto.newBuilder()
                       .setUuid(generateUuid())
                       .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
-                      .setStepParameters(RecastOrchestrationUtils.toDocumentJson(sectionStepParams))
+                      .setStepParameters(RecastOrchestrationUtils.toJson(sectionStepParams))
                       .setServiceName("DUMMY")
                       .build())
             .executableResponse(ExecutableResponse.newBuilder()

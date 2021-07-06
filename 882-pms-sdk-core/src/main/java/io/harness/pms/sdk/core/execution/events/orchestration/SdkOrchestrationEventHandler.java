@@ -83,7 +83,7 @@ public class SdkOrchestrationEventHandler extends PmsBaseEventHandler<Orchestrat
         .ambiance(event.getAmbiance())
         .status(event.getStatus())
         .resolvedStepParameters(
-            RecastOrchestrationUtils.fromDocumentJson(event.getStepParameters().toStringUtf8(), StepParameters.class))
+            RecastOrchestrationUtils.fromJson(event.getStepParameters().toStringUtf8(), StepParameters.class))
         .serviceName(event.getServiceName())
         .triggerPayload(event.getTriggerPayload())
         .tags(generateTagList(event))

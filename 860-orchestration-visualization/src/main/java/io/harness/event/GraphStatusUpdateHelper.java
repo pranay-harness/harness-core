@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 
 @Singleton
 @Slf4j
@@ -101,14 +102,15 @@ public class GraphStatusUpdateHelper {
         .failureInfo(nodeExecution.getFailureInfo())
         .skipInfo(nodeExecution.getSkipInfo())
         .nodeRunInfo(nodeExecution.getNodeRunInfo())
-        .stepParameters(nodeExecution.getResolvedStepInputs())
+        .stepParameters(
+            nodeExecution.getResolvedStepInputs() == null ? null : new Document(nodeExecution.getResolvedStepInputs()))
         .mode(nodeExecution.getMode())
         .executableResponses(CollectionUtils.emptyIfNull(nodeExecution.getExecutableResponses()))
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())
         .skipType(nodeExecution.getNode().getSkipType())
         .unitProgresses(nodeExecution.getUnitProgresses())
-        .progressData(nodeExecution.getProgressData())
+        .progressData(nodeExecution.getProgressData() == null ? null : new Document(nodeExecution.getProgressData()))
         .build();
   }
 }

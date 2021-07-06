@@ -41,6 +41,7 @@ import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -58,7 +59,6 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -176,8 +176,8 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
                             .setServiceName(nodeExecution.getNode().getServiceName());
 
       if (nodeExecution.getResolvedStepParameters() != null) {
-        builder.setStepParameters(
-            ByteString.copyFromUtf8(emptyIfNull(nodeExecution.getResolvedStepParameters().toJson())));
+        builder.setStepParameters(ByteString.copyFromUtf8(
+            emptyIfNull(RecastOrchestrationUtils.toJson(nodeExecution.getResolvedStepParameters()))));
       }
       eventEmitter.emitEvent(builder.build());
       nodeExecutionStartSubject.fireInform(
@@ -360,8 +360,10 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   private void emitEvent(NodeExecution nodeExecution, OrchestrationEventType orchestrationEventType) {
-    Document resolvedStepParameters = nodeExecution != null ? nodeExecution.getResolvedStepParameters() : null;
-    String stepParametersJson = resolvedStepParameters != null ? resolvedStepParameters.toJson() : null;
+    Map<String, Object> resolvedStepParameters =
+        nodeExecution != null ? nodeExecution.getResolvedStepParameters() : null;
+    String stepParametersJson =
+        resolvedStepParameters != null ? RecastOrchestrationUtils.toJson(resolvedStepParameters) : null;
 
     TriggerPayload triggerPayload = TriggerPayload.newBuilder().build();
     if (nodeExecution != null && nodeExecution.getAmbiance() != null) {
