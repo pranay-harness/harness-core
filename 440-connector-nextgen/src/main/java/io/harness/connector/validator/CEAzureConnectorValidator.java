@@ -13,8 +13,16 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.remote.CEAzureSetupConfig;
 
+import com.azure.core.http.policy.HttpLogDetailLevel;
+import com.azure.core.http.rest.PagedIterable;
+import com.azure.core.management.AzureEnvironment;
+import com.azure.core.management.profile.AzureProfile;
 import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
+import com.azure.resourcemanager.AzureResourceManager;
+import com.azure.resourcemanager.authorization.models.RoleAssignment;
+import com.azure.resourcemanager.authorization.models.RoleDefinition;
+import com.azure.resourcemanager.authorization.models.ServicePrincipal;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
@@ -27,6 +35,7 @@ import com.google.inject.Singleton;
 import com.microsoft.aad.msal4j.MsalServiceException;
 import java.net.UnknownHostException;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,6 +49,8 @@ public class CEAzureConnectorValidator extends AbstractConnectorValidator {
   private static final String AZURE_STORAGE_URL_FORMAT = "https://%s.%s";
   private static final String GENERIC_LOGGING_ERROR =
       "Failed to validate accountIdentifier:{} orgIdentifier:{} projectIdentifier:{}";
+  private static final String AZURE_ROLE_BILLING = "Storage Blob Data Reader";
+  private static final String AZURE_ROLE_OPTIMIZATION = "Contributor";
 
   @Inject private CEAzureSetupConfig ceAzureSetupConfig;
 
@@ -48,17 +59,52 @@ public class CEAzureConnectorValidator extends AbstractConnectorValidator {
       String orgIdentifier, String projectIdentifier, String identifier) {
     final CEAzureConnectorDTO ceAzureConnectorDTO = (CEAzureConnectorDTO) connectorDTO;
     final List<CEFeatures> featuresEnabled = ceAzureConnectorDTO.getFeaturesEnabled();
+    final String tenantId = ceAzureConnectorDTO.getTenantId();
+    final String subscriptionId = ceAzureConnectorDTO.getSubscriptionId();
+    HashMap<String, String> rolesAssigned;
 
     try {
+      ClientSecretCredential clientSecretCredential = new ClientSecretCredentialBuilder()
+                                                          .clientId(ceAzureSetupConfig.getAzureAppClientId())
+                                                          .clientSecret(ceAzureSetupConfig.getAzureAppClientSecret())
+                                                          .tenantId(tenantId)
+                                                          .build();
+      rolesAssigned = validateAppRoles(tenantId, subscriptionId, clientSecretCredential);
+
       if (featuresEnabled.contains(CEFeatures.BILLING)) {
         final BillingExportSpecDTO billingExportSpec = ceAzureConnectorDTO.getBillingExportSpec();
         final String storageAccountName = billingExportSpec.getStorageAccountName();
         final String containerName = billingExportSpec.getContainerName();
         final String directoryName = billingExportSpec.getDirectoryName();
-        final String tenantId = ceAzureConnectorDTO.getTenantId();
         String endpoint = String.format(AZURE_STORAGE_URL_FORMAT, storageAccountName, AZURE_STORAGE_SUFFIX);
-        BlobContainerClient blobContainerClient = getBlobContainerClient(endpoint, containerName, tenantId);
+        BlobContainerClient blobContainerClient =
+            getBlobContainerClient(endpoint, containerName, tenantId, clientSecretCredential);
         validateIfContainerIsPresent(blobContainerClient, directoryName);
+        if (!rolesAssigned.containsKey(AZURE_ROLE_BILLING)) {
+          return ConnectorValidationResult.builder()
+              .status(ConnectivityStatus.FAILURE)
+              .errors(
+                  ImmutableList.of(ErrorDetail.builder()
+                                       .message("Missing role " + AZURE_ROLE_BILLING + " assigned to storage account")
+                                       .build()))
+              .errorSummary(AZURE_ROLE_BILLING + " role assignment check failed")
+              .testedAt(Instant.now().toEpochMilli())
+              .build();
+        }
+      }
+      if (featuresEnabled.contains(CEFeatures.OPTIMIZATION)) {
+        if (!rolesAssigned.containsKey(AZURE_ROLE_OPTIMIZATION)
+            && !rolesAssigned.get(AZURE_ROLE_OPTIMIZATION).equals("/subscriptions/" + subscriptionId)) {
+          return ConnectorValidationResult.builder()
+              .status(ConnectivityStatus.FAILURE)
+              .errors(ImmutableList.of(ErrorDetail.builder()
+                                           .message("Missing role " + AZURE_ROLE_OPTIMIZATION
+                                               + " assigned to scope /subscriptions/" + subscriptionId)
+                                           .build()))
+              .errorSummary(AZURE_ROLE_OPTIMIZATION + " role assignment check failed")
+              .testedAt(Instant.now().toEpochMilli())
+              .build();
+        }
       }
     } catch (BlobStorageException ex) {
       if (ex.getErrorCode().toString().equals("ContainerNotFound")) {
@@ -120,6 +166,7 @@ public class CEAzureConnectorValidator extends AbstractConnectorValidator {
           .testedAt(Instant.now().toEpochMilli())
           .build();
     }
+    log.info("Validation successful");
     return ConnectorValidationResult.builder()
         .status(ConnectivityStatus.SUCCESS)
         .testedAt(Instant.now().toEpochMilli())
@@ -147,14 +194,32 @@ public class CEAzureConnectorValidator extends AbstractConnectorValidator {
   }
 
   @VisibleForTesting
-  public BlobContainerClient getBlobContainerClient(String endpoint, String containerName, String tenantId) {
-    ClientSecretCredential clientSecretCredential = new ClientSecretCredentialBuilder()
-                                                        .clientId(ceAzureSetupConfig.getAzureAppClientId())
-                                                        .clientSecret(ceAzureSetupConfig.getAzureAppClientSecret())
-                                                        .tenantId(tenantId)
-                                                        .build();
+  public BlobContainerClient getBlobContainerClient(
+      String endpoint, String containerName, String tenantId, ClientSecretCredential clientSecretCredential) {
     BlobServiceClient blobServiceClient =
         new BlobServiceClientBuilder().endpoint(endpoint).credential(clientSecretCredential).buildClient();
     return blobServiceClient.getBlobContainerClient(containerName);
+  }
+
+  @VisibleForTesting
+  public HashMap<String, String> validateAppRoles(
+      String tenantId, String subscriptionId, ClientSecretCredential clientSecretCredential) {
+    HashMap<String, String> rolesAssigned = new HashMap<>();
+    AzureProfile profile = new AzureProfile(tenantId, subscriptionId, AzureEnvironment.AZURE);
+    AzureResourceManager azureResourceManager = AzureResourceManager.configure()
+                                                    .withLogLevel(HttpLogDetailLevel.BASIC)
+                                                    .authenticate(clientSecretCredential, profile)
+                                                    .withSubscription(subscriptionId);
+    ServicePrincipal servicePrincipal =
+        azureResourceManager.accessManagement().servicePrincipals().getByName(ceAzureSetupConfig.getAzureAppClientId());
+    PagedIterable<RoleAssignment> roles =
+        azureResourceManager.accessManagement().roleAssignments().listByServicePrincipal(servicePrincipal);
+
+    for (RoleAssignment item : roles) {
+      RoleDefinition role = azureResourceManager.accessManagement().roleDefinitions().getById(item.roleDefinitionId());
+      rolesAssigned.put(role.roleName(), item.scope());
+      log.info("role: %s, scope: %s, name: %s, id: %s\n", role.roleName(), item.scope(), item.name(), item.id());
+    }
+    return rolesAssigned;
   }
 }
