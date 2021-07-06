@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.FeatureName.NEXT_GEN_ENABLED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.HAS;
@@ -77,6 +78,7 @@ import io.harness.exception.UnauthorizedException;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.UserRegistrationException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.invites.remote.InviteAcceptResponse;
 import io.harness.invites.remote.NgInviteClient;
 import io.harness.limits.ActionType;
@@ -98,6 +100,7 @@ import io.harness.remote.client.NGRestUtils;
 import io.harness.sanitizer.HtmlInputSanitizer;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.serializer.KryoSerializer;
+import io.harness.usermembership.remote.UserMembershipClient;
 import io.harness.version.VersionInfoManager;
 
 import software.wings.app.MainConfiguration;
@@ -318,6 +321,8 @@ public class UserServiceImpl implements UserService {
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
   @Inject private AccessRequestService accessRequestService;
   @Inject private SegmentHelper segmentHelper;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private UserMembershipClient userMembershipClient;
 
   private Cache<String, User> getUserCache() {
     if (configurationController.isPrimary()) {
@@ -2386,7 +2391,17 @@ public class UserServiceImpl implements UserService {
       List<Account> updatedActiveAccounts = new ArrayList<>();
       if (isNotEmpty(user.getAccounts())) {
         for (Account account : user.getAccounts()) {
-          if (!account.getUuid().equals(accountId)) {
+          if (account.getUuid().equals(accountId)) {
+            if (featureFlagService.isEnabled(NEXT_GEN_ENABLED, accountId)) {
+              Boolean isUserPartOfAccountInNG =
+                  NGRestUtils.getResponse(userMembershipClient.isUserInScope(userId, accountId, null, null));
+              log.info(
+                  "User {} is {} of nextgen in account {}", userId, isUserPartOfAccountInNG ? "" : "not", accountId);
+              if (isUserPartOfAccountInNG) {
+                updatedActiveAccounts.add(account);
+              }
+            }
+          } else {
             updatedActiveAccounts.add(account);
           }
         }
@@ -2469,23 +2484,24 @@ public class UserServiceImpl implements UserService {
     String action;
     if (isUserCreated) {
       action = EventsFrameworkMetadataConstants.CREATE_ACTION;
-      userDTO = getEventDataForCreateEvent(updatedUser);
     } else if (isUserDeleted) {
       action = EventsFrameworkMetadataConstants.DELETE_ACTION;
-      userDTO = getEventDataForDeleteEvent(oldUser);
     } else {
       action = EventsFrameworkMetadataConstants.UPDATE_ACTION;
-      userDTO = getEventDataForUpdateEvent(oldUser, updatedUser);
+      /**
+       * Dont send unnecessary events. Right now we only send events when username has changed or user is
+       * created/deleted.
+       */
+      if (updatedUser.getName().equals(oldUser.getName())) {
+        return;
+      }
     }
 
-    /**
-     * Dont send unnecessary events. Right now we only send events when user is added/removed from account or when
-     * username is changed
-     */
-    if (userDTO.getAccountsUserRemovedFromList().isEmpty() && userDTO.getNewAccountsUserAddedToList().isEmpty()
-        && isBlank(userDTO.getName())) {
-      return;
-    }
+    UserDTO.Builder userDTOBuilder = UserDTO.newBuilder();
+    userDTOBuilder.setUserId(updatedUser != null ? updatedUser.getUuid() : oldUser.getUuid());
+    userDTOBuilder.setName(updatedUser != null ? updatedUser.getName() : oldUser.getName());
+    userDTOBuilder.setEmail(updatedUser != null ? updatedUser.getEmail() : oldUser.getEmail());
+    userDTO = userDTOBuilder.build();
 
     try {
       eventProducer.send(
@@ -2497,46 +2513,6 @@ public class UserServiceImpl implements UserService {
     } catch (EventsFrameworkDownException e) {
       log.error("Failed to send event to events framework for user [userId: {}", userDTO.getUserId(), e);
     }
-  }
-
-  private UserDTO getEventDataForUpdateEvent(User oldUser, User updatedUser) {
-    UserDTO.Builder userDTOBuilder = UserDTO.newBuilder();
-    userDTOBuilder.setUserId(oldUser.getUuid());
-    if (updatedUser.getName() != null
-        && (oldUser.getName() == null || !oldUser.getName().equals(updatedUser.getName()))) {
-      userDTOBuilder.setName(updatedUser.getName());
-    }
-    Set<String> oldAccounts =
-        new HashSet<>(Optional.ofNullable(oldUser.getAccountIds()).orElse(Collections.emptyList()));
-    Set<String> newAccounts =
-        new HashSet<>(Optional.ofNullable(updatedUser.getAccountIds()).orElse(Collections.emptyList()));
-    userDTOBuilder.addAllNewAccountsUserAddedTo(Sets.difference(newAccounts, oldAccounts));
-    userDTOBuilder.addAllAccountsUserRemovedFrom(Sets.difference(oldAccounts, newAccounts));
-    return userDTOBuilder.build();
-  }
-
-  private UserDTO getEventDataForDeleteEvent(User oldUser) {
-    UserDTO.Builder userDTOBuilder = UserDTO.newBuilder();
-    if (oldUser.getName() != null) {
-      userDTOBuilder.setName(oldUser.getName());
-    }
-    userDTOBuilder.setUserId(oldUser.getUuid());
-    if (oldUser.getAccountIds() != null) {
-      userDTOBuilder.addAllAccountsUserRemovedFrom(oldUser.getAccountIds());
-    }
-    return userDTOBuilder.build();
-  }
-
-  private UserDTO getEventDataForCreateEvent(User updatedUser) {
-    UserDTO.Builder userDTOBuilder = UserDTO.newBuilder();
-    if (updatedUser.getName() != null) {
-      userDTOBuilder.setName(updatedUser.getName());
-    }
-    userDTOBuilder.setUserId(updatedUser.getUuid());
-    if (updatedUser.getAccountIds() != null) {
-      userDTOBuilder.addAllNewAccountsUserAddedTo(updatedUser.getAccountIds());
-    }
-    return userDTOBuilder.build();
   }
 
   /* (non-Javadoc)

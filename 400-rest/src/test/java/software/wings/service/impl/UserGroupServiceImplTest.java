@@ -231,6 +231,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     user.setDefaultAccountId(testAccount.getUuid());
     user.setUuid(userId);
     user.setName(userName);
+    user.setEmail("user@harness.io");
     user.setAccounts(Arrays.asList(testAccount));
     user.setUserGroups(Arrays.asList(userGroup));
     userService.createUser(user, testAccount.getUuid());

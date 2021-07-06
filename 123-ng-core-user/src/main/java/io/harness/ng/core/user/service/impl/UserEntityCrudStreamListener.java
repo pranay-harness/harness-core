@@ -1,29 +1,24 @@
 package io.harness.ng.core.user.service.impl;
 
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CREATE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.UPDATE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_ENTITY;
-import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 
-import io.harness.account.AccountClient;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.Scope;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.schemas.user.UserDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.event.MessageListener;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
-import io.harness.remote.client.RestClientUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
@@ -32,15 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class UserEntityCrudStreamListener implements MessageListener {
-  private static final String ACCOUNT_VIEWER_ROLE_IDENTIFIER = "_account_viewer";
-  private static final String ACCOUNT_ADMIN_ROLE_IDENTIFIER = "_account_admin";
   private final NgUserService ngUserService;
-  private final AccountClient accountClient;
 
   @Inject
-  public UserEntityCrudStreamListener(NgUserService ngUserService, AccountClient accountClient) {
+  public UserEntityCrudStreamListener(NgUserService ngUserService) {
     this.ngUserService = ngUserService;
-    this.accountClient = accountClient;
   }
 
   @Override
@@ -70,20 +61,14 @@ public class UserEntityCrudStreamListener implements MessageListener {
       log.error("UserId can't be null in the event consumed from entity crud stream");
       return true;
     }
-    if ((action.equals(CREATE_ACTION) || action.equals(UPDATE_ACTION))
-        && userDTO.getNewAccountsUserAddedToList() != null) {
-      addUserToAccounts(userDTO.getUserId(), userDTO.getNewAccountsUserAddedToList());
+    if (action.equals(UPDATE_ACTION)) {
+      UserMetadataDTO user = UserMetadataDTO.builder()
+                                 .uuid(stripToNull(userDTO.getUserId()))
+                                 .name(stripToNull(userDTO.getName()))
+                                 .email(stripToNull(userDTO.getEmail()))
+                                 .build();
+      return ngUserService.updateUserMetadata(user);
     }
     return true;
-  }
-
-  private void addUserToAccounts(String userId, List<String> newAccountsUserAddedTo) {
-    newAccountsUserAddedTo.forEach(accountIdentifier -> {
-      List<String> accountAdmins = RestClientUtils.getResponse(accountClient.getAccountAdmins(accountIdentifier));
-      String roleIdentifier = accountAdmins != null && accountAdmins.contains(userId) ? ACCOUNT_ADMIN_ROLE_IDENTIFIER
-                                                                                      : ACCOUNT_VIEWER_ROLE_IDENTIFIER;
-      Scope scope = Scope.builder().accountIdentifier(accountIdentifier).build();
-      ngUserService.addUserToScope(userId, scope, roleIdentifier, SYSTEM);
-    });
   }
 }
