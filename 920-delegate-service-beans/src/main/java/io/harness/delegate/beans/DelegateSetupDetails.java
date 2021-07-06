@@ -2,6 +2,7 @@ package io.harness.delegate.beans;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.gitsync.beans.YamlDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -24,6 +25,8 @@ public class DelegateSetupDetails implements YamlDTO {
   private String description;
   @NotNull private DelegateSize size;
   @NotNull private String delegateConfigurationId;
+
+  @EntityIdentifier(allowBlank = true) private String identifier; // TODO make mandatory when UI does the change
 
   private K8sConfigDetails k8sConfigDetails;
 

@@ -44,6 +44,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Event;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.account.AccountCrudObserver;
+import software.wings.utils.Utils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -201,7 +202,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   @Override
   public DelegateProfile add(DelegateProfile delegateProfile) {
     if (Strings.isNullOrBlank(delegateProfile.getIdentifier())) {
-      delegateProfile.setIdentifier(identifierFromName(delegateProfile.getName()));
+      delegateProfile.setIdentifier(Utils.normalizeIdentifier(delegateProfile.getName()));
     }
     if (delegateProfile.isNg()) {
       try {
@@ -249,10 +250,6 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
       publishDelegateProfileChangeEventViaEventFramework(delegateProfile, DELETE_ACTION);
     }
-  }
-
-  private String identifierFromName(String delegateName) {
-    return "_" + delegateName.replaceAll("[^a-zA-Z0-9_$]", "_");
   }
 
   private void publishDelegateProfileChangeEventViaEventFramework(DelegateProfile delegateProfile, String action) {
@@ -400,15 +397,12 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
   @VisibleForTesting
   public boolean identifierExists(String accountId, DelegateEntityOwner owner, String proposedIdentifier) {
-    Query<DelegateProfile> result = owner != null ? persistence.createQuery(DelegateProfile.class)
-                                                        .filter(DelegateKeys.accountId, accountId)
-                                                        .filter(DelegateKeys.owner_identifier, owner.getIdentifier())
-                                                        .field(DelegateProfileKeys.identifier)
-                                                        .equalIgnoreCase(proposedIdentifier)
-                                                  : persistence.createQuery(DelegateProfile.class)
-                                                        .filter(DelegateKeys.accountId, accountId)
-                                                        .field(DelegateProfileKeys.identifier)
-                                                        .equalIgnoreCase(proposedIdentifier);
+    Query<DelegateProfile> result = persistence.createQuery(DelegateProfile.class)
+                                        .filter(DelegateKeys.accountId, accountId)
+                                        .filter(DelegateKeys.owner, owner)
+                                        .field(DelegateProfileKeys.identifier)
+                                        .equalIgnoreCase(proposedIdentifier);
+
     return result.get() != null;
   }
 }

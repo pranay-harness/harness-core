@@ -38,6 +38,8 @@ import org.apache.commons.lang3.StringUtils;
 @Slf4j
 public class Utils {
   private static final String MULTIPLE_FILES_DELIMITER = ",";
+  private static final String UNDERSCORE = "_";
+  private static final String DASH = "-";
 
   public static String generatePath(String delimiter, boolean endsWithDelimiter, String... elements) {
     StringBuilder builder = new StringBuilder();
@@ -243,5 +245,13 @@ public class Utils {
         .map(String::trim)
         .filter(value -> validateFilePath(value, filePath))
         .collect(Collectors.toList());
+  }
+
+  public static String normalizeIdentifier(String identifier) {
+    return UNDERSCORE + identifier.replaceAll("[^a-zA-Z0-9_$]", UNDERSCORE);
+  }
+
+  public static String uuidToIdentifier(String uuid) {
+    return UNDERSCORE + uuid.replaceAll(DASH, UNDERSCORE);
   }
 }
