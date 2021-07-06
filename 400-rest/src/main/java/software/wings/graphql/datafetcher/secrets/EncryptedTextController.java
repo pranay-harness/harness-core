@@ -9,7 +9,9 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretText;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.security.encryption.EncryptedDataParams;
 
 import software.wings.graphql.schema.mutation.secrets.input.QLCreateSecretInput;
 import software.wings.graphql.schema.type.secrets.QLEncryptedText;
@@ -22,6 +24,8 @@ import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.HashSet;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -58,12 +62,17 @@ public class EncryptedTextController {
 
     String secretValue = encryptedText.getValue();
     String path = encryptedText.getSecretReference();
-    if (isNotBlank(secretValue) && isNotBlank(path)) {
-      throw new InvalidRequestException("Cannot set both value and secret reference for the encrypted text secret");
-    }
-
-    if (isBlank(path) && isBlank(secretValue)) {
-      throw new InvalidRequestException("Supply either the secret path or the secret value");
+    Set<EncryptedDataParams> st = new HashSet<EncryptedDataParams>();
+    st = encryptedText.getParameters();
+    int cnt = 0;
+    if (isNotBlank(secretValue))
+      cnt++;
+    if (isNotBlank(path))
+      cnt++;
+    if (!EmptyPredicate.isEmpty(st))
+      cnt++;
+    if (cnt != 1) {
+      throw new InvalidRequestException("Exactly ONE out of value, secret reference and Variables is to be passed");
     }
 
     SecretText secretText =
@@ -71,11 +80,13 @@ public class EncryptedTextController {
             .value(secretValue)
             .path(path)
             .name(secretName)
+            .parameters(st)
             .kmsId(secretMangerId)
             .usageRestrictions(usageScopeController.populateUsageRestrictions(encryptedText.getUsageScope(), accountId))
             .scopedToAccount(encryptedText.isScopedToAccount())
             .inheritScopesFromSM(encryptedText.isInheritScopesFromSM())
             .build();
+
     return secretManager.saveSecretText(accountId, secretText, true);
   }
 
