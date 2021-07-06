@@ -64,7 +64,6 @@ public class NodeAdviseEventHandler extends PmsBaseEventHandler<AdviseEvent> {
   @Override
   protected void handleEventWithContext(AdviseEvent event) {
     try {
-      log.info("Starting to handle ADVISE event");
       Ambiance ambiance = event.getAmbiance();
       String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
       Preconditions.checkArgument(isNotBlank(nodeExecutionId), "nodeExecutionId is null or empty");
@@ -97,8 +96,6 @@ public class NodeAdviseEventHandler extends PmsBaseEventHandler<AdviseEvent> {
         sdkNodeExecutionService.handleAdviserResponse(ambiance.getPlanExecutionId(), nodeExecutionId,
             event.getNotifyId(), AdviserResponse.newBuilder().setType(AdviseType.UNKNOWN).build());
       }
-
-      log.info("ADVISE Event Handled Successfully");
     } catch (Exception ex) {
       log.error("Error while advising execution", ex);
       sdkNodeExecutionService.handleEventError(

@@ -62,7 +62,6 @@ public class FacilitatorEventHandler extends PmsBaseEventHandler<FacilitatorEven
   @Override
   protected void handleEventWithContext(FacilitatorEvent event) {
     try {
-      log.info("Starting to handle FACILITATION event");
       Ambiance ambiance = event.getAmbiance();
       StepInputPackage inputPackage = obtainInputPackage(ambiance, event.getRefObjectsList());
       FacilitatorResponse currFacilitatorResponse = null;

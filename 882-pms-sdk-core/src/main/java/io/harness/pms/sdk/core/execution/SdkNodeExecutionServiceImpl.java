@@ -193,7 +193,7 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
     sdkResponseEventPublisher.publishEvent(SdkResponseEventProto.newBuilder()
                                                .setSdkResponseEventType(SdkResponseEventType.QUEUE_TASK)
                                                .setNodeExecutionId(nodeExecutionId)
-                                               .setPlanExecutionId(nodeExecutionId)
+                                               .setPlanExecutionId(planExecutionId)
                                                .setQueueTaskRequest(queueTaskRequest)
                                                .build());
   }

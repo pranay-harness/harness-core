@@ -91,6 +91,7 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
     Preconditions.checkArgument(isNotBlank(nodeExecutionId), "nodeExecutionId is null or empty");
     try {
       if (event.getAsyncError()) {
+        log.info("Async Error for the Event Sending Error Response");
         ErrorResponseData errorResponseData = (ErrorResponseData) response.values().iterator().next();
         StepResponseProto stepResponse =
             StepResponseProto.newBuilder()

@@ -4,7 +4,7 @@ import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.OrchestrationEventsFrameworkConstants.SDK_RESPONSE_EVENT_BATCH_SIZE;
 import static io.harness.OrchestrationEventsFrameworkConstants.SDK_RESPONSE_EVENT_CONSUMER;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_SDK_RESPONSE_EVENT_TOPIC;
-import static io.harness.pms.events.PmsEventFrameworkConstants.MAX_PROCESSING_TIME_MINUTES;
+import static io.harness.pms.events.PmsEventFrameworkConstants.MAX_PROCESSING_TIME_SECONDS;
 
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.eventsframework.EventsFrameworkConstants;
@@ -36,7 +36,7 @@ public class OrchestrationEventsFrameworkModule extends AbstractModule {
       bind(Consumer.class)
           .annotatedWith(Names.named(SDK_RESPONSE_EVENT_CONSUMER))
           .toInstance(RedisConsumer.of(PIPELINE_SDK_RESPONSE_EVENT_TOPIC, PIPELINE_SERVICE.getServiceId(), redisConfig,
-              Duration.ofMinutes(MAX_PROCESSING_TIME_MINUTES), SDK_RESPONSE_EVENT_BATCH_SIZE));
+              Duration.ofSeconds(MAX_PROCESSING_TIME_SECONDS), SDK_RESPONSE_EVENT_BATCH_SIZE));
     }
   }
 }

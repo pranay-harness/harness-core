@@ -15,6 +15,7 @@ import io.harness.callback.DelegateCallbackToken;
 import io.harness.delay.DelayEventListener;
 import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
+import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
@@ -28,6 +29,7 @@ import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
+import io.harness.redis.RedisConfig;
 import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
@@ -190,7 +192,10 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
       cacheConfigBuilder.cacheBackend(NOOP);
     }
     modules.add(PmsSdkModule.getInstance(sdkConfig));
-    modules.add(OrchestrationVisualizationModule.getInstance());
+    modules.add(OrchestrationVisualizationModule.getInstance(
+        EventsFrameworkConfiguration.builder()
+            .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
+            .build()));
     return modules;
   }
 
