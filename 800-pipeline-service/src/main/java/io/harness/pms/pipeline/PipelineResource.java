@@ -335,8 +335,6 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @QueryParam("filter") String filter, @QueryParam("stageNodeId") String stageNodeId,
       @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
-    log.info("Get Execution Detail");
-
     PipelineExecutionSummaryEntity executionSummaryEntity =
         pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
 

@@ -1,6 +1,5 @@
 package io.harness.pms.events.base;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
 import static io.harness.threading.Morpheus.sleep;
@@ -15,12 +14,11 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 import javax.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListener> implements Runnable {
+public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListener> implements PmsRedisConsumer {
   private static final int WAIT_TIME_IN_SECONDS = 10;
   private static final String CACHE_KEY = "%s_%s";
   private final Consumer redisConsumer;
@@ -67,10 +65,6 @@ public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListe
     String messageId;
     boolean messageProcessed;
     messages = redisConsumer.read(Duration.ofSeconds(WAIT_TIME_IN_SECONDS));
-    if (isNotEmpty(messages)) {
-      log.info(String.format("Starting processing of the following messages: [%s]",
-          messages.stream().map(message -> message.getId()).collect(Collectors.joining(","))));
-    }
     for (Message message : messages) {
       messageId = message.getId();
       messageProcessed = handleMessage(message);

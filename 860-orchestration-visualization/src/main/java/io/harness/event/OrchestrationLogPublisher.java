@@ -5,14 +5,19 @@ import io.harness.engine.observers.NodeStatusUpdateObserver;
 import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.engine.observers.NodeUpdateObserver;
 import io.harness.engine.observers.PlanStatusUpdateObserver;
+import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.producer.Message;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.contracts.visualisation.log.OrchestrationLogEvent;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.sql.Date;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -22,6 +27,7 @@ public class OrchestrationLogPublisher
     implements NodeUpdateObserver, NodeStatusUpdateObserver, PlanStatusUpdateObserver {
   @Inject private OrchestrationEventLogRepository orchestrationEventLogRepository;
   @Inject private GraphGenerationService graphGenerationService;
+  @Inject @Named(EventsFrameworkConstants.ORCHESTRATION_LOG) private Producer producer;
 
   @Override
   public void onNodeStatusUpdate(NodeUpdateInfo nodeUpdateInfo) {
@@ -51,6 +57,8 @@ public class OrchestrationLogPublisher
             .planExecutionId(planExecutionId)
             .validUntil(Date.from(OffsetDateTime.now().plus(Duration.ofDays(14)).toInstant()))
             .build());
-    graphGenerationService.updateGraph(planExecutionId);
+    OrchestrationLogEvent orchestrationLogEvent =
+        OrchestrationLogEvent.newBuilder().setPlanExecutionId(planExecutionId).build();
+    producer.send(Message.newBuilder().setData(orchestrationLogEvent.toByteString()).build());
   }
 }

@@ -11,6 +11,7 @@ import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheModule;
+import io.harness.consumers.GraphUpdateRedisConsumer;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
 import io.harness.engine.OrchestrationEngine;
@@ -535,6 +536,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     pipelineEventConsumerController.register(injector.getInstance(NodeAdviseEventRedisConsumer.class), 2);
     pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 2);
     pipelineEventConsumerController.register(injector.getInstance(SdkResponseEventRedisConsumer.class), 3);
+    pipelineEventConsumerController.register(injector.getInstance(GraphUpdateRedisConsumer.class), 3);
   }
 
   private void registerCorsFilter(PipelineServiceConfiguration appConfig, Environment environment) {

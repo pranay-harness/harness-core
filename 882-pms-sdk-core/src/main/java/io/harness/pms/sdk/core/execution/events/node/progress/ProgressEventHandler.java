@@ -57,7 +57,6 @@ public class ProgressEventHandler extends PmsBaseEventHandler<ProgressEvent> {
   @Override
   protected void handleEventWithContext(ProgressEvent event) {
     try {
-      log.info("Starting to handle PROGRESS event");
       StepParameters stepParameters =
           RecastOrchestrationUtils.fromDocumentJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
       ProgressData progressData =
@@ -70,9 +69,9 @@ public class ProgressEventHandler extends PmsBaseEventHandler<ProgressEvent> {
                                             .progressData(progressData)
                                             .build();
       processor.handleProgress(progressPackage);
-      log.info("PROGRESS Event Handled Successfully");
     } catch (Exception ex) {
-      log.error("Error while Handling progress", ex);
+      log.error("Error while Handling progress NodeExecutionId [{}], PlanExecutionId [{}]",
+          AmbianceUtils.obtainCurrentRuntimeId(event.getAmbiance()), event.getAmbiance().getPlanExecutionId(), ex);
     }
   }
 }

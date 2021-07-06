@@ -23,6 +23,7 @@ public final class EventsFrameworkConstants {
   public static final String GIT_PR_EVENT_STREAM = "git_pr_event_stream";
   public static final String GIT_BRANCH_HOOK_EVENT_STREAM = "git_branch_hook_event_stream";
   public static final String USERMEMBERSHIP = "usermembership";
+  public static final String ORCHESTRATION_LOG = "orchestration_log";
 
   // created for git sdk, dont use outside sdk.
   public static final String GIT_CONFIG_STREAM = "git_config_stream";
@@ -90,10 +91,12 @@ public final class EventsFrameworkConstants {
   public static final Duration ENTITY_ACTIVITY_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration HARNESS_TO_GIT_PUSH_MAX_PROCESSING_TIME = Duration.ofSeconds(50);
   public static final Duration GIT_CONFIG_STREAM_PROCESSING_TIME = Duration.ofSeconds(20);
+  public static final Duration ORCHESTRATION_LOG_MAX_PROCESSING_TIME = Duration.ofMinutes(10);
 
   public static final int DEFAULT_READ_BATCH_SIZE = 50;
   public static final int ENTITY_CRUD_READ_BATCH_SIZE = 50;
   public static final int FEATURE_FLAG_READ_BATCH_SIZE = 50;
+  public static final int ORCHESTRATION_LOG_READ_BATCH_SIZE = 50;
   public static final int USERMEMBERSHIP_READ_BATCH_SIZE = 50;
   public static final int SETUP_USAGE_READ_BATCH_SIZE = 50;
   public static final int ENTITY_ACTIVITY_READ_BATCH_SIZE = 50;

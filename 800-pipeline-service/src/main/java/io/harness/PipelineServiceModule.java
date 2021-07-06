@@ -188,9 +188,8 @@ public class PipelineServiceModule extends AbstractModule {
             .useFeatureFlagService(true)
             .build()));
     install(OrchestrationStepsModule.getInstance(configuration.getOrchestrationStepConfig()));
-    install(OrchestrationVisualizationModule.getInstance());
+    install(OrchestrationVisualizationModule.getInstance(configuration.getEventsFrameworkConfiguration()));
     install(PrimaryVersionManagerModule.getInstance());
-    install(OrchestrationVisualizationModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
         configuration.getManagerTarget(), configuration.getManagerAuthority(), true));
     install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),

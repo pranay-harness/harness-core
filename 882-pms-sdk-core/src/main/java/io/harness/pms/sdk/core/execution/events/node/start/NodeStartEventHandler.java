@@ -58,7 +58,6 @@ public class NodeStartEventHandler extends PmsBaseEventHandler<NodeStartEvent> {
   @Override
   public void handleEventWithContext(NodeStartEvent nodeStartEvent) {
     try {
-      log.info("Starting to handle NodeStart event");
       ExecutableProcessor processor = executableProcessorFactory.obtainProcessor(nodeStartEvent.getMode());
       StepInputPackage inputPackage =
           engineObtainmentHelper.obtainInputPackage(nodeStartEvent.getAmbiance(), nodeStartEvent.getRefObjectsList());
@@ -75,7 +74,6 @@ public class NodeStartEventHandler extends PmsBaseEventHandler<NodeStartEvent> {
                                 .stepParameters(stepParameters)
                                 .executionMode(nodeStartEvent.getMode())
                                 .build());
-      log.info("Successfully handled NodeStart event");
     } catch (Exception ex) {
       log.error("Error while handle NodeStart event", ex);
       sdkNodeExecutionService.handleStepResponse(nodeStartEvent.getAmbiance().getPlanExecutionId(),
