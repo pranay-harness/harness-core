@@ -48,6 +48,7 @@ import io.harness.metrics.MetricRegistryModule;
 import io.harness.metrics.jobs.RecordMetricsJob;
 import io.harness.metrics.service.api.MetricService;
 import io.harness.migration.MigrationProvider;
+import io.harness.migration.NGMigrationSdkInitHelper;
 import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.accesscontrol.migrations.AccessControlMigrationJob;
@@ -309,7 +310,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerMigrations(Injector injector) {
     NGMigrationConfiguration config = getMigrationSdkConfiguration();
-    // NGMigrationSdkInitHelper.initialize(injector, config);
+    NGMigrationSdkInitHelper.initialize(injector, config);
   }
 
   private NGMigrationConfiguration getMigrationSdkConfiguration() {
