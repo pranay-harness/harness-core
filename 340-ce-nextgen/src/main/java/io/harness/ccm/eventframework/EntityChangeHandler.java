@@ -1,7 +1,10 @@
 package io.harness.ccm.eventframework;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.K8sEventCollectionBundle;
 import io.harness.ccm.cluster.NGClusterRecordHandler;
 import io.harness.ccm.commons.entities.ClusterRecord;
@@ -27,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import retrofit2.Response;
 
 @Slf4j
+@OwnedBy(CE)
 public class EntityChangeHandler {
   @Inject NGClusterRecordHandler clusterRecordHandler;
   @Inject ConnectorResourceClient connectorResourceClient;
