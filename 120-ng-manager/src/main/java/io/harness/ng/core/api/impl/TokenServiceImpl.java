@@ -86,7 +86,7 @@ public class TokenServiceImpl implements TokenService {
       outboxService.save(new TokenCreateEvent(TokenDTOMapper.getDTOFromToken(savedToken)));
       return savedToken;
     }));
-    return newToken.getUuid() + deliminator + randomString;
+    return token.getApiKeyType().getValue() + deliminator + newToken.getUuid() + deliminator + randomString;
   }
 
   private void validateTokenRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,

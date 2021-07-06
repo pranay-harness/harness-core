@@ -56,14 +56,21 @@ public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
     Optional<String> apiKeyOptional = getApiKeyFromHeaders(containerRequestContext);
     if (apiKeyOptional.isPresent()) {
       String apiKey = apiKeyOptional.get();
-      log.info("Found an API key in request {}", apiKey);
       String[] splitToken = apiKey.split(delimiter);
+      if (splitToken.length != 3) {
+        log.warn("Token length not matching for API token");
+        throw new InvalidRequestException("Invalid API Token");
+      }
       if (EmptyPredicate.isNotEmpty(splitToken)) {
-        TokenDTO tokenDTO = NGRestUtils.getResponse(tokenClient.getToken(splitToken[0]));
-        String rawPassword = apiKey.replaceAll(splitToken[0] + delimiter, "");
+        TokenDTO tokenDTO = NGRestUtils.getResponse(tokenClient.getToken(splitToken[1]));
         if (tokenDTO != null) {
-          if (!new BCryptPasswordEncoder($2A, 10).matches(rawPassword, tokenDTO.getEncodedPassword())) {
-            throw new InvalidRequestException("Could not find the API token in Harness");
+          if (!tokenDTO.getApiKeyType().getValue().equals(splitToken[0])) {
+            log.warn("Invalid prefix for API token");
+            throw new InvalidRequestException("Invalid API token");
+          }
+          if (!new BCryptPasswordEncoder($2A, 10).matches(splitToken[2], tokenDTO.getEncodedPassword())) {
+            log.warn("Raw password not matching for API token");
+            throw new InvalidRequestException("Invalid API token");
           }
           if (!tokenDTO.isValid()) {
             throw new InvalidRequestException("Incoming API token " + tokenDTO.getName() + " has expired");
@@ -79,7 +86,7 @@ public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
           SecurityContextBuilder.setContext(principal);
           SourcePrincipalContextBuilder.setSourcePrincipal(principal);
         } else {
-          throw new InvalidRequestException("Could not find the API token in Harness");
+          throw new InvalidRequestException("Invalid API token");
         }
       } else {
         throw new InvalidRequestException("Invalid API token");

@@ -3,6 +3,7 @@ package io.harness.ng.core.api.impl;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.ng.core.common.beans.ApiKeyType.SERVICE_ACCOUNT;
+import static io.harness.ng.core.common.beans.ApiKeyType.USER;
 import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
@@ -26,6 +27,10 @@ import io.harness.ng.core.mapper.TokenDTOMapper;
 import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.ng.core.spring.TokenRepository;
 import io.harness.rule.Owner;
+import io.harness.security.SecurityContextBuilder;
+import io.harness.security.SourcePrincipalContextBuilder;
+import io.harness.security.dto.Principal;
+import io.harness.security.dto.UserPrincipal;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -109,7 +114,7 @@ public class TokenServiceImplTest extends NgManagerTestBase {
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
-  public void testCreateToken() {
+  public void testCreateToken_sat() {
     ApiKey apiKey = ApiKey.builder().defaultTimeToExpireToken(Duration.ofDays(2).toMillis()).build();
     apiKey.setUuid(randomAlphabetic(10));
     doReturn(apiKey).when(apiKeyService).getApiKey(any(), any(), any(), any(), any(), any());
@@ -117,13 +122,14 @@ public class TokenServiceImplTest extends NgManagerTestBase {
     newToken.setUuid(randomAlphabetic(10));
     doReturn(newToken).when(tokenRepository).save(any());
     String tokenString = tokenService.createToken(tokenDTO);
-    assertThat(tokenString).startsWith(token.getUuid());
+    assertThat(tokenString).startsWith(SERVICE_ACCOUNT.getValue());
+    assertThat(tokenString).contains(token.getUuid());
   }
 
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
-  public void testRotateToken() {
+  public void testRotateToken_sat() {
     ApiKey apiKey = ApiKey.builder().defaultTimeToExpireToken(Duration.ofDays(2).toMillis()).build();
     apiKey.setUuid(randomAlphabetic(10));
     doReturn(apiKey).when(apiKeyService).getApiKey(any(), any(), any(), any(), any(), any());
@@ -137,6 +143,52 @@ public class TokenServiceImplTest extends NgManagerTestBase {
     String tokenString =
         tokenService.rotateToken(accountIdentifier, orgIdentifier, projectIdentifier, ApiKeyType.SERVICE_ACCOUNT,
             parentIdentifier, tokenDTO.getApiKeyIdentifier(), identifier, Instant.now().plusMillis(1000));
-    assertThat(tokenString).startsWith(token.getUuid());
+    assertThat(tokenString).startsWith(SERVICE_ACCOUNT.getValue());
+    assertThat(tokenString).contains(token.getUuid());
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testCreateToken_pat() {
+    tokenDTO.setApiKeyType(USER);
+    token.setApiKeyType(USER);
+    Principal principal = new UserPrincipal(tokenDTO.getParentIdentifier(), "", "", tokenDTO.getAccountIdentifier());
+    SecurityContextBuilder.setContext(principal);
+    SourcePrincipalContextBuilder.setSourcePrincipal(principal);
+    ApiKey apiKey = ApiKey.builder().defaultTimeToExpireToken(Duration.ofDays(2).toMillis()).build();
+    apiKey.setUuid(randomAlphabetic(10));
+    doReturn(apiKey).when(apiKeyService).getApiKey(any(), any(), any(), any(), any(), any());
+    Token newToken = TokenDTOMapper.getTokenFromDTO(tokenDTO, Duration.ofDays(2).toMillis());
+    newToken.setUuid(randomAlphabetic(10));
+    doReturn(newToken).when(tokenRepository).save(any());
+    String tokenString = tokenService.createToken(tokenDTO);
+    assertThat(tokenString).startsWith(USER.getValue());
+    assertThat(tokenString).contains(token.getUuid());
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testRotateToken_pat() {
+    tokenDTO.setApiKeyType(USER);
+    token.setApiKeyType(USER);
+    Principal principal = new UserPrincipal(tokenDTO.getParentIdentifier(), "", "", tokenDTO.getAccountIdentifier());
+    SecurityContextBuilder.setContext(principal);
+    SourcePrincipalContextBuilder.setSourcePrincipal(principal);
+    ApiKey apiKey = ApiKey.builder().defaultTimeToExpireToken(Duration.ofDays(2).toMillis()).build();
+    apiKey.setUuid(randomAlphabetic(10));
+    doReturn(apiKey).when(apiKeyService).getApiKey(any(), any(), any(), any(), any(), any());
+    doReturn(Optional.of(TokenDTOMapper.getTokenFromDTO(tokenDTO, Duration.ofDays(2).toMillis())))
+        .when(tokenRepository)
+        .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndApiKeyIdentifierAndIdentifier(
+            any(), any(), any(), any(), any(), any(), any());
+    Token newToken = TokenDTOMapper.getTokenFromDTO(tokenDTO, Duration.ofDays(2).toMillis());
+    newToken.setUuid(randomAlphabetic(10));
+    doReturn(newToken).when(tokenRepository).save(any());
+    String tokenString = tokenService.rotateToken(accountIdentifier, orgIdentifier, projectIdentifier, USER,
+        parentIdentifier, tokenDTO.getApiKeyIdentifier(), identifier, Instant.now().plusMillis(1000));
+    assertThat(tokenString).startsWith(USER.getValue());
+    assertThat(tokenString).contains(token.getUuid());
   }
 }
