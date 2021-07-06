@@ -51,22 +51,23 @@ type Node struct {
 	// DefaultModel adds _id,created_at and updated_at fields to the Model
 	mgm.DefaultModel `bson:",inline"`
 
-	Package  string    `json:"package" bson:"package"`
-	Method   string    `json:"method" bson:"method"`
-	Id       int       `json:"id" bson:"id"`
-	Params   string    `json:"params" bson:"params"`
-	Class    string    `json:"class" bson:"class"`
-	Type     string    `json:"type" bson:"type"`
-	Acct     string    `json:"account" bson:"account"`
-	Proj     string    `json:"project" bson:"project"`
-	Org      string    `json:"organization" bson:"organization"`
-	ExpireAt time.Time `json:"expireAt" bson:"expireAt,omitempty"` // only include field if it's not set to a zero value
-	VCSInfo  VCSInfo   `json:"vcs_info" bson:"vcs_info"`
+	Package         string    `json:"package" bson:"package"`
+	Method          string    `json:"method" bson:"method"`
+	Id              int       `json:"id" bson:"id"`
+	Params          string    `json:"params" bson:"params"`
+	Class           string    `json:"class" bson:"class"`
+	Type            string    `json:"type" bson:"type"`
+	CallsReflection bool      `json:"callsReflection" bson:"callsReflection"`
+	Acct            string    `json:"account" bson:"account"`
+	Proj            string    `json:"project" bson:"project"`
+	Org             string    `json:"organization" bson:"organization"`
+	ExpireAt        time.Time `json:"expireAt" bson:"expireAt,omitempty"` // only include field if it's not set to a zero value
+	VCSInfo         VCSInfo   `json:"vcs_info" bson:"vcs_info"`
 }
 
 const (
-	nodeColl    = "nodes"
-	relnsColl   = "relations"
+	nodeColl  = "nodes"
+	relnsColl = "relations"
 )
 
 var expireQuery = bson.M{"$set": bson.M{"expireAt": time.Now()}}
@@ -79,18 +80,19 @@ type VCSInfo struct {
 }
 
 // NewNode creates Node object form given fields
-func NewNode(id int, pkg, method, params, class, typ string, vcs VCSInfo, acc, org, proj string) *Node {
+func NewNode(id int, pkg, method, params, class, typ string, callsReflection bool, vcs VCSInfo, acc, org, proj string) *Node {
 	return &Node{
-		Id:      id,
-		Package: pkg,
-		Method:  method,
-		Params:  params,
-		Class:   class,
-		Type:    typ,
-		Acct:    acc,
-		Org:     org,
-		Proj:    proj,
-		VCSInfo: vcs,
+		Id:              id,
+		Package:         pkg,
+		Method:          method,
+		Params:          params,
+		Class:           class,
+		Type:            typ,
+		CallsReflection: callsReflection,
+		Acct:            acc,
+		Org:             org,
+		Proj:            proj,
+		VCSInfo:         vcs,
 	}
 }
 
@@ -277,9 +279,13 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 	}
 	// Test methods corresponding to each <package, class>
 	methodMap := make(map[types.RunnableTest][]types.RunnableTest)
+	reflectionTests := []types.RunnableTest{}
 	for _, t := range all {
 		u := types.RunnableTest{Pkg: t.Package, Class: t.Class}
 		methodMap[u] = append(methodMap[u], types.RunnableTest{Pkg: t.Package, Class: t.Class, Method: t.Method})
+		if t.CallsReflection {
+			reflectionTests = append(reflectionTests, u)
+		}
 		totalTests += 1
 	}
 
@@ -373,6 +379,17 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 			}
 		}
 	}
+
+	// Go through reflection tests and add anything that hasn't been added before
+	for _, rt := range reflectionTests {
+		if _, ok := m[rt]; !ok {
+			m[rt] = struct{}{}
+			for _, src := range methodMap[rt] {
+				l = append(l, types.RunnableTest{Pkg: src.Pkg, Class: src.Class,
+					Method: src.Method, Selection: types.SelectSourceCode})
+			}
+		}
+	}
 	return types.SelectTestsResp{
 		TotalTests:    totalTests,
 		SelectedTests: len(l) - new, // new tests will be added later in upsert with uploading of partial CG
@@ -402,7 +419,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	}
 
 	for i, node := range cg.Nodes {
-		nodes[i] = *NewNode(node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, info, account, org, proj)
+		nodes[i] = *NewNode(node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, node.CallsReflection, info, account, org, proj)
 		if node.Type != "test" {
 			continue
 		}

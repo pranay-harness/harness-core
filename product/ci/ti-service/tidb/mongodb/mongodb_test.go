@@ -45,13 +45,13 @@ func TestMongoDb_UploadPartialCgForNodes(t *testing.T) {
 	defer dropNodes(ctx)     // drop nodes after the test is completed as well
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 	// Setup nodes
-	n1 := NewNode(1, "pkg", "m", "p", "c", "source",
+	n1 := NewNode(1, "pkg", "m", "p", "c", "source", false,
 		getVCSInfo(),
 		"acct", "org", "proj")
-	n2 := NewNode(2, "pkg", "m", "p", "c", "source",
+	n2 := NewNode(2, "pkg", "m", "p", "c", "source", false,
 		getVCSInfo(),
 		"acct", "org", "proj")
-	oldNode := NewNode(10, "pkg", "m", "p", "c", "source",
+	oldNode := NewNode(10, "pkg", "m", "p", "c", "source", false,
 		getVCSInfoWithCommit("oldCommit"),
 		"acct", "org", "proj")
 	n := []interface{}{n1, n2, oldNode}
@@ -106,13 +106,13 @@ func TestMongoDb_MergeCgForNodes(t *testing.T) {
 	defer dropNodes(ctx)     // drop nodes after the test is completed as well
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 	// Setup nodes
-	n1 := NewNode(1, "pkg", "m", "p", "c", "source",
+	n1 := NewNode(1, "pkg", "m", "p", "c", "source", false,
 		getVCSInfoWithBranch("b1"), "acct", "org", "proj")
-	n2 := NewNode(2, "pkg", "m", "p", "c", "source",
+	n2 := NewNode(2, "pkg", "m", "p", "c", "source", false,
 		getVCSInfoWithBranch("b1"), "acct", "org", "proj")
-	n3 := NewNode(3, "pkg", "m", "p", "c", "source",
+	n3 := NewNode(3, "pkg", "m", "p", "c", "source", false,
 		getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
-	n4 := NewNode(1, "pkg", "m", "p", "c", "source",
+	n4 := NewNode(1, "pkg", "m", "p", "c", "source", false,
 		getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
 	n := []interface{}{n1, n2, n3, n4}
 	db.Database.Collection("nodes").InsertMany(ctx, n)
@@ -127,10 +127,10 @@ func TestMongoDb_MergeCgForNodes(t *testing.T) {
 	assert.Equal(t, len(nodes), 2)
 
 	mergeReq := types.MergePartialCgRequest{
-		AccountId: "acct",
-		Repo: "repo.git",
+		AccountId:    "acct",
+		Repo:         "repo.git",
 		TargetBranch: "b1",
-		Diff: types.DiffInfo{Sha: "commit1"},
+		Diff:         types.DiffInfo{Sha: "commit1"},
 	}
 	db.MergePartialCg(ctx, mergeReq)
 
@@ -164,7 +164,7 @@ func TestMongoDb_MergePartialCgForRelations(t *testing.T) {
 
 	r1 := NewRelation(1, []int{1, 2}, getVCSInfoWithBranch("b1"), "acct", "org", "proj")
 	r2 := NewRelation(2, []int{3, 4, 5, 6}, getVCSInfoWithBranch("b1"), "acct", "org", "proj")
-	r3 := NewRelation(3, []int{1, 2}, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj") // moved
+	r3 := NewRelation(3, []int{1, 2}, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")             // moved
 	r4 := NewRelation(2, []int{1, 2, 3, 7, 8, 9}, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj") // merged
 	r5 := NewRelation(4, []int{1, 6, 3, 7}, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
 
@@ -173,10 +173,10 @@ func TestMongoDb_MergePartialCgForRelations(t *testing.T) {
 
 	// call merge-callgraph function
 	mergeReq := types.MergePartialCgRequest{
-		AccountId: "acct",
-		Repo: "repo.git",
+		AccountId:    "acct",
+		Repo:         "repo.git",
 		TargetBranch: "b1",
-		Diff: types.DiffInfo{Sha: "commit1"},
+		Diff:         types.DiffInfo{Sha: "commit1"},
 	}
 	db.MergePartialCg(ctx, mergeReq)
 
@@ -289,15 +289,15 @@ func Test_GetTestsToRun_Unsupported_File(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert sources and tests
-	n1 := NewNode(1, "pkg1", "m1", "param", "cls1", "source",
+	n1 := NewNode(1, "pkg1", "m1", "param", "cls1", "source", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "pkg1", "m2", "param", "cls1", "test",
+	n2 := NewNode(2, "pkg1", "m2", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n3 := NewNode(2, "pkg2", "m1", "param", "cls1", "test",
+	n3 := NewNode(2, "pkg2", "m1", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n4 := NewNode(2, "pkg2", "m2", "param", "cls1", "test",
+	n4 := NewNode(2, "pkg2", "m2", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n5 := NewNode(2, "pkg2", "m1", "param", "cls2", "test",
+	n5 := NewNode(2, "pkg2", "m1", "param", "cls2", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
 
 	n := []interface{}{n1, n2, n3, n4, n5}
@@ -322,15 +322,15 @@ func Test_GetTestsToRun_DifferentAccount(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert sources and tests
-	n1 := NewNode(1, "pkg1", "m1", "param", "cls1", "source",
+	n1 := NewNode(1, "pkg1", "m1", "param", "cls1", "source", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "pkg1", "m2", "param", "cls1", "test",
+	n2 := NewNode(2, "pkg1", "m2", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n3 := NewNode(2, "pkg2", "m1", "param", "cls1", "test",
+	n3 := NewNode(2, "pkg2", "m1", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n4 := NewNode(2, "pkg2", "m2", "param", "cls1", "test",
+	n4 := NewNode(2, "pkg2", "m2", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n5 := NewNode(2, "pkg2", "m1", "param", "cls2", "test",
+	n5 := NewNode(2, "pkg2", "m1", "param", "cls2", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
 
 	n := []interface{}{n1, n2, n3, n4, n5}
@@ -376,25 +376,25 @@ func Test_GetTestsToRun_TiConfig_Added_Deleted(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert source and tests
-	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source",
+	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test",
+	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n3 := NewNode(3, "pkg2", "m2", "param", "cls1", "test",
+	n3 := NewNode(3, "pkg2", "m2", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n4 := NewNode(4, "pkg2", "m1", "param", "cls2", "test",
+	n4 := NewNode(4, "pkg2", "m1", "param", "cls2", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n5 := NewNode(5, "path.to.pkg2", "m1", "param", "Xyz", "source",
+	n5 := NewNode(5, "path.to.pkg2", "m1", "param", "Xyz", "source", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n6 := NewNode(6, "path.to.test2", "m1", "param", "XyzTest", "test",
+	n6 := NewNode(6, "path.to.test2", "m1", "param", "XyzTest", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n7 := NewNode(7, "path.to.test3", "m1", "param", "DefTest", "test",
+	n7 := NewNode(7, "path.to.test3", "m1", "param", "DefTest", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n8 := NewNode(8, "path.to.src4", "m1", "param", "Ghi", "source",
+	n8 := NewNode(8, "path.to.src4", "m1", "param", "Ghi", "source", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n9 := NewNode(9, "path.to.test4", "m1", "param", "GhiTest", "test",
+	n9 := NewNode(9, "path.to.test4", "m1", "param", "GhiTest", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n10 := NewNode(10, "path.to.test4", "m2", "param", "GhiTest", "test",
+	n10 := NewNode(10, "path.to.test4", "m2", "param", "GhiTest", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
 	n := []interface{}{n1, n2, n3, n4, n5, n6, n7, n8, n9, n10}
 	db.Database.Collection("nodes").InsertMany(ctx, n)
@@ -437,9 +437,9 @@ func Test_GetTestsToRun_WithNewTests(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert source and tests
-	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source",
+	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test",
+	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
 	n := []interface{}{n1, n2}
 	db.Database.Collection("nodes").InsertMany(ctx, n)

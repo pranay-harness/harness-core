@@ -236,6 +236,12 @@ func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
 }
 
 func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTest) (string, error) {
+	//tests = []types.RunnableTest{
+	//	{Pkg: "io.harness.pms.pipeline.service", Class: "PMSPipelineServiceImplTest"},
+	//	{Pkg: "software.wings.service.impl.trigger", Class: "TriggerServiceTest"},
+	//	{Pkg: "software.wings.service.impl.workflow", Class: "WorkflowServiceTest"},
+	//	{Pkg: "software.wings.service.impl.verification", Class: "CVConfigurationServiceImplTest"},
+	//}
 	instrArg, err := r.createJavaAgentArg()
 	if err != nil {
 		return "", err
@@ -276,30 +282,49 @@ func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTe
 			// Hack to get bazel rules for portal
 			// TODO: figure out how to generically get rules to be executed from a package and a class
 			// Example commands:
-			//     find . -path "*pkg.class"
+			//     find . -path "*pkg.class" -> can have multiple tests (eg helper/base tests)
 			//     export fullname=$(bazelisk query path.java)
 			//     bazelisk query "attr('srcs', $fullname, ${fullname//:*/}:*)" --output=label_kind | grep "java_test rule"
-			c = fmt.Sprintf(
-				"export fullname=$(%s query `find . -path '*%s/%s*' | sed -e \"s/^\\.\\///g\"`)\n"+
-					"%s query \"attr('srcs', $fullname, ${fullname//:*/}:*)\" --output=label_kind | grep 'java_test rule'",
-				bazelCmd, strings.Replace(pkgs[i], ".", "/", -1), clss[i], bazelCmd)
-			cmdArgs = []string{"-c", c}
-			resp2, err2 := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).Output()
-			if err2 != nil || len(resp2) == 0 {
-				r.log.Errorw(fmt.Sprintf("could not find an appropriate rule in failback for pkgs %s and class %s", pkgs[i], clss[i]))
+
+			// Get list of paths for the tests
+			pathCmd := fmt.Sprintf(`find . -path '*%s/%s*' | sed -e "s/^\.\///g"`, strings.Replace(pkgs[i], ".", "/", -1), clss[i])
+			cmdArgs = []string{"-c", pathCmd}
+			pathResp, pathErr := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).Output()
+			if pathErr != nil {
+				r.log.Errorw(fmt.Sprintf("could not find path for pkgs %s and class %s", pkgs[i], clss[i]), zap.Error(pathErr))
 				continue
-				// TODO: if we can't figure out a rule, we should run the default command.
-				// Not returning error for now to avoid running all the tests most of the time.
-				// return defaultCmd, nil
 			}
-			t := strings.Fields(string(resp2))
-			resp = []byte(t[2])
+			// Iterate over the paths and try to find the relevant rules
+			for _, p := range strings.Split(string(pathResp), "\n") {
+				p = strings.TrimSpace(p)
+				if len(p) == 0 || !strings.Contains(p, "src/test") {
+					continue
+				}
+				c = fmt.Sprintf("export fullname=$(%s query %s)\n"+
+					"%s query \"attr('srcs', $fullname, ${fullname//:*/}:*)\" --output=label_kind | grep 'java_test rule'",
+					bazelCmd, p, bazelCmd)
+				cmdArgs = []string{"-c", c}
+				resp2, err2 := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).Output()
+				if err2 != nil || len(resp2) == 0 {
+					r.log.Errorw(fmt.Sprintf("could not find an appropriate rule in failback for path %s", p), zap.Error(err2))
+					continue
+				}
+				t := strings.Fields(string(resp2))
+				resp = []byte(t[2])
+				r := strings.TrimSuffix(string(resp), "\n")
+				if _, ok := rulesM[r]; !ok {
+					rules = append(rules, r)
+					rulesM[r] = struct{}{}
+				}
+			}
+		} else {
+			r := strings.TrimSuffix(string(resp), "\n")
+			if _, ok := rulesM[r]; !ok {
+				rules = append(rules, r)
+				rulesM[r] = struct{}{}
+			}
 		}
-		r := strings.TrimSuffix(string(resp), "\n")
-		if _, ok := rulesM[r]; !ok {
-			rules = append(rules, r)
-			rulesM[r] = struct{}{}
-		}
+
 	}
 	if len(rules) == 0 {
 		return fmt.Sprintf("echo \"Could not find any relevant test rules. Skipping the run\""), nil
