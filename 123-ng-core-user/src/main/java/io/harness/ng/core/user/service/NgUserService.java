@@ -68,6 +68,8 @@ public interface NgUserService {
 
   boolean isUserAtScope(String userId, Scope scope);
 
+  boolean updateUserMetadata(UserMetadataDTO user);
+
   boolean removeUserFromScope(String userId, Scope scope, UserMembershipUpdateSource source);
 
   boolean isUserPasswordSet(String accountIdentifier, String email);

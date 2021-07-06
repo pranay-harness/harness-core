@@ -7,6 +7,7 @@ import static org.springframework.data.mongodb.util.MongoDbErrorCodes.isDuplicat
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.user.entities.UserMetadata;
+import io.harness.ng.core.user.entities.UserMetadata.UserMetadataKeys;
 
 import com.google.inject.Inject;
 import com.mongodb.MongoBulkWriteException;
@@ -21,6 +22,7 @@ import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
 @AllArgsConstructor(access = AccessLevel.PROTECTED, onConstructor = @__({ @Inject }))
@@ -41,6 +43,12 @@ public class UserMetadataRepositoryCustomImpl implements UserMetadataRepositoryC
   public List<UserMetadata> findAll(Criteria criteria) {
     Query query = new Query(criteria);
     return mongoTemplate.find(query, UserMetadata.class);
+  }
+
+  @Override
+  public UserMetadata updateFirst(String userId, Update update) {
+    Query query = new Query(Criteria.where(UserMetadataKeys.userId).is(userId));
+    return mongoTemplate.findAndModify(query, update, UserMetadata.class);
   }
 
   public long insertAllIgnoringDuplicates(List<UserMetadata> userMetadata) {

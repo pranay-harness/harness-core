@@ -1191,7 +1191,7 @@ public class UserServiceTest extends WingsBaseTest {
                        .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
                        .build();
 
-    User user = User.Builder.anUser().uuid(USER_ID).email(USER_EMAIL).build();
+    User user = User.Builder.anUser().uuid(USER_ID).name("UserName").email(USER_EMAIL).build();
     user.getAccounts().add(temp);
 
     when(accountService.get(anyString())).thenReturn(temp);
@@ -1201,6 +1201,7 @@ public class UserServiceTest extends WingsBaseTest {
         .thenReturn(anUserInvite().withUuid(USER_INVITE_ID).withAccountId(ACCOUNT_ID).withEmail(USER_EMAIL).build());
     when(loginSettingsService.verifyPasswordStrength(Mockito.any(Account.class), Mockito.any(char[].class)))
         .thenReturn(true);
+    when(wingsPersistence.findAndModify(any(), any(), any())).thenReturn(user);
 
     UserInvite userInvite =
         anUserInvite().withAccountId(ACCOUNT_ID).withEmail(USER_EMAIL).withUuid(USER_INVITE_ID).build();

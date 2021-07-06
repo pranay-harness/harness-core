@@ -29,7 +29,6 @@ import io.harness.ng.core.api.UserGroupService;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.events.AddCollaboratorEvent;
 import io.harness.ng.core.events.RemoveCollaboratorEvent;
-import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.entities.UserGroup;
@@ -72,6 +71,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Singleton
@@ -81,6 +81,8 @@ public class NgUserServiceImpl implements NgUserService {
   private static final String ACCOUNT_ADMIN = "_account_admin";
   public static final String ACCOUNT_VIEWER = "_account_viewer";
   public static final String ORGANIZATION_VIEWER = "_organization_viewer";
+  private static final String ORG_ADMIN = "_organization_admin";
+  private static final String PROJECT_ADMIN = "_project_admin";
   public static final String PROJECT_VIEWER = "_project_viewer";
   private static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
   private final List<String> MANAGED_ROLE_IDENTIFIERS =
@@ -93,7 +95,6 @@ public class NgUserServiceImpl implements NgUserService {
   private final OutboxService outboxService;
   private final UserGroupService userGroupService;
   private final UserMetadataRepository userMetadataRepository;
-  private final ProjectService projectService;
 
   private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
 
@@ -101,7 +102,7 @@ public class NgUserServiceImpl implements NgUserService {
   public NgUserServiceImpl(UserClient userClient, UserMembershipRepository userMembershipRepository,
       @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient,
       @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, OutboxService outboxService,
-      UserGroupService userGroupService, UserMetadataRepository userMetadataRepository, ProjectService projectService) {
+      UserGroupService userGroupService, UserMetadataRepository userMetadataRepository) {
     this.userClient = userClient;
     this.userMembershipRepository = userMembershipRepository;
     this.accessControlAdminClient = accessControlAdminClient;
@@ -109,7 +110,6 @@ public class NgUserServiceImpl implements NgUserService {
     this.outboxService = outboxService;
     this.userGroupService = userGroupService;
     this.userMetadataRepository = userMetadataRepository;
-    this.projectService = projectService;
   }
 
   @Override
@@ -412,7 +412,7 @@ public class NgUserServiceImpl implements NgUserService {
               .build()));
     } catch (Exception e) {
       /**
-       *  It's expected that user will already have this roleassignment.
+       *  It's expected that user might already have this roleassignment.
        */
     }
     return savedUserMembership;
@@ -443,21 +443,29 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
+  public boolean updateUserMetadata(UserMetadataDTO user) {
+    Optional<UserMetadata> savedUserOpt = userMetadataRepository.findDistinctByUserId(user.getUuid());
+    if (!savedUserOpt.isPresent()) {
+      return true;
+    }
+    if (!isBlank(user.getName())) {
+      Update update = new Update();
+      update.set(UserMetadataKeys.name, user.getName());
+      return userMetadataRepository.updateFirst(user.getUuid(), update) != null;
+    }
+    return true;
+  }
+
+  @Override
   public boolean removeUserFromScope(String userId, Scope scope, UserMembershipUpdateSource source) {
     Optional<UserMembership> userMembershipOptional = getUserMembership(userId, scope);
     if (!userMembershipOptional.isPresent()) {
       return false;
     }
     UserMembership userMembership = userMembershipOptional.get();
-    if (!UserMembershipUpdateSource.SYSTEM.equals(source) && isUserPartOfChildScope(userId, scope)) {
-      throw new InvalidRequestException(getDeleteUserErrorMessage(scope));
-    }
-    if (ScopeUtils.isAccountScope(scope)) {
-      List<UserMetadataDTO> accountAdmins =
-          listUsersHavingRole(Scope.builder().accountIdentifier(scope.getAccountIdentifier()).build(), ACCOUNT_ADMIN);
-      if (accountAdmins.stream().allMatch(userMetadata -> userId.equals(userMetadata.getUuid()))) {
-        throw new InvalidRequestException("This user is the only account-admin left. Can't Remove it");
-      }
+    if (!UserMembershipUpdateSource.SYSTEM.equals(source)) {
+      ensureUserNotPartOfChildScope(userId, scope);
+      ensureUserNotLastAdminAtScope(userId, scope);
     }
 
     Optional<UserMetadata> userMetadata = userMetadataRepository.findDistinctByUserId(userId);
@@ -477,7 +485,22 @@ public class NgUserServiceImpl implements NgUserService {
     return true;
   }
 
-  private String getDeleteUserErrorMessage(Scope scope) {
+  private void ensureUserNotLastAdminAtScope(String userId, Scope scope) {
+    String roleIdentifier;
+    if (!isBlank(scope.getProjectIdentifier())) {
+      roleIdentifier = PROJECT_ADMIN;
+    } else if (!isBlank(scope.getOrgIdentifier())) {
+      roleIdentifier = ORG_ADMIN;
+    } else {
+      roleIdentifier = ACCOUNT_ADMIN;
+    }
+    List<UserMetadataDTO> scopeAdmins = listUsersHavingRole(scope, roleIdentifier);
+    if (scopeAdmins.stream().allMatch(userMetadata -> userId.equals(userMetadata.getUuid()))) {
+      throw new InvalidRequestException("User is the last admin left");
+    }
+  }
+
+  private String getDeleteUserFromChildScopeErrorMessage(Scope scope) {
     return String.format("Please delete the user from the %ss in this %s and try again",
         StringUtils.capitalize(ScopeUtils.getImmediateNextScope(scope.getAccountIdentifier(), scope.getOrgIdentifier())
                                    .toString()
@@ -489,11 +512,11 @@ public class NgUserServiceImpl implements NgUserService {
                                    .toLowerCase()));
   }
 
-  private boolean isUserPartOfChildScope(String userId, Scope scope) {
+  private void ensureUserNotPartOfChildScope(String userId, Scope scope) {
+    boolean userPartOfChildScope = false;
     if (!isBlank(scope.getProjectIdentifier())) {
-      return false;
-    }
-    if (!isBlank(scope.getOrgIdentifier())) {
+      userPartOfChildScope = false;
+    } else if (!isBlank(scope.getOrgIdentifier())) {
       Criteria criteria = Criteria.where(UserMetadataKeys.userId)
                               .is(userId)
                               .and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
@@ -502,15 +525,19 @@ public class NgUserServiceImpl implements NgUserService {
                               .is(scope.getOrgIdentifier())
                               .and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
                               .exists(true);
-      return userMembershipRepository.findOne(criteria) != null;
+      userPartOfChildScope = userMembershipRepository.findOne(criteria) != null;
+    } else {
+      Criteria criteria = Criteria.where(UserMetadataKeys.userId)
+                              .is(userId)
+                              .and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
+                              .is(scope.getAccountIdentifier())
+                              .and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
+                              .exists(true);
+      userPartOfChildScope = userMembershipRepository.findOne(criteria) != null;
     }
-    Criteria criteria = Criteria.where(UserMetadataKeys.userId)
-                            .is(userId)
-                            .and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
-                            .is(scope.getAccountIdentifier())
-                            .and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
-                            .exists(true);
-    return userMembershipRepository.findOne(criteria) != null;
+    if (userPartOfChildScope == true) {
+      throw new InvalidRequestException(getDeleteUserFromChildScopeErrorMessage(scope));
+    }
   }
 
   @Override

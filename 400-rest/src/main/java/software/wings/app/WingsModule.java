@@ -188,6 +188,7 @@ import io.harness.time.TimeModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
+import io.harness.usermembership.UserMembershipClientModule;
 import io.harness.version.VersionModule;
 
 import software.wings.DataStorageMode;
@@ -1285,6 +1286,10 @@ public class WingsModule extends AbstractModule implements ServersModule {
     } catch (Exception ex) {
       log.info("Could not create the connector resource client module", ex);
     }
+
+    // ng-usermembership Dependencies
+    install(new UserMembershipClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
 
     // ng-invite Dependencies
     install(new NgInviteClientModule(configuration.getNgManagerServiceHttpClientConfig(),
