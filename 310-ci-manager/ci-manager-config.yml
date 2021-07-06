@@ -111,7 +111,7 @@ ciExecutionServiceConfig:
   isLocal: false
   stepConfig:
     gitCloneConfig:
-      image: harness/drone-git:v1.0.0
+      image: harness/drone-git:v1.0.3
       entrypoint:
         - /usr/local/bin/clone
     buildAndPushDockerRegistryConfig:
