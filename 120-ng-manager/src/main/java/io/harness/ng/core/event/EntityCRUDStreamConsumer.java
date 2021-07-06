@@ -11,6 +11,7 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.SECRET
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_GROUP;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.USER_SCOPE_RECONCILIATION;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
@@ -48,7 +49,8 @@ public class EntityCRUDStreamConsumer implements Runnable {
       @Named(SETUP_USAGE_ENTITY) MessageProcessor setupUsageChangeEventMessageProcessor,
       @Named(USER_ENTITY + ENTITY_CRUD) MessageListener userEntityCRUDStreamListener,
       @Named(SECRET_ENTITY + ENTITY_CRUD) MessageListener secretEntityCRUDStreamListner,
-      @Named(USER_GROUP + ENTITY_CRUD) MessageListener userGroupEntityCRUDStreamListener) {
+      @Named(USER_GROUP + ENTITY_CRUD) MessageListener userGroupEntityCRUDStreamListener,
+      @Named(USER_SCOPE_RECONCILIATION) MessageListener userMembershipReconciliationMessageProcessor) {
     this.redisConsumer = redisConsumer;
     messageListenersList = new ArrayList<>();
     messageListenersList.add(organizationEntityCRUDStreamListener);
@@ -57,6 +59,7 @@ public class EntityCRUDStreamConsumer implements Runnable {
     messageListenersList.add(userEntityCRUDStreamListener);
     messageListenersList.add(secretEntityCRUDStreamListner);
     messageListenersList.add(userGroupEntityCRUDStreamListener);
+    messageListenersList.add(userMembershipReconciliationMessageProcessor);
     processorMap = new HashMap<>();
     processorMap.put(SETUP_USAGE_ENTITY, setupUsageChangeEventMessageProcessor);
   }

@@ -28,6 +28,7 @@ public final class EventsFrameworkMetadataConstants {
   public static final String PIPELINE_ENTITY = "pipeline";
   public static final String DELEGATE_ENTITY = "delegate";
   public static final String DELEGATE_CONFIGURATION_ENTITY = "delegateconfiguration";
+  public static final String USER_SCOPE_RECONCILIATION = "userScopeReconciliation";
 
   public static final String SERVICE_ENTITY = "service";
   public static final String ENVIRONMENT_ENTITY = "environment";
