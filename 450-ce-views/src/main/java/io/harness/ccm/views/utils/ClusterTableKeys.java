@@ -95,6 +95,7 @@ public class ClusterTableKeys {
   public static final String GROUP_BY_SERVICE = "Service";
   public static final String GROUP_BY_ENVIRONMENT = "Environment";
   public static final String GROUP_BY_CLOUD_PROVIDER = "Cloud Provider";
+  public static final String GROUP_BY_PRODUCT = "Product";
 
 
 }

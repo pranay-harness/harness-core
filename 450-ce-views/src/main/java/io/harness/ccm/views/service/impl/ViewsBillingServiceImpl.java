@@ -35,6 +35,7 @@ import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_TASK;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_TASK_ID;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_NAMESPACE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_NAMESPACE_ID;
+import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_PRODUCT;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_WORKLOAD_ID;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_WORKLOAD_NAME;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_WORKLOAD_TYPE;
@@ -981,6 +982,9 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
             modifiedGroupBy.add(getGroupBy(GROUP_BY_ECS_LAUNCH_TYPE, LAUNCH_TYPE, CLUSTER));
             modifiedGroupBy.add(getGroupBy(GROUP_BY_ECS_SERVICE, CLOUD_SERVICE_NAME, CLUSTER));
             modifiedGroupBy.add(getGroupBy(GROUP_BY_ECS_TASK, TASK_ID, CLUSTER));
+            break;
+          case GROUP_BY_PRODUCT:
+            modifiedGroupBy.add(getGroupBy(GROUP_BY_CLUSTER_NAME, CLUSTER_NAME, CLUSTER));
             break;
           default:
             modifiedGroupBy.add(groupBy);
