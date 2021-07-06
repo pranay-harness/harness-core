@@ -8,19 +8,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.cdng.beans.CVNGStepParameter;
-import io.harness.cvng.cdng.beans.HealthSource;
 import io.harness.cvng.cdng.beans.TestVerificationJobSpec;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskKeys;
 import io.harness.cvng.cdng.services.impl.CVNGStep.VerifyStepOutcome;
-import io.harness.cvng.core.entities.AppDynamicsCVConfig;
-import io.harness.cvng.core.entities.MetricPack;
-import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.models.VerificationType;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
+import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobBuilder;
@@ -51,25 +49,28 @@ import org.junit.experimental.categories.Category;
 public class CVNGStepTest extends CvNextGenTestBase {
   private CVNGStep cvngStep;
   @Inject private Injector injector;
-  @Inject private CVConfigService cvConfigService;
   @Inject private HPersistence hPersistence;
+  @Inject private MonitoredServiceService monitoredServiceService;
+  @Inject private MetricPackService metricPackService;
+  private BuilderFactory builderFactory;
   private String accountId;
   private String projectIdentifier;
   private String orgIdentifier;
   private String serviceIdentifier;
   private String envIdentifier;
-  private String monitoringSourceIdentifier;
+  private MonitoredServiceDTO monitoredServiceDTO;
 
   @Before
   public void setup() {
     cvngStep = new CVNGStep();
     injector.injectMembers(cvngStep);
-    accountId = generateUuid();
-    projectIdentifier = generateUuid();
-    orgIdentifier = generateUuid();
-    serviceIdentifier = generateUuid();
-    envIdentifier = generateUuid();
-    monitoringSourceIdentifier = "monitoringIdentifier";
+    builderFactory = BuilderFactory.getDefault();
+    accountId = builderFactory.getContext().getAccountId();
+    projectIdentifier = builderFactory.getContext().getProjectIdentifier();
+    orgIdentifier = builderFactory.getContext().getOrgIdentifier();
+    serviceIdentifier = builderFactory.getContext().getServiceIdentifier();
+    envIdentifier = builderFactory.getContext().getEnvIdentifier();
+    monitoredServiceDTO = builderFactory.monitoredServiceDTOBuilder().build();
   }
   @Test
   @Owner(developers = KAMAL)
@@ -80,15 +81,16 @@ public class CVNGStepTest extends CvNextGenTestBase {
     CVNGStepParameter cvngStepParameter = getCvngStepParameter();
 
     assertThatThrownBy(() -> cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessageContaining("No monitoring sources with identifiers [monitoringIdentifier]");
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("No monitoredService is defined for service %s and env %s", serviceIdentifier, envIdentifier);
   }
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testExecuteAsync_createActivity() {
     Ambiance ambiance = getAmbiance();
-    cvConfigService.save(getCVConfig());
+    metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
+    monitoredServiceService.create(accountId, monitoredServiceDTO);
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     CVNGStepParameter cvngStepParameter = getCvngStepParameter();
     AsyncExecutableResponse asyncExecutableResponse =
@@ -265,8 +267,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
         .envIdentifier(ParameterField.createValueField(envIdentifier))
         .verificationJobBuilder(getVerificationJobBuilder())
         .deploymentTag(spec.getDeploymentTag())
-        .healthSources(Collections.singletonList(
-            HealthSource.builder().identifier(ParameterField.createValueField(monitoringSourceIdentifier)).build()))
+        .monitoredServiceRef(ParameterField.createValueField(monitoredServiceDTO.getIdentifier()))
         .build();
   }
 
@@ -286,26 +287,6 @@ public class CVNGStepTest extends CvNextGenTestBase {
     return TestVerificationJob.builder()
         .sensitivity(RuntimeParameter.builder().value("Low").build())
         .duration(RuntimeParameter.builder().value("5m").build());
-  }
-
-  private AppDynamicsCVConfig getCVConfig() {
-    AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
-    cvConfig.setProjectIdentifier(projectIdentifier);
-    cvConfig.setAccountId(accountId);
-    cvConfig.setApplicationName("cv-app");
-    cvConfig.setTierName("docker-tier");
-    cvConfig.setVerificationType(VerificationType.TIME_SERIES);
-    cvConfig.setConnectorIdentifier(generateUuid());
-    cvConfig.setServiceIdentifier(serviceIdentifier);
-    cvConfig.setEnvIdentifier(envIdentifier);
-    cvConfig.setIdentifier(monitoringSourceIdentifier);
-    cvConfig.setMonitoringSourceName(generateUuid());
-    cvConfig.setApplicationName("applicationName");
-    cvConfig.setTierName("tierName");
-    cvConfig.setOrgIdentifier(orgIdentifier);
-    cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
-    cvConfig.setMetricPack(MetricPack.builder().build());
-    return cvConfig;
   }
 
   private ParameterField<String> randomParameter() {

@@ -370,33 +370,33 @@ public class NgUserServiceImpl implements NgUserService {
                            .accountIdentifier(scope.getAccountIdentifier())
                            .orgIdentifier(scope.getOrgIdentifier())
                            .build();
-      Failsafe.with(transactionRetryPolicy)
-          .get(() -> addUserToScopeInternal(userId, source, orgScope, ORGANIZATION_VIEWER));
+      addUserToScopeInternal(userId, source, orgScope, ORGANIZATION_VIEWER);
     }
 
     if (!isBlank(scope.getOrgIdentifier())) {
       Scope accountScope = Scope.builder().accountIdentifier(scope.getAccountIdentifier()).build();
-      Failsafe.with(transactionRetryPolicy)
-          .get(() -> addUserToScopeInternal(userId, source, accountScope, ACCOUNT_VIEWER));
+      addUserToScopeInternal(userId, source, accountScope, ACCOUNT_VIEWER);
     }
   }
 
-  private UserMembership addUserToScopeInternal(
+  private void addUserToScopeInternal(
       String userId, UserMembershipUpdateSource source, Scope scope, String roleIdentifier) {
     Optional<UserMetadata> userMetadata = userMetadataRepository.findDistinctByUserId(userId);
     String publicIdentifier = userMetadata.map(UserMetadata::getEmail).orElse(userId);
-    UserMembership savedUserMembership =
-        Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-          UserMembership userMembership = UserMembership.builder().userId(userId).scope(scope).build();
-          try {
-            userMembershipRepository.save(userMembership);
-            outboxService.save(
-                new AddCollaboratorEvent(scope.getAccountIdentifier(), scope, publicIdentifier, userId, source));
-          } catch (DuplicateKeyException e) {
-            //  This is benign. Move on.
-          }
-          return userMembership;
-        }));
+
+    Failsafe.with(transactionRetryPolicy).get(() -> {
+      UserMembership userMembership = null;
+      try {
+        userMembership = userMembershipRepository.save(UserMembership.builder().userId(userId).scope(scope).build());
+      } catch (DuplicateKeyException e) {
+        //  This is benign. Move on.
+      }
+      if (userMembership != null) {
+        outboxService.save(
+            new AddCollaboratorEvent(scope.getAccountIdentifier(), scope, publicIdentifier, userId, source));
+      }
+      return userMembership;
+    });
 
     try {
       RoleAssignmentDTO roleAssignmentDTO = RoleAssignmentDTO.builder()
@@ -415,7 +415,6 @@ public class NgUserServiceImpl implements NgUserService {
        *  It's expected that user might already have this roleassignment.
        */
     }
-    return savedUserMembership;
   }
 
   public void addUserToCG(String userId, Scope scope) {

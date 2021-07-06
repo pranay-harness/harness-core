@@ -7,6 +7,7 @@ import static io.harness.common.CIExecutionConstants.GIT_CLONE_MANUAL_DEPTH;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_ID;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_NAME;
 import static io.harness.common.CIExecutionConstants.GIT_SSL_NO_VERIFY;
+import static io.harness.common.CIExecutionConstants.PR_CLONE_STRATEGY_ATTRIBUTE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -208,6 +209,10 @@ public class CILiteEngineStepGroupUtils {
 
     if (depth != null) {
       settings.put(GIT_CLONE_DEPTH_ATTRIBUTE, depth.toString());
+    }
+
+    if (ciCodebase.getPrCloneStrategy() != null) {
+      settings.put(PR_CLONE_STRATEGY_ATTRIBUTE, ciCodebase.getPrCloneStrategy().getYamlName());
     }
 
     Map<String, String> envVariables = new HashMap<>();

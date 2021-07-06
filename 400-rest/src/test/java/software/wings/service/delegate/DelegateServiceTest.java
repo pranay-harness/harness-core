@@ -2167,6 +2167,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .projectIdentifier("9S5HMP0xROugl3_QgO62rQP")
             .delegateConfigurationId("delConfigId")
             .name("harness-delegate")
+            .identifier("_delegateGroupId1")
             .size(DelegateSize.LARGE)
             .description("desc")
             .k8sConfigDetails(K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_ADMIN).build())
@@ -2176,6 +2177,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                          .accountId(ACCOUNT_ID)
                          .name("harness-delegate")
                          .uuid("delegateGroupId1")
+                         .identifier("_delegateGroupId1")
                          .ng(true)
                          .owner(DelegateEntityOwnerHelper.buildOwner(
                              setupDetails.getOrgIdentifier(), setupDetails.getProjectIdentifier()))
@@ -2217,6 +2219,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .projectIdentifier("9S5HMP0xROugl3_QgO62rQP")
             .delegateConfigurationId("delConfigId")
             .name("harness-delegate")
+            .identifier("_delegateGroupId1")
             .size(DelegateSize.LARGE)
             .description("desc")
             .k8sConfigDetails(K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_VIEWER).build())
@@ -2226,6 +2229,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                          .accountId(ACCOUNT_ID)
                          .name("harness-delegate")
                          .uuid("delegateGroupId1")
+                         .identifier("_delegateGroupId1")
                          .ng(true)
                          .owner(DelegateEntityOwnerHelper.buildOwner(
                              setupDetails.getOrgIdentifier(), setupDetails.getProjectIdentifier()))
@@ -2266,6 +2270,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                             .projectIdentifier("9S5HMP0xROugl3_QgO62rQP")
                                             .delegateConfigurationId("delConfigId")
                                             .name("harness-delegate")
+                                            .identifier("_delegateGroupId1")
                                             .size(DelegateSize.LARGE)
                                             .description("desc")
                                             .k8sConfigDetails(K8sConfigDetails.builder()
@@ -2278,6 +2283,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                          .accountId(ACCOUNT_ID)
                          .name("harness-delegate")
                          .uuid("delegateGroupId1")
+                         .identifier("_delegateGroupId1")
                          .ng(true)
                          .owner(DelegateEntityOwnerHelper.buildOwner(
                              setupDetails.getOrgIdentifier(), setupDetails.getProjectIdentifier()))
@@ -2317,6 +2323,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .sessionIdentifier("9S5HMP0xROugl3_QgO62rQ")
             .delegateConfigurationId("delConfigId")
             .name("harness-delegate")
+            .identifier("_delegateGroupId1")
             .size(DelegateSize.LARGE)
             .k8sConfigDetails(K8sConfigDetails.builder().k8sPermissionType(K8sPermissionType.CLUSTER_ADMIN).build())
             .build();
@@ -2325,6 +2332,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                          .accountId(ACCOUNT_ID)
                          .name("harness-delegate")
                          .uuid("delegateGroupId1")
+                         .identifier("_delegateGroupId1")
                          .ng(true)
                          .build());
 
