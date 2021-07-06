@@ -39,6 +39,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -72,6 +74,7 @@ public class PerspectiveCustomFieldResource {
   @POST
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "Save customField", nickname = "saveCustomField")
   public RestResponse<ViewCustomField> saveCustomField(
       @QueryParam("accountId") String accountId, ViewCustomField viewCustomField) {
     modifyCustomField(viewCustomField);
@@ -127,6 +130,7 @@ public class PerspectiveCustomFieldResource {
   @GET
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "Get customField", nickname = "getCustomField")
   public RestResponse<ViewCustomField> get(
       @QueryParam("accountId") String accountId, @QueryParam("customFieldId") String customFieldId) {
     return new RestResponse<>(viewCustomFieldService.get(customFieldId));
@@ -136,6 +140,7 @@ public class PerspectiveCustomFieldResource {
   @Timed
   @ExceptionMetered
   @Path("/validate")
+  @ApiOperation(value = "Validate customField", nickname = "validateCustomField")
   public Response validate(@QueryParam("accountId") String accountId, ViewCustomField viewCustomField) {
     modifyCustomField(viewCustomField);
     BigQuery bigQuery = bigQueryService.get();
@@ -148,6 +153,7 @@ public class PerspectiveCustomFieldResource {
   @PUT
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "Update customField", nickname = "updateCustomField")
   public RestResponse<ViewCustomField> update(
       @QueryParam("accountId") String accountId, @Valid @RequestBody ViewCustomField viewCustomField) {
     modifyCustomField(viewCustomField);
@@ -159,6 +165,7 @@ public class PerspectiveCustomFieldResource {
   @DELETE
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "Delete customField", nickname = "deleteCustomField")
   public Response delete(@QueryParam("accountId") String accountId, @QueryParam("customFieldId") String customFieldId,
       @Valid @RequestBody CEView ceView) {
     viewCustomFieldService.delete(customFieldId, accountId, ceView);

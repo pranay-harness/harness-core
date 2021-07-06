@@ -28,6 +28,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.support.CronSequenceGenerator;
 import org.springframework.stereotype.Service;
@@ -52,6 +54,7 @@ public class PerspectiveReportResource {
   @Timed
   @Path("{accountId}")
   @ExceptionMetered
+  @ApiOperation(value = "Get perspective reports", nickname = "getReportSetting")
   public Response getReportSetting(@QueryParam("perspectiveId") String perspectiveId,
       @QueryParam("reportId") String reportId, @PathParam("accountId") String accountId) {
     if (perspectiveId != null) {
@@ -78,6 +81,7 @@ public class PerspectiveReportResource {
   @Timed
   @Path("{accountId}")
   @ExceptionMetered
+  @ApiOperation(value = "Delete perspective reports", nickname = "deleteReportSetting")
   public Response deleteReportSetting(@QueryParam("reportId") String reportId,
       @QueryParam("perspectiveId") String perspectiveId, @PathParam("accountId") String accountId) {
     if (perspectiveId != null) {
@@ -100,6 +104,7 @@ public class PerspectiveReportResource {
   @Path("{accountId}")
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "Create perspective reports", nickname = "createReportSetting")
   public Response createReportSetting(
       @PathParam("accountId") String accountId, @Valid @RequestBody CEReportSchedule schedule) {
     List<CEReportSchedule> ceList = new ArrayList<>();
@@ -121,6 +126,7 @@ public class PerspectiveReportResource {
   @Path("{accountId}")
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "Update perspective reports", nickname = "updateReportSetting")
   public Response updateReportSetting(
       @PathParam("accountId") String accountId, @Valid @RequestBody CEReportSchedule schedule) {
     try {
