@@ -333,7 +333,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new NotificationClientModule(configuration.getNotificationClientConfiguration()));
     modules.add(new CvPersistenceModule());
     modules.add(new CacheModule(configuration.getCacheConfig()));
-    modules.add(new TokenClientModule(configuration.getManagerClientConfig(),
+    modules.add(new TokenClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(configuration.getNgManagerServiceConfig().getNgManagerUrl()).build(),
         configuration.getNgManagerServiceConfig().getManagerServiceSecret(), "NextGenManager"));
     YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
                                                     .requireSchemaInit(true)

@@ -197,7 +197,7 @@ public class NotificationServiceModule extends AbstractModule {
     bind(NotificationService.class).to(NotificationServiceImpl.class);
     bind(NotificationTemplateService.class).to(NotificationTemplateServiceImpl.class);
     bindMessageConsumer();
-    install(new TokenClientModule(this.appConfig.getServiceHttpClientConfig(),
+    install(new TokenClientModule(this.appConfig.getRbacServiceConfig(),
         this.appConfig.getPlatformSecrets().getNgManagerServiceSecret(), NOTIFICATION_SERVICE.getServiceId()));
   }
 

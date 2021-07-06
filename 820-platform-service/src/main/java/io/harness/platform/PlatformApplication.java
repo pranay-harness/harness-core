@@ -136,7 +136,7 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     }
 
     godInjector.put(PLATFORM_SERVICE,
-        Guice.createInjector(new TokenClientModule(appConfig.getServiceHttpClientConfig(),
+        Guice.createInjector(new TokenClientModule(appConfig.getRbacServiceConfig(),
             appConfig.getPlatformSecrets().getNgManagerServiceSecret(),
             AuthorizationServiceHeader.PLATFORM_SERVICE.getServiceId())));
 
