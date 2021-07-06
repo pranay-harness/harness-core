@@ -46,6 +46,7 @@ import static io.harness.utils.MemoryPerformanceUtils.memoryUsage;
 import static io.harness.watcher.app.WatcherApplication.getProcessId;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
@@ -994,22 +995,26 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void downloadRunScripts(String directory, String version, boolean forceDownload) throws Exception {
     if (!forceDownload && new File(directory + File.separator + DELEGATE_SCRIPT).exists()) {
+      log.warn("Return without calling manager. Directory is ", directory);
       return;
     }
 
-    String versionWithoutPatch = substringBefore(version.substring(version.lastIndexOf(".") + 1), "-");
+    // Handle patched versions
+    final String updatedVersion = version.contains("-") ? substringBefore(version, "-") : version;
 
     RestResponse<DelegateScripts> restResponse = null;
     if (isBlank(delegateSize)) {
+      log.info(format("Calling getDelegateScripts with versionWithoutPatch %s", updatedVersion));
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
               -> SafeHttpCall.execute(
-                  managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), versionWithoutPatch)));
+                  managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), updatedVersion)));
     } else {
+      log.info(format("Calling getDelegateScriptsNg with versionWithoutPatch %s", updatedVersion));
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
               -> SafeHttpCall.execute(managerClient.getDelegateScriptsNg(
-                  watcherConfiguration.getAccountId(), versionWithoutPatch, delegateSize)));
+                  watcherConfiguration.getAccountId(), updatedVersion, delegateSize)));
     }
 
     if (restResponse == null) {

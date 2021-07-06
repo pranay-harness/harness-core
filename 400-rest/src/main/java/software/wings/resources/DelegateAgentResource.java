@@ -386,8 +386,10 @@ public class DelegateAgentResource {
       @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("delegateVersion") @NotEmpty String delegateVersion) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(delegateService.getDelegateScripts(accountId, delegateVersion,
-          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request)));
+      DelegateScripts delegateScripts = delegateService.getDelegateScripts(accountId, delegateVersion,
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request));
+      log.info(String.format("DelegateScripts returning: %s", delegateScripts));
+      return new RestResponse<>(delegateScripts);
     }
   }
 
