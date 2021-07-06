@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.EntityReference;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -23,7 +24,7 @@ public class GitSyncEntityDTO {
   private EntityType entityType;
   private String entityIdentifier;
   private String gitConnectorId;
-  private String repoUrl;
+  @JsonProperty("repoUrl") private String repo;
   private String branch;
   private String folderPath;
   private String entityGitPath;
