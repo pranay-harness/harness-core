@@ -153,6 +153,13 @@
           "type": "integer",
           "format": "int32"
         },
+        "prCloneStrategy": {
+          "type": "string",
+          "enum": [
+            "MergeCommit",
+            "SourceBranch"
+          ]
+        },
         "repoName": {
           "type": "string"
         },
