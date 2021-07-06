@@ -693,8 +693,8 @@ java_library(
     resources = [
         "//400-rest/src/main/resources:resource",
         "//980-commons/src/main/resources:resource",
-        "//980-commons/src/main/resources-filtered:resource",
         "//980-commons/src/test/resources:resource",
+        "//985-version/src/main/resources-filtered:resource",
     ],
     visibility = ["//visibility:public"],
     deps = [

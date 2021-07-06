@@ -1,7 +1,8 @@
 package io.harness.version;
 
-import io.harness.serializer.YamlUtils;
-
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -39,7 +40,10 @@ public class VersionInfoManager {
 
   public VersionInfoManager(String versionInfoYaml) {
     try {
-      this.versionInfo = new YamlUtils().read(versionInfoYaml, VersionInfo.class);
+      ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+      mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
+      this.versionInfo = mapper.readValue(versionInfoYaml, VersionInfo.class);
       fullVersion = versionInfo.getVersion() + "-" + versionInfo.getPatch();
     } catch (IOException e) {
       throw new RuntimeException(String.format("Failed to parse yaml content %s", versionInfoYaml), e);

@@ -8,8 +8,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.serializer.YamlUtils;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.IOUtils;
@@ -43,7 +45,11 @@ public class VersionInfoManagerTest extends CategoryTest {
     InputStream stream =
         VersionInfoManager.class.getClassLoader().getResourceAsStream("main/resources-filtered/versionInfo.yaml");
     String versionInfoString = IOUtils.toString(stream, StandardCharsets.UTF_8);
-    VersionInfo versionInfo = new YamlUtils().read(versionInfoString, VersionInfo.class);
+
+    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
+    VersionInfo versionInfo = mapper.readValue(versionInfoString, VersionInfo.class);
     VersionInfoManager versionInfoManager = new VersionInfoManager();
     assertThat(versionInfoManager.getVersionInfo()).isEqualTo(versionInfo);
   }

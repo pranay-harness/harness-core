@@ -194,6 +194,11 @@
             <artifactId>morphia</artifactId>
         </dependency>
         <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>985-version</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
@@ -242,15 +247,6 @@
         </dependency>
     </dependencies>
     <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-            </resource>
-            <resource>
-                <filtering>true</filtering>
-                <directory>src/main/resources-filtered</directory>
-            </resource>
-        </resources>
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

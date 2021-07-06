@@ -176,6 +176,7 @@ BAZEL_MODULES="\
   //970-rbac-core:module \
   //970-telemetry-beans:module \
   //980-commons:module \
+  //985-version:module \
   //990-commons-test:module \
   //product/ci/engine/proto:all \
   //product/ci/scm/proto:all \
@@ -423,6 +424,7 @@ build_bazel_module 970-grpc
 build_bazel_module 970-ng-commons
 build_bazel_module 970-rbac-core
 build_bazel_module 980-commons
+build_bazel_module 985-version
 build_bazel_module 990-commons-test
 
 build_bazel_tests 400-rest

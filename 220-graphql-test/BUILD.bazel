@@ -51,8 +51,8 @@ java_library(
     runtime_deps = [
         "//400-rest/src/main/resources",
         "//980-commons/src/main/resources",
-        "//980-commons/src/main/resources-filtered:resources",
         "//980-commons/src/test/resources",
+        "//985-version/src/main/resources-filtered:resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = [

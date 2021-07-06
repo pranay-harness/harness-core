@@ -675,15 +675,15 @@ java_library(
         "//270-delegate-service-app/src/test/resources:resource",
         "//400-rest/src/main/resources:resource",
         "//980-commons/src/main/resources:resource",
-        "//980-commons/src/main/resources-filtered:resource",
         "//980-commons/src/test/resources:resource",
+        "//985-version/src/main/resources-filtered:resource",
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [
         "//400-rest/src/main/resources",
         "//980-commons/src/main/resources",
-        "//980-commons/src/main/resources-filtered:resources",
         "//980-commons/src/test/resources",
+        "//985-version/src/main/resources-filtered:resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = shared_dependencies + [

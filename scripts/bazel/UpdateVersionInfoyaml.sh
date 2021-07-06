@@ -18,11 +18,11 @@ buildMinorVersion=$(getProperty "build.properties" "build.minorVersion")
 patch=$(getProperty "build.properties" "build.patch")
 timestamp=$( date +'%y%m%d-%H%M')
 
-sed -i.bak "s|\${build.number}|${buildNo}|g"  "980-commons/src/main/resources-filtered/versionInfo.yaml"
-sed -i.bak "s|\${gitCommitId}|${GIT_COMMIT}|g"  "980-commons/src/main/resources-filtered/versionInfo.yaml"
-sed -i.bak "s|\${gitBranch}|${GIT_BRANCH}|g"  "980-commons/src/main/resources-filtered/versionInfo.yaml"
-sed -i.bak "s|\${buildTimeStamp}|${timestamp}|g"  "980-commons/src/main/resources-filtered/versionInfo.yaml"
-sed -i.bak "s|\${build.patch}|${patch}|g"  "980-commons/src/main/resources-filtered/versionInfo.yaml"
-sed -i.bak "s|\${build.fullVersionWithPatch}|${buildMajorVersion}.${buildMinorVersion}.${buildNo}-${patch}|g"  "980-commons/src/main/resources-filtered/versionInfo.yaml"
+sed -i.bak "s|\${build.number}|${buildNo}|g"  "985-version/src/main/resources-filtered/versionInfo.yaml"
+sed -i.bak "s|\${gitCommitId}|${GIT_COMMIT}|g"  "985-version/src/main/resources-filtered/versionInfo.yaml"
+sed -i.bak "s|\${gitBranch}|${GIT_BRANCH}|g"  "985-version/src/main/resources-filtered/versionInfo.yaml"
+sed -i.bak "s|\${buildTimeStamp}|${timestamp}|g"  "985-version/src/main/resources-filtered/versionInfo.yaml"
+sed -i.bak "s|\${build.patch}|${patch}|g"  "985-version/src/main/resources-filtered/versionInfo.yaml"
+sed -i.bak "s|\${build.fullVersionWithPatch}|${buildMajorVersion}.${buildMinorVersion}.${buildNo}-${patch}|g"  "985-version/src/main/resources-filtered/versionInfo.yaml"
 
-sed -i.bak "s|\${build.fullVersion}|${buildMajorVersion}.${buildMinorVersion}.${buildNo}|g"  "980-commons/src/main/resources-filtered/versionInfo.yaml"
+sed -i.bak "s|\${build.fullVersion}|${buildMajorVersion}.${buildMinorVersion}.${buildNo}|g"  "985-version/src/main/resources-filtered/versionInfo.yaml"
