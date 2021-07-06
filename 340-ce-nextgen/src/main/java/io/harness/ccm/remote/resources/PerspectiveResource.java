@@ -28,6 +28,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -59,6 +61,7 @@ public class PerspectiveResource {
   @POST
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "Create perspective", nickname = "createPerspective")
   public RestResponse<CEView> create(@QueryParam("accountId") String accountId, @QueryParam("clone") boolean clone,
       @Valid @RequestBody CEView ceView) {
     ceView.setAccountId(accountId);
@@ -79,6 +82,7 @@ public class PerspectiveResource {
   @GET
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "Get perspective", nickname = "getPerspective")
   public RestResponse<CEView> get(
       @QueryParam("accountId") String accountId, @QueryParam("perspectiveId") String perspectiveId) {
     return new RestResponse<>(ceViewService.get(perspectiveId));
@@ -87,14 +91,17 @@ public class PerspectiveResource {
   @PUT
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "Update perspective", nickname = "updatePerspective")
   public RestResponse<CEView> update(@QueryParam("accountId") String accountId, @Valid @RequestBody CEView ceView) {
     ceView.setAccountId(accountId);
+    log.info(ceView.toString());
     return new RestResponse<>(updateTotalCost(ceViewService.update(ceView)));
   }
 
   @DELETE
   @Timed
   @ExceptionMetered
+  @ApiOperation(value = "Delete perspective", nickname = "deletePerspective")
   public Response delete(@QueryParam("accountId") String accountId, @QueryParam("perspectiveId") String perspectiveId) {
     ceViewService.delete(perspectiveId, accountId);
     ceReportScheduleService.deleteAllByView(perspectiveId, accountId);
