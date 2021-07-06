@@ -6,6 +6,7 @@ import io.harness.batch.processing.cloudevents.aws.ecs.service.support.AwsCreden
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsEC2HelperService;
 
 import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.service.impl.aws.client.CloseableAmazonWebServiceClient;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
@@ -33,14 +34,15 @@ public class AwsEC2HelperServiceImpl implements AwsEC2HelperService {
   @Override
   public List<Instance> listEc2Instances(
       AwsCrossAccountAttributes awsCrossAccountAttributes, Set<String> instanceIds, String region) {
-    try {
-      AmazonEC2Client amazonEC2Client = getAmazonEC2Client(region, awsCrossAccountAttributes);
+    try (CloseableAmazonWebServiceClient<AmazonEC2Client> closeableAmazonEC2Client =
+             new CloseableAmazonWebServiceClient(getAmazonEC2Client(region, awsCrossAccountAttributes))) {
       List<Instance> ec2Instances = new ArrayList<>();
       DescribeInstancesRequest describeInstancesRequest = new DescribeInstancesRequest().withInstanceIds(instanceIds);
       String nextToken = null;
       do {
         describeInstancesRequest.withNextToken(nextToken);
-        DescribeInstancesResult describeInstancesResult = amazonEC2Client.describeInstances(describeInstancesRequest);
+        DescribeInstancesResult describeInstancesResult =
+            closeableAmazonEC2Client.getClient().describeInstances(describeInstancesRequest);
         ec2Instances.addAll(getInstanceList(describeInstancesResult));
         nextToken = describeInstancesResult.getNextToken();
       } while (nextToken != null);
