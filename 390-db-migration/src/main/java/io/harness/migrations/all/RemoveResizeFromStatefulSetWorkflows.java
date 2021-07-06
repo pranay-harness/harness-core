@@ -9,7 +9,6 @@ import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 
 import software.wings.api.DeploymentType;

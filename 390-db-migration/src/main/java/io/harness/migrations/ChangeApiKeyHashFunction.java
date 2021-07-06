@@ -3,7 +3,6 @@ package io.harness.migrations;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.beans.PageResponse;
 import io.harness.hash.HashUtils;
 import io.harness.persistence.HIterator;

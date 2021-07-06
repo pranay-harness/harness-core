@@ -2,7 +2,6 @@ package io.harness.migrations.all;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceKeys;
 import io.harness.migrations.Migration;

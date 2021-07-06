@@ -2,7 +2,6 @@ package io.harness.migrations.all;
 
 import static software.wings.beans.template.TemplateGallery.GALLERY_KEY;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 

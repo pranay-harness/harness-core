@@ -7,7 +7,6 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_USER_AND_USER_GROUPS_AND_API_KEYS;
 import static software.wings.security.PermissionAttribute.PermissionType.VIEW_USER_AND_USER_GROUPS_AND_API_KEYS;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.persistence.HIterator;
 
 import software.wings.beans.security.AccountPermissions;

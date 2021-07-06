@@ -9,7 +9,6 @@ import static software.wings.common.TemplateConstants.SHELL_SCRIPT_EXAMPLE;
 
 import static java.util.Arrays.asList;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.SeedDataMigration;
 
 import software.wings.beans.template.TemplateFolder;

@@ -2,9 +2,7 @@ package io.harness.migrations.all;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -20,7 +18,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
 

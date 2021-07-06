@@ -13,7 +13,6 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;

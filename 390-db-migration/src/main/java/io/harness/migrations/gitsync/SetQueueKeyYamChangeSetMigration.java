@@ -3,7 +3,6 @@ package io.harness.migrations.gitsync;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.OnPrimaryManagerMigration;
 import io.harness.persistence.HIterator;
 

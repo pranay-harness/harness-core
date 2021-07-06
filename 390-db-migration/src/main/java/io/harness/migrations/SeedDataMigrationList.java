@@ -1,6 +1,5 @@
 package io.harness.migrations;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.seedata.IISInstallCommandMigration;
 import io.harness.migrations.seedata.ReImportTemplatesMigration;
 import io.harness.migrations.seedata.TemplateGalleryDefaultTemplatesMigration;

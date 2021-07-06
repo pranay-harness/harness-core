@@ -8,7 +8,6 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.migrations.Migration;
