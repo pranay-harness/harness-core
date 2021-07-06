@@ -3,6 +3,7 @@ package io.harness.delegate.beans;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.beans.DelegateEntityOwner.DelegateEntityOwnerKeys;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -60,6 +61,8 @@ public class DelegateGroup implements PersistentEntity, UuidAware {
 
   @FdTtlIndex private Date validUntil;
 
+  @EntityIdentifier private String identifier;
+
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -74,6 +77,13 @@ public class DelegateGroup implements PersistentEntity, UuidAware {
                  .field(DelegateGroupKeys.ng)
                  .field(DelegateGroupKeys.owner)
                  .name("byAcctNgOwner")
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_identification")
+                 .unique(true)
+                 .field(DelegateGroupKeys.accountId)
+                 .field(DelegateGroupKeys.owner)
+                 .field(DelegateGroupKeys.identifier)
                  .build())
         .build();
   }
