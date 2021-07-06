@@ -3,9 +3,12 @@ package software.wings.service.impl.aws.delegate;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
+import software.wings.service.impl.aws.client.CloseableAmazonWebServiceClient;
 import software.wings.service.impl.aws.model.request.AwsCloudWatchMetricDataRequest;
 import software.wings.service.impl.aws.model.request.AwsCloudWatchStatisticsRequest;
 import software.wings.service.impl.aws.model.response.AwsCloudWatchMetricDataResponse;
@@ -79,29 +82,35 @@ public class AwsCloudWatchHelperServiceDelegateImpl
 
   private GetMetricStatisticsResult getMetricStatistics(GetMetricStatisticsRequest request, final AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonCloudWatchClient cloudWatchClient = getAwsCloudWatchClient(region, awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonCloudWatchClient> closeableAmazonCloudWatchClient =
+             new CloseableAmazonWebServiceClient(getAwsCloudWatchClient(region, awsConfig))) {
       tracker.trackCloudWatchCall("Get Metric Statistics");
-      return cloudWatchClient.getMetricStatistics(request);
+      return closeableAmazonCloudWatchClient.getClient().getMetricStatistics(request);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception getMetricStatistics", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return null;
   }
 
   private GetMetricDataResult getMetricData(
       GetMetricDataRequest request, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonCloudWatchClient cloudWatchClient = getAwsCloudWatchClient(region, awsConfig);
-      return cloudWatchClient.getMetricData(request);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonCloudWatchClient> closeableAmazonCloudWatchClient =
+             new CloseableAmazonWebServiceClient(getAwsCloudWatchClient(region, awsConfig))) {
+      return closeableAmazonCloudWatchClient.getClient().getMetricData(request);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception getMetricData", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return null;
   }
