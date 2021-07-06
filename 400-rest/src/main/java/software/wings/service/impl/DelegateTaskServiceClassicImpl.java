@@ -607,8 +607,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       } else {
         log.info("No AGENT execution capabilities found on task.");
       }
-    } else {
-      log.info("FF PER_AGENT_CAPABILITIES is disabled or task did not have any execution capabilities.");
+    } else if (log.isDebugEnabled()) {
+      log.debug("FF PER_AGENT_CAPABILITIES is disabled or task did not have any execution capabilities.");
     }
   }
 
@@ -989,7 +989,6 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task);
 
     List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(task.getAccountId(), batch);
-    log.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
 
     List<String> eligibleDelegates = activeDelegates.stream()
                                          .filter(delegateId -> assignDelegateService.canAssign(batch, delegateId, task))
@@ -1132,7 +1131,9 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         return null;
       }
     } finally {
-      log.info("Done with acquire delegate task method");
+      if (log.isDebugEnabled()) {
+        log.debug("Done with acquire delegate task method");
+      }
     }
   }
 
