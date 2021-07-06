@@ -999,19 +999,22 @@ public class WatcherServiceImpl implements WatcherService {
       return;
     }
 
-    // String versionWithoutPatch = substringBefore(version.substring(version.lastIndexOf(".") + 1), "-");
+    // Handle patched versions
+    final String updatedVersion = version.contains("-") ? substringBefore(version, "-") : version;
 
     RestResponse<DelegateScripts> restResponse = null;
     if (isBlank(delegateSize)) {
-      log.info(format("Calling getDelegateScripts with versionWithoutPatch %s", version));
-      restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
-          () -> SafeHttpCall.execute(managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version)));
-    } else {
-      log.info(format("Calling getDelegateScriptsNg with versionWithoutPatch %s", version));
+      log.info(format("Calling getDelegateScripts with versionWithoutPatch %s", updatedVersion));
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
               -> SafeHttpCall.execute(
-                  managerClient.getDelegateScriptsNg(watcherConfiguration.getAccountId(), version, delegateSize)));
+                  managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), updatedVersion)));
+    } else {
+      log.info(format("Calling getDelegateScriptsNg with versionWithoutPatch %s", updatedVersion));
+      restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
+          ()
+              -> SafeHttpCall.execute(managerClient.getDelegateScriptsNg(
+                  watcherConfiguration.getAccountId(), updatedVersion, delegateSize)));
     }
 
     if (restResponse == null) {
