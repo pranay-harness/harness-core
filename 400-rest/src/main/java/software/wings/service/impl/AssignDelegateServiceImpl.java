@@ -24,6 +24,7 @@ import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.FeatureName;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateActivity;
@@ -916,8 +917,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     if (delegatesMap.get(DelegateActivity.DISCONNECTED) != null) {
       disconnectedScalingGroup = delegatesMap.get(DelegateActivity.DISCONNECTED)
                                      .stream()
-                                     .filter(a -> isNotEmpty(a.getDelegateGroupName()))
                                      .map(Delegate::getDelegateGroupName)
+                                     .filter(EmptyPredicate::isNotEmpty)
                                      .collect(Collectors.toSet());
     }
 
@@ -925,8 +926,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     if (delegatesMap.get(DelegateActivity.ACTIVE) != null) {
       connectedScalingGroup = delegatesMap.get(DelegateActivity.ACTIVE)
                                   .stream()
-                                  .filter(a -> isNotEmpty(a.getDelegateGroupName()))
                                   .map(Delegate::getDelegateGroupName)
+                                  .filter(EmptyPredicate::isNotEmpty)
                                   .collect(Collectors.toSet());
     }
 
