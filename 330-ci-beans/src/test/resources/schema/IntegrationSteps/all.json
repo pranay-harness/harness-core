@@ -389,7 +389,8 @@
           ]
         },
         "memory": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(\\d+)([GM]i?)$"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
