@@ -388,7 +388,7 @@ public class DelegateAgentResource {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       DelegateScripts delegateScripts = delegateService.getDelegateScripts(accountId, delegateVersion,
           subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request));
-      log.info("DelegateScripts returning: ", delegateScripts);
+      log.info(String.format("DelegateScripts returning: %s", delegateScripts));
       return new RestResponse<>(delegateScripts);
     }
   }

@@ -46,6 +46,7 @@ import static io.harness.utils.MemoryPerformanceUtils.memoryUsage;
 import static io.harness.watcher.app.WatcherApplication.getProcessId;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
@@ -1002,13 +1003,13 @@ public class WatcherServiceImpl implements WatcherService {
 
     RestResponse<DelegateScripts> restResponse = null;
     if (isBlank(delegateSize)) {
-      log.info("Calling getDelegateScripts with versionWithoutPatch", versionWithoutPatch);
+      log.info(format("Calling getDelegateScripts with versionWithoutPatch %s", versionWithoutPatch));
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
               -> SafeHttpCall.execute(
                   managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), versionWithoutPatch)));
     } else {
-      log.info("Calling getDelegateScriptsNg with versionWithoutPatch", versionWithoutPatch);
+      log.info(format("Calling getDelegateScriptsNg with versionWithoutPatch %s", versionWithoutPatch));
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
               -> SafeHttpCall.execute(managerClient.getDelegateScriptsNg(

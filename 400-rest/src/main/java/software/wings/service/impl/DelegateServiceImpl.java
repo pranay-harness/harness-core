@@ -1111,7 +1111,7 @@ public class DelegateServiceImpl implements DelegateService {
             .delegateTokenName(delegateTokenName)
             .build());
 
-    log.info("Returned jar and script run time params: ", scriptParams.get("watcherStorageUrl"));
+    log.info(format("Returned jar and script run time params: %s", scriptParams.get("watcherStorageUrl")));
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
     if (isNotEmpty(scriptParams)) {
       String upgradeToVersion = scriptParams.get(UPGRADE_VERSION);
@@ -1130,7 +1130,7 @@ public class DelegateServiceImpl implements DelegateService {
       delegateScripts.setStopScript(processTemplate(scriptParams, "stop.sh.ftl"));
       delegateScripts.setSetupProxyScript(processTemplate(scriptParams, "setup-proxy.sh.ftl"));
     }
-    log.info("ScriptParams was empty. Print delegateScripts", delegateScripts);
+    log.info(format("ScriptParams was empty. Print delegateScripts %s", delegateScripts));
     return delegateScripts;
   }
 
