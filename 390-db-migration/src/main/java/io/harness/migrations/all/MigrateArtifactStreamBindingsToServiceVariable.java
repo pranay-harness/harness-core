@@ -1,6 +1,5 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.migrations.Migration;

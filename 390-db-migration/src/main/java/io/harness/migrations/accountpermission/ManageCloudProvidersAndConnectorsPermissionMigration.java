@@ -1,7 +1,5 @@
 package io.harness.migrations.accountpermission;
 
-import io.harness.annotations.dev.HarnessModule;
-
 import software.wings.security.PermissionAttribute;
 
 import java.util.HashSet;

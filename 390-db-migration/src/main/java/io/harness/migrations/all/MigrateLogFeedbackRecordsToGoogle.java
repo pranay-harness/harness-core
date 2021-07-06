@@ -1,6 +1,5 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.migrations.Migration;

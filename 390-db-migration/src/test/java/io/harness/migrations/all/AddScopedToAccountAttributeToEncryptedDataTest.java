@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.VIKAS;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.category.element.UnitTests;

@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static software.wings.beans.security.UserGroup.DEFAULT_USER_GROUPS;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.security.UserGroup;

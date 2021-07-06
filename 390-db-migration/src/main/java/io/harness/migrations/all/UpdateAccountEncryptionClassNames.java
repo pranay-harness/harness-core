@@ -2,7 +2,6 @@ package io.harness.migrations.all;
 
 import static com.mongodb.DBCollection.ID_FIELD_NAME;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 import io.harness.security.SimpleEncryption;
 

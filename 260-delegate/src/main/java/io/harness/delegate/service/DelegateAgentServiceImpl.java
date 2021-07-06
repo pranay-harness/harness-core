@@ -186,7 +186,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
-import java.lang.management.MemoryUsage;
 import java.net.ConnectException;
 import java.net.URI;
 import java.net.URISyntaxException;

@@ -2,7 +2,6 @@ package io.harness.migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.event.handler.impl.MarketoHelper;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.migrations.Migration;

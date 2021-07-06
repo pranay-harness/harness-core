@@ -27,6 +27,7 @@ java_library(
     deps = [
         ":980_commons_java_proto",
         "//:lombok",
+        "//999-annotations:module",
         "@maven//:aopalliance_aopalliance",
         "@maven//:ch_qos_logback_contrib_logback_jackson",
         "@maven//:ch_qos_logback_contrib_logback_json_classic",

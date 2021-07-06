@@ -2,7 +2,6 @@ package io.harness.migrations.all;
 
 import static java.util.Arrays.asList;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 
 import software.wings.beans.DirectKubernetesInfrastructureMapping;

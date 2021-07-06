@@ -19,8 +19,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
-import io.harness.logging.Misc;
-import io.harness.persistence.HQuery;
 import io.harness.rule.Owner;
 import io.harness.service.TimeSeriesAnalysisServiceImpl;
 import io.harness.service.intfc.LearningEngineService;

@@ -1,7 +1,5 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.HarnessModule;
-
 import software.wings.beans.ResourceConstraintInstance.ResourceConstraintInstanceKeys;
 
 public class AddAccountIdToResourceContraintInstanceCollection extends AddAccountIdToCollectionUsingAppIdMigration {

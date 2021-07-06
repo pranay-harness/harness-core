@@ -1,6 +1,5 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.HarnessModule;
 public class AddAccountIdToTimeSeriesAnomaliesRecordMigration extends AddAccountIdToCollectionUsingAppIdMigration {
   @Override
   protected String getCollectionName() {

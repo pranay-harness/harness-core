@@ -6,7 +6,6 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 

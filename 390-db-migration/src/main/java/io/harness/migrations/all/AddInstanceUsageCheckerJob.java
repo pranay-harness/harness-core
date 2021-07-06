@@ -1,6 +1,5 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;

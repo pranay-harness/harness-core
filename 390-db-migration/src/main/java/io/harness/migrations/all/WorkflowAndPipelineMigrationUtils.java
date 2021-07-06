@@ -5,8 +5,6 @@ import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.annotations.dev.HarnessModule;
-
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.Workflow;

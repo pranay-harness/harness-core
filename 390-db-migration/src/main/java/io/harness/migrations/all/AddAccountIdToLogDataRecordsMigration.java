@@ -1,7 +1,5 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.HarnessModule;
-
 import software.wings.service.impl.analysis.LogDataRecord.LogDataRecordKeys;
 
 import lombok.extern.slf4j.Slf4j;

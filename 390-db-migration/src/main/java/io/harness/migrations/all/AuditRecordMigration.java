@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.stream.Collectors.toList;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 
