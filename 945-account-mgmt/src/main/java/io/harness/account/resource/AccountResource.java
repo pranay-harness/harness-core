@@ -1,9 +1,15 @@
 package io.harness.account.resource;
 
+import static io.harness.account.accesscontrol.AccountAccessControlPermissions.EDIT_ACCOUNT_PERMISSION;
+import static io.harness.account.accesscontrol.AccountAccessControlPermissions.VIEW_ACCOUNT_PERMISSION;
+
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
+import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.account.AccountClient;
 import io.harness.account.AccountConfig;
+import io.harness.account.accesscontrol.ResourceTypes;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.AccountDTO;
@@ -53,7 +59,8 @@ public class AccountResource {
   @GET
   @Path("{accountIdentifier}")
   @ApiOperation(value = "Get Account", nickname = "getAccountNG")
-  public ResponseDTO<AccountDTO> get(@PathParam("accountIdentifier") String accountIdentifier) {
+  @NGAccessControlCheck(resourceType = ResourceTypes.ACCOUNT, permission = VIEW_ACCOUNT_PERMISSION)
+  public ResponseDTO<AccountDTO> get(@PathParam("accountIdentifier") @AccountIdentifier String accountIdentifier) {
     AccountDTO accountDTO = RestClientUtils.getResponse(accountClient.getAccountDTO(accountIdentifier));
 
     accountDTO.setCluster(accountConfig.getDeploymentClusterName());
@@ -64,8 +71,9 @@ public class AccountResource {
   @PUT
   @Path("{accountIdentifier}/name")
   @ApiOperation(value = "Update Account Name", nickname = "updateAccountNameNG")
+  @NGAccessControlCheck(resourceType = ResourceTypes.ACCOUNT, permission = EDIT_ACCOUNT_PERMISSION)
   public ResponseDTO<AccountDTO> updateAccountName(
-      @PathParam("accountIdentifier") String accountIdentifier, AccountDTO dto) {
+      @PathParam("accountIdentifier") @AccountIdentifier String accountIdentifier, AccountDTO dto) {
     AccountDTO accountDTO = RestClientUtils.getResponse(accountClient.updateAccountName(accountIdentifier, dto));
 
     return ResponseDTO.newResponse(accountDTO);
@@ -74,8 +82,9 @@ public class AccountResource {
   @PUT
   @Path("{accountIdentifier}/default-experience")
   @ApiOperation(value = "Update Default Experience", nickname = "updateAccountDefaultExperienceNG")
+  @NGAccessControlCheck(resourceType = ResourceTypes.ACCOUNT, permission = EDIT_ACCOUNT_PERMISSION)
   public ResponseDTO<AccountDTO> updateDefaultExperience(
-      @PathParam("accountIdentifier") String accountIdentifier, AccountDTO dto) {
+      @PathParam("accountIdentifier") @AccountIdentifier String accountIdentifier, AccountDTO dto) {
     AccountDTO accountDTO = RestClientUtils.getResponse(accountClient.updateDefaultExperience(accountIdentifier, dto));
 
     return ResponseDTO.newResponse(accountDTO);

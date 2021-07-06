@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: rolesConfiguration
-version: 2
+version: 3
 roles:
     - identifier: _project_admin
       name: Project Admin
@@ -193,6 +193,8 @@ roles:
         - core_serviceaccount_edit
         - core_serviceaccount_delete
         - core_serviceaccount_manageapikey
+        - core_account_view
+        - core_account_edit
       allowedScopeLevels:
         - account
       managed: true
@@ -214,6 +216,7 @@ roles:
         - core_resourcegroup_view
         - core_license_view
         - core_authsetting_view
+        - core_account_view
       allowedScopeLevels:
         - account
       managed: true

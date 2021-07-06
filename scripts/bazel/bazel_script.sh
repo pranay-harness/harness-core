@@ -116,6 +116,7 @@ BAZEL_MODULES="\
   //940-notification-client:module_deploy.jar \
   //940-resource-group-beans:module \
   //940-secret-manager-client:module \
+  //945-account-mgmt:module \
   //945-ng-audit-client:module \
   //946-access-control-aggregator:module \
   //946-access-control-decision:module \
@@ -144,7 +145,6 @@ BAZEL_MODULES="\
   //953-git-sync-commons/src/main/proto:all \
   //953-git-sync-commons:module \
   //954-connector-beans:module \
-  //955-account-mgmt:module \
   //955-cg-yaml:module \
   //955-delegate-beans/src/main/proto:all \
   //955-delegate-beans:module \
