@@ -227,7 +227,7 @@ public class RoleAssignmentResource {
   public ResponseDTO<RoleAssignmentResponseDTO> create(
       @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentDTO roleAssignmentDTO) {
     Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
-    RoleAssignment roleAssignment = fromDTO(scope.toString(), roleAssignmentDTO);
+    RoleAssignment roleAssignment = fromDTO(scope, roleAssignmentDTO);
     syncDependencies(roleAssignment, scope);
     checkUpdatePermission(harnessScopeParams, roleAssignment);
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
@@ -248,7 +248,7 @@ public class RoleAssignmentResource {
     if (!identifier.equals(roleAssignmentDTO.getIdentifier())) {
       throw new InvalidRequestException("Role Assignment identifier in the request body and the url do not match.");
     }
-    RoleAssignment roleAssignmentUpdate = fromDTO(scope.toString(), roleAssignmentDTO);
+    RoleAssignment roleAssignmentUpdate = fromDTO(scope, roleAssignmentDTO);
     checkUpdatePermission(harnessScopeParams, roleAssignmentUpdate);
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
       RoleAssignmentUpdateResult roleAssignmentUpdateResult = roleAssignmentService.update(roleAssignmentUpdate);
@@ -269,7 +269,7 @@ public class RoleAssignmentResource {
     List<RoleAssignment> roleAssignmentsPayload =
         requestDTO.getRoleAssignments()
             .stream()
-            .map(roleAssignmentDTO -> fromDTO(scope.toString(), roleAssignmentDTO, managed))
+            .map(roleAssignmentDTO -> fromDTO(scope, roleAssignmentDTO, managed))
             .collect(Collectors.toList());
     List<RoleAssignmentResponseDTO> createdRoleAssignments = new ArrayList<>();
     for (RoleAssignment roleAssignment : roleAssignmentsPayload) {
@@ -320,7 +320,7 @@ public class RoleAssignmentResource {
       @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentValidationRequestDTO validationRequest) {
     Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
     harnessResourceGroupService.sync(validationRequest.getRoleAssignment().getResourceGroupIdentifier(), scope);
-    return ResponseDTO.newResponse(toDTO(roleAssignmentService.validate(fromDTO(scope.toString(), validationRequest))));
+    return ResponseDTO.newResponse(toDTO(roleAssignmentService.validate(fromDTO(scope, validationRequest))));
   }
 
   @DELETE

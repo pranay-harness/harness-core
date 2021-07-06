@@ -111,8 +111,8 @@ public class RoleServiceImpl implements RoleService {
   }
 
   @Override
-  public boolean removePermissionFromRoles(String permissionIdentifier) {
-    return roleDao.removePermissionFromRoles(permissionIdentifier);
+  public boolean removePermissionFromRoles(String permissionIdentifier, RoleFilter roleFilter) {
+    return roleDao.removePermissionFromRoles(permissionIdentifier, roleFilter);
   }
 
   @Override
@@ -177,11 +177,17 @@ public class RoleServiceImpl implements RoleService {
     PermissionFilter permissionFilter = PermissionFilter.builder()
                                             .identifierFilter(role.getPermissions())
                                             .statusFilter(ALLOWED_PERMISSION_STATUS)
-                                            .allowedScopeLevelsFilter(role.getAllowedScopeLevels())
                                             .build();
     List<Permission> permissionList = permissionService.list(permissionFilter);
     permissionList = permissionList == null ? new ArrayList<>() : permissionList;
-    Set<String> validPermissions = permissionList.stream().map(Permission::getIdentifier).collect(Collectors.toSet());
+    Set<String> validPermissions = permissionList.stream()
+                                       .filter(permission -> {
+                                         Set<String> scopesMissingInPermission = Sets.difference(
+                                             role.getAllowedScopeLevels(), permission.getAllowedScopeLevels());
+                                         return scopesMissingInPermission.isEmpty();
+                                       })
+                                       .map(Permission::getIdentifier)
+                                       .collect(Collectors.toSet());
     Set<String> invalidPermissions = Sets.difference(role.getPermissions(), validPermissions);
     if (!invalidPermissions.isEmpty()) {
       log.error("Invalid permissions while creating role {} in scope {} : [ {} ]", role.getIdentifier(),
