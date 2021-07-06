@@ -203,8 +203,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     return rate;
   }
 
-  public String queryBuilderStatus(
-      String accountId, String orgId, String projectId, long days, List<String> statusList) {
+  public String queryBuilderStatus(String accountId, String orgId, String projectId, long days, List<String> statusList,
+      long startInterval, long endInterval) {
     String selectStatusQuery =
         "select id,name,pipelineidentifier,startts,endTs,status,planexecutionid from " + tableNameCD + " where ";
     StringBuilder totalBuildSqlBuilder = new StringBuilder();
@@ -220,6 +220,10 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
     if (projectId != null) {
       totalBuildSqlBuilder.append(String.format("projectidentifier='%s' and ", projectId));
+    }
+
+    if (startInterval > 0 && endInterval > 0) {
+      totalBuildSqlBuilder.append(String.format("startts>%s and startts<=%s and ", startInterval, endInterval));
     }
 
     totalBuildSqlBuilder.append("status in (");
@@ -908,21 +912,28 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   }
   @Override
   public DashboardDeploymentActiveFailedRunningInfo getDeploymentActiveFailedRunningInfo(
-      String accountId, String orgId, String projectId, long days) {
+      String accountId, String orgId, String projectId, long days, long startInterval, long endInterval) {
+    if (startInterval > 0 && endInterval > 0) {
+      startInterval = getStartTimeOfTheDayAsEpoch(startInterval);
+      endInterval = getStartTimeOfNextDay(endInterval);
+    }
     // failed
-    String queryFailed = queryBuilderStatus(accountId, orgId, projectId, days, failedStatusList);
+    String queryFailed =
+        queryBuilderStatus(accountId, orgId, projectId, days, failedStatusList, startInterval, endInterval);
     String queryServiceNameTagIdFailed =
         queryBuilderSelectIdLimitTimeCdTable(accountId, orgId, projectId, days, failedStatusList);
     List<DeploymentStatusInfo> failure = getDeploymentStatusInfo(queryFailed, queryServiceNameTagIdFailed);
 
     // active
-    String queryActive = queryBuilderStatus(accountId, orgId, projectId, days, activeStatusList);
+    String queryActive =
+        queryBuilderStatus(accountId, orgId, projectId, days, activeStatusList, startInterval, endInterval);
     String queryServiceNameTagIdActive =
         queryBuilderSelectIdLimitTimeCdTable(accountId, orgId, projectId, days, activeStatusList);
     List<DeploymentStatusInfo> active = getDeploymentStatusInfo(queryActive, queryServiceNameTagIdActive);
 
     // pending
-    String queryPending = queryBuilderStatus(accountId, orgId, projectId, days, pendingStatusList);
+    String queryPending =
+        queryBuilderStatus(accountId, orgId, projectId, days, pendingStatusList, startInterval, endInterval);
     String queryServiceNameTagIdPending =
         queryBuilderSelectIdLimitTimeCdTable(accountId, orgId, projectId, days, pendingStatusList);
     List<DeploymentStatusInfo> pending = getDeploymentStatusInfo(queryPending, queryServiceNameTagIdPending);
