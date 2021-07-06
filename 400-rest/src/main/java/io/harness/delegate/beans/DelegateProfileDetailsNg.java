@@ -1,22 +1,33 @@
 package io.harness.delegate.beans;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.data.validator.EntityName;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "DelegateProfileDetailsNgKeys")
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonInclude(NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DelegateProfileDetailsNg {
   private String uuid;
-  private String accountId;
+  @ApiModelProperty private String accountId;
 
-  private String name;
+  @EntityName private String name;
   private String description;
   private boolean primary;
   private boolean approvalRequired;
@@ -30,10 +41,10 @@ public class DelegateProfileDetailsNg {
   private long createdAt;
   private long lastUpdatedAt;
 
-  private String identifier;
+  @ApiModelProperty private String identifier;
 
   private long numberOfDelegates;
 
-  private String orgIdentifier;
-  private String projectIdentifier;
+  @ApiModelProperty private String orgIdentifier;
+  @ApiModelProperty private String projectIdentifier;
 }

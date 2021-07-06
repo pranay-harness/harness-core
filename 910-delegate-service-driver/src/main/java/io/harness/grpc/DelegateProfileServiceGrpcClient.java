@@ -13,11 +13,14 @@ import io.harness.delegateprofile.DelegateProfileGrpc;
 import io.harness.delegateprofile.DelegateProfilePageResponseGrpc;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc.DelegateProfileServiceBlockingStub;
 import io.harness.delegateprofile.DeleteProfileRequest;
+import io.harness.delegateprofile.DeleteProfileV2Request;
 import io.harness.delegateprofile.GetProfileRequest;
 import io.harness.delegateprofile.GetProfileResponse;
+import io.harness.delegateprofile.GetProfileV2Request;
 import io.harness.delegateprofile.ListProfilesRequest;
 import io.harness.delegateprofile.ListProfilesResponse;
 import io.harness.delegateprofile.ProfileId;
+import io.harness.delegateprofile.ProfileIdentifier;
 import io.harness.delegateprofile.ProfileScopingRule;
 import io.harness.delegateprofile.ProfileSelector;
 import io.harness.delegateprofile.ScopingValues;
@@ -25,8 +28,10 @@ import io.harness.delegateprofile.UpdateProfileRequest;
 import io.harness.delegateprofile.UpdateProfileResponse;
 import io.harness.delegateprofile.UpdateProfileScopingRulesRequest;
 import io.harness.delegateprofile.UpdateProfileScopingRulesResponse;
+import io.harness.delegateprofile.UpdateProfileScopingRulesV2Request;
 import io.harness.delegateprofile.UpdateProfileSelectorsRequest;
 import io.harness.delegateprofile.UpdateProfileSelectorsResponse;
+import io.harness.delegateprofile.UpdateProfileSelectorsV2Request;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.owner.OrgIdentifier;
 import io.harness.owner.ProjectIdentifier;
@@ -93,6 +98,29 @@ public class DelegateProfileServiceGrpcClient {
     }
   }
 
+  public DelegateProfileGrpc getProfile(AccountId accountId, OrgIdentifier orgIdentifier,
+      ProjectIdentifier projectIdentifier, ProfileIdentifier profileIdentifier) {
+    try {
+      GetProfileV2Request.Builder builder =
+          GetProfileV2Request.newBuilder().setAccountId(accountId).setProfileIdentifier(profileIdentifier);
+      if (projectIdentifier != null) {
+        builder.setProjectId(projectIdentifier);
+      }
+      if (orgIdentifier != null) {
+        builder.setOrgId(orgIdentifier);
+      }
+      GetProfileResponse getProfileResponse = delegateProfileServiceBlockingStub.getProfileV2(builder.build());
+
+      if (!getProfileResponse.hasProfile()) {
+        return null;
+      }
+
+      return getProfileResponse.getProfile();
+    } catch (StatusRuntimeException ex) {
+      throw new DelegateServiceDriverException(getMessage(ex), ex);
+    }
+  }
+
   public DelegateProfileGrpc addProfile(DelegateProfileGrpc delegateProfileGrpc) {
     try {
       validateScopingRules(delegateProfileGrpc.getScopingRulesList());
@@ -127,6 +155,25 @@ public class DelegateProfileServiceGrpcClient {
     }
   }
 
+  public DelegateProfileGrpc updateProfileV2(DelegateProfileGrpc delegateProfileGrpc) {
+    try {
+      validateScopingRules(delegateProfileGrpc.getScopingRulesList());
+      UpdateProfileResponse updateProfileResponse = delegateProfileServiceBlockingStub.updateProfileV2(
+          UpdateProfileRequest.newBuilder()
+              .setVirtualStack(VirtualStackUtils.populateRequest(kryoSerializer))
+              .setProfile(delegateProfileGrpc)
+              .build());
+
+      if (!updateProfileResponse.hasProfile()) {
+        return null;
+      }
+
+      return updateProfileResponse.getProfile();
+    } catch (StatusRuntimeException ex) {
+      throw new DelegateServiceDriverException(getMessage(ex), ex);
+    }
+  }
+
   public void deleteProfile(AccountId accountId, ProfileId profileId) {
     try {
       delegateProfileServiceBlockingStub.deleteProfile(
@@ -135,6 +182,25 @@ public class DelegateProfileServiceGrpcClient {
               .setAccountId(accountId)
               .setProfileId(profileId)
               .build());
+    } catch (StatusRuntimeException ex) {
+      throw new DelegateServiceDriverException(getMessage(ex), ex);
+    }
+  }
+
+  public void deleteProfile(AccountId accountId, OrgIdentifier orgIdentifier, ProjectIdentifier projectIdentifier,
+      ProfileIdentifier profileIdentifier) {
+    try {
+      DeleteProfileV2Request.Builder builder = DeleteProfileV2Request.newBuilder()
+                                                   .setVirtualStack(VirtualStackUtils.populateRequest(kryoSerializer))
+                                                   .setAccountId(accountId)
+                                                   .setProfileIdentifier(profileIdentifier);
+      if (orgIdentifier != null) {
+        builder.setOrgId(orgIdentifier);
+      }
+      if (projectIdentifier != null) {
+        builder.setProjectId(projectIdentifier);
+      }
+      delegateProfileServiceBlockingStub.deleteProfileV2(builder.build());
     } catch (StatusRuntimeException ex) {
       throw new DelegateServiceDriverException(getMessage(ex), ex);
     }
@@ -167,6 +233,41 @@ public class DelegateProfileServiceGrpcClient {
     }
   }
 
+  public DelegateProfileGrpc updateProfileSelectors(AccountId accountId, OrgIdentifier orgIdentifier,
+      ProjectIdentifier projectIdentifier, ProfileIdentifier profileIdentifier, List<ProfileSelector> selectors) {
+    try {
+      if (selectors == null) {
+        selectors = Collections.emptyList();
+      }
+
+      UpdateProfileSelectorsV2Request.Builder builder =
+          UpdateProfileSelectorsV2Request.newBuilder()
+              .setVirtualStack(VirtualStackUtils.populateRequest(kryoSerializer))
+              .setAccountId(accountId)
+              .setProfileIdentifier(profileIdentifier)
+              .addAllSelectors(selectors);
+
+      if (null != orgIdentifier) {
+        builder.setOrgId(orgIdentifier);
+      }
+      if (null != projectIdentifier) {
+        builder.setProjectId(projectIdentifier);
+      }
+
+      UpdateProfileSelectorsResponse updateProfileSelectorsResponse =
+          delegateProfileServiceBlockingStub.updateProfileSelectorsV2(builder.build());
+
+      if (!updateProfileSelectorsResponse.hasProfile()) {
+        return null;
+      }
+
+      return updateProfileSelectorsResponse.getProfile();
+
+    } catch (StatusRuntimeException ex) {
+      throw new DelegateServiceDriverException(getMessage(ex), ex);
+    }
+  }
+
   public DelegateProfileGrpc updateProfileScopingRules(
       AccountId accountId, ProfileId profileId, List<ProfileScopingRule> scopingRules) {
     try {
@@ -181,6 +282,38 @@ public class DelegateProfileServiceGrpcClient {
                                                                            .setProfileId(profileId)
                                                                            .addAllScopingRules(scopingRules)
                                                                            .build());
+
+      if (!updateProfileScopingRulesResponse.hasProfile()) {
+        return null;
+      }
+
+      return updateProfileScopingRulesResponse.getProfile();
+
+    } catch (StatusRuntimeException ex) {
+      throw new DelegateServiceDriverException(getMessage(ex), ex);
+    }
+  }
+
+  public DelegateProfileGrpc updateProfileScopingRules(AccountId accountId, OrgIdentifier orgIdentifier,
+      ProjectIdentifier projectIdentifier, ProfileIdentifier profileIdentifier, List<ProfileScopingRule> scopingRules) {
+    try {
+      if (scopingRules == null) {
+        scopingRules = Collections.emptyList();
+      }
+      validateScopingRules(scopingRules);
+
+      UpdateProfileScopingRulesV2Request.Builder builder = UpdateProfileScopingRulesV2Request.newBuilder()
+                                                               .setAccountId(accountId)
+                                                               .setProfileIdentifier(profileIdentifier)
+                                                               .addAllScopingRules(scopingRules);
+      if (orgIdentifier != null) {
+        builder.setOrgId(orgIdentifier);
+      }
+      if (profileIdentifier != null) {
+        builder.setProjectId(projectIdentifier);
+      }
+      UpdateProfileScopingRulesResponse updateProfileScopingRulesResponse =
+          delegateProfileServiceBlockingStub.updateProfileScopingRulesV2(builder.build());
 
       if (!updateProfileScopingRulesResponse.hasProfile()) {
         return null;

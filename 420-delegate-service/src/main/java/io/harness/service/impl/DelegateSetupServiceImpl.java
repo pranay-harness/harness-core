@@ -328,10 +328,15 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
       // Account level delegate configurations
       query.field(DelegateProfileKeys.owner).doesNotExist();
     }
+    Query<DelegateProfile> filterIdentifiersQuery = query.cloneQuery();
     query.field(DelegateProfileKeys.uuid).in(identifiers);
-
     List<String> existingRecordsKeys = query.asKeyList().stream().map(key -> (String) key.getId()).collect(toList());
 
-    return identifiers.stream().map(existingRecordsKeys::contains).collect(toList());
+    filterIdentifiersQuery.field(DelegateProfileKeys.identifier).in(identifiers);
+    List<String> existingRecordsIdentifiers =
+        filterIdentifiersQuery.asList().stream().map(DelegateProfile::getIdentifier).collect(toList());
+    return identifiers.stream()
+        .map(i -> existingRecordsKeys.contains(i) || existingRecordsIdentifiers.contains(i))
+        .collect(toList());
   }
 }

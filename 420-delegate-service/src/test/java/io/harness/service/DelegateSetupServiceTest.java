@@ -5,6 +5,7 @@ import static io.harness.delegate.beans.DelegateType.KUBERNETES;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.MARKOM;
 import static io.harness.rule.OwnerRule.NICOLAS;
+import static io.harness.rule.OwnerRule.VLAD;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -763,5 +764,38 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     final Map<String, SelectorType> actual = delegateSetupService.retrieveDelegateGroupImplicitSelectors(delegateGroup);
     final Map<String, SelectorType> expectedSelectors = Maps.of("groupname", SelectorType.GROUP_NAME);
     assertThat(actual).containsExactlyEntriesOf(expectedSelectors);
+  }
+
+  @Test
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void testValidateDelegateConfigurationsShouldWorkFineWithIdsAndIdentifiers() {
+    String accountId = generateUuid();
+    String orgId = generateUuid();
+    String projectId = generateUuid();
+
+    final DelegateEntityOwner projectOwner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
+    final DelegateProfile primaryProjectDelegateProfile = DelegateProfile.builder()
+                                                              .accountId(accountId)
+                                                              .name("primary")
+                                                              .ng(true)
+                                                              .primary(true)
+                                                              .owner(projectOwner)
+                                                              .build();
+    final DelegateProfile projectDelegateProfileWithIdentifier = DelegateProfile.builder()
+                                                                     .accountId(accountId)
+                                                                     .name("project")
+                                                                     .ng(true)
+                                                                     .owner(projectOwner)
+                                                                     .identifier("identifier")
+                                                                     .build();
+
+    persistence.saveBatch(Arrays.asList(primaryProjectDelegateProfile, projectDelegateProfileWithIdentifier));
+
+    // Test project delegate profile
+    assertThat(delegateSetupService.validateDelegateConfigurations(accountId, orgId, projectId,
+                   Arrays.asList(
+                       primaryProjectDelegateProfile.getUuid(), projectDelegateProfileWithIdentifier.getIdentifier())))
+        .containsExactly(true, true);
   }
 }
