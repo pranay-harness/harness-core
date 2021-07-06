@@ -35,7 +35,7 @@ public class StageStep implements ChildrenExecutable<MapStepParameters> {
   @Override
   public ChildrenExecutableResponse obtainChildren(
       Ambiance ambiance, MapStepParameters stepParameters, StepInputPackage inputPackage) {
-    log.info("Stage Step parameters: {}", RecastOrchestrationUtils.toDocumentJson(stepParameters));
+    log.info("Stage Step parameters: {}", RecastOrchestrationUtils.toJson(stepParameters));
     List<String> childrenNodeIds = (List<String>) stepParameters.get("childrenNodeIds");
     List<Child> children = new ArrayList<>();
     if (childrenNodeIds != null) {
@@ -47,7 +47,7 @@ public class StageStep implements ChildrenExecutable<MapStepParameters> {
   @Override
   public StepResponse handleChildrenResponse(
       Ambiance ambiance, MapStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    log.info("Stage response map: {}", RecastOrchestrationUtils.toDocumentJson(responseDataMap));
+    log.info("Stage response map: {}", RecastOrchestrationUtils.toJson(responseDataMap));
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 }

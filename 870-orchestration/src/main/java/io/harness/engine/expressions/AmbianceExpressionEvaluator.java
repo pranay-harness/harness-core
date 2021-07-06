@@ -41,7 +41,6 @@ import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
-import org.bson.Document;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
@@ -194,7 +193,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
 
     @Override
     public ResolveObjectResponse processObject(Object o) {
-      Optional<ParameterDocumentField> docFieldOptional = ParameterDocumentFieldMapper.fromParameterFieldDocument(o);
+      Optional<ParameterDocumentField> docFieldOptional = ParameterDocumentFieldMapper.fromParameterFieldMap(o);
       if (!docFieldOptional.isPresent()) {
         return new ResolveObjectResponse(false, null);
       }
@@ -202,9 +201,9 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
       ParameterDocumentField docField = docFieldOptional.get();
       processObjectInternal(docField);
 
-      Document doc = (Document) o;
-      RecastOrchestrationUtils.setEncodedValue(doc, RecastOrchestrationUtils.toDocument(docField));
-      return new ResolveObjectResponse(true, doc);
+      Map<String, Object> map = (Map<String, Object>) o;
+      RecastOrchestrationUtils.setEncodedValue(map, RecastOrchestrationUtils.toMap(docField));
+      return new ResolveObjectResponse(true, map);
     }
 
     private void processObjectInternal(ParameterDocumentField documentField) {

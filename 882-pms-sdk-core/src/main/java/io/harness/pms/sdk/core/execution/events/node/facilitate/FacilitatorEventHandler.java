@@ -68,7 +68,7 @@ public class FacilitatorEventHandler extends PmsBaseEventHandler<FacilitatorEven
       for (FacilitatorObtainment obtainment : event.getFacilitatorObtainmentsList()) {
         Facilitator facilitator = facilitatorRegistry.obtain(obtainment.getType());
         StepParameters stepParameters =
-            RecastOrchestrationUtils.fromDocumentJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
+            RecastOrchestrationUtils.fromJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
         currFacilitatorResponse =
             facilitator.facilitate(ambiance, stepParameters, obtainment.getParameters().toByteArray(), inputPackage);
         if (currFacilitatorResponse != null) {

@@ -165,7 +165,7 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
 
   @Override
   public void handleProgressResponse(Ambiance ambiance, ProgressData progressData) {
-    String progressJson = RecastOrchestrationUtils.toDocumentJson(progressData);
+    String progressJson = RecastOrchestrationUtils.toJson(progressData);
     String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     sdkResponseEventPublisher.publishEvent(
         SdkResponseEventProto.newBuilder()

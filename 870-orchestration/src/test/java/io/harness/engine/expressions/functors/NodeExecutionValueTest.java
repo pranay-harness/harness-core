@@ -254,7 +254,7 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
             .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
             .setIdentifier(identifier)
             .setSkipExpressionChain(skipExpressionChain)
-            .setStepParameters(RecastOrchestrationUtils.toDocumentJson(prepareStepParameters(paramValue)));
+            .setStepParameters(RecastOrchestrationUtils.toJson(prepareStepParameters(paramValue)));
 
     if (!isEmpty(groupName)) {
       builder.setGroup(groupName);

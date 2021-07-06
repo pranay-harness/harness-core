@@ -26,9 +26,8 @@ public class PlanNodeProtoMapper {
             .setName(isEmpty(node.getName()) ? "" : node.getName())
             .setStepType(node.getStepType())
             .setIdentifier(isEmpty(node.getIdentifier()) ? "" : node.getIdentifier())
-            .setStepParameters(node.getStepParameters() == null
-                    ? ""
-                    : RecastOrchestrationUtils.toDocumentJson(node.getStepParameters()))
+            .setStepParameters(
+                node.getStepParameters() == null ? "" : RecastOrchestrationUtils.toJson(node.getStepParameters()))
             .addAllRebObjects(CollectionUtils.emptyIfNull(node.getRefObjects()))
             .addAllAdviserObtainments(CollectionUtils.emptyIfNull(node.getAdviserObtainments()))
             .addAllFacilitatorObtainments(CollectionUtils.emptyIfNull(node.getFacilitatorObtainments()))
@@ -60,9 +59,8 @@ public class PlanNodeProtoMapper {
             .setName(isEmpty(node.getName()) ? "" : node.getName())
             .setStepType(node.getStepType())
             .setIdentifier(isEmpty(node.getIdentifier()) ? "" : node.getIdentifier())
-            .setStepParameters(node.getStepParameters() == null
-                    ? ""
-                    : RecastOrchestrationUtils.toDocumentJson(node.getStepParameters()))
+            .setStepParameters(
+                node.getStepParameters() == null ? "" : RecastOrchestrationUtils.toJson(node.getStepParameters()))
             .addAllRebObjects(CollectionUtils.emptyIfNull(node.getRefObjects()))
             .addAllAdviserObtainments(CollectionUtils.emptyIfNull(node.getAdviserObtainments()))
             .addAllFacilitatorObtainments(CollectionUtils.emptyIfNull(node.getFacilitatorObtainments()))

@@ -30,7 +30,7 @@ public class K8sCanaryStep implements SyncExecutable<MapStepParameters> {
   @Override
   public StepResponse executeSync(Ambiance ambiance, MapStepParameters stepParameters, StepInputPackage inputPackage,
       PassThroughData passThroughData) {
-    log.info("K8s Canary Step parameters: {}", RecastOrchestrationUtils.toDocumentJson(stepParameters));
+    log.info("K8s Canary Step parameters: {}", RecastOrchestrationUtils.toJson(stepParameters));
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 }

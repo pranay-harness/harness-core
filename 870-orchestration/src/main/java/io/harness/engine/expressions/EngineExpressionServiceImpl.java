@@ -25,7 +25,7 @@ public class EngineExpressionServiceImpl implements EngineExpressionService {
     String json = pmsEngineExpressionService.evaluateExpression(ambiance, expression);
     Object result;
     try {
-      result = RecastOrchestrationUtils.fromDocumentJson(json, Object.class);
+      result = RecastOrchestrationUtils.fromJson(json, Object.class);
     } catch (Exception e) {
       result = json;
     }

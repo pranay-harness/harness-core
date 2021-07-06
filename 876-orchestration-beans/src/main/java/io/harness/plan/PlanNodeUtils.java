@@ -7,7 +7,7 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 public class PlanNodeUtils {
   public static PlanNodeProto cloneForRetry(PlanNodeProto planNodeProto, StepParameters stepParameters) {
     PlanNodeProto.Builder builder = PlanNodeProto.newBuilder(planNodeProto);
-    builder.setStepParameters(RecastOrchestrationUtils.toDocumentJson(stepParameters));
+    builder.setStepParameters(RecastOrchestrationUtils.toJson(stepParameters));
     return builder.build();
   }
 }

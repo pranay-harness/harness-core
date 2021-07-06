@@ -38,9 +38,9 @@ public class PmsEngineExpressionServiceImplTest extends OrchestrationTestBase {
     ambiance = AmbianceTestUtils.buildAmbiance();
     planExecutionService.save(PlanExecution.builder().uuid(ambiance.getPlanExecutionId()).build());
     pmsOutcomeService.consume(ambiance, OUTCOME_NAME,
-        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("harness").build()), null);
+        RecastOrchestrationUtils.toJson(DummyOrchestrationOutcome.builder().test("harness").build()), null);
     pmsSweepingOutputService.consume(ambiance, OUTPUT_NAME,
-        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test("harness").build()), null);
+        RecastOrchestrationUtils.toJson(DummySweepingOutput.builder().test("harness").build()), null);
   }
 
   @Test
@@ -72,6 +72,6 @@ public class PmsEngineExpressionServiceImplTest extends OrchestrationTestBase {
   public void shouldTestEvaluateExpression() {
     Object value = pmsEngineExpressionService.evaluateExpression(ambiance, "<+dummyOutcome.test> == \"harness\"");
     assertThat(value).isNotNull();
-    assertThat(value).isEqualTo(RecastOrchestrationUtils.toDocumentJson(true));
+    assertThat(value).isEqualTo(RecastOrchestrationUtils.toJson(true));
   }
 }

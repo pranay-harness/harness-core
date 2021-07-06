@@ -43,6 +43,6 @@ public class EngineGrpcExpressionService implements EngineExpressionService {
     ExpressionEvaluateBlobResponse expressionEvaluateBlobResponse =
         PmsSdkGrpcClientUtils.retryAndProcessException(engineExpressionProtoServiceBlockingStub::evaluateExpression,
             ExpressionEvaluateBlobRequest.newBuilder().setAmbiance(ambiance).setExpression(expression).build());
-    return RecastOrchestrationUtils.fromDocumentJson(expressionEvaluateBlobResponse.getValue(), Object.class);
+    return RecastOrchestrationUtils.fromJson(expressionEvaluateBlobResponse.getValue(), Object.class);
   }
 }

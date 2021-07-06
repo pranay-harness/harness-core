@@ -28,7 +28,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.bson.Document;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -59,7 +58,7 @@ public class RecastOrchestrationUtilsTest extends CategoryTest {
     String simpleJson = RecastOrchestrationUtils.toSimpleJson(dummyB);
 
     String expectedValue =
-        "{\"strVal\": \"string\", \"intVal\": 1, \"longVal\": 1242352345234, \"doubleVal\": 1.2423532235254E7, \"listVal\": [\"a\", \"b\", \"c\"], \"mapVal\": {\"1\": 1}, \"pf\": \"value\"}";
+        "{\"strVal\":\"string\",\"intVal\":1,\"longVal\":1242352345234,\"doubleVal\":1.2423532235254E7,\"listVal\":[\"a\",\"b\",\"c\"],\"mapVal\":{\"1\":1},\"pf\":\"value\"}";
     assertThat(simpleJson).isNotNull();
     assertThat(simpleJson).isEqualTo(expectedValue);
   }
@@ -93,7 +92,7 @@ public class RecastOrchestrationUtilsTest extends CategoryTest {
     String simpleJson = RecastOrchestrationUtils.toSimpleJson(dummyA);
 
     String expectedValue =
-        "{\"strVal\": \"dasgsregww\", \"aLong\": 12355235235, \"list\": [{\"strVal\": \"string\", \"intVal\": 1, \"longVal\": 1242352345234, \"doubleVal\": 1.2423532235254E7, \"listVal\": [\"a\", \"b\", \"c\"], \"mapVal\": {\"1\": 1}, \"pf\": \"value\"}, {\"strVal\": \"string\", \"intVal\": 2, \"longVal\": 1242352345234, \"doubleVal\": 1.2423532235254E7, \"listVal\": [\"a\", \"b\", \"c\"], \"mapVal\": {\"1\": 2}, \"pf\": \"value\"}]}";
+        "{\"strVal\":\"dasgsregww\",\"aLong\":12355235235,\"list\":[{\"strVal\":\"string\",\"intVal\":1,\"longVal\":1242352345234,\"doubleVal\":1.2423532235254E7,\"listVal\":[\"a\",\"b\",\"c\"],\"mapVal\":{\"1\":1},\"pf\":\"value\"},{\"strVal\":\"string\",\"intVal\":2,\"longVal\":1242352345234,\"doubleVal\":1.2423532235254E7,\"listVal\":[\"a\",\"b\",\"c\"],\"mapVal\":{\"1\":2},\"pf\":\"value\"}]}";
     assertThat(simpleJson).isNotNull();
     assertThat(simpleJson).isEqualTo(expectedValue);
   }
@@ -128,7 +127,7 @@ public class RecastOrchestrationUtilsTest extends CategoryTest {
     String simpleJson = RecastOrchestrationUtils.toSimpleJson(parameterDummy);
 
     String expectedValue =
-        "{\"list\": [{\"strVal\": \"string\", \"intVal\": 1, \"longVal\": 1242352345234, \"doubleVal\": 1.2423532235254E7, \"listVal\": [\"a\", \"b\", \"c\"], \"mapVal\": {\"1\": 1}, \"pf\": \"value\"}, {\"strVal\": \"string\", \"intVal\": 2, \"longVal\": 1242352345234, \"doubleVal\": 1.2423532235254E7, \"listVal\": [\"a\", \"b\", \"c\"], \"mapVal\": {\"1\": 2}, \"pf\": \"value\"}]}";
+        "{\"list\":[{\"strVal\":\"string\",\"intVal\":1,\"longVal\":1242352345234,\"doubleVal\":1.2423532235254E7,\"listVal\":[\"a\",\"b\",\"c\"],\"mapVal\":{\"1\":1},\"pf\":\"value\"},{\"strVal\":\"string\",\"intVal\":2,\"longVal\":1242352345234,\"doubleVal\":1.2423532235254E7,\"listVal\":[\"a\",\"b\",\"c\"],\"mapVal\":{\"1\":2},\"pf\":\"value\"}]}";
     assertThat(simpleJson).isNotNull();
     assertThat(simpleJson).isEqualTo(expectedValue);
   }
@@ -147,7 +146,7 @@ public class RecastOrchestrationUtilsTest extends CategoryTest {
     String simpleJson = RecastOrchestrationUtils.toSimpleJson(protoAsAFieldClass);
 
     String expectedValue =
-        "{\"executionErrorInfo\": {\"message\": \"some-message\"}, \"failureTypeSet\": [\"APPLICATION_FAILURE\", \"AUTHORIZATION_FAILURE\"]}";
+        "{\"executionErrorInfo\":{\"message\":\"some-message\"},\"failureTypeSet\":[\"APPLICATION_FAILURE\",\"AUTHORIZATION_FAILURE\"]}";
     assertThat(simpleJson).isNotNull();
     assertThat(simpleJson).isEqualTo(expectedValue);
   }
@@ -245,7 +244,7 @@ public class RecastOrchestrationUtilsTest extends CategoryTest {
     String simpleJson = RecastOrchestrationUtils.toSimpleJson(executionErrorInfoMap);
 
     String expectedValue =
-        "{\"0\": {\"message\": \"some-message\"}, \"1\": {\"message\": \"some-message1\"}, \"2\": {\"message\": \"some-message2\"}}";
+        "{\"0\":{\"message\":\"some-message\"},\"1\":{\"message\":\"some-message1\"},\"2\":{\"message\":\"some-message2\"}}";
     assertThat(simpleJson).isNotNull();
     assertThat(simpleJson).isEqualTo(expectedValue);
   }
@@ -256,10 +255,10 @@ public class RecastOrchestrationUtilsTest extends CategoryTest {
   public void shouldTestGenericMapInsideWrapper() {
     DummyC dummyC = new DummyC(
         new ParameterFieldValueWrapper<>(ImmutableMap.of("a", 123, "b", ParameterField.createValueField(123))));
-    Document doc = RecastOrchestrationUtils.toDocument(dummyC);
-    assertThat(doc).isNotNull();
+    Map<String, Object> map = RecastOrchestrationUtils.toMap(dummyC);
+    assertThat(map).isNotNull();
 
-    DummyC dummyC1 = RecastOrchestrationUtils.fromDocument(doc, DummyC.class);
+    DummyC dummyC1 = RecastOrchestrationUtils.fromMap(map, DummyC.class);
     assertThat(dummyC1).isNotNull();
     assertThat(dummyC1).isEqualTo(dummyC);
   }

@@ -1,6 +1,6 @@
 package io.harness.beans;
 
-import io.harness.annotation.RecasterAlias;
+import io.harness.utils.RecastReflectionUtils;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -28,12 +28,16 @@ public class RecasterMap extends LinkedHashMap<String, Object> implements Map<St
   }
 
   public <T> void setIdentifier(Class<T> clazz) {
-    String recasterAliasValue = obtainRecasterAliasValueOrNull(clazz);
+    String recasterAliasValue = RecastReflectionUtils.obtainRecasterAliasValueOrNull(clazz);
     if (recasterAliasValue != null) {
       this.put(RECAST_CLASS_KEY, recasterAliasValue);
     } else {
       this.put(RECAST_CLASS_KEY, clazz.getName());
     }
+  }
+
+  public Object removeIdentifier() {
+    return this.remove(RECAST_CLASS_KEY);
   }
 
   public boolean containsEncodedValue() {
@@ -51,14 +55,5 @@ public class RecasterMap extends LinkedHashMap<String, Object> implements Map<St
   public RecasterMap append(String key, Object value) {
     this.put(key, value);
     return this;
-  }
-
-  private <T> String obtainRecasterAliasValueOrNull(Class<T> clazz) {
-    RecasterAlias recasterAlias = clazz.getAnnotation(RecasterAlias.class);
-    if (recasterAlias == null) {
-      return null;
-    }
-
-    return recasterAlias.value();
   }
 }

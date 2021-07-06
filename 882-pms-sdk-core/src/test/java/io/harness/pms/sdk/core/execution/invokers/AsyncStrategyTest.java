@@ -99,8 +99,8 @@ public class AsyncStrategyTest extends PmsSdkCoreTestBase {
     AsyncSdkProgressCallback progressCallback = progressCallbackArgumentCaptor.getValue();
     assertThat(progressCallback.getAmbianceBytes()).isEqualTo(ambiance.toByteArray());
     assertThat(progressCallback.getStepParameters())
-        .isEqualTo(ByteString.copyFromUtf8(RecastOrchestrationUtils.toDocumentJson(invokerPackage.getStepParameters()))
-                       .toByteArray());
+        .isEqualTo(
+            ByteString.copyFromUtf8(RecastOrchestrationUtils.toJson(invokerPackage.getStepParameters())).toByteArray());
 
     assertThat(nodeExecutionIdCaptor.getValue()).isEqualTo(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
 

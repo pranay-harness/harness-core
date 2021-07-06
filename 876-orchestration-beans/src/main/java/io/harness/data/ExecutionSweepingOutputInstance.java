@@ -20,6 +20,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
@@ -62,7 +63,7 @@ public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAc
   @NotNull @Trimmed String name;
   String levelRuntimeIdIdx;
 
-  @Getter org.bson.Document value;
+  @Getter Map<String, Object> value;
   @Wither @CreatedDate Long createdAt;
 
   @FdIndex @Builder.Default Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());

@@ -51,6 +51,7 @@ import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -69,7 +70,6 @@ import java.util.concurrent.ExecutorService;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 
 /**
  * Please do not use this class outside of orchestration module. All the interactions with engine must be done via
@@ -286,10 +286,10 @@ public class OrchestrationEngine {
     Status status = planExecutionService.calculateStatus(ambiance.getPlanExecutionId());
     PlanExecution planExecution = planExecutionService.updateStatus(
         ambiance.getPlanExecutionId(), status, ops -> ops.set(PlanExecutionKeys.endTs, System.currentTimeMillis()));
-    Document resolvedStepParameters = nodeExecution.getResolvedStepParameters();
+    Map<String, Object> resolvedStepParameters = nodeExecution.getResolvedStepParameters();
     String stepParameters = null;
     if (resolvedStepParameters != null) {
-      stepParameters = resolvedStepParameters.toJson();
+      stepParameters = RecastOrchestrationUtils.toJson(resolvedStepParameters);
     }
     eventEmitter.emitEvent(OrchestrationEvent.newBuilder()
                                .setAmbiance(Ambiance.newBuilder()

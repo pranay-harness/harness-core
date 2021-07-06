@@ -74,7 +74,7 @@ public class InterruptEventHandler extends PmsBaseEventHandler<InterruptEvent> {
       Step<?> step = stepRegistry.obtain(AmbianceUtils.getCurrentStepType(event.getAmbiance()));
       if (step instanceof Failable) {
         StepParameters stepParameters =
-            RecastOrchestrationUtils.fromDocumentJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
+            RecastOrchestrationUtils.fromJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
         ((Failable) step).handleFailureInterrupt(event.getAmbiance(), stepParameters, event.getMetadataMap());
       }
       pmsInterruptService.handleFailure(event.getNotifyId());
@@ -90,7 +90,7 @@ public class InterruptEventHandler extends PmsBaseEventHandler<InterruptEvent> {
       Step<?> step = stepRegistry.obtain(stepType);
       if (step instanceof Abortable) {
         StepParameters stepParameters =
-            RecastOrchestrationUtils.fromDocumentJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
+            RecastOrchestrationUtils.fromJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
         ((Abortable) step).handleAbort(event.getAmbiance(), stepParameters, extractExecutableResponses(event));
         pmsInterruptService.handleAbort(event.getNotifyId());
       } else {

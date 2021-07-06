@@ -9,10 +9,10 @@ import io.harness.pms.yaml.ParameterDocumentField.ParameterDocumentFieldKeys;
 import io.harness.utils.RecastReflectionUtils;
 
 import java.lang.reflect.Type;
+import java.util.Map;
 import java.util.Optional;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -28,7 +28,7 @@ public class ParameterDocumentFieldMapper {
         throw new InvalidRequestException("Parameter field is null");
       }
       return ParameterDocumentField.builder()
-          .valueDoc(RecastOrchestrationUtils.toDocument(new ParameterFieldValueWrapper<>(null)))
+          .valueDoc(RecastOrchestrationUtils.toMap(new ParameterFieldValueWrapper<>(null)))
           .valueClass(cls.getName())
           .typeString(cls.isAssignableFrom(String.class))
           .skipAutoEvaluation(skipAutoEvaluation)
@@ -37,7 +37,7 @@ public class ParameterDocumentFieldMapper {
     return ParameterDocumentField.builder()
         .expression(parameterField.isExpression())
         .expressionValue(parameterField.getExpressionValue())
-        .valueDoc(RecastOrchestrationUtils.toDocument(new ParameterFieldValueWrapper<>(parameterField.getValue())))
+        .valueDoc(RecastOrchestrationUtils.toMap(new ParameterFieldValueWrapper<>(parameterField.getValue())))
         .valueClass(cls == null ? null : cls.getName())
         .inputSetValidator(parameterField.getInputSetValidator())
         .typeString(parameterField.isTypeString())
@@ -53,7 +53,7 @@ public class ParameterDocumentFieldMapper {
     }
 
     ParameterFieldValueWrapper<?> parameterFieldValueWrapper =
-        RecastOrchestrationUtils.fromDocument(documentField.getValueDoc(), ParameterFieldValueWrapper.class);
+        RecastOrchestrationUtils.fromMap(documentField.getValueDoc(), ParameterFieldValueWrapper.class);
     checkValueClass(documentField, parameterFieldValueWrapper);
     return ParameterField.builder()
         .expression(documentField.isExpression())
@@ -88,38 +88,38 @@ public class ParameterDocumentFieldMapper {
     }
   }
 
-  public Optional<ParameterDocumentField> fromParameterFieldDocument(Object o) {
-    if (!(o instanceof Document)) {
+  public Optional<ParameterDocumentField> fromParameterFieldMap(Object o) {
+    if (!(o instanceof Map)) {
       return Optional.empty();
     }
 
-    Document doc = (Document) o;
-    Object recastClass = Optional.ofNullable(RecastReflectionUtils.getDocumentIdentifier(doc)).orElse("");
+    Map<String, Object> map = (Map<String, Object>) o;
+    Object recastClass = Optional.ofNullable(RecastReflectionUtils.getIdentifier(map)).orElse("");
     String recasterAliasValue = RecastReflectionUtils.obtainRecasterAliasValueOrNull(ParameterField.class);
     if (!recastClass.equals(ParameterField.class.getName()) && !recastClass.equals(recasterAliasValue)) {
       return Optional.empty();
     }
 
-    Document encodedValue = (Document) RecastOrchestrationUtils.getEncodedValue(doc);
-    return Optional.ofNullable(fromDocument(encodedValue));
+    Map<String, Object> encodedValue = (Map<String, Object>) RecastOrchestrationUtils.getEncodedValue(map);
+    return Optional.ofNullable(fromMap(encodedValue));
   }
 
-  public ParameterDocumentField fromDocument(Document doc) {
-    if (doc == null) {
+  public ParameterDocumentField fromMap(Map<String, Object> map) {
+    if (map == null) {
       return null;
     }
 
     // Temporarily store valueDoc so that recaster doesn't deserialize it
-    Document valueDoc = (Document) doc.get(ParameterDocumentFieldKeys.valueDoc);
-    doc.put(ParameterDocumentFieldKeys.valueDoc, null);
+    Map<String, Object> valueDoc = (Map<String, Object>) map.get(ParameterDocumentFieldKeys.valueDoc);
+    map.put(ParameterDocumentFieldKeys.valueDoc, null);
 
-    ParameterDocumentField docField = RecastOrchestrationUtils.fromDocument(doc, ParameterDocumentField.class);
+    ParameterDocumentField docField = RecastOrchestrationUtils.fromMap(map, ParameterDocumentField.class);
     if (docField == null) {
       return null;
     }
 
     // Reset valueDoc
-    doc.put(ParameterDocumentFieldKeys.valueDoc, valueDoc);
+    map.put(ParameterDocumentFieldKeys.valueDoc, valueDoc);
     docField.setValueDoc(valueDoc);
     return docField;
   }

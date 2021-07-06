@@ -58,7 +58,7 @@ public class ProgressEventHandler extends PmsBaseEventHandler<ProgressEvent> {
   protected void handleEventWithContext(ProgressEvent event) {
     try {
       StepParameters stepParameters =
-          RecastOrchestrationUtils.fromDocumentJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
+          RecastOrchestrationUtils.fromJson(event.getStepParameters().toStringUtf8(), StepParameters.class);
       ProgressData progressData =
           (ProgressData) kryoSerializer.asInflatedObject(event.getProgressBytes().toByteArray());
 
