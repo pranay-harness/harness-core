@@ -14,8 +14,8 @@ shared_dependencies = [
 java_library(
     name = "module",
     srcs = glob([
-        "src/generated/**/*.java",
-        "src/main/**/*.java",
+        "src/main/java/**/*.java",
+        "src/generated/java/**/*.java",
     ]),
     tags = [
         "aeriform",

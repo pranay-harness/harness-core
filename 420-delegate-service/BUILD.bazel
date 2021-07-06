@@ -54,7 +54,7 @@ shared_dependencies = [
 
 java_library(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]) + ["//420-delegate-service/src/main/qbg:queries"],
+    srcs = glob(["src/main/java/**/*.java"]) + ["//420-delegate-service/src/main/qbg:queries"],
     visibility = ["//visibility:public"],
     deps = shared_dependencies,
 )

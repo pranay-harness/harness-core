@@ -29,7 +29,7 @@ java_library(
 
 java_library(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob(["src/main/java/**/*.java"]),
     resource_jars = [
         "//960-expression-service/src/main/proto/io/harness/expression/service:960_expression_service_java_proto",
     ],

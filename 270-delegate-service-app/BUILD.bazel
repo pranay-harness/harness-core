@@ -652,7 +652,7 @@ shared_dependencies = [
 
 java_binary(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob(["src/main/java/**/*.java"]),
     main_class = "io.harness.delegate.app.DelegateServiceApplication",
     resources = [
         "//270-delegate-service-app/src/main/resources:resource",

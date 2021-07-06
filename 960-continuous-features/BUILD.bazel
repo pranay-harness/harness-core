@@ -6,8 +6,8 @@ HarnessTeam = "CF"
 java_library(
     name = "module",
     srcs = glob([
-        "src/main/**/*.java",
-        "src/generated/**/*.java",
+        "src/main/java/**/*.java",
+        "src/generated/java/**/*.java",
     ]),
     visibility = ["//visibility:public"],
     deps = [

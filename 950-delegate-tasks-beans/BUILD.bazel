@@ -43,7 +43,7 @@ shared_dependencies = [
 
 java_library(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob(["src/main/java/**/*.java"]),
     resource_jars = [
         "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_java_proto",
     ],
