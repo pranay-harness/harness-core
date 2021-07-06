@@ -151,7 +151,6 @@ import software.wings.beans.AccountEventType;
 import software.wings.beans.AccountPreferences;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.AppContainer;
-import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.ArtifactStreamMetadata;
 import software.wings.beans.ArtifactVariable;
