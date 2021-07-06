@@ -620,16 +620,18 @@ public class CDDashboardApisTest {
                                                                    .deploymentStatus(deploymentStatusPending)
                                                                    .build();
 
-    String queryFailed = cdOverviewDashboardServiceImpl.queryBuilderStatus("acc", "orgId", "pro", 10, failedStatusList);
+    String queryFailed =
+        cdOverviewDashboardServiceImpl.queryBuilderStatus("acc", "orgId", "pro", 10, failedStatusList, 0, 0);
     String queryIdFailed = cdOverviewDashboardServiceImpl.queryBuilderSelectIdLimitTimeCdTable(
         "acc", "orgId", "pro", 10, failedStatusList);
 
-    String queryActive = cdOverviewDashboardServiceImpl.queryBuilderStatus("acc", "orgId", "pro", 10, activeStatusList);
+    String queryActive =
+        cdOverviewDashboardServiceImpl.queryBuilderStatus("acc", "orgId", "pro", 10, activeStatusList, 0, 0);
     String queryIdActive = cdOverviewDashboardServiceImpl.queryBuilderSelectIdLimitTimeCdTable(
         "acc", "orgId", "pro", 10, activeStatusList);
 
     String queryPending =
-        cdOverviewDashboardServiceImpl.queryBuilderStatus("acc", "orgId", "pro", 10, pendingStatusList);
+        cdOverviewDashboardServiceImpl.queryBuilderStatus("acc", "orgId", "pro", 10, pendingStatusList, 0, 0);
     String queryIdPending = cdOverviewDashboardServiceImpl.queryBuilderSelectIdLimitTimeCdTable(
         "acc", "orgId", "pro", 10, pendingStatusList);
 
@@ -684,7 +686,7 @@ public class CDDashboardApisTest {
         .queryCalculatorServiceTagMag(serviveTagQueryPending);
 
     DashboardDeploymentActiveFailedRunningInfo dashboardDeploymentActiveFailedRunningInfo =
-        cdOverviewDashboardServiceImpl.getDeploymentActiveFailedRunningInfo("acc", "orgId", "pro", 10);
+        cdOverviewDashboardServiceImpl.getDeploymentActiveFailedRunningInfo("acc", "orgId", "pro", 10, 0, 0);
 
     // failure
 

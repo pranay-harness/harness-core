@@ -86,21 +86,42 @@ public class QueryBuilderTest {
     String expectedQueryResult =
         "select id,name,pipelineidentifier,startts,endTs,status,planexecutionid from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('FAILED','ABORTED','EXPIRED') and startts is not null ORDER BY startts DESC LIMIT 20;";
     String queryResult = new CDOverviewDashboardServiceImpl().queryBuilderStatus(
-        "accountId", "orgId", "projectId", 20, failedStatusList);
+        "accountId", "orgId", "projectId", 20, failedStatusList, 0, 0);
     assertThat(queryResult).isEqualTo(expectedQueryResult);
 
     // activeStatusList
     expectedQueryResult =
         "select id,name,pipelineidentifier,startts,endTs,status,planexecutionid from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('RUNNING') and startts is not null ORDER BY startts DESC LIMIT 20;";
     queryResult = new CDOverviewDashboardServiceImpl().queryBuilderStatus(
-        "accountId", "orgId", "projectId", 20, activeStatusList);
+        "accountId", "orgId", "projectId", 20, activeStatusList, 0, 0);
     assertThat(queryResult).isEqualTo(expectedQueryResult);
 
     // pending
     expectedQueryResult =
         "select id,name,pipelineidentifier,startts,endTs,status,planexecutionid from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('INTERVENTIONWAITING','APPROVALWAITING') and startts is not null ORDER BY startts DESC LIMIT 20;";
     queryResult = new CDOverviewDashboardServiceImpl().queryBuilderStatus(
-        "accountId", "orgId", "projectId", 20, pendingStatusList);
+        "accountId", "orgId", "projectId", 20, pendingStatusList, 0, 0);
+    assertThat(queryResult).isEqualTo(expectedQueryResult);
+
+    // startInterval=0 and endInterval!=0
+    expectedQueryResult =
+        "select id,name,pipelineidentifier,startts,endTs,status,planexecutionid from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('FAILED','ABORTED','EXPIRED') and startts is not null ORDER BY startts DESC LIMIT 20;";
+    queryResult = new CDOverviewDashboardServiceImpl().queryBuilderStatus(
+        "accountId", "orgId", "projectId", 20, failedStatusList, 5, 0);
+    assertThat(queryResult).isEqualTo(expectedQueryResult);
+
+    // startInterval!=0 and endInterval=0
+    expectedQueryResult =
+        "select id,name,pipelineidentifier,startts,endTs,status,planexecutionid from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('FAILED','ABORTED','EXPIRED') and startts is not null ORDER BY startts DESC LIMIT 20;";
+    queryResult = new CDOverviewDashboardServiceImpl().queryBuilderStatus(
+        "accountId", "orgId", "projectId", 20, failedStatusList, 0, 5);
+    assertThat(queryResult).isEqualTo(expectedQueryResult);
+
+    // startInterval!=0 and endInterval!=0
+    expectedQueryResult =
+        "select id,name,pipelineidentifier,startts,endTs,status,planexecutionid from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and startts>1 and startts<=5 and status in ('FAILED','ABORTED','EXPIRED') and startts is not null ORDER BY startts DESC LIMIT 20;";
+    queryResult = new CDOverviewDashboardServiceImpl().queryBuilderStatus(
+        "accountId", "orgId", "projectId", 20, failedStatusList, 1, 5);
     assertThat(queryResult).isEqualTo(expectedQueryResult);
   }
 
