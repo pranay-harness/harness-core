@@ -10,13 +10,13 @@ import static io.harness.secrets.SecretPermissions.SECRET_VIEW_PERMISSION;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
-import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.ConnectorCategory;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
@@ -24,12 +24,14 @@ import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.ng.core.api.NGEncryptedDataService;
 import io.harness.ng.core.api.SecretCrudService;
+import io.harness.ng.core.api.impl.SecretPermissionValidator;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.secrets.SecretRequestWrapper;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.secretmanagerclient.SecretType;
+import io.harness.security.SecurityContextBuilder;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -86,7 +88,7 @@ public class NGSecretResourceV2 {
   private final SecretCrudService ngSecretService;
   private final Validator validator;
   private final NGEncryptedDataService encryptedDataService;
-  private final AccessControlClient accessControlClient;
+  private final SecretPermissionValidator secretPermissionValidator;
 
   @GET
   @Path("/validateUniqueIdentifier/{identifier}")
@@ -107,14 +109,19 @@ public class NGSecretResourceV2 {
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam("privateSecret") @DefaultValue("false") boolean privateSecret,
       @Valid @NotNull SecretRequestWrapper dto) {
     if (!Objects.equals(orgIdentifier, dto.getSecret().getOrgIdentifier())
         || !Objects.equals(projectIdentifier, dto.getSecret().getProjectIdentifier())) {
       throw new InvalidRequestException("Invalid request, scope in payload and params do not match.", USER);
     }
 
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.of(SECRET_RESOURCE_TYPE, null), SECRET_EDIT_PERMISSION);
+    secretPermissionValidator.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier), Resource.of(SECRET_RESOURCE_TYPE, null),
+        SECRET_EDIT_PERMISSION, privateSecret ? SecurityContextBuilder.getPrincipal() : null);
+    if (privateSecret) {
+      dto.getSecret().setOwner(SecurityContextBuilder.getPrincipal());
+    }
 
     return ResponseDTO.newResponse(ngSecretService.create(accountIdentifier, dto.getSecret()));
   }
@@ -128,8 +135,14 @@ public class NGSecretResourceV2 {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier, @Valid SecretValidationMetaData metadata) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.of(SECRET_RESOURCE_TYPE, identifier), SECRET_ACCESS_PERMISSION);
+    SecretResponseWrapper secret =
+        ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier).orElse(null);
+
+    secretPermissionValidator.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(SECRET_RESOURCE_TYPE, identifier), SECRET_ACCESS_PERMISSION,
+        secret != null ? secret.getSecret().getOwner() : null);
+
     return ResponseDTO.newResponse(
         ngSecretService.validateSecret(accountIdentifier, orgIdentifier, projectIdentifier, identifier, metadata));
   }
@@ -141,13 +154,19 @@ public class NGSecretResourceV2 {
   public ResponseDTO<SecretResponseWrapper> createViaYaml(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @Valid SecretRequestWrapper dto) {
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam("privateSecret") @DefaultValue("false") boolean privateSecret, @Valid SecretRequestWrapper dto) {
     if (!Objects.equals(orgIdentifier, dto.getSecret().getOrgIdentifier())
         || !Objects.equals(projectIdentifier, dto.getSecret().getProjectIdentifier())) {
       throw new InvalidRequestException("Invalid request, scope in payload and params do not match.", USER);
     }
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.of(SECRET_RESOURCE_TYPE, null), SECRET_EDIT_PERMISSION);
+    secretPermissionValidator.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier), Resource.of(SECRET_RESOURCE_TYPE, null),
+        SECRET_EDIT_PERMISSION, privateSecret ? SecurityContextBuilder.getPrincipal() : null);
+    if (privateSecret) {
+      dto.getSecret().setOwner(SecurityContextBuilder.getPrincipal());
+    }
+
     return ResponseDTO.newResponse(ngSecretService.createViaYaml(accountIdentifier, dto.getSecret()));
   }
 
@@ -165,8 +184,9 @@ public class NGSecretResourceV2 {
       @QueryParam(INCLUDE_SECRETS_FROM_EVERY_SUB_SCOPE) @DefaultValue("false") boolean includeSecretsFromEverySubScope,
       @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.of(SECRET_RESOURCE_TYPE, null), SECRET_VIEW_PERMISSION);
+    secretPermissionValidator.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier), Resource.of(SECRET_RESOURCE_TYPE, null),
+        SECRET_VIEW_PERMISSION, null);
 
     if (secretType != null) {
       secretTypes.add(secretType);
@@ -183,10 +203,14 @@ public class NGSecretResourceV2 {
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.of(SECRET_RESOURCE_TYPE, identifier), SECRET_VIEW_PERMISSION);
-    return ResponseDTO.newResponse(
-        ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier).orElse(null));
+    SecretResponseWrapper secret =
+        ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier).orElse(null);
+    secretPermissionValidator.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(SECRET_RESOURCE_TYPE, identifier), SECRET_VIEW_PERMISSION,
+        secret != null ? secret.getSecret().getOwner() : null);
+
+    return ResponseDTO.newResponse(secret);
   }
 
   @DELETE
@@ -196,8 +220,12 @@ public class NGSecretResourceV2 {
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.of(SECRET_RESOURCE_TYPE, identifier), SECRET_DELETE_PERMISSION);
+    SecretResponseWrapper secret =
+        ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier).orElse(null);
+    secretPermissionValidator.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(SECRET_RESOURCE_TYPE, identifier), SECRET_DELETE_PERMISSION,
+        secret != null ? secret.getSecret().getOwner() : null);
     return ResponseDTO.newResponse(
         ngSecretService.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }
@@ -211,8 +239,13 @@ public class NGSecretResourceV2 {
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @Valid SecretRequestWrapper dto) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.of(SECRET_RESOURCE_TYPE, identifier), SECRET_EDIT_PERMISSION);
+    SecretResponseWrapper secret =
+        ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier).orElse(null);
+    secretPermissionValidator.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(SECRET_RESOURCE_TYPE, identifier), SECRET_EDIT_PERMISSION,
+        secret != null ? secret.getSecret().getOwner() : null);
+
     return ResponseDTO.newResponse(
         ngSecretService.update(accountIdentifier, orgIdentifier, projectIdentifier, identifier, dto.getSecret()));
   }
@@ -226,8 +259,12 @@ public class NGSecretResourceV2 {
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @Valid SecretRequestWrapper dto) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.of(SECRET_RESOURCE_TYPE, identifier), SECRET_EDIT_PERMISSION);
+    SecretResponseWrapper secret =
+        ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier).orElse(null);
+    secretPermissionValidator.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(SECRET_RESOURCE_TYPE, identifier), SECRET_EDIT_PERMISSION,
+        secret != null ? secret.getSecret().getOwner() : null);
 
     return ResponseDTO.newResponse(ngSecretService.updateViaYaml(
         accountIdentifier, orgIdentifier, projectIdentifier, identifier, dto.getSecret()));
@@ -253,8 +290,12 @@ public class NGSecretResourceV2 {
     SecretRequestWrapper dto = JsonUtils.asObject(spec, SecretRequestWrapper.class);
     validateRequestPayload(dto);
 
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.of(SECRET_RESOURCE_TYPE, identifier), SECRET_EDIT_PERMISSION);
+    SecretResponseWrapper secret =
+        ngSecretService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier).orElse(null);
+    secretPermissionValidator.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(SECRET_RESOURCE_TYPE, identifier), SECRET_EDIT_PERMISSION,
+        secret != null ? secret.getSecret().getOwner() : null);
 
     return ResponseDTO.newResponse(ngSecretService.updateFile(
         accountIdentifier, orgIdentifier, projectIdentifier, identifier, dto.getSecret(), uploadedInputStream));
@@ -268,6 +309,7 @@ public class NGSecretResourceV2 {
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam("privateSecret") @DefaultValue("false") boolean privateSecret,
       @NotNull @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("spec") String spec) {
     SecretRequestWrapper dto = JsonUtils.asObject(spec, SecretRequestWrapper.class);
     validateRequestPayload(dto);
@@ -277,8 +319,12 @@ public class NGSecretResourceV2 {
       throw new InvalidRequestException("Invalid request, scope in payload and params do not match.", USER);
     }
 
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.of(SECRET_RESOURCE_TYPE, null), SECRET_EDIT_PERMISSION);
+    secretPermissionValidator.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier), Resource.of(SECRET_RESOURCE_TYPE, null),
+        SECRET_EDIT_PERMISSION, privateSecret ? SecurityContextBuilder.getPrincipal() : null);
+    if (privateSecret) {
+      dto.getSecret().setOwner(SecurityContextBuilder.getPrincipal());
+    }
 
     return ResponseDTO.newResponse(ngSecretService.createFile(accountIdentifier, dto.getSecret(), uploadedInputStream));
   }
@@ -303,14 +349,37 @@ public class NGSecretResourceV2 {
         if (!Optional.ofNullable(secretRefData).isPresent()) {
           continue;
         }
-        accessControlClient.checkForAccessOrThrow(ResourceScope.of(ngAccess.getAccountIdentifier(),
-                                                      ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier()),
-            Resource.of(SECRET_RESOURCE_TYPE, secretRefData.getIdentifier()), SECRET_ACCESS_PERMISSION);
+        Scope secretScope = secretRefData.getScope();
+        SecretResponseWrapper secret =
+            ngSecretService
+                .get(ngAccess.getAccountIdentifier(), getOrgIdentifier(ngAccess.getOrgIdentifier(), secretScope),
+                    getProjectIdentifier(ngAccess.getProjectIdentifier(), secretScope), secretRefData.getIdentifier())
+                .orElse(null);
+        secretPermissionValidator.checkForAccessOrThrow(
+            ResourceScope.of(
+                ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier()),
+            Resource.of(SECRET_RESOURCE_TYPE, secretRefData.getIdentifier()), SECRET_ACCESS_PERMISSION,
+            secret != null ? secret.getSecret().getOwner() : null);
+
       } catch (IllegalAccessException illegalAccessException) {
         log.error("Error while checking access permission for secret: {}", field, illegalAccessException);
       }
     }
     return ResponseDTO.newResponse(encryptedDataService.getEncryptionDetails(
         ngAccessWithEncryptionConsumer.getNgAccess(), ngAccessWithEncryptionConsumer.getDecryptableEntity()));
+  }
+
+  private String getOrgIdentifier(String parentOrgIdentifier, @NotNull Scope scope) {
+    if (scope != Scope.ACCOUNT) {
+      return parentOrgIdentifier;
+    }
+    return null;
+  }
+
+  private String getProjectIdentifier(String parentProjectIdentifier, @NotNull Scope scope) {
+    if (scope == Scope.PROJECT) {
+      return parentProjectIdentifier;
+    }
+    return null;
   }
 }

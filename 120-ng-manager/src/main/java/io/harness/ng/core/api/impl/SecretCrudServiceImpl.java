@@ -195,7 +195,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
       criteria = criteria.orOperator(where(SecretKeys.secretSpec + ".secretManagerIdentifier").exists(false),
           where(SecretKeys.secretSpec + ".secretManagerIdentifier").is(HARNESS_SECRET_MANAGER_IDENTIFIER));
     }
-
+    criteria.and(SecretKeys.owner).is(null);
     if (!StringUtils.isEmpty(searchTerm)) {
       criteria = criteria.orOperator(
           Criteria.where(SecretKeys.name).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),

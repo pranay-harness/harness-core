@@ -12,6 +12,7 @@ import io.harness.ng.DbAliases;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.secretmanagerclient.SecretType;
+import io.harness.security.dto.Principal;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -59,6 +60,7 @@ public class Secret {
   List<NGTag> tags;
   SecretType type;
   Boolean draft;
+  Principal owner;
 
   public boolean isDraft() {
     return draft != null && draft;
@@ -71,16 +73,18 @@ public class Secret {
   @LastModifiedDate Long lastModifiedAt;
 
   public SecretDTOV2 toDTO() {
-    return SecretDTOV2.builder()
-        .orgIdentifier(getOrgIdentifier())
-        .projectIdentifier(getProjectIdentifier())
-        .identifier(getIdentifier())
-        .name(getName())
-        .description(getDescription())
-        .tags(convertToMap(getTags()))
-        .type(getType())
-        .spec(Optional.ofNullable(getSecretSpec()).map(SecretSpec::toDTO).orElse(null))
-        .build();
+    SecretDTOV2 dto = SecretDTOV2.builder()
+                          .orgIdentifier(getOrgIdentifier())
+                          .projectIdentifier(getProjectIdentifier())
+                          .identifier(getIdentifier())
+                          .name(getName())
+                          .description(getDescription())
+                          .tags(convertToMap(getTags()))
+                          .type(getType())
+                          .spec(Optional.ofNullable(getSecretSpec()).map(SecretSpec::toDTO).orElse(null))
+                          .build();
+    dto.setOwner(getOwner());
+    return dto;
   }
 
   @FdIndex Boolean migratedFromManager;
