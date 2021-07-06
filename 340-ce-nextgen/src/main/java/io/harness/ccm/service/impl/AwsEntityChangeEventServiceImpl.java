@@ -50,16 +50,16 @@ public class AwsEntityChangeEventServiceImpl implements AwsEntityChangeEventServ
         List<CECloudAccount> awsAccounts = new ArrayList<>();
         try {
           awsAccounts = awsOrganizationHelperService.getAWSAccounts(
-              accountIdentifier, identifier, ceAwsConnectorDTO, awsConfig.getAccessKey(), awsConfig.getAccessKey());
-          log.info("Number of AWS Accounts: {}", awsAccounts.size());
+              accountIdentifier, identifier, ceAwsConnectorDTO, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+          log.info("Number of AWS Accounts: {}, Not Processing Create AWS Account Metadata", awsAccounts.size());
         } catch (AWSOrganizationsNotInUseException ex) {
-          log.info(
-              "AWSOrganizationsNotInUseException for AWS Connector:[%s], {}", ceAwsConnectorDTO.getAwsAccountId(), ex);
+          log.info("AWSOrganizationsNotInUseException for AWS Connector: {}", ceAwsConnectorDTO.getAwsAccountId(), ex);
         } catch (AccessDeniedException accessDeniedException) {
-          log.info("AccessDeniedException for AWS Connector:[%s], {}", ceAwsConnectorDTO.getAwsAccountId(),
-              accessDeniedException);
+          log.info("AccessDeniedException for AWS Connector: {}, Not Processing Create AWS Account Metadata",
+              ceAwsConnectorDTO.getAwsAccountId(), accessDeniedException);
         } catch (Exception ex) {
-          log.info("Exception for AWS Connector:[%s], {}", ceAwsConnectorDTO.getAwsAccountId(), ex);
+          log.info("Exception for AWS Connector:, {}, Not Processing Create AWS Account Metadata",
+              ceAwsConnectorDTO.getAwsAccountId(), ex);
         }
         for (CECloudAccount account : awsAccounts) {
           log.info("Inserting CECloudAccount: {}", account);
@@ -69,7 +69,7 @@ public class AwsEntityChangeEventServiceImpl implements AwsEntityChangeEventServ
       default:
         log.info("Not processing AWS Event, action: {}, entityChangeDTO: {}", action, entityChangeDTO);
     }
-    return false;
+    return true;
   }
 
   public ConnectorInfoDTO getConnectorConfigDTO(String accountIdentifier, String connectorIdentifierRef) {

@@ -90,7 +90,6 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
         break;
       default:
         log.error("Change Event of type %s, not handled", action);
-        return false;
     }
     return true;
   }
