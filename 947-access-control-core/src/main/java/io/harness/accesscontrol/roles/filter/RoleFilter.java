@@ -20,7 +20,7 @@ public class RoleFilter {
   String searchTerm;
   String scopeIdentifier;
   boolean includeChildScopes;
-  @Builder.Default Set<String> allowedScopeLevelsFilter = new HashSet<>();
+  @Builder.Default Set<String> scopeLevelsFilter = new HashSet<>();
   @Builder.Default @NotNull Set<String> identifierFilter = new HashSet<>();
   @Builder.Default @NotNull Set<String> permissionFilter = new HashSet<>();
   @Builder.Default @NotNull ManagedFilter managedFilter;

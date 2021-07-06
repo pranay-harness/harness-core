@@ -15,11 +15,13 @@ import io.harness.exception.UnexpectedException;
 import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -46,10 +48,10 @@ public class PermissionServiceImpl implements PermissionService {
       "[Failed]: Failed to remove permission from roles and remove the permission; attempt: {}",
       ImmutableList.of(TransactionException.class), Duration.ofSeconds(5), 3, log);
 
-  private static final RetryPolicy<Object> addPermissionTransactionRetryPolicy =
-      RetryUtils.getRetryPolicy("[Retrying]: Failed to add permission to roles and update the permission; attempt: {}",
-          "[Failed]: Failed to add permission to roles and update the permission; attempt: {}",
-          ImmutableList.of(TransactionException.class), Duration.ofSeconds(5), 3, log);
+  private static final RetryPolicy<Object> updatePermissionTransactionRetryPolicy =
+      RetryUtils.getRetryPolicy("[Retrying]: Failed to update permission with roles; attempt: {}",
+          "[Failed]: Failed to update permission with roles; attempt: {}", ImmutableList.of(TransactionException.class),
+          Duration.ofSeconds(5), 3, log);
 
   @Inject
   public PermissionServiceImpl(PermissionDao permissionDao, ResourceTypeService resourceTypeService,
@@ -96,47 +98,27 @@ public class PermissionServiceImpl implements PermissionService {
           String.format("Could not find the permission %s", permissionUpdate.getIdentifier()));
     }
     Permission currentPermission = currentPermissionOptional.get();
-    //    if (!permissionUpdate.getAllowedScopeLevels().equals(currentPermission.getAllowedScopeLevels())) {
-    //      throw new InvalidRequestException("Cannot change the the scopes at which this permission can be used.");
-    //    }
-    if (shouldIncludePermissionInAllRoles(permissionUpdate)) {
-      return Failsafe.with(addPermissionTransactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-        RoleFilter roleFilter = RoleFilter.builder()
-                                    .allowedScopeLevelsFilter(permissionUpdate.getAllowedScopeLevels())
-                                    .managedFilter(NO_FILTER)
-                                    .build();
-        boolean updateSuccessful = roleService.addPermissionToRoles(permissionUpdate.getIdentifier(), roleFilter);
-        if (!updateSuccessful) {
-          throw new UnexpectedException(String.format(
-              "The addition of permission in roles has failed for permission, %s", permissionUpdate.getIdentifier()));
-        }
-        permissionUpdate.setVersion(currentPermission.getVersion());
-        return permissionDao.update(permissionUpdate);
-      }));
-    } else if (PermissionStatus.INACTIVE.equals(permissionUpdate.getStatus())) {
-      return Failsafe.with(removePermissionTransactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-        boolean updateSuccessful = roleService.removePermissionFromRoles(permissionUpdate.getIdentifier());
-        if (!updateSuccessful) {
-          throw new UnexpectedException(String.format(
-              "The removal of permissions from role has failed for permission, %s", permissionUpdate.getIdentifier()));
-        }
-        permissionUpdate.setVersion(currentPermission.getVersion());
-        return permissionDao.update(permissionUpdate);
-      }));
-    } else {
+    return Failsafe.with(updatePermissionTransactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      Set<String> removedScopeLevels =
+          Sets.difference(currentPermission.getAllowedScopeLevels(), permissionUpdate.getAllowedScopeLevels());
+      if (!removedScopeLevels.isEmpty()) {
+        removePermissionsFromRolesOutOfScope(removedScopeLevels, permissionUpdate);
+      }
+
+      if (shouldIncludePermissionInAllRoles(permissionUpdate)) {
+        addPermissionToAllRoles(permissionUpdate);
+      } else if (PermissionStatus.INACTIVE.equals(permissionUpdate.getStatus())) {
+        removePermissionFromAllRoles(permissionUpdate.getIdentifier());
+      }
       permissionUpdate.setVersion(currentPermission.getVersion());
       return permissionDao.update(permissionUpdate);
-    }
+    }));
   }
 
   @Override
   public Permission delete(String identifier) {
     return Failsafe.with(removePermissionTransactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-      boolean updateSuccessful = roleService.removePermissionFromRoles(identifier);
-      if (!updateSuccessful) {
-        throw new UnexpectedException(
-            String.format("The removal of permissions from role has failed for permission, %s", identifier));
-      }
+      removePermissionFromAllRoles(identifier);
       return permissionDao.delete(identifier);
     }));
   }
@@ -149,5 +131,37 @@ public class PermissionServiceImpl implements PermissionService {
     return permissionUpdate.isIncludeInAllRoles()
         && (PermissionStatus.EXPERIMENTAL.equals(permissionUpdate.getStatus())
             || PermissionStatus.ACTIVE.equals(permissionUpdate.getStatus()));
+  }
+
+  private void removePermissionsFromRolesOutOfScope(Set<String> removedScopeLevels, Permission permission) {
+    if (!removedScopeLevels.isEmpty()) {
+      RoleFilter roleFilter =
+          RoleFilter.builder().scopeLevelsFilter(removedScopeLevels).managedFilter(NO_FILTER).build();
+      boolean updateSuccessful = roleService.removePermissionFromRoles(permission.getIdentifier(), roleFilter);
+      if (!updateSuccessful) {
+        throw new UnexpectedException(String.format(
+            "The removal of permissions from role has failed for permission, %s", permission.getIdentifier()));
+      }
+    }
+  }
+
+  private void removePermissionFromAllRoles(String permissionIdentifier) {
+    RoleFilter roleFilter =
+        RoleFilter.builder().scopeLevelsFilter(scopeService.getAllScopeLevels()).managedFilter(NO_FILTER).build();
+    boolean updateSuccessful = roleService.removePermissionFromRoles(permissionIdentifier, roleFilter);
+    if (!updateSuccessful) {
+      throw new UnexpectedException(
+          String.format("The removal of permissions from role has failed for permission, %s", permissionIdentifier));
+    }
+  }
+
+  private void addPermissionToAllRoles(Permission permission) {
+    RoleFilter roleFilter =
+        RoleFilter.builder().scopeLevelsFilter(permission.getAllowedScopeLevels()).managedFilter(NO_FILTER).build();
+    boolean updateSuccessful = roleService.addPermissionToRoles(permission.getIdentifier(), roleFilter);
+    if (!updateSuccessful) {
+      throw new UnexpectedException(String.format(
+          "The addition of permission in roles has failed for permission, %s", permission.getIdentifier()));
+    }
   }
 }

@@ -63,6 +63,7 @@ import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
 import io.harness.metrics.modules.MetricsModule;
 import io.harness.metrics.service.api.MetricsPublisher;
+import io.harness.migration.NGMigrationSdkModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
@@ -225,6 +226,7 @@ public class AccessControlModule extends AbstractModule {
         FeatureFlagClientModule.getInstance(config.getFeatureFlagClientConfiguration().getFeatureFlagServiceConfig(),
             config.getFeatureFlagClientConfiguration().getFeatureFlagServiceSecret(),
             ACCESS_CONTROL_SERVICE.getServiceId()));
+
     MapBinder<String, ScopeLevel> scopesByKey = MapBinder.newMapBinder(binder(), String.class, ScopeLevel.class);
     scopesByKey.addBinding(ACCOUNT.toString()).toInstance(ACCOUNT);
     scopesByKey.addBinding(ORGANIZATION.toString()).toInstance(ORGANIZATION);
@@ -264,8 +266,10 @@ public class AccessControlModule extends AbstractModule {
     } else {
       log.info("No configuration provided for Stack Driver, aggregator metrics will not be recorded");
     }
+
     install(new TransactionOutboxModule(config.getOutboxPollConfig(), ACCESS_CONTROL_SERVICE.getServiceId(),
         config.getAggregatorConfiguration().isExportMetricsToStackDriver()));
+    install(NGMigrationSdkModule.getInstance());
 
     registerRequiredBindings();
   }

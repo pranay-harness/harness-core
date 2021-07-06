@@ -128,8 +128,8 @@ public class RoleDaoImpl implements RoleDao {
   }
 
   @Override
-  public boolean removePermissionFromRoles(String permissionIdentifier) {
-    Criteria criteria = new Criteria();
+  public boolean removePermissionFromRoles(String permissionIdentifier, RoleFilter roleFilter) {
+    Criteria criteria = createCriteriaFromFilter(roleFilter);
     criteria.and(RoleDBOKeys.permissions).is(permissionIdentifier);
     Update update = new Update().pull(RoleDBOKeys.permissions, permissionIdentifier);
     UpdateResult updateResult = roleRepository.updateMulti(criteria, update);
@@ -163,8 +163,8 @@ public class RoleDaoImpl implements RoleDao {
       criteria.and(RoleDBOKeys.identifier).in(roleFilter.getIdentifierFilter());
     }
 
-    if (!roleFilter.getAllowedScopeLevelsFilter().isEmpty()) {
-      criteria.and(RoleDBOKeys.allowedScopeLevels).in(roleFilter.getAllowedScopeLevelsFilter());
+    if (!roleFilter.getScopeLevelsFilter().isEmpty()) {
+      criteria.and(RoleDBOKeys.allowedScopeLevels).in(roleFilter.getScopeLevelsFilter());
     }
 
     if (roleFilter.getManagedFilter().equals(ONLY_MANAGED)) {

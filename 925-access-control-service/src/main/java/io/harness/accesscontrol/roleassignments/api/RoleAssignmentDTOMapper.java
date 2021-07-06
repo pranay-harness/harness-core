@@ -67,11 +67,11 @@ public class RoleAssignmentDTOMapper {
         .build();
   }
 
-  public static RoleAssignment fromDTO(String scopeIdentifier, RoleAssignmentDTO object) {
-    return fromDTO(scopeIdentifier, object, false);
+  public static RoleAssignment fromDTO(Scope scope, RoleAssignmentDTO object) {
+    return fromDTO(scope, object, false);
   }
 
-  public static RoleAssignment fromDTO(String scopeIdentifier, RoleAssignmentDTO object, boolean managed) {
+  public static RoleAssignment fromDTO(Scope scope, RoleAssignmentDTO object, boolean managed) {
     RoleAssignmentBuilder roleAssignmentBuilder =
         RoleAssignment.builder()
             .identifier(isEmpty(object.getIdentifier())
@@ -83,7 +83,8 @@ public class RoleAssignmentDTOMapper {
             .roleIdentifier(object.getRoleIdentifier())
             .disabled(object.isDisabled())
             .managed(managed)
-            .scopeIdentifier(scopeIdentifier);
+            .scopeIdentifier(scope.toString())
+            .scopeLevel(scope.getLevel().toString());
     return roleAssignmentBuilder.build();
   }
 
@@ -113,10 +114,9 @@ public class RoleAssignmentDTOMapper {
         .build();
   }
 
-  public static RoleAssignmentValidationRequest fromDTO(
-      String scopeIdentifier, RoleAssignmentValidationRequestDTO object) {
+  public static RoleAssignmentValidationRequest fromDTO(Scope scope, RoleAssignmentValidationRequestDTO object) {
     return RoleAssignmentValidationRequest.builder()
-        .roleAssignment(fromDTO(scopeIdentifier, object.getRoleAssignment()))
+        .roleAssignment(fromDTO(scope, object.getRoleAssignment()))
         .validatePrincipal(object.isValidatePrincipal())
         .validateResourceGroup(object.isValidateResourceGroup())
         .validateRole(object.isValidateRole())
