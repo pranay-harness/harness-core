@@ -27,6 +27,5 @@ java_binary(
 )
 
 run_analysis(
-    run_checkstyle = False,
     run_pmd = False,
 )

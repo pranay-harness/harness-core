@@ -12,11 +12,9 @@ import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
-import software.wings.beans.Pipeline;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
-import software.wings.graphql.schema.query.QLPipelineQueryParameters;
 import software.wings.graphql.schema.query.QLWorkflowQueryParameters;
 import software.wings.graphql.schema.type.QLWorkflow;
 import software.wings.security.AppPermissionSummary;

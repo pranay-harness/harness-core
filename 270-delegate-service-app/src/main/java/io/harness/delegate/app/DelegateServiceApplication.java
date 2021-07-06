@@ -16,7 +16,11 @@ import software.wings.jersey.JsonViews;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ServiceManager;
-import com.google.inject.*;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;

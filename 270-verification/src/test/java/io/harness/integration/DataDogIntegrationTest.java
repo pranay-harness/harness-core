@@ -68,7 +68,6 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.Scheduler;
 
-@Ignore
 @Slf4j
 public class DataDogIntegrationTest extends VerificationIntegrationBase {
   @Inject private ScmSecret scmSecret;
@@ -90,6 +89,7 @@ public class DataDogIntegrationTest extends VerificationIntegrationBase {
   @Test
   @Owner(developers = SRIRAM)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("TODO: provide proper description why this test is disabled")
   public void fetch() {
     APMVerificationConfig config = new APMVerificationConfig();
     config.setAccountId(accountId);
@@ -140,6 +140,7 @@ public class DataDogIntegrationTest extends VerificationIntegrationBase {
   @Test
   @Owner(developers = SOWMYA)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("TODO: provide proper description why this test is disabled")
   public void txnDatadog() throws InterruptedException {
     final String workflowId = UUID.randomUUID().toString();
     final String workflowExecutionId = UUID.randomUUID().toString();

@@ -88,7 +88,6 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
           log.info("Nothing to process.");
           break;
         } else {
-          ;
           log.info("Next tasks to process: {}", dataCollectionTasks);
           List<Callable<Void>> callables = new ArrayList<>();
           dataCollectionTasks.forEach(dataCollectionTaskDTO -> callables.add(() -> {

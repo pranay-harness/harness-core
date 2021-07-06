@@ -45,6 +45,7 @@ import io.harness.service.intfc.TimeSeriesAnalysisService;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.Application;
 import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
@@ -382,7 +383,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBase {
     do {
       Query<Alert> alertQuery = wingsPersistence.createQuery(Alert.class, excludeAuthority);
       if (alertStatus.isPresent()) {
-        alertQuery.filter(Alert.AlertKeys.status, alertStatus.get());
+        alertQuery.filter(AlertKeys.status, alertStatus.get());
       }
       numOfAlerts = alertQuery.count();
       tryCount++;

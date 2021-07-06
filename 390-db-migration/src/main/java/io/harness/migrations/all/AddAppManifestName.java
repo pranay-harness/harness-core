@@ -9,6 +9,7 @@ import io.harness.persistence.HIterator;
 
 import software.wings.beans.Account;
 import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.ApplicationManifestKeys;
 import software.wings.dl.WingsPersistence;
@@ -70,16 +71,16 @@ public class AddAppManifestName implements Migration {
         if (serviceName != null) {
           UpdateOperations<ApplicationManifest> updateOperations =
               wingsPersistence.createUpdateOperations(ApplicationManifest.class)
-                  .set(ApplicationManifest.ApplicationManifestKeys.name, serviceName + "_" + chartName);
+                  .set(ApplicationManifestKeys.name, serviceName + "_" + chartName);
           if (ExpressionEvaluator.containsVariablePattern(chartName)) {
-            updateOperations.set(ApplicationManifest.ApplicationManifestKeys.validationMessage,
-                ApplicationManifestServiceImpl.VARIABLE_EXPRESSIONS_ERROR);
+            updateOperations.set(
+                ApplicationManifestKeys.validationMessage, ApplicationManifestServiceImpl.VARIABLE_EXPRESSIONS_ERROR);
           }
           wingsPersistence.update(applicationManifest, updateOperations);
           log.info("Successfully added name {} to application manifest with id {}", serviceName + "_" + chartName,
               applicationManifest.getUuid());
           wingsPersistence.updateField(
-              Service.class, applicationManifest.getServiceId(), Service.ServiceKeys.artifactFromManifest, true);
+              Service.class, applicationManifest.getServiceId(), ServiceKeys.artifactFromManifest, true);
         } else {
           log.info("Orphan app manifest with id {} of non existent service id {} found", applicationManifest.getUuid(),
               applicationManifest.getServiceId());
