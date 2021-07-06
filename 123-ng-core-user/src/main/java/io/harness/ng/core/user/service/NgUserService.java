@@ -41,6 +41,8 @@ public interface NgUserService {
 
   Optional<UserMembership> getUserMembership(String userId, Scope scope);
 
+  List<Scope> listMembershipsForUser(String userId, Scope scope);
+
   /**
    * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
    */

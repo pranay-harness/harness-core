@@ -23,6 +23,7 @@ import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.beans.SortOrder;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
@@ -36,16 +37,24 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.services.OrganizationService;
+import io.harness.ng.core.user.service.NgUserService;
+import io.harness.security.SecurityContextBuilder;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.security.dto.Principal;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
@@ -78,6 +87,7 @@ import org.springframework.data.domain.Page;
 @NextGenManagerAuth
 public class OrganizationResource {
   private final OrganizationService organizationService;
+  private final NgUserService ngUserService;
 
   @POST
   @ApiOperation(value = "Create an Organization", nickname = "postOrganization")
@@ -115,8 +125,20 @@ public class OrganizationResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
+    Set<String> membershipOrgs =
+        ngUserService
+            .listMembershipsForUser(
+                Optional.ofNullable(SecurityContextBuilder.getPrincipal()).map(Principal::getName).orElse(null),
+                Scope.of(accountIdentifier, null, null))
+            .stream()
+            .map(Scope::getOrgIdentifier)
+            .collect(Collectors.toSet());
+    Set<String> intersection = new HashSet<>(membershipOrgs);
+    if (!identifiers.isEmpty()) {
+      intersection = Sets.intersection(membershipOrgs, new HashSet<>(identifiers));
+    }
     OrganizationFilterDTO organizationFilterDTO =
-        OrganizationFilterDTO.builder().searchTerm(searchTerm).identifiers(identifiers).build();
+        OrganizationFilterDTO.builder().searchTerm(searchTerm).identifiers(new ArrayList<>(intersection)).build();
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder harnessManagedOrder =
           SortOrder.Builder.aSortOrder().withField(OrganizationKeys.harnessManaged, SortOrder.OrderType.DESC).build();

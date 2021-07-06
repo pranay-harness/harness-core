@@ -252,6 +252,24 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
+  public List<Scope> listMembershipsForUser(String userId, Scope scope) {
+    Criteria criteria = Criteria.where(UserMetadataKeys.userId).is(userId);
+    if (!StringUtils.isEmpty(scope.getAccountIdentifier())) {
+      criteria.and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier).is(scope.getAccountIdentifier());
+    }
+    if (!StringUtils.isEmpty(scope.getOrgIdentifier())) {
+      criteria.and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier).is(scope.getOrgIdentifier());
+    }
+    if (!StringUtils.isEmpty(scope.getProjectIdentifier())) {
+      criteria.and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier).is(scope.getProjectIdentifier());
+    }
+    return userMembershipRepository.findAll(criteria)
+        .stream()
+        .map(userMembership -> userMembership.getScope())
+        .collect(toList());
+  }
+
+  @Override
   public Optional<UserMetadataDTO> getUserMetadata(String userId) {
     return userMetadataRepository.findDistinctByUserId(userId).map(UserMetadataMapper::toDTO);
   }
