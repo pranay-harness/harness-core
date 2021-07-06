@@ -37,7 +37,9 @@ import io.harness.tasks.ResponseData;
 import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @OwnedBy(HarnessTeam.CDP)
 public class K8sDeleteStep extends TaskChainExecutableWithRollbackAndRbac implements K8sStepExecutor {
   public static final StepType STEP_TYPE = StepType.newBuilder()
@@ -158,6 +160,7 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollbackAndRbac implem
 
       return stepResponseBuilder.status(Status.SUCCEEDED).build();
     } catch (Exception e) {
+      log.error("Error while processing K8s Task response: {}", e.getMessage(), e);
       return k8sStepHelper.handleTaskException(ambiance, (K8sExecutionPassThroughData) passThroughData, e);
     }
   }
