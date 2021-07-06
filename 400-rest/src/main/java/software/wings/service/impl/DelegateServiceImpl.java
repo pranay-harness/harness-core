@@ -1111,6 +1111,7 @@ public class DelegateServiceImpl implements DelegateService {
             .delegateTokenName(delegateTokenName)
             .build());
 
+    log.info("Returned jar and script run time params: ", scriptParams.get("watcherStorageUrl"));
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
     if (isNotEmpty(scriptParams)) {
       String upgradeToVersion = scriptParams.get(UPGRADE_VERSION);
@@ -1129,6 +1130,7 @@ public class DelegateServiceImpl implements DelegateService {
       delegateScripts.setStopScript(processTemplate(scriptParams, "stop.sh.ftl"));
       delegateScripts.setSetupProxyScript(processTemplate(scriptParams, "setup-proxy.sh.ftl"));
     }
+    log.info("ScriptParams was empty. Print delegateScripts", delegateScripts);
     return delegateScripts;
   }
 
@@ -1274,6 +1276,7 @@ public class DelegateServiceImpl implements DelegateService {
         accountSecret = delegateTokenService.getTokenValue(inquiry.getAccountId(), inquiry.getDelegateTokenName());
       }
 
+      log.info("Testing: Build params");
       ImmutableMap.Builder<String, String> params =
           ImmutableMap.<String, String>builder()
               .put("delegateDockerImage", delegateDockerImage)
@@ -1400,7 +1403,7 @@ public class DelegateServiceImpl implements DelegateService {
       } else {
         params.put("delegateNamespace", HARNESS_DELEGATE);
       }
-
+      log.info("Params built: ", params.toString());
       return params.build();
     }
 

@@ -994,6 +994,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void downloadRunScripts(String directory, String version, boolean forceDownload) throws Exception {
     if (!forceDownload && new File(directory + File.separator + DELEGATE_SCRIPT).exists()) {
+      log.warn("Return without calling manager. Directory is ", directory);
       return;
     }
 
@@ -1001,11 +1002,13 @@ public class WatcherServiceImpl implements WatcherService {
 
     RestResponse<DelegateScripts> restResponse = null;
     if (isBlank(delegateSize)) {
+      log.info("Calling getDelegateScripts with versionWithoutPatch", versionWithoutPatch);
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
               -> SafeHttpCall.execute(
                   managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), versionWithoutPatch)));
     } else {
+      log.info("Calling getDelegateScriptsNg with versionWithoutPatch", versionWithoutPatch);
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
               -> SafeHttpCall.execute(managerClient.getDelegateScriptsNg(
