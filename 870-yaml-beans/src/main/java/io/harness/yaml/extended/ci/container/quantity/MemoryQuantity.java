@@ -4,40 +4,42 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.yaml.extended.ci.container.quantity.unit.MemoryQuantityUnit;
+import io.harness.yaml.validator.ResourceValidatorConstants;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.Data;
-import org.apache.commons.lang3.tuple.Pair;
 
 @Data
 @Builder
 public class MemoryQuantity {
-  private static final String PARTS_REGEX = "[GM][i]?";
-
   private String numericValue;
   private MemoryQuantityUnit unit;
 
   @JsonCreator
   public static MemoryQuantity fromString(String quantity) {
-    try {
-      if (isEmpty(quantity)) {
-        return null;
-      }
+    if (isEmpty(quantity)) {
+      return null;
+    }
 
-      String[] parts = quantity.split(PARTS_REGEX);
-      String numericValue = parts[0];
-      String suffix = quantity.substring(parts[0].length());
+    Pattern r = Pattern.compile(ResourceValidatorConstants.MEMORY_PATTERN);
+    Matcher m = r.matcher(quantity);
+    if (m.find()) {
+      String numericValue = m.group(1);
+      String suffix = m.group(2);
       MemoryQuantityUnit unit = Stream.of(MemoryQuantityUnit.values())
                                     .filter(quantityUnit -> quantityUnit.getSuffix().equals(suffix))
                                     .findFirst()
                                     .orElse(MemoryQuantityUnit.unitless);
 
       return MemoryQuantity.builder().numericValue(numericValue).unit(unit).build();
-    } catch (NumberFormatException e) {
-      throw new InvalidArgumentsException(Pair.of("memory", quantity), e);
+    } else {
+      throw new InvalidArgumentsException(String.format("Invalid memory format: %s. Memory should match regex: %s",
+          quantity, ResourceValidatorConstants.MEMORY_PATTERN));
     }
   }
 
