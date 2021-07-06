@@ -50,6 +50,7 @@ import software.wings.helpers.ext.helm.request.HelmChartCollectionParams;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
+import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
@@ -182,7 +183,7 @@ public class HelmTaskHelper {
             Files.readAllBytes(
                 Paths.get(getChartDirectory(workingDirectory, helmChartConfigParams.getChartName()), VALUES_YAML)),
             StandardCharsets.UTF_8);
-        mapK8sValuesLocationToContents.put(VALUES_YAML, singletonList(fileContent));
+        mapK8sValuesLocationToContents.put(K8sValuesLocation.Service.name(), singletonList(fileContent));
         return mapK8sValuesLocationToContents;
       }
 

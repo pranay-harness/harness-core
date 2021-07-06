@@ -689,15 +689,10 @@ public class HelmDeployState extends State {
     if (isNotEmpty(executionResponse.getMapK8sValuesLocationToContent())) {
       HelmDeployStateExecutionData helmDeployStateExecutionData =
           (HelmDeployStateExecutionData) context.getStateExecutionData();
-      helmDeployStateExecutionData.getValuesFiles().put(
-          K8sValuesLocation.Service, singletonList(executionResponse.getValuesFileContent()));
-    }
-
-    if (isNotBlank(executionResponse.getValuesFileContent())) {
-      HelmDeployStateExecutionData helmDeployStateExecutionData =
-          (HelmDeployStateExecutionData) context.getStateExecutionData();
-      helmDeployStateExecutionData.getValuesFiles().put(
-          K8sValuesLocation.Service, singletonList(executionResponse.getValuesFileContent()));
+      Map<K8sValuesLocation, List<String>> mapK8sValuesLocationToContent =
+          executionResponse.getMapK8sValuesLocationToContent().entrySet().stream().collect(
+              Collectors.toMap(entry -> K8sValuesLocation.valueOf(entry.getKey()), Map.Entry::getValue));
+      helmDeployStateExecutionData.getValuesFiles().putAll(mapK8sValuesLocationToContent);
     }
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
@@ -1564,9 +1559,9 @@ public class HelmDeployState extends State {
     helmValuesFetchTaskParameters.setHelmChartConfigTaskParams(
         helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest));
 
-    Map<String, List<String>> mapK8sValuesLocationToFilePaths = new HashMap<>();
     if (featureFlagService.isEnabled(OVERRIDE_VALUES_YAML_FROM_HELM_CHART, context.getAccountId())) {
-      mapK8sValuesLocationToFilePaths = applicationManifestUtils.getHelmFetchTaskConfigMap(context, app, applicationManifestMap);
+      Map<String, List<String>> mapK8sValuesLocationToFilePaths =
+          applicationManifestUtils.getHelmFetchTaskConfigMap(context, app, applicationManifestMap);
       helmValuesFetchTaskParameters.setMapK8sValuesLocationToFilePaths(mapK8sValuesLocationToFilePaths);
     }
 
