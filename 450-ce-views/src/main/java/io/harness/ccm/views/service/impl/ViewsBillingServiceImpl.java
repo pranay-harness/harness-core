@@ -106,12 +106,15 @@ import com.google.inject.Singleton;
 import com.healthmarketscience.sqlbuilder.SelectQuery;
 import com.healthmarketscience.sqlbuilder.custom.postgresql.PgLimitClause;
 import com.healthmarketscience.sqlbuilder.custom.postgresql.PgOffsetClause;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -138,10 +141,12 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   private static final String COST_DESCRIPTION = "of %s - %s";
   private static final String COST_VALUE = "$%s";
   private static final String TOTAL_COST_LABEL = "Total Cost";
+  private static final String FORECAST_COST_LABEL = "Forecasted Cost";
   private static final String DATE_PATTERN_FOR_CHART = "MMM dd";
   private static final long ONE_DAY_MILLIS = 86400000L;
   private static final Double defaultDoubleValue = 0D;
   private static final String STANDARD_TIME_ZONE = "GMT";
+  private static final long OBSERVATION_PERIOD = 29 * ONE_DAY_MILLIS;
 
   @Override
   public List<String> getFilterValueStats(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
@@ -294,6 +299,17 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   }
 
   @Override
+  public QLCEViewTrendInfo getForecastCostData(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
+      List<QLCEViewAggregation> aggregateFunction, String cloudProviderTableName, String accountId) {
+    Instant endInstantForForecastCost = viewsQueryHelper.getEndInstantForForecastCost(filters);
+    ViewCostData currentCostData = getCostData(bigQuery, filters, aggregateFunction, cloudProviderTableName, accountId);
+    Double forecastCost = getForecastCost(currentCostData, endInstantForForecastCost);
+
+    return getForecastCostBillingStats(forecastCost, currentCostData.getCost(), getStartInstantForForecastCost(),
+        endInstantForForecastCost.plus(1, ChronoUnit.SECONDS));
+  }
+
+  @Override
   public List<String> getColumnsForTable(BigQuery bigQuery, String informationSchemaView, String table) {
     SelectQuery query = viewsQueryBuilder.getInformationSchemaQueryForColumns(informationSchemaView, table);
     return getColumnsData(bigQuery, query);
@@ -407,6 +423,32 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
         .statsTrend(
             viewsQueryHelper.getBillingTrend(costData.getCost(), forecastCost, prevCostData, trendFilterStartTime))
         .value(costData.getCost())
+        .build();
+  }
+
+  protected QLCEViewTrendInfo getForecastCostBillingStats(
+      Double forecastCost, Double totalCost, Instant startInstant, Instant endInstant) {
+    String forecastCostDescription = "";
+    String forecastCostValue = "";
+    Double statsTrend = 0.0;
+
+    if (forecastCost != null) {
+      boolean isYearRequired = viewsQueryHelper.isYearRequired(startInstant, endInstant);
+      String startInstantFormat = viewsQueryHelper.getTotalCostFormattedDate(startInstant, isYearRequired);
+      String endInstantFormat = viewsQueryHelper.getTotalCostFormattedDate(endInstant, isYearRequired);
+      forecastCostDescription = format(COST_DESCRIPTION, startInstantFormat, endInstantFormat);
+      forecastCostValue =
+          format(COST_VALUE, viewsQueryHelper.formatNumber(viewsQueryHelper.getRoundedDoubleValue(forecastCost)));
+      statsTrend = viewsQueryHelper.getRoundedDoubleValue((forecastCost - totalCost / totalCost) * 100);
+    } else {
+      forecastCost = 0.0;
+    }
+    return QLCEViewTrendInfo.builder()
+        .statsLabel(FORECAST_COST_LABEL)
+        .statsTrend(statsTrend)
+        .statsDescription(forecastCostDescription)
+        .statsValue(forecastCostValue)
+        .value(forecastCost)
         .build();
   }
 
@@ -1114,5 +1156,46 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       }
     }
     return filters;
+  }
+
+  // Methods for calculating forecast cost
+  public Double getForecastCost(ViewCostData costData, Instant endInstant) {
+    if (costData == null) {
+      return null;
+    }
+    Instant currentTime = Instant.now();
+    if (currentTime.isAfter(endInstant)) {
+      return null;
+    }
+
+    double totalCost = costData.getCost();
+    long actualTimeDiffMillis = (endInstant.plus(1, ChronoUnit.SECONDS).toEpochMilli()) - costData.getMaxStartTime();
+
+    long billingTimeDiffMillis = ONE_DAY_MILLIS;
+    if (costData.getMaxStartTime() != costData.getMinStartTime()) {
+      billingTimeDiffMillis = costData.getMaxStartTime() - costData.getMinStartTime() + ONE_DAY_MILLIS;
+    }
+    if (billingTimeDiffMillis < OBSERVATION_PERIOD) {
+      return null;
+    }
+
+    return totalCost
+        * (new BigDecimal(actualTimeDiffMillis).divide(new BigDecimal(billingTimeDiffMillis), 2, RoundingMode.HALF_UP))
+              .doubleValue();
+  }
+
+  private ViewCostData getCostData(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
+      List<QLCEViewAggregation> aggregateFunction, String cloudProviderTableName, String accountId) {
+    boolean isClusterTableQuery = isClusterTableQuery(filters, accountId);
+    List<ViewRule> viewRuleList = new ArrayList<>();
+    List<QLCEViewFilter> idFilters = getIdFilters(filters);
+    List<QLCEViewTimeFilter> timeFilters = getTimeFilters(filters);
+    SelectQuery query = getTrendStatsQuery(
+        filters, idFilters, timeFilters, aggregateFunction, viewRuleList, cloudProviderTableName, accountId);
+    return getViewTrendStatsCostData(bigQuery, query, isClusterTableQuery);
+  }
+
+  private Instant getStartInstantForForecastCost() {
+    return Instant.ofEpochMilli(viewsQueryHelper.getStartOfCurrentDay());
   }
 }

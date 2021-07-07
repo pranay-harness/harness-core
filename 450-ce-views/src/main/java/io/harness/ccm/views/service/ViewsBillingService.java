@@ -48,4 +48,7 @@ public interface ViewsBillingService {
   TableResult getTimeSeriesStatsNg(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
       List<QLCEViewGroupBy> groupBy, List<QLCEViewAggregation> aggregateFunction, List<QLCEViewSortCriteria> sort,
       String cloudProviderTableName, String accountId, boolean includeOthers);
+
+  QLCEViewTrendInfo getForecastCostData(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
+      List<QLCEViewAggregation> aggregateFunction, String cloudProviderTableName, String accountId);
 }
