@@ -1,6 +1,7 @@
 package io.harness.ccm.service.impl;
 
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CREATE_ACTION;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.UPDATE_ACTION;
 
 import static java.lang.String.format;
 
@@ -10,11 +11,13 @@ import io.harness.ccm.CENextGenConfiguration;
 import io.harness.ccm.commons.beans.config.AwsConfig;
 import io.harness.ccm.commons.dao.CECloudAccountDao;
 import io.harness.ccm.commons.entities.billing.CECloudAccount;
+import io.harness.ccm.service.intf.AWSBucketPolicyHelperService;
 import io.harness.ccm.service.intf.AWSOrganizationHelperService;
 import io.harness.ccm.service.intf.AwsEntityChangeEventService;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResourceClient;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.exception.InvalidRequestException;
@@ -33,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AwsEntityChangeEventServiceImpl implements AwsEntityChangeEventService {
   @Inject ConnectorResourceClient connectorResourceClient;
   @Inject AWSOrganizationHelperService awsOrganizationHelperService;
+  @Inject AWSBucketPolicyHelperService awsBucketPolicyHelperService;
   @Inject CENextGenConfiguration configuration;
   @Inject CECloudAccountDao cloudAccountDao;
 
@@ -41,11 +45,20 @@ public class AwsEntityChangeEventServiceImpl implements AwsEntityChangeEventServ
     String identifier = entityChangeDTO.getIdentifier().getValue();
     String accountIdentifier = entityChangeDTO.getAccountIdentifier().getValue();
     AwsConfig awsConfig = configuration.getAwsConfig();
+    CEAwsConnectorDTO ceAwsConnectorDTO;
 
     switch (action) {
       case CREATE_ACTION:
-        CEAwsConnectorDTO ceAwsConnectorDTO =
+        ceAwsConnectorDTO =
             (CEAwsConnectorDTO) getConnectorConfigDTO(accountIdentifier, identifier).getConnectorConfig();
+
+        // Update Bucket Policy
+        if (isBillingFeatureEnabled(ceAwsConnectorDTO)) {
+          awsBucketPolicyHelperService.updateBucketPolicy(
+              ceAwsConnectorDTO.getCrossAccountAccess().getCrossAccountRoleArn(), awsConfig.getDestinationBucket(),
+              awsConfig.getAccessKey(), awsConfig.getSecretKey());
+        }
+
         log.info("CEAwsConnectorDTO: {}", ceAwsConnectorDTO);
         List<CECloudAccount> awsAccounts = new ArrayList<>();
         try {
@@ -64,6 +77,16 @@ public class AwsEntityChangeEventServiceImpl implements AwsEntityChangeEventServ
         for (CECloudAccount account : awsAccounts) {
           log.info("Inserting CECloudAccount: {}", account);
           cloudAccountDao.create(account);
+        }
+        break;
+      case UPDATE_ACTION:
+        ceAwsConnectorDTO =
+            (CEAwsConnectorDTO) getConnectorConfigDTO(accountIdentifier, identifier).getConnectorConfig();
+        // Update Bucket Policy
+        if (isBillingFeatureEnabled(ceAwsConnectorDTO)) {
+          awsBucketPolicyHelperService.updateBucketPolicy(
+              ceAwsConnectorDTO.getCrossAccountAccess().getCrossAccountRoleArn(), awsConfig.getDestinationBucket(),
+              awsConfig.getAccessKey(), awsConfig.getSecretKey());
         }
         break;
       default:
@@ -86,5 +109,10 @@ public class AwsEntityChangeEventServiceImpl implements AwsEntityChangeEventServ
       throw new InvalidRequestException(
           format("Error while getting connector information : [%s]", connectorIdentifierRef));
     }
+  }
+
+  private boolean isBillingFeatureEnabled(CEAwsConnectorDTO ceAwsConnectorDTO) {
+    List<CEFeatures> featuresEnabled = ceAwsConnectorDTO.getFeaturesEnabled();
+    return featuresEnabled.contains(CEFeatures.BILLING);
   }
 }
