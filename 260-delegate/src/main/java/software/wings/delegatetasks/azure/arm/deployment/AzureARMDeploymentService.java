@@ -267,7 +267,7 @@ public class AzureARMDeploymentService {
     }
     String errorMessage = format(DEPLOYMENT_VALIDATION_FAILED_MSG_PATTERN, errorResponse.code(),
         errorResponse.message(), errorResponse.target());
-    parentErrorBuilder.append(errorMessage).append("\n");
+    parentErrorBuilder.append(errorMessage).append('\n');
 
     if (isNotEmpty(errorResponse.details())) {
       for (ErrorResponse error : errorResponse.details()) {

@@ -64,6 +64,4 @@ java_library(
 
 run_tests()
 
-run_analysis(
-    run_pmd = False,
-)
+run_analysis()

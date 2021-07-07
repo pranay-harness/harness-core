@@ -112,7 +112,7 @@ public class ARMDeploymentSteadyStateChecker {
         if (hasFailed(status) && statusMessage != null) {
           errorMessage
               .append(String.format("Resource - [%s], %nFailed due to - [%s]", resourceId, statusMessage.toString()))
-              .append("\n");
+              .append('\n');
         }
       }
     }
