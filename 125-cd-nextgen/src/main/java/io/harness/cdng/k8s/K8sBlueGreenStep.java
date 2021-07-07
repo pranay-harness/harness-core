@@ -124,38 +124,42 @@ public class K8sBlueGreenStep extends TaskChainExecutableWithRollbackAndRbac imp
     }
 
     K8sExecutionPassThroughData executionPassThroughData = (K8sExecutionPassThroughData) passThroughData;
+
+    K8sDeployResponse k8sTaskExecutionResponse;
     try {
-      K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
-      StepResponseBuilder responseBuilder = StepResponse.builder().unitProgressList(
-          k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
+      k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
 
-      if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-        return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, responseBuilder).build();
-      }
-
-      InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
-      K8sBGDeployResponse k8sBGDeployResponse = (K8sBGDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
-
-      K8sBlueGreenOutcome k8sBlueGreenOutcome = K8sBlueGreenOutcome.builder()
-                                                    .releaseName(k8sStepHelper.getReleaseName(infrastructure))
-                                                    .releaseNumber(k8sBGDeployResponse.getReleaseNumber())
-                                                    .primaryServiceName(k8sBGDeployResponse.getPrimaryServiceName())
-                                                    .stageServiceName(k8sBGDeployResponse.getStageServiceName())
-                                                    .stageColor(k8sBGDeployResponse.getStageColor())
-                                                    .primaryColor(k8sBGDeployResponse.getPrimaryColor())
-                                                    .build();
-      executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME,
-          k8sBlueGreenOutcome, StepOutcomeGroup.STAGE.name());
-
-      return responseBuilder.status(Status.SUCCEEDED)
-          .stepOutcome(StepResponse.StepOutcome.builder()
-                           .name(OutcomeExpressionConstants.OUTPUT)
-                           .outcome(k8sBlueGreenOutcome)
-                           .build())
-          .build();
     } catch (Exception e) {
       log.error("Error while processing K8s Task response: {}", e.getMessage(), e);
       return k8sStepHelper.handleTaskException(ambiance, executionPassThroughData, e);
     }
+
+    StepResponseBuilder responseBuilder =
+        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
+
+    if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+      return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, responseBuilder).build();
+    }
+
+    InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
+    K8sBGDeployResponse k8sBGDeployResponse = (K8sBGDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
+
+    K8sBlueGreenOutcome k8sBlueGreenOutcome = K8sBlueGreenOutcome.builder()
+                                                  .releaseName(k8sStepHelper.getReleaseName(infrastructure))
+                                                  .releaseNumber(k8sBGDeployResponse.getReleaseNumber())
+                                                  .primaryServiceName(k8sBGDeployResponse.getPrimaryServiceName())
+                                                  .stageServiceName(k8sBGDeployResponse.getStageServiceName())
+                                                  .stageColor(k8sBGDeployResponse.getStageColor())
+                                                  .primaryColor(k8sBGDeployResponse.getPrimaryColor())
+                                                  .build();
+    executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME,
+        k8sBlueGreenOutcome, StepOutcomeGroup.STAGE.name());
+
+    return responseBuilder.status(Status.SUCCEEDED)
+        .stepOutcome(StepResponse.StepOutcome.builder()
+                         .name(OutcomeExpressionConstants.OUTPUT)
+                         .outcome(k8sBlueGreenOutcome)
+                         .build())
+        .build();
   }
 }
