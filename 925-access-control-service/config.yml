@@ -27,6 +27,7 @@ logging:
   loggers:
     org.glassfish.jersey: INFO
     org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
+    io.debezium.embedded.EmbeddedEngine$EmbeddedConfig: "OFF"
   appenders:
     - type: console
       threshold: TRACE
