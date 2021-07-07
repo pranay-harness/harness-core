@@ -1,7 +1,12 @@
-load("@rules_java//java:defs.bzl", "java_binary", "java_library")
+load("@rules_java//java:defs.bzl", orginal_java_binary = "java_binary", orginal_java_library = "java_library")
+load("//project/flags:report_unused.bzl", "REPORT_UNUSED")
+load("//:tools/bazel/unused_dependencies.bzl", "report_unused")
 
-def harness_java_library(**kwargs):
-    java_library(**kwargs)
+def java_library(**kwargs):
+    orginal_java_library(**kwargs)
+
+    if REPORT_UNUSED:
+        report_unused(orginal_java_library, **kwargs)
 
 def harness_sign(jar):
     name = jar.rsplit("/", 1)[-1][:-4] + "_signed"
@@ -32,11 +37,14 @@ def harness_sign(jar):
 
     return name
 
-def harness_java_binary(**kwargs):
+def java_binary(**kwargs):
     name = kwargs.get("name")
 
-    sign = kwargs.pop("sign")
-    java_binary(**kwargs)
+    sign = kwargs.pop("sign", False)
+    orginal_java_binary(**kwargs)
 
     if sign:
         harness_sign(name + "_deploy.jar")
+
+    if REPORT_UNUSED:
+        report_unused(orginal_java_binary, **kwargs)
