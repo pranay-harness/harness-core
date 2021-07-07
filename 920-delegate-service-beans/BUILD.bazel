@@ -18,6 +18,7 @@ shared_dependencies = [
     "@maven//:javax_validation_validation_api",
     "@maven//:org_hibernate_hibernate_validator",
     "@maven//:org_mongodb_morphia_morphia",
+    "@maven//:com_hazelcast_hazelcast",
     "//:lombok",
 ]
 

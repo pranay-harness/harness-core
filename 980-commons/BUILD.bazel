@@ -54,7 +54,6 @@ java_library(
         "@maven//:com_google_errorprone_error_prone_annotations",
         "@maven//:com_google_http_client_google_http_client",
         "@maven//:com_google_inject_guice",
-        "@maven//:com_hazelcast_hazelcast",
         "@maven//:com_jayway_jsonpath_json_path",
         "@maven//:com_nimbusds_nimbus_jose_jwt",
         "@maven//:com_squareup_okhttp3_okhttp",
