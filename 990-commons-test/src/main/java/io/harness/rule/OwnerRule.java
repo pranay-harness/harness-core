@@ -159,6 +159,7 @@ public class OwnerRule implements TestRule {
   public static final String NANDAN = "nandan.chandrashekar";
   public static final String RIHAZ = "rihaz.zahir";
   public static final String PRABU = "prabu.rajendran";
+  public static final String MOUNIK = "mounik.vvss";
   public static final String PHOENIKX = "nikhil.ranjan";
   public static final String SHUBHAM = "shubham.agrawal";
   public static final String ABOSII = "alexandru.bosii";
@@ -297,6 +298,7 @@ public class OwnerRule implements TestRule {
           .put(VARDAN_BANSAL, defaultUserInfo(VARDAN_BANSAL).slack("UH8NYAAUU").team(DX).build())
           .put(NANDAN, defaultUserInfo(NANDAN).slack("UKMS5KCBS").team(CV).build())
           .put(RIHAZ, defaultUserInfo(RIHAZ).slack("USUP66518").team(CDP).build())
+          .put(MOUNIK, defaultUserInfo(MOUNIK).slack("U024PB2UQ86").team(CDC).build())
           .put(PRABU, defaultUserInfo(PRABU).slack("UTF8GHZEK").team(CDC).build())
           .put(PHOENIKX, defaultUserInfo(PHOENIKX).slack("URWLPPJ8Z").team(PL).build())
           .put(SHUBHAM, defaultUserInfo(SHUBHAM).slack("UTRFKPL57").team(CI).build())

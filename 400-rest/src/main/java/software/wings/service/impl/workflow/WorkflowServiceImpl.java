@@ -1756,8 +1756,41 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return rollbackProvisionerStep;
   }
 
+  public void checkPhaseStepAndStepNames(PhaseStep phaseStep) {
+    if (phaseStep == null) {
+      return;
+    }
+    if (phaseStep.getName().contains(".")) {
+      throw new InvalidRequestException("Phase Step name should not contain dots", USER_SRE);
+    }
+    if (phaseStep.getSteps() == null) {
+      return;
+    }
+    if (phaseStep.getSteps().stream().anyMatch(
+            graphNode -> graphNode != null && graphNode.getName() != null && graphNode.getName().contains("."))) {
+      throw new InvalidRequestException("Step name should not contain dots", USER);
+    }
+  }
+
+  public void checkWorkflowForStepNames(WorkflowPhase workflowPhase) {
+    if (workflowPhase == null || workflowPhase.getPhaseSteps() == null) {
+      return;
+    }
+    if (workflowPhase.getPhaseSteps().stream().anyMatch(
+            phaseStep -> phaseStep != null && phaseStep.getName().contains("."))) {
+      throw new InvalidRequestException("Phase Step name should not contain dots", USER_SRE);
+    }
+    if (workflowPhase.getPhaseSteps().stream().anyMatch(phaseStep
+            -> phaseStep != null && phaseStep.getSteps() != null
+                && phaseStep.getSteps().stream().anyMatch(
+                    graphNode -> graphNode != null && graphNode.getName().contains(".")))) {
+      throw new InvalidRequestException("Step name should not contain dots", USER_SRE);
+    }
+  }
+
   @Override
   public PhaseStep updatePreDeployment(String appId, String workflowId, PhaseStep phaseStep) {
+    checkPhaseStepAndStepNames(phaseStep);
     WorkflowServiceHelper.cleanupPhaseStepStrategies(phaseStep);
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("Workflow", workflow, USER);
@@ -1779,6 +1812,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public PhaseStep updatePostDeployment(String appId, String workflowId, PhaseStep phaseStep) {
+    checkPhaseStepAndStepNames(phaseStep);
     WorkflowServiceHelper.cleanupPhaseStepStrategies(phaseStep);
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("workflow", workflow, USER);
@@ -1964,13 +1998,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @ValidationGroups(Update.class)
   public WorkflowPhase updateWorkflowPhase(
       @NotEmpty String appId, @NotEmpty String workflowId, @Valid WorkflowPhase workflowPhase) {
+    checkWorkflowForStepNames(workflowPhase);
     if (workflowPhase.isRollback()
         || workflowPhase.getPhaseSteps().stream().anyMatch(
             phaseStep -> phaseStep.isRollback() || phaseStep.getSteps().stream().anyMatch(GraphNode::isRollback))) {
       // This might seem as user error, but since this is controlled from the our UI lets get alerted for it
       throw new InvalidRequestException("The direct workflow phase should not have rollback flag set!", USER_SRE);
     }
-
     WorkflowServiceHelper.cleanupPhaseStrategies(workflowPhase);
     Workflow workflow = readWorkflow(appId, workflowId);
     if (workflow == null) {
@@ -2098,13 +2132,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public WorkflowPhase updateWorkflowPhaseRollback(
       String appId, String workflowId, String phaseId, WorkflowPhase rollbackWorkflowPhase) {
+    checkWorkflowForStepNames(rollbackWorkflowPhase);
     if (!rollbackWorkflowPhase.isRollback()
         || rollbackWorkflowPhase.getPhaseSteps().stream().anyMatch(phaseStep
             -> !phaseStep.isRollback() || phaseStep.getSteps().stream().anyMatch(step -> !step.isRollback()))) {
       // This might seem as user error, but since this is controlled from the our UI lets get alerted for it
       throw new InvalidRequestException("The rollback workflow phase should have rollback flag set!", USER_SRE);
     }
-
     WorkflowServiceHelper.cleanupPhaseStrategies(rollbackWorkflowPhase);
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("workflow", workflow, USER);
