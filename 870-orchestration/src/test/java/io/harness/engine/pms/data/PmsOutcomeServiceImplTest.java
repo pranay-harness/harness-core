@@ -4,9 +4,16 @@ import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anySet;
+import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.engine.expressions.ExpressionEvaluatorProvider;
+import io.harness.expression.EngineExpressionEvaluator;
+import io.harness.expression.VariableResolverTracker;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.data.Outcome;
@@ -17,15 +24,21 @@ import io.harness.testlib.RealMongo;
 import io.harness.utils.AmbianceTestUtils;
 import io.harness.utils.DummyOrchestrationOutcome;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
 
 public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
-  @Inject private PmsOutcomeService pmsOutcomeService;
+  @Mock private ExpressionEvaluatorProvider expressionEvaluatorProvider;
+  @Inject @InjectMocks @Spy private PmsOutcomeServiceImpl pmsOutcomeService;
 
   @Test
   @RealMongo
@@ -165,5 +178,54 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
     assertThat(optionalOutcome).isNotNull();
     assertThat(optionalOutcome.getOutcome()).isNull();
     assertThat(optionalOutcome.isFound()).isEqualTo(false);
+  }
+
+  @Test
+  @RealMongo
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldResolveOptionalWithDots() {
+    Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
+    String outcomeName = "outcome.name";
+
+    String outcomeJson = RecastOrchestrationUtils.toJson(DummyOrchestrationOutcome.builder().test("test").build());
+    pmsOutcomeService.consume(ambiance, outcomeName, outcomeJson, null);
+
+    when(expressionEvaluatorProvider.get(
+             any(VariableResolverTracker.class), any(Ambiance.class), anySet(), anyBoolean()))
+        .thenReturn(prepareEngineExpressionEvaluator(
+            ImmutableMap.of(outcomeName, DummyOrchestrationOutcome.builder().test("test").build())));
+
+    // Resolve with producer id
+    OptionalOutcome optionalOutcome = pmsOutcomeService.resolveOptional(
+        ambiance, RefObjectUtils.getOutcomeRefObject(outcomeName, AmbianceUtils.obtainCurrentSetupId(ambiance), null));
+    assertThat(optionalOutcome).isNotNull();
+    assertThat(optionalOutcome.getOutcome()).isEqualTo(outcomeJson);
+    assertThat(optionalOutcome.isFound()).isTrue();
+
+    // Resolve with scope
+    optionalOutcome = pmsOutcomeService.resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(outcomeName));
+    assertThat(optionalOutcome).isNotNull();
+    assertThat(optionalOutcome.getOutcome()).isEqualTo(outcomeJson);
+    assertThat(optionalOutcome.isFound()).isTrue();
+  }
+
+  public static class SampleEngineExpressionEvaluator extends EngineExpressionEvaluator {
+    private final Map<String, Object> contextMap;
+
+    public SampleEngineExpressionEvaluator(Map<String, Object> contextMap) {
+      super(null);
+      this.contextMap = contextMap;
+    }
+
+    @Override
+    protected void initialize() {
+      super.initialize();
+      contextMap.forEach(this::addToContext);
+    }
+  }
+
+  private static EngineExpressionEvaluator prepareEngineExpressionEvaluator(Map<String, Object> contextMap) {
+    return new SampleEngineExpressionEvaluator(contextMap);
   }
 }

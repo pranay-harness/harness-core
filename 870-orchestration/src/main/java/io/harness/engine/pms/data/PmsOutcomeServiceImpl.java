@@ -184,7 +184,10 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     injector.injectMembers(evaluator);
     try {
       Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
-      return OptionalOutcome.builder().found(true).outcome(value == null ? null : ((Document) value).toJson()).build();
+      return OptionalOutcome.builder()
+          .found(true)
+          .outcome(value == null ? null : RecastOrchestrationUtils.toJson(value))
+          .build();
     } catch (OutcomeException ignore) {
       return OptionalOutcome.builder().found(false).build();
     }
