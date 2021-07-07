@@ -34,6 +34,7 @@ import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.tasks.ResponseData;
@@ -101,6 +102,8 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
   @Inject protected AwsStateHelper awsStateHelper;
   @Inject protected AwsAmiServiceStateHelper awsAmiServiceHelper;
   @Inject private SpotInstStateHelper spotinstStateHelper;
+  @Inject private FeatureFlagService featureFlagService;
+
   @Attributes(title = "Command")
   @DefaultValue(ASG_COMMAND_NAME)
   private static final String COMMAND_NAME = ASG_COMMAND_NAME;
@@ -334,6 +337,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployState extends State {
                                          .stream()
                                          .map(LbDetailsForAlbTrafficShift::getStageTargetGroupArn)
                                          .collect(toList()))
+        .amiInServiceHealthyStateFFEnabled(false)
         .build();
   }
 

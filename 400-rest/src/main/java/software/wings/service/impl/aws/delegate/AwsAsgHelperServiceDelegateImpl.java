@@ -155,6 +155,30 @@ public class AwsAsgHelperServiceDelegateImpl
   }
 
   @Override
+  public List<com.amazonaws.services.autoscaling.model.Instance> listAutoScalingGroupModelInstances(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, boolean isInstanceSync) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails, isInstanceSync);
+      DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest =
+          new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig);
+      tracker.trackASGCall("Describe ASGs");
+      DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult =
+          amazonAutoScalingClient.describeAutoScalingGroups(describeAutoScalingGroupsRequest);
+      if (describeAutoScalingGroupsResult.getAutoScalingGroups().isEmpty()) {
+        return emptyList();
+      }
+      AutoScalingGroup autoScalingGroup = describeAutoScalingGroupsResult.getAutoScalingGroups().get(0);
+      return autoScalingGroup.getInstances();
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return emptyList();
+  }
+
+  @Override
   public List<Instance> listAutoScalingGroupInstances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String autoScalingGroupName, boolean isInstanceSync) {
     List<String> instanceIds =
@@ -385,7 +409,8 @@ public class AwsAsgHelperServiceDelegateImpl
   @Override
   public void setAutoScalingGroupCapacityAndWaitForInstancesReadyState(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, Integer desiredCapacity,
-      ExecutionLogCallback logCallback, Integer autoScalingSteadyStateTimeout) {
+      ExecutionLogCallback logCallback, Integer autoScalingSteadyStateTimeout,
+      boolean amiInServiceHealthyStateFFEnabled) {
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
     AmazonAutoScalingClient amazonAutoScalingClient = null;
     try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
@@ -398,8 +423,13 @@ public class AwsAsgHelperServiceDelegateImpl
                                                      .withAutoScalingGroupName(autoScalingGroupName)
                                                      .withDesiredCapacity(desiredCapacity));
       logCallback.saveExecutionLog("Successfully set desired capacity");
-      waitForAllInstancesToBeReady(awsConfig, encryptionDetails, region, autoScalingGroupName, desiredCapacity,
-          logCallback, autoScalingSteadyStateTimeout);
+      if (amiInServiceHealthyStateFFEnabled) {
+        waitForAllInstancesToBeInServiceHealthyState(awsConfig, encryptionDetails, region, autoScalingGroupName,
+            desiredCapacity, logCallback, autoScalingSteadyStateTimeout);
+      } else {
+        waitForAllInstancesToBeReady(awsConfig, encryptionDetails, region, autoScalingGroupName, desiredCapacity,
+            logCallback, autoScalingSteadyStateTimeout);
+      }
     } catch (AmazonServiceException amazonServiceException) {
       describeAutoScalingGroupActivities(
           amazonAutoScalingClient, autoScalingGroupName, new HashSet<>(), logCallback, true);
@@ -595,6 +625,39 @@ public class AwsAsgHelperServiceDelegateImpl
     logCallback.saveExecutionLog("AutoScaling group reached steady state");
   }
 
+  private void waitForAllInstancesToBeInServiceHealthyState(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, Integer desiredCount,
+      ExecutionLogCallback logCallback, Integer autoScalingSteadyStateTimeout) {
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(autoScalingSteadyStateTimeout), () -> {
+        Set<String> completedActivities = new HashSet<>();
+        while (true) {
+          List<com.amazonaws.services.autoscaling.model.Instance> instances =
+              listAutoScalingGroupModelInstances(awsConfig, encryptionDetails, region, autoScalingGroupName, false);
+          describeAutoScalingGroupActivities(closeableAmazonAutoScalingClient.getClient(), autoScalingGroupName,
+              completedActivities, logCallback, false);
+          if (instances.size() == desiredCount
+              && allInstanceInServiceHealthyStateWithRetry(
+                  awsConfig, encryptionDetails, region, instances, logCallback)) {
+            return true;
+          }
+          sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
+        }
+      });
+    } catch (UncheckedTimeoutException e) {
+      logCallback.saveExecutionLog("Request timeout. Auto Scaling Group couldn't reach steady state", ERROR);
+      throw new WingsException(INIT_TIMEOUT)
+          .addParam("message", "Timed out waiting for Auto Scaling Group to be in InService and Healthy state");
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new InvalidRequestException(
+          "Error while waiting for all instances to be in InService and Healthy state", e);
+    }
+    logCallback.saveExecutionLog("Auto Scaling Group reached steady state");
+  }
+
   @VisibleForTesting
   boolean allInstanceInReadyStateWithRetry(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, List<String> instanceIds, ExecutionLogCallback logCallback) throws InterruptedRuntimeException {
@@ -621,6 +684,37 @@ public class AwsAsgHelperServiceDelegateImpl
           + Joiner.on(",").withKeyValueSeparator("=").join(instanceStateCountMap));
     }
     return allRunning;
+  }
+
+  @VisibleForTesting
+  boolean allInstanceInServiceHealthyStateWithRetry(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, List<com.amazonaws.services.autoscaling.model.Instance> instances,
+      ExecutionLogCallback logCallback) throws InterruptedRuntimeException {
+    try {
+      return allInstanceInServiceHealthyState(awsConfig, encryptionDetails, region, instances, logCallback);
+    } catch (Exception ex) {
+      log.warn(
+          "Exception while waiting for instances to be in InService and Healthy state. Retrying once after 15 seconds");
+    }
+    sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
+    return allInstanceInServiceHealthyState(awsConfig, encryptionDetails, region, instances, logCallback);
+  }
+
+  @VisibleForTesting
+  boolean allInstanceInServiceHealthyState(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, List<com.amazonaws.services.autoscaling.model.Instance> instances,
+      ExecutionLogCallback logCallback) {
+    boolean allInServiceHealthy = instances.isEmpty()
+        || instances.stream().allMatch(instance
+            -> instance.getLifecycleState() != null && instance.getLifecycleState().equals("InService")
+                && instance.getHealthStatus() != null && instance.getHealthStatus().equals("Healthy"));
+    if (!allInServiceHealthy) {
+      Map<String, Long> instanceStateCountMap =
+          instances.stream().collect(groupingBy(instance -> instance.getLifecycleState(), counting()));
+      logCallback.saveExecutionLog("Waiting for instances to be in InService and Healthy state. "
+          + Joiner.on(",").withKeyValueSeparator("=").join(instanceStateCountMap));
+    }
+    return allInServiceHealthy;
   }
 
   @Override

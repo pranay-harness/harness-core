@@ -225,8 +225,9 @@ public class AwsAmiHelperServiceDelegateImpl
               awsConfig, encryptionDetails, region, oldAsgName, logCallback);
           awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(
               awsConfig, encryptionDetails, region, oldAsgName, 0, logCallback);
-          awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
-              awsConfig, encryptionDetails, region, oldAsgName, 0, logCallback, timeout);
+          awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
+              encryptionDetails, region, oldAsgName, 0, logCallback, timeout,
+              request.isAmiInServiceHealthyStateFFEnabled());
         }
 
         awsAsgHelperServiceDelegate.addUpdateTagAutoScalingGroup(
@@ -271,8 +272,9 @@ public class AwsAmiHelperServiceDelegateImpl
             awsConfig, encryptionDetails, region, oldAsgName, logCallback);
         awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(
             awsConfig, encryptionDetails, region, oldAsgName, desiredCount, logCallback);
-        awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
-            awsConfig, encryptionDetails, region, oldAsgName, desiredCount, logCallback, timeout);
+        awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
+            encryptionDetails, region, oldAsgName, desiredCount, logCallback, timeout,
+            request.isAmiInServiceHealthyStateFFEnabled());
         awsAsgHelperServiceDelegate.setMinInstancesForAsg(
             awsConfig, encryptionDetails, region, oldAsgName, minCount, logCallback);
 
@@ -341,8 +343,9 @@ public class AwsAmiHelperServiceDelegateImpl
             awsConfig, encryptionDetails, region, newAsgName, logCallback);
         awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(
             awsConfig, encryptionDetails, region, newAsgName, 0, logCallback);
-        awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
-            awsConfig, encryptionDetails, region, newAsgName, 0, logCallback, timeout);
+        awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
+            encryptionDetails, region, newAsgName, 0, logCallback, timeout,
+            request.isAmiInServiceHealthyStateFFEnabled());
         logCallback.saveExecutionLog(format("Asg: [%s] being deleted after shutting down to 0 instances", newAsgName));
         awsAsgHelperServiceDelegate.deleteAutoScalingGroups(awsConfig, encryptionDetails, region,
             singletonList(
@@ -381,7 +384,8 @@ public class AwsAmiHelperServiceDelegateImpl
           request.getNewAsgFinalDesiredCount(), request.getAsgDesiredCounts(), logCallback, request.isResizeNewFirst(),
           request.getAutoScalingSteadyStateTimeout(), request.getMaxInstances(), request.getMinInstances(),
           request.getPreDeploymentData(), request.getInfraMappingTargetGroupArns(), request.getInfraMappingClassisLbs(),
-          request.isRollback(), request.getBaseScalingPolicyJSONs(), request.getDesiredInstances());
+          request.isRollback(), request.getBaseScalingPolicyJSONs(), request.getDesiredInstances(),
+          request.isAmiInServiceHealthyStateFFEnabled());
 
       List<Instance> allInstancesOfNewAsg = awsAsgHelperServiceDelegate.listAutoScalingGroupInstances(
           awsConfig, encryptionDetails, request.getRegion(), request.getNewAutoScalingGroupName(), false);
@@ -518,8 +522,9 @@ public class AwsAmiHelperServiceDelegateImpl
 
     ExecutionLogCallback steadyWaitLogCallBack = getLogCallBack(
         request.getAccountId(), request.getAppId(), request.getActivityId(), UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
-    awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
-        awsConfig, encryptionDetails, region, oldAsgName, desiredCount, steadyWaitLogCallBack, timeout);
+    awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails,
+        region, oldAsgName, desiredCount, steadyWaitLogCallBack, timeout,
+        request.isAmiInServiceHealthyStateFFEnabled());
     steadyWaitLogCallBack.saveExecutionLog(
         format("All instances of AutoScaling Group: [%s] are up & running.", oldAsgName), INFO,
         CommandExecutionStatus.SUCCESS);
@@ -584,8 +589,8 @@ public class AwsAmiHelperServiceDelegateImpl
 
     ExecutionLogCallback steadyWaitLogCallBack = getLogCallBack(
         request.getAccountId(), request.getAppId(), request.getActivityId(), DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT);
-    awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
-        awsConfig, encryptionDetails, region, asgName, 0, steadyWaitLogCallBack, timeout);
+    awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails,
+        region, asgName, 0, steadyWaitLogCallBack, timeout, request.isAmiInServiceHealthyStateFFEnabled());
     steadyWaitLogCallBack.saveExecutionLog(
         format("All instances of AutoScaling Group: [%s] are terminated successfully.", asgName), INFO);
 
@@ -659,6 +664,7 @@ public class AwsAmiHelperServiceDelegateImpl
         .infraMappingTargetGroupArns(targetGroups)
         .blueGreen(true)
         .userData(trafficShiftAlbSetupRequest.getUserData())
+        .amiInServiceHealthyStateFFEnabled(trafficShiftAlbSetupRequest.isAmiInServiceHealthyStateFFEnabled())
         .build();
   }
 
@@ -686,6 +692,7 @@ public class AwsAmiHelperServiceDelegateImpl
         .infraMappingClassisLbs(Collections.emptyList())
         .infraMappingTargetGroupArns(request.getInfraMappingTargetGroupArns())
         .existingInstanceIds(Collections.emptyList())
+        .amiInServiceHealthyStateFFEnabled(request.isAmiInServiceHealthyStateFFEnabled())
         .build();
   }
 
@@ -784,7 +791,8 @@ public class AwsAmiHelperServiceDelegateImpl
   private void resizeNewAsgAndWait(String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, ExecutionLogCallback executionLogCallback,
       Integer autoScalingSteadyStateTimeout, int maxInstances, int minInstances, List<String> targetGroupsArns,
-      List<String> classicLBs, boolean rollback, List<String> baseScalingPolicyJSONs, int desiredInstances) {
+      List<String> classicLBs, boolean rollback, List<String> baseScalingPolicyJSONs, int desiredInstances,
+      boolean amiInServiceHealthyStateFFEnabled) {
     if (isNotBlank(newAutoScalingGroupName)) {
       awsAsgHelperServiceDelegate.clearAllScalingPoliciesForAsg(
           awsConfig, encryptionDetails, region, newAutoScalingGroupName, executionLogCallback);
@@ -793,8 +801,8 @@ public class AwsAmiHelperServiceDelegateImpl
       awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(
           awsConfig, encryptionDetails, region, newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback);
       awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails,
-          region, newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback,
-          autoScalingSteadyStateTimeout);
+          region, newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback, autoScalingSteadyStateTimeout,
+          amiInServiceHealthyStateFFEnabled);
       if (newAsgFinalDesiredCount >= minInstances) {
         AutoScalingGroup newAutoScalingGroup = awsAsgHelperServiceDelegate.getAutoScalingGroup(
             awsConfig, encryptionDetails, region, newAutoScalingGroupName);
@@ -842,7 +850,8 @@ public class AwsAmiHelperServiceDelegateImpl
   private void resizeOldAsgsAndWait(String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       List<AwsAmiResizeData> oldAsgsDesiredCounts, ExecutionLogCallback executionLogCallback,
       Integer autoScalingSteadyStateTimeout, AwsAmiPreDeploymentData preDeploymentData, List<String> targetGroupsArns,
-      List<String> classicLBs, boolean rollback, int newAsgFinalDesiredCount, int desiredInstances) {
+      List<String> classicLBs, boolean rollback, int newAsgFinalDesiredCount, int desiredInstances,
+      boolean amiInServiceHealthyStateFFEnabled) {
     if (isNotEmpty(oldAsgsDesiredCounts)) {
       oldAsgsDesiredCounts.forEach(count -> {
         awsAsgHelperServiceDelegate.clearAllScalingPoliciesForAsg(
@@ -853,7 +862,7 @@ public class AwsAmiHelperServiceDelegateImpl
             awsConfig, encryptionDetails, region, count.getAsgName(), count.getDesiredCount(), executionLogCallback);
         awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
             encryptionDetails, region, count.getAsgName(), count.getDesiredCount(), executionLogCallback,
-            autoScalingSteadyStateTimeout);
+            autoScalingSteadyStateTimeout, amiInServiceHealthyStateFFEnabled);
 
         if (rollback) {
           if (preDeploymentData.hasAsgReachedPreDeploymentCount(count.getDesiredCount())) {
@@ -901,24 +910,25 @@ public class AwsAmiHelperServiceDelegateImpl
       String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, List<AwsAmiResizeData> oldAsgsDesiredCounts,
       ExecutionLogCallback executionLogCallback, boolean resizeNewFirst, Integer autoScalingSteadyStateTimeout,
       int maxInstances, int minInstances, AwsAmiPreDeploymentData preDeploymentData, List<String> targetGroupsArns,
-      List<String> classicLBs, boolean rollback, List<String> baseScalingPolicyJSONs, int desiredInstances) {
+      List<String> classicLBs, boolean rollback, List<String> baseScalingPolicyJSONs, int desiredInstances,
+      boolean amiInServiceHealthyStateFFEnabled) {
     if (isBlank(newAutoScalingGroupName) && isEmpty(oldAsgsDesiredCounts)) {
       throw new InvalidRequestException("At least one AutoScaling Group must be present");
     }
     if (resizeNewFirst) {
       resizeNewAsgAndWait(region, awsConfig, encryptionDetails, newAutoScalingGroupName, newAsgFinalDesiredCount,
           executionLogCallback, autoScalingSteadyStateTimeout, maxInstances, minInstances, targetGroupsArns, classicLBs,
-          rollback, baseScalingPolicyJSONs, desiredInstances);
+          rollback, baseScalingPolicyJSONs, desiredInstances, amiInServiceHealthyStateFFEnabled);
       resizeOldAsgsAndWait(region, awsConfig, encryptionDetails, oldAsgsDesiredCounts, executionLogCallback,
           autoScalingSteadyStateTimeout, preDeploymentData, targetGroupsArns, classicLBs, rollback,
-          newAsgFinalDesiredCount, desiredInstances);
+          newAsgFinalDesiredCount, desiredInstances, amiInServiceHealthyStateFFEnabled);
     } else {
       resizeOldAsgsAndWait(region, awsConfig, encryptionDetails, oldAsgsDesiredCounts, executionLogCallback,
           autoScalingSteadyStateTimeout, preDeploymentData, targetGroupsArns, classicLBs, rollback,
-          newAsgFinalDesiredCount, desiredInstances);
+          newAsgFinalDesiredCount, desiredInstances, amiInServiceHealthyStateFFEnabled);
       resizeNewAsgAndWait(region, awsConfig, encryptionDetails, newAutoScalingGroupName, newAsgFinalDesiredCount,
           executionLogCallback, autoScalingSteadyStateTimeout, maxInstances, minInstances, targetGroupsArns, classicLBs,
-          rollback, baseScalingPolicyJSONs, desiredInstances);
+          rollback, baseScalingPolicyJSONs, desiredInstances, amiInServiceHealthyStateFFEnabled);
     }
   }
 
@@ -1158,7 +1168,7 @@ public class AwsAmiHelperServiceDelegateImpl
         autoScalingGroup.getAutoScalingGroupName(), 0, executionLogCallback);
     awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails,
         request.getRegion(), autoScalingGroup.getAutoScalingGroupName(), 0, executionLogCallback,
-        request.getAutoScalingSteadyStateTimeout());
+        request.getAutoScalingSteadyStateTimeout(), request.isAmiInServiceHealthyStateFFEnabled());
   }
 
   @VisibleForTesting
