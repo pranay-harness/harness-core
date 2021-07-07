@@ -36,4 +36,7 @@ public interface ApiKeyService {
 
   long deleteAllByParentIdentifier(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       ApiKeyType apiKeyType, String parentIdentifier);
+
+  void validateParentIdentifier(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      ApiKeyType apiKeyType, String parentIdentifier);
 }
