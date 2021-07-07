@@ -30,11 +30,13 @@ public class AwsAmiRequest extends AwsRequest {
 
   @NotNull private AwsAmiRequestType requestType;
   @NotNull private String region;
+  private boolean amiInServiceHealthyStateFFEnabled;
 
-  public AwsAmiRequest(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, AwsAmiRequestType requestType, String region) {
+  public AwsAmiRequest(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, AwsAmiRequestType requestType,
+      String region, boolean amiInServiceHealthyStateFFEnabled) {
     super(awsConfig, encryptionDetails);
     this.requestType = requestType;
     this.region = region;
+    this.amiInServiceHealthyStateFFEnabled = amiInServiceHealthyStateFFEnabled;
   }
 }

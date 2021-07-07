@@ -401,7 +401,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends CategoryTest {
     try {
       HTimeLimiterMocker.mockCallInterruptible(mockTimeLimiter).thenReturn(true);
       awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
-          AwsConfig.builder().build(), emptyList(), "us-east-1", "asgName", 1, mockCallback, 10);
+          AwsConfig.builder().build(), emptyList(), "us-east-1", "asgName", 1, mockCallback, 10, false);
       verify(mockClient).setDesiredCapacity(any());
       HTimeLimiterMocker.verifyTimeLimiterCalled(mockTimeLimiter);
     } catch (Exception ex) {

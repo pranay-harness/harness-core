@@ -65,6 +65,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -156,6 +157,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private AwsAmiServiceStateHelper awsAmiServiceStateHelper;
   @Mock private StateExecutionService stateExecutionService;
+  @Mock private FeatureFlagService mockFeatureFlagService;
 
   @InjectMocks private AwsAmiServiceDeployState state = new AwsAmiServiceDeployState("stateName");
 
@@ -207,6 +209,7 @@ public class AwsAmiServiceDeployStateTest extends WingsBaseTest {
     doReturn(application).when(mockParams).getApp();
     Service service = Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build();
     doReturn(service).when(mockServiceResourceService).getWithDetails(anyString(), anyString());
+    doReturn(false).when(mockFeatureFlagService).isEnabled(any(), any());
     doReturn(
         Arrays.asList(
             InstanceInfoVariables.builder()

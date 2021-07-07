@@ -24,6 +24,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.tasks.ResponseData;
@@ -71,6 +72,7 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
   @Inject protected DelegateService delegateService;
   @Inject private ActivityService activityService;
   @Inject private LogService logService;
+  @Inject private FeatureFlagService featureFlagService;
 
   public AwsAmiTrafficShiftAlbSwitchRoutesState(String name) {
     super(name, StateType.ASG_AMI_ALB_SHIFT_SWITCH_ROUTES.name());
@@ -205,6 +207,7 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
         .awsConfig(awsAmiTrafficShiftAlbData.getAwsConfig())
         .encryptionDetails(awsAmiTrafficShiftAlbData.getAwsEncryptedDataDetails())
         .region(awsAmiTrafficShiftAlbData.getRegion())
+        .amiInServiceHealthyStateFFEnabled(false)
         .build();
   }
 
