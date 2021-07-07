@@ -1,11 +1,11 @@
 package io.harness.serializer.morphia;
 
 import io.harness.entities.DeploymentSummary;
-import io.harness.entities.InstanceSyncPerpetualTaskInfo;
 import io.harness.entities.SyncStatus;
 import io.harness.entities.infrastructureMapping.DirectKubernetesInfrastructureMapping;
 import io.harness.entities.infrastructureMapping.InfrastructureMapping;
 import io.harness.entities.instance.Instance;
+import io.harness.entities.instancesyncperpetualtaskinfo.InstanceSyncPerpetualTaskInfo;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 
