@@ -8,6 +8,7 @@ import io.harness.serializer.kryo.ManagerKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationStepsKryoRegistrar;
 import io.harness.serializer.kryo.ProjectAndOrgKryoRegistrar;
 import io.harness.serializer.kryo.SecretManagerClientKryoRegistrar;
+import io.harness.serializer.kryo.WatcherBeansKryoRegister;
 import io.harness.serializer.morphia.CommonEntitiesMorphiaRegister;
 import io.harness.serializer.morphia.ConnectorMorphiaClassesRegistrar;
 import io.harness.serializer.morphia.EventMorphiaRegistrar;
@@ -38,6 +39,7 @@ public class EventsServerRegistrars {
           // temporary:
           .add(DelegateAgentKryoRegister.class)
           .add(DelegateAgentBeansKryoRegister.class)
+          .add(WatcherBeansKryoRegister.class)
           .add(CvNextGenCommonsBeansKryoRegistrar.class)
           .build();
 

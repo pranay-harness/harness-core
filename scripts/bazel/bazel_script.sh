@@ -106,6 +106,7 @@ BAZEL_MODULES="\
   //920-delegate-service-beans:module \
   //920-ng-signup:module \
   //925-access-control-service:module \
+  //925-watcher-beans:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
   //940-feature-flag:module \
@@ -371,6 +372,7 @@ build_bazel_module 910-delegate-service-driver
 build_bazel_module 910-delegate-task-grpc-service
 build_bazel_module 920-delegate-agent-beans
 build_bazel_module 920-delegate-service-beans
+build_bazel_module 925-watcher-beans
 build_bazel_module 930-delegate-tasks
 build_bazel_module 930-ng-core-clients
 build_bazel_module 940-feature-flag
