@@ -1113,6 +1113,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
       case ValuesYamlFromHelmRepo:
         validateAppManifestForValuesInHelmRepo(applicationManifest);
+        break;
 
       case HelmChartRepo:
         validateHelmChartRepoAppManifest(applicationManifest);
