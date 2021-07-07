@@ -7,18 +7,9 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.beans.TaskGroup.GCB;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
-import com.google.common.util.concurrent.ServiceManager;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
-import io.harness.delegate.DelegateTaskGrpc;
 import io.harness.delegate.beans.TaskData;
-import io.harness.grpc.DelegateServiceClassicGrpcClient;
-import io.harness.grpc.DelegateServiceClassicGrpcImpl;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -31,7 +22,6 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.command.GcbTaskParams;
 import software.wings.beans.command.GcbTaskParams.GcbTaskType;
 import software.wings.jersey.JsonViews;
-import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,6 +30,11 @@ import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
+import com.google.common.util.concurrent.ServiceManager;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
 import io.dropwizard.Application;
 import io.dropwizard.bundles.assets.AssetsConfiguration;
 import io.dropwizard.bundles.assets.ConfiguredAssetsBundle;
@@ -50,27 +45,11 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import io.harness.annotations.dev.TargetModule;
-import io.harness.beans.DelegateTask;
-import io.harness.delegate.beans.TaskData;
-import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
-import io.harness.threading.ExecutorModule;
-import io.harness.threading.ThreadPool;
-import lombok.extern.slf4j.Slf4j;
-import software.wings.app.InspectCommand;
-import software.wings.app.MainConfiguration;
-import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
-import software.wings.app.WingsApplication;
-import software.wings.beans.GcpConfig;
-import software.wings.beans.command.GcbTaskParams;
-import software.wings.beans.command.GcbTaskParams.GcbTaskType;
-import software.wings.jersey.JsonViews;
-import software.wings.service.intfc.DelegateTaskServiceClassic;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TargetModule(_420_DELEGATE_SERVICE)
@@ -100,44 +79,44 @@ public class DelegateServiceApplication extends Application<DelegateServiceConfi
     //    registerAtmosphereStreams(environment, injector);
     //    initializegRPCServer(injector);
 
-    Thread thread = new Thread(() -> {
-      try {
-        Thread.sleep(120000L);
-        DelegateTaskServiceClassic delegateTaskServiceClassic = injector.getInstance(DelegateTaskServiceClassic.class);
-        delegateTaskServiceClassic.executeTask(
-            DelegateTask.builder()
-                .accountId("kmpySmUISimoRrJL6NL73w")
-                .data(TaskData.builder()
-                          .async(true)
-                          .taskType(GCB.name())
-                          .parameters(new Object[] {GcbTaskParams.builder()
-                                                        .gcpConfig(new GcpConfig())
-                                                        .encryptedDataDetails(null)
-                                                        .type(GcbTaskType.FETCH_TRIGGERS)
-                                                        .build()})
-                          .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                          .build())
-                .build());
-        /*DelegateTask task = DelegateTask.builder()
-                .accountId("kmpySmUISimoRrJL6NL73w")
-                .data(TaskData.builder()
-                        .async(true)
-                        .taskType(GCB.name())
-                        .parameters(new Object[] {GcbTaskParams.builder()
-                                .gcpConfig(new GcpConfig())
-                                .encryptedDataDetails(null)
-                                .type(GcbTaskType.FETCH_TRIGGERS)
-                                .build()})
-                        .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                        .build())
-                .build();
-        DelegateService delegateService = injector.getInstance(DelegateService.class);
-        delegateService.queueTask(task);*/
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    });
-    thread.start();
+    //    Thread thread = new Thread(() -> {
+    //      try {
+    //        Thread.sleep(120000L);
+    //        DelegateTaskServiceClassic delegateTaskServiceClassic =
+    //        injector.getInstance(DelegateTaskServiceClassic.class); delegateTaskServiceClassic.executeTask(
+    //            DelegateTask.builder()
+    //                .accountId("kmpySmUISimoRrJL6NL73w")
+    //                .data(TaskData.builder()
+    //                          .async(true)
+    //                          .taskType(GCB.name())
+    //                          .parameters(new Object[] {GcbTaskParams.builder()
+    //                                                        .gcpConfig(new GcpConfig())
+    //                                                        .encryptedDataDetails(null)
+    //                                                        .type(GcbTaskType.FETCH_TRIGGERS)
+    //                                                        .build()})
+    //                          .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+    //                          .build())
+    //                .build());
+    /*DelegateTask task = DelegateTask.builder()
+            .accountId("kmpySmUISimoRrJL6NL73w")
+            .data(TaskData.builder()
+                    .async(true)
+                    .taskType(GCB.name())
+                    .parameters(new Object[] {GcbTaskParams.builder()
+                            .gcpConfig(new GcpConfig())
+                            .encryptedDataDetails(null)
+                            .type(GcbTaskType.FETCH_TRIGGERS)
+                            .build()})
+                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                    .build())
+            .build();
+    DelegateService delegateService = injector.getInstance(DelegateService.class);
+    delegateService.queueTask(task);*/
+    //      } catch (Exception e) {
+    //        e.printStackTrace();
+    //      }
+    //    });
+    //    thread.start();
     log.info("Starting Delegate Service App done");
   }
 

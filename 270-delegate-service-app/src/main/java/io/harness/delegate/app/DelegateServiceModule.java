@@ -42,7 +42,7 @@ public class DelegateServiceModule extends AbstractModule {
     //      }
     //    });
 
-    install(new DelegateServiceGrpcServerModule(config));
+    //    install(new DelegateServiceGrpcServerModule(config));
     install(new DelegateServiceClassicGrpcServerModule(config));
   }
 }

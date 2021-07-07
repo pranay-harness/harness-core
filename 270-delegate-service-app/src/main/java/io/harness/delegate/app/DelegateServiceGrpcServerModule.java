@@ -63,7 +63,7 @@ public class DelegateServiceGrpcServerModule extends AbstractModule {
 
     MapBinder<String, ServiceInfo> stringServiceInfoMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ServiceInfo.class);
-    stringServiceInfoMapBinder.addBinding(DelegateServiceGrpc.SERVICE_NAME)
+    stringServiceInfoMapBinder.addBinding("delegate-svc-mgmt")
         .toInstance(ServiceInfo.builder()
                         .id("delegate-service-management")
                         .secret(delegateServiceConfig.getDelegateServiceSecret())

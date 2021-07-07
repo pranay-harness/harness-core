@@ -248,7 +248,7 @@ grpcServerConfig:
 
 #Currently this should be pointing to the managers (71 - rest) grpc server from the grpcServerConfig property until delegate service becomes standalone service
 grpcDelegateServiceClientConfig:
-  target: localhost:9880
+  target: localhost:9890
   authority: localhost
 
 grpcClientConfig:
@@ -257,7 +257,7 @@ grpcClientConfig:
 
 #This will be used only by OnPrem delegates for grpc communication
 grpcOnpremDelegateClientConfig:
-  target: localhost:9880
+  target: localhost:9890
   authority: localhost
 
 mongo:
