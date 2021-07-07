@@ -25,6 +25,7 @@ import static software.wings.beans.appmanifest.StoreType.OC_TEMPLATES;
 import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_MANIFEST_NAME;
 import static software.wings.utils.WingsTestConstants.BUCKET_NAME;
 import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -85,6 +86,7 @@ import software.wings.service.intfc.yaml.YamlPushService;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -833,16 +835,21 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     ApplicationManifest applicationManifest1 = getHelmChartApplicationManifest();
     applicationManifest1.setAppId(APP_ID);
     applicationManifest1.setPollForChanges(true);
+    applicationManifest1.setServiceId(SERVICE_ID + 1);
+    applicationManifest1.setName(APP_MANIFEST_NAME + 1);
     persistence.save(applicationManifest1);
 
     ApplicationManifest applicationManifest2 = getHelmChartApplicationManifest();
     applicationManifest2.setAppId(APP_ID);
     applicationManifest2.setPollForChanges(true);
-    applicationManifest2.setServiceId("SERVICE_ID_1");
+    applicationManifest2.setServiceId(SERVICE_ID + 2);
+    applicationManifest2.setName(APP_MANIFEST_NAME + 2);
     persistence.save(applicationManifest2);
 
     when(serviceResourceService.getServiceNames(anyString(), anySet()))
         .thenReturn(Collections.singletonMap(SERVICE_ID, SERVICE_NAME));
+    when(serviceResourceService.getIdsWithArtifactFromManifest(APP_ID))
+        .thenReturn(Arrays.asList(SERVICE_ID + 2, SERVICE_ID + 1));
   }
 
   @Test
@@ -856,10 +863,11 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     PageResponse<ApplicationManifest> pageResponse =
         applicationManifestServiceImpl.listPollingEnabled(pageRequest, APP_ID);
     List<ApplicationManifest> applicationManifestList = pageResponse.getResponse();
-    assertThat(applicationManifestList).isNotNull().hasSize(1);
+    assertThat(applicationManifestList).isNotNull().hasSize(2);
     ApplicationManifest savedAppManifest = applicationManifestList.get(0);
     assertThat(savedAppManifest.getPollForChanges()).isTrue();
-    assertThat(savedAppManifest.getServiceName()).isNotNull().isEqualTo(SERVICE_NAME);
+    assertThat(applicationManifestList.stream().map(ApplicationManifest::getName))
+        .containsExactlyInAnyOrder(APP_MANIFEST_NAME + 1, APP_MANIFEST_NAME + 2);
   }
 
   @Test

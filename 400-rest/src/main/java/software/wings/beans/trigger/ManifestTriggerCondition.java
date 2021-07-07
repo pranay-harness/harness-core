@@ -20,16 +20,19 @@ public class ManifestTriggerCondition extends TriggerCondition {
   private String serviceId;
   @Transient private String serviceName;
   private String versionRegex;
+  private String appManifestName;
 
   public ManifestTriggerCondition() {
     super(TriggerConditionType.NEW_MANIFEST);
   }
 
-  public ManifestTriggerCondition(String appManifestId, String serviceId, String serviceName, String versionRegex) {
+  public ManifestTriggerCondition(
+      String appManifestId, String serviceId, String serviceName, String versionRegex, String appManifestName) {
     this();
     this.appManifestId = appManifestId;
     this.serviceId = serviceId;
     this.serviceName = serviceName;
     this.versionRegex = versionRegex;
+    this.appManifestName = appManifestName;
   }
 }

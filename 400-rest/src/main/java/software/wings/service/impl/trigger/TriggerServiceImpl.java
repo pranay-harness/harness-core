@@ -90,6 +90,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.HelmChart;
+import software.wings.beans.appmanifest.ManifestSummary;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.deployment.DeploymentMetadata;
@@ -675,7 +676,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public WorkflowExecution triggerExecutionByWebHook(String appId, String webHookToken,
-      Map<String, ArtifactSummary> serviceArtifactMapping, Map<String, String> serviceManifestMapping,
+      Map<String, ArtifactSummary> serviceArtifactMapping, Map<String, ManifestSummary> serviceManifestMapping,
       TriggerExecution triggerExecution, Map<String, String> parameters) {
     List<Artifact> artifacts = new ArrayList<>();
     List<HelmChart> helmCharts = new ArrayList<>();
@@ -1711,6 +1712,7 @@ public class TriggerServiceImpl implements TriggerService {
     ApplicationManifest applicationManifest =
         applicationManifestService.getById(appId, manifestTriggerCondition.getAppManifestId());
     notNullCheck("Application Manifest must exist for the given service", applicationManifest, USER);
+    manifestTriggerCondition.setAppManifestName(applicationManifest.getName());
     if (!featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, applicationManifest.getAccountId())) {
       throw new InvalidRequestException("Invalid trigger condition type", USER);
     }
@@ -1861,6 +1863,9 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private void setAppManifestIdInSelection(Trigger trigger, ManifestSelection manifestSelection) {
+    if (isNotEmpty(manifestSelection.getAppManifestId())) {
+      return;
+    }
     ApplicationManifest applicationManifest =
         applicationManifestService.getManifestByServiceId(trigger.getAppId(), manifestSelection.getServiceId());
     notNullCheck("Application Manifest does not exist", applicationManifest, USER);
@@ -2277,7 +2282,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   private void addArtifactsAndHelmChartsFromVersionsOfWebHook(Trigger trigger,
       Map<String, ArtifactSummary> serviceArtifactMapping, List<Artifact> artifacts, List<HelmChart> helmCharts,
-      Map<String, String> serviceManifestMapping) {
+      Map<String, ManifestSummary> serviceManifestMapping) {
     Map<String, String> services;
     if (ORCHESTRATION == trigger.getWorkflowType()) {
       services = resolveWorkflowServices(trigger);
@@ -2292,7 +2297,7 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private void collectHelmCharts(
-      Trigger trigger, Map<String, String> serviceManifestMapping, List<HelmChart> helmCharts) {
+      Trigger trigger, Map<String, ManifestSummary> serviceManifestMapping, List<HelmChart> helmCharts) {
     if (isEmpty(serviceManifestMapping)) {
       return;
     }
@@ -2306,7 +2311,11 @@ public class TriggerServiceImpl implements TriggerService {
         .stream()
         .filter(manifestSelection -> ManifestSelectionType.WEBHOOK_VARIABLE.equals(manifestSelection.getType()))
         .forEach(manifestSelection -> {
-          String versionNo = serviceManifestMapping.get(manifestSelection.getServiceId());
+          if (!serviceManifestMapping.containsKey(manifestSelection.getServiceId())) {
+            throw new InvalidRequestException(
+                "Service " + manifestSelection.getServiceId() + " requires manifests", USER);
+          }
+          String versionNo = serviceManifestMapping.get(manifestSelection.getServiceId()).getVersionNo();
           if (isBlank(versionNo)) {
             throw new InvalidRequestException("Version Number is Mandatory", USER);
           }
@@ -2316,7 +2325,7 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private List<HelmChart> collectHelmChartsForTemplatizedServices(
-      String appId, List<ManifestSelection> manifestSelections, Map<String, String> serviceManifestMapping) {
+      String appId, List<ManifestSelection> manifestSelections, Map<String, ManifestSummary> serviceManifestMapping) {
     List<String> serviceIdsInManifestSelections = isEmpty(manifestSelections)
         ? new ArrayList<>()
         : manifestSelections.stream().map(ManifestSelection::getServiceId).collect(toList());
@@ -2331,15 +2340,28 @@ public class TriggerServiceImpl implements TriggerService {
 
   @NotNull
   private HelmChart getHelmChartByVersionForService(
-      String appId, Map<String, String> serviceManifestMapping, String serviceId) {
-    ApplicationManifest applicationManifest = applicationManifestService.getManifestByServiceId(appId, serviceId);
+      String appId, Map<String, ManifestSummary> serviceManifestMapping, String serviceId) {
+    String appManifestName = serviceManifestMapping.get(serviceId).getAppManifestName();
+    ApplicationManifest applicationManifest;
+    if (isEmpty(appManifestName)) {
+      List<ApplicationManifest> applicationManifests = applicationManifestService.listAppManifests(appId, serviceId);
+      if (isEmpty(applicationManifests)) {
+        throw new InvalidRequestException("Application manifest not present for the service in payload: " + serviceId);
+      }
+      if (applicationManifests.size() > 1) {
+        throw new InvalidRequestException("Application Manifest name has to be provided for service " + serviceId);
+      }
+      applicationManifest = applicationManifests.get(0);
+    } else {
+      applicationManifest = applicationManifestService.getAppManifestByName(appId, null, serviceId, appManifestName);
+    }
     notNullCheck(
         "Application manifest not present for the service in payload: " + serviceId, applicationManifest, USER);
     if (!Boolean.TRUE.equals(applicationManifest.getPollForChanges())) {
       throw new InvalidRequestException("Polling not enabled for service: " + serviceId);
     }
-    HelmChart helmChart = helmChartService.getManifestByVersionNumber(
-        applicationManifest.getAccountId(), applicationManifest.getUuid(), serviceManifestMapping.get(serviceId));
+    HelmChart helmChart = helmChartService.getManifestByVersionNumber(applicationManifest.getAccountId(),
+        applicationManifest.getUuid(), serviceManifestMapping.get(serviceId).getVersionNo());
     notNullCheck("Helm chart with given version number doesn't exist: " + serviceManifestMapping.get(serviceId)
             + "for service" + serviceId,
         helmChart, USER);

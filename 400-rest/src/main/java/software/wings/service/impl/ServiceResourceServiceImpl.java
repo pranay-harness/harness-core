@@ -3211,4 +3211,19 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service service = get(appId, serviceId, false);
     return service != null && service.isK8sV2();
   }
+
+  @Override
+  public List<String> getIdsWithArtifactFromManifest(String appId) {
+    List<Service> services = wingsPersistence.createQuery(Service.class)
+                                 .filter(ServiceKeys.appId, appId)
+                                 .filter(ServiceKeys.artifactFromManifest, true)
+                                 .project(ServiceKeys.uuid, true)
+                                 .asList();
+
+    if (isEmpty(services)) {
+      return new ArrayList<>();
+    }
+
+    return services.stream().map(Base::getUuid).collect(Collectors.toList());
+  }
 }
