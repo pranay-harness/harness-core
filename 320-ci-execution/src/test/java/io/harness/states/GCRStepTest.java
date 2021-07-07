@@ -77,4 +77,54 @@ public class GCRStepTest extends CIExecutionTestBase {
                     "https://console.cloud.google.com/gcr/images/harness/US/harness/ci-automation@sha256:49f756463ad9dcfb9b6ade54d7d6f15476e7214f46a65b4b0c55d46845b12f70/details")
                 .build());
   }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldHandleArtifactWithGlobalURL() {
+    StepElementParameters stepElementParameters =
+        StepElementParameters.builder()
+            .identifier("stepId")
+            .spec(GCRStepInfo.builder()
+                      .host(ParameterField.createValueField("gcr.io"))
+                      .projectID(ParameterField.createValueField("harness"))
+                      .imageName(ParameterField.createValueField("ci-unittest"))
+                      .tags(ParameterField.createValueField(Arrays.asList("1.0", "latest")))
+                      .build())
+            .build();
+    ArtifactMetadata artifactMetadata =
+        ArtifactMetadata.builder()
+            .type(ArtifactMetadataType.DOCKER_ARTIFACT_METADATA)
+            .spec(DockerArtifactMetadata.builder()
+                      .registryType("GCR")
+                      .registryUrl("gcr.io")
+                      .dockerArtifact(
+                          DockerArtifactDescriptor.builder()
+                              .imageName("harness/ci-automation:1.0")
+                              .digest("sha256:49f756463ad9dcfb9b6ade54d7d6f15476e7214f46a65b4b0c55d46845b12f70")
+                              .build())
+                      .dockerArtifact(
+                          DockerArtifactDescriptor.builder()
+                              .imageName("harness/ci-automation:latest")
+                              .digest("sha256:49f756463ad9dcfb9b6ade54d7d6f15476e7214f46a65b4b0c55d46845b12f70")
+                              .build())
+                      .build())
+            .build();
+    StepArtifacts stepArtifacts = gcrStep.handleArtifact(artifactMetadata, stepElementParameters);
+    assertThat(stepArtifacts).isNotNull();
+    assertThat(stepArtifacts.getPublishedImageArtifacts())
+        .contains(
+            PublishedImageArtifact.builder()
+                .imageName("harness/ci-automation")
+                .tag("1.0")
+                .url(
+                    "https://console.cloud.google.com/gcr/images/harness/GLOBAL/harness/ci-automation@sha256:49f756463ad9dcfb9b6ade54d7d6f15476e7214f46a65b4b0c55d46845b12f70/details")
+                .build(),
+            PublishedImageArtifact.builder()
+                .imageName("harness/ci-automation")
+                .tag("latest")
+                .url(
+                    "https://console.cloud.google.com/gcr/images/harness/GLOBAL/harness/ci-automation@sha256:49f756463ad9dcfb9b6ade54d7d6f15476e7214f46a65b4b0c55d46845b12f70/details")
+                .build());
+  }
 }
