@@ -163,7 +163,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       log.debug("Fetching done for host {} for stateExecutionId {} for metrics {}", node,
           dataCollectionInfo.getStateExecutionId(), metricNames);
 
-      if (TimeSeriesDataRecord.shouldLogForBuildDotCom(
+      if (TimeSeriesDataRecord.shouldLogDetailedInfoForDebugging(
               dataCollectionInfo.getNewRelicConfig().getAccountId(), dataCollectionInfo.getServiceId())) {
         log.info("for {} retrieved records {} ", dataCollectionInfo.getStateExecutionId(), records);
       }
