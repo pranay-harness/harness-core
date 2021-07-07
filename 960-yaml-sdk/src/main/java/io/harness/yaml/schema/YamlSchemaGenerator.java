@@ -10,13 +10,13 @@ import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NAMESPACE
 import static io.harness.yaml.schema.beans.SchemaConstants.ENUM_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.INTEGER_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ITEMS_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.MIN_LENGTH_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.NUMBER_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.OBJECT_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ONE_OF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.PATTERN_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.REF_NODE;
-import static io.harness.yaml.schema.beans.SchemaConstants.RUNTIME_INPUT_PATTERN;
 import static io.harness.yaml.schema.beans.SchemaConstants.STRING_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.TYPE_NODE;
 
@@ -26,8 +26,10 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.reflection.CodeUtils;
 import io.harness.yaml.schema.beans.FieldEnumData;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
+import io.harness.yaml.schema.beans.FieldTypesMetadata;
 import io.harness.yaml.schema.beans.OneOfMapping;
 import io.harness.yaml.schema.beans.SchemaConstants;
+import io.harness.yaml.schema.beans.StringFieldTypeMetadata;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SupportedPossibleFieldTypes;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
@@ -275,6 +277,7 @@ public class YamlSchemaGenerator {
       final String fieldName = fieldPossibleTypes.getFieldName();
       final SupportedPossibleFieldTypes defaultFieldType = fieldPossibleTypes.getDefaultFieldType();
       final ObjectNode fieldNode = (ObjectNode) propertiesNode.get(fieldName);
+      final FieldTypesMetadata fieldTypesMetadata = fieldPossibleTypes.getFieldTypesMetadata();
       List<ObjectNode> fieldOneOfNodes = new ArrayList<>();
       if (fieldNode != null) {
         final ObjectNode currentFieldNodeValue = fieldNode.deepCopy();
@@ -285,6 +288,7 @@ public class YamlSchemaGenerator {
           if (nodeFromType == null) {
             return;
           }
+          addOtherPropertiesInNode(type, fieldTypesMetadata, nodeFromType);
           if (type.equals(defaultFieldType)) {
             fieldOneOfNodes.add(0, nodeFromType);
           } else {
@@ -301,6 +305,27 @@ public class YamlSchemaGenerator {
         fieldNode.putArray(ONE_OF_NODE).addAll(fieldOneOfNodes);
       }
     });
+  }
+
+  private void addOtherPropertiesInNode(
+      SupportedPossibleFieldTypes type, FieldTypesMetadata fieldTypesMetadata, ObjectNode nodeFromType) {
+    switch (type) {
+      case string:
+        if (fieldTypesMetadata != null) {
+          final StringFieldTypeMetadata stringFieldTypeMetadata = (StringFieldTypeMetadata) fieldTypesMetadata;
+          final int minLength = stringFieldTypeMetadata.getMinLength();
+          final String pattern = stringFieldTypeMetadata.getPattern();
+          if (minLength > 0) {
+            nodeFromType.put(MIN_LENGTH_NODE, minLength);
+          }
+          if (isNotEmpty(pattern)) {
+            nodeFromType.put(PATTERN_NODE, pattern);
+          }
+        }
+        break;
+      default:
+        break;
+    }
   }
 
   private ObjectNode getPropertiesNodeFromDefinitionNode(ObjectNode value) {
@@ -338,10 +363,6 @@ public class YamlSchemaGenerator {
         return objectNode;
       case list:
         objectNode.put(TYPE_NODE, ARRAY_TYPE_NODE);
-        return objectNode;
-      case runtime:
-        objectNode.put(TYPE_NODE, STRING_TYPE_NODE);
-        objectNode.put(PATTERN_NODE, RUNTIME_INPUT_PATTERN);
         return objectNode;
       case none:
         return null;

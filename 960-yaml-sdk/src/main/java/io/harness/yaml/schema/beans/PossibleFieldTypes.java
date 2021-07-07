@@ -23,4 +23,6 @@ public class PossibleFieldTypes {
    * default field type if it is in any of fieldTypes.
    */
   @Nullable SupportedPossibleFieldTypes defaultFieldType;
+
+  FieldTypesMetadata fieldTypesMetadata;
 }
