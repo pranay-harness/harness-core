@@ -1130,7 +1130,7 @@ public class WebHookServiceImplTest extends WingsBaseTest {
 
     Response response = webHookService.execute(token, request, httpHeaders);
     assertThat(response).isNotNull();
-    assertThat(response.getStatus()).isEqualTo(400);
+    assertThat(response.getStatus()).isEqualTo(401);
     assertThat(response.getEntity()).isInstanceOf(WebHookResponse.class);
     WebHookResponse webHookResponse = (WebHookResponse) response.getEntity();
     assertThat(webHookResponse.getError()).isEqualTo("Api Key cannot be empty");

@@ -182,7 +182,7 @@ public class WebHookServiceImpl implements WebHookService {
           && Boolean.TRUE.equals(app.getIsManualTriggerAuthorized())
           && isEmpty(httpHeaders.getHeaderString(API_KEY_HEADER))) {
         WebHookResponse webHookResponse = WebHookResponse.builder().error("Api Key cannot be empty").build();
-        return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
+        return prepareResponse(webHookResponse, Response.Status.UNAUTHORIZED);
       }
 
       return executeTriggerWebRequest(trigger.getAppId(), token, app, webHookRequest);
