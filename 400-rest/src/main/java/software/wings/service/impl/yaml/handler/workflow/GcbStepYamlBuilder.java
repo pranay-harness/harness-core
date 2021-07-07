@@ -1,10 +1,13 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.expression.ExpressionEvaluator;
@@ -27,16 +30,24 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import lombok.var;
 
-@TargetModule(HarnessModule._870_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @Data
 @Slf4j
-public class GcbStepCompletionYamlValidator implements StepCompletionYamlValidator {
+@OwnedBy(CDC)
+public class GcbStepYamlBuilder extends StepYamlBuilder {
   @Inject private SettingsService settingsService;
 
   private static final String SWEEPING_OUTPUT_SCOPE = "sweepingOutputScope";
   private static final String SWEEPING_OUTPUT_NAME = "sweepingOutputName";
   private static final String TEMPLATE_EXPRESSIONS = "templateExpressions";
+  private static final String GCB_OPTIONS = "gcbOptions";
+  private static final String GCP_CONFIG_ID = "gcpConfigId";
+  private static final String GCP_CONFIG_NAME = "gcpConfigName";
+  private static final String REPOSITORY_SPEC = "repositorySpec";
+  private static final String GIT_CONFIG_ID = "gitConfigId";
+  private static final String GIT_CONFIG_NAME = "gitConfigName";
 
   @Override
   public void validate(ChangeContext<StepYaml> changeContext) {
@@ -52,6 +63,74 @@ public class GcbStepCompletionYamlValidator implements StepCompletionYamlValidat
       validateTimeout(stepYaml);
       validateSweepingOutput(stepYaml);
     }
+  }
+
+  @Override
+  public void convertIdToNameForKnownTypes(String name, Object objectValue, Map<String, Object> outputProperties,
+      String appId, Map<String, Object> inputProperties) {
+    if (GCB_OPTIONS.equals(name)) {
+      var gcbOptions = (Map<String, Object>) objectValue;
+      String gcpConfigId = (String) gcbOptions.get(GCP_CONFIG_ID);
+      if (gcpConfigId != null) {
+        SettingAttribute gcpSettingAttribute = settingsService.get(gcpConfigId);
+        notNullCheck("GCP connector is null for the given gcpConfigId:" + gcpConfigId, gcpSettingAttribute, USER);
+        gcbOptions.put(GCP_CONFIG_NAME, gcpSettingAttribute.getName());
+      } else {
+        gcbOptions.put(GCP_CONFIG_NAME, null);
+      }
+      if (gcbOptions.containsKey(REPOSITORY_SPEC)) {
+        var repositorySpec = (Map<String, Object>) gcbOptions.get(REPOSITORY_SPEC);
+        String gitConfigId = (String) repositorySpec.get(GIT_CONFIG_ID);
+        if (gitConfigId != null) {
+          SettingAttribute gitSettingAttribute = settingsService.get(gitConfigId);
+          notNullCheck("Git connector is null for the given gitConfigId:" + gitConfigId, gitSettingAttribute, USER);
+          repositorySpec.put(GIT_CONFIG_NAME, gitSettingAttribute.getName());
+        } else {
+          repositorySpec.put(GIT_CONFIG_NAME, null);
+        }
+        repositorySpec.remove(GIT_CONFIG_ID);
+      }
+      gcbOptions.remove(GCP_CONFIG_ID);
+      outputProperties.put(GCB_OPTIONS, gcbOptions);
+      return;
+    }
+
+    outputProperties.put(name, objectValue);
+  }
+
+  @Override
+  public void convertNameToIdForKnownTypes(String name, Object objectValue, Map<String, Object> outputProperties,
+      String appId, String accountId, Map<String, Object> inputProperties) {
+    if (GCB_OPTIONS.equals(name)) {
+      var gcbOptions = (Map<String, Object>) objectValue;
+      if (gcbOptions.containsKey(GCP_CONFIG_NAME)) {
+        String gcpConfigName = (String) gcbOptions.get(GCP_CONFIG_NAME);
+        if (gcpConfigName != null) {
+          SettingAttribute gcpSettingAttribute = settingsService.getSettingAttributeByName(accountId, gcpConfigName);
+          notNullCheck("GCP connector is null for the given gcpConfigName:" + gcpConfigName, gcpSettingAttribute, USER);
+          gcbOptions.put(GCP_CONFIG_ID, gcpSettingAttribute.getUuid());
+        } else {
+          gcbOptions.put(GCP_CONFIG_ID, null);
+        }
+        gcbOptions.remove(GCP_CONFIG_NAME);
+      }
+      if (gcbOptions.containsKey(REPOSITORY_SPEC)) {
+        var repositorySpec = (Map<String, Object>) gcbOptions.get(REPOSITORY_SPEC);
+        String gitConfigName = (String) repositorySpec.get(GIT_CONFIG_NAME);
+        if (gitConfigName != null) {
+          SettingAttribute gitSettingAttribute = settingsService.getSettingAttributeByName(accountId, gitConfigName);
+          notNullCheck("Git connector is null for the given gitConfigName:" + gitConfigName, gitSettingAttribute, USER);
+          repositorySpec.put(GIT_CONFIG_ID, gitSettingAttribute.getUuid());
+        } else {
+          repositorySpec.put(GIT_CONFIG_ID, null);
+        }
+        repositorySpec.remove(GIT_CONFIG_NAME);
+      }
+      outputProperties.put(GCB_OPTIONS, gcbOptions);
+      return;
+    }
+
+    outputProperties.put(name, objectValue);
   }
 
   private void validateSweepingOutput(StepYaml stepYaml) {

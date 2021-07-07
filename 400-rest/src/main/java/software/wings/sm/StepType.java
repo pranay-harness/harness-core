@@ -122,12 +122,17 @@ import software.wings.beans.PhaseStepType;
 import software.wings.common.ProvisionerConstants;
 import software.wings.common.WorkflowConstants;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
-import software.wings.service.impl.yaml.handler.workflow.ApprovalStepCompletionYamlValidator;
-import software.wings.service.impl.yaml.handler.workflow.EmailStepYamlValidator;
-import software.wings.service.impl.yaml.handler.workflow.GcbStepCompletionYamlValidator;
-import software.wings.service.impl.yaml.handler.workflow.ServiceNowStepCompletionYamlValidator;
-import software.wings.service.impl.yaml.handler.workflow.ShellScriptStepYamlValidator;
-import software.wings.service.impl.yaml.handler.workflow.StepCompletionYamlValidator;
+import software.wings.service.impl.yaml.handler.workflow.ApprovalStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.BambooStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.CommandStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.EmailStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.GcbStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.JenkinsStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.JiraStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.ResourceConstraintStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.ServiceNowStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.ShellScriptStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.StepYamlBuilder;
 import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
@@ -658,15 +663,14 @@ public enum StepType {
 
   // Issue Tracking
   JIRA_CREATE_UPDATE(JiraCreateUpdate.class, JIRA, asList(ISSUE_TRACKING), asList(PhaseStepType.values()),
-      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), JiraStepYamlBuilder.class),
   SERVICENOW_CREATE_UPDATE(ServiceNowCreateUpdateState.class, SERVICENOW, asList(ISSUE_TRACKING),
       asList(PhaseStepType.values()), asList(DeploymentType.values()),
-      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), ServiceNowStepCompletionYamlValidator.class),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), ServiceNowStepYamlBuilder.class),
 
   // Notifications
   EMAIL(EmailState.class, WorkflowServiceHelper.EMAIL, asList(NOTIFICATION), asList(PhaseStepType.values()),
-      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK),
-      EmailStepYamlValidator.class),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), EmailStepYamlBuilder.class),
 
   // Flow Control
   BARRIER(BarrierState.class, WorkflowServiceHelper.BARRIER, asList(WorkflowStepType.FLOW_CONTROL),
@@ -674,24 +678,24 @@ public enum StepType {
       asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
   RESOURCE_CONSTRAINT(ResourceConstraintState.class, WorkflowServiceHelper.RESOURCE_CONSTRAINT,
       asList(WorkflowStepType.FLOW_CONTROL), asList(PhaseStepType.values()), asList(DeploymentType.values()),
-      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), ResourceConstraintStepYamlBuilder.class),
   APPROVAL(ApprovalState.class, APPROVAL_NAME, asList(WorkflowStepType.FLOW_CONTROL), asList(PhaseStepType.values()),
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK),
-      ApprovalStepCompletionYamlValidator.class),
+      ApprovalStepYamlBuilder.class),
 
   // CI System
   JENKINS(JenkinsState.class, WorkflowServiceHelper.JENKINS, asList(CI_SYSTEM), asList(PhaseStepType.values()),
-      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
-  GCB(GcbState.class, WorkflowServiceHelper.GCB, singletonList(CI_SYSTEM), asList(PhaseStepType.values()),
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK),
-      GcbStepCompletionYamlValidator.class),
+      JenkinsStepYamlBuilder.class),
+  GCB(GcbState.class, WorkflowServiceHelper.GCB, singletonList(CI_SYSTEM), asList(PhaseStepType.values()),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), GcbStepYamlBuilder.class),
   BAMBOO(BambooState.class, WorkflowServiceHelper.BAMBOO, asList(CI_SYSTEM), asList(PhaseStepType.values()),
-      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), BambooStepYamlBuilder.class),
 
   // Utility
   SHELL_SCRIPT(ShellScriptState.class, WorkflowServiceHelper.SHELL_SCRIPT, asList(UTILITY),
       asList(PhaseStepType.values()), asList(DeploymentType.values()),
-      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), ShellScriptStepYamlValidator.class),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), ShellScriptStepYamlBuilder.class),
   HTTP(HttpState.class, WorkflowServiceHelper.HTTP, asList(UTILITY), asList(PhaseStepType.values()),
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), true),
   NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, WorkflowServiceHelper.NEW_RELIC_DEPLOYMENT_MARKER,
@@ -707,7 +711,8 @@ public enum StepType {
 
   // Command
   COMMAND(CommandState.class, COMMAND_NAME, asList(WorkflowStepType.SERVICE_COMMAND), asList(PhaseStepType.values()),
-      Lists.newArrayList(DeploymentType.SSH, DeploymentType.WINRM), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK));
+      Lists.newArrayList(DeploymentType.SSH, DeploymentType.WINRM), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK),
+      CommandStepYamlBuilder.class);
 
   private final Class<? extends State> stateClass;
   private List<String> phaseStepTypes = new ArrayList<>();
@@ -716,7 +721,7 @@ public enum StepType {
   private List<OrchestrationWorkflowType> orchestrationWorkflowTypes = emptyList();
   private List<WorkflowStepType> workflowStepTypes = emptyList();
   private List<PhaseType> phaseTypes = emptyList();
-  private Class<? extends StepCompletionYamlValidator> yamlValidatorClass;
+  private Class<? extends StepYamlBuilder> yamlValidatorClass;
   private boolean supportsTimeoutFailure;
 
   StepType(Class<? extends State> stateClass, String displayName, List<WorkflowStepType> workflowStepTypes,
@@ -743,7 +748,7 @@ public enum StepType {
 
   StepType(Class<? extends State> stateClass, String displayName, List<WorkflowStepType> workflowStepTypes,
       List<PhaseStepType> phaseStepTypes, List<DeploymentType> deploymentTypes, List<PhaseType> phaseTypes,
-      Class<? extends StepCompletionYamlValidator> yamlValidatorClass) {
+      Class<? extends StepYamlBuilder> yamlValidatorClass) {
     this.stateClass = stateClass;
     this.displayName = displayName;
     this.deploymentTypes = deploymentTypes;
@@ -799,7 +804,7 @@ public enum StepType {
     return phaseTypes;
   }
 
-  public Class<? extends StepCompletionYamlValidator> getYamlValidatorClass() {
+  public Class<? extends StepYamlBuilder> getYamlValidatorClass() {
     return yamlValidatorClass;
   }
 

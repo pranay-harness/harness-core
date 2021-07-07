@@ -26,6 +26,8 @@ public interface ResourceConstraintService extends OwnedByAccount {
 
   @ValidationGroups(Update.class) void update(@Valid ResourceConstraint resourceConstraint);
 
+  ResourceConstraint getById(String id);
+
   ResourceConstraint getByName(@NotNull String accountId, @NotNull String resourceConstraintName);
 
   ResourceConstraint ensureResourceConstraintForConcurrency(String accountId, String name);

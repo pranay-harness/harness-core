@@ -9,6 +9,8 @@ import static software.wings.service.impl.servicenow.ServiceNowServiceImpl.Servi
 import static org.junit.runners.Parameterized.Parameters;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -32,19 +34,21 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-@TargetModule(HarnessModule._870_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @RunWith(Parameterized.class)
-public class ServiceNowStepCompletionYamlValidatorTest {
+@OwnedBy(HarnessTeam.CDC)
+public class ServiceNowStepYamlBuilderValidateTest {
+  private static final String CONNECTOR_NAME = "connectorName";
   private final ChangeContext<StepYaml> changeContext;
 
   @Rule public final ExpectedException exception = ExpectedException.none();
 
-  private final StepCompletionYamlValidator validator;
+  private final StepYamlBuilder validator;
 
-  public ServiceNowStepCompletionYamlValidatorTest(
+  public ServiceNowStepYamlBuilderValidateTest(
       ChangeContext<StepYaml> changeContext, String message, Class<? extends Exception> expectedException) {
     this.changeContext = changeContext;
-    this.validator = new ServiceNowStepCompletionYamlValidator();
+    this.validator = new ServiceNowStepYamlBuilder();
     if (expectedException != null) {
       exception.expect(expectedException);
       exception.expectMessage(message);
@@ -62,46 +66,46 @@ public class ServiceNowStepCompletionYamlValidatorTest {
 
     ServiceNowCreateUpdateParams createParamsWithoutTicketType = new ServiceNowCreateUpdateParams();
     createParamsWithoutTicketType.setAction(ServiceNowAction.CREATE);
-    createParamsWithoutTicketType.setSnowConnectorId("connectorId");
+    createParamsWithoutTicketType.setSnowConnectorName(CONNECTOR_NAME);
 
     ServiceNowCreateUpdateParams createParamsWithoutFields = new ServiceNowCreateUpdateParams();
     createParamsWithoutFields.setAction(ServiceNowAction.CREATE);
-    createParamsWithoutFields.setSnowConnectorId("connectorId");
+    createParamsWithoutFields.setSnowConnectorName(CONNECTOR_NAME);
     createParamsWithoutFields.setTicketType(INCIDENT.getDisplayName());
 
     ServiceNowCreateUpdateParams createParamsWithoutDescription = new ServiceNowCreateUpdateParams();
     createParamsWithoutDescription.setAction(ServiceNowAction.CREATE);
-    createParamsWithoutDescription.setSnowConnectorId("connectorId");
+    createParamsWithoutDescription.setSnowConnectorName(CONNECTOR_NAME);
     createParamsWithoutDescription.setTicketType(INCIDENT.getDisplayName());
     createParamsWithoutDescription.setFields(Collections.singletonMap(ServiceNowFields.SHORT_DESCRIPTION, "value"));
 
     ServiceNowCreateUpdateParams createParamsWithoutShortDescription = new ServiceNowCreateUpdateParams();
     createParamsWithoutShortDescription.setAction(ServiceNowAction.CREATE);
-    createParamsWithoutShortDescription.setSnowConnectorId("connectorId");
+    createParamsWithoutShortDescription.setSnowConnectorName(CONNECTOR_NAME);
     createParamsWithoutShortDescription.setTicketType(INCIDENT.getDisplayName());
     createParamsWithoutShortDescription.setFields(Collections.singletonMap(ServiceNowFields.DESCRIPTION, "value"));
 
     ServiceNowCreateUpdateParams updateParamsWithoutTicketType = new ServiceNowCreateUpdateParams();
     updateParamsWithoutTicketType.setAction(ServiceNowAction.UPDATE);
-    updateParamsWithoutTicketType.setSnowConnectorId("connectorId");
+    updateParamsWithoutTicketType.setSnowConnectorName(CONNECTOR_NAME);
 
     ServiceNowCreateUpdateParams updateParamsWithoutIssueNumber = new ServiceNowCreateUpdateParams();
     updateParamsWithoutIssueNumber.setAction(ServiceNowAction.UPDATE);
-    updateParamsWithoutIssueNumber.setSnowConnectorId("connectorId");
+    updateParamsWithoutIssueNumber.setSnowConnectorName(CONNECTOR_NAME);
     updateParamsWithoutIssueNumber.setTicketType(INCIDENT.getDisplayName());
 
     ServiceNowCreateUpdateParams importParamsWithoutTableName = new ServiceNowCreateUpdateParams();
     importParamsWithoutTableName.setAction(ServiceNowAction.IMPORT_SET);
-    importParamsWithoutTableName.setSnowConnectorId("connectorId");
+    importParamsWithoutTableName.setSnowConnectorName(CONNECTOR_NAME);
 
     ServiceNowCreateUpdateParams importParamsWithoutJsonBody = new ServiceNowCreateUpdateParams();
     importParamsWithoutJsonBody.setAction(ServiceNowAction.IMPORT_SET);
-    importParamsWithoutJsonBody.setSnowConnectorId("connectorId");
+    importParamsWithoutJsonBody.setSnowConnectorName(CONNECTOR_NAME);
     importParamsWithoutJsonBody.setImportSetTableName("tableName");
 
     ServiceNowCreateUpdateParams updateParamsWithoutChangeRequestMultipleTrue = new ServiceNowCreateUpdateParams();
     updateParamsWithoutChangeRequestMultipleTrue.setAction(ServiceNowAction.UPDATE);
-    updateParamsWithoutChangeRequestMultipleTrue.setSnowConnectorId("connectorId");
+    updateParamsWithoutChangeRequestMultipleTrue.setSnowConnectorName(CONNECTOR_NAME);
     updateParamsWithoutChangeRequestMultipleTrue.setTicketType(CHANGE_TASK.getDisplayName());
     updateParamsWithoutChangeRequestMultipleTrue.setFields(Collections.singletonMap(CHANGE_REQUEST_NUMBER, ""));
     updateParamsWithoutChangeRequestMultipleTrue.setUpdateMultiple(true);
@@ -113,7 +117,7 @@ public class ServiceNowStepCompletionYamlValidatorTest {
                 String.format("\"action\" could not be null or empty. Please, provide valid value: %s",
                     Arrays.toString(ServiceNowAction.values())),
                 IncompleteStateException.class},
-            {buildChangeContextWith(paramsWithoutConnectorId), "\"snowConnectorId\" could not be empty or null.",
+            {buildChangeContextWith(paramsWithoutConnectorId), "\"snowConnectorName\" could not be empty or null.",
                 IncompleteStateException.class},
             {buildChangeContextWith(createParamsWithoutTicketType), "\"ticketType\" could not be empty or null.",
                 IncompleteStateException.class},

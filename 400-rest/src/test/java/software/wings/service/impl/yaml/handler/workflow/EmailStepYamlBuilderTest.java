@@ -5,6 +5,8 @@ import static io.harness.rule.OwnerRule.MILOS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -23,15 +25,16 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
-@TargetModule(HarnessModule._870_YAML_BEANS)
-public class EmailStepYamlValidatorTest extends WingsBaseTest {
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@OwnedBy(HarnessTeam.CDC)
+public class EmailStepYamlBuilderTest extends WingsBaseTest {
   private static final String TO_ADDRESS = "toAddress";
   private static final String CC_ADDRESS = "ccAddress";
   private static final String SUBJECT = "subject";
   private static final String BODY = "body";
   private static final String IGNORE_DELIVERY_FAILURE = "ignoreDeliveryFailure";
 
-  @InjectMocks @Inject private EmailStepYamlValidator validator;
+  @InjectMocks @Inject private EmailStepYamlBuilder validator;
 
   @Test
   @Owner(developers = MILOS)

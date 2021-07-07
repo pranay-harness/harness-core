@@ -23,6 +23,7 @@ public class WebhookEventTriggerConditionYaml extends TriggerConditionYaml {
   private List<String> releaseActions = new ArrayList<>();
   private String branchRegex;
   private String gitConnectorId;
+  private String gitConnectorName;
   private String repoName;
   private String branchName;
   private List<String> filePaths;
@@ -35,8 +36,8 @@ public class WebhookEventTriggerConditionYaml extends TriggerConditionYaml {
 
   @lombok.Builder
   WebhookEventTriggerConditionYaml(String repositoryType, String branchRegex, List<String> eventType,
-      List<String> action, List<String> releaseActions, String gitConnectorId, String repoName, String branchName,
-      List<String> filePaths, Boolean checkFileContentChanged, String webhookSecret) {
+      List<String> action, List<String> releaseActions, String gitConnectorId, String gitConnectorName, String repoName,
+      String branchName, List<String> filePaths, Boolean checkFileContentChanged, String webhookSecret) {
     super.setType("WEBHOOK");
     this.eventType = eventType;
     this.action = action;
@@ -44,6 +45,7 @@ public class WebhookEventTriggerConditionYaml extends TriggerConditionYaml {
     this.repositoryType = repositoryType;
     this.branchRegex = branchRegex;
     this.gitConnectorId = gitConnectorId;
+    this.gitConnectorName = gitConnectorName;
     this.repoName = repoName;
     this.branchName = branchName;
     this.filePaths = filePaths;

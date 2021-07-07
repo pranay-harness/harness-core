@@ -14,8 +14,8 @@ notificationRules:
   executionScope: WORKFLOW
   notificationGroupAsExpression: false
   userGroupAsExpression: false
-  userGroupIds:
-  - USER_GROUP_ID
+  userGroupNames:
+  - USER_GROUP_NAME
 phases:
 - type: KUBERNETES
   computeProviderName: COMPUTE_PROVIDER_ID
