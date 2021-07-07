@@ -294,7 +294,7 @@ watcherMetadataUrl: file:///local-storage/wingswatchers/watcherlocal.txt
 
 delegateMetadataUrl: file:///local-storage/wingsdelegates/delegatelocal.txt
 
-apiUrl: "https://localhost:9090"
+apiUrl: "https://localhost:9080"
 deployMode: KUBERNETES
 envPath: ""
 

@@ -1,11 +1,8 @@
 package io.harness.delegate.app;
 
 import io.harness.delegate.DelegateServiceGrpc;
-import io.harness.delegateprofile.DelegateProfileServiceGrpc;
-import io.harness.grpc.DelegateServiceClassicGrpcClient;
 import io.harness.grpc.DelegateServiceClassicGrpcImpl;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
-import io.harness.grpc.auth.ServiceAuthServerInterceptor;
 import io.harness.grpc.auth.ServiceInfo;
 import io.harness.grpc.auth.ValidateAuthServerInterceptor;
 import io.harness.grpc.exception.GrpcExceptionMapper;
@@ -14,7 +11,6 @@ import io.harness.grpc.server.Connector;
 import io.harness.grpc.server.GrpcServer;
 import io.harness.grpc.server.GrpcServerExceptionHandler;
 import io.harness.pingpong.DelegateServicePingPongGrpc;
-import io.harness.service.DelegateServicePingPongService;
 
 import com.google.common.util.concurrent.Service;
 import com.google.inject.AbstractModule;
@@ -48,7 +44,8 @@ public class DelegateServiceClassicGrpcServerModule extends AbstractModule {
     Multibinder<BindableService> bindableServiceMultibinder = Multibinder.newSetBinder(binder(), BindableService.class);
     bindableServiceMultibinder.addBinding().toProvider(ProtoReflectionService::newInstance).in(Singleton.class);
     Provider<HealthStatusManager> healthStatusManagerProvider = getProvider(HealthStatusManager.class);
-    bindableServiceMultibinder.addBinding().toProvider(() -> healthStatusManagerProvider.get().getHealthService());
+    //    bindableServiceMultibinder.addBinding().toProvider(() ->
+    //    healthStatusManagerProvider.get().getHealthService());
     // bindableServiceMultibinder.addBinding().to(DelegateServicePingPongService.class);
 
     bindableServiceMultibinder.addBinding().to(DelegateServiceClassicGrpcImpl.class);
@@ -64,16 +61,16 @@ public class DelegateServiceClassicGrpcServerModule extends AbstractModule {
     MapBinder<String, ServiceInfo> stringServiceInfoMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ServiceInfo.class);
 
-    stringServiceInfoMapBinder.addBinding(DelegateServiceGrpc.SERVICE_NAME)
+    stringServiceInfoMapBinder.addBinding("io.harness.delegate.DelegateTask")
         .toInstance(ServiceInfo.builder()
                         .id("delegate-service-classic")
                         .secret(delegateServiceConfig.getDelegateServiceSecret())
                         .build());
-    stringServiceInfoMapBinder.addBinding(DelegateServicePingPongGrpc.SERVICE_NAME)
-        .toInstance(ServiceInfo.builder()
-                        .id("delegate-service-ping-pong")
-                        .secret(delegateServiceConfig.getDelegateServiceSecret())
-                        .build());
+    //    stringServiceInfoMapBinder.addBinding(DelegateServicePingPongGrpc.SERVICE_NAME)
+    //        .toInstance(ServiceInfo.builder()
+    //                        .id("delegate-service-ping-pong")
+    //                        .secret(delegateServiceConfig.getDelegateServiceSecret())
+    //                        .build());
 
     // exception mapper
     Multibinder<GrpcExceptionMapper> expectionMapperMultibinder =

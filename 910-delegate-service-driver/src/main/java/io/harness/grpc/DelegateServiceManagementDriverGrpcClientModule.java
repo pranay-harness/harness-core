@@ -146,12 +146,12 @@ public class DelegateServiceManagementDriverGrpcClientModule extends ProviderMod
     return () -> delegateDriverInstalledInNgService;
   }
 
-  @Provides
-  @Singleton
-  DelegateServicePingPongClient delegateServicePingPongClient(
-      DelegateServicePingPongGrpc.DelegateServicePingPongBlockingStub pingPongServiceBlockingStub,
-      VersionInfoManager versionInfoManager) {
-    return new DelegateServicePingPongClient(
-        pingPongServiceBlockingStub, versionInfoManager.getVersionInfo().getVersion());
-  }
+  //  @Provides
+  //  @Singleton
+  //  DelegateServicePingPongClient delegateServicePingPongClient(
+  //      DelegateServicePingPongGrpc.DelegateServicePingPongBlockingStub pingPongServiceBlockingStub,
+  //      VersionInfoManager versionInfoManager) {
+  //    return new DelegateServicePingPongClient(
+  //        pingPongServiceBlockingStub, versionInfoManager.getVersionInfo().getVersion());
+  //  }
 }

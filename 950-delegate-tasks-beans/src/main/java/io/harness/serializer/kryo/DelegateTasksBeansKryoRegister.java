@@ -22,6 +22,7 @@ import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -869,5 +870,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CfCommandExecutionResponse.class, 543422);
     kryo.register(ScmPathFilterEvaluationTaskParams.class, 543423);
     kryo.register(ScmPathFilterEvaluationTaskResponse.class, 543424);
+    kryo.register(DelegateTaskRank.class, 543425);
   }
 }

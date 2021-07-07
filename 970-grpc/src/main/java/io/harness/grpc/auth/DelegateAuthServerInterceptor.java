@@ -28,8 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 public class DelegateAuthServerInterceptor implements ServerInterceptor {
   public static final Context.Key<String> ACCOUNT_ID_CTX_KEY = Context.key("accountId");
   private static final ServerCall.Listener NOOP_LISTENER = new ServerCall.Listener() {};
-  private static final Set<String> INCLUDED_SERVICES = ImmutableSet.of("io.harness.perpetualtask.PerpetualTaskService",
-      "io.harness.event.PingPongService", "io.harness.event.EventPublisher", "io.harness.delegate.DelegateService");
+  private static final Set<String> INCLUDED_SERVICES =
+      ImmutableSet.of("io.harness.perpetualtask.PerpetualTaskService", "io.harness.event.PingPongService",
+          "io.harness.event.EventPublisher", "io.harness.delegate.DelegateService", "io.harness.delegate.DelegateTask");
 
   private final DelegateTokenAuthenticator tokenAuthenticator;
 

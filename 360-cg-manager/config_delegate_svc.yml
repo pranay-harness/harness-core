@@ -252,7 +252,7 @@ grpcDelegateServiceClientConfig:
   authority: localhost
 
 grpcClientConfig:
-  target: localhost:9980
+  target: localhost:9890
   authority: localhost
 
 #This will be used only by OnPrem delegates for grpc communication
@@ -294,7 +294,7 @@ watcherMetadataUrl: file:///local-storage/wingswatchers/watcherlocal.txt
 
 delegateMetadataUrl: file:///local-storage/wingsdelegates/delegatelocal.txt
 
-apiUrl: "https://localhost:9090"
+apiUrl: "https://localhost:9080"
 deployMode: KUBERNETES
 envPath: ""
 
