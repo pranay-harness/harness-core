@@ -3,6 +3,8 @@ package io.harness.app;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.datafetcher.delegate.DelegateApprovalDataFetcher;
+import io.harness.app.datafetcher.delegate.DeleteDelegateDataFetcher;
 
 import software.wings.app.WingsGraphQLModule;
 import software.wings.graphql.datafetcher.instance.instanceInfo.InstanceController;
@@ -67,7 +69,10 @@ public class GraphQLModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), Class.class, InstanceController.class);
   }
 
-  private void bindDataFetchers() {}
+  private void bindDataFetchers() {
+    bindDataFetcherWithAnnotation(DelegateApprovalDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeleteDelegateDataFetcher.class);
+  }
 
   @NotNull
   public static String calculateAnnotationName(final Class clazz, String suffixToRemove) {
