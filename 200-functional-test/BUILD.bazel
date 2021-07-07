@@ -26,6 +26,7 @@ java_library(
         "//955-delegate-beans:module",
         "//960-persistence:supporter-test",
         "//970-grpc:module",
+        "//380-cg-graphql:module",
         "@jira_client//jar",
         "@maven//:com_google_guava_guava",
         "@maven//:org_awaitility_awaitility",

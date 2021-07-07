@@ -1,0 +1,53 @@
+extend type Mutation {
+    # Approve or reject delegate
+    delegateApproval(input: DelegateApprovalInput!): DelegateApprovalPayload @dataFetcher(name: delegateApproval)
+    # Deletes delegate.
+    deleteDelegate(input: DeleteDelegateInput!): DeleteDelegatePayload @dataFetcher(name: deleteDelegate)
+}
+type Delegate{
+    accountId: String
+    delegateType: String
+    delegateName: String
+    hostName: String
+    description: String
+    ip: String
+    polllingModeEnabled: Boolean
+    status: String
+    lastHeartBeat: Long
+    version: String
+    delegateProfileId: String
+}
+
+input DelegateApprovalInput{
+    delegateId: String!
+    accountId: String!
+    delegateApproval: DelegateApprovalFilter
+}
+
+type DelegateApprovalPayload{
+    clientMutationId: String
+    delegate: Delegate
+}
+
+input DelegateApprovalFilter {
+    operator: EnumOperator
+    values: [DelegateApproval]
+}
+
+enum DelegateApproval{
+    ACTIVATE
+    REJECT
+}
+
+input DeleteDelegateInput{
+    clientMutationId: String
+    accountId: String!
+    delegateId: String!
+    forceDelete: Boolean!
+}
+
+type DeleteDelegatePayload{
+    clientMutationId: String
+    meesage: String
+}
+

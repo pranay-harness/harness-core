@@ -22,6 +22,7 @@ java_binary(
     deps = [
         "//:lombok",
         "//390-db-migration:module",
+        "//380-cg-graphql:module",
         "//400-rest:module",
     ],
 )

@@ -27,6 +27,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.GraphQLModule;
 import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
 import io.harness.beans.FeatureName;
 import io.harness.cache.CacheModule;
@@ -496,7 +497,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new TemplateModule());
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(new EventsModule(configuration));
-    modules.add(new GraphQLModule());
+    modules.add(GraphQLModule.getInstance());
     modules.add(new SSOModule());
     modules.add(new SignupModule());
     modules.add(new AuthModule());
