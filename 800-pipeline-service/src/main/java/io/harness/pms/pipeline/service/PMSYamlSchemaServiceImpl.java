@@ -244,12 +244,26 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
                                                 .filter(moduleType -> !moduleType.isInternal())
                                                 .collect(Collectors.toList());
 
+      log.info(
+          "[PMS] Project module types for projectIdentifier : {}, accountIdentifier: {}, orgIdentifier: {} are : {}",
+          projectIdentifier, accountIdentifier, orgIdentifier, projectModuleTypes);
+
       List<ModuleType> instanceModuleTypes = pmsSdkInstanceService.getActiveInstanceNames()
                                                  .stream()
                                                  .map(ModuleType::fromString)
                                                  .collect(Collectors.toList());
 
-      return (List<ModuleType>) CollectionUtils.intersection(projectModuleTypes, instanceModuleTypes);
+      log.info(
+          "[PMS] Instance module types for projectIdentifier : {}, accountIdentifier: {}, orgIdentifier: {} are : {}",
+          projectIdentifier, accountIdentifier, orgIdentifier, instanceModuleTypes);
+
+      List<ModuleType> intersection =
+          (List<ModuleType>) CollectionUtils.intersection(projectModuleTypes, instanceModuleTypes);
+
+      log.info("[PMS] Module intersection for projectIdentifier : {}, accountIdentifier: {}, orgIdentifier: {} is : {}",
+          projectIdentifier, accountIdentifier, orgIdentifier, intersection);
+
+      return intersection;
     } catch (Exception e) {
       log.warn(
           "[PMS] Cannot obtain enabled module details for projectIdentifier : {}, accountIdentifier: {}, orgIdentifier: {}",
