@@ -20,6 +20,8 @@ public interface DelegateSetupService {
 
   DelegateGroupDetails getDelegateGroupDetails(String accountId, String delegateGroupId);
 
+  DelegateGroupDetails getDelegateGroupDetailsV2(String accountId, String orgId, String projectId, String identifier);
+
   String getHostNameForGroupedDelegate(String hostname);
 
   Map<String, SelectorType> retrieveDelegateImplicitSelectors(Delegate delegate);

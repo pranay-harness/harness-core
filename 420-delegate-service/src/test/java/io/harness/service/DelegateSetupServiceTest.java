@@ -2,6 +2,7 @@ package io.harness.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateType.KUBERNETES;
+import static io.harness.rule.OwnerRule.BOJAN;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.MARKOM;
 import static io.harness.rule.OwnerRule.NICOLAS;
@@ -392,6 +393,127 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
 
     assertThat(delegateGroupDetails).isNotNull();
 
+    assertThat(delegateGroupDetails.getGroupName()).isEqualTo("grp1");
+    assertThat(delegateGroupDetails.getDelegateInstanceDetails()).hasSize(2);
+    assertThat(delegateGroupDetails.getGroupId()).isEqualTo(delegateGroup1.getUuid());
+    assertThat(delegateGroupDetails.getDelegateType()).isEqualTo(KUBERNETES);
+    assertThat(delegateGroupDetails.getGroupHostName()).isEqualTo("kube-{n}");
+    assertThat(delegateGroupDetails.getDelegateDescription()).isEqualTo("description");
+    assertThat(delegateGroupDetails.getDelegateConfigurationId()).isEqualTo(delegateProfileId);
+    assertThat(delegateGroupDetails.getGroupImplicitSelectors()).isNotNull();
+    assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("grp1")).isTrue();
+    assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("kube-0")).isFalse();
+    assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("kube-1")).isFalse();
+    assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("profile")).isTrue();
+    assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("s1")).isTrue();
+    assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("s2")).isTrue();
+    assertThat(delegateGroupDetails.getLastHeartBeat()).isEqualTo(delegate1.getLastHeartBeat());
+    assertThat(delegateGroupDetails.isActivelyConnected()).isTrue();
+    assertThat(delegateGroupDetails.getSizeDetails()).isEqualTo(grp1SizeDetails);
+    assertThat(delegateGroupDetails.getDelegateInstanceDetails())
+        .extracting(DelegateGroupListing.DelegateInner::getUuid)
+        .containsOnly(delegate1.getUuid(), delegate2.getUuid());
+    assertThat(delegateGroupDetails.getDelegateInsightsDetails()).isNotNull();
+    assertThat(delegateGroupDetails.getDelegateInsightsDetails().getInsights()).hasSize(2);
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateGroupDetailsByIdentifier() {
+    String accountId = generateUuid();
+    String delegateProfileId = generateUuid();
+
+    when(delegateCache.getDelegateProfile(accountId, delegateProfileId))
+        .thenReturn(DelegateProfile.builder().name("profile").selectors(ImmutableList.of("s1", "s2")).build());
+
+    DelegateSizeDetails grp1SizeDetails = DelegateSizeDetails.builder()
+                                              .size(DelegateSize.LARGE)
+                                              .cpu(2.5d)
+                                              .label("size")
+                                              .ram(2048)
+                                              .taskLimit(25)
+                                              .replicas(2)
+                                              .build();
+
+    DelegateGroup delegateGroup1 = DelegateGroup.builder()
+                                       .name("grp1")
+                                       .identifier("identifier1")
+                                       .accountId(accountId)
+                                       .ng(true)
+                                       .delegateType(KUBERNETES)
+                                       .description("description")
+                                       .sizeDetails(grp1SizeDetails)
+                                       .delegateConfigurationId(delegateProfileId)
+                                       .build();
+    persistence.save(delegateGroup1);
+
+    DelegateEntityOwner owner = DelegateEntityOwner.builder().identifier("orgId/projectId").build();
+    when(delegateCache.getDelegateGroupByAccountAndOwnerAndIdentifier(accountId, owner, delegateGroup1.getIdentifier()))
+        .thenReturn(delegateGroup1);
+
+    // Insights
+    DelegateInsightsDetails delegateInsightsDetails =
+        DelegateInsightsDetails.builder()
+            .insights(ImmutableList.of(
+                DelegateInsightsBarDetails.builder().build(), DelegateInsightsBarDetails.builder().build()))
+            .build();
+    when(
+        delegateInsightsService.retrieveDelegateInsightsDetails(eq(accountId), eq(delegateGroup1.getUuid()), anyLong()))
+        .thenReturn(delegateInsightsDetails);
+
+    Delegate delegate1 = createDelegateBuilder()
+                             .accountId(accountId)
+                             .owner(owner)
+                             .ng(true)
+                             .delegateType(KUBERNETES)
+                             .delegateName("grp1")
+                             .description("description")
+                             .hostName("kube-0")
+                             .sizeDetails(grp1SizeDetails)
+                             .delegateGroupId(delegateGroup1.getUuid())
+                             .delegateProfileId(delegateProfileId)
+                             .build();
+
+    Delegate delegate2 = createDelegateBuilder()
+                             .accountId(accountId)
+                             .ng(true)
+                             .owner(owner)
+                             .delegateType(KUBERNETES)
+                             .delegateName("grp1")
+                             .description("description")
+                             .hostName("kube-1")
+                             .sizeDetails(grp1SizeDetails)
+                             .delegateGroupId(delegateGroup1.getUuid())
+                             .delegateProfileId(delegateProfileId)
+                             .lastHeartBeat(System.currentTimeMillis() - 60000)
+                             .build();
+
+    persistence.save(Arrays.asList(delegate1, delegate2));
+
+    DelegateConnection delegateConnection1 = DelegateConnection.builder()
+                                                 .accountId(accountId)
+                                                 .delegateId(delegate1.getUuid())
+                                                 .lastHeartbeat(System.currentTimeMillis())
+                                                 .disconnected(false)
+                                                 .version(VERSION)
+                                                 .build();
+    DelegateConnection delegateConnection2 = DelegateConnection.builder()
+                                                 .accountId(accountId)
+                                                 .delegateId(delegate2.getUuid())
+                                                 .lastHeartbeat(System.currentTimeMillis())
+                                                 .disconnected(false)
+                                                 .version(VERSION)
+                                                 .build();
+    persistence.save(delegateConnection1);
+    persistence.save(delegateConnection2);
+
+    DelegateGroupDetails delegateGroupDetails =
+        delegateSetupService.getDelegateGroupDetailsV2(accountId, "orgId", "projectId", delegateGroup1.getIdentifier());
+
+    assertThat(delegateGroupDetails).isNotNull();
+
+    assertThat(delegateGroupDetails.getDelegateGroupIdentifier()).isEqualTo("identifier1");
     assertThat(delegateGroupDetails.getGroupName()).isEqualTo("grp1");
     assertThat(delegateGroupDetails.getDelegateInstanceDetails()).hasSize(2);
     assertThat(delegateGroupDetails.getGroupId()).isEqualTo(delegateGroup1.getUuid());

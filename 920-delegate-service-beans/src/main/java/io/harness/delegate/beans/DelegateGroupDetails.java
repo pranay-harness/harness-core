@@ -19,6 +19,7 @@ import lombok.Value;
 @Builder
 public class DelegateGroupDetails {
   private String groupId;
+  private String delegateGroupIdentifier;
   private String delegateType;
   private String groupName;
   private String groupHostName;

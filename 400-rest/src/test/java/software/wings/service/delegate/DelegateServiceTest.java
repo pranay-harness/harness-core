@@ -15,6 +15,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.BOJAN;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DESCRIPTION;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -925,6 +926,41 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void shouldForceDeleteDelegateGroupByIdentifier() {
+    String accountId = generateUuid();
+
+    DelegateGroup delegateGroup = DelegateGroup.builder()
+                                      .accountId(accountId)
+                                      .name("groupname")
+                                      .identifier("identifier")
+                                      .owner(DelegateEntityOwner.builder().identifier("orgId/projectId").build())
+                                      .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+                                      .build();
+    persistence.save(delegateGroup);
+
+    Delegate d1 = createDelegateBuilder()
+                      .accountId(accountId)
+                      .delegateName("groupname")
+                      .delegateGroupId(delegateGroup.getUuid())
+                      .build();
+    persistence.save(d1);
+    Delegate d2 = createDelegateBuilder()
+                      .accountId(accountId)
+                      .delegateName("groupname")
+                      .delegateGroupId(delegateGroup.getUuid())
+                      .build();
+    persistence.save(d2);
+
+    delegateService.deleteDelegateGroupV2(accountId, "orgId", "projectId", delegateGroup.getIdentifier(), true);
+
+    assertThat(persistence.get(DelegateGroup.class, delegateGroup.getIdentifier())).isNull();
+    assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
+    assertThat(persistence.get(Delegate.class, d2.getUuid())).isNull();
+  }
+
+  @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldMarkDelegateGroupAsDeleted() {
@@ -956,6 +992,55 @@ public class DelegateServiceTest extends WingsBaseTest {
     persistence.save(d2);
 
     delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid(), false);
+
+    DelegateGroup deletedDelegateGroup = persistence.get(DelegateGroup.class, delegateGroup.getUuid());
+    assertThat(deletedDelegateGroup).isNotNull();
+    assertThat(deletedDelegateGroup.getStatus()).isEqualTo(DelegateGroupStatus.DELETED);
+    assertThat(deletedDelegateGroup.getValidUntil()).isAfter(Date.from(Instant.now()));
+
+    Delegate deletedDelegate1 = persistence.get(Delegate.class, d1.getUuid());
+    assertThat(deletedDelegate1).isNotNull();
+    assertThat(deletedDelegate1.getStatus()).isEqualTo(DelegateInstanceStatus.DELETED);
+    assertThat(deletedDelegate1.getValidUntil()).isAfter(Date.from(Instant.now()));
+
+    Delegate deletedDelegate2 = persistence.get(Delegate.class, d2.getUuid());
+    assertThat(deletedDelegate2).isNotNull();
+    assertThat(deletedDelegate2.getStatus()).isEqualTo(DelegateInstanceStatus.DELETED);
+    assertThat(deletedDelegate2.getValidUntil()).isAfter(Date.from(Instant.now()));
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void shouldMarkDelegateGroupAsDeletedByIdentifier() {
+    String accountId = generateUuid();
+
+    DelegateGroup delegateGroup = DelegateGroup.builder()
+                                      .accountId(accountId)
+                                      .name("groupname2")
+                                      .identifier("identifier2")
+                                      .owner(DelegateEntityOwner.builder().identifier("orgId/projectId").build())
+                                      .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+                                      .build();
+    persistence.save(delegateGroup);
+
+    Delegate d1 = createDelegateBuilder()
+                      .accountId(accountId)
+                      .delegateName("groupname2")
+                      .delegateGroupId(delegateGroup.getUuid())
+                      .owner(DelegateEntityOwner.builder().identifier("orgId/projectId").build())
+                      .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+                      .build();
+    persistence.save(d1);
+    Delegate d2 = createDelegateBuilder()
+                      .accountId(accountId)
+                      .delegateName("groupname2")
+                      .delegateGroupId(delegateGroup.getUuid())
+                      .owner(DelegateEntityOwner.builder().identifier("orgId/projectId").build())
+                      .build();
+    persistence.save(d2);
+
+    delegateService.deleteDelegateGroupV2(accountId, "orgId", "projectId", delegateGroup.getIdentifier(), false);
 
     DelegateGroup deletedDelegateGroup = persistence.get(DelegateGroup.class, delegateGroup.getUuid());
     assertThat(deletedDelegateGroup).isNotNull();
@@ -3176,6 +3261,83 @@ public class DelegateServiceTest extends WingsBaseTest {
             eq(task.getSetupAbstractions()), captor.capture(), eq(assignableDelegateIds));
     List<SelectorCapability> selectorCapabilities = captor.getValue();
     assertThat(selectorCapabilities).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void shouldDeleteDelegateGroupByIdentifier() {
+    featureTestHelper.enableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
+    String accountId = generateUuid();
+
+    String owner_identifier = "orgId"
+        + "/"
+        + "projectId";
+    DelegateGroup delegateGroup = DelegateGroup.builder()
+                                      .accountId(accountId)
+                                      .name("groupname")
+                                      .identifier("identifier")
+                                      .owner(DelegateEntityOwner.builder().identifier(owner_identifier).build())
+                                      .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+                                      .build();
+    persistence.save(delegateGroup);
+
+    Delegate d1 = createDelegateBuilder()
+                      .accountId(accountId)
+                      .delegateName("groupname")
+                      .delegateGroupId(delegateGroup.getUuid())
+                      .owner(DelegateEntityOwner.builder().identifier(owner_identifier).build())
+                      .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+                      .build();
+    persistence.save(d1);
+    Delegate d2 = createDelegateBuilder()
+                      .accountId(accountId)
+                      .delegateName("groupname")
+                      .delegateGroupId(delegateGroup.getUuid())
+                      .owner(DelegateEntityOwner.builder().identifier(owner_identifier).build())
+                      .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+                      .build();
+    persistence.save(d2);
+
+    delegateService.deleteDelegateGroupV2(accountId, "orgId", "projectId", "identifier", false);
+
+    assertThat(persistence.get(DelegateGroup.class, delegateGroup.getIdentifier())).isNull();
+    assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
+    assertThat(persistence.get(Delegate.class, d2.getUuid())).isNull();
+    verify(eventProducer).send(any());
+
+    // Account level delegates
+    delegateGroup = DelegateGroup.builder()
+                        .accountId(accountId)
+                        .name("groupname-acct")
+                        .identifier("identifier")
+                        .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+                        .build();
+    persistence.save(delegateGroup);
+
+    d1 = createDelegateBuilder()
+             .accountId(accountId)
+             .delegateName("groupname-acct")
+             .delegateGroupId(delegateGroup.getUuid())
+             .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+             .build();
+    persistence.save(d1);
+    d2 = createDelegateBuilder()
+             .accountId(accountId)
+             .delegateName("groupname-acct")
+             .delegateGroupId(delegateGroup.getUuid())
+             .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+             .build();
+    persistence.save(d2);
+
+    delegateService.deleteDelegateGroupV2(accountId, "", "", "identifier", false);
+
+    assertThat(persistence.get(DelegateGroup.class, delegateGroup.getIdentifier())).isNull();
+    assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
+    assertThat(persistence.get(Delegate.class, d2.getUuid())).isNull();
+    verify(eventProducer, times(2)).send(any());
+
+    featureTestHelper.disableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
   }
 
   private CapabilityRequirement buildCapabilityRequirement() {
