@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.accesscontrol.acl.ACLPersistenceConfig;
 import io.harness.accesscontrol.commons.outbox.OutboxPersistenceConfig;
 import io.harness.accesscontrol.permissions.persistence.PermissionPersistenceConfig;
-import io.harness.accesscontrol.preference.AccessControlPreferencePersistenceConfig;
+import io.harness.accesscontrol.preference.persistence.AccessControlPreferencePersistenceConfig;
 import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupPersistenceConfig;
 import io.harness.accesscontrol.principals.users.persistence.ServiceAccountPersistenceConfig;
 import io.harness.accesscontrol.principals.users.persistence.UserPersistenceConfig;

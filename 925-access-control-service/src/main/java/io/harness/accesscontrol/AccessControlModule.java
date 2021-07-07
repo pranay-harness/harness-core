@@ -13,12 +13,10 @@ import static io.harness.eventsframework.EventsFrameworkConstants.DUMMY_TOPIC_NA
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE;
-import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.USERMEMBERSHIP;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.AccessControlClientModule;
-import io.harness.DecisionModule;
 import io.harness.accesscontrol.aggregator.AggregatorStackDriverMetricsPublisherImpl;
 import io.harness.accesscontrol.aggregator.consumers.AccessControlChangeEventFailureHandler;
 import io.harness.accesscontrol.commons.events.EventConsumer;
@@ -145,17 +143,6 @@ public class AccessControlModule extends AbstractModule {
   }
 
   @Provides
-  @Named(FEATURE_FLAG_STREAM)
-  public Consumer getFeatureFlagConsumer() {
-    RedisConfig redisConfig = config.getEventsConfig().getRedisConfig();
-    if (!config.getEventsConfig().isEnabled()) {
-      return NoOpConsumer.of(DUMMY_TOPIC_NAME, DUMMY_GROUP_NAME);
-    }
-    return RedisConsumer.of(
-        FEATURE_FLAG_STREAM, ACCESS_CONTROL_SERVICE.getServiceId(), redisConfig, Duration.ofMinutes(10), 3);
-  }
-
-  @Provides
   @Named(USERMEMBERSHIP)
   public Consumer getUserMembershipConsumer() {
     RedisConfig redisConfig = config.getEventsConfig().getRedisConfig();
@@ -190,7 +177,6 @@ public class AccessControlModule extends AbstractModule {
     bind(OutboxEventHandler.class).to(AccessControlOutboxEventHandler.class);
     install(new ValidationModule(validatorFactory));
     install(AccessControlCoreModule.getInstance());
-    install(DecisionModule.getInstance(config.getDecisionModuleConfiguration()));
     install(
         new ServiceAccountClientModule(config.getServiceAccountClientConfiguration().getServiceAccountServiceConfig(),
             config.getServiceAccountClientConfiguration().getServiceAccountServiceSecret(),

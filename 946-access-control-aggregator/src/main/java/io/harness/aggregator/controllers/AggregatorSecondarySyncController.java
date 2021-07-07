@@ -4,8 +4,8 @@ import static io.harness.aggregator.AggregatorConfiguration.ACCESS_CONTROL_SERVI
 import static io.harness.aggregator.models.MongoReconciliationOffset.SECONDARY_COLLECTION;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.accesscontrol.acl.models.ACL;
-import io.harness.accesscontrol.acl.repository.ACLRepository;
+import io.harness.accesscontrol.acl.persistence.ACL;
+import io.harness.accesscontrol.acl.persistence.repositories.ACLRepository;
 import io.harness.accesscontrol.principals.usergroups.UserGroupService;
 import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupRepository;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;

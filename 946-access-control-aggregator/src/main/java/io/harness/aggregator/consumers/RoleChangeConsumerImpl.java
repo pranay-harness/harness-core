@@ -6,8 +6,8 @@ import static io.harness.aggregator.ACLUtils.buildACL;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.Principal;
-import io.harness.accesscontrol.acl.models.ACL;
-import io.harness.accesscontrol.acl.repository.ACLRepository;
+import io.harness.accesscontrol.acl.persistence.ACL;
+import io.harness.accesscontrol.acl.persistence.repositories.ACLRepository;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO.RoleAssignmentDBOKeys;

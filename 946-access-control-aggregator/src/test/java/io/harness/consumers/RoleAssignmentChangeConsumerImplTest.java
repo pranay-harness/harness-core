@@ -6,9 +6,9 @@ import static io.harness.rule.OwnerRule.PHOENIKX;
 import static org.mockito.Mockito.mock;
 
 import io.harness.CategoryTest;
-import io.harness.accesscontrol.acl.models.ACL;
-import io.harness.accesscontrol.acl.models.SourceMetadata;
-import io.harness.accesscontrol.acl.repository.ACLRepository;
+import io.harness.accesscontrol.acl.persistence.ACL;
+import io.harness.accesscontrol.acl.persistence.SourceMetadata;
+import io.harness.accesscontrol.acl.persistence.repositories.ACLRepository;
 import io.harness.accesscontrol.roleassignments.persistence.repositories.RoleAssignmentRepository;
 import io.harness.aggregator.consumers.ChangeConsumerService;
 import io.harness.aggregator.consumers.RoleAssignmentChangeConsumerImpl;

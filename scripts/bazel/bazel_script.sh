@@ -119,7 +119,6 @@ BAZEL_MODULES="\
   //945-account-mgmt:module \
   //945-ng-audit-client:module \
   //946-access-control-aggregator:module \
-  //946-access-control-decision:module \
   //947-access-control-core:module \
   //948-access-control-admin-client:module \
   //948-access-control-sdk:module \
@@ -381,7 +380,6 @@ build_bazel_module 940-resource-group-beans
 build_bazel_module 940-secret-manager-client
 build_bazel_module 945-ng-audit-client
 build_bazel_module 946-access-control-aggregator
-build_bazel_module 946-access-control-decision
 build_bazel_module 947-access-control-core
 build_bazel_module 948-access-control-admin-client
 build_bazel_module 948-access-control-sdk

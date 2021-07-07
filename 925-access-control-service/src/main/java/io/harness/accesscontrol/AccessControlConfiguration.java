@@ -3,7 +3,6 @@ package io.harness.accesscontrol;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.AccessControlClientConfiguration;
-import io.harness.DecisionModuleConfiguration;
 import io.harness.accesscontrol.commons.events.EventsConfig;
 import io.harness.accesscontrol.commons.iterators.AccessControlIteratorsConfig;
 import io.harness.accesscontrol.commons.notifications.NotificationConfig;
@@ -45,11 +44,11 @@ import org.reflections.Reflections;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AccessControlConfiguration extends Configuration {
   public static final String SERVICE_ID = "access-control-microservice";
-  public static final String PERMISSION_PACKAGE = "io.harness.accesscontrol.permissions";
-  public static final String ROLES_PACKAGE = "io.harness.accesscontrol.roles";
+  public static final String PERMISSION_PACKAGE = "io.harness.accesscontrol.permissions.api";
+  public static final String ROLES_PACKAGE = "io.harness.accesscontrol.roles.api";
   public static final String ROLE_ASSIGNMENTS_PACKAGE = "io.harness.accesscontrol.roleassignments.api";
-  public static final String ACL_PACKAGE = "io.harness.accesscontrol.acl";
-  public static final String ACCESSCONTROL_PREFERENCE_PACKAGE = "io.harness.accesscontrol.preference";
+  public static final String ACL_PACKAGE = "io.harness.accesscontrol.acl.api";
+  public static final String ACCESSCONTROL_PREFERENCE_PACKAGE = "io.harness.accesscontrol.preference.api";
   public static final String AGGREGATOR_PACKAGE = "io.harness.accesscontrol.aggregator.api";
   public static final String HEALTH_PACKAGE = "io.harness.accesscontrol.health";
 
@@ -63,7 +62,6 @@ public class AccessControlConfiguration extends Configuration {
   @JsonProperty("userClient") private UserClientConfiguration userClientConfiguration;
   @JsonProperty("userGroupClient") private UserGroupClientConfiguration userGroupClientConfiguration;
   @JsonProperty("notificationConfig") private NotificationConfig notificationConfig;
-  @JsonProperty("decisionModuleConfig") private DecisionModuleConfiguration decisionModuleConfiguration;
   @JsonProperty("aggregatorModuleConfig") private AggregatorConfiguration aggregatorConfiguration;
   @JsonProperty("enableAuth") @Getter(AccessLevel.NONE) private boolean enableAuth;
   @JsonProperty("defaultServiceSecret") private String defaultServiceSecret;
