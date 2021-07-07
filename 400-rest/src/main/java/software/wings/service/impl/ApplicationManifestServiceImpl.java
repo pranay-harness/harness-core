@@ -18,6 +18,7 @@ import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.Remote;
+import static software.wings.beans.appmanifest.StoreType.ValuesYamlFromHelmRepo;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.delegatetasks.k8s.K8sTaskHelper.manifestFilesFromGitFetchFilesResult;
@@ -115,6 +116,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.jooq.tools.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -903,6 +905,23 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
+  @VisibleForTesting
+  void validateAppManifestForValuesInHelmRepo(ApplicationManifest appManifest) {
+    if (!appManifest.getKind().equals(VALUES)) {
+      throw new InvalidRequestException("Only ApplicationManifest Kind VALUES is supported", USER);
+    }
+    if (!appManifest.getStoreType().equals(ValuesYamlFromHelmRepo)) {
+      throw new InvalidRequestException(
+          "Only ApplicationManifest with Kind VALUES and storetype ValuesYamlFromHelmRepo is supported", USER);
+    }
+    if (appManifest.getKind().equals(VALUES) && appManifest.getStoreType().equals(ValuesYamlFromHelmRepo)
+        && StringUtils.isEmpty(appManifest.getHelmValuesYamlFilePaths())) {
+      throw new InvalidRequestException(
+          "If ApplicationManifest with Kind VALUES and storetype ValuesYamlFromHelmRepo is given HelmValuesYamlFilePaths can not be null or empty",
+          USER);
+    }
+  }
+
   void validateStoreTypeForHelmChartOverride(StoreType storeType, AppManifestSource appManifestSource) {
     if (appManifestSource == AppManifestSource.ENV) {
       if (HelmChartRepo != storeType) {
@@ -1092,6 +1111,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         validateLocalAppManifest(applicationManifest);
         break;
 
+      case ValuesYamlFromHelmRepo:
+        validateAppManifestForValuesInHelmRepo(applicationManifest);
+
       case HelmChartRepo:
         validateHelmChartRepoAppManifest(applicationManifest);
         break;
@@ -1160,6 +1182,10 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       case KustomizeSourceRepo:
         applicationManifest.getKustomizeConfig().setKustomizeDirPath(
             defaultString(applicationManifest.getKustomizeConfig().getKustomizeDirPath()));
+        break;
+
+      case ValuesYamlFromHelmRepo:
+        applicationManifest.setHelmValuesYamlFilePaths(applicationManifest.getHelmValuesYamlFilePaths().trim());
         break;
 
       case HelmChartRepo:
