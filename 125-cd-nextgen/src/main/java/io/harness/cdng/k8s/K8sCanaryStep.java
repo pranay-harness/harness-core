@@ -128,38 +128,39 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollbackAndRbac implem
 
     K8sExecutionPassThroughData executionPassThroughData = (K8sExecutionPassThroughData) passThroughData;
 
+    K8sDeployResponse k8sTaskExecutionResponse;
     try {
-      K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
-      StepResponseBuilder responseBuilder = StepResponse.builder().unitProgressList(
-          k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
-      InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
-      K8sCanaryDeployResponse k8sCanaryDeployResponse =
-          (K8sCanaryDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
-
-      K8sCanaryOutcome k8sCanaryOutcome =
-          K8sCanaryOutcome.builder()
-              .releaseName(k8sStepHelper.getReleaseName(infrastructure))
-              .releaseNumber(k8sCanaryDeployResponse.getReleaseNumber())
-              .targetInstances(k8sCanaryDeployResponse.getCurrentInstances())
-              .canaryWorkload(k8sCanaryDeployResponse.getCanaryWorkload())
-              .canaryWorkloadDeployed(k8sCanaryDeployResponse.isCanaryWorkloadDeployed())
-              .build();
-
-      executionSweepingOutputService.consume(
-          ambiance, OutcomeExpressionConstants.K8S_CANARY_OUTCOME, k8sCanaryOutcome, StepOutcomeGroup.STAGE.name());
-      if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-        return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, responseBuilder).build();
-      }
-      return responseBuilder.status(Status.SUCCEEDED)
-          .stepOutcome(StepResponse.StepOutcome.builder()
-                           .name(OutcomeExpressionConstants.OUTPUT)
-                           .outcome(k8sCanaryOutcome)
-                           .build())
-          .build();
+      // In case the Fetch files task fails, we need to close the log streams
+      k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
     } catch (Exception e) {
       log.error("Error while processing K8s Task response: {}", e.getMessage(), e);
       return k8sStepHelper.handleTaskException(ambiance, executionPassThroughData, e);
     }
+    StepResponseBuilder responseBuilder =
+        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
+    InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
+    K8sCanaryDeployResponse k8sCanaryDeployResponse =
+        (K8sCanaryDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
+
+    K8sCanaryOutcome k8sCanaryOutcome = K8sCanaryOutcome.builder()
+                                            .releaseName(k8sStepHelper.getReleaseName(infrastructure))
+                                            .releaseNumber(k8sCanaryDeployResponse.getReleaseNumber())
+                                            .targetInstances(k8sCanaryDeployResponse.getCurrentInstances())
+                                            .canaryWorkload(k8sCanaryDeployResponse.getCanaryWorkload())
+                                            .canaryWorkloadDeployed(k8sCanaryDeployResponse.isCanaryWorkloadDeployed())
+                                            .build();
+
+    executionSweepingOutputService.consume(
+        ambiance, OutcomeExpressionConstants.K8S_CANARY_OUTCOME, k8sCanaryOutcome, StepOutcomeGroup.STAGE.name());
+    if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+      return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, responseBuilder).build();
+    }
+    return responseBuilder.status(Status.SUCCEEDED)
+        .stepOutcome(StepResponse.StepOutcome.builder()
+                         .name(OutcomeExpressionConstants.OUTPUT)
+                         .outcome(k8sCanaryOutcome)
+                         .build())
+        .build();
   }
 
   @Override

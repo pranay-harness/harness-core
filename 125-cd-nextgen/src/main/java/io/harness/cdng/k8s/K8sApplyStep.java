@@ -140,18 +140,20 @@ public class K8sApplyStep extends TaskChainExecutableWithRollbackAndRbac impleme
       return k8sStepHelper.handleStepExceptionFailure((StepExceptionPassThroughData) passThroughData);
     }
 
+    K8sDeployResponse k8sTaskExecutionResponse;
     try {
-      K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
-      StepResponseBuilder stepResponseBuilder = StepResponse.builder().unitProgressList(
-          k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
-
-      if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-        return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, stepResponseBuilder).build();
-      }
-      return stepResponseBuilder.status(Status.SUCCEEDED).build();
+      k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
     } catch (Exception e) {
       log.error("Error while processing K8s Task response: {}", e.getMessage(), e);
       return k8sStepHelper.handleTaskException(ambiance, (K8sExecutionPassThroughData) passThroughData, e);
     }
+
+    StepResponseBuilder stepResponseBuilder =
+        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
+
+    if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+      return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, stepResponseBuilder).build();
+    }
+    return stepResponseBuilder.status(Status.SUCCEEDED).build();
   }
 }

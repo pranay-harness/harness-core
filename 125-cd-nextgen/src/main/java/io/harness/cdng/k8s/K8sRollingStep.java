@@ -141,33 +141,35 @@ public class K8sRollingStep extends TaskChainExecutableWithRollbackAndRbac imple
     K8sRollingOutcomeBuilder k8sRollingOutcomeBuilder = K8sRollingOutcome.builder().releaseName(
         k8sStepHelper.getReleaseName(k8sExecutionPassThroughData.getInfrastructure()));
 
+    K8sDeployResponse k8sTaskExecutionResponse;
     try {
-      K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
-      StepResponseBuilder stepResponseBuilder = StepResponse.builder().unitProgressList(
-          k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
-
-      if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-        executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.K8S_ROLL_OUT,
-            k8sRollingOutcomeBuilder.build(), StepOutcomeGroup.STAGE.name());
-        return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, stepResponseBuilder).build();
-      }
-
-      K8sRollingDeployResponse k8sTaskResponse =
-          (K8sRollingDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
-      K8sRollingOutcome k8sRollingOutcome =
-          k8sRollingOutcomeBuilder.releaseNumber(k8sTaskResponse.getReleaseNumber()).build();
-      executionSweepingOutputService.consume(
-          ambiance, OutcomeExpressionConstants.K8S_ROLL_OUT, k8sRollingOutcome, StepOutcomeGroup.STAGE.name());
-
-      return stepResponseBuilder.status(Status.SUCCEEDED)
-          .stepOutcome(StepResponse.StepOutcome.builder()
-                           .name(OutcomeExpressionConstants.OUTPUT)
-                           .outcome(k8sRollingOutcome)
-                           .build())
-          .build();
+      k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
     } catch (Exception e) {
       log.error("Error while processing K8s Task response: {}", e.getMessage(), e);
       return k8sStepHelper.handleTaskException(ambiance, k8sExecutionPassThroughData, e);
     }
+
+    StepResponseBuilder stepResponseBuilder =
+        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
+
+    if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+      executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.K8S_ROLL_OUT,
+          k8sRollingOutcomeBuilder.build(), StepOutcomeGroup.STAGE.name());
+      return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, stepResponseBuilder).build();
+    }
+
+    K8sRollingDeployResponse k8sTaskResponse =
+        (K8sRollingDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
+    K8sRollingOutcome k8sRollingOutcome =
+        k8sRollingOutcomeBuilder.releaseNumber(k8sTaskResponse.getReleaseNumber()).build();
+    executionSweepingOutputService.consume(
+        ambiance, OutcomeExpressionConstants.K8S_ROLL_OUT, k8sRollingOutcome, StepOutcomeGroup.STAGE.name());
+
+    return stepResponseBuilder.status(Status.SUCCEEDED)
+        .stepOutcome(StepResponse.StepOutcome.builder()
+                         .name(OutcomeExpressionConstants.OUTPUT)
+                         .outcome(k8sRollingOutcome)
+                         .build())
+        .build();
   }
 }
