@@ -31,9 +31,12 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
@@ -64,6 +67,7 @@ import software.wings.rules.SetupScheduler;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.yaml.WorkflowYAMLHelper;
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
+import software.wings.service.impl.yaml.handler.workflow.ApprovalStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.PipelineStageYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.PipelineYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -88,6 +92,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
@@ -101,6 +106,7 @@ import org.mockito.Mockito;
 /**
  * @author rktummala on 1/9/18
  */
+@OwnedBy(HarnessTeam.CDC)
 @SetupScheduler
 public class PipelineYamlHandler2Test extends YamlHandlerTestBase {
   private final String APP_NAME = "app1";
@@ -125,6 +131,7 @@ public class PipelineYamlHandler2Test extends YamlHandlerTestBase {
   @Mock private WorkflowYAMLHelper workflowYAMLHelper;
   @InjectMocks @Inject private PipelineYamlHandler yamlHandler;
   @InjectMocks @Inject private PipelineStageYamlHandler pipelineStageYamlHandler;
+  @Mock private ApprovalStepYamlBuilder approvalStepYamlBuilder;
 
   private String validYamlFilePath = "Setup/Applications/" + APP_NAME + "/Pipelines/" + PIPELINE_NAME + ".yaml";
 
@@ -153,6 +160,24 @@ public class PipelineYamlHandler2Test extends YamlHandlerTestBase {
     when(userGroupService.get(any(), eq("test"))).thenReturn(UserGroup.builder().name("test").uuid("test").build());
     when(userGroupService.get(any(), eq("dIyaCXXVRp65abGOlN5Fmg"))).thenReturn(userGroup);
     when(userGroupService.get(any(), eq("s6dYbwVXQ1-Bgq234fbznw"))).thenReturn(userGroup2);
+
+    doAnswer(invocationOnMock -> {
+      Object[] args = invocationOnMock.getArguments();
+      Map<String, Object> properties = (Map<String, Object>) args[2];
+      properties.put((String) args[0], args[1]);
+      return null;
+    })
+        .when(approvalStepYamlBuilder)
+        .convertNameToIdForKnownTypes(any(), any(), any(), any(), any(), any());
+
+    doAnswer(invocationOnMock -> {
+      Object[] args = invocationOnMock.getArguments();
+      Map<String, Object> properties = (Map<String, Object>) args[2];
+      properties.put((String) args[0], args[1]);
+      return null;
+    })
+        .when(approvalStepYamlBuilder)
+        .convertIdToNameForKnownTypes(any(), any(), any(), any(), any());
 
     Service service = Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).artifactType(WAR).build();
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(service);

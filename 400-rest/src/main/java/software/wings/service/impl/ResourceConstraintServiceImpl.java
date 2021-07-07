@@ -123,6 +123,11 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   }
 
   @Override
+  public ResourceConstraint getById(String id) {
+    return wingsPersistence.createQuery(ResourceConstraint.class).filter(ResourceConstraintKeys.uuid, id).get();
+  }
+
+  @Override
   public ResourceConstraint ensureResourceConstraintForConcurrency(String accountId, String name) {
     try {
       ResourceConstraint resourceConstraint = ResourceConstraint.builder()

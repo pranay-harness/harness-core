@@ -427,6 +427,7 @@ public class MigrationList {
         .add(Pair.of(359, BaseMigration.class))
         .add(Pair.of(360, AddEnableIteratorsToTriggers.class))
         .add(Pair.of(361, AddNgFieldToDelegateGroupMigration.class))
+        .add(Pair.of(362, BaseMigration.class))
         .build();
   }
 }

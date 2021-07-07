@@ -9,8 +9,11 @@ import io.harness.annotations.dev.TargetModule;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.yaml.workflow.StepYaml;
 
-@TargetModule(HarnessModule._870_YAML_BEANS)
 @OwnedBy(CDC)
-public interface StepCompletionYamlValidator {
-  void validate(ChangeContext<StepYaml> changeContext);
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+public class CommandStepYamlBuilder extends ShellScriptStepYamlBuilder {
+  @Override
+  public void validate(ChangeContext<StepYaml> changeContext) {
+    // nothing here
+  }
 }

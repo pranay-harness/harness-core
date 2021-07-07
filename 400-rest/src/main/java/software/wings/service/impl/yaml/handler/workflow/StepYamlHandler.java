@@ -67,7 +67,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -88,7 +87,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   @Inject private TemplateService templateService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
-  @Inject private StepCompletionYamlValidatorFactory stepCompletionYamlValidatorFactory;
+  @Inject private StepYamlBuilderFactory stepYamlBuilderFactory;
 
   private static final String GCB_OPTIONS = "gcbOptions";
   private static final String GCP_CONFIG_ID = "gcpConfigId";
@@ -115,10 +114,9 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
       throw new InvalidRequestException("Step name is empty for " + type + " step");
     }
 
-    StepCompletionYamlValidator stepCompletionYamlValidator =
-        stepCompletionYamlValidatorFactory.getValidatorForStepType(StepType.valueOf(type));
-    if (stepCompletionYamlValidator != null) {
-      stepCompletionYamlValidator.validate(changeContext);
+    StepYamlBuilder stepYamlBuilder = stepYamlBuilderFactory.getStepYamlBuilderForStepType(StepType.valueOf(type));
+    if (stepYamlBuilder != null) {
+      stepYamlBuilder.validate(changeContext);
     }
 
     // template expressions
@@ -145,8 +143,13 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
 
     Map<String, Object> yamlProperties = stepYaml.getProperties();
     if (yamlProperties != null) {
-      yamlProperties.forEach(
-          (name, value) -> convertNameToIdIfKnownType(name, value, outputProperties, appId, accountId, yamlProperties));
+      yamlProperties.forEach((name, value) -> {
+        if (stepYamlBuilder != null && isNotEmpty(name)) {
+          stepYamlBuilder.convertNameToIdForKnownTypes(name, value, outputProperties, appId, accountId, yamlProperties);
+        } else {
+          convertNameToIdIfKnownType(name, value, outputProperties, appId, accountId, yamlProperties);
+        }
+      });
     }
 
     generateKnownProperties(outputProperties, changeContext);
@@ -307,10 +310,18 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   public StepYaml toYaml(GraphNode step, String appId) {
     Map<String, Object> properties = step.getProperties();
     Map<String, Object> outputProperties = new TreeMap<>();
+
+    StepYamlBuilder stepYamlBuilder =
+        stepYamlBuilderFactory.getStepYamlBuilderForStepType(StepType.valueOf(step.getType()));
+
     if (properties != null) {
       properties.forEach((name, value) -> {
         if (!shouldBeIgnored(name)) {
-          convertIdToNameIfKnownType(name, value, outputProperties, appId, properties);
+          if (stepYamlBuilder != null) {
+            stepYamlBuilder.convertIdToNameForKnownTypes(name, value, outputProperties, appId, properties);
+          } else {
+            convertIdToNameIfKnownType(name, value, outputProperties, appId, properties);
+          }
         }
       });
     }
@@ -441,41 +452,6 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
         notNullCheck("Provisioner is null for the given provisionerId:" + provisionerId, provisioner, USER);
         outputProperties.put("provisionerName", provisioner.getName());
         return;
-      case GCB_OPTIONS:
-        var gcbOptions = (Map<String, Object>) objectValue;
-        String gcpConfigId = (String) gcbOptions.get(GCP_CONFIG_ID);
-        if (gcpConfigId != null) {
-          SettingAttribute gcpSettingAttribute = settingsService.get(gcpConfigId);
-          notNullCheck("GCP is null for the given gcpConfigId:" + gcpConfigId, gcpSettingAttribute, USER);
-          gcbOptions.put(GCP_CONFIG_NAME, gcpSettingAttribute.getName());
-        } else {
-          gcbOptions.put(GCP_CONFIG_NAME, null);
-        }
-        if (gcbOptions.containsKey(REPOSITORY_SPEC)) {
-          var repositorySpec = (Map<String, Object>) gcbOptions.get(REPOSITORY_SPEC);
-          String gitConfigId = (String) repositorySpec.get(GIT_CONFIG_ID);
-          if (gitConfigId != null) {
-            SettingAttribute gitSettingAttribute = settingsService.get(gitConfigId);
-            notNullCheck("Git connector is null for the given gitConfigId:" + gitConfigId, gitSettingAttribute, USER);
-            repositorySpec.put(GIT_CONFIG_NAME, gitSettingAttribute.getName());
-          } else {
-            repositorySpec.put(GIT_CONFIG_NAME, null);
-          }
-          repositorySpec.remove(GIT_CONFIG_ID);
-        }
-        gcbOptions.remove(GCP_CONFIG_ID);
-        outputProperties.put(GCB_OPTIONS, gcbOptions);
-        return;
-      case JENKINS_ID:
-        if (objectValue != null) {
-          String jenkinsConfigId = (String) objectValue;
-          SettingAttribute jenkinsConfig = settingsService.get(jenkinsConfigId);
-          notNullCheck("Jenkins is null for the given jenkinsConfigId:" + jenkinsConfigId, jenkinsConfig, USER);
-          outputProperties.put(JENKINS_NAME, jenkinsConfig.getName());
-        } else {
-          outputProperties.put(JENKINS_NAME, null);
-        }
-        return;
       default:
         outputProperties.put(name, objectValue);
         return;
@@ -525,44 +501,6 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
         InfrastructureProvisioner provisioner = infrastructureProvisionerService.getByName(appId, provisionerName);
         notNullCheck("Provisioner is null for the given name:" + provisionerName, provisioner, USER);
         properties.put("provisionerId", provisioner.getUuid());
-        return;
-      case GCB_OPTIONS:
-        var gcbOptions = (Map<String, Object>) objectValue;
-        if (gcbOptions.containsKey(GCP_CONFIG_NAME)) {
-          String gcpConfigName = (String) gcbOptions.get(GCP_CONFIG_NAME);
-          if (gcpConfigName != null) {
-            SettingAttribute gcpSettingAttribute = settingsService.getSettingAttributeByName(accountId, gcpConfigName);
-            notNullCheck("GCP is null for the given gcpConfigName:" + gcpConfigName, gcpSettingAttribute, USER);
-            gcbOptions.put(GCP_CONFIG_ID, gcpSettingAttribute.getUuid());
-          } else {
-            gcbOptions.put(GCP_CONFIG_ID, null);
-          }
-          gcbOptions.remove(GCP_CONFIG_NAME);
-        }
-        if (gcbOptions.containsKey(REPOSITORY_SPEC)) {
-          var repositorySpec = (Map<String, Object>) gcbOptions.get(REPOSITORY_SPEC);
-          String gitConfigName = (String) repositorySpec.get(GIT_CONFIG_NAME);
-          if (gitConfigName != null) {
-            SettingAttribute gitSettingAttribute = settingsService.getSettingAttributeByName(accountId, gitConfigName);
-            notNullCheck(
-                "Git connector is null for the given gitConfigName:" + gitConfigName, gitSettingAttribute, USER);
-            repositorySpec.put(GIT_CONFIG_ID, gitSettingAttribute.getUuid());
-          } else {
-            repositorySpec.put(GIT_CONFIG_ID, null);
-          }
-          repositorySpec.remove(GIT_CONFIG_NAME);
-        }
-        properties.put(GCB_OPTIONS, gcbOptions);
-        return;
-      case JENKINS_NAME:
-        if (objectValue != null) {
-          String jenkinsConfigName = (String) objectValue;
-          SettingAttribute jenkinsConfig = settingsService.getSettingAttributeByName(accountId, jenkinsConfigName);
-          notNullCheck("Jenkins is null for the given jenkinsConfigName:" + jenkinsConfigName, jenkinsConfig, USER);
-          properties.put(JENKINS_ID, jenkinsConfig.getUuid());
-        } else {
-          properties.put(JENKINS_ID, null);
-        }
         return;
       default:
         properties.put(name, objectValue);

@@ -9,6 +9,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -38,20 +40,21 @@ import org.junit.runners.Parameterized;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-@TargetModule(HarnessModule._870_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@OwnedBy(HarnessTeam.CDC)
 @RunWith(Parameterized.class)
-public class GcbStepCompletionYamlValidatorTest {
+public class GcbStepYamlBuilderTest {
   private final ChangeContext<StepYaml> changeContext;
 
   @Rule public final ExpectedException exception = ExpectedException.none();
 
-  private final GcbStepCompletionYamlValidator validator;
+  private final GcbStepYamlBuilder validator;
   @Mock private SettingsService settingsService;
 
-  public GcbStepCompletionYamlValidatorTest(
+  public GcbStepYamlBuilderTest(
       ChangeContext<StepYaml> changeContext, String message, Class<? extends Exception> expectedException) {
     this.changeContext = changeContext;
-    this.validator = new GcbStepCompletionYamlValidator();
+    this.validator = new GcbStepYamlBuilder();
     this.settingsService = Mockito.mock(SettingsService.class);
     if (expectedException != null) {
       exception.expect(expectedException);

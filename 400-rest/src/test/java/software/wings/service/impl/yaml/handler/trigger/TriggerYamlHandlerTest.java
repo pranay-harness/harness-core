@@ -26,6 +26,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageResponse;
 import io.harness.beans.WorkflowType;
@@ -90,6 +92,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDC)
 public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
   @Mock private YamlHelper mockYamlHelper;
   @Mock private YamlHandlerFactory mockYamlHandlerFactory;
@@ -525,6 +528,10 @@ public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
     workflow.setOrchestrationWorkflow(aCanaryOrchestrationWorkflow().withUserVariables(userVariables).build());
     doReturn(workflow).when(mockYamlHelper).getWorkflowFromId(any(), any());
     doReturn(workflow).when(mockYamlHelper).getWorkflowFromName(any(), any());
+    SettingAttribute gitConnectionAttributes =
+        aSettingAttribute().withUuid("gitConnectorId").withName("gitConnectorName").build();
+    doReturn(gitConnectionAttributes).when(settingsService).getSettingAttributeByName(any(), eq("gitConnectorName"));
+    doReturn(gitConnectionAttributes).when(settingsService).get(eq("gitConnectorId"));
     testCRUD(validTriggerFiles.Trigger14, TriggerConditionType.WEBHOOK, WorkflowType.ORCHESTRATION, null);
   }
 

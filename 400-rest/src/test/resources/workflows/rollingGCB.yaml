@@ -14,8 +14,8 @@ notificationRules:
   executionScope: WORKFLOW
   notificationGroupAsExpression: false
   userGroupAsExpression: false
-  userGroupIds:
-  - 2Z4yiRojQq2jmMx1JO05Jw
+  userGroupNames:
+  - USER_GROUP_NAME
 phases:
 - type: SSH
   computeProviderName: physical_data_center_test
