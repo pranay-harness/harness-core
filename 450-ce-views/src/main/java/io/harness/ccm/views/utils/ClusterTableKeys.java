@@ -91,4 +91,9 @@ public class ClusterTableKeys {
   public static final String GROUP_BY_ECS_TASK = "ECS Task";
   public static final String GROUP_BY_ECS_TASK_ID = "ECS Task Id";
   public static final String GROUP_BY_NODE = "Node";
+  public static final String GROUP_BY_APPLICATION = "Application";
+  public static final String GROUP_BY_SERVICE = "Service";
+  public static final String GROUP_BY_ENVIRONMENT = "Environment";
+  public static final String GROUP_BY_CLOUD_PROVIDER = "Cloud Provider";
+  public static final String GROUP_BY_PRODUCT = "Product";
 }

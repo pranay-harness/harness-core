@@ -14,7 +14,6 @@ import io.harness.rule.Owner;
 
 import java.io.File;
 import java.io.IOException;
-import javax.ws.rs.core.Response;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,8 +55,8 @@ public class PerspectiveReportResourceTest extends CategoryTest {
   @Test
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
-  public void testGet() throws IOException {
-    Response response = perspectiveReportResource.getReportSetting(null, REPORT_ID, ACCOUNT_ID);
+  public void testGet() {
+    perspectiveReportResource.getReportSetting(null, REPORT_ID, ACCOUNT_ID);
     verify(ceReportScheduleService).get(REPORT_ID, ACCOUNT_ID);
   }
 

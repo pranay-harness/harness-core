@@ -152,10 +152,11 @@ public class PerspectivesQuery {
     String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
     BigQuery bigQuery = bigQueryService.get();
 
-    PerspectiveTimeSeriesData data = perspectiveTimeSeriesHelper.fetch(viewsBillingService.getTimeSeriesStatsNg(
-        bigQuery, filters, groupBy, aggregateFunction, sortCriteria, cloudProviderTableName, accountId, includeOthers));
+    PerspectiveTimeSeriesData data =
+        perspectiveTimeSeriesHelper.fetch(viewsBillingService.getTimeSeriesStatsNg(bigQuery, filters, groupBy,
+            aggregateFunction, sortCriteria, cloudProviderTableName, accountId, includeOthers, limit));
 
-    return includeOthers ? perspectiveTimeSeriesHelper.postFetch(data, limit, true) : data;
+    return perspectiveTimeSeriesHelper.postFetch(data, limit, includeOthers);
   }
 
   @GraphQLQuery(name = "perspectiveFields", description = "Fields for perspective explorer")
