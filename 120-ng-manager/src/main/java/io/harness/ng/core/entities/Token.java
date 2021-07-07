@@ -84,7 +84,7 @@ public class Token implements PersistentEntity, UuidAware, NGAccountAccess, NGOr
   @EntityIdentifier String accountIdentifier;
   @EntityIdentifier(allowBlank = true) String orgIdentifier;
   @EntityIdentifier(allowBlank = true) String projectIdentifier;
-  @EntityIdentifier String parentIdentifier;
+  @NotNull String parentIdentifier;
   @NotNull ApiKeyType apiKeyType;
   @EntityIdentifier String apiKeyIdentifier;
 

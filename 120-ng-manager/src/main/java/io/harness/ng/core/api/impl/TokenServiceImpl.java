@@ -32,8 +32,6 @@ import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.ng.core.spring.TokenRepository;
-import io.harness.security.SourcePrincipalContextBuilder;
-import io.harness.security.dto.PrincipalType;
 import io.harness.utils.PageUtils;
 
 import com.google.common.base.Preconditions;
@@ -96,7 +94,6 @@ public class TokenServiceImpl implements TokenService {
                                               accountIdentifier, orgIdentifier, projectIdentifier),
           USER_SRE);
     }
-    validateParentIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier);
     apiKeyService.getApiKey(
         accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, apiKeyIdentifier);
   }
@@ -108,30 +105,6 @@ public class TokenServiceImpl implements TokenService {
     }
     validateTokenRequest(
         accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, apiKeyIdentifier);
-  }
-
-  private void validateParentIdentifier(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      ApiKeyType apiKeyType, String parentIdentifier) {
-    switch (apiKeyType) {
-      case USER:
-        Optional<String> userId = Optional.empty();
-        if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
-            && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
-          userId = Optional.of(SourcePrincipalContextBuilder.getSourcePrincipal().getName());
-        }
-        if (!userId.isPresent()) {
-          throw new InvalidArgumentsException("No user identifier present in context");
-        }
-        if (!userId.get().equals(parentIdentifier)) {
-          throw new InvalidArgumentsException(String.format(
-              "User [%s] not authenticated to create api key for user [%s]", userId.get(), parentIdentifier));
-        }
-        break;
-      case SERVICE_ACCOUNT:
-        break;
-      default:
-        throw new InvalidArgumentsException(String.format("Invalid api key type: %s", apiKeyType));
-    }
   }
 
   @Override

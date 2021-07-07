@@ -28,7 +28,7 @@ public class TokenDTO {
   @EntityIdentifier(allowBlank = true) private String projectIdentifier;
   @EntityIdentifier(allowBlank = true) private String orgIdentifier;
   @ApiModelProperty(required = true) @EntityIdentifier private String apiKeyIdentifier;
-  @ApiModelProperty(required = true) @EntityIdentifier private String parentIdentifier;
+  @ApiModelProperty(required = true) private String parentIdentifier;
   @ApiModelProperty(required = true) private ApiKeyType apiKeyType;
 
   @Size(max = 1024) String description;

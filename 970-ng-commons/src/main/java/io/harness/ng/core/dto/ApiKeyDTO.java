@@ -22,7 +22,7 @@ public class ApiKeyDTO {
   @Size(max = 1024) String description;
   @Size(max = 128) Map<String, String> tags;
   @ApiModelProperty(required = true) private ApiKeyType apiKeyType;
-  @EntityIdentifier private String parentIdentifier;
+  @ApiModelProperty(required = true) private String parentIdentifier;
   private Long defaultTimeToExpireToken;
 
   @EntityIdentifier private String accountIdentifier;
