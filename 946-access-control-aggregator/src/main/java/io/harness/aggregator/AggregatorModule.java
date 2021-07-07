@@ -2,7 +2,7 @@ package io.harness.aggregator;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.accesscontrol.acl.services.ACLService;
+import io.harness.accesscontrol.acl.ACLService;
 import io.harness.accesscontrol.principals.usergroups.UserGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.roles.RoleService;

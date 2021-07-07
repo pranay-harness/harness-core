@@ -144,8 +144,6 @@ notificationConfig:
   slackWebhookUrl: ${NOTIFICATION_SLACK_WEBHOOK_URL:-https://hooks.slack.com/services/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}
   environment: ${NOTIFICATION_ENVIRONMENT:-localhost}
 
-decisionModuleConfig:
-
 aggregatorModuleConfig:
   debezium:
     name: ${DEBEZIUM_NAME:-aggregator}

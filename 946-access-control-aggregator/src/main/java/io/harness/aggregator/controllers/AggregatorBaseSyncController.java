@@ -1,7 +1,7 @@
 package io.harness.aggregator.controllers;
 
 import io.harness.accesscontrol.AccessControlEntity;
-import io.harness.accesscontrol.acl.repository.ACLRepository;
+import io.harness.accesscontrol.acl.persistence.repositories.ACLRepository;
 import io.harness.accesscontrol.principals.usergroups.UserGroupService;
 import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupDBO;
 import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupRepository;

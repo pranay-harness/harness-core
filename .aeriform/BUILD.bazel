@@ -308,15 +308,9 @@ aeriform("//946-access-control-aggregator:module")
 
 aeriform("//946-access-control-aggregator:tests")
 
-aeriform("//946-access-control-decision:module")
-
-aeriform("//946-access-control-decision:tests")
-
 aeriform("//947-access-control-core:module")
 
 aeriform("//947-access-control-core:tests")
-
-aeriform("//947-access-control-decision-commons:module")
 
 aeriform("//948-access-control-admin-client:module")
 
