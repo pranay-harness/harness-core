@@ -4,11 +4,13 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.AGORODETKI;
+import static io.harness.rule.OwnerRule.MOUNIK;
 import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
@@ -271,6 +273,104 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     LastDeployedHelmChartInformation helmChartInformation =
         workflowServiceImpl.fetchLastDeployedHelmChart(workflow, SERVICE_ID);
     assertThat(helmChartInformation).isNull();
+  }
+
+  private PhaseStep getSinglePhaseWithSingleStep(String phaseName, String stepName) {
+    GraphNode graphnode = GraphNode.builder().name(stepName).build();
+    List<GraphNode> graphNodes = asList(graphnode);
+    PhaseStep phaseStep = aPhaseStep(VERIFY_SERVICE).addAllSteps(graphNodes).build();
+    phaseStep.setName(phaseName);
+    return phaseStep;
+  }
+
+  private WorkflowPhase getWorkflowWithPhaseStep(PhaseStep phaseStep) {
+    List<PhaseStep> phaseSteps = asList(phaseStep);
+    WorkflowPhase workflowPhase = aWorkflowPhase().phaseSteps(phaseSteps).build();
+    return workflowPhase;
+  }
+
+  @Test
+  @Owner(developers = MOUNIK)
+  @Category(UnitTests.class)
+  public void checkStepNames() {
+    WorkflowServiceImpl workflowServiceImpl = (WorkflowServiceImpl) workflowService;
+    final PhaseStep phaseStepWithInvalidStep = getSinglePhaseWithSingleStep("Phase 1", "Step.1");
+    assertThatThrownBy(() -> workflowServiceImpl.checkPhaseStepAndStepNames(phaseStepWithInvalidStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Step name should not contain dots");
+    final WorkflowPhase workflowPhaseWithInvalidStep = getWorkflowWithPhaseStep(phaseStepWithInvalidStep);
+    assertThatThrownBy(() -> workflowService.updatePostDeployment(APP_ID, WORKFLOW_ID, phaseStepWithInvalidStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Step name should not contain dots");
+    assertThatThrownBy(() -> workflowService.updatePreDeployment(APP_ID, WORKFLOW_ID, phaseStepWithInvalidStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Step name should not contain dots");
+    assertThatThrownBy(() -> workflowService.updateWorkflowPhase(APP_ID, WORKFLOW_ID, workflowPhaseWithInvalidStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Step name should not contain dots");
+    assertThatThrownBy(
+        () -> workflowService.updateWorkflowPhaseRollback(APP_ID, WORKFLOW_ID, PHASE_ID, workflowPhaseWithInvalidStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Step name should not contain dots");
+  }
+
+  @Test
+  @Owner(developers = MOUNIK)
+  @Category(UnitTests.class)
+  public void checkPhaseStepNamesWithValidSteps() {
+    final PhaseStep phaseStepWithInvalidName = getSinglePhaseWithSingleStep("Phase.1", "Step 1");
+    WorkflowServiceImpl workflowServiceImpl = (WorkflowServiceImpl) workflowService;
+    assertThatThrownBy(() -> workflowServiceImpl.checkPhaseStepAndStepNames(phaseStepWithInvalidName))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    final WorkflowPhase workflowPhaseWithInvalidPhaseStep = getWorkflowWithPhaseStep(phaseStepWithInvalidName);
+    assertThatThrownBy(() -> workflowServiceImpl.checkWorkflowForStepNames(workflowPhaseWithInvalidPhaseStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    assertThatThrownBy(() -> workflowService.updatePostDeployment(APP_ID, WORKFLOW_ID, phaseStepWithInvalidName))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    assertThatThrownBy(() -> workflowService.updatePreDeployment(APP_ID, WORKFLOW_ID, phaseStepWithInvalidName))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    assertThatThrownBy(
+        () -> workflowService.updateWorkflowPhase(APP_ID, WORKFLOW_ID, workflowPhaseWithInvalidPhaseStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    assertThatThrownBy(()
+                           -> workflowService.updateWorkflowPhaseRollback(
+                               APP_ID, WORKFLOW_ID, PHASE_ID, workflowPhaseWithInvalidPhaseStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+  }
+  @Test
+  @Owner(developers = MOUNIK)
+  @Category(UnitTests.class)
+  public void checkPhaseStepNamesWithInvalidSteps() {
+    final PhaseStep phaseStepWithInvalidName = getSinglePhaseWithSingleStep("Phase.1", "Step.1");
+    WorkflowServiceImpl workflowServiceImpl = (WorkflowServiceImpl) workflowService;
+    assertThatThrownBy(() -> workflowServiceImpl.checkPhaseStepAndStepNames(phaseStepWithInvalidName))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    final WorkflowPhase workflowPhaseWithInvalidPhaseStep = getWorkflowWithPhaseStep(phaseStepWithInvalidName);
+    assertThatThrownBy(() -> workflowServiceImpl.checkWorkflowForStepNames(workflowPhaseWithInvalidPhaseStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    assertThatThrownBy(() -> workflowService.updatePostDeployment(APP_ID, WORKFLOW_ID, phaseStepWithInvalidName))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    assertThatThrownBy(() -> workflowService.updatePreDeployment(APP_ID, WORKFLOW_ID, phaseStepWithInvalidName))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    assertThatThrownBy(
+        () -> workflowService.updateWorkflowPhase(APP_ID, WORKFLOW_ID, workflowPhaseWithInvalidPhaseStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
+    assertThatThrownBy(()
+                           -> workflowService.updateWorkflowPhaseRollback(
+                               APP_ID, WORKFLOW_ID, PHASE_ID, workflowPhaseWithInvalidPhaseStep))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Phase Step name should not contain dots");
   }
 
   @Test
