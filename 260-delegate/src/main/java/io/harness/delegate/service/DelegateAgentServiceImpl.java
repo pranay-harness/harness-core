@@ -834,6 +834,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     systemExecutor.submit(() -> handleMessage(message));
   }
 
+  @SuppressWarnings("PMD")
   private void handleMessage(String message) {
     if (StringUtils.startsWith(message, "[X]")) {
       String receivedId;

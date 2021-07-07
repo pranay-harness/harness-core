@@ -96,6 +96,7 @@ public class K8sControllerFetcher {
     return objectMeta;
   }
 
+  @SuppressWarnings("PMD")
   private Integer getWorkloadReplicas(@NotNull Object workloadResource) {
     // Deployment, ReplicaSet, StatefulSet have replicas field
     // DaemonSet, Job, CronJob doesn't have replicas

@@ -109,6 +109,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
         .getResource();
   }
 
+  @SuppressWarnings("PMD")
   private void run(DataCollectionPerpetualTaskParams taskParams, ConnectorConfigDTO connectorConfigDTO,
       DataCollectionTaskDTO dataCollectionTask) {
     try {

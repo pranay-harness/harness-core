@@ -17,8 +17,10 @@ import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.DEL)
+@Slf4j
 public class StressTestGeneratorApplication {
   public static void main(String... args) {
     List<Module> modules = new ArrayList<>();
@@ -37,6 +39,6 @@ public class StressTestGeneratorApplication {
     Injector injector = Guice.createInjector(modules);
 
     StressTestGenerator stressTestGenerator = injector.getInstance(CapabilityStressTestGenerator.class);
-    System.out.println(stressTestGenerator.makeStressTest());
+    log.info(stressTestGenerator.makeStressTest().toString());
   }
 }

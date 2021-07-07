@@ -15,6 +15,4 @@ java_library(
     ],
 )
 
-run_analysis(
-    run_pmd = False,
-)
+run_analysis()
