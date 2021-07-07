@@ -40,12 +40,11 @@ public class WinRMCredentialController {
   @Inject UsageScopeController usageScopeController;
 
   public QLWinRMCredential populateWinRMCredential(@NotNull SettingAttribute settingAttribute) {
-    QLAuthScheme authScheme = QLAuthScheme.NTLM;
     WinRmConnectionAttributes winRmConnectionAttributes = (WinRmConnectionAttributes) settingAttribute.getValue();
     return QLWinRMCredential.builder()
         .id(settingAttribute.getUuid())
         .name(settingAttribute.getName())
-        .authenticationScheme(authScheme)
+        .authenticationScheme(QLAuthScheme.valueOf(winRmConnectionAttributes.getAuthenticationScheme().toString()))
         .secretType(QLSecretType.WINRM_CREDENTIAL)
         .userName(winRmConnectionAttributes.getUsername())
         .domain(winRmConnectionAttributes.getDomain())
