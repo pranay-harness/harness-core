@@ -4426,7 +4426,7 @@ plain_artifacts = [
     "com.microsoft.azure:azure-storage:6.1.0",
     "com.microsoft.azure:msal4j:1.8.1",
     "com.microsoft.rest:client-runtime:1.7.4",
-    "com.networknt:json-schema-validator:1.0.45",
+    "com.networknt:json-schema-validator:1.0.54",
     "com.nimbusds:lang-tag:1.5",
     "com.nimbusds:nimbus-jose-jwt:8.19",
     "com.nimbusds:oauth2-oidc-sdk:7.4",
