@@ -29,8 +29,6 @@ import io.harness.ng.core.events.ApiKeyUpdateEvent;
 import io.harness.ng.core.mapper.ApiKeyDTOMapper;
 import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.ng.core.spring.ApiKeyRepository;
-import io.harness.security.SourcePrincipalContextBuilder;
-import io.harness.security.dto.PrincipalType;
 import io.harness.utils.PageUtils;
 
 import com.google.common.base.Preconditions;
@@ -61,8 +59,8 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
   @Override
   public ApiKeyDTO createApiKey(ApiKeyDTO apiKeyDTO) {
-    validateApiKeyRequest(apiKeyDTO.getAccountIdentifier(), apiKeyDTO.getOrgIdentifier(),
-        apiKeyDTO.getProjectIdentifier(), apiKeyDTO.getApiKeyType(), apiKeyDTO.getParentIdentifier());
+    validateApiKeyRequest(
+        apiKeyDTO.getAccountIdentifier(), apiKeyDTO.getOrgIdentifier(), apiKeyDTO.getProjectIdentifier());
     Optional<ApiKey> optionalApiKey =
         apiKeyRepository
             .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndIdentifier(
@@ -80,44 +78,18 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }));
   }
 
-  private void validateApiKeyRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      ApiKeyType apiKeyType, String parentIdentifier) {
+  private void validateApiKeyRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     if (!accountOrgProjectValidator.isPresent(accountIdentifier, orgIdentifier, projectIdentifier)) {
       throw new InvalidArgumentsException(String.format("Project [%s] in Org [%s] and Account [%s] does not exist",
                                               accountIdentifier, orgIdentifier, projectIdentifier),
           USER_SRE);
     }
-    validateParentIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier);
-  }
-
-  private void validateParentIdentifier(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      ApiKeyType apiKeyType, String parentIdentifier) {
-    switch (apiKeyType) {
-      case USER:
-        Optional<String> userId = Optional.empty();
-        if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
-            && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
-          userId = Optional.of(SourcePrincipalContextBuilder.getSourcePrincipal().getName());
-        }
-        if (!userId.isPresent()) {
-          throw new InvalidArgumentsException("No user identifier present in context");
-        }
-        if (!userId.get().equals(parentIdentifier)) {
-          throw new InvalidArgumentsException(String.format(
-              "User [%s] not authenticated to create api key for user [%s]", userId.get(), parentIdentifier));
-        }
-        break;
-      case SERVICE_ACCOUNT:
-        break;
-      default:
-        throw new InvalidArgumentsException(String.format("Invalid api key type: %s", apiKeyType));
-    }
   }
 
   @Override
   public ApiKeyDTO updateApiKey(ApiKeyDTO apiKeyDTO) {
-    validateApiKeyRequest(apiKeyDTO.getAccountIdentifier(), apiKeyDTO.getOrgIdentifier(),
-        apiKeyDTO.getProjectIdentifier(), apiKeyDTO.getApiKeyType(), apiKeyDTO.getParentIdentifier());
+    validateApiKeyRequest(
+        apiKeyDTO.getAccountIdentifier(), apiKeyDTO.getOrgIdentifier(), apiKeyDTO.getProjectIdentifier());
     Optional<ApiKey> optionalApiKey =
         apiKeyRepository
             .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndIdentifier(
@@ -141,7 +113,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   @Override
   public boolean deleteApiKey(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       ApiKeyType apiKeyType, String parentIdentifier, String identifier) {
-    validateApiKeyRequest(accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier);
+    validateApiKeyRequest(accountIdentifier, orgIdentifier, projectIdentifier);
     Optional<ApiKey> optionalApiKey =
         apiKeyRepository
             .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndApiKeyTypeAndParentIdentifierAndIdentifier(

@@ -85,7 +85,7 @@ public class ApiKey implements PersistentEntity, UuidAware, NGAccountAccess, NGO
   @NotNull @Size(max = 1024) String description;
   @NotNull @Singular @Size(max = 128) List<NGTag> tags;
 
-  @EntityIdentifier String parentIdentifier;
+  @NotNull String parentIdentifier;
   ApiKeyType apiKeyType;
   @Builder.Default long defaultTimeToExpireToken = DEFAULT_TTL_FOR_TOKEN;
 }

@@ -21,7 +21,7 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
-import io.harness.ng.accesscontrol.PlatformPermissions;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.ng.accesscontrol.PlatformResourceTypes;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -36,6 +36,8 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entities.ApiKey.ApiKeyKeys;
+import io.harness.security.SourcePrincipalContextBuilder;
+import io.harness.security.dto.PrincipalType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -77,13 +79,38 @@ public class ApiKeyResource {
   private final ApiKeyService apiKeyService;
   private final AccessControlClient accessControlClient;
 
+  private void validateParentIdentifier(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      ApiKeyType apiKeyType, String parentIdentifier) {
+    switch (apiKeyType) {
+      case USER:
+        java.util.Optional<String> userId = java.util.Optional.empty();
+        if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
+            && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
+          userId = java.util.Optional.of(SourcePrincipalContextBuilder.getSourcePrincipal().getName());
+        }
+        if (!userId.isPresent()) {
+          throw new InvalidArgumentsException("No user identifier present in context");
+        }
+        if (!userId.get().equals(parentIdentifier)) {
+          throw new InvalidArgumentsException(String.format(
+              "User [%s] not authenticated to create api key for user [%s]", userId.get(), parentIdentifier));
+        }
+        break;
+      case SERVICE_ACCOUNT:
+        accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+            Resource.of(PlatformResourceTypes.SERVICEACCOUNT, parentIdentifier),
+            MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION);
+        break;
+      default:
+        throw new InvalidArgumentsException(String.format("Invalid api key type: %s", apiKeyType));
+    }
+  }
+
   @POST
   @ApiOperation(value = "Create api key", nickname = "createApiKey")
   public ResponseDTO<ApiKeyDTO> createApiKey(@Valid ApiKeyDTO apiKeyDTO) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(apiKeyDTO.getAccountIdentifier(),
-                                                  apiKeyDTO.getOrgIdentifier(), apiKeyDTO.getProjectIdentifier()),
-        Resource.of(PlatformResourceTypes.SERVICEACCOUNT, apiKeyDTO.getParentIdentifier()),
-        MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION);
+    validateParentIdentifier(apiKeyDTO.getAccountIdentifier(), apiKeyDTO.getOrgIdentifier(),
+        apiKeyDTO.getProjectIdentifier(), apiKeyDTO.getApiKeyType(), apiKeyDTO.getParentIdentifier());
     ApiKeyDTO apiKey = apiKeyService.createApiKey(apiKeyDTO);
     return ResponseDTO.newResponse(apiKey);
   }
@@ -93,11 +120,8 @@ public class ApiKeyResource {
   @ApiOperation(value = "Update api key", nickname = "updateApiKey")
   public ResponseDTO<ApiKeyDTO> updateApiKey(
       @Valid ApiKeyDTO apiKeyDTO, @NotNull @PathParam("identifier") String identifier) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(apiKeyDTO.getAccountIdentifier(),
-                                                  apiKeyDTO.getOrgIdentifier(), apiKeyDTO.getProjectIdentifier()),
-        Resource.of(PlatformResourceTypes.SERVICEACCOUNT, apiKeyDTO.getParentIdentifier()),
-        MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION);
-
+    validateParentIdentifier(apiKeyDTO.getAccountIdentifier(), apiKeyDTO.getOrgIdentifier(),
+        apiKeyDTO.getProjectIdentifier(), apiKeyDTO.getApiKeyType(), apiKeyDTO.getParentIdentifier());
     ApiKeyDTO apiKey = apiKeyService.updateApiKey(apiKeyDTO);
     return ResponseDTO.newResponse(apiKey);
   }
@@ -110,9 +134,7 @@ public class ApiKeyResource {
       @NotNull @QueryParam("apiKeyType") ApiKeyType apiKeyType,
       @NotNull @QueryParam("parentIdentifier") String parentIdentifier,
       @NotNull @PathParam(IDENTIFIER_KEY) String identifier) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.of(PlatformResourceTypes.SERVICEACCOUNT, parentIdentifier), MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION);
-
+    validateParentIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier);
     boolean deleted = apiKeyService.deleteApiKey(
         accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, identifier);
     return ResponseDTO.newResponse(deleted);
@@ -125,9 +147,7 @@ public class ApiKeyResource {
       @NotNull @QueryParam("apiKeyType") ApiKeyType apiKeyType,
       @NotNull @QueryParam("parentIdentifier") String parentIdentifier,
       @Optional @QueryParam(IDENTIFIERS) List<String> identifiers) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.of(PlatformResourceTypes.SERVICEACCOUNT, parentIdentifier), MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION);
-
+    validateParentIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier);
     List<ApiKeyDTO> apiKeyDTOs = apiKeyService.listApiKeys(
         accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier, identifiers);
     return ResponseDTO.newResponse(apiKeyDTOs);
@@ -136,16 +156,15 @@ public class ApiKeyResource {
   @GET
   @Path("aggregate")
   @ApiOperation(value = "List api key", nickname = "listAggregatedApiKeys")
-  @NGAccessControlCheck(
-      resourceType = SERVICEACCOUNT, permission = PlatformPermissions.MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION)
-  public ResponseDTO<PageResponse<ApiKeyAggregateDTO>>
-  listAggregatedApiKeys(@NotNull @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+  public ResponseDTO<PageResponse<ApiKeyAggregateDTO>> listAggregatedApiKeys(
+      @NotNull @QueryParam(ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @Optional @QueryParam(ORG_KEY) @OrgIdentifier String orgIdentifier,
       @Optional @QueryParam(PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @NotNull @QueryParam("apiKeyType") ApiKeyType apiKeyType,
       @NotNull @QueryParam("parentIdentifier") String parentIdentifier,
       @Optional @QueryParam(IDENTIFIERS) List<String> identifiers, @BeanParam PageRequest pageRequest,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+    validateParentIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier);
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
           SortOrder.Builder.aSortOrder().withField(ApiKeyKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
