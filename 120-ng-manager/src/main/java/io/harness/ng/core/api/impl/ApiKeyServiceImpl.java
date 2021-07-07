@@ -3,15 +3,20 @@ package io.harness.ng.core.api.impl;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ng.accesscontrol.PlatformPermissions.MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.accesscontrol.PlatformResourceTypes;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.AccountOrgProjectValidator;
 import io.harness.ng.core.api.ApiKeyService;
@@ -29,6 +34,8 @@ import io.harness.ng.core.events.ApiKeyUpdateEvent;
 import io.harness.ng.core.mapper.ApiKeyDTOMapper;
 import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.ng.core.spring.ApiKeyRepository;
+import io.harness.security.SourcePrincipalContextBuilder;
+import io.harness.security.dto.PrincipalType;
 import io.harness.utils.PageUtils;
 
 import com.google.common.base.Preconditions;
@@ -56,6 +63,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   @Inject private AccountOrgProjectValidator accountOrgProjectValidator;
   @Inject private TokenService tokenService;
   @Inject @Named(OUTBOX_TRANSACTION_TEMPLATE) private TransactionTemplate transactionTemplate;
+  @Inject private AccessControlClient accessControlClient;
 
   @Override
   public ApiKeyDTO createApiKey(ApiKeyDTO apiKeyDTO) {
@@ -249,5 +257,33 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     return apiKeyRepository
         .deleteAllByAccountIdentifierAndOrgIdentifierAndParentIdentifierAndApiKeyTypeAndParentIdentifier(
             accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier);
+  }
+
+  @Override
+  public void validateParentIdentifier(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      ApiKeyType apiKeyType, String parentIdentifier) {
+    switch (apiKeyType) {
+      case USER:
+        java.util.Optional<String> userId = java.util.Optional.empty();
+        if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
+            && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
+          userId = java.util.Optional.of(SourcePrincipalContextBuilder.getSourcePrincipal().getName());
+        }
+        if (!userId.isPresent()) {
+          throw new InvalidArgumentsException("No user identifier present in context");
+        }
+        if (!userId.get().equals(parentIdentifier)) {
+          throw new InvalidArgumentsException(String.format(
+              "User [%s] not authenticated to create api key for user [%s]", userId.get(), parentIdentifier));
+        }
+        break;
+      case SERVICE_ACCOUNT:
+        accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+            Resource.of(PlatformResourceTypes.SERVICEACCOUNT, parentIdentifier),
+            MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION);
+        break;
+      default:
+        throw new InvalidArgumentsException(String.format("Invalid api key type: %s", apiKeyType));
+    }
   }
 }

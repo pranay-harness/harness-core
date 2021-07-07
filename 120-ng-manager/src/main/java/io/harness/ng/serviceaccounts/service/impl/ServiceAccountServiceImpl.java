@@ -136,16 +136,16 @@ public class ServiceAccountServiceImpl implements ServiceAccountService {
 
   private void validateUpdateServiceAccountRequest(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String identifier, ServiceAccountDTO requestDTO, ServiceAccount serviceAccount) {
-    verifyValuesNotChanged(
-        Lists.newArrayList(Pair.of(accountIdentifier, requestDTO.getAccountIdentifier()),
-            Pair.of(orgIdentifier, requestDTO.getOrgIdentifier()),
-            Pair.of(projectIdentifier, requestDTO.getProjectIdentifier()),
-            Pair.of(identifier, requestDTO.getIdentifier()), Pair.of(requestDTO.getEmail(), requestDTO.getEmail())),
+    verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, requestDTO.getAccountIdentifier()),
+                               Pair.of(orgIdentifier, requestDTO.getOrgIdentifier()),
+                               Pair.of(projectIdentifier, requestDTO.getProjectIdentifier()),
+                               Pair.of(identifier, requestDTO.getIdentifier())),
         true);
     verifyValuesNotChanged(
         Lists.newArrayList(Pair.of(serviceAccount.getAccountIdentifier(), requestDTO.getAccountIdentifier()),
-            Pair.of(serviceAccount.getAccountIdentifier(), requestDTO.getOrgIdentifier()),
-            Pair.of(serviceAccount.getProjectIdentifier(), requestDTO.getProjectIdentifier())),
+            Pair.of(serviceAccount.getOrgIdentifier(), requestDTO.getOrgIdentifier()),
+            Pair.of(serviceAccount.getProjectIdentifier(), requestDTO.getProjectIdentifier()),
+            Pair.of(serviceAccount.getEmail(), requestDTO.getEmail())),
         true);
   }
 

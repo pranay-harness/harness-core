@@ -6,22 +6,17 @@ import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
 import static io.harness.NGResourceFilterConstants.IDENTIFIERS;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.ng.accesscontrol.PlatformPermissions.MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.AccountIdentifier;
-import io.harness.accesscontrol.clients.AccessControlClient;
-import io.harness.accesscontrol.clients.Resource;
-import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
-import io.harness.exception.InvalidArgumentsException;
-import io.harness.ng.accesscontrol.PlatformResourceTypes;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
+import io.harness.ng.core.api.ApiKeyService;
 import io.harness.ng.core.api.TokenService;
 import io.harness.ng.core.common.beans.ApiKeyType;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -31,9 +26,7 @@ import io.harness.ng.core.dto.TokenAggregateDTO;
 import io.harness.ng.core.dto.TokenDTO;
 import io.harness.ng.core.dto.TokenFilterDTO;
 import io.harness.ng.core.entities.Token.TokenKeys;
-import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.annotations.InternalApi;
-import io.harness.security.dto.PrincipalType;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -73,40 +66,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(PL)
 public class TokenResource {
-  @Inject private TokenService tokenService;
-  @Inject private AccessControlClient accessControlClient;
-
-  private void validateParentIdentifier(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      ApiKeyType apiKeyType, String parentIdentifier) {
-    switch (apiKeyType) {
-      case USER:
-        java.util.Optional<String> userId = java.util.Optional.empty();
-        if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
-            && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
-          userId = java.util.Optional.of(SourcePrincipalContextBuilder.getSourcePrincipal().getName());
-        }
-        if (!userId.isPresent()) {
-          throw new InvalidArgumentsException("No user identifier present in context");
-        }
-        if (!userId.get().equals(parentIdentifier)) {
-          throw new InvalidArgumentsException(String.format(
-              "User [%s] not authenticated to create api key for user [%s]", userId.get(), parentIdentifier));
-        }
-        break;
-      case SERVICE_ACCOUNT:
-        accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-            Resource.of(PlatformResourceTypes.SERVICEACCOUNT, parentIdentifier),
-            MANAGEAPIKEY_SERVICEACCOUNT_PERMISSION);
-        break;
-      default:
-        throw new InvalidArgumentsException(String.format("Invalid api key type: %s", apiKeyType));
-    }
-  }
+  private final TokenService tokenService;
+  private final ApiKeyService apiKeyService;
 
   @POST
   @ApiOperation(value = "Create token", nickname = "createToken")
   public ResponseDTO<String> createToken(@Valid TokenDTO tokenDTO) {
-    validateParentIdentifier(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(),
+    apiKeyService.validateParentIdentifier(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(),
         tokenDTO.getProjectIdentifier(), tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier());
     return ResponseDTO.newResponse(tokenService.createToken(tokenDTO));
   }
@@ -115,7 +81,7 @@ public class TokenResource {
   @Path("{identifier}")
   @ApiOperation(value = "Update token", nickname = "updateToken")
   public ResponseDTO<TokenDTO> updateToken(@PathParam("identifier") String identifier, @Valid TokenDTO tokenDTO) {
-    validateParentIdentifier(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(),
+    apiKeyService.validateParentIdentifier(tokenDTO.getAccountIdentifier(), tokenDTO.getOrgIdentifier(),
         tokenDTO.getProjectIdentifier(), tokenDTO.getApiKeyType(), tokenDTO.getParentIdentifier());
     return ResponseDTO.newResponse(tokenService.updateToken(tokenDTO));
   }
@@ -130,7 +96,8 @@ public class TokenResource {
       @NotNull @QueryParam("apiKeyType") ApiKeyType apiKeyType,
       @NotNull @QueryParam("parentIdentifier") String parentIdentifier,
       @NotNull @QueryParam("apiKeyIdentifier") String apiKeyIdentifier) {
-    validateParentIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier);
+    apiKeyService.validateParentIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier);
     return ResponseDTO.newResponse(tokenService.revokeToken(accountIdentifier, orgIdentifier, projectIdentifier,
         apiKeyType, parentIdentifier, apiKeyIdentifier, identifier));
   }
@@ -153,7 +120,8 @@ public class TokenResource {
       @NotNull @QueryParam("apiKeyType") ApiKeyType apiKeyType,
       @NotNull @QueryParam("parentIdentifier") String parentIdentifier,
       @NotNull @QueryParam("apiKeyIdentifier") String apiKeyIdentifier) {
-    validateParentIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier);
+    apiKeyService.validateParentIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier);
     return ResponseDTO.newResponse(tokenService.rotateToken(accountIdentifier, orgIdentifier, projectIdentifier,
         apiKeyType, parentIdentifier, apiKeyIdentifier, identifier, Instant.ofEpochMilli(rotateTimestamp)));
   }
@@ -170,7 +138,8 @@ public class TokenResource {
       @NotNull @QueryParam("apiKeyIdentifier") String apiKeyIdentifier,
       @Optional @QueryParam(IDENTIFIERS) List<String> identifiers, @BeanParam PageRequest pageRequest,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
-    validateParentIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier);
+    apiKeyService.validateParentIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, apiKeyType, parentIdentifier);
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
           SortOrder.Builder.aSortOrder().withField(TokenKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
