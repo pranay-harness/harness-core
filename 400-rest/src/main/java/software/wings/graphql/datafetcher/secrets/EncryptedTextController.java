@@ -62,17 +62,14 @@ public class EncryptedTextController {
 
     String secretValue = encryptedText.getValue();
     String path = encryptedText.getSecretReference();
-    Set<EncryptedDataParams> st = new HashSet<EncryptedDataParams>();
-    st = encryptedText.getParameters();
-    int cnt = 0;
-    if (isNotBlank(secretValue))
-      cnt++;
-    if (isNotBlank(path))
-      cnt++;
-    if (!EmptyPredicate.isEmpty(st))
-      cnt++;
-    if (cnt != 1) {
-      throw new InvalidRequestException("Exactly ONE out of value, secret reference and Variables is to be passed");
+    Set<EncryptedDataParams> secretParameters = encryptedText.getParameters();
+
+    int isSecretValueSet = isNotBlank(secretValue) ? 1 : 0;
+    int isSecretPathSet = isNotBlank(path) ? 1 : 0;
+    int isSecretParametersSet = EmptyPredicate.isEmpty(secretParameters) ? 0 : 1;
+
+    if (isSecretValueSet + isSecretPathSet + isSecretParametersSet != 1) {
+      throw new InvalidRequestException("Exactly ONE out of secret value, secret reference or secret parameters is to be passed");
     }
 
     SecretText secretText =
@@ -80,7 +77,7 @@ public class EncryptedTextController {
             .value(secretValue)
             .path(path)
             .name(secretName)
-            .parameters(st)
+            .parameters(secretParameters)
             .kmsId(secretMangerId)
             .usageRestrictions(usageScopeController.populateUsageRestrictions(encryptedText.getUsageScope(), accountId))
             .scopedToAccount(encryptedText.isScopedToAccount())
