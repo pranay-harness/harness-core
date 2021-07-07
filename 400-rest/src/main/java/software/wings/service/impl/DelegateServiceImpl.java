@@ -2126,6 +2126,77 @@ public class DelegateServiceImpl implements DelegateService {
     publishDelegateChangeEventViaEventFramework(accountId, delegateGroupId, owner, DELETE_ACTION);
   }
 
+  @Override
+  public void deleteDelegateGroupV2(
+      String accountId, String orgId, String projectId, String identifier, boolean forceDelete) {
+    log.info("Deleting delegate group: {} and all belonging delegates.", identifier);
+    DelegateGroup delegateGroup =
+        persistence.createQuery(DelegateGroup.class)
+            .filter(DelegateGroupKeys.accountId, accountId)
+            .filter(DelegateGroupKeys.owner, DelegateEntityOwnerHelper.buildOwner(orgId, projectId))
+            .filter(DelegateGroupKeys.identifier, identifier)
+            .get();
+
+    if (delegateGroup == null) {
+      log.info("Delegate group doesn't exist or it is already deleted.");
+      return;
+    }
+
+    String delegateGroupUuid = delegateGroup.getUuid();
+    List<Delegate> groupDelegates = persistence.createQuery(Delegate.class)
+                                        .filter(DelegateKeys.accountId, accountId)
+                                        .filter(DelegateKeys.delegateGroupId, delegateGroupUuid)
+                                        .project(DelegateKeys.owner, true)
+                                        .asList();
+
+    for (Delegate delegate : groupDelegates) {
+      delete(accountId, delegate.getUuid(), forceDelete);
+    }
+
+    if (featureFlagService.isEnabled(DO_DELEGATE_PHYSICAL_DELETE, accountId) || forceDelete) {
+      persistence.delete(persistence.createQuery(DelegateGroup.class)
+                             .filter(DelegateGroupKeys.accountId, accountId)
+                             .filter(DelegateGroupKeys.uuid, delegateGroupUuid));
+      log.info("Delegate group: {} and all belonging delegates have been deleted.", delegateGroupUuid);
+    } else {
+      Query<DelegateGroup> updateQuery = persistence.createQuery(DelegateGroup.class)
+                                             .filter(DelegateGroupKeys.accountId, accountId)
+                                             .filter(DelegateGroupKeys.uuid, delegateGroupUuid);
+
+      UpdateOperations<DelegateGroup> updateOperations =
+          persistence.createUpdateOperations(DelegateGroup.class)
+              .set(DelegateGroupKeys.status, DelegateGroupStatus.DELETED)
+              .set(DelegateGroupKeys.validUntil,
+                  Date.from(OffsetDateTime.now()
+                                .plusDays(Delegate.TTL.toDays()) // Delegate.TTL is used to make sure TTL duration is
+                                // aligned between group and delegate
+                                .toInstant()));
+
+      persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
+      log.info("Delegate group: {} and all belonging delegates have been marked as deleted.", identifier);
+    }
+
+    outboxService.save(
+        DelegateGroupDeleteEvent.builder()
+            .accountIdentifier(accountId)
+            .orgIdentifier(orgId)
+            .projectIdentifier(projectId)
+            .delegateGroupId(delegateGroupUuid)
+            .delegateSetupDetails(DelegateSetupDetails.builder()
+                                      .delegateConfigurationId(delegateGroup.getDelegateConfigurationId())
+                                      .description(delegateGroup.getDescription())
+                                      .k8sConfigDetails(delegateGroup.getK8sConfigDetails())
+                                      .name(delegateGroup.getName())
+                                      .size(delegateGroup.getSizeDetails().getSize())
+                                      .orgIdentifier(orgId)
+                                      .projectIdentifier(projectId)
+                                      .build())
+            .build());
+
+    DelegateEntityOwner owner = isNotEmpty(groupDelegates) ? groupDelegates.get(0).getOwner() : null;
+    publishDelegateChangeEventViaEventFramework(accountId, delegateGroupUuid, owner, DELETE_ACTION);
+  }
+
   private void publishDelegateChangeEventViaEventFramework(
       String accountId, String delegateGroupId, DelegateEntityOwner owner, String action) {
     try {

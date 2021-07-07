@@ -109,6 +109,8 @@ public interface DelegateService extends OwnedByAccount {
 
   void deleteDelegateGroup(String accountId, String delegateGroupId, boolean forceDelete);
 
+  void deleteDelegateGroupV2(String accountId, String orgId, String projectId, String identifier, boolean forceDelete);
+
   DelegateRegisterResponse register(@Valid Delegate delegate);
 
   DelegateRegisterResponse register(@Valid DelegateParams delegateParams);
