@@ -568,4 +568,6 @@ public interface ServiceResourceService extends OwnedByApplication {
   Set<HelmSubCommand> getHelmCommandFlags(HelmVersion version, String appId, String serviceId, StoreType storeType);
 
   boolean isK8sV2Service(String appId, String serviceId);
+
+  List<String> getIdsWithArtifactFromManifest(String appId);
 }

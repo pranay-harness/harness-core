@@ -90,6 +90,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
                                        .pollForChanges(this.pollForChanges)
                                        .skipVersioningForAllK8sObjects(this.skipVersioningForAllK8sObjects)
                                        .helmCommandFlag(HelmCommandFlagConfig.cloneFrom(this.helmCommandFlag))
+                                       .name(this.name)
                                        .build();
     manifest.setAppId(this.appId);
     return manifest;
