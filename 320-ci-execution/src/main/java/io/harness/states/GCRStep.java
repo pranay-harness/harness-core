@@ -42,7 +42,9 @@ public class GCRStep extends AbstractStepExecutable {
 
     final Pattern pattern = Pattern.compile(GCR_HOST_REGEX, Pattern.CASE_INSENSITIVE);
     final Matcher matcher = pattern.matcher(host);
-    final String region = matcher.find() ? matcher.group("region").toUpperCase() : GCR_GLOBAL_REGION;
+    final String region = (matcher.find() && isNotEmpty(matcher.group("region")))
+        ? matcher.group("region").toUpperCase()
+        : GCR_GLOBAL_REGION;
 
     if (artifactMetadata.getType() == ArtifactMetadataType.DOCKER_ARTIFACT_METADATA) {
       DockerArtifactMetadata dockerArtifactMetadata = (DockerArtifactMetadata) artifactMetadata.getSpec();
