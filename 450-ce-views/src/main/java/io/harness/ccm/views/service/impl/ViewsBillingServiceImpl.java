@@ -35,6 +35,7 @@ import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_TASK;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_TASK_ID;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_NAMESPACE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_NAMESPACE_ID;
+import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_PRODUCT;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_WORKLOAD_ID;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_WORKLOAD_NAME;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_WORKLOAD_TYPE;
@@ -61,6 +62,7 @@ import io.harness.ccm.views.entities.ViewIdOperator;
 import io.harness.ccm.views.entities.ViewRule;
 import io.harness.ccm.views.entities.ViewTimeGranularity;
 import io.harness.ccm.views.entities.ViewVisualization;
+import io.harness.ccm.views.graphql.QLCEViewAggregateOperation;
 import io.harness.ccm.views.graphql.QLCEViewAggregation;
 import io.harness.ccm.views.graphql.QLCEViewDataPoint;
 import io.harness.ccm.views.graphql.QLCEViewDataPoint.QLCEViewDataPointBuilder;
@@ -75,6 +77,7 @@ import io.harness.ccm.views.graphql.QLCEViewGroupBy;
 import io.harness.ccm.views.graphql.QLCEViewMetadataFilter;
 import io.harness.ccm.views.graphql.QLCEViewRule;
 import io.harness.ccm.views.graphql.QLCEViewSortCriteria;
+import io.harness.ccm.views.graphql.QLCEViewSortType;
 import io.harness.ccm.views.graphql.QLCEViewTimeFilter;
 import io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator;
 import io.harness.ccm.views.graphql.QLCEViewTimeGroupType;
@@ -253,10 +256,10 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   @Override
   public TableResult getTimeSeriesStatsNg(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
       List<QLCEViewGroupBy> groupBy, List<QLCEViewAggregation> aggregateFunction, List<QLCEViewSortCriteria> sort,
-      String cloudProviderTableName, String accountId, boolean includeOthers) {
+      String cloudProviderTableName, String accountId, boolean includeOthers, Integer limit) {
     if (!includeOthers) {
       QLCEViewGridData gridData = getEntityStatsDataPointsNg(
-          bigQuery, filters, groupBy, aggregateFunction, sort, cloudProviderTableName, 30, 0, accountId, false);
+          bigQuery, filters, groupBy, aggregateFunction, sort, cloudProviderTableName, limit, 0, accountId, false);
       filters = getModifiedFilters(filters, gridData);
     }
     SelectQuery query = getQuery(filters, groupBy, aggregateFunction, sort, cloudProviderTableName, true, accountId);
@@ -323,7 +326,12 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       final String viewId = metadataFilter.getViewId();
       if (!metadataFilter.isPreview()) {
         CEView ceView = viewService.get(viewId);
-        List<ViewFieldIdentifier> dataSources = ceView.getDataSources();
+        List<ViewFieldIdentifier> dataSources;
+        try {
+          dataSources = ceView.getDataSources();
+        } catch (Exception e) {
+          dataSources = null;
+        }
         return dataSources != null && dataSources.size() == 1 && dataSources.get(0).equals(CLUSTER);
       }
     }
@@ -501,6 +509,10 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     }
     // account id is not passed in current gen queries
     if (accountId != null) {
+      if (isClusterPerspective(filters)) {
+        // Changes column name for cost to billingamount
+        aggregateFunction = getModifiedAggregations(aggregateFunction);
+      }
       cloudProviderTableName =
           getUpdatedCloudProviderTableName(filters, null, aggregateFunction, "", cloudProviderTableName);
     }
@@ -554,6 +566,9 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     if (accountId != null) {
       if (isClusterPerspective(filters)) {
         modifiedGroupBy = addAdditionalRequiredGroupBy(modifiedGroupBy);
+        // Changes column name for cost to billingamount
+        aggregateFunction = getModifiedAggregations(aggregateFunction);
+        sort = getModifiedSort(sort);
       }
       cloudProviderTableName =
           getUpdatedCloudProviderTableName(filters, modifiedGroupBy, aggregateFunction, "", cloudProviderTableName);
@@ -662,6 +677,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     }
     Schema schema = result.getSchema();
     FieldList fields = schema.getFields();
+    List<String> fieldNames = getFieldNames(fields);
 
     List<QLCEViewEntityStatsDataPoint> entityStatsDataPoints = new ArrayList<>();
     for (FieldValueList row : result.iterateAll()) {
@@ -690,7 +706,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       }
       entityStatsDataPoints.add(dataPointBuilder.build());
     }
-    return QLCEViewGridData.builder().data(entityStatsDataPoints).build();
+    return QLCEViewGridData.builder().data(entityStatsDataPoints).fields(fieldNames).build();
   }
 
   private QLCEViewGridData convertToEntityStatsDataForCluster(
@@ -1009,6 +1025,9 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
             modifiedGroupBy.add(getGroupBy(GROUP_BY_ECS_SERVICE, CLOUD_SERVICE_NAME, CLUSTER));
             modifiedGroupBy.add(getGroupBy(GROUP_BY_ECS_TASK, TASK_ID, CLUSTER));
             break;
+          case GROUP_BY_PRODUCT:
+            modifiedGroupBy.add(getGroupBy(GROUP_BY_CLUSTER_NAME, CLUSTER_NAME, CLUSTER));
+            break;
           default:
             modifiedGroupBy.add(groupBy);
         }
@@ -1156,6 +1175,49 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       }
     }
     return filters;
+  }
+
+  private List<QLCEViewAggregation> getModifiedAggregations(List<QLCEViewAggregation> aggregateFunctions) {
+    List<QLCEViewAggregation> modifiedAggregations;
+    if (aggregateFunctions == null) {
+      return new ArrayList<>();
+    }
+    boolean isCostAggregationPresent =
+        aggregateFunctions.stream().anyMatch(function -> function.getColumnName().equals(COST));
+    if (isCostAggregationPresent) {
+      modifiedAggregations = aggregateFunctions.stream()
+                                 .filter(function -> !function.getColumnName().equals(COST))
+                                 .collect(Collectors.toList());
+      modifiedAggregations.add(QLCEViewAggregation.builder()
+                                   .columnName(BILLING_AMOUNT)
+                                   .operationType(QLCEViewAggregateOperation.SUM)
+                                   .build());
+    } else {
+      modifiedAggregations = aggregateFunctions;
+    }
+    return modifiedAggregations;
+  }
+
+  private List<QLCEViewSortCriteria> getModifiedSort(List<QLCEViewSortCriteria> sortCriteria) {
+    List<QLCEViewSortCriteria> modifiedSortCriteria;
+    if (sortCriteria == null) {
+      return new ArrayList<>();
+    }
+    boolean isSortByCostPresent = sortCriteria.stream().anyMatch(sort -> sort.getSortType() == QLCEViewSortType.COST);
+    if (isSortByCostPresent) {
+      QLCEViewSortCriteria costSort =
+          sortCriteria.stream().filter(sort -> sort.getSortType() == QLCEViewSortType.COST).findFirst().get();
+      modifiedSortCriteria = sortCriteria.stream()
+                                 .filter(sort -> sort.getSortType() != QLCEViewSortType.COST)
+                                 .collect(Collectors.toList());
+      modifiedSortCriteria.add(QLCEViewSortCriteria.builder()
+                                   .sortOrder(costSort.getSortOrder())
+                                   .sortType(QLCEViewSortType.CLUSTER_COST)
+                                   .build());
+    } else {
+      modifiedSortCriteria = sortCriteria;
+    }
+    return modifiedSortCriteria;
   }
 
   // Methods for calculating forecast cost

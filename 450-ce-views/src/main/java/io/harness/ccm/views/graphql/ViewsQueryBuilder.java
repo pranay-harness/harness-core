@@ -6,10 +6,14 @@ import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_KEY_UN_NEST
 import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_VALUE_UN_NESTED;
 import static io.harness.ccm.views.utils.ClusterTableKeys.CLOUD_SERVICE_NAME;
 import static io.harness.ccm.views.utils.ClusterTableKeys.CLUSTER_TABLE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_APPLICATION;
+import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_CLOUD_PROVIDER;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_LAUNCH_TYPE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_SERVICE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_TASK;
+import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ENVIRONMENT;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_NODE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_SERVICE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.INSTANCE_ID;
 import static io.harness.ccm.views.utils.ClusterTableKeys.LAUNCH_TYPE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.TASK_ID;
@@ -72,6 +76,8 @@ public class ViewsQueryBuilder {
   private static final ImmutableSet<String> podInfoImmutableSet =
       ImmutableSet.of("namespace", "workloadName", "appId", "envId", "serviceId");
   private static final ImmutableSet<String> clusterFilterImmutableSet = ImmutableSet.of("product", "region");
+  private static final ImmutableList<String> applicationGroupBys =
+      ImmutableList.of(GROUP_BY_APPLICATION, GROUP_BY_SERVICE, GROUP_BY_ENVIRONMENT, GROUP_BY_CLOUD_PROVIDER);
 
   public SelectQuery getQuery(List<ViewRule> rules, List<QLCEViewFilter> filters, List<QLCEViewTimeFilter> timeFilters,
       List<QLCEViewGroupBy> groupByList, List<QLCEViewAggregation> aggregations,
@@ -80,11 +86,12 @@ public class ViewsQueryBuilder {
     selectQuery.addCustomFromTable(cloudProviderTableName);
     List<QLCEViewFieldInput> groupByEntity = getGroupByEntity(groupByList);
     QLCEViewTimeTruncGroupBy groupByTime = getGroupByTime(groupByList);
+    boolean isClusterTable = isClusterTable(cloudProviderTableName);
 
     List<ViewField> customFields = collectCustomFieldList(rules, filters, groupByEntity);
-    modifyQueryWithInstanceTypeFilter(rules, filters, groupByEntity, customFields, selectQuery);
-
-    boolean isClusterTable = isClusterTable(cloudProviderTableName);
+    if (!isApplicationQuery(groupByList) || !isClusterTable) {
+      modifyQueryWithInstanceTypeFilter(rules, filters, groupByEntity, customFields, selectQuery);
+    }
 
     if (!rules.isEmpty()) {
       selectQuery.addCondition(getConsolidatedRuleCondition(rules));
@@ -881,5 +888,17 @@ public class ViewsQueryBuilder {
 
   private boolean isClusterTable(String cloudProviderTableName) {
     return cloudProviderTableName.contains(CLUSTER_TABLE);
+  }
+
+  private boolean isApplicationQuery(List<QLCEViewGroupBy> groupByList) {
+    return groupByList.stream()
+        .filter(entry -> entry.getEntityGroupBy() != null)
+        .anyMatch(entry -> applicationGroupBys.contains(entry.getEntityGroupBy().getFieldName()));
+  }
+
+  private boolean isNodeQuery(List<QLCEViewGroupBy> groupByList) {
+    return groupByList.stream()
+        .filter(entry -> entry.getEntityGroupBy() != null)
+        .anyMatch(entry -> entry.getEntityGroupBy().getFieldName().equals(GROUP_BY_NODE));
   }
 }
