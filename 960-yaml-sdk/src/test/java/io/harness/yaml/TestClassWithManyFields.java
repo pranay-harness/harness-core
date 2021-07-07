@@ -5,6 +5,9 @@ import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.map;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.number;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -15,6 +18,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+@OwnedBy(HarnessTeam.DX)
 public class TestClassWithManyFields {
   @NoArgsConstructor
   @AllArgsConstructor
@@ -66,4 +70,21 @@ public class TestClassWithManyFields {
   }
 
   public enum Types1 { ClassWithoutApiModelOverride1 }
+
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @FieldDefaults(level = AccessLevel.PUBLIC)
+  public static class ClassWithoutApiModelOverride3 extends TestAbstractClass {
+    String testString;
+    @YamlSchemaTypes(value = {list, map}, defaultType = list, pattern = "abc") TestRandomClass1 testRandomClass1;
+  }
+
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @FieldDefaults(level = AccessLevel.PUBLIC)
+  public static class ClassWithoutApiModelOverride4 {
+    String testString;
+    @YamlSchemaTypes(value = {string, map}, defaultType = string, pattern = "abc", minLength = 1)
+    TestRandomClass1 testRandomClass1;
+  }
 }
