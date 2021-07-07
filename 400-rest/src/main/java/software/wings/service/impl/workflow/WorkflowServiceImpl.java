@@ -2807,34 +2807,32 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                       && artifactVariable.getEntityId().equals(previousArtifactVariable.getEntityId()))
               .findFirst()
               .orElse(null);
-      if (foundArtifactVariable == null) {
-        return null;
-      }
+      if (foundArtifactVariable != null) {
+        List<Artifact> artifacts = workflowExecution.getExecutionArgs().getArtifacts();
+        String artifactId = foundArtifactVariable.getValue();
 
-      List<Artifact> artifacts = workflowExecution.getExecutionArgs().getArtifacts();
-      String artifactId = foundArtifactVariable.getValue();
-
-      if (isEmpty(artifacts)) {
-        return null;
-      }
-
-      if (isBlank(artifactId) || artifactService.get(artifactId) == null) {
-        if (foundArtifactVariable.getArtifactStreamMetadata() != null
-            && foundArtifactVariable.getArtifactStreamMetadata().getRuntimeValues() != null) {
-          String artifactStreamId = foundArtifactVariable.getArtifactStreamMetadata().getArtifactStreamId();
-          return artifacts.stream()
-              .filter(artifact
-                  -> StringUtils.equals(artifactStreamId, artifact.getArtifactStreamId())
-                      && StringUtils.equals(artifact.getBuildNo(),
-                          (String) foundArtifactVariable.getArtifactStreamMetadata().getRuntimeValues().get(
-                              ArtifactMetadataKeys.buildNo)))
-              .findFirst()
-              .orElse(null);
+        if (isEmpty(artifacts)) {
+          return null;
         }
-        return null;
-      }
 
-      return artifacts.stream().filter(artifact -> artifactId.equals(artifact.getUuid())).findFirst().orElse(null);
+        if (isBlank(artifactId) || artifactService.get(artifactId) == null) {
+          if (foundArtifactVariable.getArtifactStreamMetadata() != null
+              && foundArtifactVariable.getArtifactStreamMetadata().getRuntimeValues() != null) {
+            String artifactStreamId = foundArtifactVariable.getArtifactStreamMetadata().getArtifactStreamId();
+            return artifacts.stream()
+                .filter(artifact
+                    -> StringUtils.equals(artifactStreamId, artifact.getArtifactStreamId())
+                        && StringUtils.equals(artifact.getBuildNo(),
+                            (String) foundArtifactVariable.getArtifactStreamMetadata().getRuntimeValues().get(
+                                ArtifactMetadataKeys.buildNo)))
+                .findFirst()
+                .orElse(null);
+          }
+          return null;
+        }
+
+        return artifacts.stream().filter(artifact -> artifactId.equals(artifact.getUuid())).findFirst().orElse(null);
+      }
     }
 
     List<Artifact> previousArtifacts = workflowExecution.getExecutionArgs().getArtifacts();
