@@ -43,6 +43,7 @@ import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateSetupDetails;
 import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.service.intfc.DelegateCache;
@@ -60,10 +61,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DownloadTokenService;
 import software.wings.utils.ResourceTestRule;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.InputStream;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
@@ -512,8 +510,12 @@ public class DelegateSetupResourceTest {
                                 .target("/setup/delegates/" + ID_KEY + "?accountId=" + ACCOUNT_ID + "&forceDelete=true")
                                 .request()
                                 .delete();
+    try{
+      verify(delegateService, atLeastOnce()).delete(ACCOUNT_ID, ID_KEY, true);
+    }catch (InvalidRequestException e){
+      throw new InvalidRequestException("");
+    }
 
-    verify(delegateService, atLeastOnce()).delete(ACCOUNT_ID, ID_KEY, true);
   }
 
   @Test

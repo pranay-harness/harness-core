@@ -33,6 +33,7 @@ public interface NameService {
   String pipelineExecution = "PipelineExecution";
   String user = "User";
   String tag = "Tag";
+  String delegate = "Delegate";
 
   String infrastructureDefinition = "InfrastructureDefinition";
   String deploymentType = "DeploymentType";

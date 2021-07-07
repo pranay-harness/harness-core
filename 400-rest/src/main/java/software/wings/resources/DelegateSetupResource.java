@@ -34,6 +34,7 @@ import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateSetupDetails;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.task.DelegateLogContext;
+import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.KubernetesConvention;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
@@ -518,6 +519,9 @@ public class DelegateSetupResource {
       delegateService.delete(accountId, delegateId, forceDelete);
       return new RestResponse<>();
     }
+    catch (InvalidRequestException e){
+      throw new InvalidRequestException("");
+    }
   }
   @DELETE
   @Path("delete-all-except")
@@ -549,6 +553,8 @@ public class DelegateSetupResource {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       delegateService.deleteDelegateGroup(accountId, delegateGroupId, forceDelete);
       return new RestResponse<>();
+    } catch (IOException e){
+      throw new InvalidRequestException("");
     }
   }
 

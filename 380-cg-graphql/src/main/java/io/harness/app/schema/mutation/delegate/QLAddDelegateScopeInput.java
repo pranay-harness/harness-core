@@ -1,4 +1,4 @@
-package software.wings.graphql.schema.mutation.delegate;
+package io.harness.app.schema.mutation.delegate;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotations.dev.HarnessModule;
@@ -7,14 +7,7 @@ import io.harness.annotations.dev.TargetModule;
 import lombok.Builder;
 import lombok.Value;
 import software.wings.graphql.schema.mutation.QLMutationInput;
-import software.wings.graphql.schema.mutation.execution.input.QLServiceInput;
-import software.wings.graphql.schema.type.QLEnvironment;
-import software.wings.graphql.schema.type.QLEnvironmentType;
-import software.wings.graphql.schema.type.QLInfrastructureDefinitionFilter;
-import software.wings.graphql.schema.type.QLUser;
-import software.wings.graphql.schema.type.delegate.QLDelegateScope;
-
-import java.util.List;
+import io.harness.app.schema.type.delegate.QLDelegateScope;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 

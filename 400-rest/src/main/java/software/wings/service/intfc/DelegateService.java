@@ -24,6 +24,7 @@ import io.harness.delegate.beans.DelegateSetupDetails;
 import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.FileBucket;
+import io.harness.exception.InvalidRequestException;
 import io.harness.validation.Create;
 
 import software.wings.beans.CEDelegateStatus;
@@ -103,11 +104,11 @@ public interface DelegateService extends OwnedByAccount {
       String hostname, String delegateGroupName, String delegateProfile, String tokenName) throws IOException;
   Delegate add(Delegate delegate);
 
-  void delete(String accountId, String delegateId, boolean forceDelete);
+  void delete(String accountId, String delegateId, boolean forceDelete) throws InvalidRequestException;
 
   void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain);
 
-  void deleteDelegateGroup(String accountId, String delegateGroupId, boolean forceDelete);
+  void deleteDelegateGroup(String accountId, String delegateGroupId, boolean forceDelete) throws IOException;
 
   DelegateRegisterResponse register(@Valid Delegate delegate);
 

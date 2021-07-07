@@ -1,4 +1,4 @@
-package io.harness.app.schema.type.delegate;
+package software.wings.graphql.schema.type;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;

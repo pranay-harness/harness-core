@@ -1,4 +1,4 @@
-package software.wings.graphql.datafetcher.delegate;
+package io.harness.app.datafetcher.delegate;
 
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
@@ -9,8 +9,8 @@ import io.harness.delegate.beans.DelegateScope;
 
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.mutation.delegate.QLAddDelegateScopeInput;
-import software.wings.graphql.schema.mutation.delegate.QLAddDelegateScopePayload;
+import io.harness.app.schema.mutation.delegate.QLAddDelegateScopeInput;
+import io.harness.app.schema.mutation.delegate.QLAddDelegateScopePayload;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.DelegateScopeService;
 
@@ -31,7 +31,7 @@ public class AddDelegateScopeDataFetcher
   @Override
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   @AuthRule(permissionType = MANAGE_DELEGATES)
-  protected QLAddDelegateScopePayload mutateAndFetch(
+  public QLAddDelegateScopePayload mutateAndFetch(
       QLAddDelegateScopeInput parameter, MutationContext mutationContext) {
     DelegateScope.DelegateScopeBuilder delegateScopeBuilder = DelegateScope.builder();
     DelegateController.populateDelegateScope(parameter.getDelegateScope(), delegateScopeBuilder);

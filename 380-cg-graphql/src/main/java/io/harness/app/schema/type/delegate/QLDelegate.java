@@ -1,4 +1,4 @@
-package software.wings.graphql.schema.type.delegate;
+package io.harness.app.schema.type.delegate;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

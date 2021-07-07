@@ -1,4 +1,4 @@
-package software.wings.graphql.schema.mutation.delegate;
+package io.harness.app.schema.mutation.delegate;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 

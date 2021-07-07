@@ -9,7 +9,7 @@ import lombok.Value;
 
 @Value
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
-public class QLInstancesCountQueryParameters {
+public class  QLInstancesCountQueryParameters {
   private String accountId;
   private QLInstanceCountType instanceCountType;
 }

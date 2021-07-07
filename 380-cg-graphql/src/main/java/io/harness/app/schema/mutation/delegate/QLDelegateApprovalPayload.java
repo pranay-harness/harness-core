@@ -1,14 +1,13 @@
-package software.wings.graphql.schema.mutation.delegate;
+package io.harness.app.schema.mutation.delegate;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Value;
 import software.wings.graphql.schema.mutation.QLMutationPayload;
-import software.wings.graphql.schema.type.delegate.QLDelegate;
+import io.harness.app.schema.type.delegate.QLDelegate;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 

@@ -1,4 +1,4 @@
-package software.wings.graphql.datafetcher.delegate;
+package io.harness.app.datafetcher.delegate;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -13,10 +13,10 @@ import io.jsonwebtoken.lang.Assert;
 import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.mutation.delegate.QLDelegateApproval;
-import software.wings.graphql.schema.mutation.delegate.QLDelegateApprovalInput;
-import software.wings.graphql.schema.mutation.delegate.QLDelegateApprovalPayload;
-import software.wings.graphql.schema.type.delegate.QLDelegate;
+import io.harness.app.schema.mutation.delegate.QLDelegateApproval;
+import io.harness.app.schema.mutation.delegate.QLDelegateApprovalInput;
+import io.harness.app.schema.mutation.delegate.QLDelegateApprovalPayload;
+import io.harness.app.schema.type.delegate.QLDelegate;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.DelegateService;
 
@@ -43,7 +43,7 @@ public class DelegateApprovalDataFetcher
   @Override
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   @AuthRule(permissionType = MANAGE_DELEGATES)
-  protected QLDelegateApprovalPayload mutateAndFetch(
+  public QLDelegateApprovalPayload mutateAndFetch(
       QLDelegateApprovalInput parameter, MutationContext mutationContext) {
     String delegateId = parameter.getDelegateId();
     String accountId = parameter.getAccountId();

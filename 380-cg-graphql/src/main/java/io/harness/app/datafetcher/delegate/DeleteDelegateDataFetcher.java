@@ -1,4 +1,4 @@
-package software.wings.graphql.datafetcher.delegate;
+package io.harness.app.datafetcher.delegate;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
@@ -14,13 +14,12 @@ import io.harness.logging.AutoLogContext;
 
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.mutation.delegate.QLDeleteDelegateInput;
-import software.wings.graphql.schema.mutation.delegate.QLDeleteDelegatePayload;
+import io.harness.app.schema.mutation.delegate.QLDeleteDelegateInput;
+import io.harness.app.schema.mutation.delegate.QLDeleteDelegatePayload;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.DelegateService;
 
 import com.google.inject.Inject;
-import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -37,7 +36,7 @@ public class DeleteDelegateDataFetcher extends BaseMutatorDataFetcher<QLDeleteDe
   @Override
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   @AuthRule(permissionType = MANAGE_DELEGATES)
-  protected QLDeleteDelegatePayload mutateAndFetch(QLDeleteDelegateInput parameter, MutationContext mutationContext) {
+  public QLDeleteDelegatePayload mutateAndFetch(QLDeleteDelegateInput parameter, MutationContext mutationContext) {
     String accountId = parameter.getAccountId();
     String delegateId = parameter.getDelegateId();
     boolean forceDelete = parameter.isForceDelete();

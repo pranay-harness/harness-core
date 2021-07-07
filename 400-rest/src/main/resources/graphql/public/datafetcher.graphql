@@ -148,4 +148,7 @@ enum DataFetcherEnum {
   tagUsageConnection
   verificationResultConnection
   artifactCleanup
+  delegateApproval
+  deleteDelegate
+
 }

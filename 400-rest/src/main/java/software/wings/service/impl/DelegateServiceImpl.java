@@ -1974,7 +1974,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public void delete(String accountId, String delegateId, boolean forceDelete) {
+  public void delete(String accountId, String delegateId, boolean forceDelete) throws InvalidRequestException {
     Delegate existingDelegate = persistence.createQuery(Delegate.class)
                                     .filter(DelegateKeys.accountId, accountId)
                                     .filter(DelegateKeys.uuid, delegateId)
@@ -2000,9 +2000,13 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     if (featureFlagService.isEnabled(DO_DELEGATE_PHYSICAL_DELETE, accountId) || forceDelete) {
-      persistence.delete(persistence.createQuery(Delegate.class)
-                             .filter(DelegateKeys.accountId, accountId)
-                             .filter(DelegateKeys.uuid, delegateId));
+      Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
+                                          .filter(DelegateKeys.accountId, accountId)
+                                          .filter(DelegateKeys.uuid, delegateId);
+      boolean deleted = persistence.delete(delegateQuery);
+      if (!deleted) {
+        throw new InvalidRequestException("Unable to delete delegate");
+      }
       log.info("Delegate: {} deleted.", delegateId);
     } else {
       Query<Delegate> updateQuery = persistence.createQuery(Delegate.class)
@@ -2015,7 +2019,10 @@ public class DelegateServiceImpl implements DelegateService {
               .set(
                   DelegateKeys.validUntil, Date.from(OffsetDateTime.now().plusDays(Delegate.TTL.toDays()).toInstant()));
 
-      persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
+      Delegate delegate = persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
+      if (delegate ==null || delegate.getStatus() != DelegateInstanceStatus.DELETED) {
+        throw new InvalidRequestException("Unable to set status as deleted");
+      }
       log.info("Delegate: {} marked as deleted.", delegateId);
 
       broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true).broadcast(SELF_DESTRUCT + delegateId);
