@@ -24,7 +24,7 @@ public class TokenDTO {
   private Long scheduledExpireTime;
   private boolean valid;
 
-  @ApiModelProperty(required = true) @EntityIdentifier private String accountIdentifier;
+  @ApiModelProperty(required = true) private String accountIdentifier;
   @EntityIdentifier(allowBlank = true) private String projectIdentifier;
   @EntityIdentifier(allowBlank = true) private String orgIdentifier;
   @ApiModelProperty(required = true) @EntityIdentifier private String apiKeyIdentifier;

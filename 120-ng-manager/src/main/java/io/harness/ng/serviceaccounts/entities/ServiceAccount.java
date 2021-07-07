@@ -76,7 +76,7 @@ public class ServiceAccount implements PersistentEntity, UuidAware, NGAccountAcc
   @NotNull @Size(max = 1024) String description;
   @NotNull @Singular @Size(max = 128) List<NGTag> tags;
 
-  @EntityIdentifier String accountIdentifier;
+  @NotNull String accountIdentifier;
   @EntityIdentifier(allowBlank = true) String orgIdentifier;
   @EntityIdentifier(allowBlank = true) String projectIdentifier;
 }
