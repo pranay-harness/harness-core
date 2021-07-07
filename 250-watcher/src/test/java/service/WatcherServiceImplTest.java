@@ -18,6 +18,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.concurent.HTimeLimiterMocker;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.message.MessageService;
+import io.harness.event.client.impl.tailer.ChronicleEventTailer;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.watcher.service.WatcherServiceImpl;
@@ -51,6 +52,9 @@ public class WatcherServiceImplTest extends CategoryTest {
   @InjectMocks @Spy private WatcherServiceImpl watcherService;
 
   private static final String TEST_RESOURCE_PATH = "250-watcher/src/test/resources/service/";
+
+  // Do not remove, identifies the use of powermock.mockito for the unused dependency check
+  private static final Class DUMMY = ChronicleEventTailer.class;
 
   @Test
   @Owner(developers = VUK)

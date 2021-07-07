@@ -42,6 +42,7 @@ test_dependencies = shared_dependencies + [
     "@maven//:com_google_inject_extensions_guice_assistedinject",
     "@maven//:com_google_inject_extensions_guice_multibindings",
     "@maven//:com_google_inject_guice",
+    "@maven//:org_powermock_powermock_api_mockito",
 ]
 
 java_library(

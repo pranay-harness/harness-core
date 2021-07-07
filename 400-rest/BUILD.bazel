@@ -734,6 +734,7 @@ test_dependencies = shared_dependencies + [
     "@maven//:pl_pragmatists_JUnitParams",
     "@maven//:io_grpc_grpc_testing",
     "@maven//:io_fabric8_kubernetes_server_mock",
+    "@maven//:org_powermock_powermock_api_mockito",
 ]
 
 run_package_tests(
