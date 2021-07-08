@@ -41,23 +41,36 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.dao.DuplicateKeyException;
 
 @OwnedBy(PL)
 @Singleton
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class DefaultOrganizationManager {
   private final OrganizationService organizationService;
   private final AccountOrgProjectValidator accountOrgProjectValidator;
-  @Named("PRIVILEGED") private final AccessControlAdminClient accessControlAdminClient;
+  private final AccessControlAdminClient accessControlAdminClient;
   private final NgUserService ngUserService;
   private final UserClient userClient;
   private final ResourceGroupClient resourceGroupClient;
   private final AccessControlMigrationService accessControlMigrationService;
+
+  @Inject
+  public DefaultOrganizationManager(OrganizationService organizationService,
+      AccountOrgProjectValidator accountOrgProjectValidator,
+      @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient, NgUserService ngUserService,
+      UserClient userClient, ResourceGroupClient resourceGroupClient,
+      AccessControlMigrationService accessControlMigrationService) {
+    this.organizationService = organizationService;
+    this.accountOrgProjectValidator = accountOrgProjectValidator;
+    this.accessControlAdminClient = accessControlAdminClient;
+    this.ngUserService = ngUserService;
+    this.userClient = userClient;
+    this.resourceGroupClient = resourceGroupClient;
+    this.accessControlMigrationService = accessControlMigrationService;
+  }
 
   public void createDefaultOrganization(String accountIdentifier) {
     if (!accountOrgProjectValidator.isPresent(accountIdentifier, null, null)) {
