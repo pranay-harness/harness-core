@@ -142,23 +142,6 @@ public class RedisUtils {
     return new StreamMessageId(parseLong(parts[0]), parseLong(parts[1]));
   }
 
-  public List<Message> getMessageObject(Map<StreamMessageId, Map<String, String>> result) {
-    if (isEmpty(result)) {
-      return Collections.emptyList();
-    } else {
-      List<Message> messages = new ArrayList<>();
-      Map<String, String> messageMap;
-      StreamMessageId messageId;
-      for (Map.Entry<StreamMessageId, Map<String, String>> entry : result.entrySet()) {
-        messageId = entry.getKey();
-        messageMap = entry.getValue();
-        messages.add(getConsumerMessageObject(messageId, messageMap));
-      }
-
-      return messages;
-    }
-  }
-
   public io.harness.eventsframework.producer.Message getProducedMessage(
       String messageData, Map<String, String> messageMap) {
     return io.harness.eventsframework.producer.Message.newBuilder()

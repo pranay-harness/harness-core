@@ -21,8 +21,11 @@ import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.redis.RedisConfig;
+import io.harness.version.VersionInfoManager;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.name.Names;
 import lombok.AllArgsConstructor;
 
@@ -30,9 +33,18 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class EventsFrameworkModule extends AbstractModule {
   private final EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  private final String buildNo;
+
+  //  @Provides
+  //  @Singleton
+  //  Producer getEventsFrameworkConfiguration(Version) {
+  //    return NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME);
+  //  }
 
   @Override
   protected void configure() {
+    requireBinding(VersionInfoManager.class);
+
     RedisConfig redisConfig = this.eventsFrameworkConfiguration.getRedisConfig();
     if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
       bind(Producer.class)

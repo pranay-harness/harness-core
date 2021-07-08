@@ -1,10 +1,13 @@
 package io.harness;
 
 import io.harness.eventsframework.api.AbstractConsumer;
+import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
+import io.harness.eventsframework.impl.redis.RedisAbstractConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisSerialConsumer;
+import io.harness.eventsframework.impl.redis.VersionedRedisConsumer;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.redis.RedisPersistentLocker;
 import io.harness.redis.RedisConfig;
@@ -18,38 +21,30 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MessageConsumer implements Runnable {
   private final String color;
-  private final String readVia;
   private final String groupName;
   private final Integer processingTime;
   private final AbstractConsumer client;
   private RedisPersistentLocker redisLocker;
 
-  public MessageConsumer(
-      String readVia, RedisConfig redisConfig, String channel, String groupName, Integer processingTime, String color) {
-    this.readVia = readVia;
+  public MessageConsumer(AbstractConsumer client, String groupName, Integer processingTime, String color) {
     this.color = color;
-    if (readVia.equals("serialConsumerGroups")) {
-      this.client =
-          RedisSerialConsumer.of(channel, groupName, "hardcodedconsumer", redisConfig, Duration.ofSeconds(10));
-    } else {
-      this.client = RedisConsumer.of(channel, groupName, redisConfig, Duration.ofSeconds(10), 5);
-    }
+    this.client = client;
     this.groupName = groupName;
     this.processingTime = processingTime;
   }
 
-  public MessageConsumer(RedisPersistentLocker redisLocker, RedisConfig redisConfig, String readVia, String channel,
-      String groupName, Integer processingTime, String color) {
-    this(readVia, redisConfig, channel, groupName, processingTime, color);
-    this.redisLocker = redisLocker;
-  }
+  //  public MessageConsumer(RedisPersistentLocker redisLocker, RedisConfig redisConfig, String readVia, String channel,
+  //      String groupName, Integer processingTime, String color) {
+  ////    this(readVia, redisConfig, channel, groupName, processingTime, color);
+  //    this.redisLocker = redisLocker;
+  //  }
 
   @SneakyThrows
   @Override
   public void run() {
-    if (this.readVia.equals("consumerGroups")) {
+    if (this.client instanceof RedisConsumer || this.client instanceof VersionedRedisConsumer) {
       readViaConsumerGroups();
-    } else if (this.readVia.equals("serialConsumerGroups")) {
+    } else if (this.client instanceof RedisSerialConsumer) {
       readViaSerialConsumerGroups();
     }
   }
@@ -63,7 +58,7 @@ public class MessageConsumer implements Runnable {
           processMessage(message);
         } catch (Exception e) {
           //        throw e;
-          e.printStackTrace();
+          //          e.printStackTrace();
           log.error("{}Color{} - {}Something is wrong " + e.toString() + "{}", color, ColorConstants.TEXT_RESET,
               ColorConstants.TEXT_RED, ColorConstants.TEXT_RESET);
         }

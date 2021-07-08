@@ -1,6 +1,8 @@
 package io.harness.eventsframework.impl.redis;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.eventsframework.impl.redis.RedisUtils.REDIS_STREAM_BUILD_VERSION_KEY;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.AbstractConsumer;
@@ -13,6 +15,7 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.vavr.control.Try;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -123,9 +126,11 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
           moveMessageToDeadLetterQueue(messageId, groupName, messages);
         }
       }
-      return RedisUtils.getMessageObject(messages);
+      return getMessageObject(messages);
     }
   }
+
+  protected abstract List<Message> getMessageObject(Map<StreamMessageId, Map<String, String>> result);
 
   private Map<StreamMessageId, Map<String, String>> executeClaimCommand(List<PendingEntry> pendingEntries) {
     StreamMessageId[] messageIds = pendingEntries.stream().map(PendingEntry::getId).toArray(StreamMessageId[] ::new);
@@ -157,7 +162,7 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
   private List<Message> getNewMessagesInternal(Duration maxWaitTime) {
     Map<StreamMessageId, Map<String, String>> result =
         stream.readGroup(getGroupName(), getName(), batchSize, maxWaitTime.toMillis(), TimeUnit.MILLISECONDS);
-    return RedisUtils.getMessageObject(result);
+    return getMessageObject(result);
   }
 
   protected List<Message> getMessages(boolean processUnackedMessagesBeforeNewMessages, Duration maxWaitTime) {

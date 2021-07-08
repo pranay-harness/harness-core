@@ -21,8 +21,12 @@ public class MessageProducer implements Runnable {
   private final Producer client;
   private final String color;
   private final boolean isGitAware;
+  private final int start;
+  private final int end;
 
-  public MessageProducer(Producer client, String color, boolean isGitAware) {
+  public MessageProducer(Producer client, String color, boolean isGitAware, int start, int end) {
+    this.start = start;
+    this.end = end;
     this.color = color;
     this.client = client;
     this.isGitAware = isGitAware;
@@ -39,8 +43,10 @@ public class MessageProducer implements Runnable {
   }
 
   private void publishMessages() throws InterruptedException {
-    int count = 0;
+    int count = start;
     while (true) {
+      if (count > end)
+        break;
       Message projectEvent;
       if (count % 3 == 0) {
         projectEvent =
@@ -68,16 +74,17 @@ public class MessageProducer implements Runnable {
       }
 
       count += 1;
-      TimeUnit.SECONDS.sleep(1);
+      TimeUnit.MILLISECONDS.sleep(200);
     }
   }
 
   private void publishMessagesToGitAwareProducer() throws InterruptedException {
     // Sending an event in git aware redis producer
-    int count = 0;
+    int count = start;
     while (true) {
       String messageId = null;
-
+      if (count > end)
+        break;
       Message messageInGitAwareProducer =
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of("accountId", String.valueOf(count)))
@@ -106,7 +113,7 @@ public class MessageProducer implements Runnable {
       }
 
       count += 1;
-      TimeUnit.SECONDS.sleep(1);
+      TimeUnit.MILLISECONDS.sleep(200);
     }
   }
 }

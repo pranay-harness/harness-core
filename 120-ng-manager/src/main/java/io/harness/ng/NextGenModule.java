@@ -60,6 +60,7 @@ import io.harness.encryptors.clients.AwsKmsEncryptor;
 import io.harness.encryptors.clients.GcpKmsEncryptor;
 import io.harness.encryptors.clients.LocalEncryptor;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
+import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.exception.exceptionmanager.ExceptionModule;
@@ -194,6 +195,7 @@ import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.token.TokenClientModule;
 import io.harness.user.UserClientModule;
+import io.harness.version.VersionInfoManager;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.core.StepSpecType;
@@ -235,8 +237,11 @@ public class NextGenModule extends AbstractModule {
   public static final String SECRET_MANAGER_CONNECTOR_SERVICE = "secretManagerConnectorService";
   public static final String CONNECTOR_DECORATOR_SERVICE = "connectorDecoratorService";
   private final NextGenConfiguration appConfig;
-  public NextGenModule(NextGenConfiguration appConfig) {
+  private final VersionInfoManager versionInfoManager;
+
+  public NextGenModule(NextGenConfiguration appConfig, VersionInfoManager versionInfoManager) {
     this.appConfig = appConfig;
+    this.versionInfoManager = versionInfoManager;
   }
 
   @Provides
@@ -345,7 +350,6 @@ public class NextGenModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    install(VersionModule.getInstance());
     install(PrimaryVersionManagerModule.getInstance());
     install(DelegateServiceDriverModule.getInstance(false));
     install(TimeModule.getInstance());
@@ -421,7 +425,8 @@ public class NextGenModule extends AbstractModule {
     install(new NGAggregateModule());
     install(NGModule.getInstance());
     install(ExceptionModule.getInstance());
-    install(new EventsFrameworkModule(this.appConfig.getEventsFrameworkConfiguration()));
+    install(new EventsFrameworkModule(
+        this.appConfig.getEventsFrameworkConfiguration(), versionInfoManager.getVersionInfo().getBuildNo()));
     install(new SecretManagementModule());
     install(new AccountClientModule(appConfig.getManagerClientConfig(),
         appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.toString()));

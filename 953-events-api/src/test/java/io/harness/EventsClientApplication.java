@@ -1,7 +1,10 @@
 package io.harness;
 
 import io.harness.eventsframework.impl.redis.GitAwareRedisProducer;
+import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
+import io.harness.eventsframework.impl.redis.RedisSerialConsumer;
+import io.harness.eventsframework.impl.redis.VersionedRedisConsumer;
 import io.harness.eventsframework.impl.redis.VersionedRedisProducer;
 import io.harness.lock.redis.RedisPersistentLocker;
 import io.harness.logging.LoggingInitializer;
@@ -22,6 +25,7 @@ import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import java.io.UnsupportedEncodingException;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
@@ -68,7 +72,7 @@ public class EventsClientApplication extends Application<EventsClientApplication
     registerManagedBeans(environment, injector);
     MaintenanceController.forceMaintenance(false);
 
-    String channel = "project_update";
+    String channel = "test_events_application";
 
     RedisPersistentLocker redisLocker = injector.getInstance(RedisPersistentLocker.class);
     /* ----------------- Perform operations ----------------- */
@@ -76,13 +80,28 @@ public class EventsClientApplication extends Application<EventsClientApplication
 
     /* Push messages to redis channel */
     RedisProducer redisProducer = RedisProducer.of(channel, redisConfig, 10000, "dummyMessageProducer");
-    VersionedRedisProducer versionedRedisProducer =
+    VersionedRedisProducer versionedRedisProducer1 =
         VersionedRedisProducer.of(channel, redisConfig, 10000, "dummyMessageProducer", "1.0");
+    VersionedRedisProducer versionedRedisProducer2 =
+        VersionedRedisProducer.of(channel, redisConfig, 10000, "dummyMessageProducer", "2.0");
     GitAwareRedisProducer gitAwareRedisProducer =
         GitAwareRedisProducer.of(channel, redisConfig, 10000, "dummyGitAwareMessageProducer");
-    new Thread(new MessageProducer(versionedRedisProducer, ColorConstants.TEXT_YELLOW, false)).start();
-    //    new Thread(new MessageProducer(redisProducer, ColorConstants.TEXT_YELLOW, false)).start();
+    //    new Thread(new MessageProducer(versionedRedisProducer1, ColorConstants.TEXT_YELLOW, false, 1, 50)).start();
+    //    new Thread(new MessageProducer(versionedRedisProducer2, ColorConstants.TEXT_CYAN, false, 1000,
+    //    1000000)).start(); new Thread(new MessageProducer(redisProducer, ColorConstants.TEXT_YELLOW, false)).start();
     //    new Thread(new MessageProducer(gitAwareRedisProducer, ColorConstants.TEXT_GREEN, true)).start();
+
+    //    RedisSerialConsumer redisSerialConsumer = RedisSerialConsumer.of(channel, "group1", "hardcodedconsumer",
+    //    redisConfig, Duration.ofSeconds(10));
+    VersionedRedisConsumer versionedRedisConsumer1 =
+        VersionedRedisConsumer.of(channel, "group2", redisConfig, Duration.ofSeconds(10), 5, "1.0");
+    VersionedRedisConsumer versionedRedisConsumer2 =
+        VersionedRedisConsumer.of(channel, "group2", redisConfig, Duration.ofSeconds(10), 5, "2.0");
+    //    RedisConsumer redisConsumer = RedisConsumer.of(channel, "group3", redisConfig, Duration.ofSeconds(10), 5);
+
+    new Thread(new MessageConsumer(versionedRedisConsumer1, "group3", 1000, ColorConstants.TEXT_BLUE)).start();
+
+    new Thread(new MessageConsumer(versionedRedisConsumer2, "group3", 1000, ColorConstants.TEXT_PURPLE)).start();
 
     /* Read via Consumer groups - order is important - Sync processing usecase (Gitsync) */
     //    new Thread(new MessageConsumer(
@@ -98,12 +117,21 @@ public class EventsClientApplication extends Application<EventsClientApplication
     //        .start();
 
     /* Read via Consumer groups - order is not important - Load balancing usecase */
-    //    new Thread(new MessageConsumer("consumerGroups", redisConfig, channel, "group2", 1000,
-    //    ColorConstants.TEXT_BLUE))
-    //        .start();
+    //        new Thread(new MessageConsumer("consumerGroups", redisConfig, channel, "group2", 1000,
+    //        ColorConstants.TEXT_BLUE))
+    //            .start();
     //    new Thread(new MessageConsumer("consumerGroups", redisConfig, channel, "group2", 4000,
     //    ColorConstants.TEXT_PURPLE))
     //        .start();
+
+    /* Read messages with the same build version as the consumer */
+    //    new Thread(new MessageConsumer("versionedConsumerGroup", redisConfig, channel, "group3", 1000,
+    //            ColorConstants.TEXT_BLUE))
+    //            .start();
+
+    //    new Thread(new MessageConsumer("versionedConsumerGroup", redisConfig, channel, "group3", 1000,
+    //            ColorConstants.TEXT_PURPLE))
+    //            .start();
 
     while (true) {
       Thread.sleep(10000);

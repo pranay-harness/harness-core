@@ -17,6 +17,7 @@ import io.harness.ModuleType;
 import io.harness.PipelineServiceUtilityModule;
 import io.harness.SCMGrpcClientModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.cache.CacheModule;
 import io.harness.cdng.creator.CDNGModuleInfoProvider;
 import io.harness.cdng.creator.CDNGPlanCreatorProvider;
@@ -99,6 +100,8 @@ import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.token.remote.TokenClient;
+import io.harness.version.VersionInfoManager;
+import io.harness.version.VersionModule;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -206,8 +209,13 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
         20, 1000, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     MaintenanceController.forceMaintenance(true);
+
     List<Module> modules = new ArrayList<>();
-    modules.add(new NextGenModule(appConfig));
+
+    VersionInfoManager versionInfoManager =
+        Guice.createInjector(VersionModule.getInstance()).getInstance(VersionInfoManager.class);
+    modules.add(new NextGenModule(appConfig, versionInfoManager));
+
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {
