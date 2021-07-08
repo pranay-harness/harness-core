@@ -4,6 +4,8 @@ import (
 	"io"
 
 	"github.com/wings-software/portal/commons/go/lib/images"
+	"github.com/wings-software/portal/commons/go/lib/jwtutils"
+	"github.com/wings-software/portal/product/ci/engine/consts"
 	"github.com/wings-software/portal/product/ci/engine/legacy/jexl"
 	"github.com/wings-software/portal/product/ci/engine/legacy/state"
 	"github.com/wings-software/portal/product/ci/engine/new/executor"
@@ -12,6 +14,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -20,6 +23,9 @@ var (
 	getPrivateImgMetadata = images.PrivateMetadata
 	evaluateJEXL          = jexl.EvaluateJEXL
 	executeStepInAsync    = executor.ExecuteStepInAsync
+
+	errMissingMetadata = status.Errorf(codes.InvalidArgument, "missing metadata")
+	errInvalidToken    = status.Errorf(codes.Unauthenticated, "invalid token")
 )
 
 // handler is used to implement EngineServer
@@ -114,4 +120,34 @@ func (h *engineHandler) Ping(ctx context.Context, in *pb.PingRequest) (*pb.PingR
 func (h *engineHandler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*pb.ExecuteStepResponse, error) {
 	executeStepInAsync(ctx, in, h.log, h.procWriter)
 	return &pb.ExecuteStepResponse{}, nil
+}
+
+// Synchronous RPC to fetch the secret environment variables
+func (h *engineHandler) GetSecretEnvVars(ctx context.Context, in *pb.GetSecretEnvVarsRequest) (*pb.GetSecretEnvVarsResponse, error) {
+	if err := ensureValidToken(ctx, h.log); err != nil {
+		return &pb.GetSecretEnvVarsResponse{}, err
+	}
+
+	return &pb.GetSecretEnvVarsResponse{}, nil
+}
+
+func ensureValidToken(ctx context.Context, log *zap.SugaredLogger) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return errMissingMetadata
+	}
+
+	if len(meta[consts.TokenKey]) != 1 {
+		h.log.Warnw("token key size does not match 1", "actual_size", len(meta[consts.TokenKey]))
+		return errInvalidToken
+	}
+
+	token := md[consts.TokenKey][0]
+	err := jwtutils.Verify(token, consts.SecretKey)
+	if err != nil {
+		h.log.Errorw("token verification failed", zap.Error(err))
+		return errInvalidToken
+	}
+
+	return nil
 }

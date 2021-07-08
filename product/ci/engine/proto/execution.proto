@@ -85,9 +85,9 @@ message UnitStep {
   string display_name = 2;
   oneof step {
     RunStep run = 3;
-    SaveCacheStep save_cache = 4;
-    RestoreCacheStep restore_cache = 5;
-    PublishArtifactsStep publish_artifacts = 6;
+    SaveCacheStep save_cache = 4; // deprecated
+    RestoreCacheStep restore_cache = 5; // deprecated
+    PublishArtifactsStep publish_artifacts = 6; // deprecated
     PluginStep plugin = 9;
     RunTestsStep runTests = 10;
   }
@@ -153,6 +153,14 @@ message EvaluateJEXLResponse {
   map<string, string> evaluated_expressions = 1;  // expression is key & value is evaluated expression
 }
 
+message GetSecretEnvVarsRequest {
+  string identifier = 1;
+}
+
+message GetSecretEnvVarsResponse {
+  map<string, string> secretEnvVars = 1;
+}
+
 message PingRequest {}
 
 message PingResponse {}
@@ -167,13 +175,14 @@ message ExecuteStepRequest {
 message ExecuteStepResponse {}
 
 service LiteEngine {
+  // Deprecated.
   // Synchronous RPC to execute a step
-  // Deprecated
   rpc UpdateState(UpdateStateRequest) returns (UpdateStateResponse);
 
   // Synchronous RPC to fetch image entrypoint
   rpc GetImageEntrypoint(GetImageEntrypointRequest) returns (GetImageEntrypointResponse);
 
+  // Deprecated.
   // Synchronous RPC to evaluate JEXL expression
   rpc EvaluateJEXL(EvaluateJEXLRequest) returns (EvaluateJEXLResponse);
 
@@ -184,4 +193,7 @@ service LiteEngine {
   // It is idempotent such that if two requests are fired with same id, then
   // only one request will start execution of the step.
   rpc ExecuteStep(ExecuteStepRequest) returns (ExecuteStepResponse);
+
+  // Synchronous RPC to fetch the secret environment variables
+  rpc GetSecretEnvVars(GetSecretEnvVarsRequest) returns (GetSecretEnvVarsResponse);
 }
