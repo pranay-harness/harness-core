@@ -286,7 +286,6 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerAuthFilters(appConfig, environment, injector);
     registerHealthCheck(environment, injector);
     registerObservers(injector);
-    registerMigrations(injector);
     registerRequestContextFilter(environment);
 
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
@@ -312,6 +311,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     registerCorrelationFilter(environment, injector);
     registerNotificationTemplates(injector);
     registerPmsSdkEvents(injector);
+    registerMigrations(injector);
     MaintenanceController.forceMaintenance(false);
   }
 
