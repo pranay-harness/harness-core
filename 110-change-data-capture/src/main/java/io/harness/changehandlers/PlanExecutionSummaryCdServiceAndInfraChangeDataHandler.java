@@ -27,6 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements ChangeHandler {
   private static final int MAX_RETRY_COUNT = 5;
   @Inject private TimeScaleDBService timeScaleDBService;
+  private static String SERVICE_STARTTS = "service_startts";
+  private static String SERVICE_ENDTS = "service_endts";
 
   @Override
   public boolean handleChange(ChangeEvent<?> changeEvent, String tableName, String[] fields) {
@@ -49,7 +51,11 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
                 newColumnValueMapping.put(entry, columnValueMapping.get(entry).get(i));
               }
             }
-            dbOperation(insertSQL(tableName, newColumnValueMapping));
+            if (newColumnValueMapping.containsKey(SERVICE_STARTTS)
+                && !newColumnValueMapping.get(SERVICE_STARTTS).equals("")) {
+              dbOperation(insertSQL(tableName, newColumnValueMapping));
+            }
+
             newColumnValueMapping.clear();
           }
         }
@@ -65,8 +71,12 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
                 newColumnValueMapping.put(entry, columnValueMapping.get(entry).get(i));
               }
             }
-            dbOperation(
-                updateSQL(tableName, newColumnValueMapping, Collections.singletonMap("id", changeEvent.getUuid())));
+            if (newColumnValueMapping.containsKey(SERVICE_STARTTS)
+                && !newColumnValueMapping.get(SERVICE_STARTTS).equals("")) {
+              dbOperation(
+                  updateSQL(tableName, newColumnValueMapping, Collections.singletonMap("id", changeEvent.getUuid())));
+            }
+
             newColumnValueMapping.clear();
           }
         }
@@ -161,6 +171,14 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
             columnValueMapping.put("service_startts", service_startts_list);
           }
         }
+      } else {
+        if (columnValueMapping.containsKey(SERVICE_STARTTS)) {
+          columnValueMapping.get(SERVICE_STARTTS).add("");
+        } else {
+          List<String> service_startts_list = new ArrayList<>();
+          service_startts_list.add("");
+          columnValueMapping.put(SERVICE_STARTTS, service_startts_list);
+        }
       }
       // service_endts
       if (((BasicDBObject) iteratorObject.getValue()).get("endTs") != null) {
@@ -174,6 +192,14 @@ public class PlanExecutionSummaryCdServiceAndInfraChangeDataHandler implements C
             service_endts_list.add(service_endts);
             columnValueMapping.put("service_endts", service_endts_list);
           }
+        }
+      } else {
+        if (columnValueMapping.containsKey(SERVICE_ENDTS)) {
+          columnValueMapping.get(SERVICE_ENDTS).add("");
+        } else {
+          List<String> service_startts_list = new ArrayList<>();
+          service_startts_list.add("");
+          columnValueMapping.put(SERVICE_ENDTS, service_startts_list);
         }
       }
       DBObject moduleInfoObject = (DBObject) ((DBObject) iteratorObject.getValue()).get("moduleInfo");
