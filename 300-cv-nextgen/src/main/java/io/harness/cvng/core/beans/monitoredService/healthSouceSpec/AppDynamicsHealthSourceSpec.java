@@ -1,6 +1,8 @@
-package io.harness.cvng.core.beans.monitoredService;
+package io.harness.cvng.core.beans.monitoredService.healthSouceSpec;
 
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.core.beans.monitoredService.HealthSource;
+import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
@@ -16,15 +18,18 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Value;
+import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @SuperBuilder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AppDynamicsHealthSourceSpec extends HealthSourceSpec {

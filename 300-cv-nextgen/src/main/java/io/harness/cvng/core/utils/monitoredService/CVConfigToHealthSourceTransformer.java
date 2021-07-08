@@ -2,7 +2,7 @@ package io.harness.cvng.core.utils.monitoredService;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.cvng.core.beans.monitoredService.HealthSourceSpec;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
 import io.harness.cvng.core.entities.CVConfig;
 
 import com.google.common.base.Preconditions;

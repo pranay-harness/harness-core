@@ -3,6 +3,7 @@ package io.harness.cvng.core.beans.monitoredService;
 import static io.harness.cvng.CVConstants.DATA_SOURCE_TYPE;
 
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
 import io.harness.cvng.core.entities.CVConfig;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

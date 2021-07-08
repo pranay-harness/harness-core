@@ -1,7 +1,7 @@
 package io.harness.cvng.core.utils.monitoredService;
 
-import io.harness.cvng.core.beans.monitoredService.AppDynamicsHealthSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 
 import com.google.common.base.Preconditions;

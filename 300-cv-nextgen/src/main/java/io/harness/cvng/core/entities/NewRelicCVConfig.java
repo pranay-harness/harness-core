@@ -12,10 +12,12 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @JsonTypeName("NEW_RELIC")
 @Data
+@SuperBuilder
 @FieldNameConstants(innerTypeName = "NewRelicCVConfigKeys")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
