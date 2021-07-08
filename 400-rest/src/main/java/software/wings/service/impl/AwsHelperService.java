@@ -474,18 +474,15 @@ public class AwsHelperService {
 
   public S3Object getObjectFromS3(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName, String key) {
-    encryptionService.decrypt(awsConfig, encryptionDetails, false);
-    try (CloseableAmazonWebServiceClient<AmazonS3Client> closeableAmazonS3Client = new CloseableAmazonWebServiceClient(
-             getAmazonS3Client(getBucketRegion(awsConfig, encryptionDetails, bucketName), awsConfig))) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
       tracker.trackS3Call("Get Object");
-      return closeableAmazonS3Client.getClient().getObject(bucketName, key);
+      return getAmazonS3Client(getBucketRegion(awsConfig, encryptionDetails, bucketName), awsConfig)
+          .getObject(bucketName, key);
     } catch (AmazonServiceException amazonServiceException) {
       awsApiHelperService.handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       awsApiHelperService.handleAmazonClientException(amazonClientException);
-    } catch (Exception e) {
-      log.error("Exception getObjectFromS3", e);
-      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return null;
   }
