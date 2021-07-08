@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.connector.ConnectorInfoDTO;
+import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.TimeSeriesAnalysisSummary;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.beans.TransactionMetricInfo;
@@ -35,6 +36,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.ws.rs.BadRequestException;
 import org.apache.commons.lang3.StringUtils;
@@ -54,22 +56,75 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
 
   @Override
   public TransactionMetricInfoSummaryPageDTO getMetrics(String accountId, String verificationJobInstanceId,
-      boolean anomalousMetricsOnly, String hostName, int pageNumber) {
+      boolean anomalousMetricsOnly, String hostName, String filter, int pageNumber) {
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     List<DeploymentTimeSeriesAnalysis> latestDeploymentTimeSeriesAnalysis =
         getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId);
-
     if (isEmpty(latestDeploymentTimeSeriesAnalysis)) {
       return TransactionMetricInfoSummaryPageDTO.builder()
           .pageResponse(formPageResponse(Collections.emptyList(), pageNumber, DEFAULT_PAGE_SIZE))
           .build();
     }
-
     TimeRange deploymentTimeRange = TimeRange.builder()
                                         .startTime(verificationJobInstance.getStartTime())
                                         .endTime(latestDeploymentTimeSeriesAnalysis.get(0).getEndTime())
                                         .build();
+    List<TransactionMetricInfo> transactionMetricInfoList =
+        getMetrics(accountId, verificationJobInstanceId, anomalousMetricsOnly, hostName);
+    if (isNotEmpty(filter)) {
+      transactionMetricInfoList =
+          transactionMetricInfoList.stream()
+              .filter(transactionMetricInfo
+                  -> transactionMetricInfo.getTransactionMetric().getMetricName().contains(filter)
+                      || transactionMetricInfo.getTransactionMetric().getTransactionName().contains(filter))
+              .collect(Collectors.toList());
+    }
+
+    return TransactionMetricInfoSummaryPageDTO.builder()
+        .pageResponse(formPageResponse(transactionMetricInfoList, pageNumber, DEFAULT_PAGE_SIZE))
+        .deploymentTimeRange(deploymentTimeRange)
+        .deploymentStartTime(deploymentTimeRange.getStartTime().toEpochMilli())
+        .deploymentEndTime(deploymentTimeRange.getEndTime().toEpochMilli())
+        .build();
+  }
+
+  @Override
+  public TimeSeriesAnalysisSummary getAnalysisSummary(List<String> verificationJobInstanceIds) {
+    Preconditions.checkNotNull(
+        verificationJobInstanceIds, "Missing verificationJobInstanceIds when looking for summary");
+    List<Integer> anomMetricCounts = new ArrayList<>();
+    List<Integer> totalMetricCounts = new ArrayList<>();
+    verificationJobInstanceIds.forEach(verificationJobInstanceId -> {
+      VerificationJobInstance verificationJobInstance =
+          verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
+      List<TransactionMetricInfo> transactionMetricInfoList =
+          getMetrics(verificationJobInstance.getAccountId(), verificationJobInstanceId, false, null);
+      int numAnomMetrics = 0, totalMetrics = 0;
+      for (TransactionMetricInfo transactionMetricInfo : transactionMetricInfoList) {
+        if (transactionMetricInfo.getTransactionMetric().getRisk().isGreaterThan(Risk.LOW)) {
+          numAnomMetrics++;
+        }
+        totalMetrics++;
+      }
+      anomMetricCounts.add(numAnomMetrics);
+      totalMetricCounts.add(totalMetrics);
+    });
+
+    return TimeSeriesAnalysisSummary.builder()
+        .numAnomMetrics(anomMetricCounts.stream().mapToInt(Integer::intValue).sum())
+        .totalNumMetrics(totalMetricCounts.stream().mapToInt(Integer::intValue).sum())
+        .build();
+  }
+
+  private List<TransactionMetricInfo> getMetrics(
+      String accountId, String verificationJobInstanceId, boolean anomalousMetricsOnly, String hostName) {
+    List<DeploymentTimeSeriesAnalysis> latestDeploymentTimeSeriesAnalysis =
+        getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId);
+
+    if (isEmpty(latestDeploymentTimeSeriesAnalysis)) {
+      return Collections.emptyList();
+    }
 
     Set<TransactionMetricInfo> transactionMetricInfoSet = new HashSet();
     for (DeploymentTimeSeriesAnalysis timeSeriesAnalysis : latestDeploymentTimeSeriesAnalysis) {
@@ -100,13 +155,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
     List<TransactionMetricInfo> transactionMetricInfoList = new ArrayList<>(transactionMetricInfoSet);
     transactionMetricInfoList.sort(
         (d1, d2) -> Double.compare(d2.getTransactionMetric().getScore(), d1.getTransactionMetric().getScore()));
-
-    return TransactionMetricInfoSummaryPageDTO.builder()
-        .pageResponse(formPageResponse(transactionMetricInfoList, pageNumber, DEFAULT_PAGE_SIZE))
-        .deploymentTimeRange(deploymentTimeRange)
-        .deploymentStartTime(deploymentTimeRange.getStartTime().toEpochMilli())
-        .deploymentEndTime(deploymentTimeRange.getEndTime().toEpochMilli())
-        .build();
+    return transactionMetricInfoList;
   }
 
   private PageResponse<TransactionMetricInfo> formPageResponse(

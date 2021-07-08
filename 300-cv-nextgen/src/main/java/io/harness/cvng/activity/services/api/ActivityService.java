@@ -9,12 +9,16 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
+import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
+import io.harness.cvng.core.beans.DatasourceTypeDTO;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
+
 @OwnedBy(HarnessTeam.CV)
 public interface ActivityService {
   Activity get(String activityId);
@@ -52,4 +56,7 @@ public interface ActivityService {
 
   ActivityStatusDTO getActivityStatus(String accountId, String activityId);
   List<String> createVerificationJobInstancesForActivity(Activity activity);
+  TransactionMetricInfoSummaryPageDTO getDeploymentActivityTimeSeriesData(String accountId, String activityId,
+      boolean anomalousMetricsOnly, String hostName, String filter, int pageNumber, int pageSize);
+  Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String activityId);
 }

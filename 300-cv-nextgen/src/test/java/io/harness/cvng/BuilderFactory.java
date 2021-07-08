@@ -17,6 +17,7 @@ import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHe
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigBuilder;
+import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.NewRelicCVConfig;
 import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicCVConfigBuilder;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
@@ -119,7 +120,15 @@ public class BuilderFactory {
         .orgIdentifier(context.getOrgIdentifier())
         .projectIdentifier(context.getProjectIdentifier())
         .serviceIdentifier(context.getServiceIdentifier())
-        .envIdentifier(context.getEnvIdentifier());
+        .envIdentifier(context.getEnvIdentifier())
+        .identifier(generateUuid())
+        .monitoringSourceName(generateUuid())
+        .metricPack(MetricPack.builder().build())
+        .applicationName(generateUuid())
+        .tierName(generateUuid())
+        .connectorIdentifier("AppDynamics Connector")
+        .category(CVMonitoringCategory.PERFORMANCE)
+        .productName(generateUuid());
   }
 
   public NewRelicCVConfigBuilder newRelicCVConfigBuilder() {
