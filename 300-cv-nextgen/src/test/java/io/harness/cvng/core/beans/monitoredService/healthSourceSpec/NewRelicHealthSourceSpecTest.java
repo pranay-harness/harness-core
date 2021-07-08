@@ -1,4 +1,4 @@
-package io.harness.cvng.core.beans.monitoredService;
+package io.harness.cvng.core.beans.monitoredService.healthSourceSpec;
 
 import static io.harness.rule.OwnerRule.KANHAIYA;
 
@@ -10,9 +10,11 @@ import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.monitoredService.HealthSource.CVConfigUpdateResult;
-import io.harness.cvng.core.entities.AppDynamicsCVConfig;
+import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.NewRelicHealthSourceSpec;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.core.entities.NewRelicCVConfig;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.rule.Owner;
 
@@ -29,14 +31,14 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AppDynamicsHealthSourceSpecTest extends CvNextGenTestBase {
-  AppDynamicsHealthSourceSpec appDynamicsHealthSourceSpec;
+public class NewRelicHealthSourceSpecTest extends CvNextGenTestBase {
+  NewRelicHealthSourceSpec newRelicHealthSourceSpec;
   @Inject MetricPackService metricPackService;
   String orgIdentifier;
   String projectIdentifier;
   String accountId;
   String applicationName;
-  String tierName;
+  String applicationId;
   String feature;
   String connectorIdentifier;
   String serviceIdentifier;
@@ -55,20 +57,21 @@ public class AppDynamicsHealthSourceSpecTest extends CvNextGenTestBase {
     serviceIdentifier = builderFactory.getContext().getServiceIdentifier();
     envIdentifier = builderFactory.getContext().getEnvIdentifier();
     applicationName = "appName";
-    tierName = "tierName";
-    feature = "Application Monitoring";
+    applicationId = "1234";
+    feature = "apm";
     connectorIdentifier = "connectorRef";
 
     identifier = "identifier";
     name = "some-name";
-    metricPackDTOS = Arrays.asList(MetricPackDTO.builder().identifier(CVMonitoringCategory.ERRORS).build());
-    appDynamicsHealthSourceSpec = AppDynamicsHealthSourceSpec.builder()
-                                      .appdApplicationName(applicationName)
-                                      .appdTierName(tierName)
-                                      .connectorRef(connectorIdentifier)
-                                      .feature(feature)
-                                      .metricPacks(metricPackDTOS.stream().collect(Collectors.toSet()))
-                                      .build();
+    metricPackDTOS = Arrays.asList(MetricPackDTO.builder().identifier(CVMonitoringCategory.PERFORMANCE).build());
+    newRelicHealthSourceSpec = NewRelicHealthSourceSpec.builder()
+                                   .applicationId(applicationId)
+                                   .applicationName(applicationName)
+                                   .connectorRef(connectorIdentifier)
+                                   .feature(feature)
+                                   .metricPacks(metricPackDTOS.stream().collect(Collectors.toSet()))
+                                   .build();
+
     metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
   }
 
@@ -77,18 +80,18 @@ public class AppDynamicsHealthSourceSpecTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void getCVConfigUpdateResult_whenNoConfigExist() {
     CVConfigUpdateResult cvConfigUpdateResult =
-        appDynamicsHealthSourceSpec.getCVConfigUpdateResult(accountId, orgIdentifier, projectIdentifier, envIdentifier,
+        newRelicHealthSourceSpec.getCVConfigUpdateResult(accountId, orgIdentifier, projectIdentifier, envIdentifier,
             serviceIdentifier, identifier, name, Collections.emptyList(), metricPackService);
     assertThat(cvConfigUpdateResult.getUpdated()).isEmpty();
     assertThat(cvConfigUpdateResult.getDeleted()).isEmpty();
     List<CVConfig> added = cvConfigUpdateResult.getAdded();
 
-    List<AppDynamicsCVConfig> appDynamicsCVConfigs = (List<AppDynamicsCVConfig>) (List<?>) added;
-    assertThat(appDynamicsCVConfigs).hasSize(1);
-    AppDynamicsCVConfig appDynamicsCVConfig = appDynamicsCVConfigs.get(0);
-    assertCommon(appDynamicsCVConfig);
-    assertThat(appDynamicsCVConfig.getMetricPack().getCategory()).isEqualTo(CVMonitoringCategory.ERRORS);
-    assertThat(appDynamicsCVConfig.getMetricPack().getMetrics().size()).isEqualTo(1);
+    List<NewRelicCVConfig> newRelicCVConfigs = (List<NewRelicCVConfig>) (List<?>) added;
+    assertThat(newRelicCVConfigs).hasSize(1);
+    NewRelicCVConfig newRelicCVConfig = newRelicCVConfigs.get(0);
+    assertCommon(newRelicCVConfig);
+    assertThat(newRelicCVConfig.getMetricPack().getCategory()).isEqualTo(CVMonitoringCategory.PERFORMANCE);
+    assertThat(newRelicCVConfig.getMetricPack().getMetrics().size()).isEqualTo(4);
   }
 
   @Test
@@ -97,12 +100,12 @@ public class AppDynamicsHealthSourceSpecTest extends CvNextGenTestBase {
   public void getCVConfigUpdateResult_checkDeleted() {
     List<CVConfig> cvConfigs = new ArrayList<>();
     cvConfigs.add(
-        createCVConfig(MetricPack.builder().accountId(accountId).category(CVMonitoringCategory.PERFORMANCE).build()));
-    CVConfigUpdateResult result = appDynamicsHealthSourceSpec.getCVConfigUpdateResult(accountId, orgIdentifier,
+        createCVConfig(MetricPack.builder().accountId(accountId).category(CVMonitoringCategory.ERRORS).build()));
+    CVConfigUpdateResult result = newRelicHealthSourceSpec.getCVConfigUpdateResult(accountId, orgIdentifier,
         projectIdentifier, envIdentifier, serviceIdentifier, identifier, name, cvConfigs, metricPackService);
     assertThat(result.getDeleted()).hasSize(1);
-    AppDynamicsCVConfig appDynamicsCVConfig = (AppDynamicsCVConfig) result.getDeleted().get(0);
-    assertThat(appDynamicsCVConfig.getMetricPack().getCategory()).isEqualTo(CVMonitoringCategory.PERFORMANCE);
+    NewRelicCVConfig newRelicCVConfig = (NewRelicCVConfig) result.getDeleted().get(0);
+    assertThat(newRelicCVConfig.getMetricPack().getCategory()).isEqualTo(CVMonitoringCategory.ERRORS);
   }
 
   @Test
@@ -111,13 +114,13 @@ public class AppDynamicsHealthSourceSpecTest extends CvNextGenTestBase {
   public void getCVConfigUpdateResult_checkAdded() {
     List<CVConfig> cvConfigs = new ArrayList<>();
     cvConfigs.add(
-        createCVConfig(MetricPack.builder().accountId(accountId).category(CVMonitoringCategory.PERFORMANCE).build()));
-    CVConfigUpdateResult result = appDynamicsHealthSourceSpec.getCVConfigUpdateResult(accountId, orgIdentifier,
+        createCVConfig(MetricPack.builder().accountId(accountId).category(CVMonitoringCategory.ERRORS).build()));
+    CVConfigUpdateResult result = newRelicHealthSourceSpec.getCVConfigUpdateResult(accountId, orgIdentifier,
         projectIdentifier, envIdentifier, serviceIdentifier, identifier, name, cvConfigs, metricPackService);
     assertThat(result.getAdded()).hasSize(1);
-    AppDynamicsCVConfig appDynamicsCVConfig = (AppDynamicsCVConfig) result.getAdded().get(0);
-    assertCommon(appDynamicsCVConfig);
-    assertThat(appDynamicsCVConfig.getMetricPack().getCategory()).isEqualTo(CVMonitoringCategory.ERRORS);
+    NewRelicCVConfig newRelicCVConfig = (NewRelicCVConfig) result.getAdded().get(0);
+    assertCommon(newRelicCVConfig);
+    assertThat(newRelicCVConfig.getMetricPack().getCategory()).isEqualTo(CVMonitoringCategory.PERFORMANCE);
   }
 
   @Test
@@ -126,21 +129,21 @@ public class AppDynamicsHealthSourceSpecTest extends CvNextGenTestBase {
   public void getCVConfigUpdateResult_checkUpdated() {
     List<CVConfig> cvConfigs = new ArrayList<>();
     cvConfigs.add(createCVConfig(metricPackService.getMetricPack(
-        accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS, CVMonitoringCategory.ERRORS)));
-    CVConfigUpdateResult result = appDynamicsHealthSourceSpec.getCVConfigUpdateResult(accountId, orgIdentifier,
+        accountId, orgIdentifier, projectIdentifier, DataSourceType.NEW_RELIC, CVMonitoringCategory.PERFORMANCE)));
+    CVConfigUpdateResult result = newRelicHealthSourceSpec.getCVConfigUpdateResult(accountId, orgIdentifier,
         projectIdentifier, envIdentifier, serviceIdentifier, identifier, name, cvConfigs, metricPackService);
     assertThat(result.getUpdated()).hasSize(1);
-    AppDynamicsCVConfig appDynamicsCVConfig = (AppDynamicsCVConfig) result.getUpdated().get(0);
-    assertCommon(appDynamicsCVConfig);
-    assertThat(appDynamicsCVConfig.getMetricPack().getCategory()).isEqualTo(CVMonitoringCategory.ERRORS);
+    NewRelicCVConfig newRelicCVConfig = (NewRelicCVConfig) result.getUpdated().get(0);
+    assertCommon(newRelicCVConfig);
+    assertThat(newRelicCVConfig.getMetricPack().getCategory()).isEqualTo(CVMonitoringCategory.PERFORMANCE);
   }
 
-  private void assertCommon(AppDynamicsCVConfig cvConfig) {
+  private void assertCommon(NewRelicCVConfig cvConfig) {
     assertThat(cvConfig.getAccountId()).isEqualTo(accountId);
     assertThat(cvConfig.getOrgIdentifier()).isEqualTo(orgIdentifier);
     assertThat(cvConfig.getProjectIdentifier()).isEqualTo(projectIdentifier);
     assertThat(cvConfig.getApplicationName()).isEqualTo(applicationName);
-    assertThat(cvConfig.getTierName()).isEqualTo(tierName);
+    assertThat(cvConfig.getApplicationId()).isEqualTo(Long.valueOf(applicationId));
     assertThat(cvConfig.getConnectorIdentifier()).isEqualTo(connectorIdentifier);
     assertThat(cvConfig.getEnvIdentifier()).isEqualTo(envIdentifier);
     assertThat(cvConfig.getServiceIdentifier()).isEqualTo(serviceIdentifier);
@@ -149,12 +152,12 @@ public class AppDynamicsHealthSourceSpecTest extends CvNextGenTestBase {
     assertThat(cvConfig.getMonitoringSourceName()).isEqualTo(name);
     assertThat(cvConfig.getMetricPack().getAccountId()).isEqualTo(accountId);
     assertThat(cvConfig.getMetricPack().getOrgIdentifier()).isEqualTo(orgIdentifier);
-    assertThat(cvConfig.getMetricPack().getDataSourceType()).isEqualTo(DataSourceType.APP_DYNAMICS);
+    assertThat(cvConfig.getMetricPack().getDataSourceType()).isEqualTo(DataSourceType.NEW_RELIC);
   }
 
   private CVConfig createCVConfig(MetricPack metricPack) {
-    return builderFactory.appDynamicsCVConfigBuilder()
-        .tierName(tierName)
+    return builderFactory.newRelicCVConfigBuilder()
+        .applicationId(Long.valueOf(applicationId))
         .applicationName(applicationName)
         .metricPack(metricPack)
         .connectorIdentifier(connectorIdentifier)

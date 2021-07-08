@@ -138,6 +138,7 @@ import io.harness.cvng.core.services.impl.monitoredService.HealthSourceServiceIm
 import io.harness.cvng.core.services.impl.monitoredService.MonitoredServiceServiceImpl;
 import io.harness.cvng.core.utils.monitoredService.AppDynamicsHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransformer;
+import io.harness.cvng.core.utils.monitoredService.NewRelicHealthSourceSpecTransformer;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
@@ -290,6 +291,10 @@ public class CVServiceModule extends AbstractModule {
     bind(CVConfigToHealthSourceTransformer.class)
         .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
         .to(AppDynamicsHealthSourceSpecTransformer.class);
+
+    bind(CVConfigToHealthSourceTransformer.class)
+        .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
+        .to(NewRelicHealthSourceSpecTransformer.class);
 
     bind(CVConfigTransformer.class)
         .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
