@@ -1,5 +1,8 @@
 package io.harness.serializer.morphia;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.entities.DeploymentSummary;
 import io.harness.entities.SyncStatus;
 import io.harness.entities.infrastructureMapping.DirectKubernetesInfrastructureMapping;
@@ -11,6 +14,7 @@ import io.harness.morphia.MorphiaRegistrarHelperPut;
 
 import java.util.Set;
 
+@OwnedBy(DX)
 public class InstanceMorphiaClassesRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
