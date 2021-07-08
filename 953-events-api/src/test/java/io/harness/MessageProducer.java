@@ -1,8 +1,10 @@
 package io.harness;
 
 import io.harness.eventsframework.api.EventsFrameworkDownException;
+import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.entity_crud.account.AccountEntityChangeDTO;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
+import io.harness.eventsframework.impl.redis.RedisAbstractProducer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.gitsync.interceptor.GitEntityInfo;
@@ -16,11 +18,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class MessageProducer implements Runnable {
-  private final RedisProducer client;
+  private final Producer client;
   private final String color;
   private final boolean isGitAware;
 
-  public MessageProducer(RedisProducer client, String color, boolean isGitAware) {
+  public MessageProducer(Producer client, String color, boolean isGitAware) {
     this.color = color;
     this.client = client;
     this.isGitAware = isGitAware;

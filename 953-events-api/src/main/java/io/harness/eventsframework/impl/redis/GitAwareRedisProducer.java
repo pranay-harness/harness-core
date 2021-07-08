@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
 @Slf4j
-public class GitAwareRedisProducer extends RedisProducer {
+public class GitAwareRedisProducer extends RedisAbstractProducer {
   private Retry retry;
 
   public GitAwareRedisProducer(

@@ -2,6 +2,7 @@ package io.harness;
 
 import io.harness.eventsframework.impl.redis.GitAwareRedisProducer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
+import io.harness.eventsframework.impl.redis.VersionedRedisProducer;
 import io.harness.lock.redis.RedisPersistentLocker;
 import io.harness.logging.LoggingInitializer;
 import io.harness.maintenance.MaintenanceController;
@@ -75,10 +76,13 @@ public class EventsClientApplication extends Application<EventsClientApplication
 
     /* Push messages to redis channel */
     RedisProducer redisProducer = RedisProducer.of(channel, redisConfig, 10000, "dummyMessageProducer");
+    VersionedRedisProducer versionedRedisProducer =
+        VersionedRedisProducer.of(channel, redisConfig, 10000, "dummyMessageProducer", "1.0");
     GitAwareRedisProducer gitAwareRedisProducer =
         GitAwareRedisProducer.of(channel, redisConfig, 10000, "dummyGitAwareMessageProducer");
-    new Thread(new MessageProducer(redisProducer, ColorConstants.TEXT_YELLOW, false)).start();
-    new Thread(new MessageProducer(gitAwareRedisProducer, ColorConstants.TEXT_GREEN, true)).start();
+    new Thread(new MessageProducer(versionedRedisProducer, ColorConstants.TEXT_YELLOW, false)).start();
+    //    new Thread(new MessageProducer(redisProducer, ColorConstants.TEXT_YELLOW, false)).start();
+    //    new Thread(new MessageProducer(gitAwareRedisProducer, ColorConstants.TEXT_GREEN, true)).start();
 
     /* Read via Consumer groups - order is important - Sync processing usecase (Gitsync) */
     //    new Thread(new MessageConsumer(
@@ -94,10 +98,12 @@ public class EventsClientApplication extends Application<EventsClientApplication
     //        .start();
 
     /* Read via Consumer groups - order is not important - Load balancing usecase */
-    new Thread(new MessageConsumer("consumerGroups", redisConfig, channel, "group2", 1000, ColorConstants.TEXT_BLUE))
-        .start();
-    new Thread(new MessageConsumer("consumerGroups", redisConfig, channel, "group2", 4000, ColorConstants.TEXT_PURPLE))
-        .start();
+    //    new Thread(new MessageConsumer("consumerGroups", redisConfig, channel, "group2", 1000,
+    //    ColorConstants.TEXT_BLUE))
+    //        .start();
+    //    new Thread(new MessageConsumer("consumerGroups", redisConfig, channel, "group2", 4000,
+    //    ColorConstants.TEXT_PURPLE))
+    //        .start();
 
     while (true) {
       Thread.sleep(10000);
