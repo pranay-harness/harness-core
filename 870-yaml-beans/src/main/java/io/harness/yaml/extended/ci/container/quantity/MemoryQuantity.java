@@ -30,7 +30,7 @@ public class MemoryQuantity {
     Matcher m = r.matcher(quantity);
     if (m.find()) {
       String numericValue = m.group(1);
-      String suffix = m.group(2);
+      String suffix = m.group(3);
       MemoryQuantityUnit unit = Stream.of(MemoryQuantityUnit.values())
                                     .filter(quantityUnit -> quantityUnit.getSuffix().equals(suffix))
                                     .findFirst()
