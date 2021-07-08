@@ -113,6 +113,11 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
       Instant startInstant = Instant.now().minus(30, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }
+
+    if (null != instant && batchJobType == BatchJobType.CLUSTER_DATA_HOURLY_TO_BIG_QUERY) {
+      Instant startInstant = Instant.now().minus(7, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+      instant = startInstant.isAfter(instant) ? startInstant : instant;
+    }
     return instant;
   }
 
