@@ -535,7 +535,6 @@ import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.MLAnalysisType;
-import software.wings.service.impl.analysis.SetupTestNodeData;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
@@ -543,7 +542,6 @@ import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.apm.CustomAPMDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppDynamicsDataCollectionInfoV2;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
-import software.wings.service.impl.appdynamics.AppdynamicsSetupTestNodeData;
 import software.wings.service.impl.aws.model.AwsAmiAllPhaseRollbackData;
 import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.service.impl.aws.model.AwsAmiRequest;
@@ -1162,15 +1160,12 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ElkConnector.class, 5216);
     kryo.register(ElkValidationType.class, 5245);
     kryo.register(LogElement.class, 5486);
-    kryo.register(SetupTestNodeData.class, 5530);
     kryo.register(TimeSeries.class, 5312);
     kryo.register(TimeSeriesMlAnalysisType.class, 5347);
     kryo.register(APMDataCollectionInfo.class, 5320);
     kryo.register(APMMetricInfo.ResponseMapper.class, 5322);
     kryo.register(APMMetricInfo.class, 5321);
     kryo.register(AppdynamicsDataCollectionInfo.class, 5168);
-    kryo.register(AppdynamicsSetupTestNodeData.class, 5531);
-
     kryo.register(AwsAmiPreDeploymentData.class, 5519);
     kryo.register(AwsAmiRequestType.class, 5458);
     kryo.register(AwsAmiRequest.class, 5457);
@@ -1639,7 +1634,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureVMSSSetupContextElement.class, 7467);
     kryo.register(AzureVMSSSetupStateExecutionData.class, 7468);
     kryo.register(AzureVMSSSetupExecutionSummary.class, 7469);
-    kryo.register(SetupTestNodeData.Instance.class, 7470);
     kryo.register(InstanceFetchStateExecutionData.class, 7471);
     kryo.register(InstanceFetchStateExecutionSummary.class, 7472);
 

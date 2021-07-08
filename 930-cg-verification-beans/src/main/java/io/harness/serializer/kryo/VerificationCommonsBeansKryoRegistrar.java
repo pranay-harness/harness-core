@@ -7,6 +7,8 @@ import io.harness.serializer.KryoRegistrar;
 
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.analysis.SetupTestNodeData;
+import software.wings.service.impl.appdynamics.AppdynamicsSetupTestNodeData;
 
 import com.esotericsoftware.kryo.Kryo;
 
@@ -18,5 +20,8 @@ public class VerificationCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(ThirdPartyApiCallLog.ThirdPartyApiCallField.class, 71100);
     kryo.register(ThirdPartyApiCallLog.FieldType.class, 71101);
     kryo.register(AppDynamicsConfig.class, 5074);
+    kryo.register(SetupTestNodeData.class, 5530);
+    kryo.register(AppdynamicsSetupTestNodeData.class, 5531);
+    kryo.register(SetupTestNodeData.Instance.class, 7470);
   }
 }
