@@ -50,7 +50,7 @@ public class InstanceSyncPerpetualTaskInfo {
   String projectIdentifier;
   @FdIndex String infrastructureMappingId;
   List<String> deploymentSummaryIdList;
-  List<DeploymentInfoDetails> deploymentInfoDetails;
+  List<DeploymentInfoDetails> deploymentInfoDetailsList;
   @CreatedDate long createdAt;
   @LastModifiedDate long lastUpdatedAt;
 }
