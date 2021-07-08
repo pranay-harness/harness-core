@@ -8,6 +8,7 @@ import static io.harness.k8s.model.HelmVersion.V3;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.PRABU;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -19,6 +20,8 @@ import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -71,6 +74,7 @@ import software.wings.helpers.ext.helm.request.HelmChartCollectionParams;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
+import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
@@ -82,13 +86,15 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jooq.tools.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -563,6 +569,11 @@ public class HelmTaskHelperTest extends WingsBaseTest {
   public void testGetValuesYamlFromChart() throws Exception {
     String valuesFileContent = "var: value";
     String chartName = "chartName";
+
+    K8sValuesLocation k8sValuesLocation = K8sValuesLocation.ServiceOverride;
+    Map<String, List<String>> mapK8sValuesLocationToFilePaths = new HashMap<>();
+    mapK8sValuesLocationToFilePaths.put(K8sValuesLocation.ServiceOverride.name(), singletonList("values1.yaml"));
+
     HelmChartConfigParams helmChartConfigParams =
         HelmChartConfigParams.builder().chartName(chartName).chartVersion("0.1.0").build();
     String workingDirectory = prepareChartDirectoryWithValuesFileForTest(chartName, valuesFileContent);
@@ -574,8 +585,123 @@ public class HelmTaskHelperTest extends WingsBaseTest {
             contains("helm/path fetch chartName --untar"), anyString(), eq("fetch chart chartName"), anyLong());
 
     try {
-      String result = helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams, LONG_TIMEOUT_INTERVAL, null);
-      assertThat(result).isEqualTo(valuesFileContent);
+      Map<String, List<String>> result = helmTaskHelper.getValuesYamlFromChart(
+          helmChartConfigParams, LONG_TIMEOUT_INTERVAL, null, mapK8sValuesLocationToFilePaths);
+      assertThat(result.get(k8sValuesLocation.name()).get(0)).isEqualTo(valuesFileContent);
+      assertThat(result.get(k8sValuesLocation.name()).size()).isEqualTo(1);
+    } finally {
+      FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory);
+    }
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testGetValuesYamlFromChartMissingYamlForEnvOverride() throws Exception {
+    String valuesFileContent = "var: value";
+    String chartName = "chartName";
+
+    Map<String, List<String>> mapK8sValuesLocationToFilePaths = new HashMap<>();
+    mapK8sValuesLocationToFilePaths.put(K8sValuesLocation.ServiceOverride.name(), singletonList("values1.yaml"));
+    mapK8sValuesLocationToFilePaths.put(K8sValuesLocation.Environment.name(), singletonList("values2.yaml"));
+
+    HelmChartConfigParams helmChartConfigParams =
+        HelmChartConfigParams.builder().chartName(chartName).chartVersion("0.1.0").build();
+    String workingDirectory = prepareChartDirectoryWithValuesFileForTest(chartName, valuesFileContent);
+
+    doNothing().when(helmTaskHelper).initHelm(anyString(), any(HelmVersion.class), anyLong());
+    doReturn(new ProcessResult(0, new ProcessOutput("success".getBytes())))
+        .when(helmTaskHelperBase)
+        .executeCommand(
+            contains("helm/path fetch chartName --untar"), anyString(), eq("fetch chart chartName"), anyLong());
+
+    try {
+      Map<String, List<String>> result = helmTaskHelper.getValuesYamlFromChart(
+          helmChartConfigParams, LONG_TIMEOUT_INTERVAL, null, mapK8sValuesLocationToFilePaths);
+      assertThat(result).isNullOrEmpty();
+    } finally {
+      FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory);
+    }
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testGetValuesYamlFromChartMultipleCommaSeparatedFiles() throws Exception {
+    String valuesFileContent = "var: value";
+    String valuesFileContent1EnvOverride = "var: valueEnv1";
+    String valuesFileContent2EnvOverride = "var: valueEnv2";
+    String chartName = "chartName";
+
+    K8sValuesLocation k8sValuesLocation = K8sValuesLocation.ServiceOverride;
+    K8sValuesLocation k8sValuesLocationEnvOverride = K8sValuesLocation.Environment;
+    Map<String, List<String>> mapK8sValuesLocationToFilePaths = new HashMap<>();
+    mapK8sValuesLocationToFilePaths.put(K8sValuesLocation.ServiceOverride.name(), singletonList("values1.yaml"));
+    mapK8sValuesLocationToFilePaths.put(K8sValuesLocation.Environment.name(), asList("values2.yaml", "values3.yaml"));
+
+    HelmChartConfigParams helmChartConfigParams =
+        HelmChartConfigParams.builder().chartName(chartName).chartVersion("0.1.0").build();
+
+    Map<String, String> mapValuesFileContent = new HashMap<>();
+    mapValuesFileContent.put("values1.yaml", valuesFileContent);
+    mapValuesFileContent.put("values2.yaml", valuesFileContent1EnvOverride);
+    mapValuesFileContent.put("values3.yaml", valuesFileContent2EnvOverride);
+    String workingDirectory = prepareChartDirectoryWithValuesFileForTest(chartName, mapValuesFileContent);
+
+    doNothing().when(helmTaskHelper).initHelm(anyString(), any(HelmVersion.class), anyLong());
+    doReturn(new ProcessResult(0, new ProcessOutput("success".getBytes())))
+        .when(helmTaskHelperBase)
+        .executeCommand(
+            contains("helm/path fetch chartName --untar"), anyString(), eq("fetch chart chartName"), anyLong());
+
+    try {
+      Map<String, List<String>> result = helmTaskHelper.getValuesYamlFromChart(
+          helmChartConfigParams, LONG_TIMEOUT_INTERVAL, null, mapK8sValuesLocationToFilePaths);
+      assertThat(result.get(k8sValuesLocation.name()).size()).isEqualTo(1);
+      assertThat(result.get(k8sValuesLocationEnvOverride.name()).size()).isEqualTo(2);
+      assertThat(result.get(k8sValuesLocation.name()).get(0)).isEqualTo(valuesFileContent);
+      assertThat(result.get(k8sValuesLocationEnvOverride.name()).get(0)).isEqualTo(valuesFileContent1EnvOverride);
+      assertThat(result.get(k8sValuesLocationEnvOverride.name()).get(1)).isEqualTo(valuesFileContent2EnvOverride);
+    } finally {
+      FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory);
+    }
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testGetValuesYamlFromChartMultipleFiles() throws Exception {
+    String valuesFileContent = "var: value";
+    String valuesFileContentEnvOverride = "var: valueEnv";
+    String chartName = "chartName";
+
+    K8sValuesLocation k8sValuesLocation = K8sValuesLocation.ServiceOverride;
+    K8sValuesLocation k8sValuesLocationEnvOverride = K8sValuesLocation.Environment;
+    Map<String, List<String>> mapK8sValuesLocationToFilePaths = new HashMap<>();
+    mapK8sValuesLocationToFilePaths.put(K8sValuesLocation.ServiceOverride.name(), singletonList("values1.yaml"));
+    mapK8sValuesLocationToFilePaths.put(K8sValuesLocation.Environment.name(), singletonList("values2.yaml"));
+
+    HelmChartConfigParams helmChartConfigParams =
+        HelmChartConfigParams.builder().chartName(chartName).chartVersion("0.1.0").build();
+
+    Map<String, String> mapValuesFileContent = new HashMap<>();
+    mapValuesFileContent.put("values.yaml", valuesFileContent);
+    mapValuesFileContent.put("values1.yaml", valuesFileContentEnvOverride);
+    String workingDirectory = prepareChartDirectoryWithValuesFileForTest(chartName, mapValuesFileContent);
+
+    doNothing().when(helmTaskHelper).initHelm(anyString(), any(HelmVersion.class), anyLong());
+    doReturn(new ProcessResult(0, new ProcessOutput("success".getBytes())))
+        .when(helmTaskHelperBase)
+        .executeCommand(
+            contains("helm/path fetch chartName --untar"), anyString(), eq("fetch chart chartName"), anyLong());
+
+    try {
+      Map<String, List<String>> result = helmTaskHelper.getValuesYamlFromChart(
+          helmChartConfigParams, LONG_TIMEOUT_INTERVAL, null, mapK8sValuesLocationToFilePaths);
+      assertThat(result.get(k8sValuesLocation.name()).size()).isEqualTo(1);
+      assertThat(result.get(k8sValuesLocationEnvOverride.name()).size()).isEqualTo(1);
+      assertThat(result.get(k8sValuesLocation.name()).get(0)).isEqualTo(valuesFileContent);
+      assertThat(result.get(k8sValuesLocationEnvOverride.name()).get(0)).isEqualTo(valuesFileContentEnvOverride);
     } finally {
       FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory);
     }
@@ -585,10 +711,14 @@ public class HelmTaskHelperTest extends WingsBaseTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testGetValuesYamlFromChartNoValuesYaml() throws Exception {
+    K8sValuesLocation k8sValuesLocation = K8sValuesLocation.ServiceOverride;
+    Map<String, List<String>> mapK8sValuesLocationToFilePaths = new HashMap<>();
+    mapK8sValuesLocationToFilePaths.put(K8sValuesLocation.ServiceOverride.name(), singletonList("values1.yaml"));
+
     String chartName = "chartName";
     HelmChartConfigParams helmChartConfigParams =
         HelmChartConfigParams.builder().chartName(chartName).chartVersion("0.1.0").build();
-    String workingDirectory = prepareChartDirectoryWithValuesFileForTest(chartName, null);
+    String workingDirectory = prepareChartDirectoryWithValuesFileForTest(chartName, "");
 
     doNothing().when(helmTaskHelper).initHelm(anyString(), any(HelmVersion.class), anyLong());
     doReturn(new ProcessResult(0, new ProcessOutput("success".getBytes())))
@@ -596,7 +726,8 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .executeCommand(contains("helm/path fetch"), anyString(), eq("fetch chart chartName"), anyLong());
 
     try {
-      String result = helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams, LONG_TIMEOUT_INTERVAL, null);
+      Map<String, List<String>> result = helmTaskHelper.getValuesYamlFromChart(
+          helmChartConfigParams, LONG_TIMEOUT_INTERVAL, null, mapK8sValuesLocationToFilePaths);
       assertThat(result).isNullOrEmpty();
     } finally {
       FileIo.deleteDirectoryAndItsContentIfExists(workingDirectory);
@@ -611,6 +742,10 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     String chartVersion = "1.0.0";
     HelmChartConfigParams helmChartConfigParams = HelmChartConfigParams.builder().chartName(chartName).build();
 
+    K8sValuesLocation k8sValuesLocation = K8sValuesLocation.ServiceOverride;
+    Map<String, List<String>> mapK8sValuesLocationToFilePaths = new HashMap<>();
+    mapK8sValuesLocationToFilePaths.put(K8sValuesLocation.ServiceOverride.name(), singletonList("values1.yaml"));
+
     doReturn("working/directory").when(helmTaskHelper).createNewDirectoryAtPath(anyString());
     doReturn("helm/path").when(k8sGlobalConfigService).getHelmPath(any(HelmVersion.class));
     doNothing().when(helmTaskHelper).initHelm(anyString(), any(HelmVersion.class), anyLong());
@@ -621,7 +756,8 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .when(helmTaskHelper)
         .getHelmChartInfoFromChartsYamlFile(anyString());
 
-    helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams, LONG_TIMEOUT_INTERVAL, null);
+    helmTaskHelper.getValuesYamlFromChart(
+        helmChartConfigParams, LONG_TIMEOUT_INTERVAL, null, mapK8sValuesLocationToFilePaths);
     assertThat(helmChartConfigParams.getChartVersion()).isEqualTo(chartVersion);
   }
 
@@ -630,6 +766,10 @@ public class HelmTaskHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetValuesYamlFromChartUnableToPopulateChartVersion() throws Exception {
     HelmChartConfigParams helmChartConfigParams = HelmChartConfigParams.builder().chartName("chartName").build();
+
+    K8sValuesLocation k8sValuesLocation = K8sValuesLocation.ServiceOverride;
+    Map<String, List<String>> mapK8sValuesLocationToFilePaths = new HashMap<>();
+    mapK8sValuesLocationToFilePaths.put(K8sValuesLocation.ServiceOverride.name(), singletonList("values1.yaml"));
 
     doReturn("working/directory").when(helmTaskHelper).createNewDirectoryAtPath(anyString());
     doReturn("helm/path").when(k8sGlobalConfigService).getHelmPath(any(HelmVersion.class));
@@ -641,7 +781,9 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .when(helmTaskHelper)
         .getHelmChartInfoFromChartsYamlFile(anyString());
 
-    assertThatCode(() -> helmTaskHelper.getValuesYamlFromChart(helmChartConfigParams, LONG_TIMEOUT_INTERVAL, null))
+    assertThatCode(()
+                       -> helmTaskHelper.getValuesYamlFromChart(
+                           helmChartConfigParams, LONG_TIMEOUT_INTERVAL, null, mapK8sValuesLocationToFilePaths))
         .doesNotThrowAnyException();
   }
 
@@ -651,8 +793,27 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     Files.createDirectory(Paths.get(workingDirectory, chartName));
     doReturn(workingDirectory).when(helmTaskHelper).createNewDirectoryAtPath(anyString());
     doReturn("helm/path").when(k8sGlobalConfigService).getHelmPath(any(HelmVersion.class));
-    if (valuesFileContent != null) {
+    if (!StringUtils.isEmpty(valuesFileContent)) {
       Files.write(Paths.get(workingDirectory, chartName, "values.yaml"), valuesFileContent.getBytes());
+      Files.write(Paths.get(workingDirectory, chartName, "values1.yaml"), valuesFileContent.getBytes());
+    }
+
+    return workingDirectory;
+  }
+
+  private String prepareChartDirectoryWithValuesFileForTest(String chartName, Map<String, String> mapValuesFileContent)
+      throws IOException {
+    String workingDirectory = Files.createTempDirectory("get-values-yaml-chart").toString();
+    Files.createDirectory(Paths.get(workingDirectory, chartName));
+    doReturn(workingDirectory).when(helmTaskHelper).createNewDirectoryAtPath(anyString());
+    doReturn("helm/path").when(k8sGlobalConfigService).getHelmPath(any(HelmVersion.class));
+    if (mapValuesFileContent != null) {
+      mapValuesFileContent.entrySet().stream().forEach(entry -> {
+        try {
+          Files.write(Paths.get(workingDirectory, chartName, entry.getKey()), entry.getValue().getBytes());
+        } catch (IOException e) {
+        }
+      });
     }
 
     return workingDirectory;
@@ -712,23 +873,23 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     FileData file2 = FileData.builder().filePath("dir/file2").build();
     FileData file3 = FileData.builder().filePath("dir/file3").build();
     List<FileData> emptyFiles = Collections.emptyList();
-    List<FileData> singleFile = Collections.singletonList(file1);
-    List<FileData> multipleFiles = Arrays.asList(file1, file2, file3);
+    List<FileData> singleFile = singletonList(file1);
+    List<FileData> multipleFiles = asList(file1, file2, file3);
 
     assertThat(helmTaskHelper.getFilteredFiles(emptyFiles, Collections.emptyList())).isEmpty();
-    assertThat(helmTaskHelper.getFilteredFiles(emptyFiles, Arrays.asList("file1", "file2"))).isEmpty();
+    assertThat(helmTaskHelper.getFilteredFiles(emptyFiles, asList("file1", "file2"))).isEmpty();
     assertThat(helmTaskHelper.getFilteredFiles(singleFile, Collections.emptyList())).isEmpty();
-    assertThat(helmTaskHelper.getFilteredFiles(singleFile, Arrays.asList("missing1", "missing2"))).isEmpty();
-    assertThat(helmTaskHelper.getFilteredFiles(singleFile, Collections.singletonList("dir/file1")))
+    assertThat(helmTaskHelper.getFilteredFiles(singleFile, asList("missing1", "missing2"))).isEmpty();
+    assertThat(helmTaskHelper.getFilteredFiles(singleFile, singletonList("dir/file1")))
         .containsExactlyInAnyOrder(file1);
-    assertThat(helmTaskHelper.getFilteredFiles(singleFile, Arrays.asList("dir/file1", "missing")))
+    assertThat(helmTaskHelper.getFilteredFiles(singleFile, asList("dir/file1", "missing")))
         .containsExactlyInAnyOrder(file1);
-    assertThat(helmTaskHelper.getFilteredFiles(multipleFiles, Arrays.asList("missing1", "missing2"))).isEmpty();
-    assertThat(helmTaskHelper.getFilteredFiles(multipleFiles, Collections.singletonList("dir/file1")))
+    assertThat(helmTaskHelper.getFilteredFiles(multipleFiles, asList("missing1", "missing2"))).isEmpty();
+    assertThat(helmTaskHelper.getFilteredFiles(multipleFiles, singletonList("dir/file1")))
         .containsExactlyInAnyOrder(file1);
-    assertThat(helmTaskHelper.getFilteredFiles(multipleFiles, Arrays.asList("dir/file1", "dir/file2", "dir/file3")))
+    assertThat(helmTaskHelper.getFilteredFiles(multipleFiles, asList("dir/file1", "dir/file2", "dir/file3")))
         .containsExactlyInAnyOrder(file1, file2, file3);
-    assertThat(helmTaskHelper.getFilteredFiles(multipleFiles, Arrays.asList("dir/file1", "dir/file2", "misssing")))
+    assertThat(helmTaskHelper.getFilteredFiles(multipleFiles, asList("dir/file1", "dir/file2", "misssing")))
         .containsExactlyInAnyOrder(file1, file2);
   }
 

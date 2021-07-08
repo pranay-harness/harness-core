@@ -200,14 +200,21 @@ public class HelmTaskHelper {
                 StandardCharsets.UTF_8);
             valuesYamlContents.add(fileContent);
           } catch (Exception ex) {
-            log.info(format("Required values.yaml file with path %s not found", filePath), ex);
+            String msg = format("Required values yaml file with path %s not found", filePath);
+            log.error(msg, ex);
           }
           mapK8sValuesLocationToContents.put(entry.getKey(), valuesYamlContents);
         });
       });
+
+      if (mapK8sValuesLocationToFilePaths.entrySet().stream().anyMatch(
+              entry -> (mapK8sValuesLocationToContents.get(entry.getKey()).size() != entry.getValue().size()))) {
+        throw new Exception("Could not find all required values yaml files in helm repo");
+      }
+
       return mapK8sValuesLocationToContents;
     } catch (Exception ex) {
-      log.info("values.yaml file not found", ex);
+      log.info("values yaml file not found", ex);
       return null;
     } finally {
       cleanup(workingDirectory);
