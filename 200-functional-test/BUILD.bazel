@@ -63,18 +63,6 @@ test_dependencies = [
     "@maven//:pl_pragmatists_JUnitParams",
 ]
 
-#run_package_tests(
-#    data = [
-#        "//200-functional-test/src/test/resources:resource",
-#    ],
-#    resources = [
-#        "//200-functional-test/src/test/resources:resource",
-#    ],
-#    deps = test_dependencies,
-#)
-
-run_tests()
-
 java_library(
     name = "tests",
     testonly = True,
@@ -98,6 +86,8 @@ java_library(
     visibility = ["//visibility:public"],
     deps = test_dependencies,
 )
+
+run_tests()
 
 run_analysis(
     run_sonar = False,
