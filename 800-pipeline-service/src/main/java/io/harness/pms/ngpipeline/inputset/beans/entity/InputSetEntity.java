@@ -97,6 +97,8 @@ public class InputSetEntity
   @Setter @NonFinal String filePath;
   @Setter @NonFinal String rootFolder;
 
+  @Wither @Builder.Default Boolean isInvalid = Boolean.FALSE;
+
   @Override
   public String getAccountIdentifier() {
     return accountId;
