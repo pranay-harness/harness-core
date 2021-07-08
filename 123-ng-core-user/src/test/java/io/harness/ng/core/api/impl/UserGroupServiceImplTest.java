@@ -86,11 +86,6 @@ public class UserGroupServiceImplTest extends CategoryTest {
                                     .orgIdentifier(ORG_IDENTIFIER)
                                     .projectIdentifier(PROJECT_IDENTIFIER)
                                     .build();
-    // Users with u3 missing
-    assertThatThrownBy(() -> userGroupService.create(userGroupDTO))
-        .isInstanceOf(InvalidArgumentsException.class)
-        .hasMessageContaining("The following user is not valid: [u3]");
-    userInfos.add(UserInfo.builder().uuid("u3").build());
 
     // Users with all valid users with failing membership
     assertThatThrownBy(() -> userGroupService.create(userGroupDTO))

@@ -103,9 +103,11 @@ public class InviteResource {
 
   @GET
   @ApiOperation(value = "Get all invites for the queried project/organization", nickname = "getInvites")
+  @NGAccessControlCheck(resourceType = USER, permission = VIEW_USER_PERMISSION)
   public ResponseDTO<PageResponse<InviteDTO>> getInvites(
-      @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
-      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
+      @QueryParam("accountIdentifier") @NotNull @AccountIdentifier String accountIdentifier,
+      @QueryParam("orgIdentifier") @OrgIdentifier String orgIdentifier,
+      @QueryParam("projectIdentifier") @ProjectIdentifier String projectIdentifier,
       @BeanParam PageRequest pageRequest) {
     projectIdentifier = stripToNull(projectIdentifier);
     if (isEmpty(pageRequest.getSortOrders())) {

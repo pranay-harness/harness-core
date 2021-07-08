@@ -87,7 +87,7 @@ public class NgUserServiceImpl implements NgUserService {
   private static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
   private final List<String> MANAGED_ROLE_IDENTIFIERS =
       ImmutableList.of(ACCOUNT_VIEWER, ORGANIZATION_VIEWER, PROJECT_VIEWER);
-  public static final int DEFAULT_PAGE_SIZE = 1000;
+  public static final int DEFAULT_PAGE_SIZE = 10000;
   private final UserClient userClient;
   private final UserMembershipRepository userMembershipRepository;
   private final AccessControlAdminClient accessControlAdminClient;
@@ -96,7 +96,7 @@ public class NgUserServiceImpl implements NgUserService {
   private final UserGroupService userGroupService;
   private final UserMetadataRepository userMetadataRepository;
 
-  private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
+  private static final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
 
   @Inject
   public NgUserServiceImpl(UserClient userClient, UserMembershipRepository userMembershipRepository,
@@ -310,7 +310,8 @@ public class NgUserServiceImpl implements NgUserService {
           scope.getOrgIdentifier(), scope.getProjectIdentifier(), false, createRequestDTO));
 
     } catch (Exception e) {
-      log.error("Cannot create all of the role assignments in [{}] for user [{}] at [{}]", roleAssignmentDTOs, userId,
+      log.error("Could not create all of the role assignments in [{}] for user [{}] at [{}]", roleAssignmentDTOs,
+          userId,
           ScopeUtils.toString(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()));
     }
   }
@@ -326,17 +327,12 @@ public class NgUserServiceImpl implements NgUserService {
       String userId, Scope scope, boolean addUserToParentScope, UserMembershipUpdateSource source) {
     ensureUserMetadata(userId);
     addUserToScopeInternal(userId, source, scope, getDefaultRoleIdentifier(scope));
-    // Adding user to the account for sign in flow to work
-    addUserToCG(userId, scope);
     if (addUserToParentScope) {
       addUserToParentScope(userId, scope, source);
     }
   }
 
   private String getDefaultRoleIdentifier(Scope scope) {
-    if (scope == null) {
-      return null;
-    }
     if (!isBlank(scope.getProjectIdentifier())) {
       return PROJECT_VIEWER;
     } else if (!isBlank(scope.getOrgIdentifier())) {
@@ -512,7 +508,7 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   private void ensureUserNotPartOfChildScope(String userId, Scope scope) {
-    boolean userPartOfChildScope = false;
+    boolean userPartOfChildScope;
     if (!isBlank(scope.getProjectIdentifier())) {
       userPartOfChildScope = false;
     } else if (!isBlank(scope.getOrgIdentifier())) {
@@ -534,7 +530,7 @@ public class NgUserServiceImpl implements NgUserService {
                               .exists(true);
       userPartOfChildScope = userMembershipRepository.findOne(criteria) != null;
     }
-    if (userPartOfChildScope == true) {
+    if (userPartOfChildScope) {
       throw new InvalidRequestException(getDeleteUserFromChildScopeErrorMessage(scope));
     }
   }

@@ -53,12 +53,12 @@ public class ACLServiceImpl implements ACLService {
   }
 
   @Override
-  public AccessCheckResponseDTO checkAccess(Principal principal, List<PermissionCheckDTO> permissions) {
-    List<Boolean> allowedAccessList = aclDAO.checkForAccess(principal, permissions);
+  public AccessCheckResponseDTO checkAccess(Principal principal, List<PermissionCheckDTO> permissionChecks) {
+    List<Boolean> allowedAccessList = aclDAO.checkForAccess(principal, permissionChecks);
     List<AccessControlDTO> accessControlDTOList = new ArrayList<>();
 
-    for (int i = 0; i < permissions.size(); i++) {
-      PermissionCheckDTO permissionCheckDTO = permissions.get(i);
+    for (int i = 0; i < permissionChecks.size(); i++) {
+      PermissionCheckDTO permissionCheckDTO = permissionChecks.get(i);
       if (disabledPermissions.contains(permissionCheckDTO.getPermission())) {
         accessControlDTOList.add(getAccessControlDTO(permissionCheckDTO, true));
       } else {

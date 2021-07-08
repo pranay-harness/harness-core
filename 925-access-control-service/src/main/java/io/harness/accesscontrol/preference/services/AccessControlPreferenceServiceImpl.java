@@ -15,15 +15,16 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PL)
 @Slf4j
 public class AccessControlPreferenceServiceImpl implements AccessControlPreferenceService {
   private final ScheduledExecutorService executorService;
-  private static final String ENFORCE_NG_ACCESS_CONTROL = "ENFORCE_NG_ACCESS_CONTROL";
+  private static final String ENFORCE_NG_ACCESS_CONTROL_FF = "ENFORCE_NG_ACCESS_CONTROL";
   private final AccessControlPreferenceDAO accessControlPreferenceDAO;
-  private volatile boolean globallyEnabled;
+  private final AtomicBoolean isEnabledForAllAccounts = new AtomicBoolean();
   private final FeatureFlagsClient featureFlagClient;
 
   @Inject
@@ -37,14 +38,16 @@ public class AccessControlPreferenceServiceImpl implements AccessControlPreferen
   }
 
   private void updateGlobalPreference() {
-    log.info("Trying to sync the value of NG_ACCESS_CONTROL_ENFORCED flag");
     try {
       FeatureFlagDTO featureFlagDTO =
-          RestClientUtils.getResponse(featureFlagClient.getFeatureFlagName(ENFORCE_NG_ACCESS_CONTROL));
-      this.globallyEnabled = Optional.ofNullable(featureFlagDTO).map(FeatureFlagDTO::getEnabled).orElse(false);
-      log.info("Successfully synced the value of NG_ACCESS_CONTROL_ENFORCED flag");
+          RestClientUtils.getResponse(featureFlagClient.getFeatureFlagName(ENFORCE_NG_ACCESS_CONTROL_FF));
+      boolean isEnabled = Optional.ofNullable(featureFlagDTO).map(FeatureFlagDTO::getEnabled).orElse(false);
+      if (isEnabledForAllAccounts.get() != isEnabled) {
+        isEnabledForAllAccounts.set(isEnabled);
+        log.info("Successfully synced the value of ENFORCE_NG_ACCESS_CONTROL_FF flag to : {}", isEnabled);
+      }
     } catch (Exception exception) {
-      log.error("Failed to sync value of NG_ACCESS_CONTROL_ENFORCED flag with error", exception);
+      log.error("Failed to sync ENFORCE_NG_ACCESS_CONTROL_FF feature flag", exception);
     }
   }
 
@@ -52,7 +55,7 @@ public class AccessControlPreferenceServiceImpl implements AccessControlPreferen
   public boolean isAccessControlEnabled(String accountIdentifier) {
     Optional<AccessControlPreference> accessControlPreferenceOptional = get(accountIdentifier);
     return accessControlPreferenceOptional.map(AccessControlPreference::isAccessControlEnabled)
-        .orElseGet(() -> globallyEnabled);
+        .orElseGet(() -> isEnabledForAllAccounts.get());
   }
 
   private Optional<AccessControlPreference> get(String accountIdentifier) {

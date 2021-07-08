@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 public class NGAggregateModule extends AbstractModule {
   @Override
   protected void configure() {
-    int poolSize = Runtime.getRuntime().availableProcessors() * 2;
+    int poolSize = Runtime.getRuntime().availableProcessors() * 3;
     bind(ExecutorService.class)
         .annotatedWith(Names.named("aggregate-projects"))
         .toInstance(new ManagedExecutorService(ThreadPool.create(poolSize, poolSize, 0, TimeUnit.SECONDS)));

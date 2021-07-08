@@ -65,50 +65,50 @@ public class ACLResource {
   public ResponseDTO<io.harness.accesscontrol.clients.AccessCheckResponseDTO> get(
       @Valid @NotNull AccessCheckRequestDTO dto) {
     io.harness.security.dto.Principal contextPrincipal = SecurityContextBuilder.getPrincipal();
-    List<PermissionCheckDTO> permissions = dto.getPermissions();
-    Principal principalToCheckPermissions = dto.getPrincipal();
-    Optional<String> accountIdentifierOptional = getAccountIdentifier(permissions);
+    List<PermissionCheckDTO> permissionChecks = dto.getPermissions();
+    Principal principalToCheckPermissionsFor = dto.getPrincipal();
+    Optional<String> accountIdentifierOptional = getAccountIdentifier(permissionChecks);
 
     if (accountIdentifierOptional.isPresent()
         && !accessControlPreferenceService.isAccessControlEnabled(accountIdentifierOptional.get())) {
       return ResponseDTO.newResponse(
           io.harness.accesscontrol.clients.AccessCheckResponseDTO.builder()
-              .accessControlList(permissions.stream()
+              .accessControlList(permissionChecks.stream()
                                      .map(permissionCheckDTO -> getAccessControlDTO(permissionCheckDTO, true))
                                      .collect(Collectors.toList()))
-              .principal(principalToCheckPermissions)
+              .principal(principalToCheckPermissionsFor)
               .build());
     }
 
     checkForValidContextOrThrow(contextPrincipal);
 
-    if (serviceContextAndNoPrincipalInBody(contextPrincipal, principalToCheckPermissions)) {
+    if (serviceContextAndNoPrincipalInBody(contextPrincipal, principalToCheckPermissionsFor)) {
       return ResponseDTO.newResponse(
           io.harness.accesscontrol.clients.AccessCheckResponseDTO.builder()
               .principal(Principal.builder()
                              .principalType(PrincipalType.SERVICE)
                              .principalIdentifier(contextPrincipal.getName())
                              .build())
-              .accessControlList(permissions.stream()
+              .accessControlList(permissionChecks.stream()
                                      .map(permission -> getAccessControlDTO(permission, true))
                                      .collect(Collectors.toList()))
               .build());
     }
 
-    if (userContextAndDifferentPrincipalInBody(contextPrincipal, principalToCheckPermissions)) {
+    if (userContextAndDifferentPrincipalInBody(contextPrincipal, principalToCheckPermissionsFor)) {
       // a user principal needs elevated permissions to check for permissions of another principal
       // for now, throwing exception since this is not a valid use case right now
       throw new AccessDeniedException(
           "Principal not allowed to check permission of a different principal", ErrorCode.NG_ACCESS_DENIED, USER);
     }
 
-    if (notPresent(principalToCheckPermissions)) {
-      principalToCheckPermissions =
+    if (notPresent(principalToCheckPermissionsFor)) {
+      principalToCheckPermissionsFor =
           Principal.of(fromSecurityPrincipalType(contextPrincipal.getType()), contextPrincipal.getName());
     }
 
     AccessCheckResponseDTO accessCheckResponseDTO =
-        aclService.checkAccess(principalToCheckPermissions, dto.getPermissions());
+        aclService.checkAccess(principalToCheckPermissionsFor, permissionChecks);
     return ResponseDTO.newResponse(accessCheckResponseDTO);
   }
 }
