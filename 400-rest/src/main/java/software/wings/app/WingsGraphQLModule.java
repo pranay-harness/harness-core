@@ -212,7 +212,8 @@ import org.jetbrains.annotations.NotNull;
  */
 @OwnedBy(DX)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
-public class GraphQLModule extends AbstractModule {
+@Deprecated
+public class WingsGraphQLModule extends AbstractModule {
   /***
    * This collection is mainly required to inject batched loader at app start time.
    * I was not getting a handle to Annotation Name at runtime hence I am taking this approach.
@@ -221,6 +222,17 @@ public class GraphQLModule extends AbstractModule {
   private static final String DATA_FETCHER_SUFFIX = "DataFetcher";
   public static final String BATCH_SUFFIX = "Batch";
   private static final String BATCH_DATA_LOADER_SUFFIX = BATCH_SUFFIX.concat("DataLoader");
+
+  private static volatile WingsGraphQLModule instance;
+
+  public static WingsGraphQLModule getInstance() {
+    if (instance == null) {
+      instance = new WingsGraphQLModule();
+    }
+    return instance;
+  }
+
+  private WingsGraphQLModule() {}
 
   public static Set<String> getBatchDataLoaderNames() {
     return Collections.unmodifiableSet(BATCH_DATA_LOADER_NAMES);

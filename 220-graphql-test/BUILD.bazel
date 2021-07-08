@@ -25,6 +25,7 @@ java_library(
         "//960-persistence:supporter-test",
         "//970-rbac-core:module",
         "//990-commons-test:module",
+        "//380-cg-graphql:module",
         "@maven//:de_bwaldvogel_mongo_java_server_core",
         "@maven//:de_bwaldvogel_mongo_java_server_memory_backend",
         "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_mongo",
