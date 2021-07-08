@@ -292,7 +292,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerHealthCheck(environment, injector);
     registerIterators(injector);
     registerJobs(injector);
-    registerMigrations(injector);
     registerQueueListeners(injector);
     registerPmsSdkEvents(injector);
     initializeMonitoring(appConfig, injector);
@@ -300,6 +299,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     intializeGitSync(injector, appConfig);
     registerManagedBeans(environment, injector);
 
+    registerMigrations(injector);
     MaintenanceController.forceMaintenance(false);
   }
 
