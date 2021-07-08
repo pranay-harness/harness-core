@@ -12,8 +12,10 @@ import io.harness.exception.GeneralException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.migration.MigrationDetails;
+import io.harness.migration.MigrationException;
 import io.harness.migration.MigrationProvider;
 import io.harness.migration.NGMigration;
+import io.harness.migration.TimeScaleNotAvailableException;
 import io.harness.migration.beans.MigrationType;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.migration.entities.NGSchema;
@@ -166,23 +168,22 @@ public class NGMigrationServiceImpl implements NGMigrationService {
       }
       Class<? extends NGMigration> migration = migrations.get(i);
       log.info("[Migration] - {} : Migrating {} to version {} ...", serviceName, migrationTypeName, i);
-      if (isBackground) {
-        try {
-          injector.getInstance(migration).migrate();
-          log.info("[Migration] - {} : {} completed", serviceName, migrationTypeName);
-        } catch (Exception ex) {
+      try {
+        injector.getInstance(migration).migrate();
+      } catch (Exception ex) {
+        // There may be some on-prem customers who might not have timescale db available. Hence handling this exception
+        // gracefully and skipping rest of the Timescale migration.
+        if (isBackground || ex instanceof TimeScaleNotAvailableException) {
           log.error("[Migration] - {} : Error while running migration {}", serviceName, migration.getSimpleName(), ex);
           break;
+        } else {
+          throw new MigrationException(
+              String.format("[Migration] - %s : Error while running migration %s", serviceName, migrationTypeName), ex);
         }
-      } else {
-        injector.getInstance(migration).migrate();
       }
-
       Update update = new Update().set(NGSchemaKeys.migrationDetails + "." + migrationTypeName, i);
       mongoTemplate.updateFirst(new Query(), update, schemaClass);
-      if (!isBackground) {
-        log.info("[Migration] - {} : {} completed", serviceName, migrationTypeName);
-      }
+      log.info("[Migration] - {} : {} completed", serviceName, migrationTypeName);
     }
   }
 }
