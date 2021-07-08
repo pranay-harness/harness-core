@@ -579,14 +579,20 @@ public class NexusServiceTest extends WingsBaseTest {
    * The Wire mock rule.
    */
   @Rule
-  public WireMockRule wireMockRule = new WireMockRule(
-      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
+  public WireMockRule wireMockRule = new WireMockRule(WireMockConfiguration.wireMockConfig()
+                                                          .usingFilesUnderClasspath("400-rest/src/test/resources")
+                                                          .disableRequestJournal()
+                                                          .port(0));
   @Rule
-  public WireMockRule wireMockRule2 = new WireMockRule(
-      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
+  public WireMockRule wireMockRule2 = new WireMockRule(WireMockConfiguration.wireMockConfig()
+                                                           .usingFilesUnderClasspath("400-rest/src/test/resources")
+                                                           .disableRequestJournal()
+                                                           .port(0));
   @Rule
-  public WireMockRule wireMockRule3 = new WireMockRule(
-      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
+  public WireMockRule wireMockRule3 = new WireMockRule(WireMockConfiguration.wireMockConfig()
+                                                           .usingFilesUnderClasspath("400-rest/src/test/resources")
+                                                           .disableRequestJournal()
+                                                           .port(0));
 
   private String DEFAULT_NEXUS_URL;
 
