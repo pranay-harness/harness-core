@@ -8,7 +8,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.ng.core.api.AggregateOrganizationService;
 import io.harness.ng.core.dto.OrganizationAggregateDTO;
-import io.harness.ng.core.dto.OrganizationAggregateDTO.OrganizationAggregateDTOBuilder;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.remote.OrganizationMapper;
@@ -64,33 +63,25 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   }
 
   private OrganizationAggregateDTO buildAggregateDTO(final Organization organization) {
-    OrganizationAggregateDTOBuilder organizationAggregateDTOBuilder =
-        OrganizationAggregateDTO.builder().organizationResponse(OrganizationMapper.toResponseWrapper(organization));
-
     int projectsCount = projectService
                             .getProjectsCountPerOrganization(
                                 organization.getAccountIdentifier(), singletonList(organization.getIdentifier()))
                             .getOrDefault(organization.getIdentifier(), 0);
-    organizationAggregateDTOBuilder.projectsCount(projectsCount);
 
-    List<UserMetadataDTO> orgAdmins =
-        ngUserService.listUsersHavingRole(Scope.builder()
-                                              .accountIdentifier(organization.getAccountIdentifier())
-                                              .orgIdentifier(organization.getIdentifier())
-                                              .build(),
-            ORG_ADMIN_ROLE);
+    Scope scope = Scope.builder()
+                      .accountIdentifier(organization.getAccountIdentifier())
+                      .orgIdentifier(organization.getIdentifier())
+                      .build();
+    List<UserMetadataDTO> orgAdmins = ngUserService.listUsersHavingRole(scope, ORG_ADMIN_ROLE);
+    List<UserMetadataDTO> collaborators = ngUserService.listUsers(scope);
+    collaborators.removeAll(orgAdmins);
 
-    organizationAggregateDTOBuilder.admins(orgAdmins);
-
-    Scope orgScope = Scope.builder()
-                         .accountIdentifier(organization.getAccountIdentifier())
-                         .orgIdentifier(organization.getIdentifier())
-                         .projectIdentifier(null)
-                         .build();
-    List<UserMetadataDTO> usersInOrganization = ngUserService.listUsers(orgScope);
-    usersInOrganization.removeAll(orgAdmins);
-
-    return organizationAggregateDTOBuilder.collaborators(usersInOrganization).build();
+    return OrganizationAggregateDTO.builder()
+        .organizationResponse(OrganizationMapper.toResponseWrapper(organization))
+        .projectsCount(projectsCount)
+        .admins(orgAdmins)
+        .collaborators(collaborators)
+        .build();
   }
 
   @Override
@@ -100,16 +91,17 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
     List<Organization> organizationList = organizations.toList();
 
     List<Callable<OrganizationAggregateDTO>> tasks = new ArrayList<>();
-    List<OrganizationAggregateDTO> aggregates = new ArrayList<>();
     organizations.forEach(org -> tasks.add(() -> buildAggregateDTO(org)));
-    List<Future<OrganizationAggregateDTO>> futures = null;
 
+    List<Future<OrganizationAggregateDTO>> futures;
     try {
       futures = executorService.invokeAll(tasks, 10, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
+      return Page.empty();
     }
 
+    List<OrganizationAggregateDTO> aggregates = new ArrayList<>();
     for (int i = 0; i < futures.size(); i++) {
       try {
         aggregates.add(futures.get(i).get());
@@ -121,9 +113,10 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
                            .build());
       } catch (InterruptedException interruptedException) {
         Thread.currentThread().interrupt();
+        return Page.empty();
       } catch (ExecutionException e) {
-        log.error("Error while computing aggregate for org [{}/{}]", organizationList.get(i).getAccountIdentifier(),
-            organizationList.get(i).getIdentifier(), e);
+        log.error("Error occurred while computing aggregate for org [{}/{}]",
+            organizationList.get(i).getAccountIdentifier(), organizationList.get(i).getIdentifier(), e);
         aggregates.add(OrganizationAggregateDTO.builder()
                            .organizationResponse(OrganizationMapper.toResponseWrapper(organizationList.get(i)))
                            .build());

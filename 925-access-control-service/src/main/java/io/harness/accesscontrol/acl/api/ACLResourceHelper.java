@@ -21,10 +21,6 @@ import org.apache.commons.lang3.StringUtils;
 public class ACLResourceHelper {
   public static boolean serviceContextAndNoPrincipalInBody(
       io.harness.security.dto.Principal principalInContext, Principal principalToCheckPermissions) {
-    /*
-     check if principal in context is SERVICE and principalToCheckPermissions is either null or
-     the same service principal
-     */
     Optional<io.harness.security.dto.Principal> serviceCall =
         Optional.ofNullable(principalInContext).filter(x -> SERVICE.equals(x.getType()));
 
