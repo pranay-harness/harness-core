@@ -38,7 +38,7 @@ func (ci *ConnectionInfo) String() string {
 
 func (ci *ConnectionInfo) psqlConnectionString() string {
 	if ci.EnableSSL == false {
-		return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable application_name=%s",
+		return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require application_name=%s",
 			ci.Host, ci.Port, ci.User, ci.Password, ci.DBName, ci.Application)
 	} else {
 		return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=verify-full sslrootcert=%s sslcert= sslkey= application_name=%s",
