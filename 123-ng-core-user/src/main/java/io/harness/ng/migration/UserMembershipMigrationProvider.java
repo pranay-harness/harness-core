@@ -21,7 +21,10 @@ public class UserMembershipMigrationProvider implements MigrationProvider {
   @Override
   public List<Class<? extends MigrationDetails>> getMigrationDetailsList() {
     return new ArrayList<Class<? extends MigrationDetails>>() {
-      { add(UserMembershipMigrationDetails.class); }
+      {
+        add(UserMembershipMigrationDetails.class);
+        add(UserMembershipStaleScopeMigrationDetails.class);
+      }
     };
   }
 }
