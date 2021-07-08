@@ -38,11 +38,19 @@ public class GitCapabilityHelper extends ConnectorCapabilityBaseHelper {
   }
 
   private String getGitSSHHostname(GitConfigDTO gitConfigDTO) {
-    return GitClientHelper.getGitSCM(gitConfigDTO.getUrl());
+    String url = gitConfigDTO.getUrl();
+    if (gitConfigDTO.getGitConnectionType() == GitConnectionType.ACCOUNT && !url.endsWith("/")) {
+      url += "/";
+    }
+    return GitClientHelper.getGitSCM(url);
   }
 
   private String getGitSSHPort(GitConfigDTO gitConfigDTO) {
-    String port = GitClientHelper.getGitSCMPort(gitConfigDTO.getUrl());
+    String url = gitConfigDTO.getUrl();
+    if (gitConfigDTO.getGitConnectionType() == GitConnectionType.ACCOUNT && !url.endsWith("/")) {
+      url += "/";
+    }
+    String port = GitClientHelper.getGitSCMPort(url);
     return port != null ? port : "22";
   }
 }
