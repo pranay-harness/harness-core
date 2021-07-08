@@ -145,6 +145,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
             "Pipeline [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
             pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
       }
+
+      pipelineSubject.fireInform(PipelineActionObxxxxxxxx:onUpdate, updatedResult);
+
       return updatedResult;
     } catch (EventsFrameworkDownException ex) {
       log.error("Events framework is down for Pipeline Service.", ex);
