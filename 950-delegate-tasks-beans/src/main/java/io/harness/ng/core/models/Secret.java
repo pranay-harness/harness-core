@@ -56,7 +56,7 @@ public class Secret {
                  .descSortField(SecretKeys.lastModifiedAt)
                  .build())
         .add(SortCompoundMongoIndex.builder()
-                 .name("accountOwnerOrgIdx")
+                 .name("accountOwnerOrgProjectIdx")
                  .field(SecretKeys.accountIdentifier)
                  .field(SecretKeys.owner)
                  .field(SecretKeys.orgIdentifier)
