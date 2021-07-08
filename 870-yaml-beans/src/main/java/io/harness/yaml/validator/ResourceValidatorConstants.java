@@ -6,5 +6,5 @@ import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(CI)
 public interface ResourceValidatorConstants {
-  String MEMORY_PATTERN = "^(\\d+)([GM]i?)$";
+  String MEMORY_PATTERN = "^(([0-9]*[.])?[0-9]+)([GM]i?)$";
 }
