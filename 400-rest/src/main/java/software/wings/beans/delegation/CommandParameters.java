@@ -58,7 +58,7 @@ public class CommandParameters extends CommandExecutionContext implements TaskPa
       List<String> delegateSelectors, Map<String, Artifact> multiArtifactMap,
       Map<String, ArtifactStreamAttributes> artifactStreamAttributesMap, boolean multiArtifact,
       Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap, String artifactFileName,
-      SSHVaultConfig sshVaultConfig, Command command) {
+      SSHVaultConfig sshVaultConfig, Command command, boolean disableJobControlInServiceCommands) {
     super(accountId, envId, host, appId, activityId, serviceName, runtimePath, stagingPath, backupPath,
         windowsRuntimePath, serviceTemplateId, executionCredential, appContainer, artifactFiles, serviceVariables,
         safeDisplayServiceVariables, envVariables, hostConnectionAttributes, hostConnectionCredentials,
@@ -68,7 +68,7 @@ public class CommandParameters extends CommandExecutionContext implements TaskPa
         deploymentType, artifactServerEncryptedDataDetails, inlineSshCommand, executeOnDelegate,
         disableWinRMCommandEncodingFFSet, disableWinRMEnvVariables, winrmCopyConfigOptimize, delegateSelectors,
         multiArtifactMap, artifactStreamAttributesMap, multiArtifact, artifactServerEncryptedDataDetailsMap,
-        artifactFileName, sshVaultConfig);
+        artifactFileName, sshVaultConfig, disableJobControlInServiceCommands);
 
     this.command = command;
   }

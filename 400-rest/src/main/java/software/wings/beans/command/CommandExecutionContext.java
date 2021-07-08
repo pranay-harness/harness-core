@@ -107,6 +107,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
   private Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap;
   private String artifactFileName;
   private SSHVaultConfig sshVaultConfig;
+  private boolean disableJobControlInServiceCommands;
 
   public CommandExecutionContext() {}
 
@@ -158,6 +159,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     artifactFileName = other.artifactFileName;
     delegateSelectors = other.delegateSelectors;
     sshVaultConfig = other.sshVaultConfig;
+    disableJobControlInServiceCommands = other.disableJobControlInServiceCommands;
   }
 
   public CommandExecutionContext(String accountId, String envId, Host host, String appId, String activityId,
@@ -178,7 +180,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       List<String> delegateSelectors, Map<String, Artifact> multiArtifactMap,
       Map<String, ArtifactStreamAttributes> artifactStreamAttributesMap, boolean multiArtifact,
       Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap, String artifactFileName,
-      SSHVaultConfig sshVaultConfig) {
+      SSHVaultConfig sshVaultConfig, boolean disableJobControlInServiceCommands) {
     this.accountId = accountId;
     this.envId = envId;
     this.host = host;
@@ -226,6 +228,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     this.artifactServerEncryptedDataDetailsMap = artifactServerEncryptedDataDetailsMap;
     this.artifactFileName = artifactFileName;
     this.sshVaultConfig = sshVaultConfig;
+    this.disableJobControlInServiceCommands = disableJobControlInServiceCommands;
   }
 
   /**
@@ -406,6 +409,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
     private Map<String, List<EncryptedDataDetail>> artifactServerEncryptedDataDetailsMap;
     private String artifactFileName;
     private SSHVaultConfig sshVaultConfig;
+    private boolean disableJobControlInServiceCommands;
 
     private Builder() {}
 
@@ -598,6 +602,11 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       return this;
     }
 
+    public Builder disableJobControlInServiceCommands(boolean disableJobControlInServiceCommands) {
+      this.disableJobControlInServiceCommands = disableJobControlInServiceCommands;
+      return this;
+    }
+
     public Builder winrmCopyConfigOptimize(boolean winrmCopyConfigOptimize) {
       this.winrmCopyConfigOptimize = winrmCopyConfigOptimize;
       return this;
@@ -690,7 +699,8 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
           .disableWinRMCommandEncodingFFSet(disableWinRMCommandEncodingFFSet)
           .disableWinRMEnvVariables(disableWinRMEnvVariables)
           .delegateSelectors(delegateSelectors)
-          .sshVaultConfig(sshVaultConfig);
+          .sshVaultConfig(sshVaultConfig)
+          .disableJobControlInServiceCommands(disableJobControlInServiceCommands);
     }
 
     public CommandExecutionContext build() {
@@ -741,6 +751,7 @@ public class CommandExecutionContext implements ExecutionCapabilityDemander {
       commandExecutionContext.setWinrmCopyConfigOptimize(winrmCopyConfigOptimize);
       commandExecutionContext.setDelegateSelectors(delegateSelectors);
       commandExecutionContext.setSshVaultConfig(sshVaultConfig);
+      commandExecutionContext.setDisableJobControlInServiceCommands(disableJobControlInServiceCommands);
       return commandExecutionContext;
     }
   }

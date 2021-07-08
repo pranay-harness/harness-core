@@ -522,7 +522,9 @@ public class CommandState extends State {
               .delegateSelectors(getDelegateSelectors(context))
               .disableWinRMEnvVariables(
                   featureFlagService.isEnabled(FeatureName.DISABLE_WINRM_ENV_VARIABLES, accountId))
-              .sshVaultConfig(sshVaultConfig);
+              .sshVaultConfig(sshVaultConfig)
+              .disableJobControlInServiceCommands(
+                  featureFlagService.isEnabled(FeatureName.DISABLE_JOB_CONTROL_IN_SERVICE_COMMANDS, accountId));
 
       if (host != null) {
         getHostConnectionDetails(context, host, commandParametersBuilder);

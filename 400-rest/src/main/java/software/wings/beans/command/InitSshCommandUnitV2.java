@@ -49,8 +49,11 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
         throw new RuntimeException("execlauncherv2.sh.ftl file is missing.");
       }
 
-      stringLoader.putTemplate("execlauncherv2.sh.ftl",
-          convertToUnixStyleLineEndings(IOUtils.toString(execLauncherInputStream, StandardCharsets.UTF_8)));
+      String execLauncherV2 = IOUtils.toString(execLauncherInputStream, StandardCharsets.UTF_8);
+      String execLauncherV2WithoutJobControl = execLauncherV2.replace("set -m", "");
+      stringLoader.putTemplate("execlauncherv2.sh.ftl", convertToUnixStyleLineEndings(execLauncherV2));
+      stringLoader.putTemplate(
+          "execLauncherV2WithoutJobControl.sh.ftl", convertToUnixStyleLineEndings(execLauncherV2WithoutJobControl));
 
       InputStream tailWrapperInputStream =
           InitSshCommandUnitV2.class.getClassLoader().getResourceAsStream("commandtemplates/tailwrapperv2.sh.ftl");
@@ -122,7 +125,7 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
     }
     try {
-      createPreparedCommands(command);
+      createPreparedCommands(command, context.isDisableJobControlInServiceCommands());
     } catch (IOException | TemplateException e) {
       log.error("Failed in preparing commands ", e);
     }
@@ -130,8 +133,8 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
     return commandExecutionStatus;
   }
 
-  private String getInitCommand(String scriptWorkingDirectory, boolean includeTailFunctions)
-      throws IOException, TemplateException {
+  private String getInitCommand(String scriptWorkingDirectory, boolean includeTailFunctions,
+      boolean disableJobControlInServiceCommands) throws IOException, TemplateException {
     try (StringWriter stringWriter = new StringWriter()) {
       Map<String, Object> templateParams = ImmutableMap.<String, Object>builder()
                                                .put("executionId", activityId)
@@ -141,15 +144,20 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
                                                .put("scriptWorkingDirectory", scriptWorkingDirectory)
                                                .put("includeTailFunctions", includeTailFunctions)
                                                .build();
-      cfg.getTemplate("execlauncherv2.sh.ftl").process(templateParams, stringWriter);
+      if (disableJobControlInServiceCommands) {
+        cfg.getTemplate("execLauncherV2WithoutJobControl.sh.ftl").process(templateParams, stringWriter);
+      } else {
+        cfg.getTemplate("execlauncherv2.sh.ftl").process(templateParams, stringWriter);
+      }
       return stringWriter.toString();
     }
   }
 
-  private void createPreparedCommands(Command command) throws IOException, TemplateException {
+  private void createPreparedCommands(Command command, boolean disableJobControlInServiceCommands)
+      throws IOException, TemplateException {
     for (CommandUnit unit : command.getCommandUnits()) {
       if (unit instanceof Command) {
-        createPreparedCommands((Command) unit);
+        createPreparedCommands((Command) unit, disableJobControlInServiceCommands);
       } else {
         if (unit instanceof ExecCommandUnit) {
           ExecCommandUnit execCommandUnit = (ExecCommandUnit) unit;
@@ -159,7 +167,8 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
           boolean includeTailFunctions = isNotEmpty(execCommandUnit.getTailPatterns())
               || StringUtils.contains(commandString, "harness_utils_start_tail_log_verification")
               || StringUtils.contains(commandString, "harness_utils_wait_for_tail_log_verification");
-          StringBuilder preparedCommand = new StringBuilder(getInitCommand(commandDir, includeTailFunctions));
+          StringBuilder preparedCommand =
+              new StringBuilder(getInitCommand(commandDir, includeTailFunctions, disableJobControlInServiceCommands));
           if (isEmpty(execCommandUnit.getTailPatterns())) {
             preparedCommand.append(commandString);
           } else {

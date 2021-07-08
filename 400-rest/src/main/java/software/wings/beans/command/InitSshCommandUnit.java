@@ -68,8 +68,11 @@ public class InitSshCommandUnit extends SshCommandUnit {
         throw new RuntimeException("execlauncher.ftl file is missing.");
       }
 
-      stringLoader.putTemplate("execlauncher.ftl",
-          convertToUnixStyleLineEndings(IOUtils.toString(execLauncherInputStream, StandardCharsets.UTF_8)));
+      String execLauncher = IOUtils.toString(execLauncherInputStream, StandardCharsets.UTF_8);
+      String execLauncherWithoutJobControl = execLauncher.replace("set -m", "");
+      stringLoader.putTemplate("execlauncher.ftl", convertToUnixStyleLineEndings(execLauncher));
+      stringLoader.putTemplate(
+          "execLauncherWithoutJobControl.ftl", convertToUnixStyleLineEndings(execLauncherWithoutJobControl));
 
       InputStream tailWrapperInputStream =
           InitSshCommandUnit.class.getClassLoader().getResourceAsStream("commandtemplates/tailwrapper.ftl");
@@ -134,7 +137,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
     CommandExecutionStatus commandExecutionStatus = context.executeCommandString(preInitCommand);
     String launcherFile = null;
     try {
-      launcherFile = getLauncherFile();
+      launcherFile = getLauncherFile(context.isDisableJobControlInServiceCommands());
       commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
           ? context.copyFiles(executionStagingDir, Collections.singletonList(launcherFile))
           : commandExecutionStatus;
@@ -219,13 +222,19 @@ public class InitSshCommandUnit extends SshCommandUnit {
    * @return the launcher file
    * @throws IOException       the io exception
    * @throws TemplateException the template exception
+   * @param disableJobControlInServiceCommands
    */
-  private String getLauncherFile() throws IOException, TemplateException {
+  private String getLauncherFile(boolean disableJobControlInServiceCommands) throws IOException, TemplateException {
     String launcherScript = new File(System.getProperty("java.io.tmpdir"), launcherScriptFileName).getAbsolutePath();
     try (OutputStreamWriter fileWriter =
              new OutputStreamWriter(new FileOutputStream(launcherScript), StandardCharsets.UTF_8)) {
-      cfg.getTemplate("execlauncher.ftl")
-          .process(of("envVariables", envVariables, "safeEnvVariables", safeDisplayEnvVariables), fileWriter);
+      if (disableJobControlInServiceCommands) {
+        cfg.getTemplate("execLauncherWithoutJobControl.ftl")
+            .process(of("envVariables", envVariables, "safeEnvVariables", safeDisplayEnvVariables), fileWriter);
+      } else {
+        cfg.getTemplate("execlauncher.ftl")
+            .process(of("envVariables", envVariables, "safeEnvVariables", safeDisplayEnvVariables), fileWriter);
+      }
     }
     return launcherScript;
   }
