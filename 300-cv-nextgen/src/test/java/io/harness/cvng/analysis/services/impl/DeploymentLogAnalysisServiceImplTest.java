@@ -4,12 +4,14 @@ import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
+import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.LogsAnalysisSummary;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.Cluster;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterCoordinates;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterSummary;
@@ -316,6 +318,47 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
     deploymentLogAnalysisService.save(deploymentLogAnalysis);
     assertThat(deploymentLogAnalysisService.getRecentHighestRiskScore(accountId, verificationJobInstanceId).get())
         .isEqualTo(Risk.LOW);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetAnalysisSummary() {
+    String verificationTaskId =
+        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+    DeploymentLogAnalysis deploymentLogAnalysis = createDeploymentLogAnalysis(verificationTaskId);
+    deploymentLogAnalysisService.save(deploymentLogAnalysis);
+    LogsAnalysisSummary summary =
+        deploymentLogAnalysisService.getAnalysisSummary(accountId, Arrays.asList(verificationJobInstanceId));
+    assertThat(summary).isNotNull();
+    assertThat(summary.getAnomalousClusterCount()).isEqualTo(2);
+    assertThat(summary.getTotalClusterCount()).isEqualTo(3);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetAnalysisSummary_noAnalysisYet() {
+    String verificationTaskId =
+        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+
+    LogsAnalysisSummary summary =
+        deploymentLogAnalysisService.getAnalysisSummary(accountId, Arrays.asList(verificationJobInstanceId));
+    assertThat(summary).isNotNull();
+    assertThat(summary.getAnomalousClusterCount()).isEqualTo(0);
+    assertThat(summary.getTotalClusterCount()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetAnalysisSummary_nullInput() {
+    String verificationTaskId =
+        verificationTaskService.create(accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
+
+    assertThatThrownBy(() -> deploymentLogAnalysisService.getAnalysisSummary(accountId, null))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("Missing verificationJobInstanceIds when looking for summary");
   }
 
   private DeploymentLogAnalysis createDeploymentLogAnalysis(String verificationTaskId) {

@@ -28,7 +28,10 @@ import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.source.services.api.CD10ActivitySourceService;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.util.VerificationStatus;
+import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
+import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
+import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityType;
@@ -36,6 +39,7 @@ import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
@@ -84,6 +88,8 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
   @Inject private CD10ActivitySourceService cd10ActivitySourceService;
   @Inject private AlertRuleService alertRuleService;
+  @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
+  @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
 
   @Override
   public Activity get(String activityId) {
@@ -302,6 +308,11 @@ public class ActivityServiceImpl implements ActivityService {
     DeploymentActivity activity = (DeploymentActivity) get(activityId);
     DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
         getDeploymentVerificationJobInstanceSummary(activity);
+    deploymentVerificationJobInstanceSummary.setTimeSeriesAnalysisSummary(
+        deploymentTimeSeriesAnalysisService.getAnalysisSummary(activity.getVerificationJobInstanceIds()));
+    deploymentVerificationJobInstanceSummary.setLogsAnalysisSummary(deploymentLogAnalysisService.getAnalysisSummary(
+        activity.getAccountId(), activity.getVerificationJobInstanceIds()));
+
     return DeploymentActivitySummaryDTO.builder()
         .deploymentVerificationJobInstanceSummary(deploymentVerificationJobInstanceSummary)
         .serviceIdentifier(activity.getServiceIdentifier())
@@ -596,6 +607,7 @@ public class ActivityServiceImpl implements ActivityService {
     }
   }
 
+  @Override
   public List<String> createVerificationJobInstancesForActivity(Activity activity) {
     List<VerificationJobInstance> jobInstancesToCreate = new ArrayList<>();
     List<VerificationJob> verificationJobs = new ArrayList<>();
@@ -646,6 +658,27 @@ public class ActivityServiceImpl implements ActivityService {
     } else {
       return verificationJobInstanceService.create(jobInstancesToCreate);
     }
+  }
+
+  @Override
+  public TransactionMetricInfoSummaryPageDTO getDeploymentActivityTimeSeriesData(String accountId, String activityId,
+      boolean anomalousMetricsOnly, String hostName, String filter, int pageNumber, int pageSize) {
+    Preconditions.checkNotNull(activityId);
+    Activity activity = get(activityId);
+    List<String> verificationJobInstanceIds = activity.getVerificationJobInstanceIds();
+    // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
+    // changes later
+    Preconditions.checkState(verificationJobInstanceIds.size() == 1,
+        "We do not support more than one monitored source validation from deployment");
+    return deploymentTimeSeriesAnalysisService.getMetrics(
+        accountId, verificationJobInstanceIds.get(0), anomalousMetricsOnly, hostName, filter, pageNumber);
+  }
+
+  @Override
+  public Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String activityId) {
+    Preconditions.checkNotNull(accountId);
+    Preconditions.checkNotNull(activityId);
+    return verificationJobInstanceService.getDataSourcetypes(get(activityId).getVerificationJobInstanceIds());
   }
 
   private void validateJob(VerificationJob verificationJob) {
