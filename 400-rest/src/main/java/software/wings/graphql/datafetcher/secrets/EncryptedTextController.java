@@ -9,7 +9,6 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretText;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataParams;
 
@@ -65,10 +64,11 @@ public class EncryptedTextController {
 
     int isSecretValueSet = isNotBlank(secretValue) ? 1 : 0;
     int isSecretPathSet = isNotBlank(path) ? 1 : 0;
-    int isSecretParametersSet = EmptyPredicate.isEmpty(secretParameters) ? 0 : 1;
+    int isSecretParametersSet = secretParameters != null ? 1 : 0;
 
     if (isSecretValueSet + isSecretPathSet + isSecretParametersSet != 1) {
-      throw new InvalidRequestException("Exactly ONE out of secret value, secret reference or secret parameters is to be passed");
+      throw new InvalidRequestException(
+          "Exactly ONE out of secret value, secret reference or secret parameters is to be passed");
     }
 
     SecretText secretText =
