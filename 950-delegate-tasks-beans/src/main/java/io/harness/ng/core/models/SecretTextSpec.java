@@ -9,9 +9,11 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.FieldNameConstants;
 
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "SecretTextSpecKeys")
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("SecretText")
 @JsonIgnoreProperties(ignoreUnknown = true)

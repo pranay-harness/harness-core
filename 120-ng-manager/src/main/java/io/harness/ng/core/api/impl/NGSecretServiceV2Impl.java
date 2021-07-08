@@ -240,7 +240,7 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
   @Override
   public Page<Secret> list(Criteria criteria, int page, int size) {
     return secretRepository.findAll(
-        criteria, PageUtils.getPageRequest(page, size, Collections.singletonList(SecretKeys.createdAt + ",desc")));
+        criteria, PageUtils.getPageRequest(page, size, Collections.singletonList(SecretKeys.lastModifiedAt + ",desc")));
   }
 
   public Map<String, String> buildAbstractions(

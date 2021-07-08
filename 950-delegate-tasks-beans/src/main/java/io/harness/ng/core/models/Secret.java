@@ -8,9 +8,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
+import io.harness.ng.core.models.SecretTextSpec.SecretTextSpecKeys;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.security.dto.Principal;
 
@@ -46,6 +48,29 @@ public class Secret {
                  .field(SecretKeys.orgIdentifier)
                  .field(SecretKeys.projectIdentifier)
                  .field(SecretKeys.identifier)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountOwnerIdx")
+                 .field(SecretKeys.accountIdentifier)
+                 .field(SecretKeys.owner)
+                 .descSortField(SecretKeys.lastModifiedAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountOwnerOrgIdx")
+                 .field(SecretKeys.accountIdentifier)
+                 .field(SecretKeys.owner)
+                 .field(SecretKeys.orgIdentifier)
+                 .field(SecretKeys.projectIdentifier)
+                 .descSortField(SecretKeys.lastModifiedAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountOwnerSecretManagerIdx")
+                 .field(SecretKeys.accountIdentifier)
+                 .field(SecretKeys.owner)
+                 .field(SecretKeys.orgIdentifier)
+                 .field(SecretKeys.projectIdentifier)
+                 .field(SecretTextSpecKeys.secretManagerIdentifier)
+                 .descSortField(SecretKeys.lastModifiedAt)
                  .build())
         .build();
   }
