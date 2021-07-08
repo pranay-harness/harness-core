@@ -287,6 +287,7 @@ public class EnvironmentYamlHandlerTest extends YamlHandlerTestBase {
                                      .envId(ENV_ID)
                                      .serviceId(SERVICE_ID)
                                      .entityType(EntityType.SERVICE_TEMPLATE)
+                                     .entityId(SERVICE_TEMPLATE_ID)
                                      .parentServiceVariableId(SERVICE_VARIABLE_ID)
                                      .build();
     ServiceVariable existing_2 = ServiceVariable.builder()
@@ -295,6 +296,7 @@ public class EnvironmentYamlHandlerTest extends YamlHandlerTestBase {
                                      .envId(ENV_ID)
                                      .serviceId(SERVICE_ID)
                                      .entityType(EntityType.SERVICE_TEMPLATE)
+                                     .entityId(SERVICE_TEMPLATE_ID)
                                      .parentServiceVariableId(SERVICE_VARIABLE_ID)
                                      .build();
     existing_1.setAppId(APP_ID);
@@ -322,6 +324,7 @@ public class EnvironmentYamlHandlerTest extends YamlHandlerTestBase {
     when(mockServiceVariableService.get(APP_ID, SERVICE_VARIABLE_ID)).thenReturn(parentServiceVariable);
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(parentService);
     when(secretManager.getEncryptedYamlRef(any(), any())).thenReturn(existing_1_override.getValue());
+    when(mockServiceTemplateService.get(APP_ID, SERVICE_TEMPLATE_ID)).thenReturn(serviceTemplate_1);
 
     Yaml yaml = yamlHandler.toYaml(environment, environment.getAppId());
     yaml.setVariableOverrides(Arrays.asList(existing_1_override));
