@@ -2781,24 +2781,32 @@ public class DelegateServiceTest extends WingsBaseTest {
     final String orgId = generateUuid();
     final String projectId = generateUuid();
 
-    final DelegateGroup acctGroup = DelegateGroup.builder().name("acctGrp").accountId(accountId).ng(true).build();
+    final DelegateGroup acctGroup = DelegateGroup.builder()
+                                        .name("acctGrp")
+                                        .accountId(accountId)
+                                        .ng(true)
+                                        .tags(ImmutableSet.of("custom-acct"))
+                                        .build();
     final DelegateGroup orgGroup = DelegateGroup.builder()
                                        .name("orgGrp")
                                        .accountId(accountId)
                                        .ng(true)
+                                       .tags(ImmutableSet.of("custom-org"))
                                        .owner(DelegateEntityOwnerHelper.buildOwner(orgId, null))
                                        .build();
     final DelegateGroup projectGroup = DelegateGroup.builder()
                                            .name("projectGrp")
                                            .accountId(accountId)
                                            .ng(true)
+                                           .tags(ImmutableSet.of("custom-proj"))
                                            .owner(DelegateEntityOwnerHelper.buildOwner(orgId, projectId))
                                            .build();
 
     persistence.saveBatch(Arrays.asList(acctGroup, orgGroup, projectGroup));
 
     final Set<String> actual = delegateService.getAllDelegateSelectorsUpTheHierarchy(accountId, orgId, projectId);
-    assertThat(actual).containsExactlyInAnyOrder("acctgrp", "orggrp", "projectgrp");
+    assertThat(actual).containsExactlyInAnyOrder(
+        "acctgrp", "orggrp", "projectgrp", "custom-acct", "custom-org", "custom-proj");
   }
 
   @Test

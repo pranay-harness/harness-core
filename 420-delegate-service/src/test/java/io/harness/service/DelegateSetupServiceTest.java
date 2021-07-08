@@ -44,6 +44,7 @@ import software.wings.beans.DelegateConnection;
 import software.wings.beans.SelectorType;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.Collections;
@@ -99,6 +100,7 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
                                        .description("description")
                                        .sizeDetails(grp1SizeDetails)
                                        .delegateConfigurationId(delegateProfileId)
+                                       .tags(ImmutableSet.of("custom-grp-tag"))
                                        .build();
     persistence.save(delegateGroup1);
     DelegateGroup delegateGroup2 =
@@ -207,6 +209,8 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
         assertThat(group.getGroupImplicitSelectors().containsKey("profile")).isTrue();
         assertThat(group.getGroupImplicitSelectors().containsKey("s1")).isTrue();
         assertThat(group.getGroupImplicitSelectors().containsKey("s2")).isTrue();
+        assertThat(group.getGroupCustomSelectors()).isNotNull();
+        assertThat(group.getGroupCustomSelectors().contains("custom-grp-tag")).isTrue();
         assertThat(group.getLastHeartBeat()).isEqualTo(delegate1.getLastHeartBeat());
         assertThat(group.isActivelyConnected()).isTrue();
         assertThat(group.getSizeDetails()).isEqualTo(grp1SizeDetails);
@@ -231,7 +235,8 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     String orgId = generateUuid();
     String projectId = generateUuid();
 
-    DelegateGroup acctGroup = DelegateGroup.builder().accountId(accountId).ng(true).build();
+    DelegateGroup acctGroup =
+        DelegateGroup.builder().accountId(accountId).ng(true).tags(ImmutableSet.of("custom-grp-tag")).build();
     DelegateGroup orgGroup = DelegateGroup.builder()
                                  .accountId(accountId)
                                  .ng(true)
@@ -329,6 +334,7 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
                                        .description("description")
                                        .sizeDetails(grp1SizeDetails)
                                        .delegateConfigurationId(delegateProfileId)
+                                       .tags(ImmutableSet.of("custom-grp-tag"))
                                        .build();
     persistence.save(delegateGroup1);
 
@@ -407,6 +413,7 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("profile")).isTrue();
     assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("s1")).isTrue();
     assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("s2")).isTrue();
+    assertThat(delegateGroupDetails.getGroupCustomSelectors().contains("custom-grp-tag")).isTrue();
     assertThat(delegateGroupDetails.getLastHeartBeat()).isEqualTo(delegate1.getLastHeartBeat());
     assertThat(delegateGroupDetails.isActivelyConnected()).isTrue();
     assertThat(delegateGroupDetails.getSizeDetails()).isEqualTo(grp1SizeDetails);
@@ -445,6 +452,7 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
                                        .description("description")
                                        .sizeDetails(grp1SizeDetails)
                                        .delegateConfigurationId(delegateProfileId)
+                                       .tags(ImmutableSet.of("custom-grp-tag"))
                                        .build();
     persistence.save(delegateGroup1);
 
@@ -528,6 +536,7 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("profile")).isTrue();
     assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("s1")).isTrue();
     assertThat(delegateGroupDetails.getGroupImplicitSelectors().containsKey("s2")).isTrue();
+    assertThat(delegateGroupDetails.getGroupCustomSelectors().contains("custom-grp-tag")).isTrue();
     assertThat(delegateGroupDetails.getLastHeartBeat()).isEqualTo(delegate1.getLastHeartBeat());
     assertThat(delegateGroupDetails.isActivelyConnected()).isTrue();
     assertThat(delegateGroupDetails.getSizeDetails()).isEqualTo(grp1SizeDetails);
@@ -662,11 +671,15 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
   @Test
   @Owner(developers = NICOLAS)
   @Category(UnitTests.class)
-  public void shouldRetrieveDelegateImplicitSelectorsWithGroupName() {
+  public void shouldRetrieveDelegateImplicitSelectorsWithGroupSelectors() {
     String accountId = generateUuid();
 
-    DelegateGroup delegateGroup =
-        DelegateGroup.builder().uuid(generateUuid()).accountId(accountId).name("group").build();
+    DelegateGroup delegateGroup = DelegateGroup.builder()
+                                      .uuid(generateUuid())
+                                      .accountId(accountId)
+                                      .name("group")
+                                      .tags(ImmutableSet.of("custom-tag"))
+                                      .build();
     when(delegateCache.getDelegateGroup(accountId, delegateGroup.getUuid())).thenReturn(delegateGroup);
 
     Delegate delegate = Delegate.builder()
@@ -680,8 +693,8 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     persistence.save(delegate);
 
     Set<String> tags = delegateSetupService.retrieveDelegateImplicitSelectors(delegate).keySet();
-    assertThat(tags.size()).isEqualTo(1);
-    assertThat(tags).containsExactlyInAnyOrder("group");
+    assertThat(tags.size()).isEqualTo(2);
+    assertThat(tags).containsExactlyInAnyOrder("group", "custom-tag");
   }
 
   @Test
