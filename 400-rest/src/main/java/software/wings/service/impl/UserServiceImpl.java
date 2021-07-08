@@ -322,7 +322,7 @@ public class UserServiceImpl implements UserService {
   @Inject private AccessRequestService accessRequestService;
   @Inject private SegmentHelper segmentHelper;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private UserMembershipClient userMembershipClient;
+  @Inject @Named("PRIVILEGED") private UserMembershipClient userMembershipClient;
 
   private Cache<String, User> getUserCache() {
     if (configurationController.isPrimary()) {

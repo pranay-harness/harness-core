@@ -114,6 +114,8 @@ public class UserResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USER, null), VIEW_USER_PERMISSION);
     Scope scope = Scope.builder()
                       .accountIdentifier(accountIdentifier)
                       .orgIdentifier(orgIdentifier)
@@ -128,6 +130,8 @@ public class UserResource {
   public ResponseDTO<PageResponse<UserMetadataDTO>> getCurrentGenUsers(
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
       @QueryParam("searchString") @DefaultValue("") String searchString, @BeanParam PageRequest pageRequest) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(accountIdentifier, null, null), Resource.of(USER, null), VIEW_USER_PERMISSION);
     Pageable pageable = getPageRequest(pageRequest);
     Page<UserInfo> users = ngUserService.listCurrentGenUsers(accountIdentifier, searchString, pageable);
     return ResponseDTO.newResponse(PageUtils.getNGPageResponse(users.map(UserMetadataMapper::toDTO)));
@@ -153,6 +157,8 @@ public class UserResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Valid @BeanParam PageRequest pageRequest, UserFilter userFilter) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USER, null), VIEW_USER_PERMISSION);
     Scope scope = Scope.builder()
                       .accountIdentifier(accountIdentifier)
                       .orgIdentifier(orgIdentifier)
