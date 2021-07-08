@@ -897,9 +897,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         validateStoreTypeForHelmChartOverride(appManifest.getStoreType(), getAppManifestType(appManifest));
       } else {
         if (StoreType.Local != appManifest.getStoreType() && Remote != appManifest.getStoreType()
-            && CUSTOM != appManifest.getStoreType()) {
+            && CUSTOM != appManifest.getStoreType() && ValuesYamlFromHelmRepo != appManifest.getStoreType()) {
           throw new InvalidRequestException(
-              "Only local, remote and custom store types are allowed for values.yaml in environment");
+              "Only local, remote, values yaml from helm repo and custom store types are allowed for values.yaml in environment");
         }
       }
     }

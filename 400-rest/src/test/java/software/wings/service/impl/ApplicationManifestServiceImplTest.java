@@ -23,6 +23,7 @@ import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.OC_TEMPLATES;
 import static software.wings.beans.appmanifest.StoreType.Remote;
+import static software.wings.beans.appmanifest.StoreType.ValuesYamlFromHelmRepo;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_MANIFEST_NAME;
@@ -140,6 +141,9 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     applicationManifestServiceImpl.validateAppManifestForEnvironment(applicationManifest);
 
     applicationManifest.setStoreType(HelmSourceRepo);
+    applicationManifestServiceImpl.validateAppManifestForEnvironment(applicationManifest);
+
+    applicationManifest.setStoreType(ValuesYamlFromHelmRepo);
     applicationManifestServiceImpl.validateAppManifestForEnvironment(applicationManifest);
 
     applicationManifest.setKind(K8S_MANIFEST);
