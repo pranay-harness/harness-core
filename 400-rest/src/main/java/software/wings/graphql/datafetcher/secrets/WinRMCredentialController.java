@@ -3,6 +3,7 @@ package software.wings.graphql.datafetcher.secrets;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme.KERBEROS;
 import static software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme.NTLM;
 import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
@@ -40,12 +41,15 @@ public class WinRMCredentialController {
   @Inject UsageScopeController usageScopeController;
 
   public QLWinRMCredential populateWinRMCredential(@NotNull SettingAttribute settingAttribute) {
-    QLAuthScheme authScheme = QLAuthScheme.NTLM;
     WinRmConnectionAttributes winRmConnectionAttributes = (WinRmConnectionAttributes) settingAttribute.getValue();
+
     return QLWinRMCredential.builder()
         .id(settingAttribute.getUuid())
         .name(settingAttribute.getName())
-        .authenticationScheme(authScheme)
+        .authenticationScheme(QLAuthScheme.valueOf(winRmConnectionAttributes.getAuthenticationScheme().toString()))
+        .keyTabFilePath(winRmConnectionAttributes.getAuthenticationScheme() == KERBEROS
+                ? winRmConnectionAttributes.getKeyTabFilePath()
+                : null)
         .secretType(QLSecretType.WINRM_CREDENTIAL)
         .userName(winRmConnectionAttributes.getUsername())
         .domain(winRmConnectionAttributes.getDomain())
