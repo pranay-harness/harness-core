@@ -3,6 +3,7 @@ package io.harness.migrations;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.entities.instance.Instance;
 import io.harness.migration.MigrationDetails;
 import io.harness.migration.MigrationProvider;
 import io.harness.migration.entities.NGSchema;
@@ -14,7 +15,7 @@ import java.util.List;
 public class InstanceMigrationProvider implements MigrationProvider {
   @Override
   public String getServiceName() {
-    return "instance";
+    return Instance.class.getCanonicalName();
   }
 
   @Override
