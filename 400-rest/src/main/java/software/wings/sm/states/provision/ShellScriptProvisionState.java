@@ -2,6 +2,7 @@ package software.wings.sm.states.provision;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.ALL;
+import static io.harness.beans.FeatureName.DISABLE_DEFAULT_SHELL_SCRIPT_PROVISIONER_SWEEPING_OUTPUT_SAVING;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.ListUtils.trimStrings;
@@ -29,10 +30,12 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionReflectionUtils;
+import io.harness.ff.FeatureFlagService;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.ScriptStateExecutionData;
+import software.wings.api.ShellScriptProvisionerOutput;
 import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.beans.Activity;
@@ -90,6 +93,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
   @Inject private ActivityService activityService;
   @Inject private DelegateService delegateService;
   @Inject private SweepingOutputService sweepingOutputService;
+  @Inject private FeatureFlagService featureFlagService;
   @Getter @Setter private String provisionerId;
   @Getter @Setter private List<NameValuePair> variables;
   @Getter @Setter private String sweepingOutputName;
@@ -171,6 +175,10 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
       String output = executionData.getOutput();
       Map<String, Object> outputMap = parseOutput(output);
       outputInfoElement.addOutPuts(outputMap);
+      if (featureFlagService.isNotEnabled(
+              DISABLE_DEFAULT_SHELL_SCRIPT_PROVISIONER_SWEEPING_OUTPUT_SAVING, context.getAccountId())) {
+        saveOutputElementToSweepingOutput(context, outputInfoElement.getOutputs());
+      }
       ManagerExecutionLogCallback managerExecutionCallback =
           infrastructureProvisionerService.getManagerExecutionCallback(context.getAppId(), activityId, COMMAND_UNIT);
       infrastructureProvisionerService.regenerateInfrastructureMappings(
@@ -186,6 +194,24 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
         .executionStatus(executionData.getExecutionStatus())
         .errorMessage(executionData.getErrorMsg())
         .build();
+  }
+
+  @VisibleForTesting
+  void saveOutputElementToSweepingOutput(ExecutionContext context, Map<String, Object> outputMap) {
+    SweepingOutputInstance instance = sweepingOutputService.find(
+        context.prepareSweepingOutputInquiryBuilder().name(ShellScriptProvisionerOutput.SWEEPING_OUTPUT_NAME).build());
+    ShellScriptProvisionerOutput shellScriptProvisionerOutput =
+        instance != null ? (ShellScriptProvisionerOutput) instance.getValue() : new ShellScriptProvisionerOutput();
+
+    shellScriptProvisionerOutput.putAll(outputMap);
+
+    if (instance != null) {
+      sweepingOutputService.deleteById(context.getAppId(), instance.getUuid());
+    }
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                                   .name(ShellScriptProvisionerOutput.SWEEPING_OUTPUT_NAME)
+                                   .value(shellScriptProvisionerOutput)
+                                   .build());
   }
 
   @VisibleForTesting

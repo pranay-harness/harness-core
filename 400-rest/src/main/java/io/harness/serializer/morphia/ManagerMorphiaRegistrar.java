@@ -100,6 +100,7 @@ import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.api.ServiceNowExecutionData;
 import software.wings.api.ServiceTemplateElement;
+import software.wings.api.ShellScriptProvisionerOutput;
 import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.api.SkipStateExecutionData;
@@ -1631,6 +1632,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.terraform.TerraformOutputVariables", TerraformOutputVariables.class);
     w.put("api.terragrunt.TerragruntOutputVariables", TerragruntOutputVariables.class);
     w.put("api.arm.ARMOutputVariables", ARMOutputVariables.class);
+    w.put("api.ShellScriptProvisionerOutput", ShellScriptProvisionerOutput.class);
 
     MorphiaRegistrarHelperPut sm = (name, clazz) -> w.put("sm.states.spotinst." + name, clazz);
 

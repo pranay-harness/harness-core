@@ -87,6 +87,7 @@ import software.wings.api.ServiceNowImportSetResponse;
 import software.wings.api.ServiceNowImportSetResult;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.ShellScriptApprovalExecutionData;
+import software.wings.api.ShellScriptProvisionerOutput;
 import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.api.SkipStateExecutionData;
@@ -1661,6 +1662,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(PerpetualTaskCapabilityCheckResponse.class, 8061);
     kryo.register(CiK8sTaskResponse.class, 8062);
     kryo.register(TerraformOutputVariables.class, 8063);
+    kryo.register(ShellScriptProvisionerOutput.class, 8553);
     kryo.register(EcsRunTaskStateExecutionData.class, 8084);
     kryo.register(EcsRunTaskDataBag.class, 8085);
     kryo.register(EcsDeployRollbackDataFetchRequest.class, 8086);

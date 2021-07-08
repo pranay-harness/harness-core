@@ -47,4 +47,8 @@ public class ShellScriptProvisionerOutputElement implements ContextElement {
     }
     outputVariables.putAll(newMap);
   }
+
+  public Map<String, Object> getOutputs() {
+    return outputVariables;
+  }
 }

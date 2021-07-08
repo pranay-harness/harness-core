@@ -1,9 +1,11 @@
 package software.wings.sm.states.provision;
 
 import static io.harness.beans.EnvironmentType.ALL;
+import static io.harness.beans.FeatureName.DISABLE_DEFAULT_SHELL_SCRIPT_PROVISIONER_SWEEPING_OUTPUT_SAVING;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.PARDHA;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
@@ -36,11 +38,13 @@ import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
 
 import software.wings.WingsBaseTest;
+import software.wings.api.ShellScriptProvisionerOutput;
 import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.beans.Activity;
@@ -53,6 +57,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.StateExecutionService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -79,6 +84,7 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private ExecutionContextImpl executionContext;
   @Mock private StateExecutionService stateExecutionService;
+  @Mock private FeatureFlagService featureFlagService;
   @Inject private KryoSerializer kryoSerializer;
 
   @InjectMocks
@@ -187,16 +193,23 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
     doReturn(logCallback)
         .when(infrastructureProvisionerService)
         .getManagerExecutionCallback(eq(APP_ID), eq(ACTIVITY_ID), anyString());
+    doReturn(SweepingOutputInquiry.builder()).when(executionContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(SweepingOutputInstance.builder()).when(executionContext).prepareSweepingOutputBuilder(any());
+    doReturn(null).when(sweepingOutputService).find(any());
+    doReturn(true)
+        .when(featureFlagService)
+        .isNotEnabled(eq(DISABLE_DEFAULT_SHELL_SCRIPT_PROVISIONER_SWEEPING_OUTPUT_SAVING), any());
     ExecutionResponse response = state.handleAsyncResponse(executionContext, responseData);
 
     ArgumentCaptor<SweepingOutputInstance> instanceCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
     verify(infrastructureProvisionerService, times(1))
         .regenerateInfrastructureMappings(
             PROVISIONER_ID, executionContext, expectedOutputMap, Optional.of(logCallback), Optional.empty());
-    verify(sweepingOutputService, times(1)).save(instanceCaptor.capture());
+    verify(sweepingOutputService, times(2)).save(instanceCaptor.capture());
     verify(activityService, times(1)).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
 
-    assertThat(instanceCaptor.getValue().getName()).isEqualTo("rendered-expression");
+    assertThat(instanceCaptor.getAllValues().get(0).getName()).isEqualTo("shellScriptProvisioner");
+    assertThat(instanceCaptor.getAllValues().get(1).getName()).isEqualTo("rendered-expression");
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(response.getContextElements().get(0)).isEqualTo(outputElement);
     assertThat(response.getNotifyElements().get(0)).isEqualTo(outputElement);
@@ -273,5 +286,42 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
     ShellScriptProvisionParameters populatedParameters =
         (ShellScriptProvisionParameters) delegateTaskArgumentCaptor.getValue().getData().getParameters()[0];
     assertThat(populatedParameters.getDelegateSelectors()).isEqualTo(Collections.singletonList(runTimeValueAbc));
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testSaveOutputElementToSweepingOutputWhenASweepingPutInstanceAlreadyExists() {
+    Reflect.on(state).set("kryoSerializer", kryoSerializer);
+    ShellScriptProvisionerOutput shellScriptProvisionerOutput = new ShellScriptProvisionerOutput();
+    shellScriptProvisionerOutput.put("key1", "value1");
+    Map<String, Object> outputMap = ImmutableMap.of("key", "value");
+    doReturn(SweepingOutputInquiry.builder()).when(executionContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(SweepingOutputInstance.builder()).when(executionContext).prepareSweepingOutputBuilder(any());
+    doReturn(SweepingOutputInstance.builder().value(shellScriptProvisionerOutput).build())
+        .when(sweepingOutputService)
+        .find(any());
+    ArgumentCaptor<SweepingOutputInstance> instanceCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+
+    state.saveOutputElementToSweepingOutput(executionContext, outputMap);
+
+    verify(sweepingOutputService, times(1)).deleteById(any(), any());
+    verify(sweepingOutputService, times(1)).save(instanceCaptor.capture());
+    assertThat(((ShellScriptProvisionerOutput) instanceCaptor.getValue().getValue()).keySet().size()).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testSaveOutputElementToSweepingOutput() {
+    Reflect.on(state).set("kryoSerializer", kryoSerializer);
+    Map<String, Object> outputMap = ImmutableMap.of("key", "value");
+    doReturn(SweepingOutputInquiry.builder()).when(executionContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(SweepingOutputInstance.builder()).when(executionContext).prepareSweepingOutputBuilder(any());
+    doReturn(null).when(sweepingOutputService).find(any());
+    state.saveOutputElementToSweepingOutput(executionContext, outputMap);
+
+    verify(sweepingOutputService, times(0)).deleteById(any(), any());
+    verify(sweepingOutputService, times(1)).save(any());
   }
 }
