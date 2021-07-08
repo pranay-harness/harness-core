@@ -58,10 +58,12 @@ public class ArtifactoryServiceTest extends CategoryTest {
    * The Wire mock rule.
    */
   @Rule
-  public WireMockRule wireMockRule = new WireMockRule(
-      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
+  public WireMockRule wireMockRule = new WireMockRule(WireMockConfiguration.wireMockConfig()
+                                                          .usingFilesUnderClasspath("400-rest/src/test/resources")
+                                                          .disableRequestJournal()
+                                                          .port(0));
 
-  String url = "http://localhost:9881/artifactory/";
+  String url;
 
   private ArtifactoryConfigRequest artifactoryConfig;
   private ArtifactoryConfigRequest artifactoryConfigAnonymous;

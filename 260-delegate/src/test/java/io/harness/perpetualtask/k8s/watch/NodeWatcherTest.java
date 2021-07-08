@@ -18,15 +18,17 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.rule.Owner;
 
-import com.github.tomakehurst.wiremock.client.UrlMatchingStrategy;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.matching.UrlPattern;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Message;
 import com.google.protobuf.Timestamp;
@@ -56,6 +58,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.CDP)
 public class NodeWatcherTest extends CategoryTest {
   private static final String UID = UUID.randomUUID().toString();
   private static final String NAME = "test-node";
@@ -69,7 +72,7 @@ public class NodeWatcherTest extends CategoryTest {
   private EventPublisher eventPublisher;
   private SharedInformerFactory sharedInformerFactory;
 
-  private static final UrlMatchingStrategy NODE_URL_MATCHING = urlMatching("^/api/v1/nodes.*");
+  private static final UrlPattern NODE_URL_MATCHING = urlMatching("^/api/v1/nodes.*");
 
   @Captor ArgumentCaptor<Map<String, String>> mapArgumentCaptor;
   @Rule public WireMockRule wireMockRule = new WireMockRule(65223);
