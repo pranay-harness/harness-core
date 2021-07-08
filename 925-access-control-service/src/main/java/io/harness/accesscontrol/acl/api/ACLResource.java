@@ -62,8 +62,7 @@ public class ACLResource {
 
   @POST
   @ApiOperation(value = "Check for access to resources", nickname = "getAccessControlList")
-  public ResponseDTO<io.harness.accesscontrol.clients.AccessCheckResponseDTO> get(
-      @Valid @NotNull AccessCheckRequestDTO dto) {
+  public ResponseDTO<AccessCheckResponseDTO> get(@Valid @NotNull AccessCheckRequestDTO dto) {
     io.harness.security.dto.Principal contextPrincipal = SecurityContextBuilder.getPrincipal();
     List<PermissionCheckDTO> permissionChecks = dto.getPermissions();
     Principal principalToCheckPermissionsFor = dto.getPrincipal();
@@ -72,7 +71,7 @@ public class ACLResource {
     if (accountIdentifierOptional.isPresent()
         && !accessControlPreferenceService.isAccessControlEnabled(accountIdentifierOptional.get())) {
       return ResponseDTO.newResponse(
-          io.harness.accesscontrol.clients.AccessCheckResponseDTO.builder()
+          AccessCheckResponseDTO.builder()
               .accessControlList(permissionChecks.stream()
                                      .map(permissionCheckDTO -> getAccessControlDTO(permissionCheckDTO, true))
                                      .collect(Collectors.toList()))
@@ -84,7 +83,7 @@ public class ACLResource {
 
     if (serviceContextAndNoPrincipalInBody(contextPrincipal, principalToCheckPermissionsFor)) {
       return ResponseDTO.newResponse(
-          io.harness.accesscontrol.clients.AccessCheckResponseDTO.builder()
+          AccessCheckResponseDTO.builder()
               .principal(Principal.builder()
                              .principalType(PrincipalType.SERVICE)
                              .principalIdentifier(contextPrincipal.getName())
