@@ -5,11 +5,8 @@ import lombok.Value;
 
 @Value
 @Builder
-public class QLCEViewTrendInfo {
+public class EfficiencyScoreStats {
   String statsLabel;
-  String statsDescription;
   String statsValue;
   Number statsTrend;
-  Number value;
-  EfficiencyScoreStats efficiencyScoreStats;
 }

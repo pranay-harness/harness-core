@@ -8,8 +8,10 @@ import static io.harness.ccm.views.graphql.QLCEViewAggregateOperation.MIN;
 import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.AFTER;
 import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantClusterCost;
 import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantCost;
+import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantIdleCost;
 import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantMaxStartTime;
 import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantMinStartTime;
+import static io.harness.ccm.views.graphql.ViewMetaDataConstants.entityConstantUnallocatedCost;
 import static io.harness.ccm.views.utils.ClusterTableKeys.ACTUAL_IDLE_COST;
 import static io.harness.ccm.views.utils.ClusterTableKeys.BILLING_AMOUNT;
 import static io.harness.ccm.views.utils.ClusterTableKeys.CLOUD_SERVICE_NAME;
@@ -62,6 +64,7 @@ import io.harness.ccm.views.entities.ViewIdOperator;
 import io.harness.ccm.views.entities.ViewRule;
 import io.harness.ccm.views.entities.ViewTimeGranularity;
 import io.harness.ccm.views.entities.ViewVisualization;
+import io.harness.ccm.views.graphql.EfficiencyScoreStats;
 import io.harness.ccm.views.graphql.QLCEViewAggregateOperation;
 import io.harness.ccm.views.graphql.QLCEViewAggregation;
 import io.harness.ccm.views.graphql.QLCEViewDataPoint;
@@ -298,7 +301,12 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     ViewCostData costData = getViewTrendStatsCostData(bigQuery, query, isClusterTableQuery);
     ViewCostData prevCostData = getViewTrendStatsCostData(bigQuery, prevTrendStatsQuery, isClusterTableQuery);
 
-    return getCostBillingStats(costData, prevCostData, timeFilters, trendStartInstant);
+    EfficiencyScoreStats efficiencyScoreStats = null;
+    if (isClusterTableQuery) {
+      efficiencyScoreStats = viewsQueryHelper.getEfficiencyScoreStats(costData, prevCostData);
+    }
+
+    return getCostBillingStats(costData, prevCostData, timeFilters, trendStartInstant, efficiencyScoreStats);
   }
 
   @Override
@@ -393,6 +401,12 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
           case entityConstantClusterCost:
             viewCostDataBuilder.cost(getNumericValue(row, field));
             break;
+          case entityConstantIdleCost:
+            viewCostDataBuilder.idleCost(getNumericValue(row, field));
+            break;
+          case entityConstantUnallocatedCost:
+            viewCostDataBuilder.unallocatedCost(getNumericValue(row, field));
+            break;
           default:
             break;
         }
@@ -402,7 +416,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   }
 
   protected QLCEViewTrendInfo getCostBillingStats(ViewCostData costData, ViewCostData prevCostData,
-      List<QLCEViewTimeFilter> filters, Instant trendFilterStartTime) {
+      List<QLCEViewTimeFilter> filters, Instant trendFilterStartTime, EfficiencyScoreStats efficiencyScoreStats) {
     Instant startInstant = Instant.ofEpochMilli(getTimeFilter(filters, AFTER).getValue().longValue());
     Instant endInstant = Instant.ofEpochMilli(costData.getMaxStartTime() / 1000);
     if (costData.getMaxStartTime() == 0) {
@@ -431,6 +445,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
         .statsTrend(
             viewsQueryHelper.getBillingTrend(costData.getCost(), forecastCost, prevCostData, trendFilterStartTime))
         .value(costData.getCost())
+        .efficiencyScoreStats(efficiencyScoreStats)
         .build();
   }
 
@@ -762,6 +777,12 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
       }
       clusterDataBuilder.id(entityId);
       clusterDataBuilder.name(name);
+      ClusterData clusterData = clusterDataBuilder.build();
+      // Calculating efficiency score
+      if (cost > 0) {
+        clusterDataBuilder.efficiencyScore(viewsQueryHelper.calculateEfficiencyScore(
+            clusterData.getTotalCost(), clusterData.getIdleCost(), clusterData.getUnallocatedCost()));
+      }
       dataPointBuilder.cost(cost);
       if (getCostTrend) {
         dataPointBuilder.costTrend(getCostTrendForEntity(cost, costTrendData.get(entityId), startTimeForTrend));

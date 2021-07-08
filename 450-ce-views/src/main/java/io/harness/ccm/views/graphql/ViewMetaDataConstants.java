@@ -8,4 +8,6 @@ public class ViewMetaDataConstants {
   public static final String entityConstantMaxStartTime = "startTime_MAX";
   public static final String entityConstantCost = "cost";
   public static final String entityConstantClusterCost = "billingamount";
+  public static final String entityConstantIdleCost = "actualidlecost";
+  public static final String entityConstantUnallocatedCost = "unallocatedcost";
 }

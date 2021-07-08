@@ -70,6 +70,7 @@ public class PerspectivesQuery {
                   .statsValue(trendStatsData.getStatsValue())
                   .value(trendStatsData.getValue())
                   .build())
+        .efficiencyScoreStats(trendStatsData.getEfficiencyScoreStats())
         .build();
   }
 

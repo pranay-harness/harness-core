@@ -23,6 +23,10 @@ public class ViewsQueryHelper {
   private static final String TOTAL_COST_DATE_PATTERN_WITHOUT_YEAR = "MMM dd";
   private static final String DEFAULT_TIME_ZONE = "GMT";
   private static final long ONE_DAY_MILLIS = 86400000;
+  private static final int IDLE_COST_BASELINE = 30;
+  private static final int UNALLOCATED_COST_BASELINE = 5;
+  private static final int DEFAULT_EFFICIENCY_SCORE = -1;
+  private static final String EFFICIENCY_SCORE_LABEL = "Efficiency Score";
 
   public boolean isYearRequired(Instant startInstant, Instant endInstant) {
     LocalDate endDate = LocalDateTime.ofInstant(endInstant, ZoneOffset.UTC).toLocalDate();
@@ -138,5 +142,49 @@ public class ViewsQueryHelper {
     LocalDate today = LocalDate.now(zoneId);
     ZonedDateTime zdtStart = today.atStartOfDay(zoneId);
     return zdtStart.toEpochSecond() * 1000;
+  }
+
+  public int calculateEfficiencyScore(double totalCost, double idleCost, double unallocatedCost) {
+    int utilizedBaseline = 100 - IDLE_COST_BASELINE - UNALLOCATED_COST_BASELINE;
+    double utilizedCost = totalCost - idleCost - unallocatedCost;
+    if (totalCost > 0.0) {
+      double utilizedPercentage = utilizedCost / totalCost * 100;
+      int efficiencyScore = (int) Math.round((1 - ((utilizedBaseline - utilizedPercentage) / utilizedBaseline)) * 100);
+      return Math.min(efficiencyScore, 100);
+    }
+    return DEFAULT_EFFICIENCY_SCORE;
+  }
+
+  public EfficiencyScoreStats getEfficiencyScoreStats(ViewCostData currentCostData, ViewCostData previousCostData) {
+    int currentEfficiencyScore = DEFAULT_EFFICIENCY_SCORE;
+    int previousEfficiencyScore;
+    double efficiencyTrend = DEFAULT_EFFICIENCY_SCORE;
+
+    // Calculating efficiency score for current period
+    if (currentCostData != null && currentCostData.getCost() > 0 && currentCostData.getIdleCost() != null) {
+      double unallocatedCost =
+          currentCostData.getUnallocatedCost() != null ? currentCostData.getUnallocatedCost() : 0.0;
+      currentEfficiencyScore =
+          calculateEfficiencyScore(currentCostData.getCost(), currentCostData.getIdleCost(), unallocatedCost);
+    }
+
+    // Calculating efficiency score for previous period
+    if (previousCostData != null && previousCostData.getCost() > 0 && previousCostData.getIdleCost() != null) {
+      double unallocatedCost =
+          previousCostData.getUnallocatedCost() != null ? previousCostData.getUnallocatedCost() : 0.0;
+      previousEfficiencyScore =
+          calculateEfficiencyScore(previousCostData.getCost(), previousCostData.getIdleCost(), unallocatedCost);
+
+      if (previousEfficiencyScore > 0) {
+        efficiencyTrend = getRoundedDoubleValue(
+            ((double) (currentEfficiencyScore - previousEfficiencyScore) / previousEfficiencyScore) * 100);
+      }
+    }
+
+    return EfficiencyScoreStats.builder()
+        .statsLabel(EFFICIENCY_SCORE_LABEL)
+        .statsValue(String.valueOf(currentEfficiencyScore))
+        .statsTrend(efficiencyTrend)
+        .build();
   }
 }
