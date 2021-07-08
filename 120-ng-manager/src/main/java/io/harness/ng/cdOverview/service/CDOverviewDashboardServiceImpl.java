@@ -980,6 +980,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         .lastExecuted(workloadDeploymentInfo.getLastExecuted())
         .deploymentTypeList(workloadDeploymentInfo.getDeploymentTypeList())
         .totalDeployments(totalDeployment)
+        .totalSuccess(success)
+        .totalFailure(failure)
         .totalDeploymentChangeRate(totalDeploymentChangeRate)
         .percentSuccess(percentSuccess)
         .rateSuccess(getRate(success, previousSuccess))

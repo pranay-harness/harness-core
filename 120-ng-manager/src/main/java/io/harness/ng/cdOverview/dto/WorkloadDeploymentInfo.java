@@ -20,6 +20,8 @@ public class WorkloadDeploymentInfo {
   LastWorkloadInfo lastExecuted;
   Set<String> deploymentTypeList;
   long totalDeployments;
+  long totalSuccess;
+  long totalFailure;
   double totalDeploymentChangeRate;
   double percentSuccess;
   double rateSuccess;
