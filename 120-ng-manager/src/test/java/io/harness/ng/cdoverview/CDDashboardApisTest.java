@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
@@ -409,7 +410,7 @@ public class CDDashboardApisTest {
                                                       .status(ExecutionStatus.FAILED.name())
                                                       .deploymentType("kuber1")
                                                       .build())
-                                    .deploymentTypeList(deploymentTypeList)
+                                    .deploymentTypeList(deploymentTypeList.stream().collect(Collectors.toSet()))
                                     .rateSuccess(((-1) / (double) 3) * 100)
                                     .percentSuccess((2 / (double) 4) * 100)
                                     .totalDeployments(4)
@@ -433,7 +434,7 @@ public class CDDashboardApisTest {
                                                       .status(ExecutionStatus.RUNNING.name())
                                                       .deploymentType("kuber1")
                                                       .build())
-                                    .deploymentTypeList(deploymentTypeList)
+                                    .deploymentTypeList(deploymentTypeList.stream().collect(Collectors.toSet()))
                                     .lastPipelineExecutionId("ServiceId2")
                                     .totalDeployments(2)
                                     .workload(service2WorkloadDateCount)
@@ -454,7 +455,7 @@ public class CDDashboardApisTest {
                                                       .status(ExecutionStatus.EXPIRED.name())
                                                       .deploymentType("kuber2")
                                                       .build())
-                                    .deploymentTypeList(deploymentTypeList)
+                                    .deploymentTypeList(deploymentTypeList.stream().collect(Collectors.toSet()))
                                     .lastPipelineExecutionId("ServiceId1")
 
                                     .totalDeployments(4)
