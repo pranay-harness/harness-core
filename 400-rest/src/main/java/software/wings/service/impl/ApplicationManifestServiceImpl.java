@@ -18,7 +18,7 @@ import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.Remote;
-import static software.wings.beans.appmanifest.StoreType.ValuesYamlFromHelmRepo;
+import static software.wings.beans.appmanifest.StoreType.VALUES_YAML_FROM_HELM_REPO;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.delegatetasks.k8s.K8sTaskHelper.manifestFilesFromGitFetchFilesResult;
@@ -897,7 +897,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         validateStoreTypeForHelmChartOverride(appManifest.getStoreType(), getAppManifestType(appManifest));
       } else {
         if (StoreType.Local != appManifest.getStoreType() && Remote != appManifest.getStoreType()
-            && CUSTOM != appManifest.getStoreType() && ValuesYamlFromHelmRepo != appManifest.getStoreType()) {
+            && CUSTOM != appManifest.getStoreType() && VALUES_YAML_FROM_HELM_REPO != appManifest.getStoreType()) {
           throw new InvalidRequestException(
               "Only local, remote, values yaml from helm repo and custom store types are allowed for values.yaml in environment");
         }
@@ -910,11 +910,11 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     if (!appManifest.getKind().equals(VALUES)) {
       throw new InvalidRequestException("Only ApplicationManifest Kind VALUES is supported", USER);
     }
-    if (!appManifest.getStoreType().equals(ValuesYamlFromHelmRepo)) {
+    if (!appManifest.getStoreType().equals(VALUES_YAML_FROM_HELM_REPO)) {
       throw new InvalidRequestException(
           "Only ApplicationManifest with Kind VALUES and storetype ValuesYamlFromHelmRepo is supported", USER);
     }
-    if (appManifest.getKind().equals(VALUES) && appManifest.getStoreType().equals(ValuesYamlFromHelmRepo)
+    if (appManifest.getKind().equals(VALUES) && appManifest.getStoreType().equals(VALUES_YAML_FROM_HELM_REPO)
         && StringUtils.isEmpty(appManifest.getHelmValuesYamlFilePaths())) {
       throw new InvalidRequestException(
           "If ApplicationManifest with Kind VALUES and storetype ValuesYamlFromHelmRepo is given HelmValuesYamlFilePaths can not be null or empty",
@@ -1111,7 +1111,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         validateLocalAppManifest(applicationManifest);
         break;
 
-      case ValuesYamlFromHelmRepo:
+      case VALUES_YAML_FROM_HELM_REPO:
         validateAppManifestForValuesInHelmRepo(applicationManifest);
         break;
 
@@ -1185,7 +1185,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
             defaultString(applicationManifest.getKustomizeConfig().getKustomizeDirPath()));
         break;
 
-      case ValuesYamlFromHelmRepo:
+      case VALUES_YAML_FROM_HELM_REPO:
         applicationManifest.setHelmValuesYamlFilePaths(applicationManifest.getHelmValuesYamlFilePaths().trim());
         break;
 

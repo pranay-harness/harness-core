@@ -236,10 +236,10 @@ public class ApplicationManifestUtils {
       K8sValuesLocation k8sValuesLocation = entry.getKey();
       ApplicationManifest applicationManifest = entry.getValue();
 
-      if (StoreType.ValuesYamlFromHelmRepo == applicationManifest.getStoreType()) {
+      if (StoreType.VALUES_YAML_FROM_HELM_REPO == applicationManifest.getStoreType()) {
         // use env override if available. We do not support merge config at service and env for HelmChartConfig
         Service service = fetchServiceFromContext(context);
-        if (service.isK8sV2() && StoreType.ValuesYamlFromHelmRepo == applicationManifest.getStoreType()) {
+        if (service.isK8sV2() && StoreType.VALUES_YAML_FROM_HELM_REPO == applicationManifest.getStoreType()) {
           applicationManifest = getAppManifestByApplyingHelmChartOverride(context);
         }
 

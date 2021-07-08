@@ -1348,6 +1348,9 @@ public class HelmDeployStateTest extends CategoryTest {
     helmOverrideManifestMap.put(
         K8sValuesLocation.EnvironmentGlobal, ApplicationManifest.builder().storeType(StoreType.Local).build());
 
+    Map<K8sValuesLocation, ApplicationManifest> mapK8sValuesLocationToApplicationManifest =
+        applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
+
     ApplicationManifest serviceHelmChartManifest =
         ApplicationManifest.builder()
             .storeType(HelmChartRepo)
@@ -1358,7 +1361,8 @@ public class HelmDeployStateTest extends CategoryTest {
     when(helmChartConfigHelperService.getHelmChartConfigTaskParams(context, serviceHelmChartManifest))
         .thenReturn(HelmChartConfigParams.builder().repoName("repoName").build());
 
-    helmDeployState.executeHelmValuesFetchTask(context, ACTIVITY_ID, helmOverrideManifestMap);
+    helmDeployState.executeHelmValuesFetchTask(
+        context, ACTIVITY_ID, helmOverrideManifestMap, mapK8sValuesLocationToApplicationManifest);
 
     ArgumentCaptor<DelegateTask> delegateTaskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(applicationManifestUtils, times(1))

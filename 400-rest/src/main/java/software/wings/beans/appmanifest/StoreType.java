@@ -9,5 +9,5 @@ public enum StoreType {
   OC_TEMPLATES,
   CUSTOM,
   CUSTOM_OPENSHIFT_TEMPLATE,
-  ValuesYamlFromHelmRepo
+  VALUES_YAML_FROM_HELM_REPO
 }
