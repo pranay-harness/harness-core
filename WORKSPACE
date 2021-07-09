@@ -4219,13 +4219,11 @@ http_archive(
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_jar")
 
-RULES_JVM_EXTERNAL_TAG = "3.3"
-
-RULES_JVM_EXTERNAL_SHA = "d85951a92c0908c80bd8551002d66cb23c3434409c814179c0ff026b53544dab"
+RULES_JVM_EXTERNAL_TAG = "4.1"
 
 http_archive(
     name = "rules_jvm_external",
-    sha256 = RULES_JVM_EXTERNAL_SHA,
+    sha256 = "f36441aa876c4f6427bfb2d1f2d723b48e9d930b62662bf723ddfb8fc80f0140",
     strip_prefix = "rules_jvm_external-%s" % RULES_JVM_EXTERNAL_TAG,
     url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
 )
@@ -5060,10 +5058,7 @@ maven_install(
         maven_test_artifact("org.springframework.boot:spring-boot-starter-test:2.1.6.RELEASE"),
         maven_test_artifact("pl.pragmatists:JUnitParams:1.0.4"),
     ],
-    excluded_artifacts = [
-        "org.clojure:clojure",
-        "io.netty:netty-all",
-    ],
+    excluded_artifacts = [],
     maven_install_json = "//project:main_maven_install.json",
     override_targets = {
         "org.apache.commons:commons-io": "@maven//:commons_io_commons_io",
