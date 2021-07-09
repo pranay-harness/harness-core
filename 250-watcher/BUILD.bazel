@@ -12,6 +12,7 @@ java_binary(
     resources = [
         "//250-watcher/src/main/resources:resource",
     ],
+    sign = True,
     visibility = ["//visibility:public"],
     runtime_deps = [
         "//250-watcher/src/main/resources",
