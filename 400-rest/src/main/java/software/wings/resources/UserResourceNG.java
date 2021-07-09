@@ -13,6 +13,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.mappers.AccountMapper;
+import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
@@ -135,6 +136,13 @@ public class UserResourceNG {
   public RestResponse<Boolean> getUserByEmailId(
       @QueryParam("accountId") String accountId, @QueryParam("emailId") String emailId) {
     return new RestResponse<>(userService.isUserPasswordPresent(accountId, emailId));
+  }
+
+  @PUT
+  @Path("invites/create-user")
+  public RestResponse<Boolean> createUserForInvite(@Body @NotNull UserInviteDTO userInvite) {
+    userService.completeNGInvite(userInvite);
+    return new RestResponse<>(true);
   }
 
   @PUT

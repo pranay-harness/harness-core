@@ -6,6 +6,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.ff.FeatureFlagService;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
 
@@ -15,7 +16,6 @@ import software.wings.beans.loginSettings.LoginSettings;
 import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.loginSettings.PasswordExpirationPolicy;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.AccountService;
 
