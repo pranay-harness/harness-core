@@ -925,10 +925,9 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
 
     if (isNotEmpty(executionResponse.getMapK8sValuesLocationToContent())) {
       K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
-      Map<K8sValuesLocation, List<String>> mapK8sValuesLocationToContent =
-          executionResponse.getMapK8sValuesLocationToContent().entrySet().stream().collect(
-              Collectors.toMap(entry -> K8sValuesLocation.valueOf(entry.getKey()), Map.Entry::getValue));
-      k8sStateExecutionData.getValuesFiles().putAll(mapK8sValuesLocationToContent);
+      Map<K8sValuesLocation, List<String>> mapK8sValuesLocationToNonEmptyContents =
+          getMapK8sValuesLocationToNonEmptyContents(executionResponse.getMapK8sValuesLocationToContent());
+      k8sStateExecutionData.getValuesFiles().putAll(mapK8sValuesLocationToNonEmptyContents);
     }
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
@@ -943,6 +942,25 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     } else {
       return k8sStateExecutor.executeK8sTask(context, activityId);
     }
+  }
+
+  private Map<K8sValuesLocation, List<String>> getMapK8sValuesLocationToNonEmptyContents(
+      Map<String, List<String>> mapK8sValuesLocationToContents) {
+    Map<K8sValuesLocation, List<String>> mapK8sValuesLocationToNonEmptyContents = new HashMap<>();
+
+    for (Map.Entry entry : mapK8sValuesLocationToContents.entrySet()) {
+      K8sValuesLocation k8sValueLocation = K8sValuesLocation.valueOf((String) entry.getKey());
+      List<String> contents = (List<String>) entry.getValue();
+
+      List<String> nonEmptyContents =
+          contents.stream().filter(content -> isNotBlank(content)).collect(Collectors.toList());
+
+      if (isNotEmpty(nonEmptyContents)) {
+        mapK8sValuesLocationToNonEmptyContents.put(k8sValueLocation, nonEmptyContents);
+      }
+    }
+
+    return mapK8sValuesLocationToNonEmptyContents;
   }
 
   public ExecutionResponse executeHelmValuesFetchTask(ExecutionContext context, String activityId, String commandName,

@@ -25,6 +25,5 @@ public class HelmValuesFetchTaskResponse implements DelegateTaskNotifyResponseDa
   private String errorMessage;
   private CommandExecutionStatus commandExecutionStatus;
 
-  private String valuesFileContent;
   private Map<String, List<String>> mapK8sValuesLocationToContent;
 }

@@ -690,10 +690,9 @@ public class HelmDeployState extends State {
     if (isNotEmpty(executionResponse.getMapK8sValuesLocationToContent())) {
       HelmDeployStateExecutionData helmDeployStateExecutionData =
           (HelmDeployStateExecutionData) context.getStateExecutionData();
-      Map<K8sValuesLocation, List<String>> mapK8sValuesLocationToContent =
-          executionResponse.getMapK8sValuesLocationToContent().entrySet().stream().collect(
-              Collectors.toMap(entry -> K8sValuesLocation.valueOf(entry.getKey()), Map.Entry::getValue));
-      helmDeployStateExecutionData.getValuesFiles().putAll(mapK8sValuesLocationToContent);
+      Map<K8sValuesLocation, List<String>> mapK8sValuesLocationToNonEmptyContents =
+          getMapK8sValuesLocationToNonEmptyContents(executionResponse.getMapK8sValuesLocationToContent());
+      helmDeployStateExecutionData.getValuesFiles().putAll(mapK8sValuesLocationToNonEmptyContents);
     }
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
@@ -714,6 +713,26 @@ public class HelmDeployState extends State {
     }
   }
 
+  @VisibleForTesting
+  private Map<K8sValuesLocation, List<String>> getMapK8sValuesLocationToNonEmptyContents(
+      Map<String, List<String>> mapK8sValuesLocationToContents) {
+    Map<K8sValuesLocation, List<String>> mapK8sValuesLocationToNonEmptyContents = new HashMap<>();
+
+    for (Map.Entry entry : mapK8sValuesLocationToContents.entrySet()) {
+      K8sValuesLocation k8sValueLocation = K8sValuesLocation.valueOf((String) entry.getKey());
+      List<String> contents = (List<String>) entry.getValue();
+
+      List<String> nonEmptyContents =
+          contents.stream().filter(content -> isNotBlank(content)).collect(Collectors.toList());
+
+      if (isNotEmpty(nonEmptyContents)) {
+        mapK8sValuesLocationToNonEmptyContents.put(k8sValueLocation, nonEmptyContents);
+      }
+    }
+
+    return mapK8sValuesLocationToNonEmptyContents;
+  }
+
   private boolean isValuesInCustomSource(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     for (Map.Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
       ApplicationManifest applicationManifest = entry.getValue();
@@ -724,6 +743,7 @@ public class HelmDeployState extends State {
 
     return false;
   }
+
   public String obtainActivityId(ExecutionContext context) {
     return ((HelmDeployStateExecutionData) context.getStateExecutionData()).getActivityId();
   }
