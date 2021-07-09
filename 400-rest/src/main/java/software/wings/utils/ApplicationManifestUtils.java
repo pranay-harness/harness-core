@@ -228,7 +228,7 @@ public class ApplicationManifestUtils {
     return gitFetchFileConfigMap;
   }
 
-  public Map<String, List<String>> getHelmFetchTaskConfigMap(
+  public Map<String, List<String>> getHelmFetchTaskMapK8sValuesLocationToFilePaths(
       ExecutionContext context, Application app, Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap) {
     Map<String, List<String>> mapK8sValuesLocationToFilePaths = new HashMap<>();
 

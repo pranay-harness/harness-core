@@ -910,10 +910,6 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     if (!appManifest.getKind().equals(VALUES)) {
       throw new InvalidRequestException("Only ApplicationManifest Kind VALUES is supported", USER);
     }
-    if (!appManifest.getStoreType().equals(VALUES_YAML_FROM_HELM_REPO)) {
-      throw new InvalidRequestException(
-          "Only ApplicationManifest with Kind VALUES and storetype ValuesYamlFromHelmRepo is supported", USER);
-    }
     if (appManifest.getKind().equals(VALUES) && appManifest.getStoreType().equals(VALUES_YAML_FROM_HELM_REPO)
         && StringUtils.isEmpty(appManifest.getHelmValuesYamlFilePaths())) {
       throw new InvalidRequestException(

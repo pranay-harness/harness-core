@@ -1582,7 +1582,8 @@ public class HelmDeployState extends State {
 
     if (featureFlagService.isEnabled(OVERRIDE_VALUES_YAML_FROM_HELM_CHART, context.getAccountId())) {
       Map<String, List<String>> mapK8sValuesLocationToFilePaths =
-          applicationManifestUtils.getHelmFetchTaskConfigMap(context, app, applicationManifestMap);
+          applicationManifestUtils.getHelmFetchTaskMapK8sValuesLocationToFilePaths(
+              context, app, applicationManifestMap);
       helmValuesFetchTaskParameters.setMapK8sValuesLocationToFilePaths(mapK8sValuesLocationToFilePaths);
     }
 

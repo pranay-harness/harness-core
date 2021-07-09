@@ -886,8 +886,8 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
 
     Map<String, List<String>> mapK8sValuesLocationToFilePaths = new HashMap<>();
     if (featureFlagService.isEnabled(OVERRIDE_VALUES_YAML_FROM_HELM_CHART, context.getAccountId())) {
-      mapK8sValuesLocationToFilePaths =
-          applicationManifestUtils.getHelmFetchTaskConfigMap(context, app, applicationManifestMap);
+      mapK8sValuesLocationToFilePaths = applicationManifestUtils.getHelmFetchTaskMapK8sValuesLocationToFilePaths(
+          context, app, applicationManifestMap);
     }
 
     return HelmValuesFetchTaskParameters.builder()
