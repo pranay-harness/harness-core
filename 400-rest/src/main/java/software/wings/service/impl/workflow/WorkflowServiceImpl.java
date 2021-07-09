@@ -1194,6 +1194,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     orchestrationWorkflow = workflowServiceHelper.propagateWorkflowDataToPhases(orchestrationWorkflow,
         templateExpressions, workflow.getAppId(), serviceId, infraDefinitionId, envChanged, infraChanged, migration);
 
+    if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+      CanaryOrchestrationWorkflow savedCanaryOrchestrationWorkflow =
+          (CanaryOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+      if (canaryOrchestrationWorkflow.getWorkflowPhases() != null
+          && savedCanaryOrchestrationWorkflow.getWorkflowPhases() != null) {
+        for (int i = 0; i < canaryOrchestrationWorkflow.getWorkflowPhases().size()
+             && i < savedCanaryOrchestrationWorkflow.getWorkflowPhases().size();
+             i++) {
+          if (isEmpty(canaryOrchestrationWorkflow.getWorkflowPhases().get(i).getServiceId())) {
+            canaryOrchestrationWorkflow.getWorkflowPhases().get(i).setServiceId(
+                savedCanaryOrchestrationWorkflow.getWorkflowPhases().get(i).getServiceId());
+          }
+        }
+      }
+    }
+
     workflowServiceTemplateHelper.setServiceTemplateExpressionMetadata(workflow, orchestrationWorkflow);
 
     setUnset(ops, "templateExpressions", templateExpressions);

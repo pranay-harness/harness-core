@@ -106,6 +106,7 @@ import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
@@ -818,6 +819,58 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(
         pipeline2.getPipelineStages().get(0).getPipelineStageElements().get(0).getProperties().get(EnvStateKeys.envId))
         .isEqualTo(ENV_ID);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldRetainWorkflowServiceIdIfEmpty() {
+    Workflow oldWorkflow =
+        aWorkflow()
+            .name(WORKFLOW_NAME)
+            .appId(APP_ID)
+            .envId(ENV_ID)
+            .uuid(WORKFLOW_ID)
+            .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                       .addWorkflowPhase(aWorkflowPhase().serviceId(SERVICE_ID).build())
+                                       .addWorkflowPhase(aWorkflowPhase().serviceId(SERVICE_ID + 2).build())
+                                       .build())
+            .build();
+    Workflow newWorkflow =
+        aWorkflow()
+            .name(WORKFLOW_NAME)
+            .appId(APP_ID)
+            .envId(ENV_ID)
+            .uuid(WORKFLOW_ID)
+            .orchestrationWorkflow(aCanaryOrchestrationWorkflow()
+                                       .addWorkflowPhase(aWorkflowPhase().serviceId("").build())
+                                       .addWorkflowPhase(aWorkflowPhase().serviceId(SERVICE_ID).build())
+                                       .build())
+            .build();
+    when(wingsPersistence.getWithAppId(any(), anyString(), anyString())).thenReturn(oldWorkflow);
+
+    HashMap<String, Object> properties = new HashMap<>();
+    properties.put(EnvStateKeys.workflowId, WORKFLOW_ID);
+    properties.put(EnvStateKeys.envId, ENV_ID);
+
+    when(wingsPersistence.createQuery(StateMachine.class)).thenReturn(stateMachineQuery);
+    when(wingsPersistence.createQuery(Workflow.class)).thenReturn(workflowQuery);
+    when(workflowQuery.filter(anyString(), any())).thenReturn(workflowQuery);
+    when(wingsPersistence.createUpdateOperations(Workflow.class)).thenReturn(updateOperations);
+    when(updateOperations.set(any(), any())).thenReturn(updateOperations);
+    when(stateMachineQuery.filter(anyString(), any())).thenReturn(stateMachineQuery);
+    when(stateMachineQuery.get()).thenReturn(null);
+    when(wingsPersistence.getWithAppId(Workflow.class, APP_ID, WORKFLOW_ID)).thenReturn(oldWorkflow);
+
+    when(wingsPersistence.update(any(Query.class), any(UpdateOperations.class))).thenReturn(null);
+    workflowService.updateWorkflow(newWorkflow, newWorkflow.getOrchestrationWorkflow(), false, false, false);
+    CanaryOrchestrationWorkflow canaryOrchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) newWorkflow.getOrchestrationWorkflow();
+    assertThat(canaryOrchestrationWorkflow.getWorkflowPhases()
+                   .stream()
+                   .map(WorkflowPhase::getServiceId)
+                   .collect(Collectors.toList()))
+        .containsExactly(SERVICE_ID, SERVICE_ID);
   }
 
   @Test
