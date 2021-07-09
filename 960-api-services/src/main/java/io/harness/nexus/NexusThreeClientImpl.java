@@ -89,9 +89,10 @@ public class NexusThreeClientImpl {
     }
 
     if (response.code() == 404) {
-      throw NestedExceptionUtils.hintWithExplanationException("Check if the Nexus URL & Nexus version are correct",
-          "The Nexus URL for the connector is incorrect",
-          new InvalidArtifactServerException("Invalid Artifact server"));
+      throw NestedExceptionUtils.hintWithExplanationException(
+          "Check if the Nexus URL & Nexus version are correct. Nexus URLs are different for different Nexus versions",
+          "The Nexus URL or the version for the connector is incorrect",
+          new InvalidArtifactServerException("Invalid Nexus connector details"));
     }
     return NexusHelper.isSuccessful(response);
   }
