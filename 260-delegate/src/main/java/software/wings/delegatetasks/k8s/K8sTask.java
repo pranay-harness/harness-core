@@ -65,7 +65,8 @@ public class K8sTask extends AbstractDelegateRunnableTask {
         return k8sCommandTaskTypeToTaskHandlerMap.get(k8sTaskParameters.getCommandType().name())
             .executeTask(k8sTaskParameters, null);
       } catch (Exception ex) {
-        log.error("Exception in processing k8s task [{}]", k8sTaskParameters.toString(), ex);
+        log.error("Exception in processing K8s task [{}]",
+            k8sTaskParameters.getCommandName() + ":" + k8sTaskParameters.getCommandType(), ex);
         return K8sTaskExecutionResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
             .errorMessage(ExceptionUtils.getMessage(ex))
@@ -104,7 +105,8 @@ public class K8sTask extends AbstractDelegateRunnableTask {
         return k8sCommandTaskTypeToTaskHandlerMap.get(k8sTaskParameters.getCommandType().name())
             .executeTask(k8sTaskParameters, k8SDelegateTaskParams);
       } catch (Exception ex) {
-        log.error("Exception in processing k8s task [{}]", k8sTaskParameters.toString(), ex);
+        log.error("Exception in processing K8s task [{}]",
+            k8sTaskParameters.getCommandName() + ":" + k8sTaskParameters.getCommandType(), ex);
         return K8sTaskExecutionResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
             .errorMessage(ExceptionUtils.getMessage(ex))
