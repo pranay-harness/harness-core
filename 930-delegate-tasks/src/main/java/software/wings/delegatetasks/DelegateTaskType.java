@@ -1,5 +1,9 @@
 package software.wings.delegatetasks;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.beans.TaskType;
 
 import java.lang.annotation.ElementType;
@@ -12,6 +16,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
+@OwnedBy(DEL)
 public @interface DelegateTaskType {
   TaskType value();
 }
