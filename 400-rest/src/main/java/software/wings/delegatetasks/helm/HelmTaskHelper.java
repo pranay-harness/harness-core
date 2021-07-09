@@ -187,12 +187,12 @@ public class HelmTaskHelper {
         return mapK8sValuesLocationToContents;
       }
 
-      mapK8sValuesLocationToFilePaths.entrySet().stream().forEach(entry -> {
-        final List<String> valuesYamlContents = mapK8sValuesLocationToContents.containsKey(entry.getKey())
-            ? mapK8sValuesLocationToContents.get(entry.getKey())
+      mapK8sValuesLocationToFilePaths.forEach((key, value) -> {
+        final List<String> valuesYamlContents = mapK8sValuesLocationToContents.containsKey(key)
+            ? mapK8sValuesLocationToContents.get(key)
             : new ArrayList<>();
 
-        entry.getValue().forEach(filePath -> {
+        value.forEach(filePath -> {
           try {
             String fileContent = new String(
                 Files.readAllBytes(
@@ -203,12 +203,12 @@ public class HelmTaskHelper {
             String msg = format("Required values yaml file with path %s not found", filePath);
             log.error(msg, ex);
           }
-          mapK8sValuesLocationToContents.put(entry.getKey(), valuesYamlContents);
+          mapK8sValuesLocationToContents.put(key, valuesYamlContents);
         });
       });
 
       if (mapK8sValuesLocationToFilePaths.entrySet().stream().anyMatch(
-              entry -> (mapK8sValuesLocationToContents.get(entry.getKey()).size() != entry.getValue().size()))) {
+              entry -> mapK8sValuesLocationToContents.get(entry.getKey()).size() != entry.getValue().size())) {
         throw new Exception("Could not find all required values yaml files in helm repo");
       }
 

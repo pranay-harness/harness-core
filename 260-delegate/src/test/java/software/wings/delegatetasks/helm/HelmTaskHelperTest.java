@@ -808,9 +808,9 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     doReturn(workingDirectory).when(helmTaskHelper).createNewDirectoryAtPath(anyString());
     doReturn("helm/path").when(k8sGlobalConfigService).getHelmPath(any(HelmVersion.class));
     if (mapValuesFileContent != null) {
-      mapValuesFileContent.entrySet().stream().forEach(entry -> {
+      mapValuesFileContent.forEach((key, value) -> {
         try {
-          Files.write(Paths.get(workingDirectory, chartName, entry.getKey()), entry.getValue().getBytes());
+          Files.write(Paths.get(workingDirectory, chartName, key), value.getBytes());
         } catch (IOException e) {
         }
       });
