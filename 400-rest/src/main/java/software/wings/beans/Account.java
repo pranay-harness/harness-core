@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.delegate.beans.DelegateConfiguration.DelegateConfigurationKeys;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -51,7 +51,7 @@ import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
-@OwnedBy(PL)
+@OwnedBy(DX)
 @TargetModule(HarnessModule._955_ACCOUNT_MGMT)
 @FieldNameConstants(innerTypeName = "AccountKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
