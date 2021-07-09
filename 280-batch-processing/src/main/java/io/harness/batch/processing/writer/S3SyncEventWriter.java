@@ -123,6 +123,7 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
               .build(),
           false));
       if (response != null && isNotEmpty(response.getContent())) {
+        log.debug("connectorResourceClient.listConnectors Response:{}", response);
         nextGenConnectorResponses.addAll(response.getContent());
       }
       page++;
