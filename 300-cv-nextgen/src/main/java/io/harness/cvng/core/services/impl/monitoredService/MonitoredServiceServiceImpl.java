@@ -4,10 +4,11 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.cvng.beans.MonitoredServiceType;
+import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Sources;
-import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListDTO;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
 import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.entities.MonitoredService.MonitoredServiceKeys;
@@ -34,7 +35,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   @Inject private HealthSourceService healthSourceService;
-  @Inject HPersistence hPersistence;
+  @Inject private HPersistence hPersistence;
 
   @Override
   public MonitoredServiceResponse create(String accountId, MonitoredServiceDTO monitoredServiceDTO) {
@@ -44,11 +45,15 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       healthSourceService.create(accountId, monitoredServiceDTO.getOrgIdentifier(),
           monitoredServiceDTO.getProjectIdentifier(), monitoredServiceDTO.getEnvironmentRef(),
           monitoredServiceDTO.getServiceRef(), monitoredServiceDTO.getIdentifier(),
-          monitoredServiceDTO.getSources().getHealthSources());
+          monitoredServiceDTO.getSources().getHealthSources(), getMonitoredServiceEnableStatus());
     }
     saveMonitoredServiceEntity(accountId, monitoredServiceDTO);
     return get(accountId, monitoredServiceDTO.getOrgIdentifier(), monitoredServiceDTO.getProjectIdentifier(),
         monitoredServiceDTO.getIdentifier());
+  }
+
+  private boolean getMonitoredServiceEnableStatus() {
+    return true; // TODO: Need to implement this logic later based on licensing
   }
 
   @Override
@@ -115,7 +120,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     });
     healthSourceService.create(monitoredService.getAccountId(), monitoredServiceDTO.getOrgIdentifier(),
         monitoredServiceDTO.getProjectIdentifier(), monitoredService.getEnvironmentIdentifier(),
-        monitoredService.getServiceIdentifier(), monitoredServiceDTO.getIdentifier(), toBeCreatedHealthSources);
+        monitoredService.getServiceIdentifier(), monitoredServiceDTO.getIdentifier(), toBeCreatedHealthSources,
+        monitoredService.isEnabled());
     healthSourceService.update(monitoredService.getAccountId(), monitoredServiceDTO.getOrgIdentifier(),
         monitoredServiceDTO.getProjectIdentifier(), monitoredService.getEnvironmentIdentifier(),
         monitoredService.getServiceIdentifier(), monitoredServiceDTO.getIdentifier(), toBeUpdatedHealthSources);
@@ -263,6 +269,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
                                                   .serviceIdentifier(monitoredServiceDTO.getServiceRef())
                                                   .identifier(monitoredServiceDTO.getIdentifier())
                                                   .type(monitoredServiceDTO.getType())
+                                                  .enabled(getMonitoredServiceEnableStatus())
                                                   .build();
     if (monitoredServiceDTO.getSources() != null) {
       monitoredServiceEntity.setHealthSourceIdentifiers(monitoredServiceDTO.getSources()
@@ -275,9 +282,9 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   }
 
   @Override
-  public PageResponse<MonitoredServiceListDTO> list(String accountId, String orgIdentifier, String projectIdentifier,
-      String environmentIdentifier, Integer offset, Integer pageSize, String filter) {
-    List<MonitoredServiceListDTO> monitoredServiceListDTOS = new ArrayList<>();
+  public PageResponse<MonitoredServiceListItemDTO> list(String accountId, String orgIdentifier,
+      String projectIdentifier, String environmentIdentifier, Integer offset, Integer pageSize, String filter) {
+    List<MonitoredServiceListItemDTO> monitoredServiceListItemDTOS = new ArrayList<>();
     Query<MonitoredService> monitoredServicesQuery =
         hPersistence.createQuery(MonitoredService.class)
             .filter(MonitoredServiceKeys.accountId, accountId)
@@ -288,14 +295,14 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     }
     List<MonitoredService> monitoredServices = monitoredServicesQuery.asList();
     if (monitoredServices != null) {
-      monitoredServiceListDTOS =
+      monitoredServiceListItemDTOS =
           monitoredServices.stream()
               .filter(monitoredService
                   -> isEmpty(filter) || monitoredService.getName().toLowerCase().contains(filter.trim().toLowerCase()))
               .map(monitoredService -> toMonitorServiceListDTO(monitoredService))
               .collect(Collectors.toList());
     }
-    return PageUtils.offsetAndLimit(monitoredServiceListDTOS, offset, pageSize);
+    return PageUtils.offsetAndLimit(monitoredServiceListItemDTOS, offset, pageSize);
   }
 
   @Override
@@ -376,13 +383,34 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     return get(accountId, orgIdentifier, projectIdentifier, monitoredServiceDTO.getIdentifier());
   }
 
-  private MonitoredServiceListDTO toMonitorServiceListDTO(MonitoredService monitoredService) {
-    return MonitoredServiceListDTO.builder()
+  @Override
+  public HealthMonitoringFlagResponse setHealthMonitoringFlag(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier, boolean enable) {
+    MonitoredService monitoredService = getMonitoredService(accountId, orgIdentifier, projectIdentifier, identifier);
+    Preconditions.checkNotNull(monitoredService, "Monitored service with identifier %s does not exists", identifier);
+    healthSourceService.setHealthMonitoringFlag(accountId, orgIdentifier, projectIdentifier,
+        monitoredService.getIdentifier(), monitoredService.getHealthSourceIdentifiers(), enable);
+    hPersistence.update(
+        hPersistence.createQuery(MonitoredService.class).filter(MonitoredServiceKeys.uuid, monitoredService.getUuid()),
+        hPersistence.createUpdateOperations(MonitoredService.class).set(MonitoredServiceKeys.enabled, enable));
+    // TODO: handle race condition on same version update. Probably by using version annotation and throwing exception
+    return HealthMonitoringFlagResponse.builder()
+        .accountId(accountId)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
+        .identifier(identifier)
+        .healthMonitoringEnabled(enable)
+        .build();
+  }
+
+  private MonitoredServiceListItemDTO toMonitorServiceListDTO(MonitoredService monitoredService) {
+    return MonitoredServiceListItemDTO.builder()
         .name(monitoredService.getName())
         .identifier(monitoredService.getIdentifier())
         .serviceRef(monitoredService.getServiceIdentifier())
         .environmentRef(monitoredService.getEnvironmentIdentifier())
         .type(monitoredService.getType())
+        .healthMonitoringEnabled(monitoredService.isEnabled())
         .build();
   }
 }

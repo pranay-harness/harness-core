@@ -84,6 +84,7 @@ public abstract class CVConfig
   @NotNull private String orgIdentifier;
   @NotNull private CVMonitoringCategory category;
   private Boolean firstTaskQueued;
+  private boolean enabled;
   private String perpetualTaskId;
   private String productName;
   @NotNull private String identifier;

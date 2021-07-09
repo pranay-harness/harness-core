@@ -3,8 +3,9 @@ package io.harness.cvng.core.resources;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
-import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListDTO;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.ng.beans.PageResponse;
@@ -77,11 +78,25 @@ public class MonitoredServiceResource {
     return new RestResponse<>(monitoredServiceService.update(accountId, monitoredServiceDTO));
   }
 
+  @PUT
+  @Timed
+  @ExceptionMetered
+  @Path("{identifier}/health-monitoring-flag")
+  @ApiOperation(value = "updates monitored service data", nickname = "setHealthMonitoringFlag")
+  public RestResponse<HealthMonitoringFlagResponse> setHealthMonitoringFlag(
+      @NotNull @PathParam("identifier") String identifier, @NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("enable") Boolean enable) {
+    return new RestResponse<>(monitoredServiceService.setHealthMonitoringFlag(
+        accountId, orgIdentifier, projectIdentifier, identifier, enable));
+  }
+
   @GET
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "list monitored service data ", nickname = "listMonitoredService")
-  public ResponseDTO<PageResponse<MonitoredServiceListDTO>> list(@NotNull @QueryParam("accountId") String accountId,
+  public ResponseDTO<PageResponse<MonitoredServiceListItemDTO>> list(@NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @QueryParam("environmentIdentifier") String environmentIdentifier, @QueryParam("offset") @NotNull Integer offset,
