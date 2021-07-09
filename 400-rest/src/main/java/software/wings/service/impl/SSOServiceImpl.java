@@ -5,12 +5,12 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.ng.core.account.AuthenticationMechanism.LDAP;
+import static io.harness.ng.core.account.AuthenticationMechanism.OAUTH;
+import static io.harness.ng.core.account.AuthenticationMechanism.SAML;
+import static io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.security.authentication.AuthenticationMechanism.LDAP;
-import static software.wings.security.authentication.AuthenticationMechanism.OAUTH;
-import static software.wings.security.authentication.AuthenticationMechanism.SAML;
-import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
 
 import static java.util.Arrays.asList;
 
@@ -21,6 +21,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.Account;
@@ -41,7 +42,6 @@ import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.SSOConfig;
 import software.wings.security.authentication.oauth.OauthOptions;

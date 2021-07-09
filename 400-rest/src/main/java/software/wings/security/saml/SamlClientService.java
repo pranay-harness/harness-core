@@ -8,11 +8,11 @@ import static com.google.common.base.Charsets.UTF_8;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.ng.core.account.AuthenticationMechanism;
 
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.sso.SamlSettings;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.intfc.SSOSettingService;

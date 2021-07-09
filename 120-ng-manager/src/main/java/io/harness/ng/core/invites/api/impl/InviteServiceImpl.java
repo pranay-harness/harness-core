@@ -35,7 +35,9 @@ import io.harness.mongo.MongoConfig;
 import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.dto.AccountDTO;
+import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.events.UserInviteCreateEvent;
@@ -60,6 +62,7 @@ import io.harness.notification.notificationclient.NotificationClient;
 import io.harness.outbox.api.OutboxService;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.invites.spring.InviteRepository;
+import io.harness.user.remote.UserClient;
 import io.harness.user.remote.UserFilterNG;
 import io.harness.utils.PageUtils;
 import io.harness.utils.RetryUtils;
@@ -133,6 +136,7 @@ public class InviteServiceImpl implements InviteService {
   private final String nextGenUiUrl;
   private final String nextGenAuthUiUrl;
   private final boolean isNgAuthUIEnabled;
+  private final UserClient userClient;
 
   private final RetryPolicy<Object> transactionRetryPolicy =
       RetryUtils.getRetryPolicy("[Retrying]: Failed to mark previous invites as stale; attempt: {}",
@@ -144,7 +148,7 @@ public class InviteServiceImpl implements InviteService {
       JWTGeneratorUtils jwtGeneratorUtils, NgUserService ngUserService, TransactionTemplate transactionTemplate,
       InviteRepository inviteRepository, NotificationClient notificationClient, AccountClient accountClient,
       OutboxService outboxService, OrganizationService organizationService, ProjectService projectService,
-      AccessControlClient accessControlClient, @Named("currentGenUiUrl") String currentGenUiUrl,
+      AccessControlClient accessControlClient, UserClient userClient, @Named("currentGenUiUrl") String currentGenUiUrl,
       @Named("nextGenUiUrl") String nextGenUiUrl, @Named("nextGenAuthUiUrl") String nextGenAuthUiUrl,
       @Named("isNgAuthUIEnabled") boolean isNgAuthUIEnabled) {
     this.jwtPasswordSecret = jwtPasswordSecret;
@@ -154,6 +158,7 @@ public class InviteServiceImpl implements InviteService {
     this.transactionTemplate = transactionTemplate;
     this.notificationClient = notificationClient;
     this.accountClient = accountClient;
+    this.userClient = userClient;
     this.outboxService = outboxService;
     this.organizationService = organizationService;
     this.projectService = projectService;
@@ -276,17 +281,36 @@ public class InviteServiceImpl implements InviteService {
     }
 
     UserInfo userInfo = inviteAcceptResponse.getUserInfo();
+    AccountDTO account = RestClientUtils.getResponse(accountClient.getAccountDTO(accountIdentifier));
+    if (account == null) {
+      throw new IllegalStateException(String.format("Account with identifier [%s] doesn't exists", accountIdentifier));
+    }
+
+    AuthenticationMechanism authMechanism = account.getAuthenticationMechanism();
+    boolean isPasswordRequired = authMechanism == null || authMechanism == AuthenticationMechanism.USER_PASSWORD;
+
     if (userInfo == null) {
-      return getUserInfoSubmitUrl(email, jwtToken, inviteAcceptResponse);
+      if (isPasswordRequired) {
+        return getUserInfoSubmitUrl(email, jwtToken, inviteAcceptResponse);
+      } else {
+        UserInviteDTO userInviteDTO = UserInviteDTO.builder()
+                                          .accountId(accountIdentifier)
+                                          .email(email)
+                                          .name(email.trim())
+                                          .token(jwtToken)
+                                          .build();
+        RestClientUtils.getResponse(userClient.createUserAndCompleteNGInvite(userInviteDTO));
+        return getResourceUrl(inviteAcceptResponse);
+      }
+    } else {
+      boolean isUserPasswordSet = isUserPasswordSet(accountIdentifier, userInfo.getEmail());
+      if (isPasswordRequired && !isUserPasswordSet) {
+        return getUserInfoSubmitUrl(email, jwtToken, inviteAcceptResponse);
+      } else {
+        completeInvite(jwtToken);
+        return getResourceUrl(inviteAcceptResponse);
+      }
     }
-
-    boolean isUserPasswordSet = isUserPasswordSet(accountIdentifier, userInfo.getEmail());
-    if (!isUserPasswordSet) {
-      return getUserInfoSubmitUrl(email, jwtToken, inviteAcceptResponse);
-    }
-
-    completeInvite(jwtToken);
-    return getResourceUrl(inviteAcceptResponse);
   }
 
   private URI getResourceUrl(InviteAcceptResponse inviteAcceptResponse) {

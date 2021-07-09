@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -81,10 +82,11 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
       user.setAccounts(Arrays.asList(account));
       String samlResponse =
           IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
-      account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
+      account.setAuthenticationMechanism(io.harness.ng.core.account.AuthenticationMechanism.SAML);
       when(authenticationUtils.getUser(anyString())).thenReturn(user);
       when(authenticationUtils.getDefaultAccount(any(User.class))).thenReturn(account);
-      assertThat(authHandler.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.SAML);
+      assertThat(authHandler.getAuthenticationMechanism())
+          .isEqualTo(io.harness.ng.core.account.AuthenticationMechanism.SAML);
       authHandler.authenticate(oktaIdpUrl, samlResponse);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
@@ -105,7 +107,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
 
     String samlResponseString =
         IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
-    account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
+    account.setAuthenticationMechanism(io.harness.ng.core.account.AuthenticationMechanism.SAML);
     when(authenticationUtils.getUser(anyString())).thenReturn(user);
     when(authenticationUtils.getDefaultAccount(any(User.class))).thenReturn(account);
     SamlResponse samlResponse = mock(SamlResponse.class);
@@ -135,7 +137,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     user.setUuid("kmpySmUISimoRrJL6NL73w");
     String samlResponseString =
         IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
-    account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
+    account.setAuthenticationMechanism(io.harness.ng.core.account.AuthenticationMechanism.SAML);
     when(authenticationUtils.getUser(anyString())).thenReturn(user);
     when(authenticationUtils.getDefaultAccount(any(User.class))).thenReturn(account);
     SamlResponse samlResponse = mock(SamlResponse.class);
@@ -186,7 +188,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
 
     String samlResponseString =
         IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
-    account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
+    account.setAuthenticationMechanism(io.harness.ng.core.account.AuthenticationMechanism.SAML);
     when(authenticationUtils.getUser(anyString())).thenReturn(user);
     when(authenticationUtils.getDefaultAccount(any(User.class))).thenReturn(account);
     SamlResponse samlResponse = mock(SamlResponse.class);
@@ -238,7 +240,7 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
 
     String samlResponseString =
         IOUtils.toString(getClass().getResourceAsStream("/SamlResponse.txt"), Charset.defaultCharset());
-    account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
+    account.setAuthenticationMechanism(io.harness.ng.core.account.AuthenticationMechanism.SAML);
     when(authenticationUtils.getUser(anyString())).thenReturn(user);
     when(authenticationUtils.getDefaultAccount(any(User.class))).thenReturn(account);
     SamlResponse samlResponse = mock(SamlResponse.class);

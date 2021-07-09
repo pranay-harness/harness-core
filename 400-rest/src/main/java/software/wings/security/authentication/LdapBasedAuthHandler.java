@@ -14,6 +14,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretText;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.Account;
@@ -106,7 +107,7 @@ public class LdapBasedAuthHandler implements AuthHandler {
   }
 
   @Override
-  public AuthenticationMechanism getAuthenticationMechanism() {
+  public io.harness.ng.core.account.AuthenticationMechanism getAuthenticationMechanism() {
     return AuthenticationMechanism.LDAP;
   }
 

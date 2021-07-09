@@ -4,6 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.account.DefaultExperience;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -27,14 +28,16 @@ public class AccountDTO {
   String companyName;
   String cluster;
   DefaultExperience defaultExperience;
+  AuthenticationMechanism authenticationMechanism;
 
   @Builder
-  public AccountDTO(
-      String identifier, String name, String companyName, String cluster, DefaultExperience defaultExperience) {
+  public AccountDTO(String identifier, String name, String companyName, String cluster,
+      DefaultExperience defaultExperience, AuthenticationMechanism authenticationMechanism) {
     this.identifier = identifier;
     this.name = name;
     this.companyName = companyName;
     this.cluster = cluster;
     this.defaultExperience = defaultExperience;
+    this.authenticationMechanism = authenticationMechanism;
   }
 }

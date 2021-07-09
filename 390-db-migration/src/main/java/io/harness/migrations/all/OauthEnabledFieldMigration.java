@@ -3,11 +3,11 @@ package io.harness.migrations.all;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.migrations.Migration;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.persistence.HIterator;
 
 import software.wings.beans.Account;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.authentication.AuthenticationMechanism;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

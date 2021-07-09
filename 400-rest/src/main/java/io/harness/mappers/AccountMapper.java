@@ -21,6 +21,7 @@ public class AccountMapper {
         .name(account.getAccountName())
         .companyName(account.getCompanyName())
         .defaultExperience(account.getDefaultExperience())
+        .authenticationMechanism(account.getAuthenticationMechanism())
         .build();
   }
 
