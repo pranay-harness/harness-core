@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.HPersistence;
+import io.harness.service.infrastructuremapping.InfrastructureMappingService;
+import io.harness.service.infrastructuremapping.InfrastructureMappingServiceImpl;
 import io.harness.service.instanceService.InstanceService;
 import io.harness.service.instanceService.InstanceServiceImpl;
 import io.harness.service.instancedashboardservice.InstanceDashboardService;
@@ -31,6 +33,7 @@ public class InstanceModule extends AbstractModule {
     bind(InstanceDashboardService.class).to(InstanceDashboardServiceImpl.class);
     bind(InstanceService.class).to(InstanceServiceImpl.class);
     bind(InstanceSyncPerpetualTaskInfoService.class).to(InstanceSyncPerpetualTaskInfoServiceImpl.class);
+    bind(InfrastructureMappingService.class).to(InfrastructureMappingServiceImpl.class);
   }
 
   private void registerRequiredBindings() {
