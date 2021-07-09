@@ -3,7 +3,7 @@ provisioner:
     - step:
         type: TerraformPlan
         name: Terraform Plan
-        identifier: tf_plan
+        identifier: dfe51017-d346-5323-be6f-c55cbb699cc5
         timeout: 10m
         spec:
           provisionerIdentifier:
@@ -15,7 +15,7 @@ provisioner:
     - step:
         type: HarnessApproval
         name: Harness Approval
-        identifier: approval
+        identifier: dfe51017-d346-5323-be6f-c55cbb699cc4
         timeout: 1d
         spec:
           approvalMessage:
@@ -30,7 +30,7 @@ provisioner:
     - step:
         type: TerraformApply
         name: Terraform Apply
-        identifier: tf_apply
+        identifier: dfe51017-d346-5323-be6f-c55cbb699cc8
         timeout: 10m
         spec:
           provisionerIdentifier:
@@ -40,7 +40,7 @@ provisioner:
     - step:
         type: TerraformRollback
         name: Terraform Rollback
-        identifier: tf_rollback
+        identifier: dfe51017-d346-5323-be6f-c55cbb699cc9
         timeout: 10m
         spec:
           provisionerIdentifier:
