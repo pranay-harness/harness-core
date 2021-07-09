@@ -697,25 +697,24 @@ java_library(
         "//980-commons/src/test/resources:resource",
     ],
     visibility = ["//visibility:public"],
-    deps = [
-        "@com_github_tomakehurst_wiremock//jar",
-    ] + shared_dependencies + [
-        ":module",
-        "//990-commons-test:module",
+    deps = shared_dependencies + [
         "//960-persistence:supporter-test",
-        "@maven//:org_awaitility_awaitility",
+        "//990-commons-test:module",
+        ":module",
         "@maven//:com_bertramlabs_plugins_hcl4j",
+        "@maven//:com_github_tomakehurst_wiremock_jre8_standalone",
         "@maven//:com_icegreen_greenmail",
         "@maven//:com_openpojo_openpojo",
         "@maven//:io_github_benas_random_beans",
         "@maven//:junit_junit",
+        "@maven//:net_javacrumbs_json_unit_json_unit_fluent",
         "@maven//:org_assertj_assertj_core",
+        "@maven//:org_awaitility_awaitility",
+        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
+        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:pl_pragmatists_JUnitParams",
-        "@maven//:net_javacrumbs_json_unit_json_unit_fluent",
-        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
-        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
     ],
 )
 

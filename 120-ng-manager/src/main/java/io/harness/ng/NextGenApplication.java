@@ -51,6 +51,7 @@ import io.harness.migration.MigrationProvider;
 import io.harness.migration.NGMigrationSdkInitHelper;
 import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
+import io.harness.migrations.InstanceMigrationProvider;
 import io.harness.ng.accesscontrol.migrations.AccessControlMigrationJob;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
@@ -63,7 +64,6 @@ import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.handler.NGVaultSecretManagerRenewalHandler;
 import io.harness.ng.core.migration.NGBeanMigrationProvider;
 import io.harness.ng.core.migration.ProjectMigrationProvider;
-import io.harness.ng.core.user.service.impl.UserProjectMigrationService;
 import io.harness.ng.migration.NGCoreMigrationProvider;
 import io.harness.ng.migration.UserMembershipMigrationProvider;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
@@ -291,7 +291,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerHealthCheck(environment, injector);
     registerIterators(injector);
     registerJobs(injector);
-    registerMigrations(injector);
     registerQueueListeners(injector);
     registerPmsSdkEvents(injector);
     initializeMonitoring(appConfig, injector);
@@ -299,6 +298,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     intializeGitSync(injector, appConfig);
     registerManagedBeans(environment, injector);
 
+    registerMigrations(injector);
     MaintenanceController.forceMaintenance(false);
   }
 
@@ -321,6 +321,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           { add(ProjectMigrationProvider.class); }
           { add(UserMembershipMigrationProvider.class); }
           { add(NGBeanMigrationProvider.class); }
+          { add(InstanceMigrationProvider.class); }
         })
         .build();
   }
@@ -453,7 +454,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
-    environment.lifecycle().manage(injector.getInstance(UserProjectMigrationService.class));
     environment.lifecycle().manage(injector.getInstance(AccessControlMigrationJob.class));
     createConsumerThreadsToListenToEvents(environment, injector);
   }

@@ -56,11 +56,15 @@ public class MergeHelper {
 
   public Map<FQN, String> getInvalidFQNsInInputSet(String templateYaml, String inputSetPipelineCompYaml)
       throws IOException {
-    PipelineYamlConfig inputSetConfig = new PipelineYamlConfig(inputSetPipelineCompYaml);
-    PipelineYamlConfig templateConfig = new PipelineYamlConfig(templateYaml);
-    Set<FQN> inputSetFQNs = new LinkedHashSet<>(inputSetConfig.getFqnToValueMap().keySet());
-
     Map<FQN, String> errorMap = new LinkedHashMap<>();
+    PipelineYamlConfig inputSetConfig = new PipelineYamlConfig(inputSetPipelineCompYaml);
+    Set<FQN> inputSetFQNs = new LinkedHashSet<>(inputSetConfig.getFqnToValueMap().keySet());
+    if (EmptyPredicate.isEmpty(templateYaml)) {
+      inputSetFQNs.forEach(fqn -> errorMap.put(fqn, "Pipeline no longer contains any runtime input"));
+      return errorMap;
+    }
+    PipelineYamlConfig templateConfig = new PipelineYamlConfig(templateYaml);
+
     templateConfig.getFqnToValueMap().keySet().forEach(key -> {
       if (inputSetFQNs.contains(key)) {
         String error = validateStaticValues(

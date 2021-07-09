@@ -2,7 +2,9 @@ package io.harness.migration.timescale;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.migration.MigrationException;
 import io.harness.migration.NGMigration;
+import io.harness.migration.TimeScaleNotAvailableException;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import com.google.inject.Inject;
@@ -10,7 +12,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.jdbc.ScriptRunner;
 
@@ -22,7 +23,7 @@ public abstract class NGAbstractTimeScaleMigration implements NGMigration {
   private void runMigration(Connection connection, String name) throws Exception {
     InputStream inputstream = getClass().getClassLoader().getResourceAsStream(name);
     if (inputstream == null) {
-      throw new Exception(
+      throw new MigrationException(
           String.format("[Migration]: Unable to run migration %s as script %s not found", getClass(), name));
     }
     InputStreamReader inputStreamReader = new InputStreamReader(inputstream, StandardCharsets.UTF_8);
@@ -33,17 +34,16 @@ public abstract class NGAbstractTimeScaleMigration implements NGMigration {
 
   public abstract String getFileName();
 
-  @SneakyThrows
   @Override
   public void migrate() {
     if (timeScaleDBService.isValid()) {
       try (Connection connection = timeScaleDBService.getDBConnection()) {
         runMigration(connection, getFileName());
       } catch (Exception e) {
-        throw new Exception(String.format("[Migration]: Migration %s failed", getClass()), e);
+        throw new MigrationException(String.format("[Migration]: Migration %s failed", getClass()), e);
       }
     } else {
-      throw new Exception(
+      throw new TimeScaleNotAvailableException(
           String.format("[Migration]: Migration %s failed - TIMESCALEDBSERVICE NOT AVAILABLE", getClass()));
     }
   }

@@ -2,6 +2,7 @@ package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.LogsAnalysisSummary;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.Cluster;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ResultSummary;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
@@ -12,9 +13,11 @@ import io.harness.cvng.analysis.entities.DeploymentLogAnalysis.DeploymentLogAnal
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.CVNGObjectUtils;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,6 +34,7 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
   public static final int DEFAULT_PAGE_SIZE = 10;
   @Inject private HPersistence hPersistence;
   @Inject private VerificationTaskService verificationTaskService;
+  @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Override
   public void save(DeploymentLogAnalysis deploymentLogAnalysis) {
     hPersistence.save(deploymentLogAnalysis);
@@ -82,10 +86,18 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
   @Override
   public PageResponse<LogAnalysisClusterDTO> getLogAnalysisResult(
       String accountId, String verificationJobInstanceId, Integer label, int pageNumber, String hostName) {
+    List<LogAnalysisClusterDTO> logAnalysisClusters =
+        getLogAnalysisResult(accountId, verificationJobInstanceId, label, hostName);
+
+    return formPageResponse(logAnalysisClusters, pageNumber, DEFAULT_PAGE_SIZE);
+  }
+
+  private List<LogAnalysisClusterDTO> getLogAnalysisResult(
+      String accountId, String verificationJobInstanceId, Integer label, String hostName) {
     List<DeploymentLogAnalysis> latestDeploymentLogAnalysis =
         getLatestDeploymentLogAnalysis(accountId, verificationJobInstanceId);
     if (isEmpty(latestDeploymentLogAnalysis)) {
-      return formPageResponse(Collections.emptyList(), pageNumber, DEFAULT_PAGE_SIZE);
+      return Collections.emptyList();
     }
     boolean shouldFilterByHostName = StringUtils.isNotBlank(hostName);
     List<LogAnalysisClusterDTO> logAnalysisClusters = new ArrayList<>();
@@ -100,7 +112,33 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
     }
 
     logAnalysisClusters.sort((a, b) -> Double.compare(b.getScore(), a.getScore()));
-    return formPageResponse(logAnalysisClusters, pageNumber, DEFAULT_PAGE_SIZE);
+    return logAnalysisClusters;
+  }
+
+  @Override
+  public LogsAnalysisSummary getAnalysisSummary(String accountId, List<String> verificationJobInstanceIds) {
+    List<Integer> anomClusterCounts = new ArrayList<>();
+    List<Integer> totalClusterCounts = new ArrayList<>();
+
+    Preconditions.checkNotNull(
+        verificationJobInstanceIds, "Missing verificationJobInstanceIds when looking for summary");
+    verificationJobInstanceIds.forEach(verificationJobInstanceId -> {
+      List<LogAnalysisClusterDTO> logAnalysisClusters =
+          getLogAnalysisResult(accountId, verificationJobInstanceId, null, "");
+      int anomClusters = 0, totalClusters = 0;
+      for (LogAnalysisClusterDTO logAnalysisClusterDTO : logAnalysisClusters) {
+        if (logAnalysisClusterDTO.getRisk().isGreaterThan(Risk.LOW)) {
+          anomClusters++;
+        }
+        totalClusters++;
+      }
+      anomClusterCounts.add(anomClusters);
+      totalClusterCounts.add(totalClusters);
+    });
+    return LogsAnalysisSummary.builder()
+        .anomalousClusterCount(anomClusterCounts.stream().mapToInt(Integer::intValue).sum())
+        .totalClusterCount(totalClusterCounts.stream().mapToInt(Integer::intValue).sum())
+        .build();
   }
 
   @Override

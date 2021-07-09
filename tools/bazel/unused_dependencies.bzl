@@ -8,7 +8,7 @@ def report_unused(rule_fn, **kwargs):
     for dep in deps:
         i += 1
 
-        test_name = name + "_" + str(i)
+        test_name = "unused/" + name + "_" + dep.replace("/", "!").replace(":", "~")
         prompt_name = test_name + "_prompt"
         report_name = test_name + "_report"
 
@@ -39,4 +39,5 @@ def report_unused(rule_fn, **kwargs):
                 "echo \"buildozer 'remove deps %s' //%s:%s\"" % (dep, native.package_name(), name),
                 "touch \"$@\"",
             ]),
+            tags = ["unused_dependency"],
         )

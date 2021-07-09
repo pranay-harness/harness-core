@@ -10,7 +10,9 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.beans.activity.ActivityDTO;
+import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
@@ -22,8 +24,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -132,5 +136,30 @@ public class ActivityResource {
   public RestResponse<ActivityVerificationResultDTO> getActivityVerificationResult(
       @NotNull @QueryParam("accountId") String accountId, @NotNull @PathParam("activityId") String activityId) {
     return new RestResponse(activityService.getActivityVerificationResult(accountId, activityId));
+  }
+
+  @GET
+  @Path("/{activityId}/deployment-timeseries-data")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get metrics for given activity", nickname = "getDeploymentMetrics")
+  public RestResponse<TransactionMetricInfoSummaryPageDTO> getMetrics(
+      @NotNull @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
+      @DefaultValue("false") @QueryParam("anomalousMetricsOnly") boolean anomalousMetricsOnly,
+      @QueryParam("hostName") String hostName, @QueryParam("filter") String filter,
+      @QueryParam("pageNumber") @DefaultValue("0") int pageNumber,
+      @QueryParam("pageSize") @DefaultValue("10") int pageSize) {
+    return new RestResponse(activityService.getDeploymentActivityTimeSeriesData(
+        accountId, activityId, anomalousMetricsOnly, hostName, filter, pageNumber, pageSize));
+  }
+
+  @GET
+  @Path("/{activityId}/datasource-types")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get datasource types for an activity", nickname = "getDatasourceTypes")
+  public RestResponse<Set<DatasourceTypeDTO>> getDatasourceTypes(
+      @NotNull @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId) {
+    return new RestResponse(activityService.getDataSourcetypes(accountId, activityId));
   }
 }

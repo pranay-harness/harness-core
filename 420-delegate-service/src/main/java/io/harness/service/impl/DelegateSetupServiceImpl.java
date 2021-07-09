@@ -192,6 +192,7 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
     String delegateConfigurationId = delegateGroup != null ? delegateGroup.getDelegateConfigurationId() : null;
     String delegateGroupIdentifier = delegateGroup != null ? delegateGroup.getIdentifier() : null;
     DelegateSizeDetails sizeDetails = delegateGroup != null ? delegateGroup.getSizeDetails() : null;
+    Set<String> groupCustomSelectors = delegateGroup != null ? delegateGroup.getTags() : null;
 
     String groupHostName = "";
     if (KUBERNETES.equals(delegateType) && isNotEmpty(groupDelegates)) {
@@ -213,6 +214,7 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
         .delegateConfigurationId(delegateConfigurationId)
         .sizeDetails(sizeDetails)
         .groupImplicitSelectors(retrieveDelegateGroupImplicitSelectors(delegateGroup))
+        .groupCustomSelectors(groupCustomSelectors)
         .delegateInsightsDetails(retrieveDelegateInsightsDetails(accountId, delegateGroupId))
         .lastHeartBeat(lastHeartBeat)
         .activelyConnected(
@@ -260,6 +262,12 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
 
       if (delegateGroup != null) {
         selectorTypeMap.put(delegateGroup.getName().toLowerCase(), SelectorType.GROUP_NAME);
+
+        if (isNotEmpty(delegateGroup.getTags())) {
+          for (String selector : delegateGroup.getTags()) {
+            selectorTypeMap.put(selector.toLowerCase(), SelectorType.GROUP_SELECTORS);
+          }
+        }
       }
     } else if (isNotBlank(delegate.getHostName())) {
       selectorTypeMap.put(delegate.getHostName().toLowerCase(), SelectorType.HOST_NAME);

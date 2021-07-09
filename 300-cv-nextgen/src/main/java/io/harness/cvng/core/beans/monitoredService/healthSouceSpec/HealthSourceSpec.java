@@ -1,4 +1,4 @@
-package io.harness.cvng.core.beans.monitoredService;
+package io.harness.cvng.core.beans.monitoredService.healthSouceSpec;
 
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.monitoredService.HealthSource.CVConfigUpdateResult;
@@ -15,7 +15,10 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonSubTypes({ @JsonSubTypes.Type(value = AppDynamicsHealthSourceSpec.class, name = "AppDynamics") })
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = AppDynamicsHealthSourceSpec.class, name = "AppDynamics")
+  , @JsonSubTypes.Type(value = NewRelicHealthSourceSpec.class, name = "NewRelic")
+})
 public abstract class HealthSourceSpec {
   public abstract CVConfigUpdateResult getCVConfigUpdateResult(String accountId, String orgIdentifier,
       String projectIdentifier, String environmentRef, String serviceRef, String identifier, String name,

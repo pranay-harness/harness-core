@@ -52,7 +52,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -60,7 +59,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @OwnedBy(HarnessTeam.PL)
 @Slf4j
 public class AccessControlMigrationServiceImpl implements AccessControlMigrationService {
@@ -70,11 +68,27 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   private final ProjectService projectService;
   private final OrganizationService organizationService;
   private final MockRoleAssignmentService mockRoleAssignmentService;
-  @Named("PRIVILEGED") private final AccessControlAdminClient accessControlAdminClient;
+  private final AccessControlAdminClient accessControlAdminClient;
   private final UserClient userClient;
   private final ResourceGroupClient resourceGroupClient;
   private final NgUserService ngUserService;
   private final ExecutorService executorService = Executors.newFixedThreadPool(5);
+
+  @Inject
+  public AccessControlMigrationServiceImpl(AccessControlMigrationDAO accessControlMigrationDAO,
+      ProjectService projectService, OrganizationService organizationService,
+      MockRoleAssignmentService mockRoleAssignmentService,
+      @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient, UserClient userClient,
+      ResourceGroupClient resourceGroupClient, NgUserService ngUserService) {
+    this.accessControlMigrationDAO = accessControlMigrationDAO;
+    this.projectService = projectService;
+    this.organizationService = organizationService;
+    this.mockRoleAssignmentService = mockRoleAssignmentService;
+    this.accessControlAdminClient = accessControlAdminClient;
+    this.userClient = userClient;
+    this.resourceGroupClient = resourceGroupClient;
+    this.ngUserService = ngUserService;
+  }
 
   @Override
   public void save(AccessControlMigration accessControlMigration) {

@@ -703,6 +703,7 @@ java_library(
         "//955-alert-beans:module",
         "//990-commons-test:module",
         ":module",
+        "@maven//:com_github_tomakehurst_wiremock_jre8_standalone",
         "@maven//:com_icegreen_greenmail",
         "@maven//:com_openpojo_openpojo",
         "@maven//:com_squareup_okhttp3_okhttp",

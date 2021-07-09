@@ -231,8 +231,9 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
       Matcher matcher = pattern.matcher(result);
       while (matcher.find()) {
-        result = result.replace(
-            matcher.group(), decryptedFields.get(matcher.group().substring(2, matcher.group().length() - 1)));
+        String fieldKey = matcher.group().substring(2, matcher.group().length() - 1);
+        Preconditions.checkState(decryptedFields.containsKey(fieldKey), "Could not resolve expression ${%s}", fieldKey);
+        result = result.replace(matcher.group(), decryptedFields.get(fieldKey));
       }
 
       return result;
@@ -657,7 +658,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
           } catch (Throwable ex) {
             if (!(ex instanceof Exception) || ++retry >= RETRIES) {
-              log.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+              log.error("error fetching metrics for {} for minute {} {}", dataCollectionInfo.getStateExecutionId(),
                   dataCollectionMinute, ex);
               taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
               completed.set(true);

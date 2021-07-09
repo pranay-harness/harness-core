@@ -14,6 +14,7 @@ import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
 import io.harness.pms.inputset.helpers.MergeUtils;
+import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
 import io.harness.pms.ngpipeline.inputset.mappers.PMSInputSetElementMapper;
@@ -52,8 +53,12 @@ public class ValidateAndMergeHelper {
     String pipelineYaml = getPipelineYaml(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineBranch, pipelineRepoID);
 
+    return validateInputSet(pipelineYaml, yaml);
+  }
+
+  public static InputSetErrorWrapperDTOPMS validateInputSet(String pipelineYaml, String inputSetYaml) {
     try {
-      return MergeUtils.getErrorMap(pipelineYaml, yaml);
+      return MergeUtils.getErrorMap(pipelineYaml, inputSetYaml);
     } catch (IOException e) {
       throw new InvalidRequestException("Invalid input set yaml");
     }
@@ -185,8 +190,7 @@ public class ValidateAndMergeHelper {
     String pipelineYaml = getPipelineYaml(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineBranch, pipelineRepoID);
     try {
-      return io.harness.pms.merger.helpers.MergeHelper.mergeInputSetIntoPipeline(
-          pipelineYaml, mergedRuntimeInputYaml, false);
+      return MergeHelper.mergeInputSetIntoPipeline(pipelineYaml, mergedRuntimeInputYaml, false);
     } catch (IOException e) {
       throw new InvalidRequestException("Could not merge input sets : " + e.getMessage());
     }

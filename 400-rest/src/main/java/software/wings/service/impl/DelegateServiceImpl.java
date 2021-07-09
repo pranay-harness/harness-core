@@ -517,7 +517,16 @@ public class DelegateServiceImpl implements DelegateService {
         delegateGroupQuery.field(DelegateGroupKeys.status).notEqual(DelegateGroupStatus.DELETED).asList();
 
     return delegateGroups.stream()
-        .map(group -> delegateSetupService.retrieveDelegateGroupImplicitSelectors(group).keySet())
+        .map(group -> {
+          Set<String> groupSelectors = new HashSet<>();
+          groupSelectors.addAll(delegateSetupService.retrieveDelegateGroupImplicitSelectors(group).keySet());
+
+          if (isNotEmpty(group.getTags())) {
+            groupSelectors.addAll(group.getTags());
+          }
+
+          return groupSelectors;
+        })
         .flatMap(Collection::stream)
         .collect(toSet());
   }

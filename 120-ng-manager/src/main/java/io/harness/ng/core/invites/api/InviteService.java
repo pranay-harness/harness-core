@@ -36,8 +36,6 @@ public interface InviteService {
 
   Optional<Invite> getInviteFromToken(String jwtToken, boolean allowDeleted);
 
-  boolean deleteInvite(String accountIdentifier, String orgIdentifier, String projectIdentifier, String emailId);
-
   boolean isUserPasswordSet(String accountIdentifier, String email);
 
   URI getRedirectUrl(InviteAcceptResponse inviteAcceptResponse, String accountCreationFragment, String jwtToken);

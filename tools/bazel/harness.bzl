@@ -3,10 +3,12 @@ load("//project/flags:report_unused.bzl", "REPORT_UNUSED")
 load("//:tools/bazel/unused_dependencies.bzl", "report_unused")
 
 def java_library(**kwargs):
-    orginal_java_library(**kwargs)
+    tags = kwargs.pop("tags", [])
+
+    orginal_java_library(tags = tags + ["harness"], **kwargs)
 
     if REPORT_UNUSED:
-        report_unused(orginal_java_library, **kwargs)
+        report_unused(orginal_java_library, tags = tags, **kwargs)
 
 def harness_sign(jar):
     name = jar.rsplit("/", 1)[-1][:-4] + "_signed"

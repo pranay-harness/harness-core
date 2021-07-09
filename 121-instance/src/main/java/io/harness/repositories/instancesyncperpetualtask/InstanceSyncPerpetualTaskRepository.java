@@ -12,8 +12,9 @@ import org.springframework.data.repository.CrudRepository;
 @OwnedBy(HarnessTeam.DX)
 public interface InstanceSyncPerpetualTaskRepository
     extends CrudRepository<InstanceSyncPerpetualTaskInfo, String>, InstanceSyncPerpetualTaskRepositoryCustom {
-  Optional<InstanceSyncPerpetualTaskInfo> findByAccountIdentifierAndInfrastructureMappingId(
-      String accountIdentifier, String infrastructureMappingId);
+  Optional<InstanceSyncPerpetualTaskInfo>
+  findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndInfrastructureMappingId(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String infrastructureMappingId);
 
   void deleteByInfrastructureMappingId(String infrastructureMappingId);
 }

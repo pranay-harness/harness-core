@@ -258,19 +258,6 @@ public class InviteServiceImpl implements InviteService {
   }
 
   @Override
-  public boolean deleteInvite(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String emailId) {
-    Optional<Invite> inviteOptional =
-        inviteRepository.findFirstByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndEmailAndDeletedFalse(
-            accountIdentifier, orgIdentifier, projectIdentifier, emailId);
-    if (!inviteOptional.isPresent()) {
-      return false;
-    }
-    deleteInvite(inviteOptional.get().getId());
-    return true;
-  }
-
-  @Override
   public boolean isUserPasswordSet(String accountIdentifier, String email) {
     return ngUserService.isUserPasswordSet(accountIdentifier, email);
   }
@@ -594,6 +581,8 @@ public class InviteServiceImpl implements InviteService {
 
     List<RoleAssignmentDTO> roleAssignmentDTOs = createRoleAssignmentDTOs(invite, user.getUuid());
     ngUserService.addUserToScope(user.getUuid(), scope, roleAssignmentDTOs, ACCEPTED_INVITE);
+    // Adding user to the account for sign in flow to work
+    ngUserService.addUserToCG(user.getUuid(), scope);
     markInviteApprovedAndDeleted(invite);
     return true;
   }

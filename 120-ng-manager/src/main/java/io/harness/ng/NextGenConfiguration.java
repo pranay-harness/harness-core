@@ -99,8 +99,6 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("gitSdkConfiguration") private GitSdkConfiguration gitSdkConfiguration;
   @JsonProperty("fileServiceConfiguration") private FileServiceConfiguration fileServiceConfiguration;
   @JsonProperty("baseUrls") private BaseUrls baseUrls;
-  @JsonProperty(value = "enableDefaultResourceGroupCreation", defaultValue = "false")
-  private boolean enableDefaultResourceGroupCreation;
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
   @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;

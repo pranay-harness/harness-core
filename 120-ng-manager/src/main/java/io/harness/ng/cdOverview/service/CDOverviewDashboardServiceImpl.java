@@ -1079,15 +1079,16 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
                                                 .status(lastStatus)
                                                 .deploymentType(deploymentType)
                                                 .build();
-        WorkloadDeploymentInfo workloadDeploymentInfo = WorkloadDeploymentInfo.builder()
-                                                            .serviceName(uniqueWorkloadNameAndId.get(workloadId))
-                                                            .serviceId(workloadId)
-                                                            .totalDeployments(totalDeployment)
-                                                            .lastExecuted(lastWorkloadInfo)
-                                                            .lastPipelineExecutionId(pipelineExecutionId)
-                                                            .deploymentTypeList(deploymentTypeList)
-                                                            .workload(dateCount)
-                                                            .build();
+        WorkloadDeploymentInfo workloadDeploymentInfo =
+            WorkloadDeploymentInfo.builder()
+                .serviceName(uniqueWorkloadNameAndId.get(workloadId))
+                .serviceId(workloadId)
+                .totalDeployments(totalDeployment)
+                .lastExecuted(lastWorkloadInfo)
+                .lastPipelineExecutionId(pipelineExecutionId)
+                .deploymentTypeList(deploymentTypeList.stream().collect(Collectors.toSet()))
+                .workload(dateCount)
+                .build();
         workloadDeploymentInfoList.add(getWorkloadDeploymentInfo(workloadDeploymentInfo, totalDeployment,
             prevTotalDeployments, success, previousSuccess, failure, previousFailure, numberOfDays));
       }

@@ -107,10 +107,11 @@ public class NGAggregateResource {
 
   @GET
   @Path("projects")
+  @NGAccessControlCheck(resourceType = PROJECT, permission = VIEW_PROJECT_PERMISSION)
   @ApiOperation(value = "Get ProjectAggregateDTO list", nickname = "getProjectAggregateDTOList")
   public ResponseDTO<PageResponse<ProjectAggregateDTO>> list(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @QueryParam("hasModule") @DefaultValue("true") boolean hasModule,
       @QueryParam(NGResourceFilterConstants.MODULE_TYPE_KEY) ModuleType moduleType,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
