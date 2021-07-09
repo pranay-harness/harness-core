@@ -181,6 +181,10 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
         serviceProvider.getInstanceFamily(), serviceProvider.getRegion(), serviceProvider.getCloudProvider());
 
     log.info("Current Pricing {}", vmComputePricingInfo);
+    if (vmComputePricingInfo == null) {
+      log.error("Current Pricing not available for {}", serviceProvider);
+      throw new InvalidRequestException("Pricing not available, not saving recommendation in timescaleDB");
+    }
 
     if (InstanceCategory.SPOT.equals(serviceProvider.getInstanceCategory())
         && !isEmpty(vmComputePricingInfo.getSpotPrice())) {
