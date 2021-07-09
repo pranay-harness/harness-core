@@ -91,6 +91,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
                                        .pollForChanges(this.pollForChanges)
                                        .skipVersioningForAllK8sObjects(this.skipVersioningForAllK8sObjects)
                                        .helmCommandFlag(HelmCommandFlagConfig.cloneFrom(this.helmCommandFlag))
+                                       .helmValuesYamlFilePaths(this.helmValuesYamlFilePaths)
                                        .name(this.name)
                                        .build();
     manifest.setAppId(this.appId);
@@ -110,11 +111,12 @@ public class ApplicationManifest extends Base implements AccountAccess {
     private CustomSourceConfig customSourceConfig;
     private Boolean skipVersioningForAllK8sObjects;
     private HelmCommandFlagConfig helmCommandFlag;
+    private String helmValuesYamlFilePaths;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String storeType, GitFileConfig gitFileConfig,
         HelmChartConfig helmChartConfig, KustomizeConfig kustomizeConfig, CustomSourceConfig customSourceConfig,
-        HelmCommandFlagConfig helmCommandFlag, Boolean skipVersioningForAllK8sObjects) {
+        HelmCommandFlagConfig helmCommandFlag, Boolean skipVersioningForAllK8sObjects, String helmValuesYamlFilePaths) {
       super(type, harnessApiVersion);
       this.storeType = storeType;
       this.gitFileConfig = gitFileConfig;
@@ -123,6 +125,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
       this.customSourceConfig = customSourceConfig;
       this.skipVersioningForAllK8sObjects = skipVersioningForAllK8sObjects;
       this.helmCommandFlag = helmCommandFlag;
+      this.helmValuesYamlFilePaths = helmValuesYamlFilePaths;
     }
   }
 }
