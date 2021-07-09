@@ -36,8 +36,11 @@ public class AwsKmsEntityToDTO implements ConnectorEntityToDTOMapper<AwsKmsConne
     }
 
     SecretRefData kmsArn = SecretRefHelper.createSecretRef(connector.getKmsArn());
-    AwsKmsConnectorDTO awsKmsConnectorDTO =
-        builder.kmsArn(kmsArn).region(connector.getRegion()).isDefault(connector.isDefault()).build();
+    AwsKmsConnectorDTO awsKmsConnectorDTO = builder.kmsArn(kmsArn)
+                                                .region(connector.getRegion())
+                                                .isDefault(connector.isDefault())
+                                                .delegateSelectors(connector.getDelegateSelectors())
+                                                .build();
     awsKmsConnectorDTO.setHarnessManaged(Boolean.TRUE.equals(connector.getHarnessManaged()));
 
     return awsKmsConnectorDTO;

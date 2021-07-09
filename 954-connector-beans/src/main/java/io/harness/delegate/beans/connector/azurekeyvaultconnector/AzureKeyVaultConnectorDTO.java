@@ -8,6 +8,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.azure.AzureEnvironmentType;
 import io.harness.beans.DecryptableEntity;
+import io.harness.connector.DelegateSelectable;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
@@ -18,6 +19,7 @@ import com.google.common.base.Preconditions;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -33,7 +35,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-public class AzureKeyVaultConnectorDTO extends ConnectorConfigDTO {
+public class AzureKeyVaultConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @NotNull private String clientId;
   @SecretReference @ApiModelProperty(dataType = "string") @NotNull private SecretRefData secretKey;
   @NotNull private String tenantId;
@@ -42,6 +44,7 @@ public class AzureKeyVaultConnectorDTO extends ConnectorConfigDTO {
   private boolean isDefault;
 
   @Builder.Default private AzureEnvironmentType azureEnvironmentType = AZURE;
+  private Set<String> delegateSelectors;
 
   @Override
   public List<DecryptableEntity> getDecryptableEntities() {

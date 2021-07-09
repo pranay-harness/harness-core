@@ -184,6 +184,6 @@ public class KmsConfig extends SecretManagerConfig {
   }
 
   private BaseAwsKmsConfigDTO populateBaseAwsKmsConfigDTO() {
-    return BaseAwsKmsConfigDTO.builder().region(getRegion()).build();
+    return BaseAwsKmsConfigDTO.builder().region(getRegion()).delegateSelectors(getDelegateSelectors()).build();
   }
 }

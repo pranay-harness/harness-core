@@ -1,33 +1,28 @@
-package io.harness.delegate.beans.connector.azurekeyvaultconnector;
+package io.harness.delegatetasks;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.ConnectorValidationParams;
+import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultCapabilityHelper;
+import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultConnectorDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
 
 import java.util.List;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Getter;
 
 @OwnedBy(PL)
-@Value
+@Getter
 @Builder
-public class AzureKeyVaultValidationParams implements ConnectorValidationParams, ExecutionCapabilityDemander {
-  AzureKeyVaultConnectorDTO azurekeyvaultConnectorDTO;
-  String connectorName;
-
-  @Override
-  public ConnectorType getConnectorType() {
-    return ConnectorType.AZURE_KEY_VAULT;
-  }
+public class NGAzureKeyVaultFetchEngineTaskParameters implements TaskParameters, ExecutionCapabilityDemander {
+  private final AzureKeyVaultConnectorDTO azureKeyVaultConnectorDTO;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return AzureKeyVaultCapabilityHelper.fetchRequiredExecutionCapabilities(
-        azurekeyvaultConnectorDTO, maskingEvaluator);
+        azureKeyVaultConnectorDTO, maskingEvaluator);
   }
 }
