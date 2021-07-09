@@ -79,7 +79,7 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollbackAndRbac implem
       StepElementParameters stepElementParameters, List<String> valuesFileContents,
       K8sExecutionPassThroughData executionPassThroughData, boolean shouldOpenFetchFilesLogStream) {
     final InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
-    final String releaseName = k8sStepHelper.getReleaseName(infrastructure);
+    final String releaseName = k8sStepHelper.getReleaseName(ambiance, infrastructure);
     final K8sCanaryStepParameters canaryStepParameters = (K8sCanaryStepParameters) stepElementParameters.getSpec();
     final Integer instancesValue = canaryStepParameters.getInstanceSelection().getSpec().getInstances();
     final String accountId = AmbianceHelper.getAccountId(ambiance);
@@ -143,7 +143,7 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollbackAndRbac implem
         (K8sCanaryDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
 
     K8sCanaryOutcome k8sCanaryOutcome = K8sCanaryOutcome.builder()
-                                            .releaseName(k8sStepHelper.getReleaseName(infrastructure))
+                                            .releaseName(k8sStepHelper.getReleaseName(ambiance, infrastructure))
                                             .releaseNumber(k8sCanaryDeployResponse.getReleaseNumber())
                                             .targetInstances(k8sCanaryDeployResponse.getCurrentInstances())
                                             .canaryWorkload(k8sCanaryDeployResponse.getCanaryWorkload())

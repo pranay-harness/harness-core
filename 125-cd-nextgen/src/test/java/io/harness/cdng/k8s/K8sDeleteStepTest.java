@@ -61,7 +61,7 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
 
-    doReturn("test-delete-resource-name-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
+    doReturn("test-delete-resource-name-release").when(k8sStepHelper).getReleaseName(ambiance, infrastructureOutcome);
     K8sDeleteRequest deleteRequest = executeTask(stepElementParameters, K8sDeleteRequest.class);
     assertThat(deleteRequest).isNotNull();
     assertThat(deleteRequest.getCommandName()).isEqualTo(K8S_DELETE_COMMAND_NAME);
@@ -93,7 +93,7 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
 
-    doReturn("test-delete-manifest-file-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
+    doReturn("test-delete-manifest-file-release").when(k8sStepHelper).getReleaseName(ambiance, infrastructureOutcome);
 
     K8sDeleteRequest deleteRequest = executeTask(stepElementParameters, K8sDeleteRequest.class);
     assertThat(deleteRequest).isNotNull();
@@ -121,7 +121,7 @@ public class K8sDeleteStepTest extends AbstractK8sStepExecutorTestBase {
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
 
-    doReturn("test-delete-release-name-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
+    doReturn("test-delete-release-name-release").when(k8sStepHelper).getReleaseName(ambiance, infrastructureOutcome);
 
     K8sDeleteRequest deleteRequest = executeTask(stepElementParameters, K8sDeleteRequest.class);
     assertThat(deleteRequest).isNotNull();

@@ -63,6 +63,7 @@ public class PMSExpressionEvaluator extends AmbianceExpressionEvaluator {
     addStaticAlias("serviceDefinition", "stage.spec.serviceConfig.serviceDefinition");
     addStaticAlias("artifact", "stage.spec.serviceConfig.serviceDefinition.spec.artifacts.primary.output");
     addStaticAlias("infra", "stage.spec.infrastructure.output");
+    addStaticAlias("INFRA_KEY", "stage.spec.infrastructure.output.infrastructureKey");
 
     // Status aliases
     addStaticAlias(OrchestrationConstants.STAGE_SUCCESS,

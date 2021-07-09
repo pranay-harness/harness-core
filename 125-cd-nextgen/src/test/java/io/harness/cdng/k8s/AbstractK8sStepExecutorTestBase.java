@@ -53,7 +53,7 @@ public abstract class AbstractK8sStepExecutorTestBase extends CategoryTest {
     doReturn(infraDelegateConfig).when(k8sStepHelper).getK8sInfraDelegateConfig(infrastructureOutcome, ambiance);
     doReturn(manifestDelegateConfig).when(k8sStepHelper).getManifestDelegateConfig(manifestOutcome, ambiance);
     doReturn(true).when(k8sStepHelper).getSkipResourceVersioning(manifestOutcome);
-    doReturn(releaseName).when(k8sStepHelper).getReleaseName(infrastructureOutcome);
+    doReturn(releaseName).when(k8sStepHelper).getReleaseName(ambiance, infrastructureOutcome);
     doReturn(TaskChainResponse.builder().chainEnd(true).build())
         .when(k8sStepHelper)
         .startChainLink(any(), any(), any());

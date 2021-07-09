@@ -61,7 +61,7 @@ public class K8sScaleStep extends TaskExecutableWithRollbackAndRbac<K8sDeployRes
     K8sScaleRequest request =
         K8sScaleRequest.builder()
             .commandName(K8S_SCALE_COMMAND_NAME)
-            .releaseName(k8sStepHelper.getReleaseName(infrastructure))
+            .releaseName(k8sStepHelper.getReleaseName(ambiance, infrastructure))
             .instances(instances)
             .instanceUnitType(scaleStepParameter.getInstanceSelection().getType().getInstanceUnitType())
             .workload(scaleStepParameter.getWorkload().getValue())

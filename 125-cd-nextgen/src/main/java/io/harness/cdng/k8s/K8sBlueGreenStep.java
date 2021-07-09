@@ -79,7 +79,7 @@ public class K8sBlueGreenStep extends TaskChainExecutableWithRollbackAndRbac imp
       StepElementParameters stepElementParameters, List<String> valuesFileContents,
       K8sExecutionPassThroughData executionPassThroughData, boolean shouldOpenFetchFilesLogStream) {
     InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
-    String releaseName = k8sStepHelper.getReleaseName(infrastructure);
+    String releaseName = k8sStepHelper.getReleaseName(ambiance, infrastructure);
     K8sBlueGreenStepParameters k8sBlueGreenStepParameters =
         (K8sBlueGreenStepParameters) stepElementParameters.getSpec();
     boolean skipDryRun = K8sStepHelper.getParameterFieldBooleanValue(
@@ -128,7 +128,6 @@ public class K8sBlueGreenStep extends TaskChainExecutableWithRollbackAndRbac imp
     K8sDeployResponse k8sTaskExecutionResponse;
     try {
       k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
-
     } catch (Exception e) {
       log.error("Error while processing K8s Task response: {}", e.getMessage(), e);
       return k8sStepHelper.handleTaskException(ambiance, executionPassThroughData, e);
@@ -145,7 +144,7 @@ public class K8sBlueGreenStep extends TaskChainExecutableWithRollbackAndRbac imp
     K8sBGDeployResponse k8sBGDeployResponse = (K8sBGDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
 
     K8sBlueGreenOutcome k8sBlueGreenOutcome = K8sBlueGreenOutcome.builder()
-                                                  .releaseName(k8sStepHelper.getReleaseName(infrastructure))
+                                                  .releaseName(k8sStepHelper.getReleaseName(ambiance, infrastructure))
                                                   .releaseNumber(k8sBGDeployResponse.getReleaseNumber())
                                                   .primaryServiceName(k8sBGDeployResponse.getPrimaryServiceName())
                                                   .stageServiceName(k8sBGDeployResponse.getStageServiceName())

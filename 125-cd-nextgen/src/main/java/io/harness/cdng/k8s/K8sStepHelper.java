@@ -107,6 +107,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepConstants;
+import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
@@ -165,6 +166,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDP)
@@ -189,7 +191,7 @@ public class K8sStepHelper {
   @Inject private EncryptionHelper encryptionHelper;
   @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
 
-  String getReleaseName(InfrastructureOutcome infrastructure) {
+  String getReleaseName(Ambiance ambiance, InfrastructureOutcome infrastructure) {
     String releaseName;
     switch (infrastructure.getKind()) {
       case KUBERNETES_DIRECT:
@@ -203,11 +205,19 @@ public class K8sStepHelper {
       default:
         throw new UnsupportedOperationException(format("Unknown infrastructure type: [%s]", infrastructure.getKind()));
     }
+    if (EngineExpressionEvaluator.hasExpressions(releaseName)) {
+      releaseName = engineExpressionService.renderExpression(ambiance, releaseName);
+    }
+
     validateReleaseName(releaseName);
     return releaseName;
   }
 
   private static void validateReleaseName(String name) {
+    if (isEmpty(name)) {
+      throw new InvalidArgumentsException(Pair.of("releaseName", "Cannot be empty"));
+    }
+
     if (!ExpressionUtils.matchesPattern(releaseNamePattern, name)) {
       throw new InvalidRequestException(format(
           "Invalid Release name format: %s. Release name must consist of lower case alphanumeric characters, '-' or '.'"
