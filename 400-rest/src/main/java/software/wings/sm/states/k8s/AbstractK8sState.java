@@ -870,8 +870,6 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
   private HelmValuesFetchTaskParameters fetchHelmValuesFetchTaskParameters(ExecutionContext context, String activityId,
       long timeoutInMillis, ContainerInfrastructureMapping infraMapping,
       Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap) {
-    Application app = appService.get(context.getAppId());
-
     ApplicationManifest applicationManifest =
         applicationManifestUtils.getAppManifestByApplyingHelmChartOverride(context);
     if (applicationManifest == null || HelmChartRepo != applicationManifest.getStoreType()) {
@@ -886,8 +884,8 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
 
     Map<String, List<String>> mapK8sValuesLocationToFilePaths = new HashMap<>();
     if (featureFlagService.isEnabled(OVERRIDE_VALUES_YAML_FROM_HELM_CHART, context.getAccountId())) {
-      mapK8sValuesLocationToFilePaths = applicationManifestUtils.getHelmFetchTaskMapK8sValuesLocationToFilePaths(
-          context, app, applicationManifestMap);
+      mapK8sValuesLocationToFilePaths =
+          applicationManifestUtils.getHelmFetchTaskMapK8sValuesLocationToFilePaths(context, applicationManifestMap);
     }
 
     return HelmValuesFetchTaskParameters.builder()

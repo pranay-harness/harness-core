@@ -1537,7 +1537,6 @@ public class HelmDeployState extends State {
   private HelmValuesFetchTaskParameters getHelmValuesFetchTaskParameters(ExecutionContext context, String appId,
       String activityId, Map<K8sValuesLocation, ApplicationManifest> helmOverrideManifestMap,
       Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap) {
-    Application app = appService.get(context.getAppId());
     ContainerInfrastructureMapping containerInfraMapping =
         (ContainerInfrastructureMapping) infrastructureMappingService.get(appId, context.fetchInfraMappingId());
 
@@ -1582,8 +1581,7 @@ public class HelmDeployState extends State {
 
     if (featureFlagService.isEnabled(OVERRIDE_VALUES_YAML_FROM_HELM_CHART, context.getAccountId())) {
       Map<String, List<String>> mapK8sValuesLocationToFilePaths =
-          applicationManifestUtils.getHelmFetchTaskMapK8sValuesLocationToFilePaths(
-              context, app, applicationManifestMap);
+          applicationManifestUtils.getHelmFetchTaskMapK8sValuesLocationToFilePaths(context, applicationManifestMap);
       helmValuesFetchTaskParameters.setMapK8sValuesLocationToFilePaths(mapK8sValuesLocationToFilePaths);
     }
 

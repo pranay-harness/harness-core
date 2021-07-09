@@ -229,7 +229,7 @@ public class ApplicationManifestUtils {
   }
 
   public Map<String, List<String>> getHelmFetchTaskMapK8sValuesLocationToFilePaths(
-      ExecutionContext context, Application app, Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap) {
+      ExecutionContext context, Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap) {
     Map<String, List<String>> mapK8sValuesLocationToFilePaths = new HashMap<>();
 
     for (Entry<K8sValuesLocation, ApplicationManifest> entry : applicationManifestMap.entrySet()) {
