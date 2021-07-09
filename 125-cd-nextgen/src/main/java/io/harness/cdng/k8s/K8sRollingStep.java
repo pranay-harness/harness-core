@@ -76,7 +76,7 @@ public class K8sRollingStep extends TaskChainExecutableWithRollbackAndRbac imple
       StepElementParameters stepElementParameters, List<String> valuesFileContents,
       K8sExecutionPassThroughData executionPassThroughData, boolean shouldOpenFetchFilesLogStream) {
     InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
-    String releaseName = k8sStepHelper.getReleaseName(infrastructure);
+    String releaseName = k8sStepHelper.getReleaseName(ambiance, infrastructure);
     K8sRollingStepParameters k8sRollingStepParameters = (K8sRollingStepParameters) stepElementParameters.getSpec();
     boolean skipDryRun = K8sStepHelper.getParameterFieldBooleanValue(
         k8sRollingStepParameters.getSkipDryRun(), K8sRollingBaseStepInfoKeys.skipDryRun, stepElementParameters);
@@ -139,7 +139,7 @@ public class K8sRollingStep extends TaskChainExecutableWithRollbackAndRbac imple
     log.info("Finalizing execution with passThroughData: " + passThroughData.getClass().getName());
     K8sExecutionPassThroughData k8sExecutionPassThroughData = (K8sExecutionPassThroughData) passThroughData;
     K8sRollingOutcomeBuilder k8sRollingOutcomeBuilder = K8sRollingOutcome.builder().releaseName(
-        k8sStepHelper.getReleaseName(k8sExecutionPassThroughData.getInfrastructure()));
+        k8sStepHelper.getReleaseName(ambiance, k8sExecutionPassThroughData.getInfrastructure()));
 
     K8sDeployResponse k8sTaskExecutionResponse;
     try {

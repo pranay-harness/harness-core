@@ -8,6 +8,7 @@ import io.harness.cdng.infra.beans.K8sGcpInfraMapping;
 import io.harness.filters.ConnectorRefExtractorHelper;
 import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.SkipAutoEvaluation;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -31,7 +32,11 @@ import org.springframework.data.annotation.TypeAlias;
 public class K8sGcpInfrastructure implements Infrastructure, Visitable, WithConnectorRef {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> connectorRef;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> namespace;
-  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> releaseName;
+  @NotNull
+  @SkipAutoEvaluation
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  ParameterField<String> releaseName;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> cluster;
 
   @Override
@@ -46,6 +51,11 @@ public class K8sGcpInfrastructure implements Infrastructure, Visitable, WithConn
   @Override
   public ParameterField<String> getConnectorReference() {
     return connectorRef;
+  }
+
+  @Override
+  public String[] getInfrastructureKeyValues() {
+    return new String[] {connectorRef.getValue(), cluster.getValue(), namespace.getValue()};
   }
 
   @Override
