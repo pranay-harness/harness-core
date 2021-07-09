@@ -1,9 +1,11 @@
 package software.wings;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.exception.SecretManagementException;
 import io.harness.persistence.HPersistence;
@@ -28,6 +30,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+@OwnedBy(PL)
 public class SecretManagementTestHelper {
   @Inject protected SecretManager secretManager;
   @Inject protected HPersistence persistence;
@@ -153,8 +156,8 @@ public class SecretManagementTestHelper {
   }
 
   public GcpKmsConfig getGcpKmsConfig() {
-    GcpKmsConfig gcpKmsConfig =
-        new GcpKmsConfig("gcpKms", "projectId", "region", "keyRing", "keyName", "{\"abc\": \"value\"}".toCharArray());
+    GcpKmsConfig gcpKmsConfig = new GcpKmsConfig(
+        "gcpKms", "projectId", "region", "keyRing", "keyName", "{\"abc\": \"value\"}".toCharArray(), null);
     gcpKmsConfig.setDefault(true);
     gcpKmsConfig.setEncryptionType(EncryptionType.GCP_KMS);
     gcpKmsConfig.setUsageRestrictions(

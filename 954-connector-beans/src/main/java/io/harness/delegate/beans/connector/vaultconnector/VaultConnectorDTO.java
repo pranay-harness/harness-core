@@ -9,6 +9,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
+import io.harness.connector.DelegateSelectable;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
@@ -22,6 +23,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -36,7 +38,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-public class VaultConnectorDTO extends ConnectorConfigDTO {
+public class VaultConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @SecretReference @ApiModelProperty(dataType = "string") private SecretRefData authToken;
   private String basePath;
   private String vaultUrl;
@@ -48,6 +50,7 @@ public class VaultConnectorDTO extends ConnectorConfigDTO {
   @SecretReference @ApiModelProperty(dataType = "string") private SecretRefData secretId;
   private boolean isDefault;
   private int secretEngineVersion;
+  private Set<String> delegateSelectors;
 
   public AccessType getAccessType() {
     return isNotEmpty(appRoleId) ? AccessType.APP_ROLE : AccessType.TOKEN;

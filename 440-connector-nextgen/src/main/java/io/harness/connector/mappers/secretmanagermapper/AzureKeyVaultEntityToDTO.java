@@ -21,6 +21,7 @@ public class AzureKeyVaultEntityToDTO
         .secretKey(SecretRefHelper.createSecretRef(connector.getSecretKeyRef()))
         .subscription(connector.getSubscription())
         .azureEnvironmentType(connector.getAzureEnvironmentType())
+        .delegateSelectors(connector.getDelegateSelectors())
         .build();
   }
 }
