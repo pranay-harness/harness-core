@@ -1300,22 +1300,22 @@ public class K8sStepHelper {
 
   public static boolean getParameterFieldBooleanValue(
       ParameterField<?> fieldValue, String fieldName, StepElementParameters stepElement) {
-    try {
-      return getBooleanParameterFieldValue(fieldValue);
-    } catch (Exception e) {
-      String message = String.format("%s for field %s in %s step with identifier: %s", e.getMessage(), fieldName,
-          stepElement.getType(), stepElement.getIdentifier());
-      throw new InvalidArgumentsException(message);
-    }
+    return getParameterFieldBooleanValue(fieldValue, fieldName,
+        String.format("%s step with identifier: %s", stepElement.getType(), stepElement.getIdentifier()));
   }
 
   public static boolean getParameterFieldBooleanValue(
       ParameterField<?> fieldValue, String fieldName, ManifestOutcome manifestOutcome) {
+    return getParameterFieldBooleanValue(fieldValue, fieldName,
+        String.format("%s manifest with identifier: %s", manifestOutcome.getType(), manifestOutcome.getIdentifier()));
+  }
+
+  public static boolean getParameterFieldBooleanValue(
+      ParameterField<?> fieldValue, String fieldName, String description) {
     try {
       return getBooleanParameterFieldValue(fieldValue);
     } catch (Exception e) {
-      String message = String.format("%s for field %s in %s manifest with identifier: %s", e.getMessage(), fieldName,
-          manifestOutcome.getType(), manifestOutcome.getIdentifier());
+      String message = String.format("%s for field %s in %s", e.getMessage(), fieldName, description);
       throw new InvalidArgumentsException(message);
     }
   }
