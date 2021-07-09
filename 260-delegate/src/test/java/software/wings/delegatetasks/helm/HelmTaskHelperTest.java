@@ -685,8 +685,8 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         HelmChartConfigParams.builder().chartName(chartName).chartVersion("0.1.0").build();
 
     Map<String, String> mapValuesFileContent = new HashMap<>();
-    mapValuesFileContent.put("values.yaml", valuesFileContent);
-    mapValuesFileContent.put("values1.yaml", valuesFileContentEnvOverride);
+    mapValuesFileContent.put("values1.yaml", valuesFileContent);
+    mapValuesFileContent.put("values2.yaml", valuesFileContentEnvOverride);
     String workingDirectory = prepareChartDirectoryWithValuesFileForTest(chartName, mapValuesFileContent);
 
     doNothing().when(helmTaskHelper).initHelm(anyString(), any(HelmVersion.class), anyLong());
