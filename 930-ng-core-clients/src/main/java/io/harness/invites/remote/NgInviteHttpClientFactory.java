@@ -21,8 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 public class NgInviteHttpClientFactory extends AbstractHttpClientFactory implements Provider<NgInviteClient> {
   public NgInviteHttpClientFactory(ServiceHttpClientConfig ngManagerConfig, String serviceSecret,
-      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
-    super(ngManagerConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId, false, ClientMode.PRIVILEGED);
+      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId,
+      ClientMode clientMode) {
+    super(ngManagerConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId, false, clientMode);
     log.info("secretManagerConfig {}", ngManagerConfig);
   }
 
