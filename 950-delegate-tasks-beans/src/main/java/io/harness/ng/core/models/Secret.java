@@ -68,8 +68,8 @@ public class Secret {
                  .field(SecretKeys.accountIdentifier)
                  .field(SecretKeys.orgIdentifier)
                  .field(SecretKeys.projectIdentifier)
-                 .field(SecretKeys.owner)
                  .field(SecretTextSpecKeys.secretManagerIdentifier)
+                 .field(SecretKeys.owner)
                  .descSortField(SecretKeys.lastModifiedAt)
                  .build())
         .build();
