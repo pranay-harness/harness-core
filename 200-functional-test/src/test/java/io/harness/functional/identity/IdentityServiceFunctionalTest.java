@@ -9,6 +9,7 @@ import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.testframework.framework.Setup;
@@ -20,7 +21,6 @@ import software.wings.security.HarnessUserAccountActions;
 import software.wings.security.JWT_CATEGORY;
 import software.wings.security.SecretManager;
 import software.wings.security.authentication.AccountSettingsResponse;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.oauth.OauthUserInfo;
 
 import com.google.inject.Inject;

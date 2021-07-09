@@ -16,6 +16,7 @@ import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
 
@@ -42,7 +43,6 @@ import software.wings.features.extractors.LdapSettingsAccountIdExtractor;
 import software.wings.features.extractors.SamlSettingsAccountIdExtractor;
 import software.wings.scheduler.LdapGroupSyncJob;
 import software.wings.scheduler.LdapGroupSyncJobHelper;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.oauth.OauthOptions;
 import software.wings.service.intfc.AccountService;

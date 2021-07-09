@@ -44,7 +44,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -182,8 +184,13 @@ public class InviteResource {
   verifyInviteViaNGAuthUi(@QueryParam("token") @NotNull String jwtToken,
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier, @QueryParam("email") @NotNull String email) {
     InviteAcceptResponse inviteAcceptResponse = inviteService.acceptInvite(jwtToken);
-    URI redirectURL = inviteService.getRedirectUrl(inviteAcceptResponse, email, jwtToken);
-    return Response.seeOther(redirectURL).build();
+    try {
+      String decodedEmail = URLDecoder.decode(email, "UTF-8");
+      URI redirectURL = inviteService.getRedirectUrl(inviteAcceptResponse, decodedEmail, jwtToken);
+      return Response.seeOther(redirectURL).build();
+    } catch (UnsupportedEncodingException e) {
+      throw new InvalidRequestException("Unable to decode email");
+    }
   }
 
   @GET
