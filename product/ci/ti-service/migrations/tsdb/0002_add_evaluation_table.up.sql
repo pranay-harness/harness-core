@@ -104,3 +104,4 @@ SELECT create_hypertable('evaluation', 'created_at');
 CREATE INDEX IF NOT EXISTS evaluation_idx1 ON evaluation(account_id, org_id, project_id, pipeline_id, build_id, created_at DESC);
 
 
+

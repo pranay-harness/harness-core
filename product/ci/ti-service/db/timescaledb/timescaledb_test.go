@@ -356,7 +356,7 @@ func Test_WriteSelectedTests(t *testing.T) {
 		WithArgs(account, org, project, pipeline, build, stage, step,
 			total, selected, src, new, updated).WillReturnResult(sqlmock.NewResult(0, 1))
 	tdb := &TimeScaleDb{Conn: db, Log: log, SelectionTable: table}
-	err = tdb.WriteSelectedTests(ctx, account, org, project, pipeline, build, stage, step, arg, false)
+	err = tdb.WriteSelectedTests(ctx, account, org, project, pipeline, build, stage, step, arg, 0, false)
 	assert.Nil(t, err, nil)
 }
 
@@ -395,18 +395,44 @@ func Test_WriteSelectedTests_WithUpsert(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	overviewQuery := fmt.Sprintf(
+		`
+		SELECT test_count, source_code_test, new_test, updated_test, time_taken_ms, time_saved_ms
+		FROM %s
+		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND step_id = $6 AND stage_id = $7`, table)
+	overviewQuery = regexp.QuoteMeta(overviewQuery)
+	col := []string{"test_count", "source_code_test", "new_test", "updated_test", "time_taken_ms", "time_saved_ms"}
+	rows := sqlmock.NewRows(col).
+		AddRow(300, 10, 5, 5, 40, 0)
+	mock.ExpectQuery(overviewQuery).WithArgs(account, org, project, pipeline, build, step, stage).WillReturnRows(rows)
+
+	avgQuery := fmt.Sprintf(
+		`
+				SELECT AVG(time_taken_ms/test_selected) FROM (SELECT test_selected, time_taken_ms FROM %s
+				WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND stage_id = $5 AND step_id = $6 AND time_taken_ms != 0 AND test_selected != 0 LIMIT 10000)
+				AS avg`, table)
+	avgQuery = regexp.QuoteMeta(avgQuery)
+	rows = sqlmock.NewRows([]string{"avg"}).AddRow(15)
+	mock.ExpectQuery(avgQuery).WithArgs(account, org, project, pipeline, stage, step).WillReturnRows(rows)
+
+	// Calculation of time saved:
+	// Get average = 15
+	// Get total test count = 300
+	// Get skipped tests = 280
+	// Time saved = 280 * 15 ms
+
 	stmt := fmt.Sprintf(
 		`
 				UPDATE %s
 				SET test_count = test_count + $1, test_selected = test_selected + $2,
-				source_code_test = source_code_test + $3, new_test = new_test + $4, updated_test = updated_test + $5
-				WHERE account_id = $6 AND org_id = $7 AND project_id = $8 AND pipeline_id = $9 AND build_id = $10 AND step_id = $11 AND stage_id = $12
+				source_code_test = source_code_test + $3, new_test = new_test + $4, updated_test = updated_test + $5, time_taken_ms = $6, time_saved_ms = $7
+				WHERE account_id = $8 AND org_id = $9 AND project_id = $10 AND pipeline_id = $11 AND build_id = $12 AND step_id = $13 AND stage_id = $14
 				`, table)
 	stmt = regexp.QuoteMeta(stmt)
 	mock.ExpectExec(stmt).
-		WithArgs(total, selected, src, new, updated,
+		WithArgs(total, selected, src, new, updated, 30, 280*15,
 			account, org, project, pipeline, build, step, stage).WillReturnResult(sqlmock.NewResult(0, 1))
 	tdb := &TimeScaleDb{Conn: db, Log: log, SelectionTable: table}
-	err = tdb.WriteSelectedTests(ctx, account, org, project, pipeline, build, stage, step, arg, true)
+	err = tdb.WriteSelectedTests(ctx, account, org, project, pipeline, build, stage, step, arg, 30, true)
 	assert.Nil(t, err, nil)
 }
