@@ -14,7 +14,9 @@ mkdir -p dist/manager ;
 
 cd dist/manager
 
-cp ${HOME}/.bazel-dirs/bin/360-cg-manager/module_deploy.jar rest-capsule.jar
+BAZEL_BIN=$(bazel info bazel-bin 2>/dev/null)
+
+cp ${BAZEL_BIN}/360-cg-manager/module_deploy.jar rest-capsule.jar
 cp ../../400-rest/src/main/resources/hazelcast.xml .
 cp ../../keystore.jks .
 cp ../../360-cg-manager/key.pem .
@@ -43,7 +45,7 @@ mkdir -p dist/cv-nextgen ;
 
 cd dist/cv-nextgen
 
-cp ${HOME}/.bazel-dirs/bin/300-cv-nextgen/module_deploy.jar cv-nextgen-capsule.jar
+cp ${BAZEL_BIN}/300-cv-nextgen/module_deploy.jar cv-nextgen-capsule.jar
 cp ../../300-cv-nextgen/keystore.jks .
 cp ../../300-cv-nextgen/cv-nextgen-config.yml .
 cp ../../alpn-boot-8.1.13.v20181017.jar .
@@ -67,7 +69,7 @@ mkdir -p dist/verification-service ;
 
 cd dist/verification-service
 
-cp ${HOME}/.bazel-dirs/bin/270-verification/module_deploy.jar verification-capsule.jar
+cp ${BAZEL_BIN}/270-verification/module_deploy.jar verification-capsule.jar
 cp ../../270-verification/keystore.jks .
 cp ../../270-verification/verification-config.yml .
 
@@ -88,7 +90,7 @@ mkdir -p dist/command-library-server ;
 
 cd dist/command-library-server
 
-cp ${HOME}/.bazel-dirs/bin/210-command-library-server/module_deploy.jar command-library-app-capsule.jar
+cp ${BAZEL_BIN}/210-command-library-server/module_deploy.jar command-library-app-capsule.jar
 cp ../../210-command-library-server/keystore.jks .
 cp ../../210-command-library-server/command-library-server-config.yml .
 cp ../../alpn-boot-8.1.13.v20181017.jar .
@@ -108,7 +110,7 @@ cd ../..
 
 mkdir -p dist/event-server ;
 cd dist/event-server
-cp ${HOME}/.bazel-dirs/bin/350-event-server/module_deploy.jar event-server-capsule.jar
+cp ${BAZEL_BIN}/350-event-server/module_deploy.jar event-server-capsule.jar
 cp ../../350-event-server/key.pem .
 cp ../../350-event-server/cert.pem .
 cp ../../350-event-server/event-service-config.yml .
@@ -126,7 +128,7 @@ cd ../..
 
 mkdir -p dist/batch-processing ;
 cd dist/batch-processing
-cp ${HOME}/.bazel-dirs/bin/280-batch-processing/module_deploy.jar batch-processing-capsule.jar
+cp ${BAZEL_BIN}/280-batch-processing/module_deploy.jar batch-processing-capsule.jar
 cp ../../280-batch-processing/batch-processing-config.yml .
 cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8-openjdk Dockerfile
 cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8-gcr-openjdk Dockerfile-gcr
@@ -142,7 +144,7 @@ cd ../..
 
 mkdir -p dist/change-data-capture ;
 cd dist/change-data-capture
-cp ${HOME}/.bazel-dirs/bin/110-change-data-capture/module_deploy.jar change-data-capture.jar
+cp ${BAZEL_BIN}/110-change-data-capture/module_deploy.jar change-data-capture.jar
 cp ../../110-change-data-capture/config.yml .
 cp ../../dockerization/change-data-capture/Dockerfile-change-data-capture-jenkins-k8-openjdk Dockerfile
 cp ../../dockerization/change-data-capture/Dockerfile-change-data-capture-jenkins-k8-gcr-openjdk Dockerfile-gcr
@@ -160,7 +162,7 @@ MODULE_NAME="340-ce-nextgen";
 FOLDER_NAME="ce-nextgen";
 mkdir -p dist/${FOLDER_NAME} ;
 cd dist/${FOLDER_NAME}
-cp ${HOME}/.bazel-dirs/bin/${MODULE_NAME}/module_deploy.jar ce-nextgen-capsule.jar
+cp ${BAZEL_BIN}/${MODULE_NAME}/module_deploy.jar ce-nextgen-capsule.jar
 cp ../../${MODULE_NAME}/keystore.jks .
 cp ../../${MODULE_NAME}/config.yml .
 cp ../../alpn-boot-8.1.13.v20181017.jar .
@@ -178,14 +180,14 @@ cd ../..
 
 mkdir -p dist/delegate
 cp 260-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
-#cp ${HOME}/.bazel-dirs/bin/260-delegate/module_deploy.jar dist/delegate/delegate-capsule.jar
+#cp ${BAZEL_BIN}/260-delegate/module_deploy.jar dist/delegate/delegate-capsule.jar
 cp 260-delegate/config-delegate.yml dist/delegate/config-delegate.yml
 jarsigner -storetype pkcs12 -keystore ${KEY_STORE} -storepass ${KEY_STORE_PASSWORD} dist/delegate/delegate-capsule.jar ${KEY_STORE_ALIAS}
 cp dist/delegate/delegate-capsule.jar delegate-${VERSION}.jar
 cp protocol.info dist/delegate/.
 
 mkdir -p dist/watcher
-cp ${HOME}/.bazel-dirs/bin/250-watcher/module_deploy.jar dist/watcher/watcher-capsule.jar
+cp ${BAZEL_BIN}/250-watcher/module_deploy.jar dist/watcher/watcher-capsule.jar
 jarsigner -storetype pkcs12 -keystore ${KEY_STORE} -storepass ${KEY_STORE_PASSWORD} dist/watcher/watcher-capsule.jar ${KEY_STORE_ALIAS}
 cp dist/watcher/watcher-capsule.jar watcher-${VERSION}.jar
 cp protocol.info dist/watcher/.
@@ -207,7 +209,7 @@ cp dist/disconnected_on_prem_k8s/disconnected_on_prem_k8s_installer_builder.tar.
 
 mkdir -p dist/test
 cd dist/test
-cp ${HOME}/.bazel-dirs/bin/160-model-gen-tool/module_deploy.jar model-gen-tool-capsule.jar
+cp ${BAZEL_BIN}/160-model-gen-tool/module_deploy.jar model-gen-tool-capsule.jar
 cp ../../160-model-gen-tool/config-datagen.yml .
 cd ../..
 
@@ -228,7 +230,7 @@ cd ../..
 mkdir -p dist/ng-manager
 cd dist/ng-manager
 
-cp ${HOME}/.bazel-dirs/bin/120-ng-manager/module_deploy.jar ng-manager-capsule.jar
+cp ${BAZEL_BIN}/120-ng-manager/module_deploy.jar ng-manager-capsule.jar
 cp ../../120-ng-manager/config.yml .
 cp ../../keystore.jks .
 cp ../../120-ng-manager/key.pem .
@@ -252,7 +254,7 @@ cd ../..
 
 mkdir -p dist/ci-manager
 cd dist/ci-manager
-cp ${HOME}/.bazel-dirs/bin/310-ci-manager/module_deploy.jar ci-manager-capsule.jar
+cp ${BAZEL_BIN}/310-ci-manager/module_deploy.jar ci-manager-capsule.jar
 cp ../../310-ci-manager/ci-manager-config.yml .
 cp ../../keystore.jks .
 cp ../../310-ci-manager/key.pem .
@@ -277,7 +279,7 @@ cd ../..
 mkdir -p dist/platform-service
 cd dist/platform-service
 
-cp ${HOME}/.bazel-dirs/bin/820-platform-service/module_deploy.jar platform-service-capsule.jar
+cp ${BAZEL_BIN}/820-platform-service/module_deploy.jar platform-service-capsule.jar
 cp ../../820-platform-service/config.yml .
 cp ../../820-platform-service/keystore.jks .
 cp ../../820-platform-service/key.pem .
@@ -299,7 +301,7 @@ cd ../..
 mkdir -p dist/pipeline-service
 cd dist/pipeline-service
 
-cp ${HOME}/.bazel-dirs/bin/800-pipeline-service/module_deploy.jar pipeline-service-capsule.jar
+cp ${BAZEL_BIN}/800-pipeline-service/module_deploy.jar pipeline-service-capsule.jar
 cp ../../800-pipeline-service/config.yml .
 cp ../../800-pipeline-service/keystore.jks .
 cp ../../800-pipeline-service/key.pem .
@@ -324,7 +326,7 @@ cd ../..
 mkdir -p dist/eventsapi-monitor
 cd dist/eventsapi-monitor
 
-cp ${HOME}/.bazel-dirs/bin/950-events-framework-monitor/module_deploy.jar eventsapi-monitor-capsule.jar
+cp ${BAZEL_BIN}/950-events-framework-monitor/module_deploy.jar eventsapi-monitor-capsule.jar
 cp ../../950-events-framework-monitor/config.yml .
 cp ../../950-events-framework-monitor/redis/* .
 cp ../../alpn-boot-8.1.13.v20181017.jar .
@@ -344,7 +346,7 @@ cd ../..
 mkdir -p dist/accesscontrol-service
 cd dist/accesscontrol-service
 
-cp ${HOME}/.bazel-dirs/bin/925-access-control-service/module_deploy.jar accesscontrol-service-capsule.jar
+cp ${BAZEL_BIN}/925-access-control-service/module_deploy.jar accesscontrol-service-capsule.jar
 cp ../../925-access-control-service/config.yml .
 cp ../../925-access-control-service/keystore.jks .
 cp ../../alpn-boot-8.1.13.v20181017.jar .

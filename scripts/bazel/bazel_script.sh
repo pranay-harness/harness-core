@@ -3,19 +3,20 @@
 set -ex
 
 local_repo=${HOME}/.m2/repository
-BAZEL_ARGUMENTS=
+
 if [ "${PLATFORM}" == "jenkins" ]; then
-  bazelrc=--bazelrc=bazelrc.remote
+  if [ ! -e .bazelrc ]
+  then
+    echo try-import bazelrc.remote > .bazelrc
+  fi
   local_repo=/root/.m2/repository
   if [ ! -z "${DISTRIBUTE_TESTING_WORKER}" ]; then
     bash scripts/bazel/testDistribute.sh
   fi
 fi
 
-BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --announce_rc"
-
-BAZEL_DIRS=${HOME}/.bazel-dirs
-BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --experimental_convenience_symlinks=normal --symlink_prefix=${BAZEL_DIRS}/"
+BAZEL_OUT=$(bazel info output_path 2>/dev/null)
+BAZEL_BIN=$(bazel info bazel-bin 2>/dev/null)
 
 if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
   local_repo=${OVERRIDE_LOCAL_M2}
@@ -27,26 +28,26 @@ if [[ ! -z "${CACHE_TEST_RESULTS}" ]]; then
   export CACHE_TEST_RESULTS_ARG=--cache_test_results=${CACHE_TEST_RESULTS}
 fi
 
-bazel ${bazelrc} build ${BAZEL_ARGUMENTS}  //:resource
-cat ${BAZEL_DIRS}/out/stable-status.txt
-cat ${BAZEL_DIRS}/out/volatile-status.txt
+bazel build   //:resource
+cat ${BAZEL_OUT}/stable-status.txt
+cat ${BAZEL_OUT}/volatile-status.txt
 
 if [ "${RUN_BAZEL_TESTS}" == "true" ]; then
-  bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... \
-  && bazel ${bazelrc} test ${CACHE_TEST_RESULTS_ARG} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going ${BAZEL_ARGUMENTS} -- \
+  bazel build  -- //... -//product/... -//commons/... \
+    && bazel test ${CACHE_TEST_RESULTS_ARG} --define=HARNESS_ARGS=${HARNESS_ARGS} --keep_going  -- \
   //... -//product/... -//commons/... -//200-functional-test/... -//190-deployment-functional-tests/...
   exit $?
 fi
 
 if [ "${RUN_CHECKS}" == "true" ]; then
   TARGETS=$(bazel query 'attr(tags, "checkstyle", //...:*)')
-  bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -k ${TARGETS}
+  bazel build  -k ${TARGETS}
   exit $?
 fi
 
 if [ "${RUN_PMDS}" == "true" ]; then
   TARGETS=$(bazel query 'attr(tags, "pmd", //...:*)')
-  bazel ${bazelrc} build ${BAZEL_ARGUMENTS} -k ${TARGETS}
+  bazel build  -k ${TARGETS}
   exit $?
 fi
 
@@ -181,7 +182,7 @@ BAZEL_MODULES="\
   //product/ci/scm/proto:all \
 "
 
-bazel ${bazelrc} build $BAZEL_MODULES `bazel query "//...:*" | grep "module_deploy.jar"` ${BAZEL_ARGUMENTS} --remote_download_outputs=all
+bazel build $BAZEL_MODULES `bazel query "//...:*" | grep "module_deploy.jar"`  --remote_download_outputs=all
 
 build_bazel_module() {
   module=$1
@@ -192,9 +193,9 @@ build_bazel_module() {
     exit 1
   fi
 
-  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${module}/libmodule.jar"; then
+  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT.jar" "${BAZEL_BIN}/${module}/libmodule.jar"; then
     mvn -B install:install-file \
-      -Dfile=${BAZEL_DIRS}/bin/${module}/libmodule.jar \
+      -Dfile=${BAZEL_BIN}/${module}/libmodule.jar \
       -DgroupId=software.wings \
       -DartifactId=${module} \
       -Dversion=0.0.1-SNAPSHOT \
@@ -214,9 +215,9 @@ build_bazel_tests() {
     exit 1
   fi
 
-  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT-tests.jar" "${BAZEL_DIRS}/bin/${module}/libsupporter-test.jar"; then
+  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT-tests.jar" "${BAZEL_BIN}/${module}/libsupporter-test.jar"; then
     mvn -B install:install-file \
-      -Dfile=${BAZEL_DIRS}/bin/${module}/libsupporter-test.jar \
+      -Dfile=${BAZEL_BIN}/${module}/libsupporter-test.jar \
       -DgroupId=software.wings \
       -DartifactId=${module} \
       -Dversion=0.0.1-SNAPSHOT \
@@ -233,7 +234,7 @@ build_bazel_application() {
   BAZEL_MODULE="//${module}:module"
   BAZEL_DEPLOY_MODULE="//${module}:module_deploy.jar"
 
-  bazel ${bazelrc} build $BAZEL_MODULES ${BAZEL_ARGUMENTS}
+  bazel build $BAZEL_MODULES
 
   if ! grep -q "$BAZEL_MODULE" <<<"$BAZEL_MODULES"; then
     echo "$BAZEL_MODULE is not in the list of modules"
@@ -245,9 +246,9 @@ build_bazel_application() {
     exit 1
   fi
 
-  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${module}/module.jar"; then
+  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT.jar" "${BAZEL_BIN}/${module}/module.jar"; then
     mvn -B install:install-file \
-      -Dfile=${BAZEL_DIRS}/bin/${module}/module.jar \
+      -Dfile=${BAZEL_BIN}/${module}/module.jar \
       -DgroupId=software.wings \
       -DartifactId=${module} \
       -Dversion=0.0.1-SNAPSHOT \
@@ -257,9 +258,9 @@ build_bazel_application() {
       -DlocalRepositoryPath=${local_repo}
   fi
 
-  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT-capsule.jar" "${BAZEL_DIRS}/bin/${module}/module_deploy.jar"; then
+  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT-capsule.jar" "${BAZEL_BIN}/${module}/module_deploy.jar"; then
     mvn -B install:install-file \
-      -Dfile=${BAZEL_DIRS}/bin/${module}/module_deploy.jar \
+      -Dfile=${BAZEL_BIN}/${module}/module_deploy.jar \
       -DgroupId=software.wings \
       -DartifactId=${module} \
       -Dversion=0.0.1-SNAPSHOT \
@@ -277,7 +278,7 @@ build_bazel_application_module() {
   BAZEL_DEPLOY_MODULE="//${module}:module_deploy.jar"
 
   if [ "${BUILD_BAZEL_DEPLOY_JAR}" == "true" ]; then
-    bazel ${bazelrc} build $BAZEL_DEPLOY_MODULE ${BAZEL_ARGUMENTS}
+    bazel build $BAZEL_DEPLOY_MODULE
   fi
 
   if ! grep -q "$BAZEL_MODULE" <<<"$BAZEL_MODULES"; then
@@ -285,9 +286,9 @@ build_bazel_application_module() {
     exit 1
   fi
 
-  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${module}/module.jar"; then
+  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT.jar" "${BAZEL_BIN}/${module}/module.jar"; then
     mvn -B install:install-file \
-      -Dfile=${BAZEL_DIRS}/bin/${module}/module.jar \
+      -Dfile=${BAZEL_BIN}/${module}/module.jar \
       -DgroupId=software.wings \
       -DartifactId=${module} \
       -Dversion=0.0.1-SNAPSHOT \
@@ -318,9 +319,9 @@ build_proto_module() {
 
   bazel_library=$(echo ${module} | tr '-' '_')
 
-  if ! cmp -s "${local_repo}/software/wings/${module}-proto/0.0.1-SNAPSHOT/${module}-proto-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${modulePath}/lib${bazel_library}_java_proto.jar"; then
+  if ! cmp -s "${local_repo}/software/wings/${module}-proto/0.0.1-SNAPSHOT/${module}-proto-0.0.1-SNAPSHOT.jar" "${BAZEL_BIN}/${modulePath}/lib${bazel_library}_java_proto.jar"; then
     mvn -B install:install-file \
-      -Dfile=${BAZEL_DIRS}/bin/${modulePath}/lib${bazel_library}_java_proto.jar \
+      -Dfile=${BAZEL_BIN}/${modulePath}/lib${bazel_library}_java_proto.jar \
       -DgroupId=software.wings \
       -DartifactId=${module}-proto \
       -Dversion=0.0.1-SNAPSHOT \
@@ -433,4 +434,4 @@ build_java_proto_module 960-notification-beans
 build_proto_module ciengine product/ci/engine/proto
 build_proto_module ciscm product/ci/scm/proto
 
-bazel ${bazelrc} run ${BAZEL_ARGUMENTS} //001-microservice-intfc-tool:module | grep "Codebase Hash:" > protocol.info
+bazel run //001-microservice-intfc-tool:module | grep "Codebase Hash:" > protocol.info

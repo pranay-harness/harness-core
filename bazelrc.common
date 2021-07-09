@@ -2,6 +2,8 @@
 
 import bazelrc.gcp
 
+build --announce_rc
+
 build --java_language_version=8
 
 build --enable_platform_specific_config
