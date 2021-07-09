@@ -381,6 +381,7 @@ public class InviteServiceImpl implements InviteService {
         .orgIdentifier(invite.getOrgIdentifier())
         .projectIdentifier(invite.getProjectIdentifier())
         .inviteId(invite.getId())
+        .email(invite.getEmail())
         .build();
   }
 
@@ -549,7 +550,6 @@ public class InviteServiceImpl implements InviteService {
     uriBuilder.setPath(ACCEPT_INVITE_PATH);
     uriBuilder.setParameters(getParameterList(invite));
     uriBuilder.setFragment(null);
-    log.info("Accept invite url: {}", uriBuilder.toString());
     return uriBuilder.toString();
   }
 
