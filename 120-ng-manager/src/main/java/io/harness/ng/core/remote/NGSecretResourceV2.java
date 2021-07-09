@@ -356,8 +356,9 @@ public class NGSecretResourceV2 {
                     getProjectIdentifier(ngAccess.getProjectIdentifier(), secretScope), secretRefData.getIdentifier())
                 .orElse(null);
         secretPermissionValidator.checkForAccessOrThrow(
-            ResourceScope.of(
-                ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier()),
+            ResourceScope.of(ngAccess.getAccountIdentifier(),
+                getOrgIdentifier(ngAccess.getOrgIdentifier(), secretScope),
+                getProjectIdentifier(ngAccess.getProjectIdentifier(), secretScope)),
             Resource.of(SECRET_RESOURCE_TYPE, secretRefData.getIdentifier()), SECRET_ACCESS_PERMISSION,
             secret != null ? secret.getSecret().getOwner() : null);
 
