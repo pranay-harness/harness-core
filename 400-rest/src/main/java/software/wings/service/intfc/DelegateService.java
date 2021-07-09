@@ -82,8 +82,8 @@ public interface DelegateService extends OwnedByAccount {
   DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost, String verificationHost,
       DelegateSize delegateSize) throws IOException;
 
-  DelegateScripts getDelegateScripts(String accountId, String version, String managerHost, String verificationHost)
-      throws IOException;
+  DelegateScripts getDelegateScripts(String accountId, String version, String managerHost, String verificationHost,
+      String delegateName) throws IOException;
 
   String getLatestDelegateVersion(String accountId);
 
