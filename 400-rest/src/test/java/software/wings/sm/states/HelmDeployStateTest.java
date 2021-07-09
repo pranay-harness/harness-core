@@ -1009,10 +1009,13 @@ public class HelmDeployStateTest extends CategoryTest {
 
   private void testHandleAsyncResponseForHelmFetchTaskWithValuesInGit() {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    Map<String, List<String>> mapK8sValuesLocationToContents = new HashMap<>();
+    mapK8sValuesLocationToContents.put(K8sValuesLocation.Service.name(), singletonList("fileContent"));
     HelmValuesFetchTaskResponse response = HelmValuesFetchTaskResponse.builder()
                                                .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-                                               .valuesFileContent("fileContent")
+                                               .mapK8sValuesLocationToContent(mapK8sValuesLocationToContents)
                                                .build();
+
     Map<String, ResponseData> responseDataMap = ImmutableMap.of(ACTIVITY_ID, response);
 
     doReturn(appManifestMap)
