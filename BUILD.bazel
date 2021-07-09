@@ -179,7 +179,6 @@ modules = [
     "//960-ng-signup-beans",
     "//960-notification-beans",
     "//960-persistence",
-    "//960-recaster",
     "//960-yaml-sdk",
     "//970-api-services-beans",
     "//970-grpc",
@@ -187,6 +186,7 @@ modules = [
     "//970-rbac-core",
     "//970-telemetry-beans",
     "//980-commons",
+    "//980-recaster",
     #"//990-commons-test",
 ]
 
