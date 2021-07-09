@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.accesscontrol.PlatformPermissions.INVITE_PERMISSION_IDENTIFIER;
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USER_PERMISSION;
 import static io.harness.ng.core.invites.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.ng.core.invites.InviteType.USER_INITIATED_INVITE;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.FAIL;
@@ -170,7 +171,8 @@ public class InviteServiceImpl implements InviteService {
     if (invite == null) {
       return FAIL;
     }
-    checkPermissions(invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier());
+    checkPermissions(invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier(),
+        INVITE_PERMISSION_IDENTIFIER);
     preCreateInvite(invite);
     if (checkIfUserAlreadyAdded(invite)) {
       return InviteOperationResponse.USER_ALREADY_ADDED;
@@ -215,11 +217,14 @@ public class InviteServiceImpl implements InviteService {
 
   @Override
   public Optional<Invite> getInvite(String inviteId, boolean allowDeleted) {
-    if (allowDeleted) {
-      return inviteRepository.findById(inviteId);
-    } else {
-      return inviteRepository.findFirstByIdAndDeleted(inviteId, FALSE);
+    Optional<Invite> inviteOpt =
+        allowDeleted ? inviteRepository.findById(inviteId) : inviteRepository.findFirstByIdAndDeleted(inviteId, FALSE);
+    if (inviteOpt.isPresent()) {
+      Invite invite = inviteOpt.get();
+      checkPermissions(invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier(),
+          VIEW_USER_PERMISSION);
     }
+    return inviteOpt;
   }
 
   @Override
@@ -245,7 +250,8 @@ public class InviteServiceImpl implements InviteService {
     Optional<Invite> inviteOptional = getInvite(inviteId, false);
     if (inviteOptional.isPresent()) {
       Invite invite = inviteOptional.get();
-      checkPermissions(invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier());
+      checkPermissions(invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier(),
+          INVITE_PERMISSION_IDENTIFIER);
       Update update = new Update().set(InviteKeys.deleted, TRUE);
       Invite updatedInvite = inviteRepository.updateInvite(inviteId, update);
       if (updatedInvite != null) {
@@ -340,7 +346,8 @@ public class InviteServiceImpl implements InviteService {
   }
 
   private Invite resendInvite(Invite newInvite) {
-    checkPermissions(newInvite.getAccountIdentifier(), newInvite.getOrgIdentifier(), newInvite.getProjectIdentifier());
+    checkPermissions(newInvite.getAccountIdentifier(), newInvite.getOrgIdentifier(), newInvite.getProjectIdentifier(),
+        INVITE_PERMISSION_IDENTIFIER);
     Update update = new Update()
                         .set(InviteKeys.createdAt, new Date())
                         .set(InviteKeys.validUntil,
@@ -678,9 +685,10 @@ public class InviteServiceImpl implements InviteService {
     return inviteDTOs;
   }
 
-  private void checkPermissions(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  private void checkPermissions(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String permissionIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.of("USER", null), INVITE_PERMISSION_IDENTIFIER);
+        Resource.of("USER", null), permissionIdentifier);
   }
 
   private <T, S> S wrapperForTransactions(Function<T, S> function, T arg) {

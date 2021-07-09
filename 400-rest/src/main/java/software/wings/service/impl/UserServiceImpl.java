@@ -317,7 +317,7 @@ public class UserServiceImpl implements UserService {
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private ConfigurationController configurationController;
   @Inject private HtmlInputSanitizer userNameSanitizer;
-  @Inject private NgInviteClient ngInviteClient;
+  @Inject @Named("PRIVILEGED") private NgInviteClient ngInviteClient;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
   @Inject private AccessRequestService accessRequestService;
   @Inject private SegmentHelper segmentHelper;
