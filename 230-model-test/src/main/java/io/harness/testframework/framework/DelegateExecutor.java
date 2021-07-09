@@ -49,7 +49,7 @@ public class DelegateExecutor {
 
   @Inject private DelegateService delegateService;
 
-  public void ensureDelegate(Account account, String bearerToken, Class clazz)
+  public void waitForDelegate(Account account, String bearerToken, Class clazz)
       throws IOException, InterruptedException {
     long t = System.currentTimeMillis();
     while (!isHealthy(account.getUuid(), bearerToken) && System.currentTimeMillis() - t < 300000) {
@@ -61,7 +61,6 @@ public class DelegateExecutor {
     } else {
       log.info("Delegate healthy.");
     }
-    //      executeLocalDelegate(account, bearerToken, clazz)
   }
 
   private void executeLocalDelegate(Account account, String bearerToken, Class clazz) throws IOException {

@@ -136,7 +136,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     account = accountSetupService.ensureAccount();
     adminUser = Setup.loginUser(ADMIN_USER, "admin");
     bearerToken = adminUser.getToken();
-    delegateExecutor.ensureDelegate(account, bearerToken, AbstractFunctionalTest.class);
+    delegateExecutor.waitForDelegate(account, bearerToken, AbstractFunctionalTest.class);
     if (needCommandLibraryService()) {
       commandLibraryServiceExecutor.ensureCommandLibraryService(AbstractFunctionalTest.class);
     }
