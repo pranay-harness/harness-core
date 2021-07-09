@@ -195,6 +195,7 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 	if cgDir == "" {
 		return res, fmt.Errorf("cgDir not present in request")
 	}
+	timeMs := req.GetTimeMs()
 	files, err := h.getCgFiles(cgDir)
 	if err != nil {
 		return res, errors.Wrap(err, "failed to fetch files inside the directory")
@@ -244,7 +245,7 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 	if err != nil {
 		return res, errors.Wrap(err, "stage id not found")
 	}
-	err = client.UploadCg(org, project, pipeline, build, stage, step, repo, sha, source, target, encBytes)
+	err = client.UploadCg(org, project, pipeline, build, stage, step, repo, sha, source, target, timeMs, encBytes)
 	if err != nil {
 		return res, errors.Wrap(err, "failed to upload cg to ti server")
 	}
