@@ -434,7 +434,8 @@ public class K8sStepHelper {
         paths.add(getParameterFieldValue(gitstoreConfig.getFolderPath()));
         break;
       case ManifestType.Kustomize:
-        paths.add("");
+        // Set as repository root
+        paths.add("/");
         break;
 
       default:
