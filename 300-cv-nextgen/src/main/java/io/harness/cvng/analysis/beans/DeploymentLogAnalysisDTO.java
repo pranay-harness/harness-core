@@ -59,7 +59,7 @@ public class DeploymentLogAnalysisDTO {
     int label;
     ClusterType clusterType;
     int risk;
-    public Risk getRisk() {
+    public Risk getRiskLevel() {
       return Risk.valueOf(risk);
     }
     double score;
@@ -85,7 +85,7 @@ public class DeploymentLogAnalysisDTO {
   @Builder
   public static class ResultSummary {
     int risk;
-    public Risk getRisk() {
+    public Risk getRiskLevel() {
       return Risk.valueOf(risk);
     }
     double score;
