@@ -22,7 +22,7 @@ import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.annotations.Entity;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 /**
  * @author marklu on 9/27/19

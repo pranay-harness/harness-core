@@ -36,9 +36,9 @@ java_library(
         "@maven//:io_grpc_grpc_core",
         "@maven//:io_grpc_grpc_testing",
         "@maven//:junit_junit",
+        "@maven//:net_oneandone_reflections8_reflections8",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
-        "@maven//:org_reflections_reflections",
     ],
 )
 

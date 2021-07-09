@@ -11,9 +11,9 @@ java_library(
         "//999-annotations:module",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_guava_guava",
+        "@maven//:net_oneandone_reflections8_reflections8",
         "@maven//:org_modelmapper_modelmapper",
         "@maven//:org_projectlombok_lombok",
-        "@maven//:org_reflections_reflections",
         "@maven//:org_slf4j_slf4j_api",
     ],
 )

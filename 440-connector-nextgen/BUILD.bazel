@@ -34,7 +34,7 @@ shared_dependencies = [
     "@maven//:org_hibernate_hibernate_validator",
     "@maven//:org_modelmapper_modelmapper",
     "@maven//:org_mongodb_morphia_morphia",
-    "@maven//:org_reflections_reflections",
+    "@maven//:net_oneandone_reflections8_reflections8",
     "@maven//:org_slf4j_slf4j_api",
     "@maven//:org_springframework_data_spring_data_commons",
     "@maven//:org_springframework_data_spring_data_mongodb",

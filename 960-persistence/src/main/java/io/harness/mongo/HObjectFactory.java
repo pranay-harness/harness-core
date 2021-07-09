@@ -25,7 +25,7 @@ import org.mongodb.morphia.mapping.DefaultCreator;
 import org.mongodb.morphia.mapping.MappedField;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.mapping.MappingException;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 import org.slf4j.MDC;
 
 @Slf4j

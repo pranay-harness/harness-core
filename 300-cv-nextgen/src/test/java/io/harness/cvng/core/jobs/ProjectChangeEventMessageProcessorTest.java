@@ -55,7 +55,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 @OwnedBy(HarnessTeam.CV)
 public class ProjectChangeEventMessageProcessorTest extends CvNextGenTestBase {
   @Inject private ProjectChangeEventMessageProcessor projectChangeEventMessageProcessor;

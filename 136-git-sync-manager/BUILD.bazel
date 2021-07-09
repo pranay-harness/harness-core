@@ -53,7 +53,7 @@ java_library(
         "@maven//:org_springframework_spring_tx",
         "@maven//:org_springframework_spring_web",
         "@maven//:org_mongodb_morphia_morphia",
-        "@maven//:org_reflections_reflections",
+        "@maven//:net_oneandone_reflections8_reflections8",
         "@maven//:org_slf4j_slf4j_api",
     ],
 )

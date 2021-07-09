@@ -38,7 +38,7 @@ import javax.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import org.dataloader.DataLoaderRegistry;
 import org.hibernate.validator.constraints.NotBlank;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 import org.springframework.stereotype.Service;
 
 @Api("graphql")

@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 @Slf4j
 @Singleton

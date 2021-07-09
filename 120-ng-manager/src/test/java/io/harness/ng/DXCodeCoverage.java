@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 public class DXCodeCoverage extends CategoryTest {
   @Test

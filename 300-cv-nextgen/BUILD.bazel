@@ -85,7 +85,7 @@ shared_dependencies = [
     "@maven//:org_glassfish_jersey_core_jersey_server",
     "@maven//:org_hibernate_hibernate_validator",
     "@maven//:org_mongodb_morphia_morphia",
-    "@maven//:org_reflections_reflections",
+    "@maven//:net_oneandone_reflections8_reflections8",
     "@maven//:org_slf4j_slf4j_api",
     "@maven//:ru_vyarus_guice_validator",
     "@maven//:io_harness_cv_data_collection_dsl",

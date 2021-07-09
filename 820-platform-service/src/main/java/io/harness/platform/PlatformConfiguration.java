@@ -25,7 +25,7 @@ import java.util.List;
 import javax.ws.rs.Path;
 import lombok.Getter;
 import lombok.Setter;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)

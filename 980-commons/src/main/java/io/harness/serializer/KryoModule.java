@@ -11,7 +11,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 @Slf4j
 public class KryoModule extends AbstractModule {

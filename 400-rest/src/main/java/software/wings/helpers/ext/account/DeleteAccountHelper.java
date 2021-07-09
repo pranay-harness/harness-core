@@ -50,7 +50,7 @@ import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.quartz.SchedulerException;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 @OwnedBy(PL)
 @Slf4j

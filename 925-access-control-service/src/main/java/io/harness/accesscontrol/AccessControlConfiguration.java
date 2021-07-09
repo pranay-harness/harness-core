@@ -36,7 +36,7 @@ import javax.ws.rs.Path;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 @OwnedBy(PL)
 @Getter

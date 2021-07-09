@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 /**
  * The translation layer for conversion from PipelineService json string to sdk objects

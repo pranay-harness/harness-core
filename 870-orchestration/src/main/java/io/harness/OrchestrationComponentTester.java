@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 @Slf4j
 public class OrchestrationComponentTester {

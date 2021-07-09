@@ -40,7 +40,7 @@ import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 @Singleton
 @Slf4j

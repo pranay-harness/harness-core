@@ -18,7 +18,7 @@ import java.util.HashSet;
 import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 public class CVNGMorphiaRegistrarTest extends CvNextGenTestBase {
   @Inject private CVNextGenMorphiaRegister cvNextGenMorphiaRegister;

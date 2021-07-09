@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 /**
  * Service class locator for all the artifact streams.

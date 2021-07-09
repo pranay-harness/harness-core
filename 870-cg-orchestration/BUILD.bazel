@@ -46,7 +46,7 @@ java_library(
         "@maven//:org_awaitility_awaitility",
         "@maven//:org_jooq_joor",
         "@maven//:org_mockito_mockito_core",
-        "@maven//:org_reflections_reflections",
+        "@maven//:net_oneandone_reflections8_reflections8",
     ],
 )
 

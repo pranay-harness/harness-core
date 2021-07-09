@@ -35,7 +35,7 @@ import javax.ws.rs.Path;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 @Slf4j
 @OwnedBy(DX)

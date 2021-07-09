@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @OwnedBy(PL)

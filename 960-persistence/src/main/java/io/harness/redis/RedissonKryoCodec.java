@@ -20,7 +20,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import org.redisson.codec.KryoCodec;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 @OwnedBy(PL)
 public class RedissonKryoCodec extends KryoCodec {

@@ -34,7 +34,7 @@ import javax.ws.rs.Path;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.glassfish.jersey.server.model.Resource;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 @Data
 @EqualsAndHashCode(callSuper = false)

@@ -30,7 +30,7 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 public class OrganisationChangeEventMessageProcessorTest extends CvNextGenTestBase {
   @Inject private OrganizationChangeEventMessageProcessor organizationChangeEventMessageProcessor;

@@ -41,7 +41,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;

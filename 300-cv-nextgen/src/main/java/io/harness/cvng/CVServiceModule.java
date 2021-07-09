@@ -209,7 +209,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 /**
  * Guice Module for initializing all beans.

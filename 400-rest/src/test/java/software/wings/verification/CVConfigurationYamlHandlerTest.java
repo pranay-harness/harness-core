@@ -32,7 +32,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 public class CVConfigurationYamlHandlerTest extends WingsBaseTest {
   @Spy private YamlHelper yamlHelper;

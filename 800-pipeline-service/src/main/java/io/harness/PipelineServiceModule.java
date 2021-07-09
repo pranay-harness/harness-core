@@ -140,7 +140,7 @@ import javax.cache.expiry.AccessedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.converters.TypeConverter;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 import org.springframework.core.convert.converter.Converter;
 
 @OwnedBy(PIPELINE)

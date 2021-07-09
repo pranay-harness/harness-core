@@ -29,8 +29,8 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.regex.Pattern;
-import org.reflections.Reflections;
-import org.reflections.scanners.ResourcesScanner;
+import org.reflections8.Reflections;
+import org.reflections8.scanners.ResourcesScanner;
 
 @Singleton
 @TargetModule(HarnessModule._380_CG_GRAPHQL)

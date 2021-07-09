@@ -41,9 +41,9 @@ java_library(
         "//:lombok",
         "//990-commons-test:module",
         "@maven//:junit_junit",
+        "@maven//:net_oneandone_reflections8_reflections8",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
-        "@maven//:org_reflections_reflections",
     ],
 )
 

@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 public class VisitorFieldRegistrarTest extends WalkTreeTestBase {
   @Inject Map<String, VisitableFieldRegistrar> visitableFieldRegistrarMap;

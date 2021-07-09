@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 @Slf4j
 public class QueriesTest extends DelegateServiceTestBase {

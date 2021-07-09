@@ -27,7 +27,7 @@ import javax.ws.rs.Path;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.reflections.Reflections;
+import org.reflections8.Reflections;
 
 @Data
 @Builder

@@ -44,8 +44,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.ThreadContext;
-import org.reflections.Reflections;
-import org.reflections.scanners.ResourcesScanner;
+import org.reflections8.Reflections;
+import org.reflections8.scanners.ResourcesScanner;
 
 @Slf4j
 public class MetricServiceImpl implements MetricService {
