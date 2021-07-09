@@ -77,6 +77,7 @@ BAZEL_MODULES="\
   //810-ng-triggers:module \
   //815-cg-triggers:module \
   //820-platform-service:module \
+  //820-platform-service:module_deploy.jar \
   //830-notification-service:module \
   //830-resource-group:module \
   //835-notification-senders:module \
@@ -332,6 +333,7 @@ build_proto_module() {
 }
 
 build_bazel_application 940-notification-client
+build_bazel_application 820-platform-service
 
 build_bazel_module 320-ci-execution
 build_bazel_module 330-ci-beans
