@@ -442,10 +442,6 @@ aeriform("//960-persistence:supporter-test")
 
 aeriform("//960-persistence:tests")
 
-aeriform("//960-recaster:module")
-
-aeriform("//960-recaster:tests")
-
 aeriform("//960-yaml-sdk:module")
 
 aeriform("//960-yaml-sdk:tests")
@@ -469,6 +465,10 @@ aeriform("//970-telemetry-beans:module")
 aeriform("//980-commons:module")
 
 aeriform("//980-commons:tests")
+
+aeriform("//980-recaster:module")
+
+aeriform("//980-recaster:tests")
 
 aeriform("//990-commons-test:abstract-module")
 
