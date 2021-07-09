@@ -657,6 +657,7 @@ public class HelmDeployState extends State {
               context, appManifestMap, executionResponse);
       helmDeployStateExecutionData.getValuesFiles().putAll(valuesFiles);
     }
+
     helmDeployStateExecutionData.setZippedManifestFileId(executionResponse.getZippedManifestFileId());
 
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
