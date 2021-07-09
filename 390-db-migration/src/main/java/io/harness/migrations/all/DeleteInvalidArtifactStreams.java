@@ -1,6 +1,7 @@
 package io.harness.migrations.all;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.migrations.Migration;
@@ -8,7 +9,9 @@ import io.harness.persistence.HIterator;
 
 import software.wings.beans.Account;
 import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
@@ -43,7 +46,7 @@ public class DeleteInvalidArtifactStreams implements Migration {
     Set<String> artifactStreamIdSet = new HashSet<>();
     try (HIterator<ArtifactStream> artifactStreams =
              new HIterator<>(wingsPersistence.createQuery(ArtifactStream.class)
-                                 .filter(ArtifactStream.ArtifactStreamKeys.accountId, account.getUuid())
+                                 .filter(ArtifactStreamKeys.accountId, account.getUuid())
                                  .fetch())) {
       log.info(String.join(DEBUG_LINE, " Fetching artifact streams for account ", account.getAccountName(), "with Id",
           account.getUuid()));
@@ -56,9 +59,8 @@ public class DeleteInvalidArtifactStreams implements Migration {
           String.join(DEBUG_LINE, " Exception while fetching artifact streams with account Id ", account.getUuid()));
     }
     Set<Service> serviceSet = new HashSet<>();
-    try (HIterator<Service> services = new HIterator<>(wingsPersistence.createQuery(Service.class)
-                                                           .filter(Service.ServiceKeys.accountId, account.getUuid())
-                                                           .fetch())) {
+    try (HIterator<Service> services = new HIterator<>(
+             wingsPersistence.createQuery(Service.class).filter(ServiceKeys.accountId, account.getUuid()).fetch())) {
       log.info(String.join(
           DEBUG_LINE, " Fetching services for account ", account.getAccountName(), "with Id", account.getUuid()));
       while (services.hasNext()) {
@@ -78,13 +80,13 @@ public class DeleteInvalidArtifactStreams implements Migration {
   @VisibleForTesting
   void migrate(Set<String> artifactStreamIdSet, Set<Service> serviceSet) {
     try {
-      if (artifactStreamIdSet != null && !artifactStreamIdSet.isEmpty()) {
+      if (isNotEmpty(artifactStreamIdSet)) {
         for (Service service : serviceSet) {
           List<String> artifactStreamIds = service.getArtifactStreamIds();
-          if (artifactStreamIds != null && !artifactStreamIds.isEmpty()) {
+          if (isNotEmpty(artifactStreamIds)) {
             artifactStreamIds.removeIf(id -> !artifactStreamIdSet.contains(id));
             wingsPersistence.updateField(
-                Service.class, service.getUuid(), Service.ServiceKeys.artifactStreamIds, artifactStreamIds);
+                Service.class, service.getUuid(), ServiceKeys.artifactStreamIds, artifactStreamIds);
           }
         }
       }
