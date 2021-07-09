@@ -70,7 +70,6 @@ public class HelmValuesFetchTaskTest extends WingsBaseTest {
     verify(helmTaskHelper, times(1)).getValuesYamlFromChart(any(HelmChartConfigParams.class), anyLong(), any(), any());
     assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     assertThat(response.getMapK8sValuesLocationToContent()).isEqualTo(mapK8sValuesLocationToContent);
-    assertThat(response.getValuesFileContent()).isNull();
 
     doReturn(null)
         .when(helmTaskHelper)
@@ -79,7 +78,6 @@ public class HelmValuesFetchTaskTest extends WingsBaseTest {
     HelmValuesFetchTaskResponse emptyResponse = task.run(parameters);
     verify(helmTaskHelper, times(2)).getValuesYamlFromChart(any(HelmChartConfigParams.class), anyLong(), any(), any());
     assertThat(emptyResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-    assertThat(emptyResponse.getValuesFileContent()).isEqualTo(null);
   }
 
   @Test
