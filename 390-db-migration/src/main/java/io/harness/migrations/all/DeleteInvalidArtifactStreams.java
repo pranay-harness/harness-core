@@ -10,12 +10,13 @@ import software.wings.beans.Account;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.ServiceResourceService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import graphql.VisibleForTesting;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -24,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 public class DeleteInvalidArtifactStreams implements Migration {
   private static final String DEBUG_LINE = "[DELETE_INVALID_ARTIFACT_STREAMS_MIGRATION]: ";
   @Inject private WingsPersistence wingsPersistence;
-  @Inject ServiceResourceService serviceResourceService;
   @Override
   public void migrate() {
     log.info(String.join(DEBUG_LINE, "Starting Migration"));
@@ -41,7 +41,6 @@ public class DeleteInvalidArtifactStreams implements Migration {
 
   private void migrateInvalidArtifactStreams(Account account) {
     Set<String> artifactStreamIdSet = new HashSet<>();
-    List<ArtifactStream> artifactStreamList = new LinkedList<>();
     try (HIterator<ArtifactStream> artifactStreams =
              new HIterator<>(wingsPersistence.createQuery(ArtifactStream.class)
                                  .filter(ArtifactStream.ArtifactStreamKeys.accountId, account.getUuid())
@@ -50,49 +49,45 @@ public class DeleteInvalidArtifactStreams implements Migration {
           account.getUuid()));
       while (artifactStreams.hasNext()) {
         ArtifactStream artifactStream = artifactStreams.next();
-        artifactStreamIdSet.add(artifactStream.getArtifactStreamId());
-        artifactStreamList.add(artifactStream);
+        artifactStreamIdSet.add(artifactStream.getUuid());
       }
     } catch (Exception ex) {
       log.error(
           String.join(DEBUG_LINE, " Exception while fetching artifact streams with account Id ", account.getUuid()));
     }
-    try {
-      Set<String> serviceIds = new HashSet<>();
-      for (ArtifactStream artifactStream : artifactStreamList) {
-        String serviceId = artifactStream.getServiceId();
-        if (serviceIds.contains(serviceId)) {
-          continue;
-        }
-        serviceIds.add(serviceId);
-        Service service = serviceResourceService.get(artifactStream.getAppId(), serviceId);
-        if (service == null) {
-          log.info("Artifact Stream with id {} of non existent service id {} found", artifactStream.getUuid(),
-              artifactStream.getServiceId());
-        } else {
-          List<String> artifactStreamIds = service.getArtifactStreamIds();
-          for (String id : artifactStreamIds) {
-            if (!(artifactStreamIdSet.contains(id))) {
-              artifactStreamIds.remove(id);
-            }
-          }
-          wingsPersistence.updateField(
-              Service.class, serviceId, Service.ServiceKeys.artifactStreamIds, artifactStreamIds);
+    Set<Service> serviceSet = new HashSet<>();
+    try (HIterator<Service> services = new HIterator<>(wingsPersistence.createQuery(Service.class)
+                                                           .filter(Service.ServiceKeys.accountId, account.getUuid())
+                                                           .fetch())) {
+      log.info(String.join(
+          DEBUG_LINE, " Fetching services for account ", account.getAccountName(), "with Id", account.getUuid()));
+      while (services.hasNext()) {
+        Service service = services.next();
+        if (service != null) {
+          serviceSet.add(service);
         }
       }
-      artifactStreamIdSet.clear();
-      serviceIds.clear();
-      artifactStreamList.clear();
-    } catch (RuntimeException e) {
-      log.error(String.join(DEBUG_LINE, "Failed With RuntimeException ", e.getMessage()));
-    } catch (Exception e) {
-      log.error(String.join(DEBUG_LINE, "Failed With Exception ", e.getMessage()));
+    } catch (Exception ex) {
+      log.error(String.join(DEBUG_LINE, " Exception while fetching services with account Id ", account.getUuid()));
     }
+    migrate(artifactStreamIdSet, serviceSet);
+    artifactStreamIdSet.clear();
+    serviceSet.clear();
   }
 
   @VisibleForTesting
-  void migrate(Set<String> artifactStreamIdSet) {
+  void migrate(Set<String> artifactStreamIdSet, Set<Service> serviceSet) {
     try {
+      if (artifactStreamIdSet != null && !artifactStreamIdSet.isEmpty()) {
+        for (Service service : serviceSet) {
+          List<String> artifactStreamIds = service.getArtifactStreamIds();
+          if (artifactStreamIds != null && !artifactStreamIds.isEmpty()) {
+            artifactStreamIds.removeIf(id -> !artifactStreamIdSet.contains(id));
+            wingsPersistence.updateField(
+                Service.class, service.getUuid(), Service.ServiceKeys.artifactStreamIds, artifactStreamIds);
+          }
+        }
+      }
     } catch (RuntimeException e) {
       log.error(String.join(DEBUG_LINE, "Failed With RuntimeException ", e.getMessage()));
     } catch (Exception e) {
