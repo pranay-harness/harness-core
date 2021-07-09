@@ -117,7 +117,6 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
     do {
       response = execute(connectorResourceClient.listConnectors(accountId, null, null, page, size,
           ConnectorFilterPropertiesDTO.builder()
-              .types(Arrays.asList(ConnectorType.CE_AWS))
               .ccmConnectorFilter(
                   CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING)).build())
               .build(),
