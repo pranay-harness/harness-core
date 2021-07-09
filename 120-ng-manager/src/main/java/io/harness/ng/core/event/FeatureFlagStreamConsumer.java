@@ -10,6 +10,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
+import io.harness.queue.QueueController;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
 
@@ -30,15 +31,18 @@ public class FeatureFlagStreamConsumer implements Runnable {
   private static final int WAIT_TIME_IN_SECONDS = 30;
   private final Consumer eventConsumer;
   private final List<MessageListener> messageListenersList;
+  private final QueueController queueController;
 
   @Inject
   public FeatureFlagStreamConsumer(@Named(FEATURE_FLAG_STREAM) Consumer eventConsumer,
       @Named(ORGANIZATION_ENTITY + FEATURE_FLAG_STREAM) MessageListener organizationFeatureFlagStreamListener,
-      @Named(CONNECTOR_ENTITY + FEATURE_FLAG_STREAM) MessageListener connectorFeatureFlagStreamListener) {
+      @Named(CONNECTOR_ENTITY + FEATURE_FLAG_STREAM) MessageListener connectorFeatureFlagStreamListener,
+      QueueController queueController) {
     this.eventConsumer = eventConsumer;
     messageListenersList = new ArrayList<>();
     messageListenersList.add(organizationFeatureFlagStreamListener);
     messageListenersList.add(connectorFeatureFlagStreamListener);
+    this.queueController = queueController;
   }
 
   @Override
@@ -47,6 +51,12 @@ public class FeatureFlagStreamConsumer implements Runnable {
     SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
     try {
       while (!Thread.currentThread().isInterrupted()) {
+        if (queueController.isNotPrimary()) {
+          log.info(
+              "Feature Flag Stream Consumer is not running on primary deployment, will try again after some time...");
+          TimeUnit.SECONDS.sleep(30);
+          continue;
+        }
         readEventsFrameworkMessages();
       }
     } catch (Exception ex) {
