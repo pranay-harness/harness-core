@@ -10,10 +10,11 @@ import lombok.experimental.FieldDefaults;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class MonitoredServiceListDTO {
+public class MonitoredServiceListItemDTO {
   String name;
   String identifier;
   String serviceRef;
   String environmentRef;
   MonitoredServiceType type;
+  boolean healthMonitoringEnabled;
 }

@@ -75,6 +75,7 @@ public final class MonitoredService
   List<String> healthSourceIdentifiers;
   private long lastUpdatedAt;
   private long createdAt;
+  private boolean enabled;
 
   public List<String> getHealthSourceIdentifiers() {
     if (healthSourceIdentifiers == null) {
