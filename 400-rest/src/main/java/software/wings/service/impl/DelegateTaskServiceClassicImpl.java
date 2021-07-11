@@ -267,7 +267,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
   private LoadingCache<String, String> logStreamingAccountTokenCache =
       CacheBuilder.newBuilder()
           .maximumSize(1000)
-          .expireAfterWrite(5, TimeUnit.MINUTES)
+          .expireAfterWrite(24, TimeUnit.HOURS)
           .build(new CacheLoader<String, String>() {
             @Override
             public String load(String accountId) throws IOException {
