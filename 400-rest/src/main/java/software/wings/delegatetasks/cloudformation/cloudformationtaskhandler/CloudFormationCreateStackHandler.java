@@ -173,7 +173,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
     }
     CloudFormationCommandExecutionResponse cloudFormationCommandExecutionResponse = builder.build();
-    if (!SUCCESS.equals(cloudFormationCommandExecutionResponse.getCommandExecutionStatus())) {
+    if (!SUCCESS.equals(cloudFormationCommandExecutionResponse.getCommandExecutionStatus())
+        && cloudFormationCommandExecutionResponse.getCommandResponse() != null) {
       String responseStackStatus =
           ((CloudFormationCreateStackResponse) cloudFormationCommandExecutionResponse.getCommandResponse())
               .getStackStatus();
