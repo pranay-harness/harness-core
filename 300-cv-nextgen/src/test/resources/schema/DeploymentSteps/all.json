@@ -394,17 +394,22 @@
         {
           "type": "object",
           "required": [
-            "type",
-            "verificationJobRef"
+            "healthSources",
+            "monitoredServiceRef",
+            "type"
           ],
           "properties": {
-            "description": {
-              "$ref": "#/definitions/ParameterFieldString"
+            "healthSources": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HealthSource"
+              }
+            },
+            "monitoredServiceRef": {
+              "type": "string",
+              "description": "It supports runtime input and expression"
             },
             "type": {
-              "type": "string"
-            },
-            "verificationJobRef": {
               "type": "string"
             }
           }
@@ -445,14 +450,14 @@
           "if": {
             "properties": {
               "type": {
-                "const": "Health"
+                "const": "LoadTest"
               }
             }
           },
           "then": {
             "properties": {
               "spec": {
-                "$ref": "#/definitions/HealthVerificationJobSpec"
+                "$ref": "#/definitions/TestVerificationJobSpec"
               }
             }
           }
@@ -461,14 +466,14 @@
           "if": {
             "properties": {
               "type": {
-                "const": "Test"
+                "const": "Rolling"
               }
             }
           },
           "then": {
             "properties": {
               "spec": {
-                "$ref": "#/definitions/TestVerificationJobSpec"
+                "$ref": "#/definitions/ImprovisedCanaryVerificationJobSpec"
               }
             }
           }
@@ -702,16 +707,17 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "HealthVerificationJobSpec": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/VerificationJobSpec"
-        },
-        {
-          "type": "object",
-          "properties": { }
-        }
+    "HealthSource": {
+      "type": "object",
+      "required": [
+        "identifier"
       ],
+      "properties": {
+        "identifier": {
+          "type": "string",
+          "description": "Health Source identifier"
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "HoldingScope": {
@@ -821,20 +827,28 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "InputSetValidator": {
-      "type": "object",
-      "properties": {
-        "parameters": {
-          "type": "string"
+    "ImprovisedCanaryVerificationJobSpec": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/VerificationJobSpec"
         },
-        "validatorType": {
-          "type": "string",
-          "enum": [
-            "ALLOWED_VALUES",
-            "REGEX"
-          ]
+        {
+          "type": "object",
+          "required": [
+            "sensitivity"
+          ],
+          "properties": {
+            "sensitivity": {
+              "type": "string",
+              "description": "Possible values: [Low, Medium, High]"
+            },
+            "trafficSplitPercentage": {
+              "type": "string",
+              "description": "Example: 50, You can put max upto 50."
+            }
+          }
         }
-      },
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "JexlCriteriaSpec": {
@@ -1240,60 +1254,6 @@
               "$ref": "#/definitions/StepGroupFailureActionConfig"
             }
           ]
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "ParameterField": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "object"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "ParameterFieldString": {
-      "type": "object",
-      "properties": {
-        "expression": {
-          "type": "boolean"
-        },
-        "expressionValue": {
-          "type": "string"
-        },
-        "inputSetValidator": {
-          "$ref": "#/definitions/InputSetValidator"
-        },
-        "jsonResponseField": {
-          "type": "boolean"
-        },
-        "responseField": {
-          "type": "string"
-        },
-        "typeString": {
-          "type": "boolean"
-        },
-        "value": {
-          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1888,9 +1848,7 @@
       "type": "object",
       "required": [
         "deploymentTag",
-        "duration",
-        "envRef",
-        "serviceRef"
+        "duration"
       ],
       "discriminator": "type",
       "properties": {
@@ -1901,14 +1859,6 @@
         "duration": {
           "type": "string",
           "description": "Format example: 5m, 30m, please put multiple of 5"
-        },
-        "envRef": {
-          "type": "string",
-          "description": "You can put expression <+env.identifier> to resolve env of current stage."
-        },
-        "serviceRef": {
-          "type": "string",
-          "description": "You can put expression <+service.identifier> to resolve env of current stage."
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"

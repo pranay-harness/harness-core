@@ -7,6 +7,7 @@ import static io.harness.validation.Validator.notEmptyCheck;
 
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
+import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
@@ -42,6 +43,7 @@ import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.delegate.task.terraform.TerraformVarFileInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.mappers.SecretManagerConfigMapper;
+import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ngpipeline.common.AmbianceHelper;
@@ -58,6 +60,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.utils.IdentifierRefHelper;
 import io.harness.validation.Validator;
+import io.harness.validator.NGRegexValidatorConstants;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -72,6 +75,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.query.Sort;
@@ -91,10 +95,39 @@ public class TerraformStepHelper {
   @Inject private FileServiceClientFactory fileService;
   @Named("PRIVILEGED") @Inject private SecretManagerClientService secretManagerClientService;
 
+  public static List<EntityDetail> prepareEntityDetailsForVarFiles(
+      String accountId, String orgIdentifier, String projectIdentifier, Map<String, TerraformVarFile> varFiles) {
+    List<EntityDetail> entityDetailList = new ArrayList<>();
+
+    if (EmptyPredicate.isNotEmpty(varFiles)) {
+      for (Map.Entry<String, TerraformVarFile> varFileEntry : varFiles.entrySet()) {
+        if (varFileEntry.getValue().getType().equals(TerraformVarFileTypes.Remote)) {
+          String connectorRef = ((RemoteTerraformVarFileSpec) varFileEntry.getValue().getSpec())
+                                    .getStore()
+                                    .getSpec()
+                                    .getConnectorReference()
+                                    .getValue();
+          IdentifierRef identifierRef =
+              IdentifierRefHelper.getIdentifierRef(connectorRef, accountId, orgIdentifier, projectIdentifier);
+          EntityDetail entityDetail =
+              EntityDetail.builder().type(EntityType.CONNECTORS).entityRef(identifierRef).build();
+          entityDetailList.add(entityDetail);
+        }
+      }
+    }
+
+    return entityDetailList;
+  }
+
   public String generateFullIdentifier(String provisionerIdentifier, Ambiance ambiance) {
-    return String.format("%s/%s/%s/%s", AmbianceHelper.getAccountId(ambiance),
-        AmbianceHelper.getOrgIdentifier(ambiance), AmbianceHelper.getProjectIdentifier(ambiance),
-        provisionerIdentifier);
+    if (Pattern.matches(NGRegexValidatorConstants.IDENTIFIER_PATTERN, provisionerIdentifier)) {
+      return String.format("%s/%s/%s/%s", AmbianceHelper.getAccountId(ambiance),
+          AmbianceHelper.getOrgIdentifier(ambiance), AmbianceHelper.getProjectIdentifier(ambiance),
+          provisionerIdentifier);
+    } else {
+      throw new InvalidRequestException(String.format(
+          "Provisioner Identifier cannot contain special characters or spaces: [%s]", provisionerIdentifier));
+    }
   }
 
   private void validateGitStoreConfig(GitStoreConfig gitStoreConfig) {
@@ -119,7 +152,12 @@ public class TerraformStepHelper {
     validateGitStoreConfig(gitStoreConfig);
     String connectorId = gitStoreConfig.getConnectorRef().getValue();
     ConnectorInfoDTO connectorDTO = k8sStepHelper.getConnector(connectorId, ambiance);
-    String validationMessage = String.format("Invalid type for manifestType: [%s]", identifier);
+    String validationMessage = "";
+    if (identifier.equals(TerraformStepHelper.TF_CONFIG_FILES)) {
+      validationMessage = "Config Files";
+    } else {
+      validationMessage = String.format("Var Files with identifier: %s", identifier);
+    }
     // TODO: fix manifest part, remove k8s dependency
     k8sStepHelper.validateManifest(store.getKind(), connectorDTO, validationMessage);
     GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());

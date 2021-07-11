@@ -8,7 +8,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;

@@ -24,6 +24,7 @@ import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.commons.RepairActionCode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.repositories.TimeoutInstanceRepository;
 import io.harness.rule.Owner;
@@ -70,18 +71,19 @@ public class InterventionWaitAdviserResponseHandlerTest extends OrchestrationTes
         PlanExecutionMetadata.builder().planExecutionId(PLAN_EXECUTION_ID).build();
     planExecutionMetadataService.save(planExecutionMetadata);
 
-    nodeExecution = NodeExecution.builder()
-                        .uuid(NODE_EXECUTION_ID)
-                        .ambiance(ambiance)
-                        .node(PlanNodeProto.newBuilder()
-                                  .setUuid(NODE_SETUP_ID)
-                                  .setName("DUMMY")
-                                  .setIdentifier("dummy")
-                                  .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                  .build())
-                        .startTs(System.currentTimeMillis())
-                        .status(Status.FAILED)
-                        .build();
+    nodeExecution =
+        NodeExecution.builder()
+            .uuid(NODE_EXECUTION_ID)
+            .ambiance(ambiance)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(NODE_SETUP_ID)
+                      .setName("DUMMY")
+                      .setIdentifier("dummy")
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .build())
+            .startTs(System.currentTimeMillis())
+            .status(Status.FAILED)
+            .build();
     nodeExecutionService.save(nodeExecution);
     Duration timeout = Duration.newBuilder().setSeconds(java.time.Duration.ofDays(1).toMinutes() * 60).build();
     advise = InterventionWaitAdvise.newBuilder()

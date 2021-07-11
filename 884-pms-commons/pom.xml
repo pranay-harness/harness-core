@@ -40,7 +40,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>960-recaster</artifactId>
+            <artifactId>980-recaster</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

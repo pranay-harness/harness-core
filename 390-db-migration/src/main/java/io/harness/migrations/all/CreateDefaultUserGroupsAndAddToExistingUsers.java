@@ -3,7 +3,6 @@ package io.harness.migrations.all;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.migrations.Migration;

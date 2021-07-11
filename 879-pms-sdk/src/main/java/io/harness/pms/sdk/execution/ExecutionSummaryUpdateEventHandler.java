@@ -61,13 +61,13 @@ public class ExecutionSummaryUpdateEventHandler implements OrchestrationEventHan
     if (Objects.equals(level.getGroup(), "STAGE")) {
       executionSummaryUpdateRequest.setNodeUuid(level.getSetupId());
     }
-    String pipelineInfoJson = RecastOrchestrationUtils.toDocumentJson(
+    String pipelineInfoJson = RecastOrchestrationUtils.toJson(
         executionSummaryModuleInfoProvider.getPipelineLevelModuleInfo(orchestrationEvent));
     if (EmptyPredicate.isNotEmpty(pipelineInfoJson)) {
       executionSummaryUpdateRequest.setPipelineModuleInfoJson(pipelineInfoJson);
     }
-    String stageInfoJson = RecastOrchestrationUtils.toDocumentJson(
-        executionSummaryModuleInfoProvider.getStageLevelModuleInfo(orchestrationEvent));
+    String stageInfoJson =
+        RecastOrchestrationUtils.toJson(executionSummaryModuleInfoProvider.getStageLevelModuleInfo(orchestrationEvent));
     if (EmptyPredicate.isNotEmpty(stageInfoJson)) {
       executionSummaryUpdateRequest.setNodeModuleInfoJson(stageInfoJson);
     }

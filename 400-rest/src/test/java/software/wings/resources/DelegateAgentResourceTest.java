@@ -8,6 +8,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.JENNY;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -332,8 +333,8 @@ public class DelegateAgentResourceTest {
     String verificationUrl = httpServletRequest.getScheme() + "://" + httpServletRequest.getServerName() + ":"
         + httpServletRequest.getServerPort();
     DelegateScripts delegateScripts = DelegateScripts.builder().build();
-    when(delegateService.getDelegateScripts(
-             ACCOUNT_ID, version, subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl))
+    when(delegateService.getDelegateScripts(ACCOUNT_ID, version,
+             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, null))
         .thenReturn(delegateScripts);
     RestResponse<DelegateScripts> restResponse = RESOURCES.client()
                                                      .target("/agent/delegates/" + DELEGATE_ID + "/upgrade?delegateId="
@@ -343,8 +344,8 @@ public class DelegateAgentResourceTest {
                                                      .get(new GenericType<RestResponse<DelegateScripts>>() {});
 
     verify(delegateService, atLeastOnce())
-        .getDelegateScripts(
-            ACCOUNT_ID, version, subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl);
+        .getDelegateScripts(ACCOUNT_ID, version, subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID),
+            verificationUrl, null);
     assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull();
   }
 
@@ -443,7 +444,7 @@ public class DelegateAgentResourceTest {
         + httpServletRequest.getServerPort();
     DelegateScripts delegateScripts = DelegateScripts.builder().build();
     when(delegateService.getDelegateScripts(ACCOUNT_ID, delegateVersion,
-             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl))
+             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, null))
         .thenReturn(delegateScripts);
 
     RestResponse<DelegateScripts> restResponse =
@@ -454,7 +455,33 @@ public class DelegateAgentResourceTest {
 
     verify(delegateService, atLeastOnce())
         .getDelegateScripts(ACCOUNT_ID, delegateVersion,
-            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl);
+            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, null);
+    assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void getdelegateScripts() throws IOException {
+    String delegateVersion = "0.0.0";
+    String delegateName = "TEST_DELEGATE";
+    String verificationUrl = httpServletRequest.getScheme() + "://" + httpServletRequest.getServerName() + ":"
+        + httpServletRequest.getServerPort();
+    DelegateScripts delegateScripts = DelegateScripts.builder().build();
+    when(delegateService.getDelegateScripts(ACCOUNT_ID, delegateVersion,
+             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, delegateName))
+        .thenReturn(delegateScripts);
+
+    RestResponse<DelegateScripts> restResponse =
+        RESOURCES.client()
+            .target("/agent/delegates/delegateScripts?accountId=" + ACCOUNT_ID + "&delegateVersion=" + delegateVersion
+                + "&delegateName=" + delegateName)
+            .request()
+            .get(new GenericType<RestResponse<DelegateScripts>>() {});
+
+    verify(delegateService, atLeastOnce())
+        .getDelegateScripts(ACCOUNT_ID, delegateVersion,
+            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, delegateName);
     assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull();
   }
 

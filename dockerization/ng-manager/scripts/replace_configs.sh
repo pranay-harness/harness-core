@@ -330,7 +330,7 @@ replace_key_value baseUrls.webhookBaseUrl "$WEBHOOK_BASE_URL"
 
 replace_key_value ngAuthUIEnabled "$HARNESS_ENABLE_NG_AUTH_UI_PLACEHOLDER"
 
-replace_key_value enableDefaultResourceGroupCreation "${ENABLE_DEFAULT_RESOURCE_GROUP_CREATION:-false}"
+replace_key_value exportMetricsToStackDriver "$EXPORT_METRICS_TO_STACK_DRIVER"
 
 replace_key_value signupNotificationConfiguration.projectId "$SIGNUP_NOTIFICATION_GCS_PROJECT_ID"
 replace_key_value signupNotificationConfiguration.bucketName "$SIGNUP_NOTIFICATION_GCS_BUCKET_NAME"
@@ -353,3 +353,4 @@ replace_key_value featureFlagConfig.featureFlagSystem "$FEATURE_FLAG_SYSTEM"
 replace_key_value featureFlagConfig.syncFeaturesToCF "$SYNC_FEATURES_TO_CF"
 replace_key_value ceAzureSetupConfig.azureAppClientId "$AZURE_APP_CLIENT_ID"
 replace_key_value ceAzureSetupConfig.azureAppClientSecret "$AZURE_APP_CLIENT_SECRET"
+replace_key_value pipelineServiceClientConfig.baseUrl "$PIPELINE_SERVICE_CLIENT_BASEURL"

@@ -32,6 +32,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -70,6 +71,7 @@ public class AwsAmiSwitchRoutesStateTest extends WingsBaseTest {
   @Mock private AwsStateHelper mockAwsStateHelper;
   @Mock protected transient AwsAmiServiceStateHelper awsAmiServiceHelper;
   @Mock private StateExecutionService stateExecutionService;
+  @Mock private FeatureFlagService mockFeatureFlagService;
 
   @InjectMocks private AwsAmiSwitchRoutesState state = new AwsAmiSwitchRoutesState("stateName");
 
@@ -85,6 +87,7 @@ public class AwsAmiSwitchRoutesStateTest extends WingsBaseTest {
     doReturn(environment).when(mockContext).fetchRequiredEnvironment();
     Activity activity = Activity.builder().uuid(ACTIVITY_ID).appId(APP_ID).build();
     doReturn(activity).when(mockActivityService).save(any());
+    doReturn(false).when(mockFeatureFlagService).isEnabled(any(), any());
     AmiServiceSetupElement serviceSetupElement = AmiServiceSetupElement.builder()
                                                      .oldAutoScalingGroupName("foo__1")
                                                      .newAutoScalingGroupName("foo__2")

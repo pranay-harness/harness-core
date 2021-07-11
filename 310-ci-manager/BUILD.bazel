@@ -16,6 +16,7 @@ shared_dependencies = [
     "//955-delegate-beans:module",
     "//960-persistence:module",
     "//960-yaml-sdk:module",
+    "//965-api-key-filter:module",
     "//product/ci/engine/proto:ciengine_java_proto",
     "//product/ci/scm/proto:ciscm_java_proto",
     "@jira_client//jar",
@@ -416,7 +417,7 @@ shared_dependencies = [
 java_binary(
     name = "module",
     srcs = glob([
-        "src/main/**/*.java",
+        "src/main/java/**/*.java",
     ]),
     data = ["//:resource"],
     main_class = "io.harness.app.CIManagerApplication",

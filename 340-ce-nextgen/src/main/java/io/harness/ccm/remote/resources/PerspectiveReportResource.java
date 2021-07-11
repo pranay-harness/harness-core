@@ -15,6 +15,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.Valid;
@@ -52,68 +53,65 @@ public class PerspectiveReportResource {
   @Timed
   @Path("{accountId}")
   @ExceptionMetered
-  public Response getReportSetting(@QueryParam("perspectiveId") String perspectiveId,
+  @ApiOperation(value = "Get perspective reports", nickname = "getReportSetting")
+  public RestResponse<List<CEReportSchedule>> getReportSetting(@QueryParam("perspectiveId") String perspectiveId,
       @QueryParam("reportId") String reportId, @PathParam("accountId") String accountId) {
     if (perspectiveId != null) {
-      RestResponse rr = new RestResponse<List<CEReportSchedule>>(
-          ceReportScheduleService.getReportSettingByView(perspectiveId, accountId));
-      return prepareResponse(rr, Response.Status.OK);
+      return new RestResponse<>(ceReportScheduleService.getReportSettingByView(perspectiveId, accountId));
     } else if (reportId != null) {
       List<CEReportSchedule> ceList = new ArrayList<>();
       CEReportSchedule rep = ceReportScheduleService.get(reportId, accountId);
       if (rep != null) {
         ceList.add(rep);
       }
-      RestResponse rr = new RestResponse<List<CEReportSchedule>>(ceList);
-      return prepareResponse(rr, Response.Status.OK);
+      return new RestResponse<>(ceList);
     }
     // INVALID_REQUEST
-    RestResponse rr = new RestResponse<>();
+    RestResponse<List<CEReportSchedule>> rr = new RestResponse<>();
     addResponseMessage(
         rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. Either 'viewId' or 'reportId' is needed");
-    return prepareResponse(rr, Response.Status.BAD_REQUEST);
+    return rr;
   }
 
   @DELETE
   @Timed
   @Path("{accountId}")
   @ExceptionMetered
-  public Response deleteReportSetting(@QueryParam("reportId") String reportId,
+  @ApiOperation(value = "Delete perspective reports", nickname = "deleteReportSetting")
+  public RestResponse<String> deleteReportSetting(@QueryParam("reportId") String reportId,
       @QueryParam("perspectiveId") String perspectiveId, @PathParam("accountId") String accountId) {
     if (perspectiveId != null) {
       ceReportScheduleService.deleteAllByView(perspectiveId, accountId);
-      RestResponse rr = new RestResponse("Successfully deleted the record");
-      return prepareResponse(rr, Response.Status.OK);
+      return new RestResponse<>("Successfully deleted the record");
     } else if (reportId != null) {
       ceReportScheduleService.delete(reportId, accountId);
-      RestResponse rr = new RestResponse("Successfully deleted the record");
-      return prepareResponse(rr, Response.Status.OK);
+      return new RestResponse<>("Successfully deleted the record");
     }
     // INVALID_REQUEST
-    RestResponse rr = new RestResponse();
+    RestResponse<String> rr = new RestResponse<>();
     addResponseMessage(
         rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. Either 'viewId' or 'reportId' is needed");
-    return prepareResponse(rr, Response.Status.BAD_REQUEST);
+    return rr;
   }
 
   @POST
   @Path("{accountId}")
   @Timed
   @ExceptionMetered
-  public Response createReportSetting(
+  @ApiOperation(value = "Create perspective reports", nickname = "createReportSetting")
+  public RestResponse<List<CEReportSchedule>> createReportSetting(
       @PathParam("accountId") String accountId, @Valid @RequestBody CEReportSchedule schedule) {
     List<CEReportSchedule> ceList = new ArrayList<>();
     try {
       CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(schedule.getUserCron());
       ceList.add(ceReportScheduleService.createReportSetting(cronSequenceGenerator, accountId, schedule));
-      RestResponse rr = new RestResponse<List<CEReportSchedule>>(ceList);
-      return prepareResponse(rr, Response.Status.OK);
+      return new RestResponse<>(ceList);
     } catch (IllegalArgumentException e) {
       log.error("ERROR", e);
-      RestResponse rr = new RestResponse();
+      RestResponse<List<CEReportSchedule>> rr = new RestResponse<>();
       addResponseMessage(
           rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. Schedule provided is invalid");
-      return prepareResponse(rr, Response.Status.BAD_REQUEST);
+      return rr;
     }
   }
 
@@ -121,19 +119,18 @@ public class PerspectiveReportResource {
   @Path("{accountId}")
   @Timed
   @ExceptionMetered
-  public Response updateReportSetting(
+  @ApiOperation(value = "Update perspective reports", nickname = "updateReportSetting")
+  public RestResponse<List<CEReportSchedule>> updateReportSetting(
       @PathParam("accountId") String accountId, @Valid @RequestBody CEReportSchedule schedule) {
     try {
       CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(schedule.getUserCron());
-      RestResponse rr = new RestResponse<List<CEReportSchedule>>(
-          ceReportScheduleService.update(cronSequenceGenerator, accountId, schedule));
-      return prepareResponse(rr, Response.Status.OK);
+      return new RestResponse<>(ceReportScheduleService.update(cronSequenceGenerator, accountId, schedule));
     } catch (IllegalArgumentException e) {
       log.warn(String.valueOf(e));
-      RestResponse rr = new RestResponse();
+      RestResponse<List<CEReportSchedule>> rr = new RestResponse<>();
       addResponseMessage(
           rr, ErrorCode.INVALID_REQUEST, Level.ERROR, "ERROR: Invalid request. Schedule provided is invalid");
-      return prepareResponse(rr, Response.Status.BAD_REQUEST);
+      return rr;
     }
   }
 

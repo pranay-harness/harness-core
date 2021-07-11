@@ -340,7 +340,7 @@ shared_dependencies = [
 
 java_library(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob(["src/main/java/**/*.java"]),
     data = ["//:resource"],
     #    main_class = "io.harness.notification.NotificationApplication",
     resources = [

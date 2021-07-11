@@ -38,20 +38,17 @@ import io.harness.ng.core.entities.NotificationSettingConfig;
 import io.harness.ng.core.events.UserGroupCreateEvent;
 import io.harness.ng.core.events.UserGroupDeleteEvent;
 import io.harness.ng.core.events.UserGroupUpdateEvent;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
-import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserGroup;
 import io.harness.ng.core.user.entities.UserGroup.UserGroupKeys;
 import io.harness.ng.core.user.remote.dto.UserFilter;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.notification.NotificationChannelType;
 import io.harness.outbox.api.OutboxService;
 import io.harness.remote.NGObjectMapperHelper;
 import io.harness.remote.client.NGRestUtils;
-import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.ng.core.spring.UserGroupRepository;
 import io.harness.user.remote.UserClient;
-import io.harness.user.remote.UserFilterNG;
 import io.harness.utils.RetryUtils;
 import io.harness.utils.ScopeUtils;
 
@@ -190,8 +187,6 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public UserGroup delete(Scope scope, String identifier) {
-    Criteria criteria = createUserGroupFetchCriteria(
-        scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), identifier);
     RoleAssignmentFilterDTO roleAssignmentFilterDTO =
         RoleAssignmentFilterDTO.builder()
             .principalFilter(Collections.singleton(
@@ -206,10 +201,27 @@ public class UserGroupServiceImpl implements UserGroupService {
           pageResponse.getTotalItems()));
     }
     validateAtleastOneAdminExistIfUserGroupRemoved(scope, identifier);
+
+    Criteria criteria = createUserGroupFetchCriteria(
+        scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), identifier);
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
       UserGroup userGroup = userGroupRepository.delete(criteria);
       outboxService.save(new UserGroupDeleteEvent(userGroup.getAccountIdentifier(), toDTO(userGroup)));
       return userGroup;
+    }));
+  }
+
+  @Override
+  public boolean deleteByScope(Scope scope) {
+    return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      Criteria criteria =
+          createScopeCriteria(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier());
+      List<UserGroup> deleteUserGroups = userGroupRepository.deleteAll(criteria);
+      if (isNotEmpty(deleteUserGroups)) {
+        deleteUserGroups.forEach(userGroup
+            -> outboxService.save(new UserGroupDeleteEvent(userGroup.getAccountIdentifier(), toDTO(userGroup))));
+      }
+      return true;
     }));
   }
 
@@ -233,14 +245,14 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public void addUserToUserGroups(String accountIdentifier, UserInfo userInfo, List<UserGroup> userGroups) {
+  public void addUserToUserGroups(String accountIdentifier, String userId, List<UserGroup> userGroups) {
     if (isEmpty(userGroups)) {
       return;
     }
 
     for (UserGroup userGroup : userGroups) {
-      if (!checkMember(accountIdentifier, null, null, userGroup.getIdentifier(), userInfo.getUuid())) {
-        addMember(accountIdentifier, null, null, userGroup.getIdentifier(), userInfo.getUuid());
+      if (!checkMember(accountIdentifier, null, null, userGroup.getIdentifier(), userId)) {
+        addMember(accountIdentifier, null, null, userGroup.getIdentifier(), userId);
       }
     }
   }
@@ -291,9 +303,6 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   private void validateAtleastOneAdminExistIfUserGroupRemoved(Scope scope, String userGroupIdentifier) {
-    if (!ScopeUtils.isAccountScope(scope)) {
-      return;
-    }
     List<PrincipalDTO> admins = getAdmins(Scope.builder().accountIdentifier(scope.getAccountIdentifier()).build());
     boolean doesOtherAdminUsersExist = admins.stream()
                                            .filter(admin -> admin.getType().equals(USER))
@@ -312,15 +321,15 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (doesOtherAdminUserGroupsExist) {
       return;
     }
-    throw new InvalidRequestException(String.format("%s has the last account admins for account %s. Can't remove it",
-        userGroupIdentifier, scope.getAccountIdentifier()));
+    throw new InvalidRequestException(
+        String.format("%s has the last account admins. Can not remove it", userGroupIdentifier));
   }
 
   @NotNull
   private List<PrincipalDTO> getAdmins(Scope scope) {
     PageResponse<RoleAssignmentResponseDTO> response =
         NGRestUtils.getResponse(accessControlAdminClient.getFilteredRoleAssignments(scope.getAccountIdentifier(),
-            scope.getOrgIdentifier(), scope.getProjectIdentifier(), 0, 100,
+            scope.getOrgIdentifier(), scope.getProjectIdentifier(), 0, 10000,
             RoleAssignmentFilterDTO.builder().roleFilter(Collections.singleton(ACCOUNT_ADMIN)).build()));
     return response.getContent()
         .stream()
@@ -381,38 +390,12 @@ public class UserGroupServiceImpl implements UserGroupService {
       validateNotificationSettings(userGroup.getNotificationConfigs());
     }
     if (userGroup.getUsers() != null) {
-      validateUsers(userGroup.getUsers(), userGroup.getAccountIdentifier());
+      validateUsers(userGroup.getUsers());
       validateScopeMembership(userGroup);
     }
   }
 
-  private void validateScopeMembership(UserGroup userGroup) {
-    Set<String> filteredUserIds = ngUserService.filterUsersWithScopeMembership(userGroup.getUsers(),
-        userGroup.getAccountIdentifier(), userGroup.getOrgIdentifier(), userGroup.getProjectIdentifier());
-    Sets.SetView<String> invalidUserIds = Sets.difference(new HashSet<>(userGroup.getUsers()), filteredUserIds);
-    if (isNotEmpty(invalidUserIds)) {
-      throw new InvalidArgumentsException(getInvalidUserMessage(invalidUserIds));
-    }
-  }
-
-  private void validateFilter(UserGroupFilterDTO filter) {
-    if (isNotEmpty(filter.getIdentifierFilter()) && isNotEmpty(filter.getDatabaseIdFilter())) {
-      throw new InvalidArgumentsException("Both the database id filter and identifier filter cannot be provided");
-    }
-  }
-
-  private void validateUsers(List<String> usersIds, String accountId) {
-    Failsafe.with(retryPolicy).run(() -> {
-      Set<String> returnedUsersIds =
-          RestClientUtils.getResponse(userClient.listUsers(accountId, UserFilterNG.builder().userIds(usersIds).build()))
-              .stream()
-              .map(UserInfo::getUuid)
-              .collect(Collectors.toSet());
-      Set<String> invalidUserIds = Sets.difference(new HashSet<>(usersIds), returnedUsersIds);
-      if (!invalidUserIds.isEmpty()) {
-        throw new InvalidArgumentsException(getInvalidUserMessage(invalidUserIds));
-      }
-    });
+  private void validateUsers(List<String> usersIds) {
     if (hasDuplicate(usersIds)) {
       throw new InvalidArgumentsException("Duplicate users provided");
     }
@@ -426,6 +409,25 @@ public class UserGroupServiceImpl implements UserGroupService {
       }
     }
     return false;
+  }
+
+  private void validateScopeMembership(UserGroup userGroup) {
+    Scope scope = Scope.builder()
+                      .accountIdentifier(userGroup.getAccountIdentifier())
+                      .orgIdentifier(userGroup.getOrgIdentifier())
+                      .projectIdentifier(userGroup.getProjectIdentifier())
+                      .build();
+    List<String> userIds = ngUserService.listUserIds(scope);
+    Sets.SetView<String> invalidUserIds = Sets.difference(new HashSet<>(userGroup.getUsers()), new HashSet<>(userIds));
+    if (isNotEmpty(invalidUserIds)) {
+      throw new InvalidArgumentsException(getInvalidUserMessage(invalidUserIds));
+    }
+  }
+
+  private void validateFilter(UserGroupFilterDTO filter) {
+    if (isNotEmpty(filter.getIdentifierFilter()) && isNotEmpty(filter.getDatabaseIdFilter())) {
+      throw new InvalidArgumentsException("Both the database id filter and identifier filter cannot be provided");
+    }
   }
 
   private String getInvalidUserMessage(Set<String> invalidUserIds) {
@@ -513,9 +515,6 @@ public class UserGroupServiceImpl implements UserGroupService {
     existingUserGroup.setSsoGroupId(ssoGroupId);
     existingUserGroup.setSsoGroupName(ssoGroupName);
 
-    // auditing TBD
-    //    auditServiceHelper.reportForAuditingUsingAccountId(accountId, group, updatedGroup, Event.Type.LINK_SSO);
-
     return updateInternal(existingUserGroup, oldUserGroup);
   }
 
@@ -541,8 +540,6 @@ public class UserGroupServiceImpl implements UserGroupService {
     existingUserGroup.setLinkedSsoType(null);
     existingUserGroup.setLinkedSsoDisplayName(null);
 
-    //    auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, group, Event.Type.UNLINK_SSO);
-    //    log.info("Auditing unlink from SSO Group for groupId={}", group.getUuid());
     return updateInternal(existingUserGroup, oldUserGroup);
   }
 }

@@ -57,7 +57,6 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
         .helmChartConfig(getHelmChartConfigForToYaml(applicationManifest))
         .kustomizeConfig(applicationManifest.getKustomizeConfig())
         .customSourceConfig(applicationManifest.getCustomSourceConfig())
-        .pollForChanges(applicationManifest.getPollForChanges())
         .skipVersioningForAllK8sObjects(applicationManifest.getSkipVersioningForAllK8sObjects())
         .helmCommandFlag(applicationManifest.getHelmCommandFlag())
         .build();
@@ -88,6 +87,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
 
   private ApplicationManifest toBean(ChangeContext<Yaml> changeContext) {
     Yaml yaml = changeContext.getYaml();
+    String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
 
     String filePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
@@ -102,6 +102,9 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
       serviceId = (service == null) ? null : service.getUuid();
     }
 
+    if (yaml.getStoreType() == null) {
+      throw new InvalidRequestException("StoreType field should not be null for helm chart");
+    }
     StoreType storeType = Enum.valueOf(StoreType.class, yaml.getStoreType());
     AppManifestKind kind = yamlHelper.getAppManifestKindFromPath(filePath);
     GitFileConfig gitFileConfig = getGitFileConfigFromYaml(accountId, appId, yaml, storeType);
@@ -116,6 +119,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     }
 
     ApplicationManifest manifest = ApplicationManifest.builder()
+                                       .name(name)
                                        .serviceId(serviceId)
                                        .envId(envId)
                                        .storeType(storeType)
@@ -124,7 +128,6 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
                                        .kind(kind)
                                        .kustomizeConfig(kustomizeConfig)
                                        .customSourceConfig(customSourceConfig)
-                                       .pollForChanges(yaml.getPollForChanges())
                                        .skipVersioningForAllK8sObjects(yaml.getSkipVersioningForAllK8sObjects())
                                        .helmCommandFlag(yaml.getHelmCommandFlag())
                                        .build();

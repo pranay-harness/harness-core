@@ -14,6 +14,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationStepsTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.exception.WingsException;
@@ -33,12 +35,13 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(PersistenceIteratorFactory.class)
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class ResourceRestraintPersistenceMonitorTest extends OrchestrationStepsTestBase {
   @Mock private PersistenceIteratorFactory persistenceIteratorFactory;
-  @Mock private ResourceRestraintService resourceRestraintService;
+  @Mock private ResourceRestraintInstanceService resourceRestraintInstanceService;
   @Inject @InjectMocks private ResourceRestraintPersistenceMonitor persistenceMonitor;
 
   @Test
@@ -57,8 +60,9 @@ public class ResourceRestraintPersistenceMonitorTest extends OrchestrationStepsT
   public void testBlockedInstance() {
     ResourceRestraintInstance instance = getResourceRestraint(BLOCKED);
     persistenceMonitor.handle(instance);
-    verify(resourceRestraintService).updateBlockedConstraints(Sets.newHashSet(instance.getResourceRestraintId()));
-    verify(resourceRestraintService, never()).updateActiveConstraintsForInstance(any());
+    verify(resourceRestraintInstanceService)
+        .updateBlockedConstraints(Sets.newHashSet(instance.getResourceRestraintId()));
+    verify(resourceRestraintInstanceService, never()).updateActiveConstraintsForInstance(any());
   }
 
   @Test
@@ -66,10 +70,11 @@ public class ResourceRestraintPersistenceMonitorTest extends OrchestrationStepsT
   @Category(UnitTests.class)
   public void testActiveInstance() {
     ResourceRestraintInstance instance = getResourceRestraint(ACTIVE);
-    when(resourceRestraintService.updateActiveConstraintsForInstance(instance)).thenReturn(true);
+    when(resourceRestraintInstanceService.updateActiveConstraintsForInstance(instance)).thenReturn(true);
     persistenceMonitor.handle(instance);
-    verify(resourceRestraintService).updateBlockedConstraints(Sets.newHashSet(instance.getResourceRestraintId()));
-    verify(resourceRestraintService).updateActiveConstraintsForInstance(any());
+    verify(resourceRestraintInstanceService)
+        .updateBlockedConstraints(Sets.newHashSet(instance.getResourceRestraintId()));
+    verify(resourceRestraintInstanceService).updateActiveConstraintsForInstance(any());
   }
 
   @Test
@@ -77,11 +82,11 @@ public class ResourceRestraintPersistenceMonitorTest extends OrchestrationStepsT
   @Category(UnitTests.class)
   public void testActiveInstance_WhenNoInstancesAreUpdated() {
     ResourceRestraintInstance instance = getResourceRestraint(ACTIVE);
-    when(resourceRestraintService.updateActiveConstraintsForInstance(instance)).thenReturn(false);
+    when(resourceRestraintInstanceService.updateActiveConstraintsForInstance(instance)).thenReturn(false);
     persistenceMonitor.handle(instance);
-    verify(resourceRestraintService, never())
+    verify(resourceRestraintInstanceService, never())
         .updateBlockedConstraints(Sets.newHashSet(instance.getResourceRestraintId()));
-    verify(resourceRestraintService).updateActiveConstraintsForInstance(any());
+    verify(resourceRestraintInstanceService).updateActiveConstraintsForInstance(any());
   }
 
   @Test
@@ -90,11 +95,11 @@ public class ResourceRestraintPersistenceMonitorTest extends OrchestrationStepsT
   public void shouldThrowWingsException() {
     ResourceRestraintInstance instance = getResourceRestraint(ACTIVE);
     doThrow(new WingsException("exception"))
-        .when(resourceRestraintService)
+        .when(resourceRestraintInstanceService)
         .updateActiveConstraintsForInstance(instance);
     persistenceMonitor.handle(instance);
-    verify(resourceRestraintService).updateActiveConstraintsForInstance(any());
-    verify(resourceRestraintService, never()).updateBlockedConstraints(any());
+    verify(resourceRestraintInstanceService).updateActiveConstraintsForInstance(any());
+    verify(resourceRestraintInstanceService, never()).updateBlockedConstraints(any());
   }
 
   @Test
@@ -103,11 +108,11 @@ public class ResourceRestraintPersistenceMonitorTest extends OrchestrationStepsT
   public void shouldThrowRuntimeException() {
     ResourceRestraintInstance instance = getResourceRestraint(ACTIVE);
     doThrow(new RuntimeException("exception"))
-        .when(resourceRestraintService)
+        .when(resourceRestraintInstanceService)
         .updateActiveConstraintsForInstance(instance);
     persistenceMonitor.handle(instance);
-    verify(resourceRestraintService).updateActiveConstraintsForInstance(any());
-    verify(resourceRestraintService, never()).updateBlockedConstraints(any());
+    verify(resourceRestraintInstanceService).updateActiveConstraintsForInstance(any());
+    verify(resourceRestraintInstanceService, never()).updateBlockedConstraints(any());
   }
 
   private ResourceRestraintInstance getResourceRestraint(State state) {

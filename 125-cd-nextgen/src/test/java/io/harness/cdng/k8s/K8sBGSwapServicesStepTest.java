@@ -37,6 +37,7 @@ import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
@@ -188,7 +189,8 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
                                          .commandExecutionStatus(SUCCESS)
                                          .build();
 
-    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepElementParameters, () -> responseData);
+    StepResponse response =
+        k8sBGSwapServicesStep.handleTaskResultWithSecurityContext(ambiance, stepElementParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(SUCCEEDED);
     StepOutcome outcome = response.getStepOutcomes().stream().collect(Collectors.toList()).get(0);
     assertThat(outcome.getOutcome()).isInstanceOf(K8sBGSwapServicesOutcome.class);
@@ -207,7 +209,8 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
                                          .commandExecutionStatus(SUCCESS)
                                          .build();
 
-    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepElementParameters, () -> responseData);
+    StepResponse response =
+        k8sBGSwapServicesStep.handleTaskResultWithSecurityContext(ambiance, stepElementParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(SUCCEEDED);
     assertThat(response.getStepOutcomes()).isEmpty();
   }
@@ -222,7 +225,8 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
                                          .commandUnitsProgress(UnitProgressData.builder().build())
                                          .build();
 
-    StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepElementParameters, () -> responseData);
+    StepResponse response =
+        k8sBGSwapServicesStep.handleTaskResultWithSecurityContext(ambiance, stepElementParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(FAILED);
     assertThat(response.getStepOutcomes()).isEmpty();
   }
@@ -256,10 +260,12 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
 
   private Ambiance getAmbianceForRollback() {
     return Ambiance.newBuilder()
-        .addLevels(
-            Level.newBuilder()
-                .setStepType(StepType.newBuilder().setType(RollbackOptionalChildChainStep.STEP_TYPE.getType()).build())
-                .build())
+        .addLevels(Level.newBuilder()
+                       .setStepType(StepType.newBuilder()
+                                        .setType(RollbackOptionalChildChainStep.STEP_TYPE.getType())
+                                        .setStepCategory(StepCategory.STEP)
+                                        .build())
+                       .build())
         .build();
   }
 }

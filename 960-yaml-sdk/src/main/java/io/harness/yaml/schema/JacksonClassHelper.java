@@ -14,6 +14,7 @@ import io.harness.yaml.YamlSchemaTypes;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.OneOfMapping;
 import io.harness.yaml.schema.beans.PossibleFieldTypes;
+import io.harness.yaml.schema.beans.StringFieldTypeMetadata;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SupportedPossibleFieldTypes;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
@@ -157,8 +158,15 @@ public class JacksonClassHelper {
       Set<SupportedPossibleFieldTypes> value = Arrays.stream(fieldTypes.value()).collect(Collectors.toSet());
       final SupportedPossibleFieldTypes defaultType = fieldTypes.defaultType();
       final String fieldName = YamlSchemaUtils.getFieldName(declaredField);
-      possibleFieldTypesSet.add(
-          PossibleFieldTypes.builder().fieldName(fieldName).defaultFieldType(defaultType).fieldTypes(value).build());
+      possibleFieldTypesSet.add(PossibleFieldTypes.builder()
+                                    .fieldName(fieldName)
+                                    .defaultFieldType(defaultType)
+                                    .fieldTypes(value)
+                                    .fieldTypesMetadata(StringFieldTypeMetadata.builder()
+                                                            .minLength(fieldTypes.minLength())
+                                                            .pattern(fieldTypes.pattern())
+                                                            .build())
+                                    .build());
     }
   }
 

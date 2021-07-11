@@ -269,7 +269,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldNotLogCanAssign() {
-    assertThatCode(() -> delegateSelectionLogsService.logNoIncludeScopeMatched(null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logNoIncludeScopeMatched(null, null, ""))
         .doesNotThrowAnyException();
   }
 
@@ -300,7 +300,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldNotLogTaskAssigned() {
-    assertThatCode(() -> delegateSelectionLogsService.logTaskAssigned(null, null, null)).doesNotThrowAnyException();
+    assertThatCode(() -> delegateSelectionLogsService.logTaskAssigned(null, null, "")).doesNotThrowAnyException();
   }
 
   @Test
@@ -329,7 +329,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldNotLogNoIncludeScopeMatched() {
-    assertThatCode(() -> delegateSelectionLogsService.logNoIncludeScopeMatched(null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logNoIncludeScopeMatched(null, null, ""))
         .doesNotThrowAnyException();
   }
 
@@ -371,7 +371,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldNotLogExcludeScopeMatched() {
-    assertThatCode(() -> delegateSelectionLogsService.logExcludeScopeMatched(null, null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logExcludeScopeMatched(null, null, "", null))
         .doesNotThrowAnyException();
   }
 
@@ -413,7 +413,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = SANJA)
   @Category(UnitTests.class)
   public void shouldNotLogProfileScopeRuleNotMatched() {
-    assertThatCode(() -> delegateSelectionLogsService.logProfileScopeRuleNotMatched(null, null, null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logProfileScopeRuleNotMatched(null, null, "", null, null))
         .doesNotThrowAnyException();
   }
 
@@ -536,7 +536,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   public void shouldNotLogMissingAllSelectors() {
     DelegateSelectionLogsServiceImpl delegateSelectionLogsService = new DelegateSelectionLogsServiceImpl();
 
-    assertThatCode(() -> delegateSelectionLogsService.logMissingAllSelectors(null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logMissingAllSelectors(null, null, ""))
         .doesNotThrowAnyException();
   }
 
@@ -578,7 +578,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldNotLogMissingSelector() {
-    assertThatCode(() -> delegateSelectionLogsService.logMissingSelector(null, null, null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logMissingSelector(null, null, "", null, null))
         .doesNotThrowAnyException();
   }
 
@@ -999,7 +999,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldNotLogMustExecuteOnDelegateMatched() {
-    assertThatCode(() -> delegateSelectionLogsService.logMustExecuteOnDelegateMatched(null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logMustExecuteOnDelegateMatched(null, null, ""))
         .doesNotThrowAnyException();
   }
 
@@ -1093,7 +1093,7 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldNotLogMustExecuteOnDelegateNotMatched() {
-    assertThatCode(() -> delegateSelectionLogsService.logMustExecuteOnDelegateNotMatched(null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logMustExecuteOnDelegateNotMatched(null, null, ""))
         .doesNotThrowAnyException();
   }
 
@@ -1124,11 +1124,11 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
   public void shouldNotLogOwnerRuleNotMatched() {
-    assertThatCode(() -> delegateSelectionLogsService.logOwnerRuleNotMatched(null, null, null, null))
+    assertThatCode(() -> delegateSelectionLogsService.logOwnerRuleNotMatched(null, null, "", null))
         .doesNotThrowAnyException();
     assertThatCode(()
                        -> delegateSelectionLogsService.logOwnerRuleNotMatched(
-                           BatchDelegateSelectionLog.builder().build(), null, null, null))
+                           BatchDelegateSelectionLog.builder().build(), null, "", null))
         .doesNotThrowAnyException();
   }
 

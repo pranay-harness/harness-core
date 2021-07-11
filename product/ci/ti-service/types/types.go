@@ -145,6 +145,7 @@ type SelectionOverview struct {
 	Total       int              `json:"total_tests"`
 	Skipped     int              `json:"skipped_tests"`
 	TimeSavedMs int              `json:"time_saved_ms"`
+	TimeTakenMs int              `json:"time_taken_ms"`
 	Selected    SelectionDetails `json:"selected_tests"`
 }
 

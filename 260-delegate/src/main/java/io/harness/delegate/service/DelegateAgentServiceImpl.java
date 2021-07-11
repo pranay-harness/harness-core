@@ -64,6 +64,7 @@ import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
 import static io.harness.network.SafeHttpCall.execute;
 import static io.harness.threading.Morpheus.sleep;
+import static io.harness.utils.MemoryPerformanceUtils.memoryUsage;
 
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
@@ -185,7 +186,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
-import java.lang.management.MemoryUsage;
 import java.net.ConnectException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -834,6 +834,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     systemExecutor.submit(() -> handleMessage(message));
   }
 
+  @SuppressWarnings("PMD")
   private void handleMessage(String message) {
     if (StringUtils.startsWith(message, "[X]")) {
       String receivedId;
@@ -1267,10 +1268,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         log.info("[Old] Upgrade is pending...");
       } else {
         log.info("Checking for upgrade");
+        String delegateName = System.getenv().get("DELEGATE_NAME");
         try {
-          RestResponse<DelegateScripts> restResponse =
-              HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(1),
-                  () -> delegateExecute(delegateAgentManagerClient.getDelegateScripts(accountId, version)));
+          RestResponse<DelegateScripts> restResponse = HTimeLimiter.callInterruptible21(timeLimiter,
+              Duration.ofMinutes(1),
+              () -> delegateExecute(delegateAgentManagerClient.getDelegateScripts(accountId, version, delegateName)));
           DelegateScripts delegateScripts = restResponse.getResource();
           if (delegateScripts.isDoUpgrade()) {
             upgradePending.set(true);
@@ -1747,13 +1749,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     try (AutoLogContext ignore = new AutoLogContext(obtainPerformance(), OVERRIDE_NESTS)) {
       log.info("Current performance");
     }
-  }
-
-  private void memoryUsage(ImmutableMap.Builder<String, String> builder, String prefix, MemoryUsage memoryUsage) {
-    builder.put(prefix + "init", Long.toString(memoryUsage.getInit()));
-    builder.put(prefix + "used", Long.toString(memoryUsage.getUsed()));
-    builder.put(prefix + "committed", Long.toString(memoryUsage.getCommitted()));
-    builder.put(prefix + "max", Long.toString(memoryUsage.getMax()));
   }
 
   private void abortDelegateTask(DelegateTaskAbortEvent delegateTaskEvent) {

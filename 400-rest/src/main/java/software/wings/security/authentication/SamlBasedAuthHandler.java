@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
+import io.harness.ng.core.account.AuthenticationMechanism;
 
 import software.wings.beans.Account;
 import software.wings.beans.User;
@@ -71,7 +72,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
         SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(account.getUuid());
 
         // Occurs when SAML settings are being tested before being enabled
-        if (account.getAuthenticationMechanism() != AuthenticationMechanism.SAML) {
+        if (account.getAuthenticationMechanism() != io.harness.ng.core.account.AuthenticationMechanism.SAML) {
           log.info("SAML test login successful for user: [{}]", user.getEmail());
           throw new WingsException(ErrorCode.SAML_TEST_SUCCESS_MECHANISM_NOT_ENABLED);
         }
@@ -267,7 +268,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
   }
 
   @Override
-  public AuthenticationMechanism getAuthenticationMechanism() {
+  public io.harness.ng.core.account.AuthenticationMechanism getAuthenticationMechanism() {
     return AuthenticationMechanism.SAML;
   }
 }

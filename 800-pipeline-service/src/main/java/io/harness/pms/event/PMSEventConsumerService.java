@@ -20,6 +20,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Todo: Migrate these to use event controller and delete this class.
+ */
 @Slf4j
 @OwnedBy(PIPELINE)
 public class PMSEventConsumerService implements Managed {
@@ -54,6 +57,7 @@ public class PMSEventConsumerService implements Managed {
     webhookEventConsumerService.shutdown();
     webhookEventConsumerService.awaitTermination(
         WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
+
     featureFlagConsumerService.shutdown();
   }
 }

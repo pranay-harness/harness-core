@@ -183,7 +183,7 @@ public class K8sScaleStepTest extends CategoryTest {
     doReturn(infrastructureOutcome)
         .when(outcomeService)
         .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
-    doReturn("test-scale-count-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
+    doReturn("test-scale-count-release").when(k8sStepHelper).getReleaseName(ambiance, infrastructureOutcome);
     doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(LinkedList.class));
 
     scaleStep.obtainTask(ambiance, stepElementParameters, stepInputPackage);
@@ -238,7 +238,7 @@ public class K8sScaleStepTest extends CategoryTest {
     doReturn(infrastructureOutcome)
         .when(outcomeService)
         .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
-    doReturn("test-scale-percentage-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
+    doReturn("test-scale-percentage-release").when(k8sStepHelper).getReleaseName(ambiance, infrastructureOutcome);
     doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(LinkedList.class));
 
     scaleStep.obtainTask(ambiance, stepElementParameters, stepInputPackage);
@@ -275,7 +275,8 @@ public class K8sScaleStepTest extends CategoryTest {
                                          .commandUnitsProgress(UnitProgressData.builder().build())
                                          .build();
 
-    StepResponse response = scaleStep.handleTaskResult(ambiance, stepElementParameters, () -> responseData);
+    StepResponse response =
+        scaleStep.handleTaskResultWithSecurityContext(ambiance, stepElementParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
 
@@ -293,7 +294,8 @@ public class K8sScaleStepTest extends CategoryTest {
                                          .commandUnitsProgress(UnitProgressData.builder().build())
                                          .build();
 
-    StepResponse response = scaleStep.handleTaskResult(ambiance, stepElementParameters, () -> responseData);
+    StepResponse response =
+        scaleStep.handleTaskResultWithSecurityContext(ambiance, stepElementParameters, () -> responseData);
     assertThat(response.getStatus()).isEqualTo(Status.FAILED);
     assertThat(response.getFailureInfo().getErrorMessage()).isEqualTo("Execution failed.");
   }

@@ -2,17 +2,13 @@ package io.harness.metrics;
 
 import static io.harness.metrics.MetricConstants.METRIC_LABEL_PREFIX;
 
-import io.harness.logging.AutoLogContext;
-
-import java.util.HashMap;
 import java.util.Map;
 import org.apache.logging.log4j.ThreadContext;
 
-public class ThreadAutoLogContext extends AutoLogContext {
+public class ThreadAutoLogContext implements AutoCloseable {
   Map<String, String> contextMap;
 
-  public ThreadAutoLogContext(Map<String, String> contextMap, OverrideBehavior overrideBehavior) {
-    super(new HashMap<>(), overrideBehavior);
+  public ThreadAutoLogContext(Map<String, String> contextMap) {
     this.contextMap = contextMap;
     for (Map.Entry<String, String> entry : contextMap.entrySet()) {
       ThreadContext.put(METRIC_LABEL_PREFIX + entry.getKey(), entry.getValue());
@@ -27,7 +23,6 @@ public class ThreadAutoLogContext extends AutoLogContext {
 
   @Override
   public void close() {
-    super.close();
     removeFromContext();
   }
 }

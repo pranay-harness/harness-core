@@ -13,6 +13,7 @@ import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.ImagePullPolicy;
 import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
@@ -45,8 +46,10 @@ public class RunTestsStepInfo implements CIStepInfo {
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.RUN_TESTS).build();
 
   @JsonIgnore
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(CIStepInfoType.RUN_TESTS.getDisplayName()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(CIStepInfoType.RUN_TESTS.getDisplayName())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;

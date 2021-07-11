@@ -498,6 +498,18 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
+  public void setHealthMonitoringFlag(
+      String accountId, String orgIdentifier, String projectIdentifier, List<String> identifiers, boolean isEnabled) {
+    hPersistence.update(hPersistence.createQuery(CVConfig.class)
+                            .filter(CVConfigKeys.accountId, accountId)
+                            .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+                            .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
+                            .field(CVConfigKeys.identifier)
+                            .in(identifiers),
+        hPersistence.createUpdateOperations(CVConfig.class).set(CVConfigKeys.enabled, isEnabled));
+  }
+
+  @Override
   public List<CVConfig> listByMonitoringSources(String accountId, String orgIdentifier, String projectIdentifier,
       String serviceIdentifier, String envIdentifier, List<String> monitoringSources) {
     Preconditions.checkNotNull(accountId);

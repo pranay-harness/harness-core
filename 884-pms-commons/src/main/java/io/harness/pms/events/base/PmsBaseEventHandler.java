@@ -1,10 +1,14 @@
 package io.harness.pms.events.base;
 
+import static io.harness.pms.events.PmsEventFrameworkConstants.PIPELINE_MONITORING_ENABLED;
+
 import io.harness.data.structure.CollectionUtils;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.AutoLogContext.OverrideBehavior;
+import io.harness.manage.GlobalContextManager;
 import io.harness.metrics.ThreadAutoLogContext;
 import io.harness.monitoring.EventMonitoringService;
+import io.harness.monitoring.MonitoringContext;
 import io.harness.monitoring.MonitoringInfo;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -15,8 +19,11 @@ import com.google.inject.Inject;
 import com.google.protobuf.Message;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public abstract class PmsBaseEventHandler<T extends Message> {
   public static String LISTENER_END_METRIC = "%s_queue_time";
   public static String LISTENER_START_METRIC = "%s_time_in_queue";
@@ -37,17 +44,25 @@ public abstract class PmsBaseEventHandler<T extends Message> {
   protected abstract String getMetricPrefix(T message);
 
   public void handleEvent(T event, Map<String, String> metadataMap, long createdAt) {
-    try (PmsGitSyncBranchContextGuard ignore1 = gitSyncContext(event); AutoLogContext ignore2 = autoLogContext(event)) {
-      ThreadAutoLogContext metricContext =
-          new ThreadAutoLogContext(extractMetricContext(event), OverrideBehavior.OVERRIDE_NESTS);
+    try (PmsGitSyncBranchContextGuard ignore1 = gitSyncContext(event); AutoLogContext ignore2 = autoLogContext(event);
+         ThreadAutoLogContext metricContext = new ThreadAutoLogContext(extractMetricContext(event))) {
+      log.info("[PMS_MESSAGE_LISTENER] Starting to process {} event ", event.getClass().getSimpleName());
+      // TODO (sahil/prashants) change this
+      GlobalContextManager.upsertGlobalContextRecord(
+          MonitoringContext.builder()
+              .isMonitoringEnabled(
+                  Objects.equals(metadataMap.getOrDefault(PIPELINE_MONITORING_ENABLED, "false"), "true"))
+              .build());
       MonitoringInfo monitoringInfo = MonitoringInfo.builder()
                                           .createdAt(createdAt)
                                           .metricPrefix(getMetricPrefix(event))
                                           .metricContext(metricContext)
+                                          .accountId(AmbianceUtils.getAccountId(extractAmbiance(event)))
                                           .build();
       eventMonitoringService.sendMetric(LISTENER_START_METRIC, monitoringInfo, metadataMap);
       handleEventWithContext(event);
       eventMonitoringService.sendMetric(LISTENER_END_METRIC, monitoringInfo, metadataMap);
+      log.info("[PMS_MESSAGE_LISTENER] Processing Finished for {} event", event.getClass().getSimpleName());
     }
   }
 

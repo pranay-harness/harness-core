@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.delegate.beans.DelegateConfiguration.DelegateConfigurationKeys;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -20,12 +20,12 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.account.DefaultExperience;
 import io.harness.security.EncryptionInterface;
 import io.harness.security.SimpleEncryption;
 import io.harness.validation.Create;
 
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -51,7 +51,7 @@ import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
-@OwnedBy(PL)
+@OwnedBy(DX)
 @TargetModule(HarnessModule._955_ACCOUNT_MGMT)
 @FieldNameConstants(innerTypeName = "AccountKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -24,7 +24,6 @@ import org.junit.experimental.categories.Category;
 /**
  * Created by Pranjal on 09/26/2018
  */
-@Ignore
 public class ExperimentalLogAnalysisResourceIntegrationTest extends VerificationIntegrationBase {
   @Override
   @Before
@@ -36,6 +35,7 @@ public class ExperimentalLogAnalysisResourceIntegrationTest extends Verification
   @Test
   @Owner(developers = PRANJAL)
   @Category(DeprecatedIntegrationTests.class)
+  @Ignore("TODO: provide proper description why this test is disabled")
   public void testGetLogExpAnalysisInfo() throws UnknownHostException {
     WebTarget getTarget = client.target(VERIFICATION_API_BASE + "/"
         + "learning-exp" + ExperimentalLogAnalysisResource.ANALYSIS_STATE_GET_EXP_ANALYSIS_INFO_URL

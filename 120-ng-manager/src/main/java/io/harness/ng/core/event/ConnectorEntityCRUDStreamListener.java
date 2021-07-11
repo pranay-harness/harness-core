@@ -79,6 +79,8 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
 
   private boolean processAccountCreateEvent(AccountEntityChangeDTO accountEntityChangeDTO) {
     harnessSMManager.createHarnessSecretManager(accountEntityChangeDTO.getAccountId(), null, null);
+
+    ciDefaultEntityManager.createCIDefaultEntities(accountEntityChangeDTO.getAccountId(), null, null);
     return true;
   }
 
@@ -152,9 +154,6 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
 
   private boolean processProjectCreateEvent(ProjectEntityChangeDTO projectEntityChangeDTO) {
     harnessSMManager.createHarnessSecretManager(projectEntityChangeDTO.getAccountIdentifier(),
-        projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
-
-    ciDefaultEntityManager.createCIDefaultEntities(projectEntityChangeDTO.getAccountIdentifier(),
         projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
     return true;
   }

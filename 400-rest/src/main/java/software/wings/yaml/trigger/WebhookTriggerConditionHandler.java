@@ -14,6 +14,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.trigger.GithubAction;
 import software.wings.beans.trigger.ReleaseAction;
 import software.wings.beans.trigger.TriggerCondition;
@@ -24,6 +25,7 @@ import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.trigger.TriggerConditionYamlHandler;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.yaml.trigger.WebhookEventTriggerConditionYaml.WebhookEventTriggerConditionYamlBuilder;
 
@@ -35,12 +37,14 @@ import java.util.stream.Collectors;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Singleton
+@Slf4j
 public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<WebhookEventTriggerConditionYaml> {
   private static final String PACKAGE_STRING = "package:";
   private static final String SPLITTER = ":";
@@ -48,6 +52,7 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
   @Inject private SecretManager secretManager;
   @Inject private AppService appService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private SettingsService settingsService;
 
   @Override
   public WebhookEventTriggerConditionYaml toYaml(TriggerCondition bean, String appId) {
@@ -64,7 +69,8 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
     if (webHookTriggerCondition.isCheckFileContentChanged()) {
       webhookEventTriggerConditionYamlBuilder.checkFileContentChanged(
           webHookTriggerCondition.isCheckFileContentChanged());
-      webhookEventTriggerConditionYamlBuilder.gitConnectorId(webHookTriggerCondition.getGitConnectorId());
+      webhookEventTriggerConditionYamlBuilder.gitConnectorName(
+          getGitConnectorNameFromId(webHookTriggerCondition.getGitConnectorId()));
       webhookEventTriggerConditionYamlBuilder.repoName(webHookTriggerCondition.getRepoName());
       webhookEventTriggerConditionYamlBuilder.branchName(webHookTriggerCondition.getBranchName());
       webhookEventTriggerConditionYamlBuilder.filePaths(webHookTriggerCondition.getFilePaths());
@@ -97,7 +103,8 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
             .eventTypes(getBeansEventTypes(webhookConditionYaml.getEventType()))
             .webhookSource(getBeanWebhookSource(webhookConditionYaml.getRepositoryType()))
             .checkFileContentChanged(getCheckFileContentChanged(webhookConditionYaml))
-            .gitConnectorId(webhookConditionYaml.getGitConnectorId())
+            .gitConnectorId(getGitConnectorIdFromName(
+                webhookConditionYaml.getGitConnectorName(), accountId, webhookConditionYaml.getGitConnectorId()))
             .repoName(webhookConditionYaml.getRepoName())
             .branchName(webhookConditionYaml.getBranchName())
             .filePaths(webhookConditionYaml.getFilePaths())
@@ -125,6 +132,25 @@ public class WebhookTriggerConditionHandler extends TriggerConditionYamlHandler<
     }
 
     return webHookTriggerCondition;
+  }
+
+  private String getGitConnectorIdFromName(String gitConnectorName, String accountId, String gitConnectorId) {
+    if (gitConnectorName == null) {
+      if (gitConnectorId != null) {
+        log.info("YAML_ID_LOGS: User sending id in yaml in Triggers. accountId: {}", accountId);
+        return gitConnectorId;
+      }
+      return null;
+    }
+    SettingAttribute gitSettingAttribute = settingsService.getSettingAttributeByName(accountId, gitConnectorName);
+    notNullCheck(String.format("Git connector %s does not exist.", gitConnectorName), gitSettingAttribute);
+    return gitSettingAttribute.getUuid();
+  }
+
+  private String getGitConnectorNameFromId(String gitConnectorId) {
+    SettingAttribute gitSettingAttribute = settingsService.get(gitConnectorId);
+    notNullCheck(String.format("Git connector %s does not exist.", gitConnectorId), gitSettingAttribute);
+    return gitSettingAttribute.getName();
   }
 
   private boolean getCheckFileContentChanged(WebhookEventTriggerConditionYaml webhookConditionYaml) {

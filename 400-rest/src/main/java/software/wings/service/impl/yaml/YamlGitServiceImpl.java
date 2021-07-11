@@ -158,7 +158,6 @@ import javax.ws.rs.core.HttpHeaders;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
-
 /**
  * The type Yaml git sync service.
  */
@@ -774,6 +773,19 @@ public class YamlGitServiceImpl implements YamlGitService {
         return "Found ping event. Only push events are supported";
       }
 
+      WebhookSource webhookSource = webhookEventUtils.obtainWebhookSource(headers);
+      /* When a webhook  for pull request merged event is created at Azure Devops end, it first sends an event with
+       * 'active' status. We need to ignore this and process the next event it sends with status 'completed' at the time
+       * of actual pull request merge. Processing  is skipped for event with 'active' status since pull request event is
+       * still open and and unmerged yet. If we don't skip it, current code flow throws an exception for 'active' event,
+       * which restricts/disables webhook from Azure end */
+      if (webhookSource != null && webhookSource.equals(WebhookSource.AZURE_DEVOPS)
+          && webhookEventUtils.shouldIgnorePullRequestMergeEventWithActiveStatusFromAzure(yamlWebHookPayload)) {
+        log.info(GIT_YAML_LOG_PREFIX
+            + "Merge pull request event having active status received from Azure DevOps. Skipped processing.");
+        return "Skipped processing for merge pull request event since pull request has active status and is still unmerged.";
+      }
+
       final String branchName = obtainBranchFromPayload(yamlWebHookPayload, headers);
 
       if (isEmpty(branchName)) {
@@ -1214,7 +1226,11 @@ public class YamlGitServiceImpl implements YamlGitService {
     }
 
     WebhookSource webhookSource = webhookEventUtils.obtainWebhookSource(headers);
-    webhookEventUtils.validatePushEvent(webhookSource, headers);
+    if (webhookSource == WebhookSource.AZURE_DEVOPS) {
+      webhookEventUtils.validatePushEventForAzureDevOps(yamlWebHookPayload);
+    } else {
+      webhookEventUtils.validatePushEvent(webhookSource, headers);
+    }
 
     Map<String, Object> payLoadMap =
         JsonUtils.asObject(yamlWebHookPayload, new TypeReference<Map<String, Object>>() {});
@@ -1229,7 +1245,11 @@ public class YamlGitServiceImpl implements YamlGitService {
     }
 
     WebhookSource webhookSource = webhookEventUtils.obtainWebhookSource(headers);
-    webhookEventUtils.validatePushEvent(webhookSource, headers);
+    if (webhookSource == WebhookSource.AZURE_DEVOPS) {
+      webhookEventUtils.validatePushEventForAzureDevOps(yamlWebHookPayload);
+    } else {
+      webhookEventUtils.validatePushEvent(webhookSource, headers);
+    }
     Map<String, Object> payLoadMap = webhookEventUtils.obtainPayloadMap(yamlWebHookPayload, headers);
 
     return webhookEventUtils.obtainBranchName(webhookSource, headers, payLoadMap);

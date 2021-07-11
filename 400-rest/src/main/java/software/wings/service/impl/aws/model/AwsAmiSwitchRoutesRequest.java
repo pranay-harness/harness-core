@@ -43,8 +43,8 @@ public class AwsAmiSwitchRoutesRequest extends AwsAmiRequest {
       List<String> primaryClassicLBs, List<String> primaryTargetGroupARNs, String newAsgName,
       List<String> stageClassicLBs, List<String> stageTargetGroupARNs, int registrationTimeout,
       AwsAmiPreDeploymentData preDeploymentData, boolean downscaleOldAsg, boolean rollback,
-      List<String> baseScalingPolicyJSONs) {
-    super(awsConfig, encryptionDetails, EXECUTE_AMI_SWITCH_ROUTE, region);
+      List<String> baseScalingPolicyJSONs, boolean amiInServiceHealthyStateFFEnabled) {
+    super(awsConfig, encryptionDetails, EXECUTE_AMI_SWITCH_ROUTE, region, amiInServiceHealthyStateFFEnabled);
     this.accountId = accountId;
     this.appId = appId;
     this.activityId = activityId;

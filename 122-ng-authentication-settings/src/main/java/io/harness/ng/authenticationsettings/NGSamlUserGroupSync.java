@@ -5,8 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.ng.core.api.UserGroupService;
-import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserGroup;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
 
 import software.wings.security.authentication.SamlUserAuthorization;
@@ -14,6 +14,7 @@ import software.wings.security.authentication.SamlUserAuthorization;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
@@ -36,8 +37,11 @@ public class NGSamlUserGroupSync {
 
   private void updateUserGroups(
       List<UserGroup> userGroupsToSync, SamlUserAuthorization samlUserAuthorization, String accountIdentifier) {
-    UserInfo userInfo = ngUserService.getUserFromEmail(samlUserAuthorization.getEmail()).get();
-
+    Optional<UserMetadataDTO> userOpt = ngUserService.getUserByEmail(samlUserAuthorization.getEmail(), false);
+    if (!userOpt.isPresent()) {
+      return;
+    }
+    UserMetadataDTO user = userOpt.get();
     final List<String> newUserGroups =
         samlUserAuthorization.getUserGroups() != null ? samlUserAuthorization.getUserGroups() : new ArrayList<>();
     log.info("SAML authorisation user groups for user: {} are: {}", samlUserAuthorization.getEmail(),
@@ -48,13 +52,12 @@ public class NGSamlUserGroupSync {
     Scope scope =
         Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(null).projectIdentifier(null).build();
     userGroupsToSync.forEach(userGroup -> {
-      if (userGroupService.checkMember(accountIdentifier, null, null, userGroup.getIdentifier(), userInfo.getUuid())
+      if (userGroupService.checkMember(accountIdentifier, null, null, userGroup.getIdentifier(), user.getUuid())
           && !newUserGroups.contains(userGroup.getSsoGroupId())) {
         log.info("Removing user: {} from user group: {} in account: {}", samlUserAuthorization.getEmail(),
             userGroup.getName(), userGroup.getAccountIdentifier());
-        userGroupService.removeMember(scope, userGroup.getIdentifier(), userInfo.getUuid());
-      } else if (!userGroupService.checkMember(
-                     accountIdentifier, null, null, userGroup.getIdentifier(), userInfo.getUuid())
+        userGroupService.removeMember(scope, userGroup.getIdentifier(), user.getUuid());
+      } else if (!userGroupService.checkMember(accountIdentifier, null, null, userGroup.getIdentifier(), user.getUuid())
           && newUserGroups.contains(userGroup.getSsoGroupId())) {
         userAddedToGroups.add(userGroup);
       }
@@ -63,6 +66,6 @@ public class NGSamlUserGroupSync {
     log.info("Adding user {} to groups {} in saml authorization.", samlUserAuthorization.getEmail(),
         userAddedToGroups.toString());
 
-    userGroupService.addUserToUserGroups(accountIdentifier, userInfo, userAddedToGroups);
+    userGroupService.addUserToUserGroups(accountIdentifier, user.getUuid(), userAddedToGroups);
   }
 }

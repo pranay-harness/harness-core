@@ -1,6 +1,7 @@
 package io.harness.batch.processing.service.impl;
 
 import static io.harness.ccm.commons.entities.k8s.K8sWorkload.encodeDotsInKey;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
@@ -15,13 +16,16 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Sort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class WorkloadRepositoryImpl implements WorkloadRepository {
   private final HPersistence hPersistence;
@@ -41,7 +45,8 @@ public class WorkloadRepositoryImpl implements WorkloadRepository {
   @Override
   public void savePodWorkload(String accountId, PodInfo podInfo) {
     Owner topLevelOwner = podInfo.getTopLevelOwner();
-    if (isNotEmpty(topLevelOwner.getLabelsMap())) {
+    Map<String, String> labelMap = getLabelMap(accountId, podInfo);
+    if (isNotEmpty(labelMap)) {
       final CacheKey cacheKey = new CacheKey(podInfo.getClusterId(), topLevelOwner.getUid());
       saved.get(cacheKey,
           key
@@ -58,10 +63,19 @@ public class WorkloadRepositoryImpl implements WorkloadRepository {
                      .set(K8sWorkloadKeys.namespace, podInfo.getNamespace())
                      .set(K8sWorkloadKeys.uid, topLevelOwner.getUid())
                      .set(K8sWorkloadKeys.kind, topLevelOwner.getKind())
-                     .set(K8sWorkloadKeys.labels, encodeDotsInKey(topLevelOwner.getLabelsMap())),
+                     .set(K8sWorkloadKeys.labels, encodeDotsInKey(labelMap)),
                  HPersistence.upsertReturnNewOptions))
               != null);
     }
+  }
+
+  private Map<String, String> getLabelMap(String accountId, PodInfo podInfo) {
+    Owner topLevelOwner = podInfo.getTopLevelOwner();
+    Map<String, String> labelsMap = topLevelOwner.getLabelsMap();
+    if (accountId.equals("hW63Ny6rQaaGsKkVjE0pJA") && isEmpty(labelsMap)) {
+      labelsMap = podInfo.getLabelsMap();
+    }
+    return labelsMap;
   }
 
   @Override

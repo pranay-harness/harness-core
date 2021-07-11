@@ -7,6 +7,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildrenExecutableResponse;
 import io.harness.pms.contracts.execution.ChildrenExecutableResponse.Child;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.plan.MapStepParameters;
 import io.harness.pms.sdk.core.steps.executables.ChildrenExecutable;
@@ -23,7 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(PIPELINE)
 public class StageStep implements ChildrenExecutable<MapStepParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType("stage").build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType("stage").setStepCategory(StepCategory.STEP).build();
 
   @Override
   public Class<MapStepParameters> getStepParametersClass() {
@@ -33,7 +35,7 @@ public class StageStep implements ChildrenExecutable<MapStepParameters> {
   @Override
   public ChildrenExecutableResponse obtainChildren(
       Ambiance ambiance, MapStepParameters stepParameters, StepInputPackage inputPackage) {
-    log.info("Stage Step parameters: {}", RecastOrchestrationUtils.toDocumentJson(stepParameters));
+    log.info("Stage Step parameters: {}", RecastOrchestrationUtils.toJson(stepParameters));
     List<String> childrenNodeIds = (List<String>) stepParameters.get("childrenNodeIds");
     List<Child> children = new ArrayList<>();
     if (childrenNodeIds != null) {
@@ -45,7 +47,7 @@ public class StageStep implements ChildrenExecutable<MapStepParameters> {
   @Override
   public StepResponse handleChildrenResponse(
       Ambiance ambiance, MapStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    log.info("Stage response map: {}", RecastOrchestrationUtils.toDocumentJson(responseDataMap));
+    log.info("Stage response map: {}", RecastOrchestrationUtils.toJson(responseDataMap));
     return StepResponse.builder().status(Status.SUCCEEDED).build();
   }
 }

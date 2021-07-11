@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/wings-software/portal/product/ci/addon/ti"
@@ -70,7 +71,7 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handler
 		}
 
 		// Classify and write the test selection stats to timescaleDB
-		err = db.WriteSelectedTests(ctx, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, selected, false)
+		err = db.WriteSelectedTests(ctx, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, selected, 0, false)
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: could not write selected tests", "account_id", accountId,
@@ -211,6 +212,12 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 		buildId := r.FormValue(buildIdParam)
 		stageId := r.FormValue(stageIdParam)
 		stepId := r.FormValue(stepIdParam)
+		timeMsStr := r.FormValue(timeMsParam)
+		timeMs, err := strconv.ParseInt(timeMsStr, 10, 64)
+		if err != nil {
+			log.Errorw("could not parse time taken", zap.Error(err))
+			timeMs = 0
+		}
 		info := mongodb.VCSInfo{
 			Repo:     r.FormValue(repoParam),
 			Branch:   r.FormValue(sourceBranchParam),
@@ -246,7 +253,7 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			accountIDParam, acc, repoParam, info.Repo, sourceBranchParam, info.Branch, targetBranchParam, target)
 		resp, err := tidb.UploadPartialCg(r.Context(), cg, info, acc, org, proj, target)
 		// Try to update counts even if uploading partial CG failed
-		werr := db.WriteSelectedTests(r.Context(), acc, org, proj, pipelineId, buildId, stageId, stepId, resp, true)
+		werr := db.WriteSelectedTests(r.Context(), acc, org, proj, pipelineId, buildId, stageId, stepId, resp, timeMs, true)
 		if err != nil {
 			log.Errorw("failed to write callgraph to db", accountIDParam, acc, repoParam, info.Repo,
 				sourceBranchParam, info.Branch, zap.Error(err))

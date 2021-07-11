@@ -25,4 +25,7 @@ public interface ServiceAccountService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
   PageResponse<ServiceAccountAggregateDTO> listAggregateServiceAccounts(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, List<String> identifiers, Pageable pageable, ServiceAccountFilterDTO filterDTO);
+
+  ServiceAccountAggregateDTO getServiceAccountAggregateDTO(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 }

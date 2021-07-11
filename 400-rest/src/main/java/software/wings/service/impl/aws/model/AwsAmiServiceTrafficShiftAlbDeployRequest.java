@@ -43,8 +43,9 @@ public class AwsAmiServiceTrafficShiftAlbDeployRequest extends AwsAmiRequest {
       String newAutoScalingGroupName, String oldAutoScalingGroupName, Integer oldAsgFinalDesiredCount,
       Integer autoScalingSteadyStateTimeout, int minInstances, int maxInstances,
       AwsAmiPreDeploymentData preDeploymentData, boolean rollback, List<String> baseScalingPolicyJSONs,
-      int desiredInstances, List<String> infraMappingTargetGroupArns) {
-    super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB_DEPLOY, region);
+      int desiredInstances, List<String> infraMappingTargetGroupArns, boolean amiInServiceHealthyStateFFEnabled) {
+    super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB_DEPLOY, region,
+        amiInServiceHealthyStateFFEnabled);
     this.accountId = accountId;
     this.appId = appId;
     this.commandName = commandName;

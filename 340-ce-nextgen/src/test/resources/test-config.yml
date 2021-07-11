@@ -77,6 +77,10 @@ ngManagerClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
+grpcClient:
+  target: localhost:9880
+  authority: localhost
+
 # has to be comma ',' delimited flags
 featureFlagsEnabled: ""
 deployMode: KUBERNETES

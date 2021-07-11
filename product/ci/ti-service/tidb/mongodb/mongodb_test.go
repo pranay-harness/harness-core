@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"testing"
+	"time"
 )
 
 var db *MongoDb
@@ -44,13 +45,16 @@ func TestMongoDb_UploadPartialCgForNodes(t *testing.T) {
 	defer dropNodes(ctx)     // drop nodes after the test is completed as well
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 	// Setup nodes
-	n1 := NewNode(1, "pkg", "m", "p", "c", "source",
+	n1 := NewNode(1, "pkg", "m", "p", "c", "source", false,
 		getVCSInfo(),
 		"acct", "org", "proj")
-	n2 := NewNode(2, "pkg", "m", "p", "c", "source",
+	n2 := NewNode(2, "pkg", "m", "p", "c", "source", false,
 		getVCSInfo(),
 		"acct", "org", "proj")
-	n := []interface{}{n1, n2}
+	oldNode := NewNode(10, "pkg", "m", "p", "c", "source", false,
+		getVCSInfoWithCommit("oldCommit"),
+		"acct", "org", "proj")
+	n := []interface{}{n1, n2, oldNode}
 	db.Database.Collection("nodes").InsertMany(ctx, n)
 
 	// this should be added in nodes collection as ID: 3 is unique
@@ -67,17 +71,155 @@ func TestMongoDb_UploadPartialCgForNodes(t *testing.T) {
 		"proj",
 		"target",
 	)
+	// ttl script of mongo runs every 60 seconds.
+	time.Sleep(70 * time.Second)
+
+	// Expectations --
+	// - commitId of node `oldNode` is older so this node should be deleted.
+	// - newNode is newly uploaded node with new commit so it will be added.
+	// - node with name `nodeWithDuplicateId` already exists with same commit so it should not be added.
+
 	var nodes []Node
 	curr, _ := db.Database.Collection("nodes").Find(ctx, bson.M{}, &options.FindOptions{})
 	curr.All(ctx, &nodes)
 
 	idSet := []int{1, 2, 3}
+
+	// before calling fn there were 2 nodes.
+	// In fn call one node with older commit will be removed. One with new node id will be added and one which already
+	// exists will be skipped.
+	for _, no := range nodes {
+		fmt.Println(no)
+	}
 	assert.Equal(t, len(nodes), 3)
 	for _, node := range nodes {
 		fmt.Println(node.Id)
 		assert.True(t, contains(idSet, node.Id))
 	}
 
+}
+
+func TestMongoDb_MergeCgForNodes(t *testing.T) {
+	ctx := context.Background()
+	dropNodes(ctx)
+	dropRelations(ctx)
+	defer dropNodes(ctx)     // drop nodes after the test is completed as well
+	defer dropRelations(ctx) // drop relations after the test is completed as well
+	// Setup nodes
+	n1 := NewNode(1, "pkg", "m", "p", "c", "source", false,
+		getVCSInfoWithBranch("b1"), "acct", "org", "proj")
+	n2 := NewNode(2, "pkg", "m", "p", "c", "source", false,
+		getVCSInfoWithBranch("b1"), "acct", "org", "proj")
+	n3 := NewNode(3, "pkg", "m", "p", "c", "source", false,
+		getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
+	n4 := NewNode(1, "pkg", "m", "p", "c", "source", false,
+		getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
+	n := []interface{}{n1, n2, n3, n4}
+	db.Database.Collection("nodes").InsertMany(ctx, n)
+
+	// Expectations
+	// - `newNode` is new node uploaded with new commit and new node so it will be added.
+	// -  node `nodeWithDuplicateId` already exists with same commit so it should not be added.
+	var nodes []Node
+	curr, _ := db.Database.Collection("nodes").Find(ctx, bson.M{"vcs_info.branch": "b1"}, &options.FindOptions{})
+	curr.All(ctx, &nodes)
+
+	assert.Equal(t, len(nodes), 2)
+
+	mergeReq := types.MergePartialCgRequest{
+		AccountId:    "acct",
+		Repo:         "repo.git",
+		TargetBranch: "b1",
+		Diff:         types.DiffInfo{Sha: "commit1"},
+	}
+	db.MergePartialCg(ctx, mergeReq)
+
+	// ttl script of mongo runs every 60 seconds.
+	time.Sleep(70 * time.Second)
+	curr, _ = db.Database.Collection("nodes").Find(ctx, bson.M{"vcs_info.branch": "b1"}, &options.FindOptions{})
+	curr.All(ctx, &nodes)
+
+	idSet := []int{1, 2, 3}
+	// there were 2 nodes in destination branch
+	// there were 2 nodes in src branch -- node id 3 was unique while node id 1 was duplicate
+	// node id 3 will be move to destination branch from the src branch while the node id 1 will be skipped
+	// finally there should be 3 nodes in the destination branch and 0 nodes in the src branch
+	assert.Equal(t, len(nodes), 3)
+	for _, node := range nodes {
+		fmt.Println(node.Id)
+		assert.True(t, contains(idSet, node.Id))
+	}
+
+	curr, _ = db.Database.Collection("nodes").Find(ctx, bson.M{"vcs_info.branch": "b2"}, &options.FindOptions{})
+	curr.All(ctx, &nodes)
+	assert.Equal(t, len(nodes), 0)
+}
+
+func TestMongoDb_MergePartialCgForRelations(t *testing.T) {
+	ctx := context.Background()
+	dropNodes(ctx)
+	dropRelations(ctx)
+	defer dropNodes(ctx)     // drop nodes after the test is completed as well
+	defer dropRelations(ctx) // drop relations after the test is completed as well
+
+	r1 := NewRelation(1, []int{1, 2}, getVCSInfoWithBranch("b1"), "acct", "org", "proj")
+	r2 := NewRelation(2, []int{3, 4, 5, 6}, getVCSInfoWithBranch("b1"), "acct", "org", "proj")
+	r3 := NewRelation(3, []int{1, 2}, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")             // moved
+	r4 := NewRelation(2, []int{1, 2, 3, 7, 8, 9}, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj") // merged
+	r5 := NewRelation(4, []int{1, 6, 3, 7}, getVCSInfoWithBranchAndCommit("commit1", "b2"), "acct", "org", "proj")
+
+	nodes := []interface{}{r1, r2, r3, r4, r5}
+	db.Database.Collection("relations").InsertMany(ctx, nodes)
+
+	// call merge-callgraph function
+	mergeReq := types.MergePartialCgRequest{
+		AccountId:    "acct",
+		Repo:         "repo.git",
+		TargetBranch: "b1",
+		Diff:         types.DiffInfo{Sha: "commit1"},
+	}
+	db.MergePartialCg(ctx, mergeReq)
+
+	// ttl script of mongo runs every 60 seconds.
+	time.Sleep(70 * time.Second)
+
+	var relations []Relation
+	curr, _ := db.Database.Collection("relations").Find(ctx, bson.M{"vcs_info.branch": "b1"}, &options.FindOptions{})
+	curr.All(ctx, &relations)
+
+	// Expectation:
+	// node 1 wil remain unchanged
+	// node 2 is in both dest and src branch so it will merged and moved to dest branch
+	// node 3 is in dest branch and it should be moved to src branch
+	// node 4 is in dest branch and it should be moved to src branch
+	idSet := []int{1, 2, 3, 4}
+	assert.Equal(t, len(relations), 4)
+	for _, reln := range relations {
+		assert.True(t, contains(idSet, reln.Source))
+	}
+
+	rel := filterRelations(1, relations)
+	assert.Equal(t, len(rel.Tests), 2)
+	assert.True(t, contains(rel.Tests, 1))
+	assert.True(t, contains(rel.Tests, 2))
+
+	// 2 should be the merged and contain {1, 2, 3, 4, 5, 6, 7, 8, 9}
+	rel = filterRelations(2, relations)
+	assert.Equal(t, len(rel.Tests), 9)
+	assert.True(t, contains(rel.Tests, 3))
+	assert.True(t, contains(rel.Tests, 1))
+
+	// 3 should be moved directly
+	rel = filterRelations(3, relations)
+	assert.Equal(t, len(rel.Tests), 2)
+
+	// 4 should also be moved directly
+	rel = filterRelations(4, relations)
+	assert.Equal(t, len(rel.Tests), 4)
+
+	curr, _ = db.Database.Collection("relations").Find(ctx, bson.M{"vcs_info.branch": "b2"}, &options.FindOptions{})
+	curr.All(ctx, &relations)
+	assert.Equal(t, len(relations), 0)
 }
 
 func TestMongoDb_UploadPartialCgForRelations(t *testing.T) {
@@ -106,6 +248,10 @@ func TestMongoDb_UploadPartialCgForRelations(t *testing.T) {
 		"proj",
 		"target",
 	)
+
+	// ttl script of mongo runs every 60 seconds.
+	time.Sleep(70 * time.Second)
+
 	var relations []Relation
 	curr, _ := db.Database.Collection("relations").Find(ctx, bson.M{}, &options.FindOptions{})
 	curr.All(ctx, &relations)
@@ -143,15 +289,15 @@ func Test_GetTestsToRun_Unsupported_File(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert sources and tests
-	n1 := NewNode(1, "pkg1", "m1", "param", "cls1", "source",
+	n1 := NewNode(1, "pkg1", "m1", "param", "cls1", "source", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "pkg1", "m2", "param", "cls1", "test",
+	n2 := NewNode(2, "pkg1", "m2", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n3 := NewNode(2, "pkg2", "m1", "param", "cls1", "test",
+	n3 := NewNode(2, "pkg2", "m1", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n4 := NewNode(2, "pkg2", "m2", "param", "cls1", "test",
+	n4 := NewNode(2, "pkg2", "m2", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n5 := NewNode(2, "pkg2", "m1", "param", "cls2", "test",
+	n5 := NewNode(2, "pkg2", "m1", "param", "cls2", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
 
 	n := []interface{}{n1, n2, n3, n4, n5}
@@ -159,7 +305,7 @@ func Test_GetTestsToRun_Unsupported_File(t *testing.T) {
 
 	chFiles := []types.File{{Name: "a.xml", Status: types.FileModified}}
 
-	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{Files: chFiles, TargetBranch: "branch", Repo: "repo"}, "acct")
+	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{Files: chFiles, TargetBranch: "branch", Repo: "repo.git"}, "acct")
 	assert.Nil(t, err)
 	assert.Equal(t, resp.SelectAll, true)
 	assert.Equal(t, resp.TotalTests, 4)
@@ -176,15 +322,15 @@ func Test_GetTestsToRun_DifferentAccount(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert sources and tests
-	n1 := NewNode(1, "pkg1", "m1", "param", "cls1", "source",
+	n1 := NewNode(1, "pkg1", "m1", "param", "cls1", "source", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "pkg1", "m2", "param", "cls1", "test",
+	n2 := NewNode(2, "pkg1", "m2", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n3 := NewNode(2, "pkg2", "m1", "param", "cls1", "test",
+	n3 := NewNode(2, "pkg2", "m1", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n4 := NewNode(2, "pkg2", "m2", "param", "cls1", "test",
+	n4 := NewNode(2, "pkg2", "m2", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n5 := NewNode(2, "pkg2", "m1", "param", "cls2", "test",
+	n5 := NewNode(2, "pkg2", "m1", "param", "cls2", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
 
 	n := []interface{}{n1, n2, n3, n4, n5}
@@ -192,7 +338,7 @@ func Test_GetTestsToRun_DifferentAccount(t *testing.T) {
 
 	chFiles := []types.File{{Name: "a.xml", Status: types.FileModified}}
 
-	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{Files: chFiles, TargetBranch: "branch", Repo: "repo"}, "diffAct")
+	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{Files: chFiles, TargetBranch: "branch", Repo: "repo.git"}, "diffAct")
 	assert.Nil(t, err)
 	assert.Equal(t, resp.SelectAll, true)
 	assert.Equal(t, resp.TotalTests, 0) // Nothing got returned
@@ -230,25 +376,25 @@ func Test_GetTestsToRun_TiConfig_Added_Deleted(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert source and tests
-	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source",
+	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test",
+	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n3 := NewNode(3, "pkg2", "m2", "param", "cls1", "test",
+	n3 := NewNode(3, "pkg2", "m2", "param", "cls1", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n4 := NewNode(4, "pkg2", "m1", "param", "cls2", "test",
+	n4 := NewNode(4, "pkg2", "m1", "param", "cls2", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n5 := NewNode(5, "path.to.pkg2", "m1", "param", "Xyz", "source",
+	n5 := NewNode(5, "path.to.pkg2", "m1", "param", "Xyz", "source", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n6 := NewNode(6, "path.to.test2", "m1", "param", "XyzTest", "test",
+	n6 := NewNode(6, "path.to.test2", "m1", "param", "XyzTest", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n7 := NewNode(7, "path.to.test3", "m1", "param", "DefTest", "test",
+	n7 := NewNode(7, "path.to.test3", "m1", "param", "DefTest", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n8 := NewNode(8, "path.to.src4", "m1", "param", "Ghi", "source",
+	n8 := NewNode(8, "path.to.src4", "m1", "param", "Ghi", "source", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n9 := NewNode(9, "path.to.test4", "m1", "param", "GhiTest", "test",
+	n9 := NewNode(9, "path.to.test4", "m1", "param", "GhiTest", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n10 := NewNode(10, "path.to.test4", "m2", "param", "GhiTest", "test",
+	n10 := NewNode(10, "path.to.test4", "m2", "param", "GhiTest", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
 	n := []interface{}{n1, n2, n3, n4, n5, n6, n7, n8, n9, n10}
 	db.Database.Collection("nodes").InsertMany(ctx, n)
@@ -270,7 +416,7 @@ func Test_GetTestsToRun_TiConfig_Added_Deleted(t *testing.T) {
 	ticonfig := types.TiConfig{}
 	ticonfig.Config.Ignore = []string{"**/*.xml", "**/*.jsp"}
 
-	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{TiConfig: ticonfig, Files: chFiles, TargetBranch: "branch", Repo: "repo"}, "acct")
+	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{TiConfig: ticonfig, Files: chFiles, TargetBranch: "branch", Repo: "repo.git"}, "acct")
 	assert.Nil(t, err)
 	assert.Equal(t, resp.SelectAll, false)
 	assert.Equal(t, resp.TotalTests, 7)
@@ -291,9 +437,9 @@ func Test_GetTestsToRun_WithNewTests(t *testing.T) {
 	defer dropRelations(ctx) // drop relations after the test is completed as well
 
 	// Insert source and tests
-	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source",
+	n1 := NewNode(1, "path.to.pkg", "m1", "param", "Abc", "source", false,
 		getVCSInfo(), "acct", "org", "proj")
-	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test",
+	n2 := NewNode(2, "path.to.test", "m2", "param", "AbcTest", "test", false,
 		getVCSInfo(), "acct", "org", "proj")
 	n := []interface{}{n1, n2}
 	db.Database.Collection("nodes").InsertMany(ctx, n)
@@ -313,7 +459,7 @@ func Test_GetTestsToRun_WithNewTests(t *testing.T) {
 	ticonfig := types.TiConfig{}
 	ticonfig.Config.Ignore = []string{"**/*.xml", "**/*.jsp"}
 
-	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{TiConfig: ticonfig, Files: chFiles, TargetBranch: "branch", Repo: "repo"}, "acct")
+	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{TiConfig: ticonfig, Files: chFiles, TargetBranch: "branch", Repo: "repo.git"}, "acct")
 	assert.Nil(t, err)
 	assert.Equal(t, resp.SelectAll, false)
 	assert.Equal(t, resp.TotalTests, 1)    // new tests will get factored after CG
@@ -357,11 +503,27 @@ func dropRelations(ctx context.Context) {
 }
 
 func getVCSInfo() VCSInfo {
+	return getCustomVCSInfo("repo.git", "branch", "commit")
+}
+
+func getCustomVCSInfo(repo, branch, commit string) VCSInfo {
 	return VCSInfo{
-		Repo:     "repo",
-		Branch:   "branch",
-		CommitId: "commit",
+		Repo:     repo,
+		Branch:   branch,
+		CommitId: commit,
 	}
+}
+
+func getVCSInfoWithBranchAndCommit(commit, branch string) VCSInfo {
+	return getCustomVCSInfo("repo.git", branch, commit)
+}
+
+func getVCSInfoWithBranch(branch string) VCSInfo {
+	return getCustomVCSInfo("repo.git", branch, "commit")
+}
+
+func getVCSInfoWithCommit(commit string) VCSInfo {
+	return getCustomVCSInfo("repo.git", "branch", commit)
 }
 
 func getNode(id int) ti.Node {

@@ -1,6 +1,5 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.OnPrimaryManagerMigration;
 
 import software.wings.beans.GitFileActivitySummary;

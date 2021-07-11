@@ -6,7 +6,9 @@ import lombok.Value;
 @Value
 @Builder
 public class ViewCostData {
-  private double cost;
-  private long minStartTime;
-  private long maxStartTime;
+  double cost;
+  Double idleCost;
+  Double unallocatedCost;
+  long minStartTime;
+  long maxStartTime;
 }

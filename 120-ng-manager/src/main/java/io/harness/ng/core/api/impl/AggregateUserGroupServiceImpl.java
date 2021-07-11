@@ -2,6 +2,7 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
@@ -24,18 +25,15 @@ import io.harness.ng.core.dto.AggregateACLRequest;
 import io.harness.ng.core.dto.RoleAssignmentMetadataDTO;
 import io.harness.ng.core.dto.UserGroupAggregateDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
 import io.harness.ng.core.user.entities.UserGroup;
-import io.harness.ng.core.user.remote.mapper.UserMetadataMapper;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.ng.core.utils.UserGroupMapper;
-import io.harness.user.remote.UserFilterNG;
 import io.harness.utils.PageUtils;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -69,28 +67,25 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
     Page<UserGroup> userGroupPageResponse = userGroupService.list(
         accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, getPageRequest(pageRequest));
 
-    Set<PrincipalDTO> principalDTOSet =
-        userGroupPageResponse.stream()
-            .map(userGroup -> PrincipalDTO.builder().identifier(userGroup.getIdentifier()).type(USER_GROUP).build())
-            .collect(Collectors.toSet());
-    RoleAssignmentFilterDTO roleAssignmentFilterDTO =
-        RoleAssignmentFilterDTO.builder().principalFilter(principalDTOSet).build();
-
-    Map<String, List<RoleAssignmentMetadataDTO>> userGroupRoleAssignmentsMap =
-        getPrincipalRoleAssignmentMap(accountIdentifier, orgIdentifier, projectIdentifier, roleAssignmentFilterDTO);
-
     List<String> userIdentifiers = userGroupPageResponse.stream()
                                        .map(ug -> getLastNElementsReversed(ug.getUsers(), userSize))
                                        .flatMap(List::stream)
                                        .filter(Objects::nonNull)
                                        .distinct()
                                        .collect(Collectors.toList());
-
     Map<String, UserMetadataDTO> userMetadataMap =
-        ngUserService.listCurrentGenUsers(accountIdentifier, UserFilterNG.builder().userIds(userIdentifiers).build())
+        ngUserService.getUserMetadata(userIdentifiers)
             .stream()
-            .map(UserMetadataMapper::writeDTO)
             .collect(Collectors.toMap(UserMetadataDTO::getUuid, Function.identity()));
+
+    Set<PrincipalDTO> principalDTOSet =
+        userGroupPageResponse.stream()
+            .map(userGroup -> PrincipalDTO.builder().identifier(userGroup.getIdentifier()).type(USER_GROUP).build())
+            .collect(Collectors.toSet());
+    RoleAssignmentFilterDTO roleAssignmentFilterDTO =
+        RoleAssignmentFilterDTO.builder().principalFilter(principalDTOSet).build();
+    Map<String, List<RoleAssignmentMetadataDTO>> userGroupRoleAssignmentsMap =
+        getPrincipalRoleAssignmentMap(accountIdentifier, orgIdentifier, projectIdentifier, roleAssignmentFilterDTO);
 
     return PageUtils.getNGPageResponse(userGroupPageResponse.map(userGroup -> {
       List<UserMetadataDTO> users = getLastNElementsReversed(userGroup.getUsers(), userSize)
@@ -137,18 +132,16 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
                                                 .build();
     List<UserGroup> userGroups = userGroupService.list(userGroupFilterDTO);
 
-    Set<String> userIdentifiers = userGroups.stream()
-                                      .map(UserGroup::getUsers)
-                                      .flatMap(List::stream)
-                                      .filter(Objects::nonNull)
-                                      .collect(Collectors.toSet());
+    List<String> userIdentifiers = userGroups.stream()
+                                       .map(UserGroup::getUsers)
+                                       .flatMap(List::stream)
+                                       .filter(Objects::nonNull)
+                                       .distinct()
+                                       .collect(toList());
 
     Map<String, UserMetadataDTO> userMetadataMap =
-        ngUserService
-            .listCurrentGenUsers(
-                accountIdentifier, UserFilterNG.builder().userIds(new ArrayList<>(userIdentifiers)).build())
+        ngUserService.getUserMetadata(userIdentifiers)
             .stream()
-            .map(UserMetadataMapper::writeDTO)
             .collect(Collectors.toMap(UserMetadataDTO::getUuid, Function.identity()));
 
     return userGroups.stream()
@@ -180,14 +173,9 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
     Map<String, List<RoleAssignmentMetadataDTO>> userGroupRoleAssignmentsMap =
         getPrincipalRoleAssignmentMap(accountIdentifier, orgIdentifier, projectIdentifier, roleAssignmentFilterDTO);
 
-    List<String> userIdentifiers =
-        userGroupOpt.get().getUsers() == null ? new ArrayList<>() : userGroupOpt.get().getUsers();
-
-    List<UserMetadataDTO> users =
-        ngUserService.listCurrentGenUsers(accountIdentifier, UserFilterNG.builder().userIds(userIdentifiers).build())
-            .stream()
-            .map(UserMetadataMapper::writeDTO)
-            .collect(toList());
+    List<UserMetadataDTO> users = isEmpty(userGroupOpt.get().getUsers())
+        ? Collections.emptyList()
+        : ngUserService.getUserMetadata(userGroupOpt.get().getUsers());
 
     return UserGroupAggregateDTO.builder()
         .userGroupDTO(UserGroupMapper.toDTO(userGroupOpt.get()))
@@ -205,6 +193,7 @@ public class AggregateUserGroupServiceImpl implements AggregateUserGroupService 
 
     Map<String, RoleResponseDTO> roleMap = roleAssignmentAggregateResponseDTO.getRoles().stream().collect(
         toMap(e -> e.getRole().getIdentifier(), Function.identity()));
+
     Map<String, ResourceGroupDTO> resourceGroupMap =
         roleAssignmentAggregateResponseDTO.getResourceGroups().stream().collect(
             toMap(ResourceGroupDTO::getIdentifier, Function.identity()));

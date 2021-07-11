@@ -1,9 +1,11 @@
 package software.wings.service.impl.applicationmanifest;
 
+import static io.harness.beans.SearchFilter.Operator.CONTAINS;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.regex.Pattern.compile;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -17,17 +19,21 @@ import io.harness.data.structure.EmptyPredicate;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.appmanifest.HelmChart.HelmChartKeys;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 
 import com.google.inject.Inject;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
 @OwnedBy(HarnessTeam.CDC)
 public class HelmChartServiceImpl implements HelmChartService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private ApplicationManifestService applicationManifestService;
 
   @Override
   public HelmChart create(HelmChart helmChart) {
@@ -41,16 +47,23 @@ public class HelmChartServiceImpl implements HelmChartService {
   }
 
   @Override
-  public PageResponse<HelmChart> listHelmChartsForService(
-      String appId, String serviceId, PageRequest<HelmChart> pageRequest) {
+  public Map<String, List<HelmChart>> listHelmChartsForService(
+      String appId, String serviceId, String manifestSearchString, PageRequest<HelmChart> pageRequest) {
     if (isNotBlank(appId)) {
       pageRequest.addFilter(HelmChartKeys.appId, EQ, appId);
     }
     if (isNotBlank(serviceId)) {
       pageRequest.addFilter(HelmChartKeys.serviceId, EQ, serviceId);
     }
+    if (isNotBlank(manifestSearchString)) {
+      pageRequest.addFilter(HelmChartKeys.displayName, CONTAINS, manifestSearchString);
+    }
     pageRequest.addOrder(HelmChartKeys.createdAt, SortOrder.OrderType.DESC);
-    return listHelmChartsForService(pageRequest);
+    List<HelmChart> helmCharts = listHelmChartsForService(pageRequest);
+    Map<String, String> appManifestIdNameMap = applicationManifestService.getNamesForIds(
+        appId, helmCharts.stream().map(HelmChart::getApplicationManifestId).collect(Collectors.toSet()));
+    return helmCharts.stream().collect(
+        groupingBy(helmChart -> appManifestIdNameMap.get(helmChart.getApplicationManifestId())));
   }
 
   @Override

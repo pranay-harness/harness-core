@@ -2,7 +2,6 @@ package io.harness.migrations.timescaledb;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(CE)

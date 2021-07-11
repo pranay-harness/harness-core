@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 public class PmsYamlSchemaHelper {
-  private static final String STEP_ELEMENT_CONFIG =
+  public static final String STEP_ELEMENT_CONFIG =
       io.harness.yaml.utils.YamlSchemaUtils.getSwaggerName(StepElementConfig.class);
   private static final Class<StepElementConfig> STEP_ELEMENT_CONFIG_CLASS = StepElementConfig.class;
 

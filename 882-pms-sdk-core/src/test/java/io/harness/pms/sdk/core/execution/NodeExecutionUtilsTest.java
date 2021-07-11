@@ -10,9 +10,9 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
-import org.bson.Document;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -36,24 +36,24 @@ public class NodeExecutionUtilsTest extends PmsSdkCoreTestBase {
                       .dummy(ParameterField.createValueField(dummyInner))
                       .build();
 
-    Document doc = RecastOrchestrationUtils.toDocument(dummy);
-    Object resp = NodeExecutionUtils.resolveObject(doc);
+    Map<String, Object> map = RecastOrchestrationUtils.toMap(dummy);
+    Object resp = NodeExecutionUtils.resolveObject(map);
     assertThat(resp).isNotNull();
-    assertThat(resp).isInstanceOf(Document.class);
+    assertThat(resp).isInstanceOf(Map.class);
 
-    doc = (Document) resp;
-    assertThat(doc.get("strVal1")).isEqualTo("c");
-    assertThat(doc.get("intVal1")).isEqualTo(2);
-    assertThat(doc.get("strVal2")).isEqualTo("<+tmp3>");
-    assertThat(doc.get("intVal2")).isEqualTo(3);
+    map = (Map<String, Object>) resp;
+    assertThat(map.get("strVal1")).isEqualTo("c");
+    assertThat(map.get("intVal1")).isEqualTo(2);
+    assertThat(map.get("strVal2")).isEqualTo("<+tmp3>");
+    assertThat(map.get("intVal2")).isEqualTo(3);
 
-    doc = (Document) doc.get("dummy");
-    assertThat(doc).isNotNull();
-    assertThat(doc.get("strVal1")).isEqualTo("a");
-    assertThat(doc.get("intVal1")).isEqualTo(1);
-    assertThat(doc.get("strVal2")).isEqualTo("b");
-    assertThat(doc.get("intVal2")).isEqualTo("<+tmp1>");
-    assertThat(doc.get("dummy")).isEqualTo("<+tmp2>");
+    map = (Map<String, Object>) map.get("dummy");
+    assertThat(map).isNotNull();
+    assertThat(map.get("strVal1")).isEqualTo("a");
+    assertThat(map.get("intVal1")).isEqualTo(1);
+    assertThat(map.get("strVal2")).isEqualTo("b");
+    assertThat(map.get("intVal2")).isEqualTo("<+tmp1>");
+    assertThat(map.get("dummy")).isEqualTo("<+tmp2>");
   }
 
   @Data

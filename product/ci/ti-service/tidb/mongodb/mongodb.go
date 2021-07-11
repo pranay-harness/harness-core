@@ -38,34 +38,39 @@ type Relation struct {
 	// DefaultModel adds _id,created_at and updated_at fields to the Model
 	mgm.DefaultModel `bson:",inline"`
 
-	Source  int     `json:"source" bson:"source"`
-	Tests   []int   `json:"tests" bson:"tests"`
-	Acct    string  `json:"account" bson:"account"`
-	Proj    string  `json:"project" bson:"project"`
-	Org     string  `json:"organization" bson:"organization"`
-	VCSInfo VCSInfo `json:"vcs_info" bson:"vcs_info"`
+	Source   int       `json:"source" bson:"source"`
+	Tests    []int     `json:"tests" bson:"tests"`
+	Acct     string    `json:"account" bson:"account"`
+	Proj     string    `json:"project" bson:"project"`
+	Org      string    `json:"organization" bson:"organization"`
+	ExpireAt time.Time `json:"expireAt" bson:"expireAt,omitempty"` // only include field if it's not set to a zero value
+	VCSInfo  VCSInfo   `json:"vcs_info" bson:"vcs_info"`
 }
 
 type Node struct {
 	// DefaultModel adds _id,created_at and updated_at fields to the Model
 	mgm.DefaultModel `bson:",inline"`
 
-	Package string  `json:"package" bson:"package"`
-	Method  string  `json:"method" bson:"method"`
-	Id      int     `json:"id" bson:"id"`
-	Params  string  `json:"params" bson:"params"`
-	Class   string  `json:"class" bson:"class"`
-	Type    string  `json:"type" bson:"type"`
-	Acct    string  `json:"account" bson:"account"`
-	Proj    string  `json:"project" bson:"project"`
-	Org     string  `json:"organization" bson:"organization"`
-	VCSInfo VCSInfo `json:"vcs_info" bson:"vcs_info"`
+	Package         string    `json:"package" bson:"package"`
+	Method          string    `json:"method" bson:"method"`
+	Id              int       `json:"id" bson:"id"`
+	Params          string    `json:"params" bson:"params"`
+	Class           string    `json:"class" bson:"class"`
+	Type            string    `json:"type" bson:"type"`
+	CallsReflection bool      `json:"callsReflection" bson:"callsReflection"`
+	Acct            string    `json:"account" bson:"account"`
+	Proj            string    `json:"project" bson:"project"`
+	Org             string    `json:"organization" bson:"organization"`
+	ExpireAt        time.Time `json:"expireAt" bson:"expireAt,omitempty"` // only include field if it's not set to a zero value
+	VCSInfo         VCSInfo   `json:"vcs_info" bson:"vcs_info"`
 }
 
 const (
 	nodeColl  = "nodes"
 	relnsColl = "relations"
 )
+
+var expireQuery = bson.M{"$set": bson.M{"expireAt": time.Now()}}
 
 // VCSInfo contains metadata corresponding to version control system details
 type VCSInfo struct {
@@ -75,18 +80,19 @@ type VCSInfo struct {
 }
 
 // NewNode creates Node object form given fields
-func NewNode(id int, pkg, method, params, class, typ string, vcs VCSInfo, acc, org, proj string) *Node {
+func NewNode(id int, pkg, method, params, class, typ string, callsReflection bool, vcs VCSInfo, acc, org, proj string) *Node {
 	return &Node{
-		Id:      id,
-		Package: pkg,
-		Method:  method,
-		Params:  params,
-		Class:   class,
-		Type:    typ,
-		Acct:    acc,
-		Org:     org,
-		Proj:    proj,
-		VCSInfo: vcs,
+		Id:              id,
+		Package:         pkg,
+		Method:          method,
+		Params:          params,
+		Class:           class,
+		Type:            typ,
+		CallsReflection: callsReflection,
+		Acct:            acc,
+		Org:             org,
+		Proj:            proj,
+		VCSInfo:         vcs,
 	}
 }
 
@@ -273,9 +279,13 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 	}
 	// Test methods corresponding to each <package, class>
 	methodMap := make(map[types.RunnableTest][]types.RunnableTest)
+	reflectionTests := []types.RunnableTest{}
 	for _, t := range all {
 		u := types.RunnableTest{Pkg: t.Package, Class: t.Class}
 		methodMap[u] = append(methodMap[u], types.RunnableTest{Pkg: t.Package, Class: t.Class, Method: t.Method})
+		if t.CallsReflection {
+			reflectionTests = append(reflectionTests, u)
+		}
 		totalTests += 1
 	}
 
@@ -369,6 +379,17 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 			}
 		}
 	}
+
+	// Go through reflection tests and add anything that hasn't been added before
+	for _, rt := range reflectionTests {
+		if _, ok := m[rt]; !ok {
+			m[rt] = struct{}{}
+			for _, src := range methodMap[rt] {
+				l = append(l, types.RunnableTest{Pkg: src.Pkg, Class: src.Class,
+					Method: src.Method, Selection: types.SelectSourceCode})
+			}
+		}
+	}
 	return types.SelectTestsResp{
 		TotalTests:    totalTests,
 		SelectedTests: len(l) - new, // new tests will be added later in upsert with uploading of partial CG
@@ -398,7 +419,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	}
 
 	for i, node := range cg.Nodes {
-		nodes[i] = *NewNode(node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, info, account, org, proj)
+		nodes[i] = *NewNode(node.ID, node.Package, node.Method, node.Params, node.Class, node.Type, node.CallsReflection, info, account, org, proj)
 		if node.Type != "test" {
 			continue
 		}
@@ -414,7 +435,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	// query for partial callgraph for the filter -(repo + branch + (commitId != currentCommit)) and delete old entries.
 	// this will delete all the nodes create by older commits for current pull request
 	f := bson.M{"vcs_info.repo": info.Repo, "account": account, "vcs_info.branch": info.Branch, "vcs_info.commit_id": bson.M{"$ne": info.CommitId}}
-	r1, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, f, &options.DeleteOptions{})
+	r1, err := mdb.Database.Collection(nodeColl).UpdateMany(ctx, f, expireQuery)
 	if err != nil {
 		return resp, errors.Wrap(
 			err,
@@ -423,16 +444,16 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info 
 	}
 	// this will delete all the relations create by older commits for current pull request
 	f = bson.M{"vcs_info.repo": info.Repo, "account": account, "vcs_info.branch": info.Branch, "vcs_info.commit_id": bson.M{"$ne": info.CommitId}}
-	r2, err := mdb.Database.Collection(relnsColl).DeleteMany(ctx, f, &options.DeleteOptions{})
+	r2, err := mdb.Database.Collection(relnsColl).UpdateMany(ctx, f, expireQuery)
 	if err != nil {
 		return resp, errors.Wrap(
 			err,
-			fmt.Sprintf("failed to delete records from relations collection while uploading partial callgraph "+
+			fmt.Sprintf("failed to make records from relations collection expired while uploading partial callgraph "+
 				"for repo: %s, branch: %s acc: %s", info.Repo, info.Branch, account))
 	}
 	mdb.Log.Infow(
-		fmt.Sprintf("deleted %d records from nodes and %d records from relns collection",
-			r1.DeletedCount, r2.DeletedCount), "account", account, "repo", info.Repo, "branch", info.Branch)
+		fmt.Sprintf("marked %d records expired  from nodes and %d records from relns collection",
+			r1.ModifiedCount, r2.ModifiedCount), "account", account, "repo", info.Repo, "branch", info.Branch)
 
 	err = mdb.upsertNodes(ctx, nodes, info, account)
 	if err != nil {
@@ -646,11 +667,11 @@ func (mdb *MongoDb) mergeNodes(ctx context.Context, commit, branch, repo, accoun
 	// delete remaining records of src branch from nodes collection
 	// todo(AMAN):  find a better filter than $ne
 	f := bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "account": account, "vcs_info.branch": bson.M{"$ne": branch}}
-	res, err := mdb.Database.Collection(nodeColl).DeleteMany(ctx, f, &options.DeleteOptions{})
+	res, err := mdb.Database.Collection(nodeColl).UpdateMany(ctx, f, expireQuery)
 	if err != nil {
 		return formatError(err, "failed to delete records in nodes collection", repo, branch, commit)
 	}
-	mdb.Log.Infow(fmt.Sprintf("deleted %d records from nodes collection", res.DeletedCount),
+	mdb.Log.Infow(fmt.Sprintf("marked %d records as expired from nodes collection", res.ModifiedCount),
 		"account", account,
 		"repo", repo,
 		"branch", branch,
@@ -737,11 +758,11 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo, ac
 	// delete remaining records of src branch from relations collection
 	// todo(AMAN):  find a better filter than $ne
 	f := bson.M{"vcs_info.commit_id": commit, "vcs_info.repo": repo, "account": account, "vcs_info.branch": bson.M{"$ne": branch}}
-	res, err := mdb.Database.Collection(relnsColl).DeleteMany(ctx, f, &options.DeleteOptions{})
+	res, err := mdb.Database.Collection(relnsColl).UpdateMany(ctx, f, expireQuery)
 	if err != nil {
 		return formatError(err, "failed to delete records in relations collection", repo, branch, commit)
 	}
-	mdb.Log.Infow(fmt.Sprintf("deleted %d records from relation collection", res.DeletedCount),
+	mdb.Log.Infow(fmt.Sprintf("markde %d records as deleted from relation collection", res.ModifiedCount),
 		"account", account,
 		"repo", repo,
 		"branch", branch,

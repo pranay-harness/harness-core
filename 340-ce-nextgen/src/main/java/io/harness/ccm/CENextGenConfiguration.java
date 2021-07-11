@@ -11,6 +11,7 @@ import io.harness.cf.CfClientConfig;
 import io.harness.configuration.DeployMode;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.ff.FeatureFlagConfig;
+import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.remote.CEAzureSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -50,6 +51,7 @@ public class CENextGenConfiguration extends Configuration {
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
   @JsonProperty("managerClientConfig") private ServiceHttpClientConfig managerClientConfig;
   @JsonProperty("ngManagerClientConfig") private ServiceHttpClientConfig ngManagerClientConfig;
+  @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
   @JsonProperty(value = "enableAuth", defaultValue = "false") private boolean enableAuth;
   @JsonProperty("ngManagerServiceSecret") private String ngManagerServiceSecret;
   @JsonProperty("jwtAuthSecret") private String jwtAuthSecret;

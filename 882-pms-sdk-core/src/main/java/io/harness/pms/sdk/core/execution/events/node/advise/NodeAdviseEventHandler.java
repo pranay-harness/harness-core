@@ -37,8 +37,8 @@ public class NodeAdviseEventHandler extends PmsBaseEventHandler<AdviseEvent> {
   protected Map<String, String> extractMetricContext(AdviseEvent message) {
     return ImmutableMap.<String, String>builder()
         .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
-        .put("projectIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
-        .put("orgIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
+        .put("orgIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
+        .put("projectIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
         .build();
   }
 
@@ -64,9 +64,8 @@ public class NodeAdviseEventHandler extends PmsBaseEventHandler<AdviseEvent> {
   @Override
   protected void handleEventWithContext(AdviseEvent event) {
     try {
-      log.info("Starting to handle ADVISE event");
-
-      String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(event.getAmbiance());
+      Ambiance ambiance = event.getAmbiance();
+      String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
       Preconditions.checkArgument(isNotBlank(nodeExecutionId), "nodeExecutionId is null or empty");
 
       AdviserResponse adviserResponse = null;
@@ -90,14 +89,13 @@ public class NodeAdviseEventHandler extends PmsBaseEventHandler<AdviseEvent> {
       }
 
       if (adviserResponse != null) {
-        sdkNodeExecutionService.handleAdviserResponse(nodeExecutionId, event.getNotifyId(), adviserResponse);
+        sdkNodeExecutionService.handleAdviserResponse(
+            ambiance.getPlanExecutionId(), nodeExecutionId, event.getNotifyId(), adviserResponse);
       } else {
         log.info("Calculated Adviser response is null. Proceeding with UNKNOWN adviser type.");
-        sdkNodeExecutionService.handleAdviserResponse(
-            nodeExecutionId, event.getNotifyId(), AdviserResponse.newBuilder().setType(AdviseType.UNKNOWN).build());
+        sdkNodeExecutionService.handleAdviserResponse(ambiance.getPlanExecutionId(), nodeExecutionId,
+            event.getNotifyId(), AdviserResponse.newBuilder().setType(AdviseType.UNKNOWN).build());
       }
-
-      log.info("ADVISE Event Handled Successfully");
     } catch (Exception ex) {
       log.error("Error while advising execution", ex);
       sdkNodeExecutionService.handleEventError(

@@ -7,7 +7,6 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 
 import static software.wings.sm.StateType.HELM_DEPLOY;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;

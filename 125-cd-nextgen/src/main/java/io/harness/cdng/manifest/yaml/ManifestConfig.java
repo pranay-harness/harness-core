@@ -1,5 +1,7 @@
 package io.harness.cdng.manifest.yaml;
 
+import static io.harness.cdng.manifest.yaml.ManifestAttributes.ManifestAttributeStepParameters;
+
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
@@ -77,16 +79,17 @@ public class ManifestConfig implements Visitable {
 
   @Value
   public static class ManifestConfigStepParameters {
+    String identifier;
     String type;
-    ManifestAttributes spec;
+    ManifestAttributeStepParameters spec;
 
     public static ManifestConfigStepParameters fromManifestConfig(ManifestConfig manifestConfig) {
       if (manifestConfig == null) {
         return null;
       }
-      return new ManifestConfigStepParameters(
+      return new ManifestConfigStepParameters(manifestConfig.getIdentifier(),
           manifestConfig.getType() == null ? null : manifestConfig.getType().getDisplayName(),
-          manifestConfig.getSpec());
+          manifestConfig.getSpec().getManifestAttributeStepParameters());
     }
   }
 }

@@ -104,6 +104,27 @@ public class ServiceAccountServiceImplTest extends NgManagerTestBase {
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
+  public void testUpdateServiceAccount_updateEmail() {
+    doReturn(ServiceAccount.builder()
+                 .accountIdentifier(accountIdentifier)
+                 .orgIdentifier(orgIdentifier)
+                 .projectIdentifier(projectIdentifier)
+                 .identifier(identifier)
+                 .email("svc@service.harness.io")
+                 .build())
+        .when(serviceAccountRepository)
+        .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
+            accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+
+    assertThatThrownBy(()
+                           -> serviceAccountService.updateServiceAccount(accountIdentifier, orgIdentifier,
+                               projectIdentifier, identifier, serviceAccountRequestDTO))
+        .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
   public void listServiceAccountDTO() {
     doReturn(Lists.newArrayList(ServiceAccount.builder()
                                     .name(name)

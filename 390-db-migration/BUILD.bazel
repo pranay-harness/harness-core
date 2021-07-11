@@ -5,7 +5,7 @@ load("//:tools/bazel/macros.bzl", "run_analysis")
 java_library(
     name = "module",
     srcs = glob([
-        "src/main/**/*.java",
+        "src/main/java/**/*.java",
     ]),
     visibility = ["//visibility:public"],
     deps = [
@@ -41,12 +41,10 @@ java_library(
         "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
         "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
         "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_api_mockito",
         "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:pl_pragmatists_JUnitParams",
     ],
 )
 
-run_analysis(
-    run_checkstyle = False,
-    run_pmd = False,
-)
+run_analysis()

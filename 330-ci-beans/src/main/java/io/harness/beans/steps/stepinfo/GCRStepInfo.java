@@ -14,6 +14,7 @@ import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.filters.WithConnectorRef;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
@@ -47,7 +48,8 @@ public class GCRStepInfo implements PluginCompatibleStep, WithConnectorRef {
   public static final int DEFAULT_RETRY = 1;
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.GCR).build();
   @JsonIgnore
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.GCR.getDisplayName()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.GCR.getDisplayName()).setStepCategory(StepCategory.STEP).build();
 
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
   @ApiModelProperty(hidden = true)

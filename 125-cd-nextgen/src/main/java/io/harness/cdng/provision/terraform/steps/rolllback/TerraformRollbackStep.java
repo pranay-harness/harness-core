@@ -25,6 +25,7 @@ import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollback;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.tasks.SkipTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
@@ -47,8 +48,10 @@ import java.util.List;
 
 @OwnedBy(HarnessTeam.CDP)
 public class TerraformRollbackStep extends TaskExecutableWithRollback<TerraformTaskNGResponse> {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.TERRAFORM_ROLLBACK.getYamlType()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.TERRAFORM_ROLLBACK.getYamlType())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
 
   @Inject private KryoSerializer kryoSerializer;
   @Inject private TerraformConfigHelper terraformConfigHelper;

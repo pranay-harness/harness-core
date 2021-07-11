@@ -16,6 +16,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.rule.Owner;
 import io.harness.utils.AmbianceTestUtils;
@@ -36,18 +37,19 @@ public class NodeExecutionServiceImplTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void shouldTestSave() {
     String nodeExecutionId = generateUuid();
-    NodeExecution nodeExecution = NodeExecution.builder()
-                                      .uuid(nodeExecutionId)
-                                      .ambiance(AmbianceTestUtils.buildAmbiance())
-                                      .node(PlanNodeProto.newBuilder()
-                                                .setUuid(generateUuid())
-                                                .setName("name")
-                                                .setIdentifier("dummy")
-                                                .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                                .build())
-                                      .startTs(System.currentTimeMillis())
-                                      .status(Status.QUEUED)
-                                      .build();
+    NodeExecution nodeExecution =
+        NodeExecution.builder()
+            .uuid(nodeExecutionId)
+            .ambiance(AmbianceTestUtils.buildAmbiance())
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(generateUuid())
+                      .setName("name")
+                      .setIdentifier("dummy")
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .build())
+            .startTs(System.currentTimeMillis())
+            .status(Status.QUEUED)
+            .build();
     NodeExecution savedExecution = nodeExecutionService.save(nodeExecution);
     assertThat(savedExecution.getUuid()).isEqualTo(nodeExecutionId);
   }
@@ -58,30 +60,32 @@ public class NodeExecutionServiceImplTest extends OrchestrationTestBase {
   public void shouldTestErrorOutNodes() {
     String nodeExecutionId1 = generateUuid();
     String nodeExecutionId2 = generateUuid();
-    NodeExecution nodeExecution1 = NodeExecution.builder()
-                                       .uuid(nodeExecutionId1)
-                                       .ambiance(AmbianceTestUtils.buildAmbiance())
-                                       .node(PlanNodeProto.newBuilder()
-                                                 .setUuid(generateUuid())
-                                                 .setName("name")
-                                                 .setIdentifier("dummy")
-                                                 .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                                 .build())
-                                       .startTs(System.currentTimeMillis())
-                                       .status(Status.RUNNING)
-                                       .build();
-    NodeExecution nodeExecution2 = NodeExecution.builder()
-                                       .uuid(nodeExecutionId2)
-                                       .ambiance(AmbianceTestUtils.buildAmbiance())
-                                       .node(PlanNodeProto.newBuilder()
-                                                 .setUuid(generateUuid())
-                                                 .setName("name")
-                                                 .setIdentifier("dummy")
-                                                 .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                                 .build())
-                                       .startTs(System.currentTimeMillis())
-                                       .status(Status.SUCCEEDED)
-                                       .build();
+    NodeExecution nodeExecution1 =
+        NodeExecution.builder()
+            .uuid(nodeExecutionId1)
+            .ambiance(AmbianceTestUtils.buildAmbiance())
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(generateUuid())
+                      .setName("name")
+                      .setIdentifier("dummy")
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .build())
+            .startTs(System.currentTimeMillis())
+            .status(Status.RUNNING)
+            .build();
+    NodeExecution nodeExecution2 =
+        NodeExecution.builder()
+            .uuid(nodeExecutionId2)
+            .ambiance(AmbianceTestUtils.buildAmbiance())
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(generateUuid())
+                      .setName("name")
+                      .setIdentifier("dummy")
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .build())
+            .startTs(System.currentTimeMillis())
+            .status(Status.SUCCEEDED)
+            .build();
     nodeExecutionService.save(nodeExecution1);
     nodeExecutionService.save(nodeExecution2);
 

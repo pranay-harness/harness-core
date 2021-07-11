@@ -21,6 +21,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.Wither;
 import org.springframework.data.annotation.TypeAlias;
@@ -63,5 +64,21 @@ public class StoreConfigWrapper implements OverridesApplier<StoreConfigWrapper>,
     VisitableChildren children = VisitableChildren.builder().build();
     children.add(YAMLFieldNameConstants.SPEC, spec);
     return children;
+  }
+
+  @Value
+  public static class StoreConfigWrapperParameters {
+    String type;
+    StoreConfig spec;
+
+    public static StoreConfigWrapperParameters fromStoreConfigWrapper(StoreConfigWrapper storeConfigWrapper) {
+      if (storeConfigWrapper == null) {
+        return null;
+      }
+
+      return new StoreConfigWrapperParameters(
+          storeConfigWrapper.getType() == null ? null : storeConfigWrapper.getType().getDisplayName(),
+          storeConfigWrapper.getSpec());
+    }
   }
 }

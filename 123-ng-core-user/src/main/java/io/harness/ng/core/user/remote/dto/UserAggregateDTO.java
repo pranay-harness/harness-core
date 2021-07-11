@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.RoleAssignmentMetadataDTO;
-import io.harness.ng.core.invites.dto.UserMetadataDTO;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

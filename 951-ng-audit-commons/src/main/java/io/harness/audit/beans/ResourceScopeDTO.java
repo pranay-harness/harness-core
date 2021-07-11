@@ -7,7 +7,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.validator.EntityIdentifier;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.ng.core.AccountScope;
 import io.harness.ng.core.OrgScope;
@@ -34,8 +33,8 @@ import org.hibernate.validator.constraints.NotBlank;
 @FieldNameConstants(innerTypeName = "ResourceScopeKeys")
 public class ResourceScopeDTO {
   @NotNull @NotBlank String accountIdentifier;
-  @EntityIdentifier(allowBlank = true) String orgIdentifier;
-  @EntityIdentifier(allowBlank = true) String projectIdentifier;
+  String orgIdentifier;
+  String projectIdentifier;
   @Size(max = 2) Map<String, String> labels;
 
   @JsonIgnore

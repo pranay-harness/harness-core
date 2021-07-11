@@ -1,4 +1,8 @@
 package io.harness.serializer.morphia;
+
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.MigrateSecretTask;
 import io.harness.beans.SecretChangeLog;
@@ -6,6 +10,7 @@ import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretUsageLog;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
+import io.harness.ng.core.entities.NGEncryptedData;
 
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
@@ -20,6 +25,7 @@ import software.wings.beans.VaultConfig;
 
 import java.util.Set;
 
+@OwnedBy(PL)
 public class SMCoreMorphiaRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {
@@ -38,6 +44,7 @@ public class SMCoreMorphiaRegistrar implements MorphiaRegistrar {
     set.add(SSHVaultConfig.class);
     set.add(BaseVaultConfig.class);
     set.add(MigrateSecretTask.class);
+    set.add(NGEncryptedData.class);
   }
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {

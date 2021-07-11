@@ -25,7 +25,6 @@ import io.harness.serializer.morphia.converters.LevelMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefObjectMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.SdkModuleInfoMorphiaConverter;
-import io.harness.serializer.morphia.converters.SdkResponseEventRequestMorphiaConverter;
 import io.harness.serializer.morphia.converters.StepTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.TriggerPayloadMorphiaConverter;
 import io.harness.serializer.morphia.converters.TriggeredByMorphiaConverter;
@@ -85,8 +84,6 @@ import io.harness.serializer.spring.converters.skip.SkipInfoReadConverter;
 import io.harness.serializer.spring.converters.skip.SkipInfoWriteConverter;
 import io.harness.serializer.spring.converters.stepoutcomeref.StepOutcomeRefReadConverter;
 import io.harness.serializer.spring.converters.stepoutcomeref.StepOutcomeRefWriteConverter;
-import io.harness.serializer.spring.converters.steps.SdkResponseEventRequestReadConverter;
-import io.harness.serializer.spring.converters.steps.SdkResponseEventRequestWriteConverter;
 import io.harness.serializer.spring.converters.steps.StepInfoReadConverter;
 import io.harness.serializer.spring.converters.steps.StepInfoWriteConverter;
 import io.harness.serializer.spring.converters.steptype.StepTypeReadConverter;
@@ -152,7 +149,6 @@ public class OrchestrationRegistrars {
           .add(TriggeredByMorphiaConverter.class)
           .add(ExecutionMetadataMorphiaConverter.class)
           .add(TriggerPayloadMorphiaConverter.class)
-          .add(SdkResponseEventRequestMorphiaConverter.class)
           .add(InterruptConfigMorphiaConverter.class)
           .build();
 
@@ -176,9 +172,8 @@ public class OrchestrationRegistrars {
       TriggerPayloadWriteConverter.class, SkipInfoReadConverter.class, SkipInfoWriteConverter.class,
       TimeoutObtainmentReadConverter.class, TimeoutObtainmentWriteConverter.class, AdviserResponseReadConverter.class,
       AdviserResponseWriteConverter.class, UnitProgressReadConverter.class, UnitProgressWriteConverter.class,
-      InterruptConfigReadConverter.class, InterruptConfigWriteConverter.class,
-      SdkResponseEventRequestReadConverter.class, SdkResponseEventRequestWriteConverter.class,
-      NodeRunInfoReadConverter.class, NodeRunInfoWriteConverter.class, ExecutionPrincipalInfoReadConverter.class,
+      InterruptConfigReadConverter.class, InterruptConfigWriteConverter.class, NodeRunInfoReadConverter.class,
+      NodeRunInfoWriteConverter.class, ExecutionPrincipalInfoReadConverter.class,
       ExecutionPrincipalInfoWriteConverter.class, InterruptEffectReadConverter.class,
       InterruptEffectWriteConverter.class, SdkModuleInfoReadConverter.class, SdkModuleInfoWriteConverter.class,
       ConsumerConfigReadConverter.class, ConsumerConfigWriteConverter.class);

@@ -39,9 +39,10 @@ public class NexusTwoClientImpl {
 
     final Response<RepositoryListResourceResponse> response = request.execute();
     if (response.code() == 404) {
-      throw NestedExceptionUtils.hintWithExplanationException("Check if the Nexus URL & version are correct",
-          "The Nexus URL for the connector is incorrect",
-          new InvalidArtifactServerException("Invalid Artifact server", USER));
+      throw NestedExceptionUtils.hintWithExplanationException(
+          "Check if the Nexus URL & Nexus version are correct. Nexus URLs are different for different Nexus versions",
+          "The Nexus URL or the version for the connector is incorrect",
+          new InvalidArtifactServerException("Invalid Nexus connector details", USER));
     }
     if (isSuccessful(response)) {
       log.info("Retrieving repositories success");

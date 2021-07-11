@@ -45,10 +45,13 @@ import io.harness.health.HealthService;
 import io.harness.logstreaming.LogStreamingModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.metrics.jobs.RecordMetricsJob;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.migration.MigrationProvider;
 import io.harness.migration.NGMigrationSdkInitHelper;
 import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
+import io.harness.migrations.InstanceMigrationProvider;
 import io.harness.ng.accesscontrol.migrations.AccessControlMigrationJob;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
@@ -58,10 +61,11 @@ import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.OptimisticLockingFailureExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
+import io.harness.ng.core.handler.NGVaultSecretManagerRenewalHandler;
+import io.harness.ng.core.migration.NGBeanMigrationProvider;
 import io.harness.ng.core.migration.ProjectMigrationProvider;
-import io.harness.ng.core.user.service.impl.UserMembershipMigrationService;
-import io.harness.ng.core.user.service.impl.UserProjectMigrationService;
 import io.harness.ng.migration.NGCoreMigrationProvider;
+import io.harness.ng.migration.UserMembershipMigrationProvider;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEventPollService;
@@ -95,6 +99,7 @@ import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
+import io.harness.token.remote.TokenClient;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -286,13 +291,14 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerHealthCheck(environment, injector);
     registerIterators(injector);
     registerJobs(injector);
-    registerMigrations(injector);
     registerQueueListeners(injector);
     registerPmsSdkEvents(injector);
+    initializeMonitoring(appConfig, injector);
 
     intializeGitSync(injector, appConfig);
     registerManagedBeans(environment, injector);
 
+    registerMigrations(injector);
     MaintenanceController.forceMaintenance(false);
   }
 
@@ -313,8 +319,18 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .migrationProviderList(new ArrayList<Class<? extends MigrationProvider>>() {
           { add(NGCoreMigrationProvider.class); } // Add all migration provider classes here
           { add(ProjectMigrationProvider.class); }
+          { add(UserMembershipMigrationProvider.class); }
+          { add(NGBeanMigrationProvider.class); }
+          { add(InstanceMigrationProvider.class); }
         })
         .build();
+  }
+
+  private void initializeMonitoring(NextGenConfiguration appConfig, Injector injector) {
+    if (appConfig.isExportMetricsToStackDriver()) {
+      injector.getInstance(MetricService.class).initializeMetrics();
+      injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
+    }
   }
 
   private GitSyncSdkConfiguration getGitSyncConfiguration(NextGenConfiguration config) {
@@ -361,8 +377,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   }
 
   public void registerIterators(Injector injector) {
+    injector.getInstance(NGVaultSecretManagerRenewalHandler.class).registerIterators();
     injector.getInstance(WebhookEventProcessingService.class).registerIterators();
-    injector.getInstance(UserMembershipMigrationService.class).registerIterators();
   }
 
   public void registerJobs(Injector injector) {
@@ -438,7 +454,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
-    environment.lifecycle().manage(injector.getInstance(UserProjectMigrationService.class));
     environment.lifecycle().manage(injector.getInstance(AccessControlMigrationJob.class));
     createConsumerThreadsToListenToEvents(environment, injector);
   }
@@ -515,12 +530,14 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private void registerAuthFilters(NextGenConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.isEnableAuth()) {
-      registerNextGenAuthFilter(configuration, environment);
+      registerNextGenAuthFilter(
+          configuration, environment, injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED"))));
       registerInternalApiAuthFilter(configuration, environment);
     }
   }
 
-  private void registerNextGenAuthFilter(NextGenConfiguration configuration, Environment environment) {
+  private void registerNextGenAuthFilter(
+      NextGenConfiguration configuration, Environment environment, TokenClient tokenClient) {
     Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate =
         (getAuthenticationExemptedRequestsPredicate().negate())
             .and((getAuthFilterPredicate(InternalApi.class)).negate());
@@ -529,7 +546,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     serviceToSecretMapping.put(
         IDENTITY_SERVICE.getServiceId(), configuration.getNextGenConfig().getJwtIdentityServiceSecret());
     serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getNextGenConfig().getNgManagerServiceSecret());
-    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
+    environment.jersey().register(
+        new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping, tokenClient));
   }
 
   private void registerInternalApiAuthFilter(NextGenConfiguration configuration, Environment environment) {

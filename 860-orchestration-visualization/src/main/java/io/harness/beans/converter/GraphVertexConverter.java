@@ -40,14 +40,15 @@ public class GraphVertexConverter {
         .failureInfo(nodeExecution.getFailureInfo())
         .skipInfo(nodeExecution.getSkipInfo())
         .nodeRunInfo(nodeExecution.getNodeRunInfo())
-        .stepParameters(nodeExecution.getResolvedStepInputs())
+        .stepParameters(
+            nodeExecution.getResolvedStepInputs() == null ? null : new Document(nodeExecution.getResolvedStepInputs()))
         .mode(nodeExecution.getMode())
         .executableResponses(CollectionUtils.emptyIfNull(nodeExecution.getExecutableResponses()))
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())
         .skipType(nodeExecution.getNode().getSkipType())
         .unitProgresses(nodeExecution.getUnitProgresses())
-        .progressData(nodeExecution.getProgressData())
+        .progressData(nodeExecution.getProgressData() == null ? null : new Document(nodeExecution.getProgressData()))
         .graphDelegateSelectionLogParams(graphDelegateSelectionLogParamsList)
         .build();
   }
@@ -69,7 +70,8 @@ public class GraphVertexConverter {
         .stepType(nodeExecution.getNode().getStepType().getType())
         .status(nodeExecution.getStatus())
         .failureInfo(nodeExecution.getFailureInfo())
-        .stepParameters(nodeExecution.getResolvedStepInputs())
+        .stepParameters(
+            nodeExecution.getResolvedStepInputs() == null ? null : new Document(nodeExecution.getResolvedStepInputs()))
         .skipInfo(nodeExecution.getSkipInfo())
         .nodeRunInfo(nodeExecution.getNodeRunInfo())
         .mode(nodeExecution.getMode())
@@ -79,7 +81,7 @@ public class GraphVertexConverter {
         .skipType(nodeExecution.getNode().getSkipType())
         .outcomeDocuments(outcomes)
         .unitProgresses(nodeExecution.getUnitProgresses())
-        .progressData(nodeExecution.getProgressData())
+        .progressData(nodeExecution.getProgressData() == null ? null : new Document(nodeExecution.getProgressData()))
         .graphDelegateSelectionLogParams(graphDelegateSelectionLogParamsList)
         .build();
   }

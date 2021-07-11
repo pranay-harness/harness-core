@@ -3,6 +3,7 @@ package io.harness.repositories.service.custom;
 import io.harness.ng.core.service.entity.ServiceEntity;
 
 import com.mongodb.client.result.UpdateResult;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -14,4 +15,6 @@ public interface ServiceRepositoryCustom {
   UpdateResult delete(Criteria criteria);
   Long findActiveServiceCountAtGivenTimestamp(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, long timestampInMs);
+
+  List<ServiceEntity> findAllRunTimePermission(Criteria criteria);
 }

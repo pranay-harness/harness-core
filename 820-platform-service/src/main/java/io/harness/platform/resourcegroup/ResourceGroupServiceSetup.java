@@ -6,6 +6,8 @@ import static io.harness.platform.PlatformConfiguration.getResourceGroupServiceR
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.health.HealthService;
+import io.harness.metrics.jobs.RecordMetricsJob;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
@@ -39,6 +41,7 @@ public class ResourceGroupServiceSetup {
     registerScheduledJobs(injector);
     registerManagedBeans(environment, injector);
     registerHealthCheck(environment, injector);
+    initializeMonitoring(appConfig, injector);
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {
@@ -49,6 +52,13 @@ public class ResourceGroupServiceSetup {
 
   private void registerIterators(Injector injector) {
     injector.getInstance(ResourceGroupAsyncReconciliationHandler.class).registerIterators();
+  }
+
+  private void initializeMonitoring(ResourceGroupServiceConfig appConfig, Injector injector) {
+    if (appConfig.isExportMetricsToStackDriver()) {
+      injector.getInstance(MetricService.class).initializeMetrics();
+      injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
+    }
   }
 
   private void registerScheduledJobs(Injector injector) {

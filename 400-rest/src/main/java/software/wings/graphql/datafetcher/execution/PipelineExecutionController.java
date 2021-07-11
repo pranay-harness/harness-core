@@ -304,7 +304,8 @@ public class PipelineExecutionController {
   public String resolveEnvId(WorkflowExecution execution, Pipeline pipeline, List<QLVariableInput> variableInputs) {
     String envId = null;
     Variable envVariable = WorkflowServiceTemplateHelper.getEnvVariable(pipeline.getPipelineVariables());
-    if (envVariable != null && !Boolean.TRUE.equals(envVariable.getRuntimeInput())) {
+    if (envVariable != null && !Boolean.TRUE.equals(envVariable.getRuntimeInput())
+        && execution.getExecutionArgs().getWorkflowVariables() != null) {
       String key = envVariable.getName();
       envId = execution.getExecutionArgs().getWorkflowVariables().get(key);
     } else {

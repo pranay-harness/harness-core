@@ -26,4 +26,17 @@ public interface DelegateProfileManagerNgService {
   DelegateProfileDetailsNg add(DelegateProfileDetailsNg delegateProfile);
 
   void delete(String accountId, String delegateProfileId);
+
+  DelegateProfileDetailsNg get(String accountId, String orgId, String projectId, String delegateProfileIdentifier);
+
+  DelegateProfileDetailsNg updateScopingRules(String accountId, String orgId, String projectId,
+      String delegateProfileIdentifier, List<ScopingRuleDetailsNg> scopingRules);
+
+  boolean delete(String accountId, String orgId, String projectId, String delegateProfileIdentifier);
+
+  DelegateProfileDetailsNg updateSelectors(
+      String accountId, String orgId, String projectId, String delegateProfileIdentifier, List<String> selectors);
+
+  DelegateProfileDetailsNg updateV2(String accountId, String orgIdentifier, String projectIdentifier,
+      String profileIdentifier, DelegateProfileDetailsNg updatedProfileDetails);
 }

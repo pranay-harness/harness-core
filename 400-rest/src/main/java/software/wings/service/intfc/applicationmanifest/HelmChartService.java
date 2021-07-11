@@ -9,6 +9,7 @@ import software.wings.beans.appmanifest.HelmChart;
 import software.wings.service.intfc.ownership.OwnedByApplicationManifest;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -21,7 +22,8 @@ public interface HelmChartService extends OwnedByApplicationManifest {
 
   HelmChart get(String appId, String helmChartId);
 
-  PageResponse<HelmChart> listHelmChartsForService(String appId, String serviceId, PageRequest<HelmChart> PageRequest);
+  Map<String, List<HelmChart>> listHelmChartsForService(
+      String appId, String serviceId, String manifestSearchString, PageRequest<HelmChart> PageRequest);
 
   HelmChart getLastCollectedManifest(String accountId, String applicationManifestUuid);
 

@@ -14,8 +14,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.harness.beans.shared.ResourceConstraint;
-import io.harness.beans.shared.RestraintService;
+import io.harness.beans.ResourceConstraint;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.distribution.constraint.Constraint;
@@ -42,7 +41,6 @@ import org.mockito.Spy;
 public class ResourceConstraintStateTest extends WingsBaseTest {
   @Mock ExecutionContextImpl executionContext;
   @Mock ResourceConstraintService resourceConstraintService;
-  @Mock RestraintService restraintService;
   @Mock AppService applicationService;
 
   @InjectMocks @Spy ResourceConstraintState state = new ResourceConstraintState("rcs");
@@ -96,7 +94,7 @@ public class ResourceConstraintStateTest extends WingsBaseTest {
         .when(resourceConstraintService)
         .createAbstraction(any(ResourceConstraint.class));
 
-    doReturn(mock(ResourceConstraint.class)).when(restraintService).get(anyString(), anyString());
+    doReturn(mock(ResourceConstraint.class)).when(resourceConstraintService).get(anyString(), anyString());
     doReturn(2).when(state).alreadyAcquiredPermits(any(), any());
 
     state.setAcquireMode(AcquireMode.ENSURE);

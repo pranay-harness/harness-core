@@ -4,6 +4,6 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 public interface PipelineViewObject {
   default String toViewJson() {
-    return RecastOrchestrationUtils.toDocumentJson(this);
+    return RecastOrchestrationUtils.toJson(this);
   }
 }

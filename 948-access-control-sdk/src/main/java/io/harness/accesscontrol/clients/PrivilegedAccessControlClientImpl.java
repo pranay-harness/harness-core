@@ -38,7 +38,7 @@ public class PrivilegedAccessControlClientImpl implements AccessControlClient {
   public AccessCheckResponseDTO checkForAccess(Principal principal, List<PermissionCheckDTO> permissionCheckDTOList) {
     AccessCheckRequestDTO accessCheckRequestDTO =
         AccessCheckRequestDTO.builder().principal(principal).permissions(permissionCheckDTOList).build();
-    return NGRestUtils.getResponse(this.accessControlHttpClient.getAccessControlList(accessCheckRequestDTO));
+    return NGRestUtils.getResponse(this.accessControlHttpClient.checkForAccess(accessCheckRequestDTO));
   }
 
   @Override
@@ -61,26 +61,28 @@ public class PrivilegedAccessControlClientImpl implements AccessControlClient {
     return hasAccess(null, resourceScope, resource, permission);
   }
 
-  private PermissionCheckDTO getParentPermissionCheckDTO(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String permission) {
+  private PermissionCheckDTO getPermissionCheckDTOForScope(ResourceScope resourceScope, String permission) {
     PermissionCheckDTO.Builder builder = PermissionCheckDTO.builder().permission(permission);
-    if (!StringUtils.isEmpty(projectIdentifier)) {
+    if (!StringUtils.isEmpty(resourceScope.getProjectIdentifier())) {
       return builder
-          .resourceScope(
-              ResourceScope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build())
+          .resourceScope(ResourceScope.builder()
+                             .accountIdentifier(resourceScope.getAccountIdentifier())
+                             .orgIdentifier(resourceScope.getOrgIdentifier())
+                             .build())
           .resourceType(PROJECT_RESOURCE_TYPE)
-          .resourceIdentifier(projectIdentifier)
+          .resourceIdentifier(resourceScope.getProjectIdentifier())
           .build();
     }
-    if (!StringUtils.isEmpty(orgIdentifier)) {
-      return builder.resourceScope(ResourceScope.builder().accountIdentifier(accountIdentifier).build())
+    if (!StringUtils.isEmpty(resourceScope.getOrgIdentifier())) {
+      return builder
+          .resourceScope(ResourceScope.builder().accountIdentifier(resourceScope.getAccountIdentifier()).build())
           .resourceType(ORGANIZATION_RESOURCE_TYPE)
-          .resourceIdentifier(orgIdentifier)
+          .resourceIdentifier(resourceScope.getOrgIdentifier())
           .build();
     }
     return builder.resourceScope(ResourceScope.builder().build())
         .resourceType(ACCOUNT_RESOURCE_TYPE)
-        .resourceIdentifier(accountIdentifier)
+        .resourceIdentifier(resourceScope.getAccountIdentifier())
         .build();
   }
 
@@ -100,11 +102,10 @@ public class PrivilegedAccessControlClientImpl implements AccessControlClient {
       Principal principal, ResourceScope resourceScope, Resource resource, String permission, String exceptionMessage) {
     PermissionCheckDTO permissionCheckDTO;
     if (resource == null && resourceScope == null) {
-      throw new UnexpectedException("Both resource scope and resource cannot be null simultaneously");
+      throw new UnexpectedException("Both resource scope and resource cannot be null together");
     }
     if (resource == null) {
-      permissionCheckDTO = getParentPermissionCheckDTO(resourceScope.getAccountIdentifier(),
-          resourceScope.getOrgIdentifier(), resourceScope.getProjectIdentifier(), permission);
+      permissionCheckDTO = getPermissionCheckDTOForScope(resourceScope, permission);
     } else {
       permissionCheckDTO = PermissionCheckDTO.builder()
                                .permission(permission)
@@ -120,8 +121,7 @@ public class PrivilegedAccessControlClientImpl implements AccessControlClient {
     if (!StringUtils.isEmpty(exceptionMessage)) {
       finalMessage = exceptionMessage;
     } else {
-      finalMessage = String.format("Missing permission %s on %s", accessControlDTO.getPermission(),
-          accessControlDTO.getResourceType().toLowerCase());
+      finalMessage = String.format("Missing permission on %s", accessControlDTO.getResourceType().toLowerCase());
       if (!StringUtils.isEmpty(accessControlDTO.getResourceIdentifier())) {
         finalMessage =
             finalMessage.concat(String.format(" with identifier %s", accessControlDTO.getResourceIdentifier()));

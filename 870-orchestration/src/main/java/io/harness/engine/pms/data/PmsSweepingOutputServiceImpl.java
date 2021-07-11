@@ -44,7 +44,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
         expressionEvaluatorProvider.get(null, ambiance, EnumSet.of(NodeExecutionEntityType.SWEEPING_OUTPUT), true);
     injector.injectMembers(evaluator);
     Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
-    return value == null ? null : RecastOrchestrationUtils.toDocumentJson(value);
+    return value == null ? null : RecastOrchestrationUtils.toJson(value);
   }
 
   private String resolveUsingRuntimeId(Ambiance ambiance, RefObject refObject) {
@@ -53,7 +53,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
     if (instance == null) {
       throw new SweepingOutputException(format("Could not resolve sweeping output with name '%s'", name));
     }
-    return RecastOrchestrationUtils.toDocumentJson(instance.getValue());
+    return RecastOrchestrationUtils.toJson(instance.getValue());
   }
 
   @Override
@@ -67,11 +67,9 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
         expressionEvaluatorProvider.get(null, ambiance, EnumSet.of(NodeExecutionEntityType.SWEEPING_OUTPUT), true);
     injector.injectMembers(evaluator);
     Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
-    return value == null ? RawOptionalSweepingOutput.builder().found(false).build()
-                         : RawOptionalSweepingOutput.builder()
-                               .found(true)
-                               .output(RecastOrchestrationUtils.toDocumentJson(value))
-                               .build();
+    return value == null
+        ? RawOptionalSweepingOutput.builder().found(false).build()
+        : RawOptionalSweepingOutput.builder().found(true).output(RecastOrchestrationUtils.toJson(value)).build();
   }
 
   private RawOptionalSweepingOutput resolveOptionalUsingRuntimeId(Ambiance ambiance, RefObject refObject) {
@@ -82,7 +80,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
     }
     return RawOptionalSweepingOutput.builder()
         .found(true)
-        .output(RecastOrchestrationUtils.toDocumentJson(instance.getValue()))
+        .output(RecastOrchestrationUtils.toJson(instance.getValue()))
         .build();
   }
 
@@ -114,7 +112,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
                                    .planExecutionId(ambiance.getPlanExecutionId())
                                    .levels(ambiance.getLevelsList())
                                    .name(name)
-                                   .value(RecastOrchestrationUtils.toDocumentFromJson(value))
+                                   .value(RecastOrchestrationUtils.fromJson(value))
                                    .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))
                                    .build());
       return instance.getUuid();

@@ -28,6 +28,7 @@ import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
@@ -241,6 +242,22 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       return verificationJobInstance.getCvConfigMap().get(cvConfigId);
     }
     return cvConfigService.get(cvConfigId);
+  }
+
+  @Override
+  public Set<DatasourceTypeDTO> getDataSourcetypes(List<String> verificationJobInstanceIds) {
+    Preconditions.checkNotNull(verificationJobInstanceIds);
+    List<VerificationJobInstance> verificationJobInstances = get(verificationJobInstanceIds);
+    Set<DatasourceTypeDTO> datasourceTypeDTOSet = new HashSet<>();
+    verificationJobInstances.forEach(verificationJobInstance -> {
+      verificationJobInstance.getCvConfigMap().values().forEach(cvConfig -> {
+        datasourceTypeDTOSet.add(DatasourceTypeDTO.builder()
+                                     .verificationType(cvConfig.getVerificationType())
+                                     .dataSourceType(cvConfig.getType())
+                                     .build());
+      });
+    });
+    return datasourceTypeDTOSet;
   }
 
   @Override

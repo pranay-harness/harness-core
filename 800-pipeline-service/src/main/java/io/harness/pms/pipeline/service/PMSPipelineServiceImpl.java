@@ -14,9 +14,12 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.ExplanationException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidYamlException;
+import io.harness.exception.ScmException;
 import io.harness.gitsync.helpers.GitContextHelper;
+import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.observer.Subject;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
@@ -55,6 +58,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private VariableCreatorMergeService variableCreatorMergeService;
   @Inject private PMSPipelineServiceHelper pmsPipelineServiceHelper;
   @Inject private PMSPipelineServiceStepHelper pmsPipelineServiceStepHelper;
+  @Inject private GitSyncSdkService gitSyncSdkService;
   @Inject @Getter private final Subject<PipelineActionObserver> pipelineSubject = new Subject<>();
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
@@ -82,6 +86,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
       throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
 
+    } catch (ExplanationException | ScmException e) {
+      log.error("Error while updating pipeline " + pipelineEntity.getIdentifier(), e);
+      throw e;
     } catch (Exception e) {
       log.error(String.format("Error while saving pipeline [%s]", pipelineEntity.getIdentifier()), e);
       throw new InvalidRequestException(String.format(
@@ -138,6 +145,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
             "Pipeline [%s] under Project[%s], Organization [%s] couldn't be updated or doesn't exist.",
             pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
       }
+
+      pipelineSubject.fireInform(PipelineActionObxxxxxxxx:onUpdate, updatedResult);
+
       return updatedResult;
     } catch (EventsFrameworkDownException ex) {
       log.error("Events framework is down for Pipeline Service.", ex);
@@ -145,6 +155,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     } catch (IOException ex) {
       log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
       throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+    } catch (ExplanationException | ScmException e) {
+      log.error("Error while updating pipeline " + pipelineEntity.getIdentifier(), e);
+      throw e;
     } catch (Exception e) {
       log.error(String.format("Error while updating pipeline [%s]", pipelineEntity.getIdentifier()), e);
       throw new InvalidRequestException(String.format(
@@ -211,9 +224,13 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public Page<PipelineEntity> list(
-      Criteria criteria, Pageable pageable, String accountId, String orgIdentifier, String projectIdentifier) {
-    return pmsPipelineRepository.findAll(criteria, pageable, accountId, orgIdentifier, projectIdentifier);
+  public Page<PipelineEntity> list(Criteria criteria, Pageable pageable, String accountId, String orgIdentifier,
+      String projectIdentifier, Boolean getDistinctFromBranches) {
+    if (Boolean.TRUE.equals(getDistinctFromBranches)
+        && gitSyncSdkService.isGitSyncEnabled(accountId, orgIdentifier, projectIdentifier)) {
+      return pmsPipelineRepository.findAll(criteria, pageable, accountId, orgIdentifier, projectIdentifier, true);
+    }
+    return pmsPipelineRepository.findAll(criteria, pageable, accountId, orgIdentifier, projectIdentifier, false);
   }
 
   @Override

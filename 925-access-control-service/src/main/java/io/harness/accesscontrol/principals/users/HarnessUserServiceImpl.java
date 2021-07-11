@@ -16,6 +16,7 @@ import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
@@ -29,8 +30,8 @@ public class HarnessUserServiceImpl implements HarnessUserService {
   private final UserService userService;
 
   @Inject
-  public HarnessUserServiceImpl(
-      UserMembershipClient userMembershipClient, ScopeParamsFactory scopeParamsFactory, UserService userService) {
+  public HarnessUserServiceImpl(@Named("PRIVILEGED") UserMembershipClient userMembershipClient,
+      ScopeParamsFactory scopeParamsFactory, UserService userService) {
     this.userMembershipClient = userMembershipClient;
     this.scopeParamsFactory = scopeParamsFactory;
     this.userService = userService;

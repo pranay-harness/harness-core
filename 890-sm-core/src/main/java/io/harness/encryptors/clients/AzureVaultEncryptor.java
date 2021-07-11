@@ -191,6 +191,17 @@ public class AzureVaultEncryptor implements VaultEncryptor {
     }
   }
 
+  @Override
+  public boolean validateSecretManagerConfiguration(String accountId, EncryptionConfig encryptionConfig) {
+    try {
+      createSecret(accountId, AzureVaultConfig.AZURE_VAULT_VALIDATION_URL, Boolean.TRUE.toString(), encryptionConfig);
+    } catch (Exception exception) {
+      log.error("Validation failed for Secret Manager/KMS: " + encryptionConfig.getName());
+      return false;
+    }
+    return true;
+  }
+
   private HashMap<String, String> getMetadata() {
     return new HashMap<String, String>() {
       { put("createdBy", "Harness"); }

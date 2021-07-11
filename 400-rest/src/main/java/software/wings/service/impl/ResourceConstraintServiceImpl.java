@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.allChecks;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -19,9 +20,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.beans.shared.ResourceConstraint;
-import io.harness.beans.shared.ResourceConstraint.ResourceConstraintKeys;
-import io.harness.beans.shared.RestraintService;
+import io.harness.beans.ResourceConstraint;
+import io.harness.beans.ResourceConstraint.ResourceConstraintKeys;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.Constraint.Spec;
 import io.harness.distribution.constraint.Constraint.Strategy;
@@ -38,6 +38,7 @@ import io.harness.distribution.constraint.UnableToSaveConstraintException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
+import io.harness.validation.Create;
 import io.harness.validation.Update;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -86,7 +87,6 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 public class ResourceConstraintServiceImpl implements ResourceConstraintService, ConstraintRegistry {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private StateExecutionService stateExecutionService;
-  @Inject private RestraintService restraintService;
 
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private WingsPersistence wingsPersistence;
@@ -120,6 +120,11 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
           "Resource Constraint capacity cannot be less than the current usage", WingsException.USER);
     }
     wingsPersistence.merge(resourceConstraint);
+  }
+
+  @Override
+  public ResourceConstraint getById(String id) {
+    return wingsPersistence.createQuery(ResourceConstraint.class).filter(ResourceConstraintKeys.uuid, id).get();
   }
 
   @Override
@@ -394,7 +399,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
   @Override
   public Constraint load(ConstraintId id) throws UnableToLoadConstraintException {
-    final ResourceConstraint resourceConstraint = restraintService.get(null, id.getValue());
+    final ResourceConstraint resourceConstraint = get(null, id.getValue());
     return createAbstraction(resourceConstraint);
   }
 
@@ -447,7 +452,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   @Override
   public boolean registerConsumer(ConstraintId id, ConstraintUnit unit, Consumer consumer, int currentlyRunning)
       throws UnableToRegisterConsumerException {
-    ResourceConstraint resourceConstraint = restraintService.get(null, id.getValue());
+    ResourceConstraint resourceConstraint = get(null, id.getValue());
     if (resourceConstraint == null) {
       throw new InvalidRequestException(format("There is no resource constraint with id: %s", id.getValue()));
     }
@@ -579,5 +584,25 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
       }
     }
     return currentPermits;
+  }
+
+  @Override
+  public ResourceConstraint get(String accountId, String resourceConstraintId) {
+    final ResourceConstraint resourceConstraint = wingsPersistence.get(ResourceConstraint.class, resourceConstraintId);
+    if (resourceConstraint != null && accountId != null && !resourceConstraint.getAccountId().equals(accountId)) {
+      return null;
+    }
+    return resourceConstraint;
+  }
+
+  @Override
+  @ValidationGroups(Create.class)
+  public ResourceConstraint save(ResourceConstraint resourceConstraint) {
+    try {
+      wingsPersistence.save(resourceConstraint);
+      return resourceConstraint;
+    } catch (DuplicateKeyException exception) {
+      throw new InvalidRequestException("The resource constraint name cannot be reused.", exception, USER);
+    }
   }
 }

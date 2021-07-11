@@ -44,6 +44,10 @@ public enum Risk {
     return this.getValue() >= other.getValue();
   }
 
+  public boolean isGreaterThan(Risk other) {
+    return this.getValue() > other.getValue();
+  }
+
   public boolean isLessThanEq(Risk other) {
     return this.getValue() <= other.getValue();
   }

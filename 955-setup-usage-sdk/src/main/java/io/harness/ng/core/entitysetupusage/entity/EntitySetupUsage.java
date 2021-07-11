@@ -7,6 +7,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.EntityDetail.EntityDetailKeys;
 import io.harness.ng.core.NGAccountAccess;
@@ -22,6 +23,7 @@ import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotBlank;
+import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -38,6 +40,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("entitySetupUsage")
 @TypeAlias("io.harness.ng.core.entityReference.entity.EntitySetupUsage")
 @OwnedBy(DX)
+@Entity(value = "entitySetupUsage", noClassnameStored = true)
 public class EntitySetupUsage implements PersistentEntity, NGAccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -65,6 +68,22 @@ public class EntitySetupUsage implements PersistentEntity, NGAccountAccess {
                  .field(EntitySetupUsageKeys.referredEntityBranch)
                  .field(EntitySetupUsageKeys.accountIdentifier)
                  .unique(true)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("account_referredBy_createdAt_index")
+                 .field(EntitySetupUsageKeys.accountIdentifier)
+                 .field(EntitySetupUsageKeys.referredByEntityFQN)
+                 .field(EntitySetupUsageKeys.referredByEntityType)
+                 .field(EntitySetupUsageKeys.referredEntityType)
+                 .field(EntitySetupUsageKeys.referredByEntityIsDefault)
+                 .descSortField(EntitySetupUsageKeys.createdAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("account_referredByFQN_referredByIsDefault_createdAt_index")
+                 .field(EntitySetupUsageKeys.accountIdentifier)
+                 .field(EntitySetupUsageKeys.referredByEntityFQN)
+                 .field(EntitySetupUsageKeys.referredByEntityIsDefault)
+                 .descSortField(EntitySetupUsageKeys.createdAt)
                  .build())
         .build();
   }

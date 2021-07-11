@@ -10,7 +10,6 @@ import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
 import io.harness.pms.contracts.resume.ChainDetails;
 import io.harness.pms.contracts.resume.NodeResumeEvent;
 import io.harness.pms.events.base.PmsEventCategory;
-import io.harness.pms.execution.utils.AmbianceUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -29,7 +28,6 @@ public class RedisNodeResumeEventPublisher implements NodeResumeEventPublisher {
   @Override
   public void publishEvent(NodeExecution nodeExecution, Map<String, ByteString> responseMap, boolean isError) {
     String serviceName = nodeExecution.getNode().getServiceName();
-    String accountId = AmbianceUtils.getAccountId(nodeExecution.getAmbiance());
     NodeResumeEvent.Builder resumeEventBuilder = NodeResumeEvent.newBuilder()
                                                      .setAmbiance(nodeExecution.getAmbiance())
                                                      .setExecutionMode(nodeExecution.getMode())
@@ -43,8 +41,8 @@ public class RedisNodeResumeEventPublisher implements NodeResumeEventPublisher {
       resumeEventBuilder.setChainDetails(chainDetails);
     }
 
-    eventSender.sendEvent(
-        resumeEventBuilder.build().toByteString(), PmsEventCategory.NODE_RESUME, serviceName, accountId, true);
+    eventSender.sendEvent(nodeExecution.getAmbiance(), resumeEventBuilder.build().toByteString(),
+        PmsEventCategory.NODE_RESUME, serviceName, true);
   }
 
   public ChainDetails buildChainDetails(NodeExecution nodeExecution) {

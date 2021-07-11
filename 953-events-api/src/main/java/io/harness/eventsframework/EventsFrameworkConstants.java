@@ -23,6 +23,7 @@ public final class EventsFrameworkConstants {
   public static final String GIT_PR_EVENT_STREAM = "git_pr_event_stream";
   public static final String GIT_BRANCH_HOOK_EVENT_STREAM = "git_branch_hook_event_stream";
   public static final String USERMEMBERSHIP = "usermembership";
+  public static final String ORCHESTRATION_LOG = "orchestration_log";
 
   // created for git sdk, dont use outside sdk.
   public static final String GIT_CONFIG_STREAM = "git_config_stream";
@@ -34,34 +35,34 @@ public final class EventsFrameworkConstants {
 
   // Pipeline Service Events
   public static final String PIPELINE_ORCHESTRATION_EVENT_TOPIC = "pipeline_orchestration";
-  public static final int PIPELINE_ORCHESTRATION_EVENT_BATCH_SIZE = 20;
+  public static final int PIPELINE_ORCHESTRATION_EVENT_BATCH_SIZE = 1;
   public static final int PIPELINE_ORCHESTRATION_EVENT_MAX_TOPIC_SIZE = 5000;
 
   public static final String PIPELINE_SDK_RESPONSE_EVENT_TOPIC = "pipeline_sdk_response";
   public static final int PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE = 5000;
 
   public static final String PIPELINE_INTERRUPT_TOPIC = "pipeline_interrupt";
-  public static final int PIPELINE_INTERRUPT_BATCH_SIZE = 10;
+  public static final int PIPELINE_INTERRUPT_BATCH_SIZE = 1;
   public static final int PIPELINE_INTERRUPT_EVENT_MAX_TOPIC_SIZE = 1000;
 
   public static final String PIPELINE_FACILITATOR_EVENT_TOPIC = "pipeline_node_facilitation";
-  public static final int PIPELINE_FACILITATOR_EVENT_BATCH_SIZE = 10;
+  public static final int PIPELINE_FACILITATOR_EVENT_BATCH_SIZE = 1;
   public static final int PIPELINE_FACILITATOR_EVENT_MAX_TOPIC_SIZE = 5000;
 
   public static final String PIPELINE_NODE_START_EVENT_TOPIC = "pipeline_node_start";
-  public static final int PIPELINE_NODE_START_EVENT_BATCH_SIZE = 10;
+  public static final int PIPELINE_NODE_START_EVENT_BATCH_SIZE = 1;
   public static final int PIPELINE_NODE_START_EVENT_MAX_TOPIC_SIZE = 5000;
 
   public static final String PIPELINE_PROGRESS_EVENT_TOPIC = "pipeline_node_progress";
-  public static final int PIPELINE_PROGRESS_BATCH_SIZE = 10;
+  public static final int PIPELINE_PROGRESS_BATCH_SIZE = 1;
   public static final int PIPELINE_PROGRESS_MAX_TOPIC_SIZE = 5000;
 
   public static final String PIPELINE_NODE_ADVISE_EVENT_TOPIC = "pipeline_node_advise";
-  public static final int PIPELINE_NODE_ADVISE_BATCH_SIZE = 10;
+  public static final int PIPELINE_NODE_ADVISE_BATCH_SIZE = 1;
   public static final int PIPELINE_NODE_ADVISE_MAX_TOPIC_SIZE = 5000;
 
   public static final String PIPELINE_NODE_RESUME_EVENT_TOPIC = "pipeline_node_resume";
-  public static final int PIPELINE_NODE_RESUME_BATCH_SIZE = 10;
+  public static final int PIPELINE_NODE_RESUME_BATCH_SIZE = 1;
   public static final int PIPELINE_NODE_RESUME_MAX_TOPIC_SIZE = 5000;
 
   public static final int DEFAULT_TOPIC_SIZE = 10000;
@@ -90,10 +91,12 @@ public final class EventsFrameworkConstants {
   public static final Duration ENTITY_ACTIVITY_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration HARNESS_TO_GIT_PUSH_MAX_PROCESSING_TIME = Duration.ofSeconds(50);
   public static final Duration GIT_CONFIG_STREAM_PROCESSING_TIME = Duration.ofSeconds(20);
+  public static final Duration ORCHESTRATION_LOG_MAX_PROCESSING_TIME = Duration.ofMinutes(10);
 
   public static final int DEFAULT_READ_BATCH_SIZE = 50;
   public static final int ENTITY_CRUD_READ_BATCH_SIZE = 50;
   public static final int FEATURE_FLAG_READ_BATCH_SIZE = 50;
+  public static final int ORCHESTRATION_LOG_READ_BATCH_SIZE = 50;
   public static final int USERMEMBERSHIP_READ_BATCH_SIZE = 50;
   public static final int SETUP_USAGE_READ_BATCH_SIZE = 50;
   public static final int ENTITY_ACTIVITY_READ_BATCH_SIZE = 50;

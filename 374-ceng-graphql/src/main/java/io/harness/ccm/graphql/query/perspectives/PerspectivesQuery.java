@@ -60,10 +60,8 @@ public class PerspectivesQuery {
     String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
     BigQuery bigQuery = bigQueryService.get();
 
-    log.info(cloudProviderTableName);
-
-    QLCEViewTrendInfo trendStatsData =
-        viewsBillingService.getTrendStatsData(bigQuery, filters, aggregateFunction, cloudProviderTableName);
+    QLCEViewTrendInfo trendStatsData = viewsBillingService.getTrendStatsDataNg(
+        bigQuery, filters, aggregateFunction, cloudProviderTableName, accountId);
     return PerspectiveTrendStats.builder()
         .cost(StatsInfo.builder()
                   .statsTrend(trendStatsData.getStatsTrend())
@@ -71,6 +69,29 @@ public class PerspectivesQuery {
                   .statsDescription(trendStatsData.getStatsDescription())
                   .statsValue(trendStatsData.getStatsValue())
                   .value(trendStatsData.getValue())
+                  .build())
+        .efficiencyScoreStats(trendStatsData.getEfficiencyScoreStats())
+        .build();
+  }
+
+  @GraphQLQuery(name = "perspectiveForecastCost", description = "Forecast cost for perspective")
+  public PerspectiveTrendStats perspectiveForecastCost(
+      @GraphQLArgument(name = "filters") List<QLCEViewFilterWrapper> filters,
+      @GraphQLArgument(name = "aggregateFunction") List<QLCEViewAggregation> aggregateFunction,
+      @GraphQLEnvironment final ResolutionEnvironment env) {
+    final String accountId = graphQLUtils.getAccountIdentifier(env);
+    String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
+    BigQuery bigQuery = bigQueryService.get();
+
+    QLCEViewTrendInfo forecastCostData = viewsBillingService.getForecastCostData(
+        bigQuery, filters, aggregateFunction, cloudProviderTableName, accountId);
+    return PerspectiveTrendStats.builder()
+        .cost(StatsInfo.builder()
+                  .statsTrend(forecastCostData.getStatsTrend())
+                  .statsLabel(forecastCostData.getStatsLabel())
+                  .statsDescription(forecastCostData.getStatsDescription())
+                  .statsValue(forecastCostData.getStatsValue())
+                  .value(forecastCostData.getValue())
                   .build())
         .build();
   }
@@ -88,8 +109,10 @@ public class PerspectivesQuery {
     BigQuery bigQuery = bigQueryService.get();
 
     return PerspectiveEntityStatsData.builder()
-        .data(viewsBillingService.getEntityStatsDataPoints(
-            bigQuery, filters, groupBy, aggregateFunction, sortCriteria, cloudProviderTableName, limit, offset))
+        .data(viewsBillingService
+                  .getEntityStatsDataPointsNg(bigQuery, filters, groupBy, aggregateFunction, sortCriteria,
+                      cloudProviderTableName, limit, offset, accountId, true)
+                  .getData())
         .build();
   }
 
@@ -106,7 +129,8 @@ public class PerspectivesQuery {
     BigQuery bigQuery = bigQueryService.get();
 
     return PerspectiveFilterData.builder()
-        .values(viewsBillingService.getFilterValueStats(bigQuery, filters, cloudProviderTableName, limit, offset))
+        .values(viewsBillingService.getFilterValueStatsNg(
+            bigQuery, filters, cloudProviderTableName, limit, offset, accountId))
         .build();
   }
 
@@ -129,8 +153,9 @@ public class PerspectivesQuery {
     String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
     BigQuery bigQuery = bigQueryService.get();
 
-    PerspectiveTimeSeriesData data = perspectiveTimeSeriesHelper.fetch(viewsBillingService.getTimeSeriesStats(
-        bigQuery, filters, groupBy, aggregateFunction, sortCriteria, cloudProviderTableName));
+    PerspectiveTimeSeriesData data =
+        perspectiveTimeSeriesHelper.fetch(viewsBillingService.getTimeSeriesStatsNg(bigQuery, filters, groupBy,
+            aggregateFunction, sortCriteria, cloudProviderTableName, accountId, includeOthers, limit));
 
     return perspectiveTimeSeriesHelper.postFetch(data, limit, includeOthers);
   }

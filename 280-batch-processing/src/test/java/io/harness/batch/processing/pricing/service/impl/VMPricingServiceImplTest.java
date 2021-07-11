@@ -1,8 +1,10 @@
 package io.harness.batch.processing.pricing.service.impl;
 
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.withinPercentage;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -32,12 +34,13 @@ import retrofit2.Response;
 public class VMPricingServiceImplTest extends CategoryTest {
   @InjectMocks private VMPricingServiceImpl vmPricingService;
   @Mock private BanzaiPricingClient banzaiPricingClient;
-  private final String REGION = "us-east-1";
-  private final String COMPUTE_SERVICE = "compute";
-  private final String DEFAULT_INSTANCE_FAMILY = "c4.8xlarge";
-  private final double DEFAULT_INSTANCE_CPU = 36;
-  private final double DEFAULT_INSTANCE_MEMORY = 60;
-  private final double DEFAULT_INSTANCE_PRICE = 1.60;
+  private static final String REGION = "us-east-1";
+  private static final String COMPUTE_SERVICE = "compute";
+  private static final String DEFAULT_INSTANCE_FAMILY = "c4.8xlarge";
+  private static final double DEFAULT_INSTANCE_CPU = 36;
+  private static final double DEFAULT_INSTANCE_MEMORY = 60;
+  private static final double DEFAULT_INSTANCE_PRICE = 1.60;
+  private static final double MAX_RELATIVE_ERROR_PCT = 5;
 
   @Test
   @Owner(developers = HITESH)
@@ -82,7 +85,7 @@ public class VMPricingServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
-  public void testGetCustomComputeVMPricingInfo() throws IOException {
+  public void testGetHardCodedComputeVMPricingInfo() throws IOException {
     VMComputePricingInfo computeVMPricingInfo =
         vmPricingService.getComputeVMPricingInfo("n2-standard-16", REGION, CloudProvider.GCP);
     assertThat(computeVMPricingInfo).isNotNull();
@@ -90,6 +93,27 @@ public class VMPricingServiceImplTest extends CategoryTest {
     assertThat(computeVMPricingInfo.getMemPerVm()).isEqualTo(64.0);
     assertThat(computeVMPricingInfo.getOnDemandPrice()).isEqualTo(0.7769);
     assertThat(computeVMPricingInfo.getType()).isEqualTo("n2-standard-16");
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGetCustomComputeVMPricingInfo() throws IOException {
+    Call<PricingResponse> pricingInfoCall = mock(Call.class);
+    when(pricingInfoCall.execute()).thenReturn(createPricingResponse());
+    when(banzaiPricingClient.getPricingInfo(CloudProvider.GCP.getCloudProviderName(), COMPUTE_SERVICE, REGION))
+        .thenReturn(pricingInfoCall);
+
+    VMComputePricingInfo computeVMPricingInfo =
+        vmPricingService.getComputeVMPricingInfo("e2-custom-12-32768", REGION, CloudProvider.GCP);
+
+    assertThat(computeVMPricingInfo).isNotNull();
+    assertThat(computeVMPricingInfo.getCpusPerVm()).isEqualTo(12.0D);
+    assertThat(computeVMPricingInfo.getMemPerVm()).isEqualTo(32.0D);
+    assertThat(computeVMPricingInfo.getOnDemandPrice()).isCloseTo(0.372824, withinPercentage(MAX_RELATIVE_ERROR_PCT));
+    assertThat(computeVMPricingInfo.getSpotPrice().get(0).getPrice())
+        .isCloseTo(0.111844, withinPercentage(MAX_RELATIVE_ERROR_PCT));
+    assertThat(computeVMPricingInfo.getType()).isEqualTo("e2-custom-12-32768");
   }
 
   @Test

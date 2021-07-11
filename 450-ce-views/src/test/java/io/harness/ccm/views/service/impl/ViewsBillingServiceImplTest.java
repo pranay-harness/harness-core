@@ -53,7 +53,9 @@ public class ViewsBillingServiceImplTest extends CategoryTest {
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     doCallRealMethod().when(viewsQueryBuilder).getAliasFromField(any());
-    doCallRealMethod().when(viewsQueryBuilder).getFilterValuesQuery(any(), any(), anyString(), anyInt(), anyInt());
+    doCallRealMethod()
+        .when(viewsQueryBuilder)
+        .getFilterValuesQuery(any(), any(), any(), anyString(), anyInt(), anyInt());
     doReturn(resultSet).when(bigQuery).query(any());
 
     clusterId = QLCEViewFieldInput.builder()

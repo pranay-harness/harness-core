@@ -250,11 +250,11 @@ public class HelmClientImplTest extends CategoryTest {
   public void repoUpdate() throws Exception {
     ConsumerWrapper<HelmCommandRequest> command = helmClient::repoUpdate;
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V2, command, helmInstallCommandRequest))
-        .isEqualTo("helm repo update");
+        .isEqualTo("helm repo update ${HELM_HOME_PATH_FLAG}");
     assertThat(getCommandWithNoValueOverride(HelmVersion.V2, command, helmInstallCommandRequest))
-        .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm repo update");
+        .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm repo update ${HELM_HOME_PATH_FLAG}");
     assertThat(getCommandWithCommandFlags(HelmVersion.V2, command, helmInstallCommandRequest))
-        .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm repo update");
+        .isEqualTo("KUBECONFIG=~/.kube/dummy-config helm repo update ${HELM_HOME_PATH_FLAG}");
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V3, command, helmInstallCommandRequest))
         .isEqualTo("/client-tools/v3.1/helm repo update");
     assertThat(getCommandWithNoValueOverride(HelmVersion.V3, command, helmInstallCommandRequest))

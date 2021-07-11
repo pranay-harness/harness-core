@@ -11,6 +11,7 @@ import io.harness.ci.utils.CIPipelineStandardVariablesUtils;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
@@ -28,7 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CI)
 public class CIPipelineSetupStep
     implements ChildExecutable<CIPipelineSetupParameters>, SyncExecutable<CIPipelineSetupParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType("CI_PIPELINE_SETUP").build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType("CI_PIPELINE_SETUP").setStepCategory(StepCategory.STEP).build();
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
 
   @Override

@@ -102,9 +102,6 @@ then
     ${TRACK_FILES} \
     --team-filter ${HARNESS_TEAM} \
     --kind-filter AutoAction \
-    --kind-filter Critical \
     --kind-filter Error \
-    --kind-filter ToDo \
-    --kind-filter Warning \
     --exit-code
 fi

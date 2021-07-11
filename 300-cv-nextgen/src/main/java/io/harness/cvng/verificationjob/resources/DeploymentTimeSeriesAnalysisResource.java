@@ -34,8 +34,9 @@ public class DeploymentTimeSeriesAnalysisResource {
   public RestResponse<TransactionMetricInfoSummaryPageDTO> getMetrics(
       @PathParam("verificationJobInstanceId") String verificationJobInstanceId,
       @QueryParam("accountId") String accountId, @QueryParam("anomalousMetricsOnly") boolean anomalousMetricsOnly,
-      @QueryParam("hostName") String hostName, @QueryParam("pageNumber") int pageNumber) {
+      @QueryParam("hostName") String hostName, @QueryParam("filter") String filter,
+      @QueryParam("pageNumber") int pageNumber) {
     return new RestResponse(deploymentTimeSeriesAnalysisService.getMetrics(
-        accountId, verificationJobInstanceId, anomalousMetricsOnly, hostName, pageNumber));
+        accountId, verificationJobInstanceId, anomalousMetricsOnly, hostName, filter, pageNumber));
   }
 }

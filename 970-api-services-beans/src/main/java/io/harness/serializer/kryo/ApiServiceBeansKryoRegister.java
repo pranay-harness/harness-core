@@ -141,7 +141,6 @@ import com.google.api.services.monitoring.v3.model.Point;
 import com.google.api.services.monitoring.v3.model.TimeInterval;
 import com.google.api.services.monitoring.v3.model.TimeSeries;
 import com.google.api.services.monitoring.v3.model.TypedValue;
-import com.hazelcast.spi.exception.TargetNotMemberException;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.sumologic.client.SumoServerException;
@@ -178,7 +177,6 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(CapacityReservationTargetResponse.class, 1024);
     kryo.register(KubernetesClientException.class, 2000);
     kryo.register(JSONException.class, 2001);
-    kryo.register(TargetNotMemberException.class, 2002);
     kryo.register(SumoServerException.class, 2003);
     kryo.register(ListTimeSeriesResponse.class, 2004);
     kryo.register(TimeSeries.class, 2005);

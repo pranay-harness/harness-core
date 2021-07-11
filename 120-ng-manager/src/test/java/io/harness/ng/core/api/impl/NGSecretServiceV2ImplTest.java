@@ -17,8 +17,8 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
+import io.harness.delegate.utils.TaskSetupAbstractionHelper;
 import io.harness.encryption.SecretRefData;
-import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.api.NGSecretActivityService;
 import io.harness.ng.core.dto.secrets.SSHCredentialType;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
@@ -61,7 +61,7 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
   private NGSecretServiceV2Impl secretServiceV2Spy;
   private NGSecretActivityService ngSecretActivityService;
   private OutboxService outboxService;
-  private FeatureFlagService featureFlagService;
+  private TaskSetupAbstractionHelper taskSetupAbstractionHelper;
   private TransactionTemplate transactionTemplate;
 
   @Before
@@ -72,9 +72,9 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
     ngSecretActivityService = mock(NGSecretActivityService.class);
     outboxService = mock(OutboxService.class);
     transactionTemplate = mock(TransactionTemplate.class);
-    featureFlagService = mock(FeatureFlagService.class);
+    taskSetupAbstractionHelper = new TaskSetupAbstractionHelper();
     secretServiceV2 = new NGSecretServiceV2Impl(secretRepository, delegateGrpcClientWrapper, sshKeySpecDTOHelper,
-        ngSecretActivityService, outboxService, transactionTemplate, featureFlagService);
+        ngSecretActivityService, outboxService, transactionTemplate, taskSetupAbstractionHelper);
     secretServiceV2Spy = spy(secretServiceV2);
   }
 

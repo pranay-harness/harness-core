@@ -221,7 +221,7 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
                           .setScale(2, BigDecimal.ROUND_HALF_EVEN);
       } else {
         recommendation.setLastDayCostAvailable(false);
-        log.info("Unable to get lastDayCost for workload {}", workloadId);
+        log.debug("Unable to get lastDayCost for workload {}", workloadId);
       }
       recommendation.setTtl(Instant.now().plus(RECOMMENDATION_TTL));
       recommendation.setDirty(false);

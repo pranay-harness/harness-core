@@ -2,16 +2,16 @@ package io.harness.migrations.all;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
 
 import software.wings.beans.Account;
 import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ApplicationManifest.ApplicationManifestKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ApplicationManifestServiceImpl;
 import software.wings.service.intfc.ServiceResourceService;
@@ -19,13 +19,11 @@ import software.wings.service.intfc.ServiceResourceService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 @Singleton
-@TargetModule(HarnessModule._390_DB_MIGRATION)
 @OwnedBy(CDC)
 public class AddAppManifestName implements Migration {
   private static final String DEBUG_LINE = "[APP_MANIFEST_NAME_ADDITION_MIGRATION]: ";
@@ -50,7 +48,7 @@ public class AddAppManifestName implements Migration {
   private void migrateApplicationManifestsForAccount(Account account) {
     try (HIterator<ApplicationManifest> applicationManifests =
              new HIterator<>(wingsPersistence.createQuery(ApplicationManifest.class)
-                                 .filter(ApplicationManifest.ApplicationManifestKeys.accountId, account.getUuid())
+                                 .filter(ApplicationManifestKeys.accountId, account.getUuid())
                                  .fetch())) {
       log.info(String.join(DEBUG_LINE, " Fetching application manifests for account", account.getAccountName(),
           "with Id", account.getUuid()));
@@ -73,16 +71,16 @@ public class AddAppManifestName implements Migration {
         if (serviceName != null) {
           UpdateOperations<ApplicationManifest> updateOperations =
               wingsPersistence.createUpdateOperations(ApplicationManifest.class)
-                  .set(ApplicationManifest.ApplicationManifestKeys.name, serviceName + "_" + chartName);
+                  .set(ApplicationManifestKeys.name, serviceName + "_" + chartName);
           if (ExpressionEvaluator.containsVariablePattern(chartName)) {
-            updateOperations.set(ApplicationManifest.ApplicationManifestKeys.validationMessage,
-                ApplicationManifestServiceImpl.VARIABLE_EXPRESSIONS_ERROR);
+            updateOperations.set(
+                ApplicationManifestKeys.validationMessage, ApplicationManifestServiceImpl.VARIABLE_EXPRESSIONS_ERROR);
           }
           wingsPersistence.update(applicationManifest, updateOperations);
           log.info("Successfully added name {} to application manifest with id {}", serviceName + "_" + chartName,
               applicationManifest.getUuid());
           wingsPersistence.updateField(
-              Service.class, applicationManifest.getServiceId(), Service.ServiceKeys.artifactFromManifest, true);
+              Service.class, applicationManifest.getServiceId(), ServiceKeys.artifactFromManifest, true);
         } else {
           log.info("Orphan app manifest with id {} of non existent service id {} found", applicationManifest.getUuid(),
               applicationManifest.getServiceId());

@@ -29,7 +29,7 @@ import io.harness.plancreator.steps.common.StageElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
-import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 
@@ -74,9 +74,8 @@ public class GitBuildStatusUtility {
    * @param ambiance
    * @param accountId
    */
-  public void sendStatusToGit(Status status, String resolvedStepParamters, Ambiance ambiance, String accountId) {
-    StageElementParameters stageElementParameters =
-        RecastOrchestrationUtils.fromDocumentJson(resolvedStepParamters, StageElementParameters.class);
+  public void sendStatusToGit(Status status, StepParameters stepParameters, Ambiance ambiance, String accountId) {
+    StageElementParameters stageElementParameters = (StageElementParameters) stepParameters;
 
     IntegrationStageStepParametersPMS integrationStageStepParameters =
         (IntegrationStageStepParametersPMS) stageElementParameters.getSpecConfig();

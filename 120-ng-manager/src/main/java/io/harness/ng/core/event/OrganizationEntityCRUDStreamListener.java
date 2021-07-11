@@ -32,14 +32,12 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class OrganizationEntityCRUDStreamListener implements MessageListener {
   private final OrganizationService organizationService;
   private final DefaultOrganizationManager defaultOrganizationManager;
-  private final ResourceGroupClient resourceGroupClient;
 
   @Inject
   public OrganizationEntityCRUDStreamListener(OrganizationService organizationService,
       DefaultOrganizationManager defaultOrganizationManager, ResourceGroupClient resourceGroupClient) {
     this.organizationService = organizationService;
     this.defaultOrganizationManager = defaultOrganizationManager;
-    this.resourceGroupClient = resourceGroupClient;
   }
 
   @Override
@@ -81,7 +79,6 @@ public class OrganizationEntityCRUDStreamListener implements MessageListener {
 
   private boolean processAccountCreateEvent(AccountEntityChangeDTO accountEntityChangeDTO) {
     defaultOrganizationManager.createDefaultOrganization(accountEntityChangeDTO.getAccountId());
-    resourceGroupClient.createManagedResourceGroup(accountEntityChangeDTO.getAccountId(), null, null);
     return true;
   }
 

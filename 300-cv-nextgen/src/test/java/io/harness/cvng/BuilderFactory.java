@@ -1,27 +1,57 @@
 package io.harness.cvng;
 
+import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo5MinBoundary;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.MonitoredServiceDataSourceType;
+import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.beans.job.Sensitivity;
+import io.harness.cvng.cdng.beans.CVNGStepInfo;
+import io.harness.cvng.cdng.beans.CVNGStepInfo.CVNGStepInfoBuilder;
+import io.harness.cvng.cdng.beans.TestVerificationJobSpec;
+import io.harness.cvng.core.beans.monitoredService.HealthSource;
+import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceDTOBuilder;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigBuilder;
+import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.core.entities.NewRelicCVConfig;
+import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicCVConfigBuilder;
+import io.harness.cvng.dashboard.entities.HeatMap;
+import io.harness.cvng.dashboard.entities.HeatMap.HeatMapBuilder;
+import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
+import io.harness.cvng.dashboard.entities.HeatMap.HeatMapRisk;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
+import io.harness.pms.yaml.ParameterField;
 
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.Value;
+
 @Data
 @Builder(buildMethodName = "unsafeBuild")
 public class BuilderFactory {
+  public static final String CONNECTOR_IDENTIFIER = "connectorIdentifier";
   @Getter @Setter(AccessLevel.PRIVATE) private Clock clock;
   @Getter @Setter(AccessLevel.PRIVATE) private Context context;
   public static class BuilderFactoryBuilder {
@@ -43,6 +73,108 @@ public class BuilderFactory {
         .startTime(clock.instant())
         .dataCollectionDelay(Duration.ofMinutes(2))
         .resolvedJob(getVerificationJob());
+  }
+
+  public MonitoredServiceDTOBuilder monitoredServiceDTOBuilder() {
+    return MonitoredServiceDTO.builder()
+        .identifier(context.serviceIdentifier + "_" + context.getEnvIdentifier())
+        .name("monitored service name")
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .type(MonitoredServiceType.APPLICATION)
+        .description(generateUuid())
+        .serviceRef(context.getServiceIdentifier())
+        .environmentRef(context.getEnvIdentifier())
+        .sources(MonitoredServiceDTO.Sources.builder()
+                     .healthSources(Arrays.asList(createHealthSource()).stream().collect(Collectors.toSet()))
+                     .build());
+  }
+
+  public HeatMapBuilder heatMapBuilderWith5MinResolution() {
+    Instant bucketEndTime = clock.instant();
+    bucketEndTime = roundDownTo5MinBoundary(bucketEndTime);
+    Instant bucketStartTime = bucketEndTime.minus(4, ChronoUnit.HOURS);
+    List<HeatMapRisk> heatMapRisks = new ArrayList<>();
+
+    for (Instant startTime = bucketStartTime; startTime.isBefore(bucketEndTime);
+         startTime = startTime.plus(5, ChronoUnit.MINUTES)) {
+      heatMapRisks.add(HeatMapRisk.builder()
+                           .riskScore(-1)
+                           .startTime(startTime)
+                           .endTime(startTime.plus(5, ChronoUnit.MINUTES))
+                           .build());
+    }
+
+    return HeatMap.builder()
+        .accountId(context.getAccountId())
+        .projectIdentifier(context.getProjectIdentifier())
+        .orgIdentifier(context.getOrgIdentifier())
+        .category(CVMonitoringCategory.ERRORS)
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier())
+        .heatMapResolution(HeatMapResolution.FIVE_MIN)
+        .heatMapBucketStartTime(bucketStartTime)
+        .heatMapBucketEndTime(bucketEndTime)
+        .heatMapRisks(heatMapRisks);
+  }
+
+  private HealthSource createHealthSource() {
+    return HealthSource.builder()
+        .identifier("healthSourceIdentifier")
+        .name("health source name")
+        .type(MonitoredServiceDataSourceType.APP_DYNAMICS)
+        .spec(createHealthSourceSpec())
+        .build();
+  }
+
+  private HealthSourceSpec createHealthSourceSpec() {
+    return AppDynamicsHealthSourceSpec.builder()
+        .appdApplicationName("appApplicationName")
+        .appdTierName("tier")
+        .connectorRef(CONNECTOR_IDENTIFIER)
+        .feature("Application Monitoring")
+        .metricPacks(new HashSet<MetricPackDTO>() {
+          { add(MetricPackDTO.builder().identifier(CVMonitoringCategory.ERRORS).build()); }
+        })
+        .build();
+  }
+
+  public CVNGStepInfoBuilder cvngStepInfoBuilder() {
+    return CVNGStepInfo.builder()
+        .monitoredServiceRef(
+            ParameterField.createValueField(context.getServiceIdentifier() + "_" + context.getEnvIdentifier()))
+        .type("LoadTest")
+        .spec(TestVerificationJobSpec.builder()
+                  .duration(ParameterField.createValueField("5m"))
+                  .deploymentTag(ParameterField.createValueField("build#1"))
+                  .sensitivity(ParameterField.createValueField("Low"))
+                  .build());
+  }
+
+  public AppDynamicsCVConfigBuilder appDynamicsCVConfigBuilder() {
+    return AppDynamicsCVConfig.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier())
+        .identifier(generateUuid())
+        .monitoringSourceName(generateUuid())
+        .metricPack(MetricPack.builder().build())
+        .applicationName(generateUuid())
+        .tierName(generateUuid())
+        .connectorIdentifier("AppDynamics Connector")
+        .category(CVMonitoringCategory.PERFORMANCE)
+        .productName(generateUuid());
+  }
+
+  public NewRelicCVConfigBuilder newRelicCVConfigBuilder() {
+    return NewRelicCVConfig.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier());
   }
 
   private VerificationJob getVerificationJob() {

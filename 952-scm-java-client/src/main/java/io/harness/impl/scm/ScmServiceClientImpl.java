@@ -398,17 +398,19 @@ public class ScmServiceClientImpl implements ScmServiceClient {
       ScmConnector connector, Set<String> foldersList, String branchName, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(connector);
     String slug = scmGitProviderHelper.getSlug(connector);
-    final GetLatestCommitResponse latestCommit = scmBlockingStub.getLatestCommit(
+    final GetLatestCommitResponse latestCommitResponse = scmBlockingStub.getLatestCommit(
         GetLatestCommitRequest.newBuilder().setBranch(branchName).setProvider(gitProvider).setSlug(slug).build());
-    try (AutoLogContext ignore1 =
-             new RepoBranchLogContext(slug, branchName, latestCommit.getCommitId(), OVERRIDE_ERROR)) {
+    ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
+        latestCommitResponse.getStatus(), latestCommitResponse.getError());
+    String latestCommitId = latestCommitResponse.getCommitId();
+    try (AutoLogContext ignore1 = new RepoBranchLogContext(slug, branchName, latestCommitId, OVERRIDE_ERROR)) {
       List<String> getFilesWhichArePartOfHarness =
-          getFileNames(foldersList, slug, gitProvider, branchName, latestCommit.getCommitId(), scmBlockingStub);
-      final FileBatchContentResponse contentOfFiles = getContentOfFiles(
-          getFilesWhichArePartOfHarness, slug, gitProvider, latestCommit.getCommitId(), scmBlockingStub);
+          getFileNames(foldersList, slug, gitProvider, branchName, latestCommitId, scmBlockingStub);
+      final FileBatchContentResponse contentOfFiles =
+          getContentOfFiles(getFilesWhichArePartOfHarness, slug, gitProvider, latestCommitId, scmBlockingStub);
       return FileContentBatchResponse.builder()
           .fileBatchContentResponse(contentOfFiles)
-          .commitId(latestCommit.getCommitId())
+          .commitId(latestCommitId)
           .build();
     }
   }

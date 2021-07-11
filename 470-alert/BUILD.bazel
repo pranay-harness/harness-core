@@ -14,7 +14,7 @@ shared_dependencies = [
 java_library(
     name = "module",
     srcs = glob([
-        "src/main/**/*.java",
+        "src/main/java/**/*.java",
     ]),
     tags = [
         "aeriform",
@@ -24,7 +24,4 @@ java_library(
     deps = shared_dependencies,
 )
 
-run_analysis(
-    run_checkstyle = False,
-    run_pmd = False,
-)
+run_analysis()

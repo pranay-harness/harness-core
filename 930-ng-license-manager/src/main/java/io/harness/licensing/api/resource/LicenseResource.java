@@ -1,8 +1,12 @@
 package io.harness.licensing.api.resource;
 
+import static io.harness.licensing.accesscontrol.LicenseAccessControlPermissions.VIEW_LICENSE_PERMISSION;
+
 import io.harness.NGCommonEntityConstants;
 import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.licensing.ModuleType;
+import io.harness.licensing.accesscontrol.ResourceTypes;
 import io.harness.licensing.beans.modules.AccountLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialDTO;
@@ -56,6 +60,7 @@ public class LicenseResource {
   @Deprecated
   @ApiOperation(
       value = "Gets Module License By Account And ModuleType", nickname = "getModuleLicenseByAccountAndModuleType")
+  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<ModuleLicenseDTO>
   getModuleLicense(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
@@ -67,6 +72,7 @@ public class LicenseResource {
   @Path("/modules/{accountIdentifier}")
   @ApiOperation(
       value = "Gets Module Licenses By Account And ModuleType", nickname = "getModuleLicensesByAccountAndModuleType")
+  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<List<ModuleLicenseDTO>>
   getModuleLicenses(
       @NotNull @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
@@ -78,6 +84,7 @@ public class LicenseResource {
   @Path("{accountIdentifier}/summary")
   @ApiOperation(
       value = "Gets Module Licenses With Summary By Account And ModuleType", nickname = "getLicensesAndSummary")
+  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<LicensesWithSummaryDTO>
   getLicensesWithSummary(
       @NotNull @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
@@ -94,6 +101,7 @@ public class LicenseResource {
   @GET
   @Path("account")
   @ApiOperation(value = "Gets All Module License Information in Account", nickname = "getAccountLicenses")
+  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<AccountLicenseDTO> getAccountLicensesDTO(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     AccountLicenseDTO accountLicenses = licenseService.getAccountLicense(accountIdentifier);
@@ -103,6 +111,7 @@ public class LicenseResource {
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Gets Module License", nickname = "getModuleLicenseById")
+  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<ModuleLicenseDTO> get(@PathParam("identifier") String identifier,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     ModuleLicenseDTO moduleLicense = licenseService.getModuleLicenseById(identifier);
@@ -112,6 +121,7 @@ public class LicenseResource {
   @POST
   @Path("trial")
   @ApiOperation(value = "Starts Trail License For A Module", nickname = "startTrialLicense")
+  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<ModuleLicenseDTO> startTrialLicense(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @Valid @Body StartTrialDTO startTrialRequestDTO) {
@@ -121,6 +131,7 @@ public class LicenseResource {
   @POST
   @Path("extend-trial")
   @ApiOperation(value = "Extends Trail License For A Module", nickname = "extendTrialLicense")
+  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<ModuleLicenseDTO> extendTrialLicense(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @Valid @Body StartTrialDTO startTrialRequestDTO) {

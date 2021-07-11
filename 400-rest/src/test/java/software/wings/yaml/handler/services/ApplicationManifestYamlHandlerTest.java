@@ -232,6 +232,7 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
         (ApplicationManifest.Yaml) getYaml(localValidYamlContent, ApplicationManifest.Yaml.class);
     changeContext.setYaml(yamlObject);
 
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(Service.builder().build());
     ApplicationManifest savedApplicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     compareAppManifest(localApplicationManifest, savedApplicationManifest);
 
@@ -251,6 +252,7 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
         (ApplicationManifest.Yaml) getYaml(remoteYamlContent, ApplicationManifest.Yaml.class);
     changeContext.setYaml(yamlObject);
 
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(Service.builder().build());
     ApplicationManifest savedApplicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     compareAppManifest(remoteApplicationManifest, savedApplicationManifest);
 
@@ -264,6 +266,7 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testCRUDAndGetForCustomManifest() throws IOException {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(Service.builder().build());
     testCRUDAndGetForCustomManifest(customManifestYamlContent, customApplicationManifest);
     testCRUDAndGetForCustomManifest(customOpenshiftTemplateYamlContent, customOpenshiftTemplateApplicationManifest);
   }
@@ -497,6 +500,7 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
         (ApplicationManifest.Yaml) getYaml(kustomizeYamlContent, ApplicationManifest.Yaml.class);
     changeContext.setYaml(yamlObject);
 
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(Service.builder().build());
     ApplicationManifest savedApplicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     compareAppManifest(kustomizeManifest, savedApplicationManifest);
 
@@ -515,7 +519,7 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
   @Category(UnitTests.class)
   public void testFieldsInYaml() {
     int attributeDiff = attributeDiff(ApplicationManifest.class, ApplicationManifest.Yaml.class);
-    assertThat(attributeDiff).isEqualTo(11);
+    assertThat(attributeDiff).isEqualTo(13);
   }
 
   private String readResourceFile(String fileName) throws IOException {
@@ -550,6 +554,7 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
     ChangeContext<ApplicationManifest.Yaml> changeContext =
         createChangeContext(remoteYamlContentWithSkipVersioing, validYamlFilePath);
 
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(Service.builder().build());
     ApplicationManifest.Yaml yamlObject =
         (ApplicationManifest.Yaml) getYaml(remoteYamlContentWithSkipVersioing, ApplicationManifest.Yaml.class);
     changeContext.setYaml(yamlObject);

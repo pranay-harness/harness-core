@@ -148,6 +148,7 @@ import io.harness.delegate.task.helm.HttpHelmConnectivityDelegateTask;
 import io.harness.delegate.task.helm.HttpHelmValidationHandler;
 import io.harness.delegate.task.jira.JiraTaskNG;
 import io.harness.delegate.task.jira.connection.JiraTestConnectionTaskNG;
+import io.harness.delegate.task.k8s.K8sFetchServiceAccountTask;
 import io.harness.delegate.task.k8s.K8sTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask;
@@ -179,6 +180,10 @@ import io.harness.delegatetasks.DeleteSecretTask;
 import io.harness.delegatetasks.EncryptSecretTask;
 import io.harness.delegatetasks.EncryptSecretTaskValidationHandler;
 import io.harness.delegatetasks.FetchSecretTask;
+import io.harness.delegatetasks.NGAzureKeyVaultFetchEngineTask;
+import io.harness.delegatetasks.NGVaultFetchEngineTask;
+import io.harness.delegatetasks.NGVaultRenewalAppRoleTask;
+import io.harness.delegatetasks.NGVaultRenewalTask;
 import io.harness.delegatetasks.UpsertSecretTask;
 import io.harness.delegatetasks.UpsertSecretTaskValidationHandler;
 import io.harness.delegatetasks.ValidateSecretManagerConfigurationTask;
@@ -196,6 +201,7 @@ import io.harness.encryptors.clients.GcpKmsEncryptor;
 import io.harness.encryptors.clients.GcpSecretsManagerEncryptor;
 import io.harness.encryptors.clients.HashicorpVaultEncryptor;
 import io.harness.encryptors.clients.LocalEncryptor;
+import io.harness.exception.DelegateServiceDriverExceptionHandler;
 import io.harness.exception.exceptionmanager.ExceptionModule;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
 import io.harness.gcp.client.GcpClient;
@@ -1286,6 +1292,10 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.UPSERT_SECRET).toInstance(UpsertSecretTask.class);
     mapBinder.addBinding(TaskType.FETCH_SECRET).toInstance(FetchSecretTask.class);
     mapBinder.addBinding(TaskType.ENCRYPT_SECRET).toInstance(EncryptSecretTask.class);
+    mapBinder.addBinding(TaskType.NG_VAULT_RENEW_TOKEN).toInstance(NGVaultRenewalTask.class);
+    mapBinder.addBinding(TaskType.NG_VAULT_RENEW_APP_ROLE_TOKEN).toInstance(NGVaultRenewalAppRoleTask.class);
+    mapBinder.addBinding(TaskType.NG_VAULT_FETCHING_TASK).toInstance(NGVaultFetchEngineTask.class);
+    mapBinder.addBinding(TaskType.NG_AZURE_VAULT_FETCH_ENGINES).toInstance(NGAzureKeyVaultFetchEngineTask.class);
     mapBinder.addBinding(TaskType.VALIDATE_SECRET_MANAGER_CONFIGURATION)
         .toInstance(ValidateSecretManagerConfigurationTask.class);
 
@@ -1394,6 +1404,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.AWS_CODECOMMIT_API_TASK).toInstance(AwsCodeCommitApiDelegateTask.class);
     mapBinder.addBinding(TaskType.CE_VALIDATE_KUBERNETES_CONFIG)
         .toInstance(CEKubernetesTestConnectionDelegateTask.class);
+    mapBinder.addBinding(TaskType.K8S_SERVICE_ACCOUNT_INFO).toInstance(K8sFetchServiceAccountTask.class);
     mapBinder.addBinding(TaskType.HTTP_HELM_CONNECTIVITY_TASK).toInstance(HttpHelmConnectivityDelegateTask.class);
 
     mapBinder.addBinding(TaskType.K8_FETCH_NAMESPACES).toInstance(ServiceImplDelegateTask.class);
@@ -1559,5 +1570,7 @@ public class DelegateModule extends AbstractModule {
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(SCMExceptionHandler.class));
     AuthenticationExceptionHandler.exceptions().forEach(
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(AuthenticationExceptionHandler.class));
+    DelegateServiceDriverExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(DelegateServiceDriverExceptionHandler.class));
   }
 }

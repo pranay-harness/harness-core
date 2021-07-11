@@ -7,6 +7,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
+import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
 
 import io.harness.AccessControlClientModule;
 import io.harness.CgOrchestrationModule;
@@ -143,8 +144,6 @@ import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
 import io.harness.notifications.AlertVisibilityChecker;
 import io.harness.notifications.AlertVisibilityCheckerImpl;
-import io.harness.outbox.OutboxPollConfiguration;
-import io.harness.outbox.OutboxSDKConstants;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.pcf.CfDeploymentManager;
@@ -189,6 +188,7 @@ import io.harness.time.TimeModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
+import io.harness.usermembership.UserMembershipClientModule;
 import io.harness.version.VersionModule;
 
 import software.wings.DataStorageMode;
@@ -410,6 +410,7 @@ import software.wings.service.impl.apm.ApmVerificationServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
 import software.wings.service.impl.applicationmanifest.HelmChartServiceImpl;
 import software.wings.service.impl.artifact.ArtifactCleanupServiceAsyncImpl;
+import software.wings.service.impl.artifact.ArtifactCleanupServiceSyncImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceAsyncImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceImpl;
 import software.wings.service.impl.artifact.ArtifactServiceImpl;
@@ -686,8 +687,6 @@ import software.wings.service.intfc.security.GcpSecretsManagerServiceV2;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
-import software.wings.service.intfc.security.NGSecretFileService;
-import software.wings.service.intfc.security.NGSecretFileServiceImpl;
 import software.wings.service.intfc.security.NGSecretManagerService;
 import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.NGSecretServiceImpl;
@@ -1133,6 +1132,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(ArtifactCleanupService.class)
         .annotatedWith(Names.named("AsyncArtifactCleanupService"))
         .to(ArtifactCleanupServiceAsyncImpl.class);
+    bind(ArtifactCleanupService.class)
+        .annotatedWith(Names.named("SyncArtifactCleanupService"))
+        .to(ArtifactCleanupServiceSyncImpl.class);
     bind(CustomBuildSourceService.class).to(CustomBuildSourceServiceImpl.class);
 
     bind(ContainerSync.class).to(ContainerSyncImpl.class);
@@ -1285,6 +1287,10 @@ public class WingsModule extends AbstractModule implements ServersModule {
       log.info("Could not create the connector resource client module", ex);
     }
 
+    // ng-usermembership Dependencies
+    install(new UserMembershipClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+
     // ng-invite Dependencies
     install(new NgInviteClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
@@ -1318,7 +1324,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new AuditClientModule(this.configuration.getAuditClientConfig(),
         this.configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId(),
         this.configuration.isEnableAudit()));
-    install(new TransactionOutboxModule());
+    install(new TransactionOutboxModule(DEFAULT_OUTBOX_POLL_CONFIGURATION, MANAGER.getServiceId(), false));
 
     bind(OutboxEventHandler.class).to(DelegateOutboxEventHandler.class);
     install(new CVCommonsServiceModule());
@@ -1460,7 +1466,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(SecretManager.class).to(SecretManagerImpl.class);
     bind(NGSecretManagerService.class).to(NGSecretManagerServiceImpl.class);
     bind(NGSecretService.class).to(NGSecretServiceImpl.class);
-    bind(NGSecretFileService.class).to(NGSecretFileServiceImpl.class);
     bind(SecretsDelegateCacheHelperService.class).to(SecretsDelegateCacheHelperServiceImpl.class);
     bind(DelegatePropertiesServiceProvider.class).to(NoopDelegatePropertiesServiceProviderImpl.class);
     bind(DelegateConfigurationServiceProvider.class).to(NoopDelegateConfigurationServiceProviderImpl.class);
@@ -1610,13 +1615,5 @@ public class WingsModule extends AbstractModule implements ServersModule {
   @Singleton
   public ObjectMapper getYamlSchemaObjectMapperWithoutNamed() {
     return Jackson.newObjectMapper();
-  }
-
-  @Provides
-  @Singleton
-  public OutboxPollConfiguration getOutboxPollConfiguration() {
-    OutboxPollConfiguration outboxPollConfiguration = OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
-    outboxPollConfiguration.setLockId(MANAGER.getServiceId());
-    return outboxPollConfiguration;
   }
 }

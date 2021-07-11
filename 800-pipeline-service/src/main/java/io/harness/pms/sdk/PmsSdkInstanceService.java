@@ -128,4 +128,10 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
     pmsSdkInstanceRepository.findAll().forEach(instance -> instanceNames.add(instance.getName()));
     return instanceNames;
   }
+
+  public Set<String> getActiveInstanceNames() {
+    Set<String> instanceNames = new HashSet<>();
+    pmsSdkInstanceRepository.findByActive(true).forEach(instance -> instanceNames.add(instance.getName()));
+    return instanceNames;
+  }
 }

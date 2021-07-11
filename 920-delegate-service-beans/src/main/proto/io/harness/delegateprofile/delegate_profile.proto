@@ -63,3 +63,7 @@ message DelegateProfilePageResponseGrpc {
   int64 total = 2;
   repeated DelegateProfileGrpc response = 3;
 }
+
+message ProfileIdentifier {
+  string identifier = 1;
+}

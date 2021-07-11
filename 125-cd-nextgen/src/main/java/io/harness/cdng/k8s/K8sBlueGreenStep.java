@@ -22,6 +22,7 @@ import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -36,11 +37,15 @@ import io.harness.tasks.ResponseData;
 import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @OwnedBy(HarnessTeam.CDP)
 public class K8sBlueGreenStep extends TaskChainExecutableWithRollbackAndRbac implements K8sStepExecutor {
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(ExecutionNodeType.K8S_BLUE_GREEN.getYamlType()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(ExecutionNodeType.K8S_BLUE_GREEN.getYamlType())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
   public static final String K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME = "Blue/Green Deploy";
 
   @Inject private K8sStepHelper k8sStepHelper;
@@ -63,9 +68,9 @@ public class K8sBlueGreenStep extends TaskChainExecutableWithRollbackAndRbac imp
   }
 
   @Override
-  public TaskChainResponse executeNextLink(Ambiance ambiance, StepElementParameters stepElementParameters,
-      StepInputPackage inputPackage, PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseSupplier)
-      throws Exception {
+  public TaskChainResponse executeNextLinkWithSecurityContext(Ambiance ambiance,
+      StepElementParameters stepElementParameters, StepInputPackage inputPackage, PassThroughData passThroughData,
+      ThrowingSupplier<ResponseData> responseSupplier) throws Exception {
     return k8sStepHelper.executeNextLink(this, ambiance, stepElementParameters, passThroughData, responseSupplier);
   }
 
@@ -74,7 +79,7 @@ public class K8sBlueGreenStep extends TaskChainExecutableWithRollbackAndRbac imp
       StepElementParameters stepElementParameters, List<String> valuesFileContents,
       K8sExecutionPassThroughData executionPassThroughData, boolean shouldOpenFetchFilesLogStream) {
     InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
-    String releaseName = k8sStepHelper.getReleaseName(infrastructure);
+    String releaseName = k8sStepHelper.getReleaseName(ambiance, infrastructure);
     K8sBlueGreenStepParameters k8sBlueGreenStepParameters =
         (K8sBlueGreenStepParameters) stepElementParameters.getSpec();
     boolean skipDryRun = K8sStepHelper.getParameterFieldBooleanValue(
@@ -103,8 +108,9 @@ public class K8sBlueGreenStep extends TaskChainExecutableWithRollbackAndRbac imp
   }
 
   @Override
-  public StepResponse finalizeExecution(Ambiance ambiance, StepElementParameters stepElementParameters,
-      PassThroughData passThroughData, ThrowingSupplier<ResponseData> responseDataSupplier) {
+  public StepResponse finalizeExecutionWithSecurityContext(Ambiance ambiance,
+      StepElementParameters stepElementParameters, PassThroughData passThroughData,
+      ThrowingSupplier<ResponseData> responseDataSupplier) {
     if (passThroughData instanceof GitFetchResponsePassThroughData) {
       return k8sStepHelper.handleGitTaskFailure((GitFetchResponsePassThroughData) passThroughData);
     }
@@ -118,37 +124,41 @@ public class K8sBlueGreenStep extends TaskChainExecutableWithRollbackAndRbac imp
     }
 
     K8sExecutionPassThroughData executionPassThroughData = (K8sExecutionPassThroughData) passThroughData;
+
+    K8sDeployResponse k8sTaskExecutionResponse;
     try {
-      K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
-      StepResponseBuilder responseBuilder = StepResponse.builder().unitProgressList(
-          k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
-
-      if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-        return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, responseBuilder).build();
-      }
-
-      InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
-      K8sBGDeployResponse k8sBGDeployResponse = (K8sBGDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
-
-      K8sBlueGreenOutcome k8sBlueGreenOutcome = K8sBlueGreenOutcome.builder()
-                                                    .releaseName(k8sStepHelper.getReleaseName(infrastructure))
-                                                    .releaseNumber(k8sBGDeployResponse.getReleaseNumber())
-                                                    .primaryServiceName(k8sBGDeployResponse.getPrimaryServiceName())
-                                                    .stageServiceName(k8sBGDeployResponse.getStageServiceName())
-                                                    .stageColor(k8sBGDeployResponse.getStageColor())
-                                                    .primaryColor(k8sBGDeployResponse.getPrimaryColor())
-                                                    .build();
-      executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME,
-          k8sBlueGreenOutcome, StepOutcomeGroup.STAGE.name());
-
-      return responseBuilder.status(Status.SUCCEEDED)
-          .stepOutcome(StepResponse.StepOutcome.builder()
-                           .name(OutcomeExpressionConstants.OUTPUT)
-                           .outcome(k8sBlueGreenOutcome)
-                           .build())
-          .build();
+      k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
     } catch (Exception e) {
+      log.error("Error while processing K8s Task response: {}", e.getMessage(), e);
       return k8sStepHelper.handleTaskException(ambiance, executionPassThroughData, e);
     }
+
+    StepResponseBuilder responseBuilder =
+        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
+
+    if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+      return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, responseBuilder).build();
+    }
+
+    InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
+    K8sBGDeployResponse k8sBGDeployResponse = (K8sBGDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
+
+    K8sBlueGreenOutcome k8sBlueGreenOutcome = K8sBlueGreenOutcome.builder()
+                                                  .releaseName(k8sStepHelper.getReleaseName(ambiance, infrastructure))
+                                                  .releaseNumber(k8sBGDeployResponse.getReleaseNumber())
+                                                  .primaryServiceName(k8sBGDeployResponse.getPrimaryServiceName())
+                                                  .stageServiceName(k8sBGDeployResponse.getStageServiceName())
+                                                  .stageColor(k8sBGDeployResponse.getStageColor())
+                                                  .primaryColor(k8sBGDeployResponse.getPrimaryColor())
+                                                  .build();
+    executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME,
+        k8sBlueGreenOutcome, StepOutcomeGroup.STAGE.name());
+
+    return responseBuilder.status(Status.SUCCEEDED)
+        .stepOutcome(StepResponse.StepOutcome.builder()
+                         .name(OutcomeExpressionConstants.OUTPUT)
+                         .outcome(k8sBlueGreenOutcome)
+                         .build())
+        .build();
   }
 }

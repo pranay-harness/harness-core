@@ -35,6 +35,8 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateSequenceConfig.Builder.aDelegateSequenceBuilder;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.utils.Utils.normalizeIdentifier;
+import static software.wings.utils.Utils.uuidToIdentifier;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static java.lang.String.format;
@@ -136,6 +138,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.logging.Misc;
 import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
+import io.harness.ng.core.utils.NGUtils;
 import io.harness.observer.Subject;
 import io.harness.outbox.api.OutboxService;
 import io.harness.persistence.HIterator;
@@ -217,6 +220,7 @@ import com.mongodb.MongoGridFSException;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
+import io.dropwizard.jersey.validation.JerseyViolationException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -245,6 +249,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
+import javax.validation.ConstraintViolation;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.core.MediaType;
 import lombok.Getter;
@@ -259,6 +264,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -511,7 +517,16 @@ public class DelegateServiceImpl implements DelegateService {
         delegateGroupQuery.field(DelegateGroupKeys.status).notEqual(DelegateGroupStatus.DELETED).asList();
 
     return delegateGroups.stream()
-        .map(group -> delegateSetupService.retrieveDelegateGroupImplicitSelectors(group).keySet())
+        .map(group -> {
+          Set<String> groupSelectors = new HashSet<>();
+          groupSelectors.addAll(delegateSetupService.retrieveDelegateGroupImplicitSelectors(group).keySet());
+
+          if (isNotEmpty(group.getTags())) {
+            groupSelectors.addAll(group.getTags());
+          }
+
+          return groupSelectors;
+        })
         .flatMap(Collection::stream)
         .collect(toSet());
   }
@@ -611,7 +626,8 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateGroupId(delegateGroup.getUuid())
               .delegateNamespace(delegateSetupDetails.getK8sConfigDetails().getNamespace())
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
-              .build());
+              .build(),
+          true);
 
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
       String templateName = obtainK8sTemplateNameFromConfig(delegateSetupDetails.getK8sConfigDetails());
@@ -1064,7 +1080,8 @@ public class DelegateServiceImpl implements DelegateService {
             .verificationHost(verificationHost)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateXmx(delegateXmx)
-            .build());
+            .build(),
+        true);
 
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
     if (isNotEmpty(scriptParams)) {
@@ -1088,8 +1105,8 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public DelegateScripts getDelegateScripts(
-      String accountId, String version, String managerHost, String verificationHost) throws IOException {
+  public DelegateScripts getDelegateScripts(String accountId, String version, String managerHost,
+      String verificationHost, String delegateName) throws IOException {
     String delegateTokenName = EMPTY;
     if (featureFlagService.isEnabled(FeatureName.USE_CUSTOM_DELEGATE_TOKENS, accountId)) {
       DelegateTokenGlobalContextData delegateTokenGlobalContextData =
@@ -1109,7 +1126,9 @@ public class DelegateServiceImpl implements DelegateService {
             .verificationHost(verificationHost)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateTokenName(delegateTokenName)
-            .build());
+            .delegateName(StringUtils.defaultString(delegateName))
+            .build(),
+        false);
 
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
     if (isNotEmpty(scriptParams)) {
@@ -1184,14 +1203,15 @@ public class DelegateServiceImpl implements DelegateService {
     private String delegateTokenName;
   }
 
-  private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry inquiry) {
+  private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(
+      ScriptRuntimeParamMapInquiry inquiry, boolean isNg) {
     String latestVersion = null;
     String jarRelativePath;
     String delegateJarDownloadUrl = null;
     String delegateStorageUrl = null;
     String delegateCheckLocation = null;
     boolean jarFileExists = false;
-    String delegateDockerImage = "harness/delegate:latest";
+    String delegateDockerImage = isNg ? "harness/delegate:ng" : "harness/delegate:latest";
     CdnConfig cdnConfig = mainConfiguration.getCdnConfig();
     boolean useCDN =
         featureFlagService.isEnabled(USE_CDN_FOR_STORAGE_FILES, inquiry.getAccountId()) && cdnConfig != null;
@@ -1494,7 +1514,8 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateType(SHELL_SCRIPT)
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .delegateTokenName(tokenName)
-              .build());
+              .build(),
+          false);
 
       if (isEmpty(scriptParams)) {
         throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
@@ -1616,7 +1637,8 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateType(DOCKER)
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .delegateTokenName(tokenName)
-              .build());
+              .build(),
+          false);
 
       if (isEmpty(scriptParams)) {
         throw new InvalidArgumentsException(Pair.of("scriptParams", "Failed to get jar and script runtime params."));
@@ -1690,7 +1712,8 @@ public class DelegateServiceImpl implements DelegateService {
               .ciEnabled(isCiEnabled)
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .delegateTokenName(tokenName)
-              .build());
+              .build(),
+          false);
 
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
       saveProcessedTemplate(scriptParams, yaml, HARNESS_DELEGATE + ".yaml.ftl");
@@ -1738,7 +1761,8 @@ public class DelegateServiceImpl implements DelegateService {
             .ceEnabled(true)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateTokenName(tokenName)
-            .build());
+            .build(),
+        false);
 
     File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
     saveProcessedTemplate(scriptParams, yaml,
@@ -1782,7 +1806,8 @@ public class DelegateServiceImpl implements DelegateService {
             .delegateType(HELM_DELEGATE)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateTokenName(tokenName)
-            .build());
+            .build(),
+        false);
 
     File yaml = File.createTempFile(HARNESS_DELEGATE_VALUES_YAML, YAML);
     saveProcessedTemplate(params, yaml, "delegate-helm-values.yaml.ftl");
@@ -1821,7 +1846,8 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateGroupId(delegateGroup.getUuid())
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .delegateTokenName(tokenName)
-              .build());
+              .build(),
+          false);
 
       scriptParams = updateMapForEcsDelegate(awsVpcMode, hostname, delegateGroupName, scriptParams);
 
@@ -2108,6 +2134,77 @@ public class DelegateServiceImpl implements DelegateService {
 
     DelegateEntityOwner owner = isNotEmpty(groupDelegates) ? groupDelegates.get(0).getOwner() : null;
     publishDelegateChangeEventViaEventFramework(accountId, delegateGroupId, owner, DELETE_ACTION);
+  }
+
+  @Override
+  public void deleteDelegateGroupV2(
+      String accountId, String orgId, String projectId, String identifier, boolean forceDelete) {
+    log.info("Deleting delegate group: {} and all belonging delegates.", identifier);
+    DelegateGroup delegateGroup =
+        persistence.createQuery(DelegateGroup.class)
+            .filter(DelegateGroupKeys.accountId, accountId)
+            .filter(DelegateGroupKeys.owner, DelegateEntityOwnerHelper.buildOwner(orgId, projectId))
+            .filter(DelegateGroupKeys.identifier, identifier)
+            .get();
+
+    if (delegateGroup == null) {
+      log.info("Delegate group doesn't exist or it is already deleted.");
+      return;
+    }
+
+    String delegateGroupUuid = delegateGroup.getUuid();
+    List<Delegate> groupDelegates = persistence.createQuery(Delegate.class)
+                                        .filter(DelegateKeys.accountId, accountId)
+                                        .filter(DelegateKeys.delegateGroupId, delegateGroupUuid)
+                                        .project(DelegateKeys.owner, true)
+                                        .asList();
+
+    for (Delegate delegate : groupDelegates) {
+      delete(accountId, delegate.getUuid(), forceDelete);
+    }
+
+    if (featureFlagService.isEnabled(DO_DELEGATE_PHYSICAL_DELETE, accountId) || forceDelete) {
+      persistence.delete(persistence.createQuery(DelegateGroup.class)
+                             .filter(DelegateGroupKeys.accountId, accountId)
+                             .filter(DelegateGroupKeys.uuid, delegateGroupUuid));
+      log.info("Delegate group: {} and all belonging delegates have been deleted.", delegateGroupUuid);
+    } else {
+      Query<DelegateGroup> updateQuery = persistence.createQuery(DelegateGroup.class)
+                                             .filter(DelegateGroupKeys.accountId, accountId)
+                                             .filter(DelegateGroupKeys.uuid, delegateGroupUuid);
+
+      UpdateOperations<DelegateGroup> updateOperations =
+          persistence.createUpdateOperations(DelegateGroup.class)
+              .set(DelegateGroupKeys.status, DelegateGroupStatus.DELETED)
+              .set(DelegateGroupKeys.validUntil,
+                  Date.from(OffsetDateTime.now()
+                                .plusDays(Delegate.TTL.toDays()) // Delegate.TTL is used to make sure TTL duration is
+                                // aligned between group and delegate
+                                .toInstant()));
+
+      persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
+      log.info("Delegate group: {} and all belonging delegates have been marked as deleted.", identifier);
+    }
+
+    outboxService.save(
+        DelegateGroupDeleteEvent.builder()
+            .accountIdentifier(accountId)
+            .orgIdentifier(orgId)
+            .projectIdentifier(projectId)
+            .delegateGroupId(delegateGroupUuid)
+            .delegateSetupDetails(DelegateSetupDetails.builder()
+                                      .delegateConfigurationId(delegateGroup.getDelegateConfigurationId())
+                                      .description(delegateGroup.getDescription())
+                                      .k8sConfigDetails(delegateGroup.getK8sConfigDetails())
+                                      .name(delegateGroup.getName())
+                                      .size(delegateGroup.getSizeDetails().getSize())
+                                      .orgIdentifier(orgId)
+                                      .projectIdentifier(projectId)
+                                      .build())
+            .build());
+
+    DelegateEntityOwner owner = isNotEmpty(groupDelegates) ? groupDelegates.get(0).getOwner() : null;
+    publishDelegateChangeEventViaEventFramework(accountId, delegateGroupUuid, owner, DELETE_ACTION);
   }
 
   private void publishDelegateChangeEventViaEventFramework(
@@ -2760,6 +2857,16 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public DelegateGroup upsertDelegateGroup(String name, String accountId, DelegateSetupDetails delegateSetupDetails) {
     boolean isNg = delegateSetupDetails != null;
+    String delegateGroupIdentifier = getDelegateGroupIdentifier(name, delegateSetupDetails);
+
+    if (isNg) {
+      try {
+        delegateSetupDetails.setIdentifier(delegateGroupIdentifier);
+        NGUtils.validate(delegateSetupDetails);
+      } catch (JerseyViolationException exception) {
+        throw new InvalidRequestException(getMessage(exception));
+      }
+    }
 
     String description = delegateSetupDetails != null ? delegateSetupDetails.getDescription() : null;
     String delegateConfigurationId =
@@ -2776,6 +2883,10 @@ public class DelegateServiceImpl implements DelegateService {
     K8sConfigDetails k8sConfigDetails =
         delegateSetupDetails != null ? delegateSetupDetails.getK8sConfigDetails() : null;
 
+    Set<String> tags = delegateSetupDetails != null && isNotEmpty(delegateSetupDetails.getTags())
+        ? delegateSetupDetails.getTags()
+        : null;
+
     DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgIdentifier, projectIdentifier);
 
     Query<DelegateGroup> query = this.persistence.createQuery(DelegateGroup.class)
@@ -2783,11 +2894,27 @@ public class DelegateServiceImpl implements DelegateService {
                                      .filter(DelegateGroupKeys.ng, isNg)
                                      .filter(DelegateGroupKeys.owner, owner)
                                      .filter(DelegateGroupKeys.name, name);
-    UpdateOperations<DelegateGroup> updateOperations = this.persistence.createUpdateOperations(DelegateGroup.class)
-                                                           .setOnInsert(DelegateGroupKeys.uuid, generateUuid())
-                                                           .set(DelegateGroupKeys.name, name)
-                                                           .set(DelegateGroupKeys.accountId, accountId)
-                                                           .set(DelegateGroupKeys.ng, isNg);
+
+    // this statement is here because of identifier migration where we used normalized uuid for existing groups
+    DelegateGroup existingEntity = query.get();
+    if (existingEntity != null && uuidToIdentifier(existingEntity.getUuid()).equals(existingEntity.getIdentifier())) {
+      delegateGroupIdentifier = existingEntity.getIdentifier();
+    }
+
+    if (existingEntity != null && existingEntity.getIdentifier() == null) {
+      log.warn("Existing delegate group {} has null identifier. New entry will be created with identifier {}",
+          existingEntity, delegateGroupIdentifier);
+    }
+
+    query.filter(DelegateGroupKeys.identifier, delegateGroupIdentifier);
+
+    UpdateOperations<DelegateGroup> updateOperations =
+        this.persistence.createUpdateOperations(DelegateGroup.class)
+            .setOnInsert(DelegateGroupKeys.uuid, generateUuid())
+            .setOnInsert(DelegateGroupKeys.identifier, delegateGroupIdentifier)
+            .set(DelegateGroupKeys.name, name)
+            .set(DelegateGroupKeys.accountId, accountId)
+            .set(DelegateGroupKeys.ng, isNg);
 
     if (k8sConfigDetails != null) {
       updateOperations.set(DelegateGroupKeys.delegateType, KUBERNETES);
@@ -2798,6 +2925,7 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, DelegateGroupKeys.description, description);
     setUnset(updateOperations, DelegateGroupKeys.delegateConfigurationId, delegateConfigurationId);
     setUnset(updateOperations, DelegateGroupKeys.sizeDetails, sizeDetails);
+    setUnset(updateOperations, DelegateGroupKeys.tags, tags);
 
     DelegateGroup delegateGroup = persistence.upsert(query, updateOperations, HPersistence.upsertReturnNewOptions);
     outboxService.save(
@@ -2809,6 +2937,30 @@ public class DelegateServiceImpl implements DelegateService {
             .delegateSetupDetails(delegateSetupDetails)
             .build());
     return delegateGroup;
+  }
+
+  @NotNull
+  private String getMessage(JerseyViolationException exception) {
+    return "Fields "
+        + exception.getConstraintViolations()
+              .stream()
+              .map(c -> ((PathImpl) c.getPropertyPath()).getLeafNode().getName())
+              .reduce("", (i, j) -> i + " <" + j + "> ")
+        + " did not pass validation checks: "
+        + exception.getConstraintViolations()
+              .stream()
+              .map(ConstraintViolation::getMessage)
+              .reduce("", (i, j) -> i + " <" + j + "> ");
+  }
+
+  private String getDelegateGroupIdentifier(String name, DelegateSetupDetails delegateSetupDetails) {
+    if (delegateSetupDetails != null && isNotBlank(delegateSetupDetails.getIdentifier())) {
+      return delegateSetupDetails.getIdentifier();
+    } else if (delegateSetupDetails != null && isBlank(delegateSetupDetails.getIdentifier())) {
+      return normalizeIdentifier(delegateSetupDetails.getName());
+    } else {
+      return normalizeIdentifier(name);
+    }
   }
 
   public void registerHeartbeat(

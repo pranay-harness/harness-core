@@ -1,7 +1,9 @@
 package software.wings.resources.secretsmanagement;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.NGCommonEntityConstants;
-import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.mappers.SecretManagerConfigMapper;
@@ -16,8 +18,6 @@ import software.wings.service.intfc.security.NGSecretManagerService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -31,6 +31,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+@OwnedBy(PL)
 @Api(value = "secret-managers", hidden = true)
 @Path("/ng/secret-managers")
 @Produces("application/json")
@@ -64,19 +65,6 @@ public class SecretManagerResourceNG {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String org,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String project) {
     return new RestResponse<>(ngSecretManagerService.testConnection(account, org, project, identifier));
-  }
-
-  @GET
-  public RestResponse<List<SecretManagerConfigDTO>> getSecretManagers(
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers) {
-    List<SecretManagerConfig> secretManagerConfigs =
-        ngSecretManagerService.list(accountIdentifier, orgIdentifier, projectIdentifier, identifiers);
-    List<SecretManagerConfigDTO> dtoList = new ArrayList<>();
-    secretManagerConfigs.forEach(secretManagerConfig -> dtoList.add(secretManagerConfig.toDTO(true)));
-    return new RestResponse<>(dtoList);
   }
 
   @GET

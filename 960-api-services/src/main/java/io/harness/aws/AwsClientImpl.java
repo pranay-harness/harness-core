@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
@@ -81,9 +82,10 @@ public class AwsClientImpl implements AwsClient {
 
   @Override
   public void validateAwsAccountCredential(AwsConfig awsConfig) {
-    try {
+    try (CloseableAmazonWebServiceClient<AmazonEC2Client> closeableAmazonEC2Client =
+             new CloseableAmazonWebServiceClient(getAmazonEc2Client(awsConfig))) {
       tracker.trackEC2Call("Get Ec2 client");
-      getAmazonEc2Client(awsConfig).describeRegions();
+      closeableAmazonEC2Client.getClient().describeRegions();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       if (amazonEC2Exception.getStatusCode() == 401 && !awsConfig.isEc2IamCredentials()) {
         if (isEmpty(awsConfig.getAwsAccessKeyCredential().getAccessKey())) {
@@ -95,24 +97,29 @@ public class AwsClientImpl implements AwsClient {
         }
       }
       throw amazonEC2Exception;
+    } catch (Exception e) {
+      log.error("Exception validateAwsAccountCredential", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
   @Override
   public void validateAwsCodeCommitCredential(AwsConfig awsConfig, String region, String repo) {
-    try {
+    try (CloseableAmazonWebServiceClient<AWSCodeCommitClient> closeableAmazonECSClient =
+             new CloseableAmazonWebServiceClient(getAmazonCodeCommitClient(awsConfig, region))) {
       tracker.trackEC2Call("Get CodeCommit client");
-      AWSCodeCommitClient amazonCodeCommitClient = getAmazonCodeCommitClient(awsConfig, region);
       if (isNotEmpty(repo)) {
-        amazonCodeCommitClient.getRepository(new GetRepositoryRequest().withRepositoryName(repo));
+        closeableAmazonECSClient.getClient().getRepository(new GetRepositoryRequest().withRepositoryName(repo));
       } else {
-        amazonCodeCommitClient.listRepositories(new ListRepositoriesRequest());
+        closeableAmazonECSClient.getClient().listRepositories(new ListRepositoriesRequest());
       }
     } catch (AWSCodeCommitException awsCodeCommitException) {
       if (awsCodeCommitException.getStatusCode() == 401) {
         checkCredentials(awsConfig);
       }
       throw awsCodeCommitException;
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -144,26 +151,35 @@ public class AwsClientImpl implements AwsClient {
 
   @Override
   public RepositoryMetadata fetchRepositoryInformation(AwsConfig awsConfig, String region, String repo) {
-    AWSCodeCommitClient amazonCodeCommitClient = getAmazonCodeCommitClient(awsConfig, region);
-    GetRepositoryResult repository =
-        amazonCodeCommitClient.getRepository(new GetRepositoryRequest().withRepositoryName(repo));
-    return repository.getRepositoryMetadata();
+    try (CloseableAmazonWebServiceClient<AWSCodeCommitClient> closeableAmazonECSClient =
+             new CloseableAmazonWebServiceClient(getAmazonCodeCommitClient(awsConfig, region))) {
+      GetRepositoryResult repository =
+          closeableAmazonECSClient.getClient().getRepository(new GetRepositoryRequest().withRepositoryName(repo));
+      return repository.getRepositoryMetadata();
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
   }
 
   @Override
   public List<Commit> fetchCommitInformation(AwsConfig awsConfig, String region, String repo, List<String> commitIds) {
-    AWSCodeCommitClient amazonCodeCommitClient = getAmazonCodeCommitClient(awsConfig, region);
-    BatchGetCommitsResult batchGetCommitsResult = amazonCodeCommitClient.batchGetCommits(
-        new BatchGetCommitsRequest().withRepositoryName(repo).withCommitIds(commitIds));
-    return batchGetCommitsResult.getCommits();
+    try (CloseableAmazonWebServiceClient<AWSCodeCommitClient> closeableAmazonECSClient =
+             new CloseableAmazonWebServiceClient(getAmazonCodeCommitClient(awsConfig, region))) {
+      BatchGetCommitsResult batchGetCommitsResult = closeableAmazonECSClient.getClient().batchGetCommits(
+          new BatchGetCommitsRequest().withRepositoryName(repo).withCommitIds(commitIds));
+      return batchGetCommitsResult.getCommits();
+
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
   }
 
   @Override
   public String getAmazonEcrAuthToken(AwsConfig awsConfig, String account, String region) {
-    try {
-      AmazonECRClient amazonECRClient = getAmazonEcrClient(region, awsConfig);
+    try (CloseableAmazonWebServiceClient<AmazonECRClient> closeableAmazonECRClient =
+             new CloseableAmazonWebServiceClient(getAmazonEcrClient(region, awsConfig))) {
       tracker.trackECRCall("Get Auth Token");
-      return amazonECRClient
+      return closeableAmazonECRClient.getClient()
           .getAuthorizationToken(new GetAuthorizationTokenRequest().withRegistryIds(singletonList(account)))
           .getAuthorizationData()
           .get(0)
@@ -173,6 +189,9 @@ public class AwsClientImpl implements AwsClient {
         checkCredentials(awsConfig);
       }
       throw amazonEC2Exception;
+    } catch (Exception e) {
+      log.error("Exception getAmazonEcrAuthToken", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -356,7 +375,13 @@ public class AwsClientImpl implements AwsClient {
   @Override
   public ObjectListing getBucket(
       AWSCredentialsProvider credentialsProvider, @NotNull String s3BucketName, @Nullable String s3Prefix) {
-    final AmazonS3Client amazonS3Client = getAmazonS3Client(credentialsProvider);
-    return amazonS3Client.listObjects(s3BucketName, s3Prefix);
+    try (CloseableAmazonWebServiceClient<AmazonS3Client> closeableAmazonS3Client =
+             new CloseableAmazonWebServiceClient(getAmazonS3Client(credentialsProvider))) {
+      return closeableAmazonS3Client.getClient().listObjects(s3BucketName, s3Prefix);
+
+    } catch (Exception e) {
+      log.error("Exception getBucket", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
   }
 }

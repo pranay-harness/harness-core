@@ -3,6 +3,11 @@ package io.harness.ng.core.entities;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.validator.EntityIdentifier;
+import io.harness.data.validator.NGEntityName;
+import io.harness.mongo.CollationLocale;
+import io.harness.mongo.CollationStrength;
+import io.harness.mongo.index.Collation;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
@@ -11,6 +16,7 @@ import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.NGOrgAccess;
 import io.harness.ng.core.NGProjectAccess;
 import io.harness.ng.core.common.beans.ApiKeyType;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 
@@ -18,9 +24,12 @@ import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -51,7 +60,20 @@ public class Token implements PersistentEntity, UuidAware, NGAccountAccess, NGOr
                  .field(TokenKeys.apiKeyType)
                  .field(TokenKeys.parentIdentifier)
                  .field(TokenKeys.apiKeyIdentifier)
-                 .build())
+                 .build(),
+            CompoundMongoIndex.builder()
+                .name("unique_idx")
+                .field(TokenKeys.accountIdentifier)
+                .field(TokenKeys.orgIdentifier)
+                .field(TokenKeys.projectIdentifier)
+                .field(TokenKeys.identifier)
+                .field(TokenKeys.apiKeyType)
+                .field(TokenKeys.parentIdentifier)
+                .field(TokenKeys.apiKeyIdentifier)
+                .unique(true)
+                .collation(
+                    Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
+                .build())
         .build();
   }
 
@@ -59,18 +81,21 @@ public class Token implements PersistentEntity, UuidAware, NGAccountAccess, NGOr
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
 
-  String accountIdentifier;
-  String orgIdentifier;
-  String projectIdentifier;
-  String parentIdentifier;
-  ApiKeyType apiKeyType;
-  String apiKeyIdentifier;
+  @NotNull String accountIdentifier;
+  @EntityIdentifier(allowBlank = true) String orgIdentifier;
+  @EntityIdentifier(allowBlank = true) String projectIdentifier;
+  @NotNull String parentIdentifier;
+  @NotNull ApiKeyType apiKeyType;
+  @EntityIdentifier String apiKeyIdentifier;
 
-  @FdIndex String identifier;
-  String name;
+  @EntityIdentifier String identifier;
+  @NGEntityName String name;
+  @FdIndex String encodedPassword;
   Instant validFrom;
   Instant validTo;
   Instant scheduledExpireTime;
+  @NotNull @Size(max = 1024) String description;
+  @NotNull @Singular @Size(max = 128) List<NGTag> tags;
 
   @FdTtlIndex private Date validUntil;
 

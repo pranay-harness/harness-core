@@ -5,6 +5,7 @@ import static io.harness.remote.client.RestClientUtils.getResponse;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
@@ -81,9 +82,9 @@ public class AccountResourceImpl implements Resource {
       return null;
     }
     return ResourceInfo.builder()
-        .accountIdentifier(accountEntityChangeDTO.getAccountId())
+        .accountIdentifier(stripToNull(accountEntityChangeDTO.getAccountId()))
         .resourceType(getType())
-        .resourceIdentifier(accountEntityChangeDTO.getAccountId())
+        .resourceIdentifier(stripToNull(accountEntityChangeDTO.getAccountId()))
         .build();
   }
 }

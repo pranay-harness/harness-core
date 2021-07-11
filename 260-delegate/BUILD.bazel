@@ -28,6 +28,7 @@ shared_dependencies = [
     "//440-connector-nextgen:module",
     "//450-ce-views:module",
     "//490-ce-commons:module",
+    "//820-platform-service:module",
     "//835-notification-senders:module",
     "//860-orchestration-steps:module",
     "//870-orchestration:module",
@@ -290,7 +291,6 @@ shared_dependencies = [
     "@maven//:commons_net_commons_net",
     "@maven//:commons_pool_commons_pool",
     "@maven//:commons_validator_commons_validator",
-    "@maven//:de_bwaldvogel_mongo_java_server",
     "@maven//:de_danielbechler_java_object_diff",
     "@maven//:de_javakaffee_kryo_serializers",
     "@maven//:de_jkeylockmanager_jkeylockmanager",
@@ -412,7 +412,6 @@ shared_dependencies = [
     "@maven//:net_i2p_crypto_eddsa",
     "@maven//:net_java_dev_jna_jna",
     "@maven//:net_java_dev_jna_jna_platform",
-    "@maven//:net_javacrumbs_json_unit_json_unit_fluent",
     "@maven//:net_jcip_jcip_annotations",
     "@maven//:net_jodah_expiringmap",
     "@maven//:net_jodah_failsafe",
@@ -485,7 +484,6 @@ shared_dependencies = [
     "@maven//:org_atmosphere_atmosphere_runtime",
     "@maven//:org_atmosphere_wasync",
     "@maven//:org_atteo_evo_inflector",
-    "@maven//:org_awaitility_awaitility",
     "@maven//:org_bitbucket_b_c_jose4j",
     "@maven//:org_bouncycastle_bcpg_jdk15on",
     "@maven//:org_bouncycastle_bcpkix_jdk15on",
@@ -655,7 +653,7 @@ shared_dependencies = [
 
 java_library(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob(["src/main/java/**/*.java"]),
     resources = [
         "//260-delegate/src/main/resources:resource",
     ],
@@ -706,6 +704,7 @@ java_library(
         "//955-alert-beans:module",
         "//990-commons-test:module",
         ":module",
+        "@maven//:com_github_tomakehurst_wiremock_jre8_standalone",
         "@maven//:com_icegreen_greenmail",
         "@maven//:com_openpojo_openpojo",
         "@maven//:com_squareup_okhttp3_okhttp",
@@ -714,16 +713,14 @@ java_library(
         "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
         "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
         "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_api_mockito",
         "@maven//:pl_pragmatists_JUnitParams",
     ],
 )
 
 run_tests()
 
-run_analysis(
-    run_checkstyle = False,
-    run_pmd = False,
-)
+run_analysis()
 
 # The //260-delegate:module_deploy.jar is not public, this is why this tar needs to be in
 # the container sub-directory. This os because springboot does not propagate the visibility.

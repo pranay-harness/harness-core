@@ -129,25 +129,29 @@ public class TokenEventHandler implements OutboxEventHandler {
     return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);
   }
 
-  private boolean publishEvent(TokenDTO TokenDTO, String action) {
+  private boolean publishEvent(TokenDTO tokenDTO, String action) {
     try {
       eventProducer.send(
           Message.newBuilder()
-              .putAllMetadata(ImmutableMap.of("accountId", TokenDTO.getAccountIdentifier(),
+              .putAllMetadata(ImmutableMap.of("accountId", tokenDTO.getAccountIdentifier(),
                   EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.TOKEN_ENTITY,
                   EventsFrameworkMetadataConstants.ACTION, action))
               .setData(EntityChangeDTO.newBuilder()
-                           .setIdentifier(StringValue.of(TokenDTO.getIdentifier()))
-                           .setOrgIdentifier(StringValue.of(TokenDTO.getOrgIdentifier()))
-                           .setProjectIdentifier(StringValue.of(TokenDTO.getProjectIdentifier()))
-                           .setIdentifier(StringValue.of(TokenDTO.getIdentifier()))
+                           .setIdentifier(StringValue.of(tokenDTO.getIdentifier()))
+                           .setOrgIdentifier(tokenDTO.getOrgIdentifier() != null
+                                   ? StringValue.of(tokenDTO.getOrgIdentifier())
+                                   : StringValue.of(""))
+                           .setProjectIdentifier(tokenDTO.getProjectIdentifier() != null
+                                   ? StringValue.of(tokenDTO.getProjectIdentifier())
+                                   : StringValue.of(""))
+                           .setIdentifier(StringValue.of(tokenDTO.getIdentifier()))
                            .build()
                            .toByteString())
               .build());
       return true;
     } catch (EventsFrameworkDownException e) {
       log.error(
-          "Failed to send " + action + " event to events framework api key identifier: " + TokenDTO.getIdentifier(), e);
+          "Failed to send " + action + " event to events framework api key identifier: " + tokenDTO.getIdentifier(), e);
       return false;
     }
   }

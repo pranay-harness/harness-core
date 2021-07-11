@@ -1,6 +1,5 @@
 package io.harness.migrations;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.all.DeleteGitFileActivityAndGitFileAcitivitySummary;
 import io.harness.migrations.all.RefactorTheFieldsInGitSyncError;
 import io.harness.migrations.all.SyncNewFolderForConfigFiles;

@@ -24,7 +24,7 @@ import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.FeatureName;
-import io.harness.beans.shared.tasks.NgSetupFields;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateActivity;
@@ -34,6 +34,7 @@ import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegate.beans.DelegateScope;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
+import io.harness.delegate.beans.NgSetupFields;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
@@ -226,8 +227,10 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
         && Boolean.TRUE.equals(Boolean.valueOf(taskSetupAbstractions.get(NgSetupFields.NG)));
 
     if (featureFlagService.isNotEnabled(FeatureName.NG_CG_TASK_ASSIGNMENT_ISOLATION, delegate.getAccountId())) {
-      log.info(
-          "CG/NG delegate/task assignment isolation test. Is Delegate NG: {}, Is Task NG: {}", isDelegateNg, isTaskNg);
+      if (log.isDebugEnabled()) {
+        log.debug("CG/NG delegate/task assignment isolation test. Is Delegate NG: {}, Is Task NG: {}", isDelegateNg,
+            isTaskNg);
+      }
       return true;
     }
 
@@ -235,8 +238,10 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       return true;
     }
 
-    log.warn("CG/NG delegate/task assignment isolation check was negative. Is Delegate NG: {}, Is Task NG: {}",
-        isDelegateNg, isTaskNg);
+    if (log.isDebugEnabled()) {
+      log.debug("CG/NG delegate/task assignment isolation check was negative. Is Delegate NG: {}, Is Task NG: {}",
+          isDelegateNg, isTaskNg);
+    }
     return false;
   }
 
@@ -782,8 +787,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     try {
       List<String> activeDelegates = retrieveActiveDelegates(delegateTask.getAccountId(), null);
 
-      log.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
-
       List<String> whitelistedDelegates = connectedWhitelistedDelegates(delegateTask);
       if (activeDelegates.isEmpty()) {
         errorMessage = "There were no active delegates to complete the task.";
@@ -912,8 +915,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     if (delegatesMap.get(DelegateActivity.DISCONNECTED) != null) {
       disconnectedScalingGroup = delegatesMap.get(DelegateActivity.DISCONNECTED)
                                      .stream()
-                                     .filter(a -> isNotEmpty(a.getDelegateGroupName()))
                                      .map(Delegate::getDelegateGroupName)
+                                     .filter(EmptyPredicate::isNotEmpty)
                                      .collect(Collectors.toSet());
     }
 
@@ -921,8 +924,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     if (delegatesMap.get(DelegateActivity.ACTIVE) != null) {
       connectedScalingGroup = delegatesMap.get(DelegateActivity.ACTIVE)
                                   .stream()
-                                  .filter(a -> isNotEmpty(a.getDelegateGroupName()))
                                   .map(Delegate::getDelegateGroupName)
+                                  .filter(EmptyPredicate::isNotEmpty)
                                   .collect(Collectors.toSet());
     }
 

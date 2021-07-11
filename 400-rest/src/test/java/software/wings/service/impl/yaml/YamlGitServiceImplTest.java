@@ -7,9 +7,11 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.IGOR;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.trigger.WebhookSource.AZURE_DEVOPS;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
 import static software.wings.service.impl.yaml.YamlGitServiceImpl.PUSH_IF_NOT_HEAD_MAX_RETRY_COUNT;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -88,6 +90,12 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
   private static final String WEBHOOK_TOKEN = "Webhook_Token";
   private static final String GH_PUSH_REQ_FILE =
       "400-rest/src/test/resources/software/wings/service/impl/webhook/github_push_request.json";
+  private static final String AZURE_DEVOPS_CODE_PUSH_WEBHOOK =
+      "400-rest/src/test/resources/software/wings/service/impl/webhook/azure_code_push_request.json";
+  private static final String AZURE_DEVOPS_MERGE_PULL_REQUEST_COMPLETED_WEBHOOK =
+      "400-rest/src/test/resources/software/wings/service/impl/webhook/azure_merge_pull_completed_request.json";
+  private static final String AZURE_DEVOPS_MERGE_PULL_REQUEST_ACTIVE_WEBHOOK =
+      "400-rest/src/test/resources/software/wings/service/impl/webhook/azure_merge_pull_active_request.json";
 
   @Before
   public void setup() {
@@ -188,6 +196,75 @@ public class YamlGitServiceImplTest extends WingsBaseTest {
 
     String response = yamlGitService.validateAndQueueWebhookRequest(
         ACCOUNT_ID, WEBHOOK_TOKEN, obtainPayload(GH_PUSH_REQ_FILE), httpHeaders);
+    assertThat(response).isEqualTo("Successfully accepted webhook request for processing");
+    verify(yamlChangeSetService, times(1)).save(any(YamlChangeSet.class));
+  }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void testProcessAzureDevopsWebhookForCodePushEvent() throws Exception {
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withAccountId(ACCOUNT_ID)
+            .withUuid(SETTING_ID)
+            .withName("GitConnector")
+            .withValue(GitConfig.builder().accountId(ACCOUNT_ID).webhookToken(WEBHOOK_TOKEN).build())
+            .build();
+
+    YamlGitConfig yamlGitConfig =
+        YamlGitConfig.builder().accountId(ACCOUNT_ID).gitConnectorId(SETTING_ID).branchName("main").build();
+
+    when(webhookEventUtils.isGitPingEvent(httpHeaders)).thenReturn(false);
+    when(webhookEventUtils.obtainWebhookSource(httpHeaders)).thenReturn(AZURE_DEVOPS);
+    doNothing().when(webhookEventUtils).validatePushEvent(AZURE_DEVOPS, httpHeaders);
+    when(webhookEventUtils.obtainBranchName(any(), any(), any())).thenReturn("main");
+    final YamlChangeSet yamlChangeSet = YamlChangeSet.builder().build();
+    yamlChangeSet.setUuid("uuid");
+    doReturn(yamlChangeSet).when(yamlChangeSetService).save(any(YamlChangeSet.class));
+    persistence.save(settingAttribute);
+    persistence.save(yamlGitConfig);
+
+    String response = yamlGitService.validateAndQueueWebhookRequest(
+        ACCOUNT_ID, WEBHOOK_TOKEN, obtainPayload(AZURE_DEVOPS_CODE_PUSH_WEBHOOK), httpHeaders);
+    assertThat(response).isEqualTo("Successfully accepted webhook request for processing");
+    verify(yamlChangeSetService, times(1)).save(any(YamlChangeSet.class));
+  }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void testProcessAzureDevOpsWebhookForCodePullRequestMergeEvent() throws Exception {
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withAccountId(ACCOUNT_ID)
+            .withUuid(SETTING_ID)
+            .withName("GitConnector")
+            .withValue(GitConfig.builder().accountId(ACCOUNT_ID).webhookToken(WEBHOOK_TOKEN).build())
+            .build();
+
+    YamlGitConfig yamlGitConfig =
+        YamlGitConfig.builder().accountId(ACCOUNT_ID).gitConnectorId(SETTING_ID).branchName("main").build();
+
+    when(webhookEventUtils.isGitPingEvent(httpHeaders)).thenReturn(false);
+    when(webhookEventUtils.obtainWebhookSource(httpHeaders)).thenReturn(AZURE_DEVOPS);
+    doNothing().when(webhookEventUtils).validatePushEvent(AZURE_DEVOPS, httpHeaders);
+    when(webhookEventUtils.obtainBranchName(any(), any(), any())).thenReturn("main");
+    final YamlChangeSet yamlChangeSet = YamlChangeSet.builder().build();
+    yamlChangeSet.setUuid("uuid");
+    doReturn(yamlChangeSet).when(yamlChangeSetService).save(any(YamlChangeSet.class));
+    persistence.save(settingAttribute);
+    persistence.save(yamlGitConfig);
+    when(webhookEventUtils.shouldIgnorePullRequestMergeEventWithActiveStatusFromAzure(any())).thenReturn(true);
+    String response = yamlGitService.validateAndQueueWebhookRequest(
+        ACCOUNT_ID, WEBHOOK_TOKEN, obtainPayload(AZURE_DEVOPS_MERGE_PULL_REQUEST_ACTIVE_WEBHOOK), httpHeaders);
+    assertThat(response).isEqualTo(
+        "Skipped processing for merge pull request event since pull request has active status and is still unmerged.");
+    verify(yamlChangeSetService, times(0)).save(any(YamlChangeSet.class));
+
+    when(webhookEventUtils.shouldIgnorePullRequestMergeEventWithActiveStatusFromAzure(any())).thenReturn(false);
+    response = yamlGitService.validateAndQueueWebhookRequest(
+        ACCOUNT_ID, WEBHOOK_TOKEN, obtainPayload(AZURE_DEVOPS_MERGE_PULL_REQUEST_COMPLETED_WEBHOOK), httpHeaders);
     assertThat(response).isEqualTo("Successfully accepted webhook request for processing");
     verify(yamlChangeSetService, times(1)).save(any(YamlChangeSet.class));
   }

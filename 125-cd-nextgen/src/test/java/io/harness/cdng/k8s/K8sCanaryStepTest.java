@@ -182,9 +182,9 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
             .commandUnitsProgress(UnitProgressData.builder().build())
             .commandExecutionStatus(SUCCESS)
             .build();
-    when(k8sStepHelper.getReleaseName(any())).thenReturn("releaseName");
+    when(k8sStepHelper.getReleaseName(any(), any())).thenReturn("releaseName");
 
-    StepResponse response = k8sCanaryStep.finalizeExecution(
+    StepResponse response = k8sCanaryStep.finalizeExecutionWithSecurityContext(
         ambiance, stepElementParameters, K8sExecutionPassThroughData.builder().build(), () -> k8sDeployResponse);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
     assertThat(response.getStepOutcomes()).hasSize(1);
@@ -213,7 +213,7 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
 
     doReturn(stepResponse).when(k8sStepHelper).handleTaskException(ambiance, executionPassThroughData, thrownException);
 
-    StepResponse response = k8sCanaryStep.finalizeExecution(
+    StepResponse response = k8sCanaryStep.finalizeExecutionWithSecurityContext(
         ambiance, stepElementParameters, executionPassThroughData, () -> { throw thrownException; });
 
     assertThat(response).isEqualTo(stepResponse);

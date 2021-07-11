@@ -115,6 +115,11 @@ public class CloudFormationCreateStackState extends CloudFormationState {
   @Attributes(title = "Use parameters file") @Getter @Setter protected boolean useParametersFile;
 
   @Setter @JsonIgnore @SchemaIgnore private boolean fileFetched;
+  @Getter @Setter private boolean specifyCapabilities;
+  @Getter @Setter private List<String> capabilities;
+  @Getter @Setter private boolean addTags;
+  // tag list as JSON text
+  @Getter @Setter private String tags;
 
   @JsonIgnore
   @SchemaIgnore
@@ -166,6 +171,13 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     String roleArnRendered = executionContext.renderExpression(getCloudFormationRoleArn());
     String regionRendered = executionContext.renderExpression(getRegion());
     builder.cloudFormationRoleArn(roleArnRendered).region(regionRendered);
+
+    if (isSpecifyCapabilities()) {
+      builder.capabilities(capabilities);
+    }
+    if (isAddTags()) {
+      builder.tags(executionContext.renderExpression(tags));
+    }
 
     if (provisioner.provisionByUrl()) {
       if (useParametersFile && !isFileFetched()) {

@@ -1,5 +1,5 @@
 # to be used when building in Jenkins
-FROM us.gcr.io/platform-205701/alpine:safe-alpine3.12-sec1096-apm
+FROM us.gcr.io/platform-205701/alpine:safe-alpine3.12-sec1338-apm
 
 # Add the capsule JAR and other files
 COPY eventsapi-monitor-capsule.jar config.yml redislabs_ca.pem install_redis.sh alpn-boot-8.1.13.v20181017.jar /opt/harness/

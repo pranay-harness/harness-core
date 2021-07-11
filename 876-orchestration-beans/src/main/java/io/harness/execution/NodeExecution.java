@@ -34,6 +34,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -73,8 +74,8 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
 
   // Resolved StepParameters stored just before invoking step.
-  org.bson.Document resolvedStepParameters;
-  org.bson.Document resolvedStepInputs;
+  Map<String, Object> resolvedStepParameters;
+  Map<String, Object> resolvedStepInputs;
 
   // For Wait Notify
   String notifyId;
@@ -107,7 +108,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   @Singular List<UnitProgress> unitProgresses;
 
-  org.bson.Document progressData;
+  Map<String, Object> progressData;
 
   AdviserResponse adviserResponse;
   // Timeouts for advisers
@@ -135,17 +136,17 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   public static class NodeExecutionBuilder {
     public NodeExecutionBuilder resolvedStepParameters(StepParameters stepParameters) {
-      this.resolvedStepParameters = RecastOrchestrationUtils.toDocument(stepParameters);
+      this.resolvedStepParameters = RecastOrchestrationUtils.toMap(stepParameters);
       return this;
     }
 
     public NodeExecutionBuilder resolvedStepParameters(String jsonString) {
-      this.resolvedStepParameters = RecastOrchestrationUtils.toDocumentFromJson(jsonString);
+      this.resolvedStepParameters = RecastOrchestrationUtils.fromJson(jsonString);
       return this;
     }
 
     public NodeExecutionBuilder resolvedStepInputs(String jsonString) {
-      this.resolvedStepInputs = RecastOrchestrationUtils.toDocumentFromJson(jsonString);
+      this.resolvedStepInputs = RecastOrchestrationUtils.fromJson(jsonString);
       return this;
     }
   }
@@ -201,7 +202,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   }
 
   public ByteString getResolvedStepParametersBytes() {
-    String resolvedStepParams = this.getResolvedStepParameters().toJson();
+    String resolvedStepParams = RecastOrchestrationUtils.toJson(this.getResolvedStepParameters());
     return ByteString.copyFromUtf8(resolvedStepParams);
   }
 }

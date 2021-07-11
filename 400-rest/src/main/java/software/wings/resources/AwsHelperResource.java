@@ -85,4 +85,12 @@ public class AwsHelperResource {
       @QueryParam("accountId") String accountId, @PathParam("settingId") String settingId) {
     return new RestResponse(awsHelperResourceService.listBuckets(settingId));
   }
+
+  @GET
+  @Path("/cloudformation/capabilities")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> listCloudformationCapabilities() {
+    return new RestResponse(awsHelperResourceService.listCloudformationCapabilities());
+  }
 }

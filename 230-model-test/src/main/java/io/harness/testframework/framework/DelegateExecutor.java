@@ -5,10 +5,13 @@ import static io.harness.testframework.framework.utils.ExecutorUtils.addConfig;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addGCVMOptions;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJacocoAgentVM;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJar;
+import static io.harness.testframework.framework.utils.ExecutorUtils.getJar;
 
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.filesystem.FileIo;
 import io.harness.resource.Project;
@@ -38,6 +41,7 @@ import org.zeroturnaround.exec.StartedProcess;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateExecutor {
   private static boolean failedAlready;
   private static AtomicBoolean startedAlready = new AtomicBoolean();
@@ -81,12 +85,7 @@ public class DelegateExecutor {
           return;
         }
 
-        String home = System.getProperty("user.home");
-        if (home.contains("root")) {
-          home = "/home/jenkins";
-        }
-
-        final Path jar = Paths.get(home + "/.bazel-dirs/bin/260-delegate/module_deploy.jar");
+        final Path jar = getJar("260-delegate");
         log.info("The delegate path is: {}", jar.toString());
 
         final Path config = Paths.get(directory.getPath(), "260-delegate", "config-delegate.yml");

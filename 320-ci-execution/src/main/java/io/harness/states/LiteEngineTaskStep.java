@@ -138,8 +138,9 @@ public class LiteEngineTaskStep implements TaskExecutableWithRbac<StepElementPar
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepElementParameters,
-      ThrowingSupplier<K8sTaskExecutionResponse> responseSupplier) throws Exception {
+  public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance,
+      StepElementParameters stepElementParameters, ThrowingSupplier<K8sTaskExecutionResponse> responseSupplier)
+      throws Exception {
     K8sTaskExecutionResponse k8sTaskExecutionResponse = responseSupplier.get();
 
     LiteEngineTaskStepInfo stepParameters = (LiteEngineTaskStepInfo) stepElementParameters.getSpec();

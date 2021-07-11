@@ -19,6 +19,7 @@ import static io.harness.ngtriggers.beans.source.WebhookTriggerType.GITLAB;
 
 import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature.USE_NATIVE_TYPE_ID;
 import static java.time.temporal.ChronoUnit.DAYS;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -70,7 +71,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -82,7 +82,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -310,11 +309,36 @@ public class NGTriggerElementMapper {
     return triggerWebhookEventBuilder;
   }
 
+  public TriggerWebhookEventBuilder toNGTriggerWebhookEventForCustom(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String pipelineIdentifier, String triggerIdentifier, String payload,
+      List<HeaderConfig> headerConfigs) {
+    WebhookTriggerType webhookTriggerType = CUSTOM;
+
+    return TriggerWebhookEvent.builder()
+        .accountId(accountIdentifier)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
+        .triggerIdentifier(triggerIdentifier)
+        .pipelineIdentifier(pipelineIdentifier)
+        .sourceRepoType(webhookTriggerType.getEntityMetadataName())
+        .headers(headerConfigs)
+        .payload(payload);
+  }
+
   public NGTriggerDetailsResponseDTO toNGTriggerDetailsResponseDTO(
       NGTriggerEntity ngTriggerEntity, boolean includeYaml, boolean throwExceptionIfYamlConversionFails) {
-    String webhookUrl = ngTriggerEntity.getType() == WEBHOOK
-        ? WebhookHelper.generateWebhookUrl(webhookConfigProvider, ngTriggerEntity.getAccountId())
-        : null;
+    String webhookUrl = EMPTY;
+    if (ngTriggerEntity.getType() == WEBHOOK) {
+      WebhookMetadata webhookMetadata = ngTriggerEntity.getMetadata().getWebhook();
+      if (webhookMetadata.getGit() != null) {
+        webhookUrl = WebhookHelper.generateWebhookUrl(webhookConfigProvider, ngTriggerEntity.getAccountId());
+      } else if (webhookMetadata.getCustom() != null) {
+        webhookUrl = WebhookHelper.generateCustomWebhookUrl(webhookConfigProvider, ngTriggerEntity.getAccountId(),
+            ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(),
+            ngTriggerEntity.getTargetIdentifier(), ngTriggerEntity.getIdentifier());
+      }
+    }
+
     NGTriggerDetailsResponseDTOBuilder ngTriggerDetailsResponseDTO =
         NGTriggerDetailsResponseDTO.builder()
             .name(ngTriggerEntity.getName())
@@ -330,18 +354,7 @@ public class NGTriggerElementMapper {
     // Webhook Details
     if (ngTriggerEntity.getType() == WEBHOOK) {
       WebhookDetailsBuilder webhookDetails = WebhookDetails.builder();
-
       webhookDetails.webhookSourceRepo(ngTriggerEntity.getMetadata().getWebhook().getType()).build();
-
-      if (ngTriggerEntity.getMetadata().getWebhook().getType().equalsIgnoreCase("CUSTOM")) {
-        CustomMetadata customMedata = ngTriggerEntity.getMetadata().getWebhook().getCustom();
-        if (customMedata != null
-            && "inline".equals(ngTriggerEntity.getMetadata().getWebhook().getCustom().getCustomAuthTokenType())) {
-          webhookDetails.webhookSecret(new String(
-              Base64.decodeBase64(ngTriggerEntity.getMetadata().getWebhook().getCustom().getCustomAuthTokenValue()),
-              StandardCharsets.UTF_8));
-        }
-      }
       ngTriggerDetailsResponseDTO.webhookDetails(webhookDetails.build());
     }
 

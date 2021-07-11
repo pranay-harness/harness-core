@@ -33,6 +33,7 @@ import io.harness.migrations.all.AddHarnessGroupAccessFlagToAccount;
 import io.harness.migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
 import io.harness.migrations.all.AddLimitVicinityCheckJobToAllAccounts;
 import io.harness.migrations.all.AddLoginSettingsToAccountMigration;
+import io.harness.migrations.all.AddNgFieldToDelegateGroupMigration;
 import io.harness.migrations.all.AddReplCtrlNameToKubeSetupProperties;
 import io.harness.migrations.all.AddRestrictionsToSecretManagerConfig;
 import io.harness.migrations.all.AddScopedToAccountAttributeToEncryptedData;
@@ -425,6 +426,8 @@ public class MigrationList {
         .add(Pair.of(358, BaseMigration.class))
         .add(Pair.of(359, BaseMigration.class))
         .add(Pair.of(360, AddEnableIteratorsToTriggers.class))
+        .add(Pair.of(361, AddNgFieldToDelegateGroupMigration.class))
+        .add(Pair.of(362, BaseMigration.class))
         .build();
   }
 }

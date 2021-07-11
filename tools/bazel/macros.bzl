@@ -34,7 +34,7 @@ def sonarqube_test(
         sq_properties_template = None,
         tags = [],
         visibility = []):
-    srcs = native.glob(["src/main/**/*.java"])
+    srcs = native.glob(["src/main/java/**/*.java"])
     targets = [":module"]
     if name == None:
         name = "sq_mycomponent"

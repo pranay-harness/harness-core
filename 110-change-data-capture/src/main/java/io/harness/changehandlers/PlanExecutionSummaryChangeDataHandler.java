@@ -1,5 +1,7 @@
 package io.harness.changehandlers;
 
+import static java.util.Arrays.asList;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.changestreamsframework.ChangeEvent;
@@ -114,5 +116,10 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
     }
 
     return columnValueMapping;
+  }
+
+  @Override
+  public List<String> getPrimaryKeys() {
+    return asList("id", "startts");
   }
 }

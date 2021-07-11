@@ -82,8 +82,8 @@ public interface DelegateService extends OwnedByAccount {
   DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost, String verificationHost,
       DelegateSize delegateSize) throws IOException;
 
-  DelegateScripts getDelegateScripts(String accountId, String version, String managerHost, String verificationHost)
-      throws IOException;
+  DelegateScripts getDelegateScripts(String accountId, String version, String managerHost, String verificationHost,
+      String delegateName) throws IOException;
 
   String getLatestDelegateVersion(String accountId);
 
@@ -108,6 +108,8 @@ public interface DelegateService extends OwnedByAccount {
   void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain);
 
   void deleteDelegateGroup(String accountId, String delegateGroupId, boolean forceDelete);
+
+  void deleteDelegateGroupV2(String accountId, String orgId, String projectId, String identifier, boolean forceDelete);
 
   DelegateRegisterResponse register(@Valid Delegate delegate);
 

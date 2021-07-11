@@ -4,10 +4,12 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
 import lombok.Builder;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-@EqualsAndHashCode(callSuper = true)
 @OwnedBy(HarnessTeam.DX)
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class DirectKubernetesInfrastructureMapping extends InfrastructureMapping {
   private String namespace;
   private String releaseName;

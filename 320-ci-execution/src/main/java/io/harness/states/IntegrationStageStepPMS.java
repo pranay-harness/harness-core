@@ -17,6 +17,7 @@ import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.plancreator.steps.common.StageElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
@@ -40,7 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
 public class IntegrationStageStepPMS implements ChildExecutable<StageElementParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType("IntegrationStageStepPMS").build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType("IntegrationStageStepPMS").setStepCategory(StepCategory.STAGE).build();
 
   @Inject ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Inject OutcomeService outcomeService;

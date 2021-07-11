@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.node.ShortNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -43,13 +44,13 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.bson.Document;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -68,26 +69,30 @@ public class RecastTest extends PmsSdkCoreTestBase {
             .failureTypeSet(Sets.newHashSet(FailureType.APPLICATION_FAILURE, FailureType.AUTHORIZATION_FAILURE))
             .build();
 
-    Document expectedDocument =
-        new Document()
-            .append(RECAST_KEY, ProtoAsAFieldClass.class.getName())
-            .append("executionErrorInfo",
-                new Document()
-                    .append(RECAST_KEY, ExecutionErrorInfo.class.getName())
-                    .append(ENCODED_VALUE, JsonFormat.printer().print(executionErrorInfo)))
-            .append("failureTypeSet",
-                Sets.newHashSet(new Document()
-                                    .append(RECAST_KEY, FailureType.class.getName())
-                                    .append(ENCODED_VALUE, FailureType.APPLICATION_FAILURE.name()),
-                    new Document()
-                        .append(RECAST_KEY, FailureType.class.getName())
-                        .append(ENCODED_VALUE, FailureType.AUTHORIZATION_FAILURE.name())));
+    Map<Object, Object> expectedDocument =
+        ImmutableMap.builder()
+            .put(RECAST_KEY, ProtoAsAFieldClass.class.getName())
+            .put("executionErrorInfo",
+                ImmutableMap.builder()
+                    .put(RECAST_KEY, ExecutionErrorInfo.class.getName())
+                    .put(ENCODED_VALUE, JsonFormat.printer().print(executionErrorInfo))
+                    .build())
+            .put("failureTypeSet",
+                Sets.newHashSet(ImmutableMap.builder()
+                                    .put(RECAST_KEY, FailureType.class.getName())
+                                    .put(ENCODED_VALUE, FailureType.APPLICATION_FAILURE.name())
+                                    .build(),
+                    ImmutableMap.builder()
+                        .put(RECAST_KEY, FailureType.class.getName())
+                        .put(ENCODED_VALUE, FailureType.AUTHORIZATION_FAILURE.name())
+                        .build()))
+            .build();
 
-    Document document = RecastOrchestrationUtils.toDocument(protoAsAFieldClass);
-    assertThat(document).isNotNull();
-    assertThat(document).isEqualTo(expectedDocument);
+    Map<String, Object> map = RecastOrchestrationUtils.toMap(protoAsAFieldClass);
+    assertThat(map).isNotNull();
+    assertThat(map).isEqualTo(expectedDocument);
 
-    ProtoAsAFieldClass recastedClass = RecastOrchestrationUtils.fromDocument(document, ProtoAsAFieldClass.class);
+    ProtoAsAFieldClass recastedClass = RecastOrchestrationUtils.fromMap(map, ProtoAsAFieldClass.class);
     assertThat(recastedClass).isEqualTo(protoAsAFieldClass);
   }
 
@@ -106,15 +111,16 @@ public class RecastTest extends PmsSdkCoreTestBase {
   public void shouldTestRecastWithProtoExecutionErrorInfo() throws InvalidProtocolBufferException {
     ExecutionErrorInfo executionErrorInfo = ExecutionErrorInfo.newBuilder().setMessage("some-message").build();
 
-    Document expectedDocument = new Document()
-                                    .append(RECAST_KEY, ExecutionErrorInfo.class.getName())
-                                    .append(ENCODED_VALUE, JsonFormat.printer().print(executionErrorInfo));
+    Map<Object, Object> expectedDocument = ImmutableMap.builder()
+                                               .put(RECAST_KEY, ExecutionErrorInfo.class.getName())
+                                               .put(ENCODED_VALUE, JsonFormat.printer().print(executionErrorInfo))
+                                               .build();
 
-    Document document = RecastOrchestrationUtils.toDocument(executionErrorInfo);
+    Map<String, Object> document = RecastOrchestrationUtils.toMap(executionErrorInfo);
     assertThat(document).isNotNull();
     assertThat(document).isEqualTo(expectedDocument);
 
-    ExecutionErrorInfo recastedClass = RecastOrchestrationUtils.fromDocument(document, ExecutionErrorInfo.class);
+    ExecutionErrorInfo recastedClass = RecastOrchestrationUtils.fromMap(document, ExecutionErrorInfo.class);
     assertThat(recastedClass).isEqualTo(executionErrorInfo);
   }
 
@@ -138,15 +144,16 @@ public class RecastTest extends PmsSdkCoreTestBase {
                     .build())
             .build();
 
-    Document expectedDocument = new Document()
-                                    .append(RECAST_KEY, NodeExecutionProto.class.getName())
-                                    .append(ENCODED_VALUE, JsonFormat.printer().print(nodeExecutionProto));
+    Map<Object, Object> expectedDocument = ImmutableMap.builder()
+                                               .put(RECAST_KEY, NodeExecutionProto.class.getName())
+                                               .put(ENCODED_VALUE, JsonFormat.printer().print(nodeExecutionProto))
+                                               .build();
 
-    Document document = RecastOrchestrationUtils.toDocument(nodeExecutionProto);
+    Map<String, Object> document = RecastOrchestrationUtils.toMap(nodeExecutionProto);
     assertThat(document).isNotNull();
     assertThat(document).isEqualTo(expectedDocument);
 
-    NodeExecutionProto recastedClass = RecastOrchestrationUtils.fromDocument(document, NodeExecutionProto.class);
+    NodeExecutionProto recastedClass = RecastOrchestrationUtils.fromMap(document, NodeExecutionProto.class);
     assertThat(recastedClass).isEqualTo(nodeExecutionProto);
   }
 
@@ -170,11 +177,12 @@ public class RecastTest extends PmsSdkCoreTestBase {
                     .build())
             .build();
 
-    Document document = new Document()
-                            .append(RECAST_KEY, NodeExecutionProto.class.getName())
-                            .append(ENCODED_VALUE, JsonFormat.printer().print(nodeExecutionProto));
+    Map<Object, Object> document = ImmutableMap.builder()
+                                       .put(RECAST_KEY, NodeExecutionProto.class.getName())
+                                       .put(ENCODED_VALUE, JsonFormat.printer().print(nodeExecutionProto))
+                                       .build();
 
-    NodeExecutionProto recastedClass = RecastOrchestrationUtils.fromDocument(document, NodeExecutionProto.class);
+    NodeExecutionProto recastedClass = RecastOrchestrationUtils.fromMap((Map) document, NodeExecutionProto.class);
     assertThat(recastedClass).isEqualTo(nodeExecutionProto);
   }
 
@@ -190,12 +198,12 @@ public class RecastTest extends PmsSdkCoreTestBase {
     ObjectNode objectNode = new ObjectNode(JsonNodeFactory.instance);
     objectNode.set("stage", yamlField.getNode().getCurrJsonNode());
 
-    Document document = RecastOrchestrationUtils.toDocument(objectNode);
-    ObjectNode objectNode1 = RecastOrchestrationUtils.fromDocument(document, ObjectNode.class);
+    Map<String, Object> document = RecastOrchestrationUtils.toMap(objectNode);
+    ObjectNode objectNode1 = RecastOrchestrationUtils.fromMap(document, ObjectNode.class);
     assertThat(objectNode1).isEqualTo(objectNode);
 
-    Document doc = RecastOrchestrationUtils.toDocument(yamlField);
-    YamlField yamlField1 = RecastOrchestrationUtils.fromDocument(doc, YamlField.class);
+    Map<String, Object> doc = RecastOrchestrationUtils.toMap(yamlField);
+    YamlField yamlField1 = RecastOrchestrationUtils.fromMap(doc, YamlField.class);
     assertThat(yamlField1).isEqualTo(yamlField);
   }
 
@@ -240,9 +248,8 @@ public class RecastTest extends PmsSdkCoreTestBase {
     YamlNodeWrapperConfigList wrapperConfigListi = new YamlNodeWrapperConfigList();
     wrapperConfigListi.setList(ImmutableList.of(yamlNodeWrapperConfig, yamlNodeWrapperConfig1));
 
-    Document document = RecastOrchestrationUtils.toDocument(wrapperConfigListi);
-    YamlNodeWrapperConfigList objectNode1 =
-        RecastOrchestrationUtils.fromDocument(document, YamlNodeWrapperConfigList.class);
+    Map<String, Object> document = RecastOrchestrationUtils.toMap(wrapperConfigListi);
+    YamlNodeWrapperConfigList objectNode1 = RecastOrchestrationUtils.fromMap(document, YamlNodeWrapperConfigList.class);
     assertThat(objectNode1).isEqualTo(wrapperConfigListi);
   }
 

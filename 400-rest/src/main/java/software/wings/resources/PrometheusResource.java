@@ -16,6 +16,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
+import software.wings.service.impl.prometheus.PrometheusAnalysisServiceImpl;
 import software.wings.service.impl.prometheus.PrometheusSetupTestNodeData;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
@@ -78,7 +79,8 @@ public class PrometheusResource implements LogAnalysisResource {
             "Expected format example jvm_memory_max_bytes{pod_name=\"$hostName\"}");
       }
 
-      if (!serviceLevel && isNotEmpty(query) && !query.contains(HOST_NAME_PLACE_HOLDER)) {
+      if (!serviceLevel && isNotEmpty(query) && !query.contains(HOST_NAME_PLACE_HOLDER)
+          && !query.contains(PrometheusAnalysisServiceImpl.HOST_NAME_PLACE_HOLDER)) {
         invalidFields.put(
             "Invalid query for group: " + timeSeries.getTxnName() + ", metric : " + timeSeries.getMetricName(),
             HOST_NAME_PLACE_HOLDER + " is not present in the url.");

@@ -185,9 +185,10 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   }
 
   public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category) {
+      String projectIdentifier, String searchTerm, ConnectorType type, ConnectorCategory category,
+      ConnectorCategory sourceCategory) {
     Criteria criteria = filterService.createCriteriaFromConnectorFilter(
-        accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category);
+        accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, type, category, sourceCategory);
     Pageable pageable = PageUtils.getPageRequest(
         PageRequest.builder()
             .pageIndex(page)
@@ -339,6 +340,12 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
 
   @Override
   public ConnectorResponseDTO update(ConnectorDTO connectorRequest, String accountIdentifier) {
+    return update(connectorRequest, accountIdentifier, ChangeType.MODIFY);
+  }
+
+  @Override
+  public ConnectorResponseDTO update(
+      ConnectorDTO connectorRequest, String accountIdentifier, ChangeType gitChangeType) {
     assurePredefined(connectorRequest, accountIdentifier);
     ConnectorInfoDTO connector = connectorRequest.getConnectorInfo();
     Objects.requireNonNull(connector.getIdentifier());
@@ -370,7 +377,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
             existingConnector.getIdentifier());
         newConnector.setHeartbeatPerpetualTaskId(
             connectorHeartbeatTaskId == null ? null : connectorHeartbeatTaskId.getId());
-      } else {
+      } else if (existingConnector.getHeartbeatPerpetualTaskId() != null) {
         connectorHeartbeatService.resetPerpetualTask(
             accountIdentifier, existingConnector.getHeartbeatPerpetualTaskId());
         newConnector.setHeartbeatPerpetualTaskId(existingConnector.getHeartbeatPerpetualTaskId());
@@ -384,8 +391,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
             -> outboxService.save(new ConnectorUpdateEvent(
                 accountIdentifier, oldConnectorDTO.getConnector(), connectorRequest.getConnectorInfo()));
       }
-      Connector updatedConnector =
-          connectorRepository.save(newConnector, connectorRequest, ChangeType.MODIFY, supplier);
+      Connector updatedConnector = connectorRepository.save(newConnector, connectorRequest, gitChangeType, supplier);
       connectorEntityReferenceHelper.createSetupUsageForSecret(connector, accountIdentifier, true);
       return connectorMapper.writeDTO(updatedConnector);
 

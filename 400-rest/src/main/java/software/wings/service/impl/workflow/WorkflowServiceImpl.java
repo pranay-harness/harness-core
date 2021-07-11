@@ -186,6 +186,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowStepMeta;
+import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifestSummary;
 import software.wings.beans.appmanifest.HelmChart;
@@ -1755,8 +1756,41 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return rollbackProvisionerStep;
   }
 
+  public void checkPhaseStepAndStepNames(PhaseStep phaseStep) {
+    if (phaseStep == null) {
+      return;
+    }
+    if (phaseStep.getName().contains(".")) {
+      throw new InvalidRequestException("Phase Step name should not contain dots", USER_SRE);
+    }
+    if (phaseStep.getSteps() == null) {
+      return;
+    }
+    if (phaseStep.getSteps().stream().anyMatch(
+            graphNode -> graphNode != null && graphNode.getName() != null && graphNode.getName().contains("."))) {
+      throw new InvalidRequestException("Step name should not contain dots", USER);
+    }
+  }
+
+  public void checkWorkflowForStepNames(WorkflowPhase workflowPhase) {
+    if (workflowPhase == null || workflowPhase.getPhaseSteps() == null) {
+      return;
+    }
+    if (workflowPhase.getPhaseSteps().stream().anyMatch(
+            phaseStep -> phaseStep != null && phaseStep.getName().contains("."))) {
+      throw new InvalidRequestException("Phase Step name should not contain dots", USER_SRE);
+    }
+    if (workflowPhase.getPhaseSteps().stream().anyMatch(phaseStep
+            -> phaseStep != null && phaseStep.getSteps() != null
+                && phaseStep.getSteps().stream().anyMatch(
+                    graphNode -> graphNode != null && graphNode.getName().contains(".")))) {
+      throw new InvalidRequestException("Step name should not contain dots", USER_SRE);
+    }
+  }
+
   @Override
   public PhaseStep updatePreDeployment(String appId, String workflowId, PhaseStep phaseStep) {
+    checkPhaseStepAndStepNames(phaseStep);
     WorkflowServiceHelper.cleanupPhaseStepStrategies(phaseStep);
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("Workflow", workflow, USER);
@@ -1778,6 +1812,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public PhaseStep updatePostDeployment(String appId, String workflowId, PhaseStep phaseStep) {
+    checkPhaseStepAndStepNames(phaseStep);
     WorkflowServiceHelper.cleanupPhaseStepStrategies(phaseStep);
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("workflow", workflow, USER);
@@ -1963,13 +1998,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @ValidationGroups(Update.class)
   public WorkflowPhase updateWorkflowPhase(
       @NotEmpty String appId, @NotEmpty String workflowId, @Valid WorkflowPhase workflowPhase) {
+    checkWorkflowForStepNames(workflowPhase);
     if (workflowPhase.isRollback()
         || workflowPhase.getPhaseSteps().stream().anyMatch(
             phaseStep -> phaseStep.isRollback() || phaseStep.getSteps().stream().anyMatch(GraphNode::isRollback))) {
       // This might seem as user error, but since this is controlled from the our UI lets get alerted for it
       throw new InvalidRequestException("The direct workflow phase should not have rollback flag set!", USER_SRE);
     }
-
     WorkflowServiceHelper.cleanupPhaseStrategies(workflowPhase);
     Workflow workflow = readWorkflow(appId, workflowId);
     if (workflow == null) {
@@ -2097,13 +2132,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public WorkflowPhase updateWorkflowPhaseRollback(
       String appId, String workflowId, String phaseId, WorkflowPhase rollbackWorkflowPhase) {
+    checkWorkflowForStepNames(rollbackWorkflowPhase);
     if (!rollbackWorkflowPhase.isRollback()
         || rollbackWorkflowPhase.getPhaseSteps().stream().anyMatch(phaseStep
             -> !phaseStep.isRollback() || phaseStep.getSteps().stream().anyMatch(step -> !step.isRollback()))) {
       // This might seem as user error, but since this is controlled from the our UI lets get alerted for it
       throw new InvalidRequestException("The rollback workflow phase should have rollback flag set!", USER_SRE);
     }
-
     WorkflowServiceHelper.cleanupPhaseStrategies(rollbackWorkflowPhase);
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("workflow", workflow, USER);
@@ -2483,23 +2518,35 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return service.getName();
   }
 
-  private ApplicationManifestSummary prepareApplicationManifestSummary(
+  private List<ApplicationManifestSummary> prepareApplicationManifestSummary(
       String serviceId, String accountId, String appId, WorkflowExecution workflowExecution) {
-    ApplicationManifest applicationManifest = applicationManifestService.getManifestByServiceId(appId, serviceId);
-    if (applicationManifest == null || applicationManifest.getHelmChartConfig() == null) {
+    List<ApplicationManifest> applicationManifests =
+        applicationManifestService.getManifestsByServiceId(appId, serviceId, AppManifestKind.K8S_MANIFEST);
+    if (isEmpty(applicationManifests)) {
       return null;
     }
-    HelmChart lastCollectedHelmChart =
-        helmChartService.getLastCollectedManifest(accountId, applicationManifest.getUuid());
-    Optional<HelmChart> helmChartOptional = (workflowExecution != null && workflowExecution.getHelmCharts() != null)
-        ? workflowExecution.getHelmCharts().stream().filter(chart -> serviceId.equals(chart.getServiceId())).findFirst()
-        : Optional.empty();
-    return ApplicationManifestSummary.builder()
-        .appManifestId(applicationManifest.getUuid())
-        .settingId(applicationManifest.getHelmChartConfig().getConnectorId())
-        .defaultManifest(helmChartOptional.map(ManifestSummary::prepareSummaryFromHelmChart).orElse(null))
-        .lastCollectedManifest(ManifestSummary.prepareSummaryFromHelmChart(lastCollectedHelmChart))
-        .build();
+    List<ApplicationManifestSummary> applicationManifestSummaryList = new ArrayList<>();
+    for (ApplicationManifest applicationManifest : applicationManifests) {
+      if (applicationManifest == null || applicationManifest.getHelmChartConfig() == null) {
+        return null;
+      }
+      HelmChart lastCollectedHelmChart =
+          helmChartService.getLastCollectedManifest(accountId, applicationManifest.getUuid());
+      Optional<HelmChart> helmChartOptional = (workflowExecution != null && workflowExecution.getHelmCharts() != null)
+          ? workflowExecution.getHelmCharts()
+                .stream()
+                .filter(chart -> serviceId.equals(chart.getServiceId()))
+                .findFirst()
+          : Optional.empty();
+      applicationManifestSummaryList.add(
+          ApplicationManifestSummary.builder()
+              .appManifestId(applicationManifest.getUuid())
+              .settingId(applicationManifest.getHelmChartConfig().getConnectorId())
+              .defaultManifest(helmChartOptional.map(ManifestSummary::prepareSummaryFromHelmChart).orElse(null))
+              .lastCollectedManifest(ManifestSummary.prepareSummaryFromHelmChart(lastCollectedHelmChart))
+              .build());
+    }
+    return applicationManifestSummaryList;
   }
 
   @VisibleForTesting
@@ -2547,10 +2594,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private boolean isHelmChartPresentInAppManifest(
       Optional<HelmChart> requiredHelmChart, String serviceId, String appId) {
     if (requiredHelmChart.isPresent()) {
-      List<HelmChart> presentHelmCharts =
-          helmChartService.listHelmChartsForService(appId, serviceId, new PageRequest<>());
-      return presentHelmCharts.stream().anyMatch(
-          helmChart -> requiredHelmChart.get().getUuid().equals(helmChart.getUuid()));
+      Map<String, List<HelmChart>> presentHelmCharts =
+          helmChartService.listHelmChartsForService(appId, serviceId, null, new PageRequest<>());
+      return presentHelmCharts.values()
+          .stream()
+          .flatMap(Collection::stream)
+          .anyMatch(helmChart -> requiredHelmChart.get().getUuid().equals(helmChart.getUuid()));
     }
     return false;
   }
@@ -2758,34 +2807,32 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                       && artifactVariable.getEntityId().equals(previousArtifactVariable.getEntityId()))
               .findFirst()
               .orElse(null);
-      if (foundArtifactVariable == null) {
-        return null;
-      }
+      if (foundArtifactVariable != null) {
+        List<Artifact> artifacts = workflowExecution.getExecutionArgs().getArtifacts();
+        String artifactId = foundArtifactVariable.getValue();
 
-      List<Artifact> artifacts = workflowExecution.getExecutionArgs().getArtifacts();
-      String artifactId = foundArtifactVariable.getValue();
-
-      if (isEmpty(artifacts)) {
-        return null;
-      }
-
-      if (isBlank(artifactId) || artifactService.get(artifactId) == null) {
-        if (foundArtifactVariable.getArtifactStreamMetadata() != null
-            && foundArtifactVariable.getArtifactStreamMetadata().getRuntimeValues() != null) {
-          String artifactStreamId = foundArtifactVariable.getArtifactStreamMetadata().getArtifactStreamId();
-          return artifacts.stream()
-              .filter(artifact
-                  -> StringUtils.equals(artifactStreamId, artifact.getArtifactStreamId())
-                      && StringUtils.equals(artifact.getBuildNo(),
-                          (String) foundArtifactVariable.getArtifactStreamMetadata().getRuntimeValues().get(
-                              ArtifactMetadataKeys.buildNo)))
-              .findFirst()
-              .orElse(null);
+        if (isEmpty(artifacts)) {
+          return null;
         }
-        return null;
-      }
 
-      return artifacts.stream().filter(artifact -> artifactId.equals(artifact.getUuid())).findFirst().orElse(null);
+        if (isBlank(artifactId) || artifactService.get(artifactId) == null) {
+          if (foundArtifactVariable.getArtifactStreamMetadata() != null
+              && foundArtifactVariable.getArtifactStreamMetadata().getRuntimeValues() != null) {
+            String artifactStreamId = foundArtifactVariable.getArtifactStreamMetadata().getArtifactStreamId();
+            return artifacts.stream()
+                .filter(artifact
+                    -> StringUtils.equals(artifactStreamId, artifact.getArtifactStreamId())
+                        && StringUtils.equals(artifact.getBuildNo(),
+                            (String) foundArtifactVariable.getArtifactStreamMetadata().getRuntimeValues().get(
+                                ArtifactMetadataKeys.buildNo)))
+                .findFirst()
+                .orElse(null);
+          }
+          return null;
+        }
+
+        return artifacts.stream().filter(artifact -> artifactId.equals(artifact.getUuid())).findFirst().orElse(null);
+      }
     }
 
     List<Artifact> previousArtifacts = workflowExecution.getExecutionArgs().getArtifacts();

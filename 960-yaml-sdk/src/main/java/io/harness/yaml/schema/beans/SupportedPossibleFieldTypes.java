@@ -11,7 +11,6 @@ public enum SupportedPossibleFieldTypes {
   bool,
   list,
   map,
-  runtime,
   /**
    * Only used for setting default.
    */

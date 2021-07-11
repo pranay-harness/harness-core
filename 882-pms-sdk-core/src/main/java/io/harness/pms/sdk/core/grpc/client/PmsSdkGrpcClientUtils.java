@@ -69,8 +69,8 @@ public class PmsSdkGrpcClientUtils {
             return false;
           }
           StatusRuntimeException statusRuntimeException = (StatusRuntimeException) throwable;
-          return statusRuntimeException.getStatus() == Status.UNAVAILABLE
-              || statusRuntimeException.getStatus() == Status.UNKNOWN;
+          return statusRuntimeException.getStatus().getCode() == Status.Code.UNAVAILABLE
+              || statusRuntimeException.getStatus().getCode() == Status.Code.UNKNOWN;
         });
   }
 }

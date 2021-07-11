@@ -5,6 +5,7 @@ import io.harness.ng.core.account.DefaultExperience;
 import io.harness.persistence.HIterator;
 
 import software.wings.beans.Account;
+import software.wings.beans.Account.AccountKeys;
 import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
@@ -20,7 +21,7 @@ public class DefaultExperienceMigration implements Migration {
   public void migrate() {
     log.info("Starting the migration of default experience in account");
     Query<Account> accountsQuery =
-        wingsPersistence.createQuery(Account.class).field(Account.AccountKeys.defaultExperience).doesNotExist();
+        wingsPersistence.createQuery(Account.class).field(AccountKeys.defaultExperience).doesNotExist();
     try (HIterator<Account> records = new HIterator<>(accountsQuery.fetch())) {
       while (records.hasNext()) {
         Account account = null;
@@ -28,9 +29,9 @@ public class DefaultExperienceMigration implements Migration {
           account = records.next();
           UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
           if (account.isCreatedFromNG()) {
-            updateOperations.set(Account.AccountKeys.defaultExperience, DefaultExperience.NG);
+            updateOperations.set(AccountKeys.defaultExperience, DefaultExperience.NG);
           } else {
-            updateOperations.set(Account.AccountKeys.defaultExperience, DefaultExperience.CG);
+            updateOperations.set(AccountKeys.defaultExperience, DefaultExperience.CG);
           }
           wingsPersistence.update(account, updateOperations);
         } catch (Exception e) {

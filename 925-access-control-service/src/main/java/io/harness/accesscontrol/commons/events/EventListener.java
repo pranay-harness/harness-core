@@ -7,8 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
-import io.harness.lock.AcquiredLock;
-import io.harness.lock.redis.RedisPersistentLocker;
+import io.harness.queue.QueueController;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
 
@@ -26,16 +25,13 @@ public abstract class EventListener implements Runnable {
   private static final int WAIT_TIME_IN_SECONDS = 10;
   private final Consumer redisConsumer;
   private final Set<EventConsumer> eventConsumers;
-  private final RedisPersistentLocker redisPersistentLocker;
-  private final String consumerGroupName;
+  private final QueueController queueController;
 
   @Inject
-  public EventListener(Consumer redisConsumer, Set<EventConsumer> eventConsumers,
-      RedisPersistentLocker redisPersistentLocker, String consumerGroupName) {
+  public EventListener(Consumer redisConsumer, Set<EventConsumer> eventConsumers, QueueController queueController) {
     this.redisConsumer = redisConsumer;
     this.eventConsumers = eventConsumers;
-    this.redisPersistentLocker = redisPersistentLocker;
-    this.consumerGroupName = consumerGroupName;
+    this.queueController = queueController;
   }
 
   public abstract String getListenerName();
@@ -46,6 +42,11 @@ public abstract class EventListener implements Runnable {
     try {
       SecurityContextBuilder.setContext(new ServicePrincipal(ACCESS_CONTROL_SERVICE.getServiceId()));
       while (!Thread.currentThread().isInterrupted()) {
+        if (queueController.isNotPrimary()) {
+          log.info(getListenerName() + "is not running on primary deployment, will try again after some time...");
+          TimeUnit.SECONDS.sleep(30);
+          continue;
+        }
         readEventsFrameworkMessages();
       }
     } catch (InterruptedException ex) {
@@ -59,19 +60,9 @@ public abstract class EventListener implements Runnable {
   }
 
   private void readEventsFrameworkMessages() throws InterruptedException {
-    AcquiredLock acquiredLock = null;
     try {
-      acquiredLock = redisPersistentLocker.tryToAcquireLock(consumerGroupName, Duration.ofMinutes(2));
-      if (acquiredLock == null) {
-        Thread.sleep(1000);
-        return;
-      }
       pollAndProcessMessages();
-      redisPersistentLocker.destroy(acquiredLock);
     } catch (EventsFrameworkDownException e) {
-      if (acquiredLock != null) {
-        redisPersistentLocker.destroy(acquiredLock);
-      }
       log.error("Events framework is down for " + getListenerName() + " consumer. Retrying again...", e);
       TimeUnit.SECONDS.sleep(WAIT_TIME_IN_SECONDS);
     }

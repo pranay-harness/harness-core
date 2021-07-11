@@ -6,7 +6,6 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.expression.ExpressionEvaluator;

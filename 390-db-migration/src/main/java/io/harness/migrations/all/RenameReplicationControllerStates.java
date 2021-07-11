@@ -4,7 +4,6 @@ import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 import io.harness.migrations.MigrationUtils;
 

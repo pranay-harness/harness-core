@@ -26,8 +26,7 @@ import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
-import io.harness.ng.core.user.entities.UserMembership;
-import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
@@ -40,8 +39,12 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -49,29 +52,43 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @OwnedBy(HarnessTeam.PL)
 @Slf4j
 public class AccessControlMigrationServiceImpl implements AccessControlMigrationService {
-  public static final int BATCH_SIZE = 50;
+  public static final int BATCH_SIZE = 5;
   public static final String ALL_RESOURCES = "_all_resources";
   private final AccessControlMigrationDAO accessControlMigrationDAO;
   private final ProjectService projectService;
   private final OrganizationService organizationService;
   private final MockRoleAssignmentService mockRoleAssignmentService;
-  @Named("PRIVILEGED") private final AccessControlAdminClient accessControlAdminClient;
+  private final AccessControlAdminClient accessControlAdminClient;
   private final UserClient userClient;
   private final ResourceGroupClient resourceGroupClient;
   private final NgUserService ngUserService;
-  private final ExecutorService executorService =
-      Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
+  private final ExecutorService executorService = Executors.newFixedThreadPool(5);
+
+  @Inject
+  public AccessControlMigrationServiceImpl(AccessControlMigrationDAO accessControlMigrationDAO,
+      ProjectService projectService, OrganizationService organizationService,
+      MockRoleAssignmentService mockRoleAssignmentService,
+      @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient, UserClient userClient,
+      ResourceGroupClient resourceGroupClient, NgUserService ngUserService) {
+    this.accessControlMigrationDAO = accessControlMigrationDAO;
+    this.projectService = projectService;
+    this.organizationService = organizationService;
+    this.mockRoleAssignmentService = mockRoleAssignmentService;
+    this.accessControlAdminClient = accessControlAdminClient;
+    this.userClient = userClient;
+    this.resourceGroupClient = resourceGroupClient;
+    this.ngUserService = ngUserService;
+  }
 
   @Override
   public void save(AccessControlMigration accessControlMigration) {
@@ -117,6 +134,8 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   }
 
   private long createRoleAssignments(Scope scope, boolean managed, List<RoleAssignmentDTO> roleAssignments) {
+    roleAssignments = dedupRoleAssignments(roleAssignments);
+
     List<List<RoleAssignmentDTO>> batchedRoleAssignments = Lists.partition(roleAssignments, BATCH_SIZE);
     List<Future<List<RoleAssignmentResponseDTO>>> futures = new ArrayList<>();
     batchedRoleAssignments.forEach(batch
@@ -143,6 +162,26 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
     return createdRoleAssignments;
   }
 
+  private List<RoleAssignmentDTO> dedupRoleAssignments(List<RoleAssignmentDTO> roleAssignments) {
+    Map<RoleAssignmentKey, RoleAssignmentDTO> map = new HashMap<>();
+    for (RoleAssignmentDTO roleAssignment : roleAssignments) {
+      RoleAssignmentKey key = new RoleAssignmentKey(roleAssignment.getResourceGroupIdentifier(),
+          roleAssignment.getRoleIdentifier(), roleAssignment.getPrincipal().getIdentifier(),
+          roleAssignment.getPrincipal().getType(), roleAssignment.isDisabled());
+      map.put(key, roleAssignment);
+    }
+    return new ArrayList<>(map.values());
+  }
+
+  @Value
+  private static class RoleAssignmentKey {
+    String resourceGroupIdentifier;
+    String roleIdentifier;
+    String principalIdentifier;
+    PrincipalType principalType;
+    boolean disabled;
+  }
+
   private void migrateInternal(Scope scope) {
     if (isMigrated(scope)) {
       log.info("Scope {} already migrated", scope);
@@ -153,14 +192,19 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
 
     try {
       ensureManagedResourceGroup(scope);
-      migrateMockRoleAssignments(scope);
       assignViewerRoleToUsers(scope);
+      migrateMockRoleAssignments(scope);
       if (!hasAdmin(scope)) {
         assignAdminRoleToUsers(scope);
       }
 
       if (!hasAdmin(scope)) {
         assignAdminAndViewerRoleToCGUsers(scope);
+      }
+
+      if (!hasAdmin(scope)) {
+        log.error(String.format("Access control migration failed for scope : %s", scope.toString()));
+        return;
       }
 
       long durationInSeconds = stopwatch.elapsed(TimeUnit.SECONDS);
@@ -179,17 +223,17 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   }
 
   private void assignViewerRoleToUsers(Scope scope) {
-    List<String> users = getUsersInScope(scope);
+    Set<String> users = new HashSet<>(getUsersInScope(scope));
     if (users.isEmpty()) {
       return;
     }
-
-    log.info("Created {} MANAGED role assignments from UserMembership for scope: {}",
-        createRoleAssignments(scope, true, buildRoleAssignments(users, getManagedViewerRole(scope))), scope);
+    users.forEach(userId -> upsertUserMembership(scope, userId));
   }
 
   private boolean hasAdmin(Scope scope) {
-    return !isEmpty(ngUserService.listUsersHavingRole(scope, getManagedAdminRole(scope)));
+    List<UserMetadataDTO> admins = ngUserService.listUsersHavingRole(scope, getManagedAdminRole(scope));
+    log.info("Admins in scope {} are {}", scope, admins == null ? Collections.emptyList() : admins);
+    return !isEmpty(admins);
   }
 
   private void ensureManagedResourceGroup(Scope scope) {
@@ -203,11 +247,14 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
       return;
     }
 
+    mockRoleAssignments.stream()
+        .map(roleAssignment -> roleAssignment.getRoleAssignment().getPrincipal().getIdentifier())
+        .distinct()
+        .forEach(roleAssignment -> upsertUserMembership(scope, roleAssignment));
+
     List<RoleAssignmentDTO> managedRoleAssignments = new ArrayList<>();
     List<RoleAssignmentDTO> nonManagedRoleAssignments = new ArrayList<>();
     mockRoleAssignments.forEach(mockRoleAssignment -> {
-      upsertUserMembership(scope, mockRoleAssignment.getRoleAssignment().getPrincipal().getIdentifier());
-
       if (Boolean.TRUE.equals(mockRoleAssignment.getRoleAssignment().isManaged())) {
         managedRoleAssignments.add(mockRoleAssignment.getRoleAssignment());
       } else {
@@ -222,7 +269,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   }
 
   private void assignAdminRoleToUsers(Scope scope) {
-    List<String> users = getUsersInScope(scope);
+    Set<String> users = new HashSet<>(getUsersInScope(scope));
     if (users.isEmpty()) {
       return;
     }
@@ -232,16 +279,14 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   }
 
   private void assignAdminAndViewerRoleToCGUsers(Scope scope) {
-    List<String> currentGenUsers =
-        getUsers(scope.getAccountIdentifier()).stream().map(UserInfo::getUuid).collect(Collectors.toList());
+    Set<String> currentGenUsers =
+        getUsers(scope.getAccountIdentifier()).stream().map(UserInfo::getUuid).collect(Collectors.toSet());
+    log.info("Number of CG Users : {}", currentGenUsers.size());
     if (currentGenUsers.isEmpty()) {
       return;
     }
 
     currentGenUsers.forEach(userId -> upsertUserMembership(scope, userId));
-
-    log.info("Created {} MANAGED role assignments from CG Users for scope: {}",
-        createRoleAssignments(scope, true, buildRoleAssignments(currentGenUsers, getManagedViewerRole(scope))), scope);
 
     log.info("Created {} NON-MANAGED role assignments from CG Users for scope: {}",
         createRoleAssignments(scope, false, buildRoleAssignments(currentGenUsers, getManagedAdminRole(scope))), scope);
@@ -261,16 +306,6 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
     }
   }
 
-  private static String getManagedViewerRole(Scope scope) {
-    if (!StringUtils.isEmpty(scope.getProjectIdentifier())) {
-      return "_project_viewer";
-    } else if (!StringUtils.isEmpty(scope.getOrgIdentifier())) {
-      return "_organization_viewer";
-    } else {
-      return "_account_viewer";
-    }
-  }
-
   private static String getManagedAdminRole(Scope scope) {
     if (!StringUtils.isEmpty(scope.getProjectIdentifier())) {
       return "_project_admin";
@@ -281,7 +316,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
     }
   }
 
-  private List<RoleAssignmentDTO> buildRoleAssignments(List<String> userIds, String roleIdentifier) {
+  private List<RoleAssignmentDTO> buildRoleAssignments(Collection<String> userIds, String roleIdentifier) {
     return userIds.stream()
         .map(userId
             -> RoleAssignmentDTO.builder()
@@ -295,27 +330,35 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   }
 
   private List<String> getOrganizations(String accountIdentifier) {
-    return organizationService
-        .list(Criteria.where(OrganizationKeys.accountIdentifier)
-                  .is(accountIdentifier)
-                  .and(OrganizationKeys.deleted)
-                  .ne(true))
-        .stream()
-        .map(Organization::getIdentifier)
-        .collect(Collectors.toList());
+    List<String> orgs =
+        organizationService
+            .list(Criteria.where(OrganizationKeys.accountIdentifier)
+                      .is(accountIdentifier)
+                      .and(OrganizationKeys.deleted)
+                      .ne(true))
+            .stream()
+            .map(Organization::getIdentifier)
+            .collect(Collectors.toCollection(ArrayList::new)); // this has been done explicitly so that shuffle does not
+                                                               // throw UnsupportedOperationException
+    Collections.shuffle(orgs);
+    return orgs;
   }
 
   private List<String> getProjects(String accountIdentifier, String orgIdentifier) {
-    return projectService
-        .list(Criteria.where(ProjectKeys.accountIdentifier)
-                  .is(accountIdentifier)
-                  .and(ProjectKeys.deleted)
-                  .ne(true)
-                  .and(ProjectKeys.orgIdentifier)
-                  .is(orgIdentifier))
-        .stream()
-        .map(Project::getIdentifier)
-        .collect(Collectors.toList());
+    List<String> projects =
+        projectService
+            .list(Criteria.where(ProjectKeys.accountIdentifier)
+                      .is(accountIdentifier)
+                      .and(ProjectKeys.deleted)
+                      .ne(true)
+                      .and(ProjectKeys.orgIdentifier)
+                      .is(orgIdentifier))
+            .stream()
+            .map(Project::getIdentifier)
+            .collect(Collectors.toCollection(ArrayList::new)); // this has been done explicitly so that shuffle does not
+                                                               // throw UnsupportedOperationException
+    Collections.shuffle(projects);
+    return projects;
   }
 
   private List<RoleAssignmentResponseDTO> getMockRoleAssignments(Scope scope) {
@@ -331,15 +374,6 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   }
 
   private List<String> getUsersInScope(Scope scope) {
-    return ngUserService
-        .listUserMemberships(Criteria.where(UserMembershipKeys.scopes + ".accountIdentifier")
-                                 .is(scope.getAccountIdentifier())
-                                 .and(UserMembershipKeys.scopes + ".orgIdentifier")
-                                 .is(scope.getOrgIdentifier())
-                                 .and(UserMembershipKeys.scopes + ".projectIdentifier")
-                                 .is(scope.getProjectIdentifier()))
-        .stream()
-        .map(UserMembership::getUserId)
-        .collect(Collectors.toList());
+    return ngUserService.listUserIds(scope);
   }
 }

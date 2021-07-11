@@ -8,6 +8,7 @@ public enum Destination {
   NATERO("Natero"),
   MARKETO("Marketo"),
   SALESFORCE("Salesforce"),
+  AMPLITUDE("Amplitude"),
   ALL("All");
 
   private String destinationName;

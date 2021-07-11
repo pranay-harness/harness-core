@@ -226,17 +226,14 @@ func (r *runTask) resolveExprInEnv(ctx context.Context) (map[string]string, erro
 	for k, v := range r.environment {
 		envVarMap[k] = v
 	}
-	m, err := resolver.ResolveJEXLInMapValues(ctx, envVarMap, r.id, r.prevStepOutputs, r.log)
+
+	// Resolves secret in environment variables e.g. foo-${ngSecretManager.obtain("secret", 1234)}
+	resolvedSecretMap, err := resolver.ResolveSecretInMapValues(envVarMap)
 	if err != nil {
 		return nil, err
 	}
 
-	resolvedSecretMap, err := resolver.ResolveSecretInMapValues(m)
-	if err != nil {
-		return nil, err
-	}
-
-	return resolver.ResolveEnvInMapValues(resolvedSecretMap), nil
+	return resolvedSecretMap, nil
 }
 
 // resolveExprInCmd resolves JEXL expressions & secret present in command

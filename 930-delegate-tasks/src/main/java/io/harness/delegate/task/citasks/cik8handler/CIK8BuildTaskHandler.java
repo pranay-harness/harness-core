@@ -5,6 +5,7 @@ package io.harness.delegate.task.citasks.cik8handler;
  * git secrets.
  */
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.ci.k8s.PodStatus.Status.RUNNING;
 import static io.harness.delegate.beans.ci.pod.CIContainerType.LITE_ENGINE;
@@ -56,9 +57,11 @@ import io.kubernetes.client.util.Watch;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -81,6 +84,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
   private static final String DOCKER_CONFIG_KEY = ".dockercfg";
   private static final String HARNESS_IMAGE_SECRET = "HARNESS_IMAGE_SECRET";
+  private static final String HARNESS_SECRETS_LIST = "HARNESS_SECRETS_LIST";
 
   @Override
   public Type getType() {
@@ -297,6 +301,14 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     secretData.putAll(gitSecretData);
     log.info("Determined environment secrets to create for stage for pod {}", podParams.getName());
 
+    for (CIK8ContainerParams containerParams : containerParamsList) {
+      Set<String> allSecrets = new HashSet<>();
+      if (!isEmpty(containerParams.getSecretEnvVars())) {
+        allSecrets.addAll(containerParams.getSecretEnvVars().keySet());
+        updateContainerWithEnvVariable(allSecrets, containerParams);
+      }
+    }
+
     if (isNotEmpty(secretData)) {
       log.info("Creating environment secrets for pod name: {}", podParams.getName());
       kubeCtlHandler.createSecret(kubernetesClient, k8SecretName, namespace, secretData);
@@ -452,5 +464,19 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     }
     secretEnvVars.put(
         variableName, SecretVarParams.builder().secretKey(secretParam.getSecretKey()).secretName(secretName).build());
+  }
+
+  private void updateContainerWithEnvVariable(Set<String> allSecrets, ContainerParams containerParams) {
+    if (isEmpty(allSecrets)) {
+      return;
+    }
+
+    Map<String, String> secretEnvVars = containerParams.getEnvVars();
+    if (secretEnvVars == null) {
+      secretEnvVars = new HashMap<>();
+      containerParams.setEnvVars(secretEnvVars);
+    }
+    String secret = String.join(",", allSecrets);
+    secretEnvVars.put(HARNESS_SECRETS_LIST, secret);
   }
 }

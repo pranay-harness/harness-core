@@ -25,6 +25,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.run.ExpressionBlock;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.expression.PmsEngineExpressionService;
@@ -55,18 +56,19 @@ public class RunPreFacilitationCheckerTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void performCheckWhenConditionTrue() {
     String whenCondition = "<+pipeline.name>==\"name\"";
-    NodeExecution nodeExecution = NodeExecution.builder()
-                                      .uuid(generateUuid())
-                                      .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
-                                      .status(Status.QUEUED)
-                                      .mode(ExecutionMode.TASK)
-                                      .node(PlanNodeProto.newBuilder()
-                                                .setUuid(generateUuid())
-                                                .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                                .setWhenCondition(whenCondition)
-                                                .build())
-                                      .startTs(System.currentTimeMillis())
-                                      .build();
+    NodeExecution nodeExecution =
+        NodeExecution.builder()
+            .uuid(generateUuid())
+            .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
+            .status(Status.QUEUED)
+            .mode(ExecutionMode.TASK)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(generateUuid())
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .setWhenCondition(whenCondition)
+                      .build())
+            .startTs(System.currentTimeMillis())
+            .build();
     mongoTemplate.save(nodeExecution);
 
     when(engineExpressionEvaluator.getVariableResolverTracker()).thenReturn(variableResolverTracker);
@@ -85,18 +87,19 @@ public class RunPreFacilitationCheckerTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void performCheckWhenConditionFalse() {
     String whenCondition = "<+pipeline.name>==\"name\"";
-    NodeExecution nodeExecution = NodeExecution.builder()
-                                      .uuid(generateUuid())
-                                      .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
-                                      .status(Status.QUEUED)
-                                      .mode(ExecutionMode.TASK)
-                                      .node(PlanNodeProto.newBuilder()
-                                                .setUuid(generateUuid())
-                                                .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                                .setWhenCondition(whenCondition)
-                                                .build())
-                                      .startTs(System.currentTimeMillis())
-                                      .build();
+    NodeExecution nodeExecution =
+        NodeExecution.builder()
+            .uuid(generateUuid())
+            .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
+            .status(Status.QUEUED)
+            .mode(ExecutionMode.TASK)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(generateUuid())
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .setWhenCondition(whenCondition)
+                      .build())
+            .startTs(System.currentTimeMillis())
+            .build();
     mongoTemplate.save(nodeExecution);
 
     when(engineExpressionEvaluator.getVariableResolverTracker()).thenReturn(variableResolverTracker);
@@ -121,18 +124,19 @@ public class RunPreFacilitationCheckerTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void performCheckWhenConditionException() {
     String whenCondition = "<+pipeline.name>==\"name\"";
-    NodeExecution nodeExecution = NodeExecution.builder()
-                                      .uuid(generateUuid())
-                                      .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
-                                      .status(Status.QUEUED)
-                                      .mode(ExecutionMode.TASK)
-                                      .node(PlanNodeProto.newBuilder()
-                                                .setUuid(generateUuid())
-                                                .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                                .setWhenCondition(whenCondition)
-                                                .build())
-                                      .startTs(System.currentTimeMillis())
-                                      .build();
+    NodeExecution nodeExecution =
+        NodeExecution.builder()
+            .uuid(generateUuid())
+            .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
+            .status(Status.QUEUED)
+            .mode(ExecutionMode.TASK)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(generateUuid())
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .setWhenCondition(whenCondition)
+                      .build())
+            .startTs(System.currentTimeMillis())
+            .build();
     mongoTemplate.save(nodeExecution);
 
     when(engineExpressionEvaluator.getVariableResolverTracker()).thenReturn(variableResolverTracker);

@@ -1,10 +1,13 @@
 package io.harness.delegate.beans.connector.awsconnector;
 
+import static io.harness.ConnectorConstants.INHERIT_FROM_DELEGATE_TYPE_ERROR_MSG;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.MANUAL_CREDENTIALS;
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.DelegateSelectable;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
+import io.harness.exception.InvalidRequestException;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
@@ -33,5 +36,13 @@ public class AwsConnectorDTO extends ConnectorConfigDTO implements DelegateSelec
       return Collections.singletonList(awsManualCredentials);
     }
     return null;
+  }
+
+  @Override
+  public void validate() {
+    if (AwsCredentialType.INHERIT_FROM_DELEGATE.equals(credential.getAwsCredentialType())
+        && isEmpty(delegateSelectors)) {
+      throw new InvalidRequestException(INHERIT_FROM_DELEGATE_TYPE_ERROR_MSG);
+    }
   }
 }

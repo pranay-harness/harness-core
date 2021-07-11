@@ -34,6 +34,7 @@ public class CIExecutionConstants {
   public static final Integer GIT_CLONE_DEPTH = 50;
   public static final Integer GIT_CLONE_MANUAL_DEPTH = 1;
   public static final String GIT_CLONE_DEPTH_ATTRIBUTE = "depth";
+  public static final String PR_CLONE_STRATEGY_ATTRIBUTE = "PR_CLONE_STRATEGY";
   public static final String GIT_SSL_NO_VERIFY = "GIT_SSL_NO_VERIFY";
   public static final String GIT_URL_SUFFIX = ".git";
   public static final String PATH_SEPARATOR = "/";
@@ -103,7 +104,6 @@ public class CIExecutionConstants {
   public static final String HARNESS_SERVICE_ARGS = "HARNESS_SERVICE_ARGS";
 
   public static final String HARNESS_WORKSPACE = "HARNESS_WORKSPACE";
-  public static final String HARNESS_SECRETS_LIST = "HARNESS_SECRETS_LIST";
 
   // Deprecated
   public static final List<String> SH_COMMAND = Collections.unmodifiableList(Arrays.asList("sh", "-c", "--"));

@@ -6,7 +6,6 @@ import static software.wings.beans.Base.ID_KEY2;
 import static software.wings.common.Constants.ACCOUNT_ID_KEY;
 import static software.wings.common.Constants.APP_ID_KEY;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.migrations.Migration;
 
 import software.wings.beans.Account;

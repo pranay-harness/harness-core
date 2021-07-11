@@ -75,7 +75,7 @@ public class SignupServiceImpl implements SignupService {
   public static final String FAILED_EVENT_NAME = "SIGNUP_ATTEMPT_FAILED";
   public static final String SUCCEED_EVENT_NAME = "NEW_SIGNUP";
   private static final String VERIFY_URL = "register/verify";
-  private static final String LOGIN_URL = "login";
+  private static final String LOGIN_URL = "";
 
   @Inject
   public SignupServiceImpl(AccountService accountService, UserClient userClient, SignupValidator signupValidator,
@@ -168,7 +168,7 @@ public class SignupServiceImpl implements SignupService {
 
   private String generateLoginUrl(String accountId) {
     String baseUrl = accountService.getBaseUrl(accountId, nextGenManagerUri);
-    return String.format("%s/%s", baseUrl, LOGIN_URL);
+    return String.format("%s%s", baseUrl, LOGIN_URL);
   }
 
   @Override

@@ -63,7 +63,12 @@ public class CIK8JavaClientHandler {
 
   private V1Pod createPod(ApiClient apiClient, V1Pod pod, String namespace) throws ApiException {
     CoreV1Api coreV1Api = new CoreV1Api(apiClient);
-    return coreV1Api.createNamespacedPod(namespace, pod, null, null, null);
+    try {
+      return coreV1Api.createNamespacedPod(namespace, pod, null, null, null);
+    } catch (ApiException ex) {
+      log.warn("Failed to created pod due to: {}", ex.getResponseBody());
+      throw ex;
+    }
   }
 
   public V1Status deletePod(ApiClient apiClient, String podName, String namespace) throws ApiException {

@@ -6,10 +6,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
@@ -23,7 +20,6 @@ import software.wings.beans.Service;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.dl.WingsPersistence;
-import software.wings.resources.ServiceResource;
 import software.wings.service.intfc.ServiceResourceService;
 
 import com.google.inject.Inject;

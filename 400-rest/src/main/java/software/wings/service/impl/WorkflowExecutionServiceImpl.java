@@ -103,11 +103,11 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.beans.ResourceConstraint;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.WorkflowType;
-import io.harness.beans.shared.ResourceConstraint;
 import io.harness.cache.MongoStore;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.CollectionUtils;
@@ -243,6 +243,7 @@ import software.wings.service.impl.workflow.queuing.WorkflowConcurrencyHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -413,6 +414,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private HelmChartService helmChartService;
   @Inject private StateInspectionService stateInspectionService;
+  @Inject private ApplicationManifestService applicationManifestService;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -2131,6 +2133,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                     .collect(toList());
 
     List<HelmChart> helmCharts = helmChartService.listByIds(accountId, helmChartIds);
+    helmCharts.forEach(helmChart
+        -> helmChart.setMetadata(applicationManifestService.fetchAppManifestProperties(
+            helmChart.getAppId(), helmChart.getApplicationManifestId())));
 
     if (helmCharts == null || helmChartIds.size() != helmCharts.size()) {
       log.error("helmChartIds from executionArgs contains invalid helmCharts");

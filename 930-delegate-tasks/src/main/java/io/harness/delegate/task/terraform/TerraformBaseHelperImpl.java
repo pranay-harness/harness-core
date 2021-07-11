@@ -9,6 +9,7 @@ import static io.harness.delegate.task.terraform.TerraformCommand.APPLY;
 import static io.harness.delegate.task.terraform.TerraformCommand.DESTROY;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
+import static io.harness.logging.LogLevel.WARN;
 import static io.harness.provision.TerraformConstants.TERRAFORM_APPLY_PLAN_FILE_VAR_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_DESTROY_PLAN_FILE_VAR_NAME;
@@ -17,6 +18,7 @@ import static io.harness.provision.TerraformConstants.TERRAFORM_STATE_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_VARIABLES_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TF_BASE_DIR;
 import static io.harness.provision.TerraformConstants.TF_SCRIPT_DIR;
+import static io.harness.provision.TerraformConstants.TF_WORKING_DIR;
 import static io.harness.provision.TerraformConstants.USER_DIR_KEY;
 import static io.harness.provision.TerraformConstants.WORKSPACE_STATE_FILE_PATH_FORMAT;
 
@@ -488,7 +490,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
       String scriptPath, String baseDir) {
     fetchConfigFileAndCloneLocally(gitBaseRequestForConfigFile, logCallback);
 
-    String workingDir = Paths.get(baseDir, TF_SCRIPT_DIR).toString();
+    String workingDir = getWorkingDir(baseDir);
 
     copyConfigFilestoWorkingDirectory(logCallback, gitBaseRequestForConfigFile, baseDir, workingDir);
 
@@ -506,14 +508,22 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
     return scriptDirectory;
   }
 
+  public String getWorkingDir(String baseDir) {
+    return Paths.get(baseDir, TF_SCRIPT_DIR).toString();
+  }
+
+  public String getBaseDir(String entityId) {
+    return TF_WORKING_DIR + entityId;
+  }
+
   public void fetchConfigFileAndCloneLocally(GitBaseRequest gitBaseRequestForConfigFile, LogCallback logCallback) {
     try {
       gitClient.ensureRepoLocallyClonedAndUpdated(gitBaseRequestForConfigFile);
     } catch (RuntimeException ex) {
-      logCallback.saveExecutionLog(format("Failed performing git operation. Reason: %s", ex.getMessage()), ERROR,
-          CommandExecutionStatus.RUNNING);
-      throw new TerraformCommandExecutionException(
-          format("Exception in processing git operation"), WingsException.USER);
+      String msg = isNotEmpty(ex.getMessage()) ? format("Failed performing git operation. Reason: %s", ex.getMessage())
+                                               : "Failed performing git operation.";
+      logCallback.saveExecutionLog(msg, ERROR, CommandExecutionStatus.RUNNING);
+      throw new TerraformCommandExecutionException("Exception in processing git operation", WingsException.USER, ex);
     }
   }
 
@@ -615,5 +625,29 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
     }
     return sshSessionConfigMapper.getSSHSessionConfig(
         gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
+  }
+
+  public void performCleanupOfTfDirs(TerraformTaskNGParameters parameters, LogCallback logCallback) {
+    {
+      FileUtils.deleteQuietly(new File(getBaseDir(parameters.getEntityId())));
+      if (parameters.getEncryptedTfPlan() != null) {
+        try {
+          boolean isSafelyDeleted = encryptDecryptHelper.deleteEncryptedRecord(
+              parameters.getEncryptionConfig(), parameters.getEncryptedTfPlan());
+          if (isSafelyDeleted) {
+            log.info("Terraform Plan has been safely deleted from vault");
+          }
+        } catch (Exception ex) {
+          logCallback.saveExecutionLog(
+              color(format("Failed to delete secret: [%s] from vault: [%s], please clean it up",
+                        parameters.getEncryptedTfPlan().getEncryptionKey(), parameters.getEncryptionConfig().getName()),
+                  LogColor.Yellow, LogWeight.Bold),
+              WARN, CommandExecutionStatus.RUNNING);
+          logCallback.saveExecutionLog(ex.getMessage(), WARN);
+          log.error("Exception occurred while deleting Terraform Plan from vault", ex);
+        }
+      }
+      logCallback.saveExecutionLog("Done cleaning up directories.", INFO, CommandExecutionStatus.SUCCESS);
+    }
   }
 }

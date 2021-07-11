@@ -22,7 +22,6 @@ import static io.harness.common.CIExecutionConstants.HARNESS_LOG_PREFIX_VARIABLE
 import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PIPELINE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PROJECT_ID_VARIABLE;
-import static io.harness.common.CIExecutionConstants.HARNESS_SECRETS_LIST;
 import static io.harness.common.CIExecutionConstants.HARNESS_SERVICE_LOG_KEY_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_STAGE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_WORKSPACE;
@@ -97,6 +96,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
+import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -155,8 +155,6 @@ public class K8BuildSetupUtils {
   @Inject private PipelineRbacHelper pipelineRbacHelper;
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
   private final int MAX_ATTEMPTS = 3;
-
-  private final String regexPattern = "^\\$\\{ngSecretManager.obtain\\(.*)\\}";
 
   public CIK8BuildTaskParams getCIk8BuildTaskParams(LiteEngineTaskStepInfo liteEngineTaskStepInfo, Ambiance ambiance,
       Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys) {
@@ -229,8 +227,7 @@ public class K8BuildSetupUtils {
     PodSetupInfo podSetupInfo = getPodSetupInfo((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo());
     ConnectorDetails harnessInternalImageConnector = null;
     if (isNotEmpty(ciExecutionServiceConfig.getDefaultInternalImageConnector())) {
-      harnessInternalImageConnector =
-          connectorUtils.getConnectorDetails(ngAccess, ciExecutionServiceConfig.getDefaultInternalImageConnector());
+      harnessInternalImageConnector = getDefaultInternalConnector(ngAccess);
     }
 
     ConnectorDetails gitConnector = getGitConnector(ngAccess, ciCodebase, skipGitClone);
@@ -422,7 +419,6 @@ public class K8BuildSetupUtils {
 
     Map<String, String> envVarsWithSecretRef = removeEnvVarsWithSecretRef(envVars);
 
-    envVars.putAll(createEnvVariableForSecret(containerSecretVariableDetails, envVarsWithSecretRef));
     if (containerDefinitionInfo.getContainerType() == CIContainerType.SERVICE) {
       envVars.put(HARNESS_SERVICE_LOG_KEY_VARIABLE,
           format("%s/serviceId:%s", logPrefix, containerDefinitionInfo.getStepIdentifier()));
@@ -475,26 +471,6 @@ public class K8BuildSetupUtils {
     }
 
     return IntegrationStageUtils.getFullyQualifiedImageName(imageName, imgConnector);
-  }
-
-  private Map<String, String> createEnvVariableForSecret(
-      List<SecretVariableDetails> secretVariableDetails, Map<String, String> envVariablesWithSecretRef) {
-    Map<String, String> envVars = new HashMap<>();
-
-    List<String> secretEnvNames = new ArrayList<>();
-
-    if (isNotEmpty(secretVariableDetails)) {
-      secretEnvNames.addAll(secretVariableDetails.stream()
-                                .map(secretVariableDetail -> secretVariableDetail.getSecretVariableDTO().getName())
-                                .collect(Collectors.toList()));
-    }
-    if (isNotEmpty(envVariablesWithSecretRef)) {
-      secretEnvNames.addAll(envVariablesWithSecretRef.keySet());
-    }
-
-    envVars.put(HARNESS_SECRETS_LIST, String.join(",", secretEnvNames));
-
-    return envVars;
   }
 
   private CIK8ContainerParams createLiteEngineContainerParams(ConnectorDetails connectorDetails,
@@ -871,5 +847,19 @@ public class K8BuildSetupUtils {
         .withMaxAttempts(MAX_ATTEMPTS)
         .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
         .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
+  }
+
+  private ConnectorDetails getDefaultInternalConnector(NGAccess ngAccess) {
+    ConnectorDetails connectorDetails = null;
+    if (isNotEmpty(ciExecutionServiceConfig.getDefaultInternalImageConnector())) {
+      try {
+        connectorDetails =
+            connectorUtils.getConnectorDetails(ngAccess, ciExecutionServiceConfig.getDefaultInternalImageConnector());
+      } catch (ConnectorNotFoundException e) {
+        log.info("Default harness image connector does not exist: {}", e.getMessage());
+        connectorDetails = null;
+      }
+    }
+    return connectorDetails;
   }
 }

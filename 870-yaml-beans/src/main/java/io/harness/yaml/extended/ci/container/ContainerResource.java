@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
+import io.harness.yaml.validator.ResourceValidatorConstants;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -14,6 +15,7 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.Optional;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
@@ -33,7 +35,9 @@ public class ContainerResource {
   @Data
   @TypeAlias("resource_limits")
   public static class Limits {
-    @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Min(0) private ParameterField<String> memory;
+    @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+    @Pattern(regexp = ResourceValidatorConstants.MEMORY_PATTERN)
+    private ParameterField<String> memory;
     @YamlSchemaTypes(value = {number})
     @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
     @Min(0)

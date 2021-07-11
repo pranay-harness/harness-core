@@ -4,4 +4,16 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 
-@OwnedBy(PL) public enum ApiKeyType { USER, SERVICE_ACCOUNT }
+import lombok.Getter;
+
+@OwnedBy(PL)
+public enum ApiKeyType {
+  USER("pat"),
+  SERVICE_ACCOUNT("sat");
+
+  @Getter public final String value;
+
+  ApiKeyType(String value) {
+    this.value = value;
+  }
+}

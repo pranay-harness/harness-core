@@ -19,9 +19,9 @@ import io.harness.pms.contracts.execution.TaskExecutableResponse;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.resume.NodeResumeEvent;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.events.base.PmsEventCategory;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
@@ -61,8 +61,8 @@ public class RedisNodeResumeEventPublisherTest extends OrchestrationTestBase {
             .mode(ExecutionMode.ASYNC)
             .node(PlanNodeProto.newBuilder()
                       .setUuid(generateUuid())
-                      .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                      .setStepParameters(RecastOrchestrationUtils.toDocumentJson(sectionStepParams))
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .setStepParameters(RecastOrchestrationUtils.toJson(sectionStepParams))
                       .setServiceName("DUMMY")
                       .build())
             .executableResponse(ExecutableResponse.newBuilder()
@@ -87,7 +87,7 @@ public class RedisNodeResumeEventPublisherTest extends OrchestrationTestBase {
                                           .build();
 
     verify(eventSender)
-        .sendEvent(nodeResumeEvent.toByteString(), PmsEventCategory.NODE_RESUME,
-            nodeExecution.getNode().getServiceName(), AmbianceUtils.getAccountId(nodeExecution.getAmbiance()), true);
+        .sendEvent(nodeExecution.getAmbiance(), nodeResumeEvent.toByteString(), PmsEventCategory.NODE_RESUME,
+            nodeExecution.getNode().getServiceName(), true);
   }
 }

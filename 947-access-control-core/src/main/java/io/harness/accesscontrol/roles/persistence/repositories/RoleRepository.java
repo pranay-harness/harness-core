@@ -14,5 +14,6 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 @HarnessRepo
 @ValidateOnExecution
 public interface RoleRepository extends PagingAndSortingRepository<RoleDBO, String>, RoleCustomRepository {
-  List<RoleDBO> deleteByIdentifierAndScopeIdentifier(@NotNull String identifier, String parentIdentifier);
+  List<RoleDBO> deleteByIdentifierAndScopeIdentifierAndManaged(
+      @NotNull String identifier, String parentIdentifier, boolean managed);
 }

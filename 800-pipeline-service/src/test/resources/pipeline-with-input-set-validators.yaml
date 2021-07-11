@@ -28,7 +28,7 @@ pipeline:
                         store:
                           type: Git
                           spec:
-                            connectorRef: <+input>.regex(acc\..*)
+                            connectorRef: <+input>.regex(account\..*)
                             gitFetchType: COMMIT
                             branch: master
                             paths:

@@ -48,12 +48,15 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class GitChangeSetRunnable implements Runnable {
   public static final int MAX_RUNNING_CHANGESETS_FOR_ACCOUNT = 5;
   public static final int MAX_RETRY_FOR_CHANGESET = 10;
+  public static final int MAX_RETRIED_QUEUED_JOB_CHECK_INTERVAL = 5 /*min*/;
+
   public static final List<YamlChangeSetStatus> terminalStatusList =
       ImmutableList.of(YamlChangeSetStatus.FAILED, YamlChangeSetStatus.COMPLETED, YamlChangeSetStatus.SKIPPED);
   public static final List<YamlChangeSetStatus> runningStatusList = ImmutableList.of(YamlChangeSetStatus.RUNNING);
 
   private static final AtomicLong lastTimestampForStuckJobCheck = new AtomicLong(0);
   private static final AtomicLong lastTimestampForStatusLogPrint = new AtomicLong(0);
+  private static final AtomicLong lastTimestampForQueuedJobCheck = new AtomicLong(0);
 
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private GitChangeSetRunnableHelper gitChangeSetRunnableHelper;
@@ -72,6 +75,7 @@ public class GitChangeSetRunnable implements Runnable {
       }
 
       handleStuckChangeSets();
+      handleChangeSetWithMaxRetry();
 
       final List<YamlChangeSetDTO> yamlChangeSets = getYamlChangeSetsToProcess();
 
@@ -261,5 +265,24 @@ public class GitChangeSetRunnable implements Runnable {
   @VisibleForTesting
   int getMaxRunningChangesetsForAccount() {
     return MAX_RUNNING_CHANGESETS_FOR_ACCOUNT;
+  }
+
+  private void handleChangeSetWithMaxRetry() {
+    if (shouldPerformMaxRetriedJobCheck()) {
+      log.info("handling max retried queued change sets");
+      lastTimestampForQueuedJobCheck.set(System.currentTimeMillis());
+      skipChangeSetsWithMaxRetries();
+      log.info("Successfully handled max retried stuck queued change sets");
+    }
+  }
+
+  private void skipChangeSetsWithMaxRetries() {
+    yamlChangeSetService.markQueuedYamlChangeSetsWithMaxRetriesAsSkipped(MAX_RETRY_FOR_CHANGESET);
+  }
+
+  boolean shouldPerformMaxRetriedJobCheck() {
+    return lastTimestampForQueuedJobCheck.get() == 0
+        || (System.currentTimeMillis() - lastTimestampForQueuedJobCheck.get()
+            > TimeUnit.MINUTES.toMillis(MAX_RETRIED_QUEUED_JOB_CHECK_INTERVAL));
   }
 }

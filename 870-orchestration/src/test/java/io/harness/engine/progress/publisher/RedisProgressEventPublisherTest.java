@@ -21,9 +21,9 @@ import io.harness.pms.contracts.execution.TaskExecutableResponse;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.progress.ProgressEvent;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.events.base.PmsEventCategory;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
@@ -65,8 +65,8 @@ public class RedisProgressEventPublisherTest extends OrchestrationTestBase {
             .mode(ExecutionMode.ASYNC)
             .node(PlanNodeProto.newBuilder()
                       .setUuid(generateUuid())
-                      .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                      .setStepParameters(RecastOrchestrationUtils.toDocumentJson(sectionStepParams))
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .setStepParameters(RecastOrchestrationUtils.toJson(sectionStepParams))
                       .setServiceName("DUMMY")
                       .build())
             .executableResponse(ExecutableResponse.newBuilder()
@@ -91,7 +91,7 @@ public class RedisProgressEventPublisherTest extends OrchestrationTestBase {
                                       .build();
 
     verify(eventSender)
-        .sendEvent(progressEvent.toByteString(), PmsEventCategory.PROGRESS_EVENT,
-            nodeExecution.getNode().getServiceName(), AmbianceUtils.getAccountId(nodeExecution.getAmbiance()), false);
+        .sendEvent(nodeExecution.getAmbiance(), progressEvent.toByteString(), PmsEventCategory.PROGRESS_EVENT,
+            nodeExecution.getNode().getServiceName(), false);
   }
 }

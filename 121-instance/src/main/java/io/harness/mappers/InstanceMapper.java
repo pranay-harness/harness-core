@@ -5,6 +5,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.dtos.InstanceDTO;
 import io.harness.entities.instance.Instance;
 
+import java.util.ArrayList;
+import java.util.List;
 import lombok.experimental.UtilityClass;
 
 @OwnedBy(HarnessTeam.DX)
@@ -35,6 +37,12 @@ public class InstanceMapper {
         .isDeleted(instance.isDeleted())
         .lastModifiedAt(instance.getLastModifiedAt())
         .build();
+  }
+
+  public List<InstanceDTO> toDTO(List<Instance> instances) {
+    List<InstanceDTO> instanceDTOList = new ArrayList<>();
+    instances.forEach(instance -> instanceDTOList.add(toDTO(instance)));
+    return instanceDTOList;
   }
 
   public Instance toEntity(InstanceDTO instanceDTO) {

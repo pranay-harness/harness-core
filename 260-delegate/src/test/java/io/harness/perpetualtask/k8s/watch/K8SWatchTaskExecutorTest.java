@@ -150,7 +150,7 @@ public class K8SWatchTaskExecutorTest extends DelegateTestBase {
                             .build()))
                     .build()))));
 
-    stubFor(get(urlPathEqualTo("/api/v1/nodes"))
+    stubFor(get(urlMatching("/api/v1/nodes.*"))
                 .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(getNodeList()))));
     stubFor(get(urlPathEqualTo("/api/v1/pods"))
                 .willReturn(aResponse().withStatus(200).withBody(new Gson().toJson(getPodList()))));

@@ -68,7 +68,7 @@ public class SecretUtils {
     }
 
     if (secretRefData == null && secretVariable.getDefaultValue() != null) {
-      secretIdentifier = secretVariable.getDefaultValue();
+      secretIdentifier = secretVariable.getDefaultValue().getIdentifier();
     }
 
     if (secretIdentifier == null || secretRefData == null) {
@@ -101,7 +101,7 @@ public class SecretUtils {
     }
 
     if (secretRefData == null && secretVariable.getDefaultValue() != null) {
-      secretIdentifier = secretVariable.getDefaultValue();
+      secretIdentifier = secretVariable.getDefaultValue().getIdentifier();
     }
 
     if (secretIdentifier == null || secretRefData == null) {

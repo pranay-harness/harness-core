@@ -18,7 +18,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.datahandler.services.AdminAccountService;
 import io.harness.datahandler.services.AdminUserService;
-import io.harness.licensing.remote.admin.AdminLicenseHttpClient;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 
@@ -40,13 +39,10 @@ public class AdminAccountResourceTest extends CategoryTest {
 
   private static AdminAccountService adminAccountService = mock(AdminAccountService.class);
   private static AdminUserService adminUserService = mock(AdminUserService.class);
-  private static AdminLicenseHttpClient adminLicenseHttpClient = mock(AdminLicenseHttpClient.class);
 
   @ClassRule
   public static ResourceTestRule RESOURCES =
-      ResourceTestRule.builder()
-          .instance(new AdminAccountResource(adminAccountService, adminUserService, adminLicenseHttpClient))
-          .build();
+      ResourceTestRule.builder().instance(new AdminAccountResource(adminAccountService, adminUserService)).build();
 
   @Before
   public void setUp() {

@@ -12,16 +12,8 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.helper.EncryptionHelper;
 import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.connector.services.ConnectorService;
-import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
-import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubApiAccessType;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
-import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
-import io.harness.encryption.SecretRefData;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.InvalidRequestException;
@@ -36,6 +28,7 @@ import io.harness.gitsync.common.beans.GitSyncDirection;
 import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.beans.InfoForGitPush.InfoForGitPushBuilder;
 import io.harness.gitsync.common.dtos.GitSyncEntityDTO;
+import io.harness.gitsync.common.helper.UserProfileHelper;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitBranchSyncService;
 import io.harness.gitsync.common.service.GitEntityService;
@@ -50,9 +43,6 @@ import io.harness.gitsync.scm.ScmGitUtils;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
-import io.harness.ng.userprofile.commons.GithubSCMDTO;
-import io.harness.ng.userprofile.commons.SCMType;
-import io.harness.ng.userprofile.commons.SourceCodeManagerDTO;
 import io.harness.ng.userprofile.services.api.SourceCodeManagerService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.DecryptGitApiAccessHelper;
@@ -83,6 +73,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   private final ScmOrchestratorService scmOrchestratorService;
   private final GitBranchSyncService gitBranchSyncService;
   private final GitCommitService gitCommitService;
+  private final UserProfileHelper userProfileHelper;
 
   @Inject
   public HarnessToGitHelperServiceImpl(@Named("connectorDecoratorService") ConnectorService connectorService,
@@ -90,7 +81,8 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
       YamlGitConfigService yamlGitConfigService, EntityDetailProtoToRestMapper entityDetailRestToProtoMapper,
       ExecutorService executorService, GitBranchService gitBranchService, EncryptionHelper encryptionHelper,
       SourceCodeManagerService sourceCodeManagerService, ScmOrchestratorService scmOrchestratorService,
-      GitBranchSyncService gitBranchSyncService, GitCommitService gitCommitService) {
+      GitBranchSyncService gitBranchSyncService, GitCommitService gitCommitService,
+      UserProfileHelper userProfileHelper) {
     this.connectorService = connectorService;
     this.decryptScmApiAccess = decryptScmApiAccess;
     this.gitEntityService = gitEntityService;
@@ -103,6 +95,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     this.scmOrchestratorService = scmOrchestratorService;
     this.gitBranchSyncService = gitBranchSyncService;
     this.gitCommitService = gitCommitService;
+    this.userProfileHelper = userProfileHelper;
   }
 
   @Override
@@ -189,7 +182,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
       throw new InvalidRequestException("Connector doesn't exist.");
     }
     final ConnectorResponseDTO connector = connectorResponseDTO.get();
-    setConnectorDetailsFromUserProfile(yamlGitConfig, userPrincipal, connector);
+    userProfileHelper.setConnectorDetailsFromUserProfile(yamlGitConfig, userPrincipal, connector);
     setRepoUrlInConnector(yamlGitConfig, connector);
     return Optional.of(connector);
   }
@@ -197,37 +190,6 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   private void setRepoUrlInConnector(YamlGitConfigDTO yamlGitConfig, ConnectorResponseDTO connector) {
     final ScmConnector connectorConfigDTO = (ScmConnector) connector.getConnector().getConnectorConfig();
     connectorConfigDTO.setUrl(yamlGitConfig.getRepo());
-  }
-
-  private void setConnectorDetailsFromUserProfile(
-      YamlGitConfigDTO yamlGitConfig, UserPrincipal userPrincipal, ConnectorResponseDTO connector) {
-    if (connector.getConnector().getConnectorType() != ConnectorType.GITHUB) {
-      throw new InvalidRequestException("Git Sync only supported for github connector");
-    }
-    final GithubConnectorDTO githubConnectorDTO = (GithubConnectorDTO) connector.getConnector().getConnectorConfig();
-    githubConnectorDTO.setUrl(yamlGitConfig.getRepo());
-    final List<SourceCodeManagerDTO> sourceCodeManager =
-        sourceCodeManagerService.get(userPrincipal.getUserId().getValue());
-    final Optional<SourceCodeManagerDTO> sourceCodeManagerDTO =
-        sourceCodeManager.stream().filter(scm -> scm.getType().equals(SCMType.GITHUB)).findFirst();
-    if (!sourceCodeManagerDTO.isPresent()) {
-      throw new InvalidRequestException("User profile doesn't contain github scm details");
-    }
-    final GithubSCMDTO githubUserProfile = (GithubSCMDTO) sourceCodeManagerDTO.get();
-    final SecretRefData tokenRef;
-    try {
-      tokenRef =
-          ((GithubUsernameTokenDTO) ((GithubHttpCredentialsDTO) githubUserProfile.getAuthentication().getCredentials())
-                  .getHttpCredentialsSpec())
-              .getTokenRef();
-    } catch (Exception e) {
-      throw new InvalidRequestException(
-          "User Profile should contain github username token credentials for git sync", e);
-    }
-    githubConnectorDTO.setApiAccess(GithubApiAccessDTO.builder()
-                                        .type(GithubApiAccessType.TOKEN)
-                                        .spec(GithubTokenSpecDTO.builder().tokenRef(tokenRef).build())
-                                        .build());
   }
 
   @Override

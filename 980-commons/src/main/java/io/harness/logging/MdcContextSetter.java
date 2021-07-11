@@ -6,7 +6,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
 import java.util.Map;
-import org.jboss.logging.MDC;
+import org.slf4j.MDC;
 
 @OwnedBy(HarnessTeam.DX)
 public class MdcContextSetter implements AutoCloseable {

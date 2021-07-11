@@ -431,19 +431,59 @@ func (tdb *TimeScaleDb) GetTestSuites(
 // WriteSelectedTests write selected test information corresponding to a PR to the database.
 // If an entry already exists, it adds the counts to the existing row.
 func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, accountID, orgId, projectId, pipelineId,
-	buildId, stageId, stepId string, s types.SelectTestsResp, upsert bool) error {
+	buildId, stageId, stepId string, s types.SelectTestsResp, timeMs int64, upsert bool) error {
 	entries := 12
 	valueArgs := make([]interface{}, 0, entries)
 	var stmt string
 	if upsert == true {
+		// Upsert time_taken_ms and time_saved_ms
+		/*
+			Calculation of time_saved:
+				Get list of 10000 runs for the same step_id over previous builds where num_selected != 0 and time_taken_ms != 0
+				If there are none, set time_saved = 0
+				Calculate average time / test
+				time_saved = (Total tests skipped) * (Average time per test)
+				if time_saved < 0
+					time_saved = 0
+		*/
+		overview, err := tdb.GetSelectionOverview(ctx, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId)
+		if err != nil {
+			return err
+		}
+		fmt.Println("overview: ", overview)
+		query := fmt.Sprintf(
+			`
+				SELECT AVG(time_taken_ms/test_selected) FROM (SELECT test_selected, time_taken_ms FROM %s
+				WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND stage_id = $5 AND step_id = $6 AND time_taken_ms != 0 AND test_selected != 0 LIMIT 10000)
+				AS avg`, tdb.SelectionTable)
+		rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, stageId, stepId)
+		if err != nil {
+			return rows.Err()
+		}
+		defer rows.Close()
+		avg := 500 // default value of 500ms
+		for rows.Next() {
+			var zdur zero.Float
+			err = rows.Scan(&zdur)
+			if err != nil {
+				tdb.Log.Errorw("could not get average test time", zap.Error(err))
+				break
+			}
+			if zdur.ValueOrZero() != 0 {
+				avg = int(zdur.ValueOrZero())
+			}
+			break
+		}
+
+		timeSavedMs := overview.Skipped * avg
 		stmt = fmt.Sprintf(
 			`
 					UPDATE %s
 					SET test_count = test_count + $1, test_selected = test_selected + $2,
-					source_code_test = source_code_test + $3, new_test = new_test + $4, updated_test = updated_test + $5
-					WHERE account_id = $6 AND org_id = $7 AND project_id = $8 AND pipeline_id = $9 AND build_id = $10 AND step_id = $11 AND stage_id = $12
+					source_code_test = source_code_test + $3, new_test = new_test + $4, updated_test = updated_test + $5, time_taken_ms = $6, time_saved_ms = $7
+					WHERE account_id = $8 AND org_id = $9 AND project_id = $10 AND pipeline_id = $11 AND build_id = $12 AND step_id = $13 AND stage_id = $14
 					`, tdb.SelectionTable)
-		valueArgs = append(valueArgs, s.TotalTests, s.SelectedTests, s.SrcCodeTests, s.NewTests, s.UpdatedTests,
+		valueArgs = append(valueArgs, s.TotalTests, s.SelectedTests, s.SrcCodeTests, s.NewTests, s.UpdatedTests, timeMs, timeSavedMs,
 			accountID, orgId, projectId, pipelineId, buildId, stepId, stageId)
 	} else {
 		stmt = fmt.Sprintf(
@@ -467,10 +507,10 @@ func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, accountID, orgId
 // GetSelectionOverview provides high level stats for test selection
 func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, accountID, orgId, projectId, pipelineId,
 	buildId, stepId, stageId string) (types.SelectionOverview, error) {
-	var ztotal, zsrc, znew, zupd zero.Int
+	var ztotal, zsrc, znew, zupd, ztt, zts zero.Int
 	query := fmt.Sprintf(
 		`
-		SELECT test_count, source_code_test, new_test, updated_test
+		SELECT test_count, source_code_test, new_test, updated_test, time_taken_ms, time_saved_ms
 		FROM %s
 		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND step_id = $6 AND stage_id = $7`, tdb.SelectionTable)
 	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId)
@@ -480,12 +520,14 @@ func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, accountID, org
 	}
 	res := types.SelectionOverview{}
 	for rows.Next() {
-		err = rows.Scan(&ztotal, &zsrc, &znew, &zupd)
+		err = rows.Scan(&ztotal, &zsrc, &znew, &zupd, &ztt, &zts)
 		if err != nil {
 			tdb.Log.Errorw("could not read overview response from db", zap.Error(err))
 			return types.SelectionOverview{}, err
 		}
 		res.Total = int(ztotal.ValueOrZero())
+		res.TimeSavedMs = int(zts.ValueOrZero())
+		res.TimeTakenMs = int(ztt.ValueOrZero())
 		res.Selected.New = int(znew.ValueOrZero())
 		res.Selected.Upd = int(zupd.ValueOrZero())
 		res.Selected.Src = int(zsrc.ValueOrZero())
@@ -497,32 +539,6 @@ func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, accountID, org
 	}
 	defer rows.Close()
 
-	// Get total time saved
-	// Get average over last 50k tests which were run in this pipeline
-	query = fmt.Sprintf(
-		`
-		SELECT AVG(duration_ms) FROM (SELECT duration_ms from %s
-		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 LIMIT 50000)
-		AS sub`, tdb.EvalTable)
-	rows, err = tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId)
-	if err != nil {
-		return res, rows.Err()
-	}
-	defer rows.Close()
-	avg := 500 // default value of 500ms
-	for rows.Next() {
-		var zdur zero.Float
-		err = rows.Scan(&zdur)
-		if err != nil {
-			tdb.Log.Errorw("could not get average test time", zap.Error(err))
-			break
-		}
-		if zdur.ValueOrZero() != 0 {
-			avg = int(zdur.ValueOrZero())
-		}
-		break
-	}
-	res.TimeSavedMs = res.Skipped * avg
 	return res, nil
 }
 

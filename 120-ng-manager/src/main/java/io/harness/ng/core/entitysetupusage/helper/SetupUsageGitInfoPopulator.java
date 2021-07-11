@@ -56,7 +56,7 @@ public class SetupUsageGitInfoPopulator {
     Boolean isDefault = checkWhetherIsDefaultBranch(referredByEntityRef.getAccountIdentifier(),
         referredByEntityRef.getOrgIdentifier(), referredByEntityRef.getProjectIdentifier(), repoIdentifier, branch);
     List<EntityDetail> referredEntities =
-        setupUsages.stream().map(EntitySetupUsage::getReferredEntity).collect(toList());
+        setupUsages.stream().map(EntitySetupUsage::getReferredEntity).filter(Objects::nonNull).collect(toList());
     populateRepoBranchInReferredByEntity(referredByEntity, repoIdentifier, branch, isDefault);
     populateRepoBranchInReferredEntities(referredEntities, repoIdentifier, branch, isDefault);
   }

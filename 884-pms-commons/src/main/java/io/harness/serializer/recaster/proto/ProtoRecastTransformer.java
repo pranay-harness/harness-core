@@ -10,8 +10,8 @@ import io.harness.utils.RecastReflectionUtils;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
+import java.util.Map;
 import lombok.SneakyThrows;
-import org.bson.Document;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class ProtoRecastTransformer extends RecastTransformer implements CustomValueTransformer {
@@ -22,7 +22,7 @@ public class ProtoRecastTransformer extends RecastTransformer implements CustomV
       return null;
     }
 
-    Object decodedObject = RecastOrchestrationUtils.getEncodedValue((Document) fromObject);
+    Object decodedObject = RecastOrchestrationUtils.getEncodedValue((Map<String, Object>) fromObject);
 
     if (decodedObject == null) {
       return null;

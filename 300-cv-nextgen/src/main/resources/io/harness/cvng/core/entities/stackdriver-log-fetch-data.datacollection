@@ -19,7 +19,7 @@ Var projects = []
 Var:projects.append(Env:project)
 Var:body.put("projectIds", Var:projects)
 Var:body.put("filter", Var:queryFilter)
-Var:body.put("pageSize", "10000")
+Var:body.put("pageSize", "1000")
 Var:body.put("orderBy", "timestamp desc")
 
 Var url = concat(Env:baseUrl, "entries:list")

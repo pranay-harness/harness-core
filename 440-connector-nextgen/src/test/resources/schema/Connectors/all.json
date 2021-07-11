@@ -483,12 +483,22 @@
         },
         {
           "type": "object",
+          "required": [
+            "kmsArn"
+          ],
           "properties": {
             "credential": {
               "$ref": "#/definitions/AwsKmsConnectorCredential"
             },
             "default": {
               "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "kmsArn": {
               "type": "string"
@@ -637,6 +647,7 @@
           "type": "object",
           "required": [
             "clientId",
+            "secretKey",
             "subscription",
             "tenantId",
             "vaultName"
@@ -654,6 +665,13 @@
             },
             "default": {
               "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "secretKey": {
               "type": "string"
@@ -1934,15 +1952,22 @@
         },
         {
           "type": "object",
+          "required": [
+            "credentials"
+          ],
           "properties": {
             "credentials": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "type": "string"
             },
             "default": {
               "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "keyName": {
               "type": "string"
@@ -3557,6 +3582,13 @@
             },
             "default": {
               "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "readOnly": {
               "type": "boolean"
