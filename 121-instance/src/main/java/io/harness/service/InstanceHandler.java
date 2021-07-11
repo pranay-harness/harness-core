@@ -109,7 +109,9 @@ public abstract class InstanceHandler<T extends InstanceHandlerKey, U extends In
     validateAndReturnDeploymentInfo(deploymentSummary);
 
     // Infrastructure mapping is already present in deployment summary
-    U infrastructureMapping = validateAndReturnInfrastructureMapping(deploymentSummary.getInfrastructureMapping());
+    U infrastructureMapping = null;
+    //    U infrastructureMapping =
+    //    validateAndReturnInfrastructureMapping(deploymentSummary.getInfrastructureMapping());
 
     syncInstancesInternal(
         infrastructureMapping, deploymentSummary, rollbackInfo, null, InstanceSyncFlowType.NEW_DEPLOYMENT);

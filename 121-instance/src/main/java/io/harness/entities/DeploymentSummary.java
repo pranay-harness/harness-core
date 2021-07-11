@@ -3,7 +3,6 @@ package io.harness.entities;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.entities.deploymentinfo.DeploymentInfo;
-import io.harness.entities.infrastructureMapping.InfrastructureMapping;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;
@@ -47,15 +46,12 @@ public class DeploymentSummary implements PersistentEntity {
   private String projectIdentifier;
   private String pipelineExecutionId;
   private String pipelineExecutionName;
-  private String artifactId;
-  private String artifactName;
-  private String artifactBuildNum;
+  private ArtifactDetails artifactDetails;
   private String deployedById;
   private String deployedByName;
   private String infrastructureMappingId;
-  private InfrastructureMapping infrastructureMapping;
   private long deployedAt;
   private DeploymentInfo deploymentInfo;
-  @CreatedDate Long createdAt;
-  @LastModifiedDate Long lastModifiedAt;
+  @CreatedDate long createdAt;
+  @LastModifiedDate long lastModifiedAt;
 }
