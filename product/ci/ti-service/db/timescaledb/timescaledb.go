@@ -446,11 +446,12 @@ func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, accountID, orgId
 				if time_saved < 0
 					time_saved = 0
 		*/
+		tdb.Log.Infow("debug", "location", "getting selection overview", "time", time.Now())
 		overview, err := tdb.GetSelectionOverview(ctx, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId)
+		tdb.Log.Infow("debug", "location", "got selection overview", "time", time.Now())
 		if err != nil {
 			return err
 		}
-		fmt.Println("overview: ", overview)
 		query := fmt.Sprintf(
 			`
 				SELECT AVG(time_taken_ms/test_selected) FROM (SELECT test_selected, time_taken_ms FROM %s
@@ -513,7 +514,9 @@ func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, accountID, org
 		SELECT test_count, source_code_test, new_test, updated_test, time_taken_ms, time_saved_ms
 		FROM %s
 		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND step_id = $6 AND stage_id = $7`, tdb.SelectionTable)
+	tdb.Log.Infow("debug", "location", "before query context", "time", time.Now())
 	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId)
+	tdb.Log.Infow("debug", "location", "after query context", "time", time.Now())
 	if err != nil {
 		tdb.Log.Errorw("could not query database for selection overview", zap.Error(err))
 		return types.SelectionOverview{}, err

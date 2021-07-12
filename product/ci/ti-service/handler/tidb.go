@@ -213,6 +213,7 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 		stageId := r.FormValue(stageIdParam)
 		stepId := r.FormValue(stepIdParam)
 		timeMsStr := r.FormValue(timeMsParam)
+		log.Infow("debug", "pos", "L216", "time", time.Now(), "acc", acc, "org", org, "proj", proj, "build", buildId, "stage", stageId, "step", stepId, "timeMsStr", timeMsStr)
 		timeMs, err := strconv.ParseInt(timeMsStr, 10, 64)
 		if err != nil {
 			log.Errorw("could not parse time taken", zap.Error(err))
@@ -228,6 +229,8 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			log.Errorw("could not unmarshal request body")
 			WriteBadRequest(w, err)
 		}
+		log.Infow("debug", "pos", "L232", "time", time.Now(), "acc", acc, "org", org, "proj", proj, "build", buildId, "stage", stageId, "step", stepId, "timeMsStr", timeMsStr)
+
 		cgSer, err := avro.NewCgphSerialzer(cgSchemaPath)
 		if err != nil {
 			log.Errorw("failed to create callgraph serializer instance", accountIDParam, acc,
@@ -235,6 +238,8 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			WriteBadRequest(w, err)
 			return
 		}
+		log.Infow("debug", "pos", "L241", "time", time.Now(), "acc", acc, "org", org, "proj", proj, "build", buildId, "stage", stageId, "step", stepId, "timeMsStr", timeMsStr)
+
 		cgString, err := cgSer.Deserialize(data)
 		if err != nil {
 			log.Errorw("failed to deserialize callgraph", accountIDParam, acc, repoParam, info.Repo,
@@ -242,6 +247,8 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			WriteBadRequest(w, err)
 			return
 		}
+		log.Infow("debug", "pos", "L250", "time", time.Now(), "acc", acc, "org", org, "proj", proj, "build", buildId, "stage", stageId, "step", stepId, "timeMsStr", timeMsStr)
+
 		cg, err := ti.FromStringMap(cgString.(map[string]interface{}))
 		if err != nil {
 			log.Errorw("failed to construct callgraph object from interface object",
@@ -251,9 +258,14 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 		}
 		log.Infow(fmt.Sprintf("received %d nodes and %d relations", len(cg.Nodes), len(cg.Relations)),
 			accountIDParam, acc, repoParam, info.Repo, sourceBranchParam, info.Branch, targetBranchParam, target)
+		log.Infow("debug", "pos", "L261", "time", "location", "before_upload_partial_cg", time.Now())
+		st := time.Now()
 		resp, err := tidb.UploadPartialCg(r.Context(), cg, info, acc, org, proj, target)
+		log.Infow("debug", "pos", "L263","location", "after_upload_partial_cg", "time", time.Now(), "time_taken", time.Since(st).String())
 		// Try to update counts even if uploading partial CG failed
+		st2 := time.Now()
 		werr := db.WriteSelectedTests(r.Context(), acc, org, proj, pipelineId, buildId, stageId, stepId, resp, timeMs, true)
+		log.Infow("debug", "pos", "266","location", "after_writing_selected_tests", "time", time.Now(), "time_taken", time.Since(st2).String())
 		if err != nil {
 			log.Errorw("failed to write callgraph to db", accountIDParam, acc, repoParam, info.Repo,
 				sourceBranchParam, info.Branch, zap.Error(err))
