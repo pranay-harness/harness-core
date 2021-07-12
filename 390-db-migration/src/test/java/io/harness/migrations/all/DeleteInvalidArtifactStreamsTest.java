@@ -45,7 +45,7 @@ public class DeleteInvalidArtifactStreamsTest extends WingsBaseTest {
     wingsPersistence.save(artifactStreams);
     deleteInvalidArtifactStreamMigration.migrate();
     Service service1 = wingsPersistence.get(Service.class, service.getUuid());
-    assertThat(service1.getArtifactStreamIds().equals(artifactStreamIds));
+    assertThat(service1.getArtifactStreamIds().equals(artifactStreamIds)).isTrue();
   }
 
   @Test
@@ -62,6 +62,6 @@ public class DeleteInvalidArtifactStreamsTest extends WingsBaseTest {
     deleteInvalidArtifactStreamMigration.migrate();
     Service service1 = wingsPersistence.get(Service.class, service.getUuid());
     List<String> requiredArtifacts = new ArrayList<>(Arrays.asList("id2"));
-    assertThat(service1.getArtifactStreamIds().equals(requiredArtifacts));
+    assertThat(service1.getArtifactStreamIds().equals(requiredArtifacts)).isTrue();
   }
 }
