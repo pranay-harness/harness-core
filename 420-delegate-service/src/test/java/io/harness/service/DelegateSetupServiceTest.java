@@ -547,6 +547,93 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     assertThat(delegateGroupDetails.getDelegateInsightsDetails().getInsights()).hasSize(2);
   }
 
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testUpdateDelegateGroupShouldModifyTags() {
+    String accountId = generateUuid();
+
+    DelegateGroup delegateGroup1 = DelegateGroup.builder()
+                                       .name("grp1")
+                                       .accountId(accountId)
+                                       .ng(true)
+                                       .delegateType(KUBERNETES)
+                                       .description("description")
+                                       .tags(ImmutableSet.of("custom-grp-tag"))
+                                       .build();
+    persistence.save(delegateGroup1);
+
+    // Test with populated tags list
+    DelegateGroupDetails delegateGroupDetails =
+        delegateSetupService.updateDelegateGroup(accountId, delegateGroup1.getUuid(),
+            DelegateGroupDetails.builder().groupCustomSelectors(ImmutableSet.of("tag1", "tag2")).build());
+
+    assertThat(delegateGroupDetails).isNotNull();
+    assertThat(delegateGroupDetails.getGroupCustomSelectors().contains("custom-grp-tag")).isFalse();
+    assertThat(delegateGroupDetails.getGroupCustomSelectors().contains("tag1")).isTrue();
+    assertThat(delegateGroupDetails.getGroupCustomSelectors().contains("tag2")).isTrue();
+
+    // Test with empty tags list
+    delegateGroupDetails = delegateSetupService.updateDelegateGroup(accountId, delegateGroup1.getUuid(),
+        DelegateGroupDetails.builder().groupCustomSelectors(Collections.emptySet()).build());
+
+    assertThat(delegateGroupDetails).isNotNull();
+    assertThat(delegateGroupDetails.getGroupCustomSelectors()).isNull();
+
+    // Test with null tags list
+    delegateGroupDetails = delegateSetupService.updateDelegateGroup(
+        accountId, delegateGroup1.getUuid(), DelegateGroupDetails.builder().build());
+
+    assertThat(delegateGroupDetails).isNotNull();
+    assertThat(delegateGroupDetails.getGroupCustomSelectors()).isNull();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testUpdateDelegateGroupDetailsByIdentifierShouldModifyTags() {
+    String accountId = generateUuid();
+    String orgId = generateUuid();
+    String projectId = generateUuid();
+    String identifier = generateUuid();
+    DelegateEntityOwner owner = DelegateEntityOwner.builder().identifier(orgId + "/" + projectId).build();
+
+    DelegateGroup delegateGroup1 = DelegateGroup.builder()
+                                       .name("grp1")
+                                       .identifier(identifier)
+                                       .accountId(accountId)
+                                       .owner(owner)
+                                       .ng(true)
+                                       .delegateType(KUBERNETES)
+                                       .description("description")
+                                       .tags(ImmutableSet.of("custom-grp-tag"))
+                                       .build();
+    persistence.save(delegateGroup1);
+
+    // Test with empty tags list
+    DelegateGroupDetails delegateGroupDetails = delegateSetupService.updateDelegateGroup(accountId,
+        delegateGroup1.getUuid(), DelegateGroupDetails.builder().groupCustomSelectors(Collections.emptySet()).build());
+
+    assertThat(delegateGroupDetails).isNotNull();
+    assertThat(delegateGroupDetails.getGroupCustomSelectors()).isNull();
+
+    // Test with populated tags list
+    delegateGroupDetails = delegateSetupService.updateDelegateGroup(accountId, orgId, projectId, identifier,
+        DelegateGroupDetails.builder().groupCustomSelectors(ImmutableSet.of("tag1", "tag2")).build());
+
+    assertThat(delegateGroupDetails).isNotNull();
+    assertThat(delegateGroupDetails.getGroupCustomSelectors().contains("custom-grp-tag")).isFalse();
+    assertThat(delegateGroupDetails.getGroupCustomSelectors().contains("tag1")).isTrue();
+    assertThat(delegateGroupDetails.getGroupCustomSelectors().contains("tag2")).isTrue();
+
+    // Test with null tags list
+    delegateGroupDetails = delegateSetupService.updateDelegateGroup(
+        accountId, delegateGroup1.getUuid(), DelegateGroupDetails.builder().build());
+
+    assertThat(delegateGroupDetails).isNotNull();
+    assertThat(delegateGroupDetails.getGroupCustomSelectors()).isNull();
+  }
+
   private DelegateBuilder createDelegateBuilder() {
     return Delegate.builder()
         .ip("127.0.0.1")
