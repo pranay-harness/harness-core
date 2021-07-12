@@ -6,6 +6,7 @@ import io.harness.dtos.deploymentinfo.DeploymentInfoDTO;
 import io.harness.dtos.infrastructuremapping.InfrastructureMappingDTO;
 import io.harness.entities.ArtifactDetails;
 
+import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Value;
 
@@ -24,8 +25,8 @@ public class DeploymentSummaryDTO {
   String deployedById;
   String deployedByName;
   String infrastructureMappingId;
-  InfrastructureMappingDTO infrastructureMapping;
-  DeploymentInfoDTO deploymentInfo;
+  @Nullable InfrastructureMappingDTO infrastructureMapping;
+  DeploymentInfoDTO deploymentInfoDTO;
   long deployedAt;
   long createdAt;
   long lastModifiedAt;
