@@ -1,5 +1,6 @@
 package io.harness.k8s.manifest;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static io.harness.k8s.manifest.ManifestHelper.MAX_VALUES_EXPRESSION_RECURSION_DEPTH;
 import static io.harness.k8s.manifest.ManifestHelper.getMapFromValuesFileContent;
@@ -18,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
@@ -43,6 +45,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
+@OwnedBy(CDP)
 public class ManifestHelperTest extends CategoryTest {
   @Before
   public void setup() {
@@ -502,7 +505,7 @@ public class ManifestHelperTest extends CategoryTest {
                                         .resourceId(KubernetesResourceId.builder().kind(Kind.Deployment.name()).build())
                                         .build();
 
-    List<KubernetesResource> kubernetesResources = ManifestHelper.getWorkloadsForCanaryAndBG(asList(deployment));
+    List<KubernetesResource> kubernetesResources = ManifestHelper.getWorkloadsForCanary(asList(deployment));
     assertThat(kubernetesResources.size()).isEqualTo(1);
     assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
 
@@ -511,7 +514,7 @@ public class ManifestHelperTest extends CategoryTest {
             .resourceId(KubernetesResourceId.builder().kind(Kind.DeploymentConfig.name()).build())
             .build();
 
-    kubernetesResources = ManifestHelper.getWorkloadsForCanaryAndBG(asList(deployment, deploymentConfig));
+    kubernetesResources = ManifestHelper.getWorkloadsForCanary(asList(deployment, deploymentConfig));
     assertThat(kubernetesResources.size()).isEqualTo(2);
     assertThat(kubernetesResources.containsAll(ImmutableList.of(deployment, deploymentConfig))).isTrue();
 
@@ -520,7 +523,7 @@ public class ManifestHelperTest extends CategoryTest {
             .resourceId(KubernetesResourceId.builder().kind(Kind.StatefulSet.name()).build())
             .build();
 
-    kubernetesResources = ManifestHelper.getWorkloadsForCanaryAndBG(asList(deployment, statefulSet));
+    kubernetesResources = ManifestHelper.getWorkloadsForCanary(asList(deployment, statefulSet));
     assertThat(kubernetesResources.size()).isEqualTo(1);
     assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
 
@@ -528,7 +531,7 @@ public class ManifestHelperTest extends CategoryTest {
                                        .resourceId(KubernetesResourceId.builder().kind(Kind.DaemonSet.name()).build())
                                        .build();
 
-    kubernetesResources = ManifestHelper.getWorkloadsForCanaryAndBG(asList(deployment, statefulSet, daemonSet));
+    kubernetesResources = ManifestHelper.getWorkloadsForCanary(asList(deployment, statefulSet, daemonSet));
     assertThat(kubernetesResources.size()).isEqualTo(1);
     assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
 
@@ -541,10 +544,18 @@ public class ManifestHelperTest extends CategoryTest {
         + "spec:\n"
         + "  replicas: 1");
 
-    kubernetesResources = ManifestHelper.getWorkloadsForCanaryAndBG(
-        asList(deployment, statefulSet, daemonSet, deploymentDirectApply.get(0)));
+    kubernetesResources =
+        ManifestHelper.getWorkloadsForCanary(asList(deployment, statefulSet, daemonSet, deploymentDirectApply.get(0)));
     assertThat(kubernetesResources.size()).isEqualTo(1);
     assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
+
+    kubernetesResources = ManifestHelper.getWorkloadsForCanary(asList(statefulSet));
+    assertThat(kubernetesResources.size()).isEqualTo(1);
+    assertThat(kubernetesResources.get(0)).isEqualTo(statefulSet);
+
+    kubernetesResources = ManifestHelper.getWorkloadsForCanary(asList(statefulSet, deploymentConfig));
+    assertThat(kubernetesResources.size()).isEqualTo(1);
+    assertThat(kubernetesResources.get(0)).isEqualTo(deploymentConfig);
   }
 
   @Test
