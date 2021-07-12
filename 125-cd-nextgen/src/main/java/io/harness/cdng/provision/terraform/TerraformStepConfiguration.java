@@ -20,11 +20,20 @@ public class TerraformStepConfiguration {
 
   public TerraformStepConfigurationParameters toStepParameters() {
     TerraformStepConfigurationParametersBuilder builder = TerraformStepConfigurationParameters.builder();
-    Validator.notNullCheck("Step Configuration Type is null", terraformStepConfigurationType);
+    validateParams();
     builder.type(terraformStepConfigurationType);
     if (terraformExecutionData != null) {
       builder.spec(terraformExecutionData.toStepParameters());
     }
     return builder.build();
+  }
+
+  void validateParams() {
+    Validator.notNullCheck("Step Configuration Type is null", terraformStepConfigurationType);
+
+    if (terraformStepConfigurationType == TerraformStepConfigurationType.INLINE) {
+      Validator.notNullCheck("Spec inside Configuration cannot be null", terraformExecutionData);
+      terraformExecutionData.validateParams();
+    }
   }
 }
