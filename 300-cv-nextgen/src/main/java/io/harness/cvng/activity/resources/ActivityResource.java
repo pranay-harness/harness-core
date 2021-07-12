@@ -12,7 +12,7 @@ import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.beans.activity.ActivityDTO;
-import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.cvng.core.beans.MonitoredServiceDataSourceTypeDTO;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
@@ -158,7 +158,7 @@ public class ActivityResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get datasource types for an activity", nickname = "getDatasourceTypes")
-  public RestResponse<Set<DatasourceTypeDTO>> getDatasourceTypes(
+  public RestResponse<Set<MonitoredServiceDataSourceTypeDTO>> getDatasourceTypes(
       @NotNull @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId) {
     return new RestResponse(activityService.getDataSourcetypes(accountId, activityId));
   }

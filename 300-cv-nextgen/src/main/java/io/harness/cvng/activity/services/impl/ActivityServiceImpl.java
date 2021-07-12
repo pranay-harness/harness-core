@@ -39,7 +39,7 @@ import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
-import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.cvng.core.beans.MonitoredServiceDataSourceTypeDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
@@ -675,7 +675,7 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String activityId) {
+  public Set<MonitoredServiceDataSourceTypeDTO> getDataSourcetypes(String accountId, String activityId) {
     Preconditions.checkNotNull(accountId);
     Preconditions.checkNotNull(activityId);
     return verificationJobInstanceService.getDataSourcetypes(get(activityId).getVerificationJobInstanceIds());

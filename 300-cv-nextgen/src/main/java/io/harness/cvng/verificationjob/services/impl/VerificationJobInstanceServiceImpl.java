@@ -25,10 +25,12 @@ import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.services.api.VerificationJobInstanceAnalysisService;
 import io.harness.cvng.beans.DataCollectionInfo;
+import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.cvng.core.beans.MonitoredServiceDataSourceTypeDTO;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
@@ -245,16 +247,18 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   @Override
-  public Set<DatasourceTypeDTO> getDataSourcetypes(List<String> verificationJobInstanceIds) {
+  public Set<MonitoredServiceDataSourceTypeDTO> getDataSourcetypes(List<String> verificationJobInstanceIds) {
     Preconditions.checkNotNull(verificationJobInstanceIds);
     List<VerificationJobInstance> verificationJobInstances = get(verificationJobInstanceIds);
-    Set<DatasourceTypeDTO> datasourceTypeDTOSet = new HashSet<>();
+    Set<MonitoredServiceDataSourceTypeDTO> datasourceTypeDTOSet = new HashSet<>();
     verificationJobInstances.forEach(verificationJobInstance -> {
       verificationJobInstance.getCvConfigMap().values().forEach(cvConfig -> {
-        datasourceTypeDTOSet.add(DatasourceTypeDTO.builder()
-                                     .verificationType(cvConfig.getVerificationType())
-                                     .dataSourceType(cvConfig.getType())
-                                     .build());
+        datasourceTypeDTOSet.add(
+            MonitoredServiceDataSourceTypeDTO.builder()
+                .verificationType(cvConfig.getVerificationType())
+                .dataSourceType(MonitoredServiceDataSourceType.dataSourceTypeMonitoredServiceDataSourceTypeMap.get(
+                    cvConfig.getType()))
+                .build());
       });
     });
     return datasourceTypeDTOSet;

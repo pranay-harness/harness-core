@@ -13,7 +13,7 @@ import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
-import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.cvng.core.beans.MonitoredServiceDataSourceTypeDTO;
 
 import java.time.Instant;
 import java.util.List;
@@ -58,5 +58,5 @@ public interface ActivityService {
   List<String> createVerificationJobInstancesForActivity(Activity activity);
   TransactionMetricInfoSummaryPageDTO getDeploymentActivityTimeSeriesData(String accountId, String activityId,
       boolean anomalousMetricsOnly, String hostName, String filter, int pageNumber, int pageSize);
-  Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String activityId);
+  Set<MonitoredServiceDataSourceTypeDTO> getDataSourcetypes(String accountId, String activityId);
 }
