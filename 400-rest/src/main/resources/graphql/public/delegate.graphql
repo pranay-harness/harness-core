@@ -1,0 +1,33 @@
+extend type Query {
+    # Get details about one or multiple Harness Environments.
+    delegateList(filters: [DelegateFilter], limit: Int!, offset: Int): DelegateList
+    @dataFetcher(name: delegateList)
+}
+
+type DelegateList {
+    pageInfo: PageInfo
+    nodes: [Delegate]
+}
+
+input DelegateFilter {
+    accountId: String
+    delegateType: DelegateType
+    delegateStatus: DelegateStatus
+    delegateName: String
+}
+
+enum DelegateType {
+    SHELL_SCRIPT
+    DOCKER
+    KUBERNETES
+    HELM_DELEGATE
+    ECS
+}
+
+enum DelegateStatus {
+    ENABLED
+    WAITING_FOR_APPROVAL
+    DELETED
+}
+
+

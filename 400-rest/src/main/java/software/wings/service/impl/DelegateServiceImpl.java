@@ -887,7 +887,8 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public Delegate updateApprovalStatus(String accountId, String delegateId, DelegateApproval action) {
+  public Delegate updateApprovalStatus(String accountId, String delegateId, DelegateApproval action)
+      throws InvalidRequestException {
     DelegateInstanceStatus newDelegateStatus = mapApprovalActionToDelegateStatus(action);
     Type actionEventType = mapActionToEventType(action);
 
@@ -895,6 +896,12 @@ public class DelegateServiceImpl implements DelegateService {
                                    .filter(DelegateKeys.accountId, accountId)
                                    .filter(DelegateKeys.uuid, delegateId)
                                    .get();
+    if (currentDelegate == null) {
+      throw new InvalidRequestException("Unable to fetch delegate with delegate ID " + delegateId);
+    }
+    if (currentDelegate.getStatus() != DelegateInstanceStatus.WAITING_FOR_APPROVAL) {
+      throw new InvalidRequestException("Delegate is already in state " + currentDelegate.getStatus().name());
+    }
 
     Query<Delegate> updateQuery = persistence.createQuery(Delegate.class)
                                       .filter(DelegateKeys.accountId, accountId)
@@ -2000,7 +2007,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public void delete(String accountId, String delegateId, boolean forceDelete) {
+  public void delete(String accountId, String delegateId, boolean forceDelete) throws InvalidRequestException {
     Delegate existingDelegate = persistence.createQuery(Delegate.class)
                                     .filter(DelegateKeys.accountId, accountId)
                                     .filter(DelegateKeys.uuid, delegateId)
@@ -2023,12 +2030,18 @@ public class DelegateServiceImpl implements DelegateService {
               .obfuscatedIpAddress(obfuscate(existingDelegate.getIp()))
               .hostName(existingDelegate.getHostName())
               .build());
+    } else {
+      throw new InvalidRequestException("Unable to fetch delegate with delegate id " + delegateId);
     }
 
     if (featureFlagService.isEnabled(DO_DELEGATE_PHYSICAL_DELETE, accountId) || forceDelete) {
-      persistence.delete(persistence.createQuery(Delegate.class)
-                             .filter(DelegateKeys.accountId, accountId)
-                             .filter(DelegateKeys.uuid, delegateId));
+      Query<Delegate> delegateQuery = persistence.createQuery(Delegate.class)
+                                          .filter(DelegateKeys.accountId, accountId)
+                                          .filter(DelegateKeys.uuid, delegateId);
+      boolean deleted = persistence.delete(delegateQuery);
+      if (!deleted) {
+        throw new InvalidRequestException("Unable to perform delete on delegate delegate id " + delegateId);
+      }
       log.info("Delegate: {} deleted.", delegateId);
     } else {
       Query<Delegate> updateQuery = persistence.createQuery(Delegate.class)
@@ -2041,13 +2054,15 @@ public class DelegateServiceImpl implements DelegateService {
               .set(
                   DelegateKeys.validUntil, Date.from(OffsetDateTime.now().plusDays(Delegate.TTL.toDays()).toInstant()));
 
-      persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
+      Delegate delegate = persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
+      if (delegate == null || delegate.getStatus() != DelegateInstanceStatus.DELETED) {
+        throw new InvalidRequestException("Unable to set status as deleted delegate id " + delegateId);
+      }
       log.info("Delegate: {} marked as deleted.", delegateId);
 
       broadcasterFactory.lookup(STREAM_DELEGATE + accountId, true).broadcast(SELF_DESTRUCT + delegateId);
       log.warn("Sent self destruct command to logically deleted delegate {}.", delegateId);
     }
-
     auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, existingDelegate);
     log.info("Auditing deleting of Delegate for accountId={}", accountId);
   }
@@ -2074,7 +2089,11 @@ public class DelegateServiceImpl implements DelegateService {
                                         .asList();
 
     for (Delegate delegate : groupDelegates) {
-      delete(accountId, delegate.getUuid(), forceDelete);
+      try {
+        delete(accountId, delegate.getUuid(), forceDelete);
+      } catch (InvalidRequestException exception) {
+        log.error("Unbale to delete delegate " + delegate.getUuid());
+      }
     }
     DelegateGroup delegateGroup = persistence.createQuery(DelegateGroup.class)
                                       .filter(DelegateGroupKeys.accountId, accountId)
