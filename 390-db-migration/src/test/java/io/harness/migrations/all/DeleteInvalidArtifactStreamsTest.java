@@ -41,7 +41,7 @@ public class DeleteInvalidArtifactStreamsTest extends WingsBaseTest {
     artifactStreams.add(EcrArtifactStream.builder().uuid("id4").serviceId(SERVICE_ID).build());
     artifactStreams.add(AmazonS3ArtifactStream.builder().uuid("id2").serviceId(SERVICE_ID).build());
     artifactStreams.add(DockerArtifactStream.builder().uuid("id3").serviceId(SERVICE_ID).build());
-    artifactStreams.add(EcrArtifactStream.builder().uuid("id1").serviceId(SERVICE_ID).build());
+    artifactStreams.add(SmbArtifactStream.builder().uuid("id1").serviceId(SERVICE_ID).build());
     wingsPersistence.save(artifactStreams);
     deleteInvalidArtifactStreamMigration.migrate();
     Service service1 = wingsPersistence.get(Service.class, service.getUuid());
