@@ -142,7 +142,7 @@ public class EventJobScheduler {
         account -> gcpScheduledQueryTriggerAction.execute(account.getUuid()));
   }
 
-  @Scheduled(cron = "0 0 8 * * ?")
+  @Scheduled(cron = "0 0 11 * * ?")
   public void runTimescalePurgeJob() {
     boolean masterPod = accountShardService.isMasterPod();
     if (masterPod) {
