@@ -23,6 +23,7 @@ public class PipelineCoreTimeScaleMigrationDetails implements MigrationDetails {
   public List<Pair<Integer, Class<? extends NGMigration>>> getMigrations() {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends NGMigration>>>()
         .add(Pair.of(1, UpdateTimescalePipelineExecutionSummary.class))
+        .add(Pair.of(2, UpdateTimescaleCIPipelineExecutionSummary.class))
         .build();
   }
 }
