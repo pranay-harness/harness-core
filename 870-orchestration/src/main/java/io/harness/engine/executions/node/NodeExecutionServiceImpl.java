@@ -37,10 +37,10 @@ import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent.Builder;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.interrupts.InterruptConfig;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
-import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -52,7 +52,6 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -400,7 +399,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       NodeExecution nodeExecution, OrchestrationEventType orchestrationEventType, Builder eventBuilder) {
     if (orchestrationEventType == OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE) {
       Level level = AmbianceUtils.obtainCurrentLevel(nodeExecution.getAmbiance());
-      if (level != null && Objects.equals(level.getGroup(), StepOutcomeGroup.STAGE.name())
+      if (level != null && level.getStepType().getStepCategory() == StepCategory.STAGE
           && nodeExecution.getStatus() == ABORTED) {
         List<NodeExecution> allChildrenWithStatusInAborted = findAllChildrenWithStatusIn(
             nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid(), EnumSet.of(ABORTED), false);
