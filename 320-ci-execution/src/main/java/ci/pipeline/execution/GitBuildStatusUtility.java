@@ -28,7 +28,7 @@ import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plancreator.steps.common.StageElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.ConnectorUtils;
@@ -38,7 +38,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.Map;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -64,8 +63,8 @@ public class GitBuildStatusUtility {
   @Inject @Named("ngBaseUrl") private String ngBaseUrl;
   @Inject private PipelineUtils pipelineUtils;
 
-  public boolean shouldSendStatus(String group) {
-    return Objects.equals(group, StepOutcomeGroup.STAGE.name());
+  public boolean shouldSendStatus(StepCategory stepCategory) {
+    return stepCategory == StepCategory.STAGE;
   }
 
   /**
