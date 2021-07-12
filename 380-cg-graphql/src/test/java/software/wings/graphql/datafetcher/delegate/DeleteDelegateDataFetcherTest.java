@@ -4,24 +4,23 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.JENNY;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.when;
 
 import io.harness.app.datafetcher.delegate.DeleteDelegateDataFetcher;
+import io.harness.app.schema.mutation.delegate.input.QLDeleteDelegateInput;
+import io.harness.app.schema.mutation.delegate.payload.QLDeleteDelegatePayload;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateInstanceStatus;
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.MutationContext;
-import io.harness.app.schema.mutation.delegate.QLDeleteDelegateInput;
-import io.harness.app.schema.mutation.delegate.QLDeleteDelegatePayload;
-import software.wings.security.UserPermissionInfo;
-import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.DelegateService;
 
@@ -86,9 +85,11 @@ public class DeleteDelegateDataFetcherTest extends AbstractDataFetcherTestBase {
     String delegateId = generateUuid();
     QLDeleteDelegateInput deleteDelegateInput =
         QLDeleteDelegateInput.builder().delegateId(delegateId).accountId(accountId).forceDelete(true).build();
-    QLDeleteDelegatePayload deleteDelegatePayload = deleteDelegateDataFetcher.mutateAndFetch(
-            deleteDelegateInput, MutationContext.builder().accountId(accountId).build());
-    Assert.assertTrue(deleteDelegatePayload.getMessage().equals("Unable to complete request to delete delegate"));
+    assertThatThrownBy(()
+                           -> deleteDelegateDataFetcher.mutateAndFetch(
+                               deleteDelegateInput, MutationContext.builder().accountId(accountId).build()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Unable to fetch delegate with delegate id " + delegateId);
   }
 
   @Test
@@ -119,28 +120,13 @@ public class DeleteDelegateDataFetcherTest extends AbstractDataFetcherTestBase {
     String accountId = generateUuid();
     String delegateId = generateUuid();
     QLDeleteDelegateInput deleteDelegateInput =
-            QLDeleteDelegateInput.builder().delegateId(delegateId).accountId(accountId).forceDelete(false).build();
-    QLDeleteDelegatePayload deleteDelegatePayload = deleteDelegateDataFetcher.mutateAndFetch(
-            deleteDelegateInput, MutationContext.builder().accountId(accountId).build());
-    Assert.assertTrue(deleteDelegatePayload.getMessage().equals("Unable to complete request to delete delegate"));
+        QLDeleteDelegateInput.builder().delegateId(delegateId).accountId(accountId).forceDelete(false).build();
+    assertThatThrownBy(()
+                           -> deleteDelegateDataFetcher.mutateAndFetch(
+                               deleteDelegateInput, MutationContext.builder().accountId(accountId).build()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Unable to fetch delegate with delegate id " + delegateId);
   }
-
-  @Test
-  @Category(UnitTests.class)
-  @Owner(developers = JENNY)
-  public void testPermissionDeleteDelegate() {
-    user.setUserRequestContext(
-            UserRequestContext.builder().userPermissionInfo(UserPermissionInfo.builder().build()).build());
-    //user.getUserRequestContext().getUserPermissionInfo().setAppPermissionMap(null);
-    user.getUserRequestContext().setUserPermissionInfo(null);
-    String accountId = generateUuid();
-    String delegateId = generateUuid();
-    QLDeleteDelegateInput deleteDelegateInput =
-            QLDeleteDelegateInput.builder().delegateId(delegateId).accountId(accountId).forceDelete(false).build();
-    QLDeleteDelegatePayload deleteDelegatePayload = deleteDelegateDataFetcher.mutateAndFetch(
-            deleteDelegateInput, MutationContext.builder().accountId(accountId).build());
-  }
-
 
   private Delegate.DelegateBuilder createDelegateBuilder() {
     return Delegate.builder()

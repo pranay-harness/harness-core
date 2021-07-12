@@ -1,7 +1,11 @@
 package io.harness.app.schema.type.delegate;
 
+import io.harness.annotations.dev.OwnedBy;
 import software.wings.graphql.schema.type.QLEnum;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
+@OwnedBy(DEL)
 public enum QLTaskGroup implements QLEnum {
   SCRIPT,
   HTTP,

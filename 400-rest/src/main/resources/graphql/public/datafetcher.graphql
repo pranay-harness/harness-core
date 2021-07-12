@@ -150,5 +150,7 @@ enum DataFetcherEnum {
   artifactCleanup
   delegateApproval
   deleteDelegate
-
+  delegateList
+  addDelegateScope
+  attachScopeToDelegate
 }

@@ -1,21 +1,19 @@
 package io.harness.app.datafetcher.delegate;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
 
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.TargetModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.schema.mutation.delegate.input.QLDeleteDelegateInput;
+import io.harness.app.schema.mutation.delegate.payload.QLDeleteDelegatePayload;
 import io.harness.delegate.task.DelegateLogContext;
-import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
-import io.harness.app.schema.mutation.delegate.QLDeleteDelegateInput;
-import io.harness.app.schema.mutation.delegate.QLDeleteDelegatePayload;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.DelegateService;
 
@@ -23,7 +21,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(DEL)
 public class DeleteDelegateDataFetcher extends BaseMutatorDataFetcher<QLDeleteDelegateInput, QLDeleteDelegatePayload> {
   @Inject private DelegateService delegateService;
 
@@ -34,7 +32,6 @@ public class DeleteDelegateDataFetcher extends BaseMutatorDataFetcher<QLDeleteDe
   }
 
   @Override
-  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   @AuthRule(permissionType = MANAGE_DELEGATES)
   public QLDeleteDelegatePayload mutateAndFetch(QLDeleteDelegateInput parameter, MutationContext mutationContext) {
     String accountId = parameter.getAccountId();
@@ -43,11 +40,7 @@ public class DeleteDelegateDataFetcher extends BaseMutatorDataFetcher<QLDeleteDe
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
       delegateService.delete(accountId, delegateId, forceDelete);
-    } catch (InvalidRequestException e) {
-      log.error("Unable to complete request to delete delegate", e);
-      return new QLDeleteDelegatePayload(
-          mutationContext.getAccountId(), "Unable to complete request to delete delegate");
+      return new QLDeleteDelegatePayload(mutationContext.getAccountId(), "Delegate deleted");
     }
-    return new QLDeleteDelegatePayload(mutationContext.getAccountId(), "Delegate deleted");
   }
 }

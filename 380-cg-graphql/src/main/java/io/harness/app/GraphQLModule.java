@@ -3,7 +3,10 @@ package io.harness.app;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.datafetcher.delegate.AddDelegateScopeDataFetcher;
+import io.harness.app.datafetcher.delegate.AttachScopeToDelegateDataFetcher;
 import io.harness.app.datafetcher.delegate.DelegateApprovalDataFetcher;
+import io.harness.app.datafetcher.delegate.DelegateListDataFetcher;
 import io.harness.app.datafetcher.delegate.DeleteDelegateDataFetcher;
 
 import software.wings.app.WingsGraphQLModule;
@@ -72,6 +75,9 @@ public class GraphQLModule extends AbstractModule {
   private void bindDataFetchers() {
     bindDataFetcherWithAnnotation(DelegateApprovalDataFetcher.class);
     bindDataFetcherWithAnnotation(DeleteDelegateDataFetcher.class);
+    bindDataFetcherWithAnnotation(DelegateListDataFetcher.class);
+    bindDataFetcherWithAnnotation(AddDelegateScopeDataFetcher.class);
+    bindDataFetcherWithAnnotation(AttachScopeToDelegateDataFetcher.class);
   }
 
   @NotNull

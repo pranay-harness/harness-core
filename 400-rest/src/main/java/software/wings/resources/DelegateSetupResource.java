@@ -549,12 +549,9 @@ public class DelegateSetupResource {
       @QueryParam("projectId") String projectId, @QueryParam("forceDelete") boolean forceDelete) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(DELEGATE_RESOURCE_TYPE, delegateGroupId), DELEGATE_DELETE_PERMISSION);
-
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       delegateService.deleteDelegateGroup(accountId, delegateGroupId, forceDelete);
       return new RestResponse<>();
-    } catch (IOException e){
-      throw new InvalidRequestException("");
     }
   }
 

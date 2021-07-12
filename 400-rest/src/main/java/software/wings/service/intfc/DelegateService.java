@@ -76,7 +76,7 @@ public interface DelegateService extends OwnedByAccount {
 
   Delegate updateDescription(String accountId, String delegateId, String newDescription);
 
-  Delegate updateApprovalStatus(String accountId, String delegateId, DelegateApproval action);
+  Delegate updateApprovalStatus(String accountId, String delegateId, DelegateApproval action) throws InvalidRequestException;
 
   Delegate updateScopes(@Valid Delegate delegate);
 
@@ -108,7 +108,7 @@ public interface DelegateService extends OwnedByAccount {
 
   void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain);
 
-  void deleteDelegateGroup(String accountId, String delegateGroupId, boolean forceDelete) throws IOException;
+  void deleteDelegateGroup(String accountId, String delegateGroupId, boolean forceDelete);
 
   DelegateRegisterResponse register(@Valid Delegate delegate);
 
@@ -168,4 +168,5 @@ public interface DelegateService extends OwnedByAccount {
   void regenerateCapabilityPermissions(String accountId, String delegateId);
 
   DelegateGroup upsertDelegateGroup(String name, String accountId, DelegateSetupDetails delegateSetupDetails);
+
 }

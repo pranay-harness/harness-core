@@ -1,16 +1,13 @@
-package io.harness.app.schema.mutation.delegate;
+package io.harness.app.schema.type.delegate;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateApproval;
 
 import software.wings.graphql.schema.type.QLEnum;
 
-@OwnedBy(PL)
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(DEL)
 public enum QLDelegateApproval implements QLEnum {
   ACTIVATE,
   REJECT;

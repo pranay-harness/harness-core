@@ -1,23 +1,19 @@
 package io.harness.app.datafetcher.delegate;
 
-import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
 
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.TargetModule;
+import io.harness.app.schema.mutation.delegate.input.QLAddDelegateScopeInput;
+import io.harness.app.schema.mutation.delegate.payload.QLAddDelegateScopePayload;
+import io.harness.app.schema.type.delegate.QLDelegateScope;
 import io.harness.delegate.beans.DelegateScope;
 
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
-import io.harness.app.schema.mutation.delegate.QLAddDelegateScopeInput;
-import io.harness.app.schema.mutation.delegate.QLAddDelegateScopePayload;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.DelegateScopeService;
 
-
 import com.google.inject.Inject;
 
-@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class AddDelegateScopeDataFetcher
     extends BaseMutatorDataFetcher<QLAddDelegateScopeInput, QLAddDelegateScopePayload> {
   @Inject DelegateScopeService delegateScopeService;
@@ -29,16 +25,19 @@ public class AddDelegateScopeDataFetcher
   }
 
   @Override
-  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   @AuthRule(permissionType = MANAGE_DELEGATES)
-  public QLAddDelegateScopePayload mutateAndFetch(
-      QLAddDelegateScopeInput parameter, MutationContext mutationContext) {
+  public QLAddDelegateScopePayload mutateAndFetch(QLAddDelegateScopeInput parameter, MutationContext mutationContext) {
     DelegateScope.DelegateScopeBuilder delegateScopeBuilder = DelegateScope.builder();
-    DelegateController.populateDelegateScope(parameter.getDelegateScope(), delegateScopeBuilder);
+    DelegateController.populateDelegateScope(mutationContext.getAccountId(), parameter, delegateScopeBuilder);
     DelegateScope scope = delegateScopeService.add(delegateScopeBuilder.build());
     if (scope == null) {
       return QLAddDelegateScopePayload.builder().message("Error while adding delegate scope").build();
     }
-    return QLAddDelegateScopePayload.builder().message("Delegate Scope added").build();
+    QLDelegateScope.QLDelegateScopeBuilder qlDelegateScopeBuilder = QLDelegateScope.builder();
+    DelegateController.populateQLDelegateScope(scope, qlDelegateScopeBuilder);
+    return QLAddDelegateScopePayload.builder()
+        .message("Delegate Scope added")
+        .delegateScope(qlDelegateScopeBuilder.build())
+        .build();
   }
 }
