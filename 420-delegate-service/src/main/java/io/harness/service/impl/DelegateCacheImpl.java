@@ -162,4 +162,14 @@ public class DelegateCacheImpl implements DelegateCache {
   public void invalidateDelegateProfileCache(String accountId, String delegateProfileId) {
     delegateProfilesCache.invalidate(ImmutablePair.of(accountId, delegateProfileId));
   }
+
+  @Override
+  public void invalidateDelegateGroupCache(String accountId, String delegateGroupId) {
+    delegateGroupCache.invalidate(ImmutablePair.of(accountId, delegateGroupId));
+  }
+
+  @Override
+  public void invalidateDelegateGroupCacheByIdentifier(String accountId, DelegateEntityOwner owner, String identifier) {
+    delegateGroupCacheByAccountAndOwnerAndIdentifier.invalidate(ImmutableTriple.of(accountId, owner, identifier));
+  }
 }

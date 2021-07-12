@@ -45,7 +45,7 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("SumoLogic") SUMOLOGIC("SumoLogic");
   private final String displayName;
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static ConnectorType getConnectorType(@JsonProperty("type") String displayName) {
     for (ConnectorType connectorType : ConnectorType.values()) {
       if (connectorType.displayName.equalsIgnoreCase(displayName)) {

@@ -17,7 +17,8 @@ import lombok.experimental.SuperBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSubTypes({
   @JsonSubTypes.Type(value = AppDynamicsHealthSourceSpec.class, name = "AppDynamics")
-  , @JsonSubTypes.Type(value = NewRelicHealthSourceSpec.class, name = "NewRelic")
+  , @JsonSubTypes.Type(value = NewRelicHealthSourceSpec.class, name = "NewRelic"),
+      @JsonSubTypes.Type(value = StackdriverLogHealthSourceSpec.class, name = "StackdriverLog")
 })
 public abstract class HealthSourceSpec {
   public abstract CVConfigUpdateResult getCVConfigUpdateResult(String accountId, String orgIdentifier,
@@ -36,4 +37,6 @@ public abstract class HealthSourceSpec {
     cvConfig.setMonitoringSourceName(name);
     cvConfig.setProductName(feature);
   }
+
+  public void validate() {}
 }
