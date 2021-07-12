@@ -60,12 +60,17 @@ public class TerraformApplyStepInfo
 
   @Override
   public SpecParameters getSpecParameters() {
-    Validator.notNullCheck("Terraform Step configuration is null", terraformStepConfiguration);
+    validateSpecParams();
     return TerraformApplyStepParameters.infoBuilder()
         .provisionerIdentifier(getProvisionerIdentifier())
         .configuration(terraformStepConfiguration.toStepParameters())
         .delegateSelectors(getDelegateSelectors())
         .build();
+  }
+
+  void validateSpecParams() {
+    Validator.notNullCheck("Terraform Step configuration is null", terraformStepConfiguration);
+    terraformStepConfiguration.validateParams();
   }
 
   @Override

@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.helpers.manifest.StoreConfigWrapperVisitorHelper;
 import io.harness.exception.UnexpectedTypeException;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.validation.Validator;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -43,6 +44,11 @@ public class StoreConfigWrapper implements OverridesApplier<StoreConfigWrapper>,
   public StoreConfigWrapper(StoreConfigType type, StoreConfig spec) {
     this.type = type;
     this.spec = spec;
+  }
+
+  public void validateParams() {
+    Validator.notNullCheck("Type cannot be empty inside Store.", type);
+    Validator.notNullCheck("Spec cannot be empty inside Store.", spec);
   }
 
   @Override

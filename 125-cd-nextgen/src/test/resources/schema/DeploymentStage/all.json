@@ -4530,6 +4530,9 @@
     },
     "TerraformConfigFilesWrapper": {
       "type": "object",
+      "required": [
+        "store"
+      ],
       "properties": {
         "store": {
           "$ref": "#/definitions/StoreConfigWrapper"
