@@ -206,12 +206,14 @@ public class SamlBasedAuthHandler implements AuthHandler {
     SamlResponse samlResponse = samlClient.decodeAndValidateSamlResponse(samlResponseString);
     String groupMembershipAttr = samlSettings.getGroupMembershipAttr();
     List<AttributeStatement> attributeStatements = samlResponse.getAssertion().getAttributeStatements();
-
+    log.info("GroupMemberShipAttribute:{}", groupMembershipAttr);
     for (AttributeStatement attributeStatement : attributeStatements) {
       for (Attribute attribute : attributeStatement.getAttributes()) {
+        log.info("GroupMemberShipAttribute:{} AttributeName:{}", groupMembershipAttr, attribute.getName());
         if (attribute.getName().equals(groupMembershipAttr)) {
           for (XMLObject xmlObject : attribute.getAttributeValues()) {
             final String userGroup = getAttributeValue(xmlObject);
+            log.info("Found Group from SAML Assertion", userGroup);
             if (userGroup != null) {
               userGroups.add(userGroup);
             }
