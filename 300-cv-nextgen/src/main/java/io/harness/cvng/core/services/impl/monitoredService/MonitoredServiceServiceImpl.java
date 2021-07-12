@@ -374,6 +374,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
           throw new InvalidRequestException(String.format(
               "Multiple Health Sources exists with the same identifier %s", healthSource.getIdentifier()));
         }
+        healthSource.getSpec().validate();
       });
     }
   }

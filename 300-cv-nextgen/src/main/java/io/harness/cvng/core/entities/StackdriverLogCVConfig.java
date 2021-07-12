@@ -12,16 +12,16 @@ import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @JsonTypeName("STACKDRIVER_LOG")
 @Data
-@Builder
+@SuperBuilder
 @FieldNameConstants(innerTypeName = "StackdriverLogCVConfigKeys")
 @NoArgsConstructor
 @AllArgsConstructor
