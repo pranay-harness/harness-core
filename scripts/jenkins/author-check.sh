@@ -7,6 +7,7 @@ UNKNOWN_USERS=`\
 git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Aaditi Joag <aaditi.joag@harness.io>$" |\
     grep -iv "^Aaditya Kumar <aaditya.kumar@harness.io>$" |\
+    grep -iv "^Abhijith Pradeep <abhijith.pradeep@harness.io>$" |\
     grep -iv "^Abhijith V Mohan <abhijith.mohan@harness.io>$" |\
     grep -iv "^Abhinav Hinger <abhinav.hinger@harness.io>$" |\
     grep -iv "^Abhinav Mittal <abhinav.mittal@harness.io>$" |\
