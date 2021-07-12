@@ -249,11 +249,13 @@ encryptedRecords {"name": "path_1", "background": true} {"path": 1}
 entityAuditRecords {"name": "entityRecordIndex_1", "background": true} {"auditHeaderId": 1, "createdAt": -1}
 entityAuditRecords {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 entitySetupUsage {"name": "EntitySetupUsage_unique_index", "unique": true} {"referredByEntityType": 1, "referredByEntityFQN": 1, "referredByEntityRepoIdentifier": 1, "referredByEntityBranch": 1, "referredEntityType": 1, "referredEntityFQN": 1, "referredEntityRepoIdentifier": 1, "referredEntityBranch": 1, "accountIdentifier": 1}
-entitySetupUsage {"name": "ReferredByEntityIndex", "background": true} {"referredByEntityType": 1, "referredByEntityFQN": 1, "accountIdentifier": 1}
-entitySetupUsage {"name": "ReferredEntityIndex", "background": true} {"referredEntityType": 1, "referredEntityFQN": 1, "accountIdentifier": 1}
+entitySetupUsage {"name": "ReferredByEntityIndex", "background": true} {"accountIdentifier": 1, "referredByEntityType": 1, "referredByEntityFQN": 1}
+entitySetupUsage {"name": "ReferredEntityIndex", "background": true} {"accountIdentifier": 1, "referredEntityType": 1, "referredEntityFQN": 1}
 entitySetupUsage {"name": "accountIdentifier_1", "background": true} {"accountIdentifier": 1}
 entitySetupUsage {"name": "account_referredByFQN_referredByIsDefault_createdAt_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityIsDefault": 1, "createdAt": -1}
 entitySetupUsage {"name": "account_referredBy_createdAt_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityType": 1, "referredEntityType": 1, "referredByEntityIsDefault": 1, "createdAt": -1}
+entitySetupUsage {"name": "account_referredBy_referred_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityType": 1, "referredEntityFQN": 1, "referredEntityType": 1}
+entitySetupUsage {"name": "account_referredBy_referred_type_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityType": 1, "referredEntityType": 1, "createdAt": 1}
 entitySetupUsage {"name": "referredByEntityFQN_1", "background": true} {"referredByEntityFQN": 1}
 entitySetupUsage {"name": "referredEntityFQN_1", "background": true} {"referredEntityFQN": 1}
 entityVersions {"name": "accountId_1", "background": true} {"accountId": 1}
@@ -332,6 +334,7 @@ gitFileActivity {"name": "accountId_procCommitId_filePath_status", "background":
 gitFileActivity {"name": "accountId_procCommitId_status", "background": true} {"accountId": 1, "processingCommitId": 1, "status": 1}
 gitFileActivitySummary {"name": "gitCommits_createdAt_direction_indx", "background": true} {"accountId": 1, "createdAt": 1, "gitToHarness": 1}
 gitFileActivitySummary {"name": "gitCommits_for_appId_indx", "background": true} {"accountId": 1, "appId": 1, "gitToHarness": 1}
+gitProcessRequestSdk {"name": "accountId_repo_branch_commit_index", "background": true} {"accountId": 1, "repoUrl": 1, "branch": 1, "commitId": 1}
 gitSyncError {"name": "accountId_createdAt", "background": true} {"accountId": 1, "createdAt": 1}
 gitSyncError {"name": "account_filepath_direction_idx", "unique": true} {"accountId": 1, "yamlFilePath": 1, "gitSyncDirection": 1}
 gitSyncError {"name": "appId_1", "background": true} {"appId": 1}
