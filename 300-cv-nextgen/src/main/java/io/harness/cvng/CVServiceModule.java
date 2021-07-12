@@ -1,8 +1,10 @@
 package io.harness.cvng;
 
+import static io.harness.AuthorizationServiceHeader.CV_NEXT_GEN;
 import static io.harness.cvng.cdng.services.impl.CVNGNotifyEventListener.CVNG_ORCHESTRATION;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -164,6 +166,7 @@ import io.harness.cvng.verificationjob.services.impl.VerificationJobInstanceServ
 import io.harness.cvng.verificationjob.services.impl.VerificationJobServiceImpl;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.mongo.MongoPersistence;
+import io.harness.outbox.TransactionOutboxModule;
 import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
@@ -417,6 +420,8 @@ public class CVServiceModule extends AbstractModule {
 
     bind(HealthSourceService.class).to(HealthSourceServiceImpl.class);
     bind(MonitoredServiceService.class).to(MonitoredServiceServiceImpl.class);
+    install(new TransactionOutboxModule(DEFAULT_OUTBOX_POLL_CONFIGURATION, CV_NEXT_GEN.getServiceId(),
+        verificationConfiguration.isExportMetricsToStackDriver()));
   }
 
   private void bindTheMonitoringSourceImportStatusCreators() {

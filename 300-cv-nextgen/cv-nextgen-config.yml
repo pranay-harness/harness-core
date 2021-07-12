@@ -137,3 +137,5 @@ cacheConfig:
   cacheBackend: REDIS
   cacheNamespace: ""
   disabledCaches: [ ]
+
+exportMetricsToStackDriver: false

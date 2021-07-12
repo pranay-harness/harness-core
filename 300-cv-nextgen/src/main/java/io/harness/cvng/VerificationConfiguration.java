@@ -54,6 +54,7 @@ public class VerificationConfiguration extends Configuration {
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
   @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
+  @JsonProperty("exportMetricsToStackDriver") private boolean exportMetricsToStackDriver;
 
   private String portalUrl;
   /**
