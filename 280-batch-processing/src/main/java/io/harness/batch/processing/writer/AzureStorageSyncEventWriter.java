@@ -23,6 +23,7 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ceazure.BillingExportSpecDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
 import io.harness.ff.FeatureFlagService;
+import io.harness.filter.FilterType;
 import io.harness.ng.beans.PageResponse;
 
 import software.wings.beans.SettingAttribute;
@@ -97,16 +98,17 @@ public class AzureStorageSyncEventWriter extends EventWriter implements ItemWrit
   public void syncNextGenContainers(String accountId) {
     List<ConnectorResponseDTO> nextGenConnectors = new ArrayList<>();
     PageResponse<ConnectorResponseDTO> response = null;
+    ConnectorFilterPropertiesDTO connectorFilterPropertiesDTO =
+        ConnectorFilterPropertiesDTO.builder()
+            .types(Arrays.asList(ConnectorType.CE_AZURE))
+            .ccmConnectorFilter(CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING)).build())
+            .build();
+    connectorFilterPropertiesDTO.setFilterType(FilterType.CONNECTOR);
     int page = 0;
     int size = 100;
     do {
-      response = execute(connectorResourceClient.listConnectors(accountId, null, null, page, size,
-          ConnectorFilterPropertiesDTO.builder()
-              .types(Arrays.asList(ConnectorType.CE_AZURE))
-              .ccmConnectorFilter(
-                  CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING)).build())
-              .build(),
-          false));
+      response = execute(connectorResourceClient.listConnectors(
+          accountId, null, null, page, size, connectorFilterPropertiesDTO, false));
       if (response != null && isNotEmpty(response.getContent())) {
         nextGenConnectors.addAll(response.getContent());
       }
