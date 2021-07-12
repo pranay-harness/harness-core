@@ -11,7 +11,12 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Service;
-import software.wings.beans.artifact.*;
+
+import software.wings.beans.artifact.AmazonS3ArtifactStream;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.artifact.EcrArtifactStream;
+import software.wings.beans.artifact.SmbArtifactStream;
 import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
@@ -21,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
 
 public class DeleteInvalidArtifactStreamsTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
