@@ -22,6 +22,7 @@ import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.AwsCurAttributesDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.ff.FeatureFlagService;
+import io.harness.filter.FilterType;
 import io.harness.ng.beans.PageResponse;
 
 import software.wings.beans.AwsCrossAccountAttributes;
@@ -112,16 +113,17 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
   public void syncNextGenContainers(String accountId) {
     List<ConnectorResponseDTO> nextGenConnectorResponses = new ArrayList<>();
     PageResponse<ConnectorResponseDTO> response = null;
+    ConnectorFilterPropertiesDTO connectorFilterPropertiesDTO =
+        ConnectorFilterPropertiesDTO.builder()
+            .types(Arrays.asList(ConnectorType.CE_AWS))
+            .ccmConnectorFilter(CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING)).build())
+            .build();
+    connectorFilterPropertiesDTO.setFilterType(FilterType.CONNECTOR);
     int page = 0;
     int size = 100;
     do {
-      response = execute(connectorResourceClient.listConnectors(accountId, null, null, page, size,
-          ConnectorFilterPropertiesDTO.builder()
-              .types(Arrays.asList(ConnectorType.CE_AWS))
-              .ccmConnectorFilter(
-                  CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING)).build())
-              .build(),
-          false));
+      response = execute(connectorResourceClient.listConnectors(
+          accountId, null, null, page, size, connectorFilterPropertiesDTO, false));
       if (response != null && isNotEmpty(response.getContent())) {
         nextGenConnectorResponses.addAll(response.getContent());
       }
