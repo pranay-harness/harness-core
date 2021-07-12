@@ -32,6 +32,7 @@ import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HelmClientException;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.helm.HelmCliCommandType;
 import io.harness.helm.HelmCommandTemplateFactory;
@@ -202,6 +203,7 @@ public class HelmTaskHelper {
           } catch (Exception ex) {
             String msg = format("Required values yaml file with path %s not found", filePath);
             log.error(msg, ex);
+            throw new InvalidArgumentsException(msg, ex, USER);
           }
           mapK8sValuesLocationToContents.put(key, valuesYamlContents);
         });
@@ -209,10 +211,12 @@ public class HelmTaskHelper {
 
       if (mapK8sValuesLocationToFilePaths.entrySet().stream().anyMatch(
               entry -> mapK8sValuesLocationToContents.get(entry.getKey()).size() != entry.getValue().size())) {
-        throw new Exception("Could not find all required values yaml files in helm repo");
+        throw new InvalidArgumentsException("Could not find all required values yaml files in helm repo");
       }
 
       return mapK8sValuesLocationToContents;
+    } catch (InvalidArgumentsException ex) {
+      throw ex;
     } catch (Exception ex) {
       log.info("values yaml file not found", ex);
       return null;
