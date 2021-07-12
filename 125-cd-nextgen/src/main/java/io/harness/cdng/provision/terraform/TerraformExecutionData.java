@@ -41,7 +41,7 @@ public class TerraformExecutionData {
   List<NGVariable> environmentVariables;
 
   public TerraformExecutionDataParameters toStepParameters() {
-    Validator.notNullCheck("Config files are null", terraformConfigFilesWrapper);
+    validateParams();
     TerraformExecutionDataParametersBuilder builder =
         TerraformExecutionDataParameters.builder()
             .workspace(workspace)
@@ -65,5 +65,10 @@ public class TerraformExecutionData {
     }
     builder.varFiles(varFiles);
     return builder.build();
+  }
+
+  void validateParams() {
+    Validator.notNullCheck("Config files are null", terraformConfigFilesWrapper);
+    terraformConfigFilesWrapper.validateParams();
   }
 }

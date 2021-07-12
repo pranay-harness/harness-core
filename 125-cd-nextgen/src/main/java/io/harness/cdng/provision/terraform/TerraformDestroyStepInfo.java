@@ -60,7 +60,7 @@ public class TerraformDestroyStepInfo
 
   @Override
   public SpecParameters getSpecParameters() {
-    Validator.notNullCheck("Terraform Step configuration is null", terraformStepConfiguration);
+    validateSpecParams();
     return TerraformDestroyStepParameters.infoBuilder()
         .provisionerIdentifier(provisionerIdentifier)
         .delegateSelectors(delegateSelectors)
@@ -68,8 +68,14 @@ public class TerraformDestroyStepInfo
         .build();
   }
 
+  void validateSpecParams() {
+    Validator.notNullCheck("Terraform Step configuration is null", terraformStepConfiguration);
+    terraformStepConfiguration.validateParams();
+  }
+
   @Override
   public Map<String, ParameterField<String>> extractConnectorRefs() {
+    validateSpecParams();
     Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
 
     if (terraformStepConfiguration.terraformStepConfigurationType == TerraformStepConfigurationType.INLINE) {

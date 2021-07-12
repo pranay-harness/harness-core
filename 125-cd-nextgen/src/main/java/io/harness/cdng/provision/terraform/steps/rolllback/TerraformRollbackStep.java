@@ -21,7 +21,7 @@ import io.harness.logging.UnitProgress;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.persistence.HIterator;
 import io.harness.plancreator.steps.common.StepElementParameters;
-import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollback;
+import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.tasks.SkipTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
@@ -47,7 +47,7 @@ import java.util.Collections;
 import java.util.List;
 
 @OwnedBy(HarnessTeam.CDP)
-public class TerraformRollbackStep extends TaskExecutableWithRollback<TerraformTaskNGResponse> {
+public class TerraformRollbackStep extends TaskExecutableWithRollbackAndRbac<TerraformTaskNGResponse> {
   public static final StepType STEP_TYPE = StepType.newBuilder()
                                                .setType(ExecutionNodeType.TERRAFORM_ROLLBACK.getYamlType())
                                                .setStepCategory(StepCategory.STEP)
@@ -59,7 +59,7 @@ public class TerraformRollbackStep extends TaskExecutableWithRollback<TerraformT
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
 
   @Override
-  public TaskRequest obtainTask(
+  public TaskRequest obtainTaskAfterRbac(
       Ambiance ambiance, StepElementParameters stepParameters, StepInputPackage inputPackage) {
     TerraformRollbackStepParameters stepParametersSpec = (TerraformRollbackStepParameters) stepParameters.getSpec();
 
@@ -151,7 +151,12 @@ public class TerraformRollbackStep extends TaskExecutableWithRollback<TerraformT
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepParameters,
+  public void validateResources(Ambiance ambiance, StepElementParameters stepParameters) {
+    // no connectors/secret managers to validate
+  }
+
+  @Override
+  public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance, StepElementParameters stepParameters,
       ThrowingSupplier<TerraformTaskNGResponse> responseDataSupplier) throws Exception {
     TerraformRollbackStepParameters stepParametersSpec = (TerraformRollbackStepParameters) stepParameters.getSpec();
     TerraformTaskNGResponse taskResponse = responseDataSupplier.get();
