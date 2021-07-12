@@ -21,7 +21,14 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
 public class DelegateListDataFetcher
-    extends AbstractConnectionV2DataFetcher<QLDelegateFilter, QLNoOpSortCriteria, QLDelegateList> {
+    extends AbstractConnectionV2DataFetcher<io.harness.app.schema.query.delegate.QLDelegateFilter, QLNoOpSortCriteria,
+        QLDelegateList> {
+  @Override
+  protected io.harness.app.schema.query.delegate.QLDelegateFilter generateFilter(
+      DataFetchingEnvironment environment, String key, String value) {
+    return null;
+  }
+
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLDelegateList fetchConnection(List<io.harness.app.schema.query.delegate.QLDelegateFilter> filters,
@@ -61,11 +68,5 @@ public class DelegateListDataFetcher
         utils.setStringFilter(field, type);
       }
     });
-  }
-
-  @Override
-  protected io.harness.app.schema.query.delegate.QLDelegateFilter generateFilter(
-      DataFetchingEnvironment environment, String key, String value) {
-    return null;
   }
 }
