@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.entities.ArtifactDetails.ArtifactDetailsKeys;
 import io.harness.entities.instance.Instance.InstanceKeys;
 
+import java.time.Duration;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -29,4 +30,9 @@ public final class InstanceSyncConstants {
   public static final String INSTANCES = "instances";
   public static final int INSTANCE_LIMIT = 20;
   public static final String buildId = "buildId";
+
+  // Lock key prefixes and timeouts
+  public static final String INSTANCE_SYNC_PREFIX = "INSTANCE_SYNC:";
+  public static final Duration INSTANCE_SYNC_LOCK_TIMEOUT = Duration.ofSeconds(200);
+  public static final Duration INSTANCE_SYNC_WAIT_TIMEOUT = Duration.ofSeconds(220);
 }

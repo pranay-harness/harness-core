@@ -51,6 +51,7 @@ public class InstanceSyncPerpetualTaskInfo {
   @FdIndex String infrastructureMappingId;
   List<String> deploymentSummaryIdList;
   List<DeploymentInfoDetails> deploymentInfoDetailsList;
+  String perpetualTaskId;
   @CreatedDate long createdAt;
   @LastModifiedDate long lastUpdatedAt;
 }

@@ -41,9 +41,7 @@ public class TerraformPlanExecutionData {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> secretManagerRef;
 
   public TerraformPlanExecutionDataParameters toStepParameters() {
-    Validator.notNullCheck("Config files are null", terraformConfigFilesWrapper);
-    Validator.notNullCheck("Terraform Plan command is null", command);
-    Validator.notNullCheck("Secret Manager Ref for Tf plan is null", secretManagerRef);
+    validateParams();
     TerraformPlanExecutionDataParametersBuilder builder =
         TerraformPlanExecutionDataParameters.builder()
             .workspace(workspace)
@@ -66,5 +64,12 @@ public class TerraformPlanExecutionData {
     }
     builder.varFiles(varFiles);
     return builder.build();
+  }
+
+  public void validateParams() {
+    Validator.notNullCheck("Config files are null", terraformConfigFilesWrapper);
+    terraformConfigFilesWrapper.validateParams();
+    Validator.notNullCheck("Terraform Plan command is null", command);
+    Validator.notNullCheck("Secret Manager Ref for Tf plan is null", secretManagerRef);
   }
 }

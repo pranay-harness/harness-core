@@ -8,6 +8,7 @@ import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.service.ExecutionSummaryUpdateRequest;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
@@ -19,7 +20,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import io.grpc.StatusRuntimeException;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -52,13 +52,13 @@ public class ExecutionSummaryUpdateEventHandler implements OrchestrationEventHan
             .setPlanExecutionId(ambiance.getPlanExecutionId())
             .setNodeExecutionId(AmbianceUtils.obtainCurrentLevel(ambiance).getRuntimeId());
     if (ambiance.getLevelsCount() >= 3) {
-      if (Objects.equals(ambiance.getLevels(2).getGroup(), "STAGE")) {
+      if (LevelUtils.isStageLevel(ambiance.getLevels(2))) {
         executionSummaryUpdateRequest.setNodeUuid(ambiance.getLevels(2).getSetupId());
       } else if (ambiance.getLevelsCount() >= 4) {
         executionSummaryUpdateRequest.setNodeUuid(ambiance.getLevels(3).getSetupId());
       }
     }
-    if (Objects.equals(level.getGroup(), "STAGE")) {
+    if (LevelUtils.isStageLevel(level)) {
       executionSummaryUpdateRequest.setNodeUuid(level.getSetupId());
     }
     String pipelineInfoJson = RecastOrchestrationUtils.toJson(

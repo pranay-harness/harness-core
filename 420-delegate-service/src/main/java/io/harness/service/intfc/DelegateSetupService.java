@@ -32,4 +32,10 @@ public interface DelegateSetupService {
 
   List<Boolean> validateDelegateConfigurations(
       String accountId, String orgId, String projectId, List<String> identifiers);
+
+  DelegateGroupDetails updateDelegateGroup(
+      String accountId, String delegateGroupId, DelegateGroupDetails delegateGroupDetails);
+
+  DelegateGroupDetails updateDelegateGroup(
+      String accountId, String orgId, String projectId, String identifier, DelegateGroupDetails delegateGroupDetails);
 }

@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
 
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -24,6 +25,7 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.ProcessTimeLogContext;
+import io.harness.queue.QueueController;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Stopwatch;
@@ -63,6 +65,8 @@ public class GitChangeSetRunnable implements Runnable {
   @Inject private GitChangeSetRunnableQueueHelper gitChangeSetRunnableQueueHelper;
   @Inject private PersistentLocker persistentLocker;
   @Inject private YamlChangeSetLifeCycleManagerService yamlChangeSetLifeCycleHandlerService;
+  @Inject private QueueController queueController;
+
   @Override
   public void run() {
     final Stopwatch stopwatch = Stopwatch.createStarted();
@@ -164,10 +168,9 @@ public class GitChangeSetRunnable implements Runnable {
     return null;
   }
 
-  private boolean shouldRun() {
-    // TODO(abhinav): add maintainance logic
-    //    return !getMaintenanceFilename() && configurationController.isPrimary();
-    return true;
+  @VisibleForTesting
+  boolean shouldRun() {
+    return !getMaintenanceFlag() && queueController.isPrimary();
   }
 
   private void handleStuckChangeSets() {

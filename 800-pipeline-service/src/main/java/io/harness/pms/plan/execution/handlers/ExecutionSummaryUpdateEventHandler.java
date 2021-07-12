@@ -1,10 +1,8 @@
 package io.harness.pms.plan.execution.handlers;
 
-import static io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup.PIPELINE;
-import static io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup.STAGE;
-
 import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.engine.observers.NodeUpdateObserver;
+import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.observer.AsyncInformObserver;
 import io.harness.pms.execution.utils.StatusUtils;
@@ -40,7 +38,7 @@ public class ExecutionSummaryUpdateEventHandler implements NodeUpdateObserver, A
   }
 
   public void updatePipelineLevelInfo(String planExecutionId, NodeExecution nodeExecution) {
-    if (Objects.equals(nodeExecution.getNode().getGroup(), PIPELINE)) {
+    if (OrchestrationUtils.isPipelineNode(nodeExecution)) {
       Update update = new Update();
       if (StatusUtils.isFinalStatus(nodeExecution.getStatus())) {
         update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.endTs, nodeExecution.getEndTs());
@@ -53,7 +51,7 @@ public class ExecutionSummaryUpdateEventHandler implements NodeUpdateObserver, A
   }
 
   public void updateStageLevelInfo(String planExecutionId, NodeExecution nodeExecution) {
-    if (Objects.equals(nodeExecution.getNode().getGroup(), STAGE.name())
+    if (OrchestrationUtils.isStageNode(nodeExecution)
         || Objects.equals(nodeExecution.getNode().getStepType().getType(), StepSpecTypeConstants.BARRIER)) {
       Update update = new Update();
       String stageUuid = nodeExecution.getNode().getUuid();

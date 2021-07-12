@@ -263,11 +263,13 @@ entityActivity {"name": "type_referredFqn_referredByType_desSort_Index", "backgr
 entityAuditRecords {"name": "entityRecordIndex_1", "background": true} {"auditHeaderId": 1, "createdAt": -1}
 entityAuditRecords {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 entitySetupUsage {"name": "EntitySetupUsage_unique_index", "unique": true} {"referredByEntityType": 1, "referredByEntityFQN": 1, "referredByEntityRepoIdentifier": 1, "referredByEntityBranch": 1, "referredEntityType": 1, "referredEntityFQN": 1, "referredEntityRepoIdentifier": 1, "referredEntityBranch": 1, "accountIdentifier": 1}
-entitySetupUsage {"name": "ReferredByEntityIndex", "background": true} {"referredByEntityType": 1, "referredByEntityFQN": 1, "accountIdentifier": 1}
-entitySetupUsage {"name": "ReferredEntityIndex", "background": true} {"referredEntityType": 1, "referredEntityFQN": 1, "accountIdentifier": 1}
+entitySetupUsage {"name": "ReferredByEntityIndex", "background": true} {"accountIdentifier": 1, "referredByEntityType": 1, "referredByEntityFQN": 1}
+entitySetupUsage {"name": "ReferredEntityIndex", "background": true} {"accountIdentifier": 1, "referredEntityType": 1, "referredEntityFQN": 1}
 entitySetupUsage {"name": "accountIdentifier_1", "background": true} {"accountIdentifier": 1}
 entitySetupUsage {"name": "account_referredByFQN_referredByIsDefault_createdAt_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityIsDefault": 1, "createdAt": -1}
 entitySetupUsage {"name": "account_referredBy_createdAt_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityType": 1, "referredEntityType": 1, "referredByEntityIsDefault": 1, "createdAt": -1}
+entitySetupUsage {"name": "account_referredBy_referred_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityType": 1, "referredEntityFQN": 1, "referredEntityType": 1}
+entitySetupUsage {"name": "account_referredBy_referred_type_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityType": 1, "referredEntityType": 1, "createdAt": 1}
 entitySetupUsage {"name": "referredByEntityFQN_1", "background": true} {"referredByEntityFQN": 1}
 entitySetupUsage {"name": "referredEntityFQN_1", "background": true} {"referredEntityFQN": 1}
 entityVersions {"name": "accountId_1", "background": true} {"accountId": 1}
@@ -351,6 +353,7 @@ gitFileActivity {"name": "accountId_procCommitId_status", "background": true} {"
 gitFileActivityNG {"name": "lastUpdatedAt_1", "background": true} {"lastUpdatedAt": 1}
 gitFileActivitySummary {"name": "gitCommits_createdAt_direction_indx", "background": true} {"accountId": 1, "createdAt": 1, "gitToHarness": 1}
 gitFileActivitySummary {"name": "gitCommits_for_appId_indx", "background": true} {"accountId": 1, "appId": 1, "gitToHarness": 1}
+gitProcessRequestSdk {"name": "accountId_repo_branch_commit_index", "background": true} {"accountId": 1, "repoUrl": 1, "branch": 1, "commitId": 1}
 gitSyncError {"name": "accountId_createdAt", "background": true} {"accountId": 1, "createdAt": 1}
 gitSyncError {"name": "account_filepath_direction_idx", "unique": true} {"accountId": 1, "yamlFilePath": 1, "gitSyncDirection": 1}
 gitSyncError {"name": "appId_1", "background": true} {"appId": 1}
@@ -933,10 +936,15 @@ yamlChangeSet {"name": "appId_1", "background": true} {"appId": 1}
 yamlChangeSet {"name": "createdAt_1", "background": true} {"createdAt": 1}
 yamlChangeSet {"name": "searchIdx_1", "background": true} {"accountId": 1, "status": 1, "retryCount": 1}
 yamlChangeSet {"name": "status_1", "background": true} {"status": 1}
+yamlChangeSetNG {"name": "accountId_createdAt_index", "background": true} {"accountId": 1, "createdAt": -1}
+yamlChangeSetNG {"name": "accountId_queuekey_status_queuedOn_index", "background": true} {"accountId": 1, "queueKey": 1, "status": 1, "queuedOn": -1}
+yamlChangeSetNG {"name": "accountId_status_createdAt_index", "background": true} {"accountId": 1, "status": 1, "createdAt": 1}
+yamlChangeSetNG {"name": "accountId_status_retryCount_index", "background": true} {"accountId": 1, "status": 1, "retryCount": 1}
 yamlChangeSetNG {"name": "status_1", "background": true} {"status": 1}
 yamlGitConfig {"name": "appId_1", "background": true} {"appId": 1}
 yamlGitConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}
 yamlGitConfig {"name": "unique_locate", "unique": true} {"accountId": 1, "entityId": 1, "entityType": 1}
+yamlGitConfigs {"name": "accountId_orgId_projectId_Index", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1}
 yamlGitConfigs {"name": "accountId_orgId_projectId_identifier_unique_Index", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
 yamlGitConfigs {"name": "accountId_orgId_projectId_repo_unique_Index", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "repo": 1}
 yamlGitConfigs {"name": "repo_1", "background": true} {"repo": 1}

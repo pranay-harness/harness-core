@@ -56,7 +56,7 @@ public class TerraformPlanStepInfo extends TerraformPlanBaseStepInfo implements 
 
   @Override
   public SpecParameters getSpecParameters() {
-    Validator.notNullCheck("Terraform Plan configuration is NULL", terraformPlanExecutionData);
+    validateSpecParams();
     return TerraformPlanStepParameters.infoBuilder()
         .provisionerIdentifier(provisionerIdentifier)
         .delegateSelectors(delegateSelectors)
@@ -64,8 +64,14 @@ public class TerraformPlanStepInfo extends TerraformPlanBaseStepInfo implements 
         .build();
   }
 
+  void validateSpecParams() {
+    Validator.notNullCheck("Terraform Plan configuration is NULL", terraformPlanExecutionData);
+    terraformPlanExecutionData.validateParams();
+  }
+
   @Override
   public Map<String, ParameterField<String>> extractConnectorRefs() {
+    validateSpecParams();
     Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
     connectorRefMap.put("configuration.configFiles.store.spec.connectorRef",
         terraformPlanExecutionData.getTerraformConfigFilesWrapper().store.getSpec().getConnectorReference());
