@@ -475,7 +475,7 @@ public class BillingDataServiceImpl {
 
   public boolean purgeOldHourlyBillingData(BatchJobType batchJobType) {
     final String PURGE_DATA_QUERY =
-        BillingDataTableNameProvider.replaceTableName("SELECT drop_chunks(interval '14 days', '%s')", batchJobType);
+        BillingDataTableNameProvider.replaceTableName("SELECT drop_chunks('%s', interval '14 days')", batchJobType);
     log.info("Purging old {} data !!", batchJobType.name());
     return executeQuery(PURGE_DATA_QUERY);
   }

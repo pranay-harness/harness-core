@@ -49,7 +49,7 @@ public class K8sUtilizationGranularDataServiceImpl {
       + " SETTINGID, CLUSTERID, INSTANCEID, INSTANCETYPE FROM KUBERNETES_UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND INSTANCETYPE = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s' "
       + " GROUP BY SETTINGID, CLUSTERID, INSTANCEID, INSTANCETYPE ";
 
-  static final String PURGE_DATA_QUERY = "SELECT drop_chunks(interval '16 days', 'kubernetes_utilization_data')";
+  static final String PURGE_DATA_QUERY = "SELECT drop_chunks('kubernetes_utilization_data', interval '16 days')";
 
   public boolean create(List<K8sGranularUtilizationData> k8sGranularUtilizationDataList) {
     if (k8sGranularUtilizationDataList.isEmpty()) {
