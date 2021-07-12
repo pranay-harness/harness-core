@@ -51,6 +51,7 @@ import io.harness.accesscontrol.scopes.harness.events.ScopeEventConsumer;
 import io.harness.aggregator.AggregatorModule;
 import io.harness.aggregator.consumers.ChangeEventFailureHandler;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.concurrent.HTimeLimiter;
 import io.harness.eventsframework.api.Consumer;
@@ -75,6 +76,7 @@ import io.harness.threading.ThreadPool;
 import io.harness.token.TokenClientModule;
 import io.harness.usergroups.UserGroupClientModule;
 import io.harness.usermembership.UserMembershipClientModule;
+import io.harness.version.VersionModule;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -160,6 +162,8 @@ public class AccessControlModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    install(VersionModule.getInstance());
+    install(PrimaryVersionManagerModule.getInstance());
     install(AccessControlPersistenceModule.getInstance(config.getMongoConfig()));
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()

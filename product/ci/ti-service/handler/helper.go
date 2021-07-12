@@ -13,6 +13,7 @@ const (
 	buildIdParam     = "buildId"
 	stageIdParam     = "stageId"
 	stepIdParam      = "stepId"
+	timeMsParam      = "timeMs"
 	reportParam      = "report"
 	sortParam        = "sort"
 	statusParam      = "status"

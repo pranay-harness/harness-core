@@ -1105,8 +1105,8 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public DelegateScripts getDelegateScripts(
-      String accountId, String version, String managerHost, String verificationHost) throws IOException {
+  public DelegateScripts getDelegateScripts(String accountId, String version, String managerHost,
+      String verificationHost, String delegateName) throws IOException {
     String delegateTokenName = EMPTY;
     if (featureFlagService.isEnabled(FeatureName.USE_CUSTOM_DELEGATE_TOKENS, accountId)) {
       DelegateTokenGlobalContextData delegateTokenGlobalContextData =
@@ -1126,6 +1126,7 @@ public class DelegateServiceImpl implements DelegateService {
             .verificationHost(verificationHost)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateTokenName(delegateTokenName)
+            .delegateName(StringUtils.defaultString(delegateName))
             .build(),
         false);
 

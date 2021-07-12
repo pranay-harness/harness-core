@@ -17,6 +17,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
+import io.harness.queue.QueueController;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
 
@@ -40,6 +41,7 @@ public class EntityCRUDStreamConsumer implements Runnable {
   private final Consumer redisConsumer;
   private final Map<String, MessageProcessor> processorMap;
   private final List<MessageListener> messageListenersList;
+  private final QueueController queueController;
 
   @Inject
   public EntityCRUDStreamConsumer(@Named(ENTITY_CRUD) Consumer redisConsumer,
@@ -50,8 +52,10 @@ public class EntityCRUDStreamConsumer implements Runnable {
       @Named(USER_ENTITY + ENTITY_CRUD) MessageListener userEntityCRUDStreamListener,
       @Named(SECRET_ENTITY + ENTITY_CRUD) MessageListener secretEntityCRUDStreamListner,
       @Named(USER_GROUP + ENTITY_CRUD) MessageListener userGroupEntityCRUDStreamListener,
-      @Named(USER_SCOPE_RECONCILIATION) MessageListener userMembershipReconciliationMessageProcessor) {
+      @Named(USER_SCOPE_RECONCILIATION) MessageListener userMembershipReconciliationMessageProcessor,
+      QueueController queueController) {
     this.redisConsumer = redisConsumer;
+    this.queueController = queueController;
     messageListenersList = new ArrayList<>();
     messageListenersList.add(organizationEntityCRUDStreamListener);
     messageListenersList.add(projectEntityCRUDStreamListener);
@@ -70,6 +74,11 @@ public class EntityCRUDStreamConsumer implements Runnable {
     try {
       SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
       while (!Thread.currentThread().isInterrupted()) {
+        if (queueController.isNotPrimary()) {
+          log.info("Entity crud consumer is not running on primary deployment, will try again after some time...");
+          TimeUnit.SECONDS.sleep(30);
+          continue;
+        }
         readEventsFrameworkMessages();
       }
     } catch (InterruptedException ex) {

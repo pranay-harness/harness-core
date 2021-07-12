@@ -98,6 +98,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>820-platform-service</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>835-notification-senders</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

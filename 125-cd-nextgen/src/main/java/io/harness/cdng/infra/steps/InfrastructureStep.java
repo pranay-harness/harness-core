@@ -16,6 +16,7 @@ import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.infra.yaml.InfrastructureKind;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.infra.yaml.K8sGcpInfrastructure;
+import io.harness.cdng.service.steps.ServiceStepOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
@@ -44,6 +45,7 @@ import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
+import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
@@ -78,6 +80,7 @@ public class InfrastructureStep implements SyncExecutableWithRbac<Infrastructure
   @Inject private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
   @Inject private PipelineRbacHelper pipelineRbacHelper;
   @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
+  @Inject private OutcomeService outcomeService;
 
   @Override
   public Class<Infrastructure> getStepParametersClass() {
@@ -100,7 +103,10 @@ public class InfrastructureStep implements SyncExecutableWithRbac<Infrastructure
     validateInfrastructure(infrastructure);
     EnvironmentOutcome environmentOutcome = (EnvironmentOutcome) executionSweepingOutputResolver.resolve(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.ENVIRONMENT));
-    InfrastructureOutcome infrastructureOutcome = InfrastructureMapper.toOutcome(infrastructure, environmentOutcome);
+    ServiceStepOutcome serviceOutcome = (ServiceStepOutcome) outcomeService.resolve(
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.SERVICE));
+    InfrastructureOutcome infrastructureOutcome =
+        InfrastructureMapper.toOutcome(infrastructure, environmentOutcome, serviceOutcome);
     ngManagerLogCallback.saveExecutionLog(
         "Infrastructure Step completed", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
     return StepResponse.builder()
@@ -168,8 +174,7 @@ public class InfrastructureStep implements SyncExecutableWithRbac<Infrastructure
     switch (infrastructure.getKind()) {
       case InfrastructureKind.KUBERNETES_DIRECT:
         K8SDirectInfrastructure k8SDirectInfrastructure = (K8SDirectInfrastructure) infrastructure;
-        validateExpression(k8SDirectInfrastructure.getConnectorRef(), k8SDirectInfrastructure.getNamespace(),
-            k8SDirectInfrastructure.getReleaseName());
+        validateExpression(k8SDirectInfrastructure.getConnectorRef(), k8SDirectInfrastructure.getNamespace());
         break;
 
       case InfrastructureKind.KUBERNETES_GCP:

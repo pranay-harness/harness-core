@@ -5,6 +5,7 @@ import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
+import io.harness.queue.QueueController;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,6 +23,7 @@ public class EntityCRUDStreamConsumer implements Runnable {
   private static final int MAX_WAIT_TIME_SEC = 10;
   private final Consumer consumer;
   private final Map<String, ConsumerMessageProcessor> processorMap;
+  private QueueController queueController;
 
   @Inject
   public EntityCRUDStreamConsumer(@Named(EventsFrameworkConstants.ENTITY_CRUD) Consumer abstractConsumer,
@@ -32,8 +34,9 @@ public class EntityCRUDStreamConsumer implements Runnable {
       @Named(EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY)
       ConsumerMessageProcessor organizationChangeEventMessageProcessor,
       @Named(EventsFrameworkMetadataConstants.ACCOUNT_ENTITY)
-      ConsumerMessageProcessor accountChangeEventMessageProcessor) {
+      ConsumerMessageProcessor accountChangeEventMessageProcessor, QueueController queueController) {
     this.consumer = abstractConsumer;
+    this.queueController = queueController;
     processorMap = new HashMap<>();
     processorMap.put(EventsFrameworkMetadataConstants.PROJECT_ENTITY, projectChangeEventMessageProcessor);
     processorMap.put(EventsFrameworkMetadataConstants.CONNECTOR_ENTITY, connectorChangeEventMessageProcessor);
@@ -46,6 +49,11 @@ public class EntityCRUDStreamConsumer implements Runnable {
     log.info("Started the consumer for entity crud stream");
     try {
       while (!Thread.currentThread().isInterrupted()) {
+        if (queueController.isNotPrimary()) {
+          log.info("Entity crud consumer is not running on primary deployment, will try again after some time...");
+          TimeUnit.SECONDS.sleep(30);
+          continue;
+        }
         readEventsFrameworkMessages();
       }
     } catch (Exception ex) {

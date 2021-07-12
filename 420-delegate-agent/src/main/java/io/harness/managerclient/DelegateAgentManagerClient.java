@@ -86,8 +86,8 @@ public interface DelegateAgentManagerClient {
       @Query("fileId") String fileId, @Query("fileBucket") FileBucket fileBucket, @Query("accountId") String accountId);
 
   @GET("agent/delegates/delegateScripts")
-  Call<RestResponse<DelegateScripts>> getDelegateScripts(
-      @Query("accountId") String accountId, @Query("delegateVersion") String delegateVersion);
+  Call<RestResponse<DelegateScripts>> getDelegateScripts(@Query("accountId") String accountId,
+      @Query("delegateVersion") String delegateVersion, @Query("delegateName") String delegateName);
 
   @GET("agent/infra-download/delegate-auth/delegate/logging-token")
   Call<RestResponse<AccessTokenBean>> getLoggingToken(@Query("accountId") String accountId);

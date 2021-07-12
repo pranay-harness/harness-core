@@ -24,4 +24,5 @@ public class InviteAcceptResponse {
   String orgIdentifier;
   String projectIdentifier;
   String inviteId;
+  String email;
 }

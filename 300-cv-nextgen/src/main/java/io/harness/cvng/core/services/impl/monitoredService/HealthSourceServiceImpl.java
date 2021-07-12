@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class HealthSourceServiceImpl implements HealthSourceService {
   @Inject Injector injector;
@@ -31,13 +32,16 @@ public class HealthSourceServiceImpl implements HealthSourceService {
 
   @Override
   public void create(String accountId, String orgIdentifier, String projectIdentifier, String environmentRef,
-      String serviceRef, String nameSpaceIdentifier, Set<HealthSource> healthSources) {
+      String serviceRef, String nameSpaceIdentifier, Set<HealthSource> healthSources, boolean enabled) {
     healthSources.forEach(healthSource -> {
       CVConfigUpdateResult cvConfigUpdateResult = healthSource.getSpec().getCVConfigUpdateResult(accountId,
           orgIdentifier, projectIdentifier, environmentRef, serviceRef,
           HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, healthSource.getIdentifier()),
           healthSource.getName(), Collections.emptyList(), metricPackService);
+      cvConfigUpdateResult.getAdded().forEach(cvConfig -> cvConfig.setEnabled(enabled));
       cvConfigService.save(cvConfigUpdateResult.getAdded());
+      // Creating MonitoringSourcePerpetualTasks for now irrespective of enable/disable status.
+      // We need to rethink how these tasks are created, batched and managed together.
       monitoringSourcePerpetualTaskService.createTask(accountId, orgIdentifier, projectIdentifier,
           healthSource.getSpec().getConnectorRef(),
           HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, healthSource.getIdentifier()));
@@ -91,6 +95,17 @@ public class HealthSourceServiceImpl implements HealthSourceService {
       cvConfigService.update(cvConfigUpdateResult.getUpdated());
       cvConfigService.save(cvConfigUpdateResult.getAdded());
     });
+  }
+
+  @Override
+  public void setHealthMonitoringFlag(String accountId, String orgIdentifier, String projectIdentifier,
+      String namespace, List<String> healthSourceIdentifiers, boolean enable) {
+    cvConfigService.setHealthMonitoringFlag(accountId, orgIdentifier, projectIdentifier,
+        healthSourceIdentifiers.stream()
+            .map(healthSourceIdentifier
+                -> HealthSourceService.getNameSpacedIdentifier(namespace, healthSourceIdentifier))
+            .collect(Collectors.toList()),
+        enable);
   }
 
   private HealthSource transformCVConfigs(

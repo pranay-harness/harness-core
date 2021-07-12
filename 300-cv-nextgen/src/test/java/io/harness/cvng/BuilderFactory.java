@@ -1,6 +1,9 @@
 package io.harness.cvng;
 
+import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo5MinBoundary;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
@@ -20,6 +23,12 @@ import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigBuil
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.NewRelicCVConfig;
 import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicCVConfigBuilder;
+import io.harness.cvng.core.entities.StackdriverLogCVConfig;
+import io.harness.cvng.core.entities.StackdriverLogCVConfig.StackdriverLogCVConfigBuilder;
+import io.harness.cvng.dashboard.entities.HeatMap;
+import io.harness.cvng.dashboard.entities.HeatMap.HeatMapBuilder;
+import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
+import io.harness.cvng.dashboard.entities.HeatMap.HeatMapRisk;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -30,8 +39,11 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -39,6 +51,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.Value;
+
 @Data
 @Builder(buildMethodName = "unsafeBuild")
 public class BuilderFactory {
@@ -79,6 +92,34 @@ public class BuilderFactory {
         .sources(MonitoredServiceDTO.Sources.builder()
                      .healthSources(Arrays.asList(createHealthSource()).stream().collect(Collectors.toSet()))
                      .build());
+  }
+
+  public HeatMapBuilder heatMapBuilderWith5MinResolution() {
+    Instant bucketEndTime = clock.instant();
+    bucketEndTime = roundDownTo5MinBoundary(bucketEndTime);
+    Instant bucketStartTime = bucketEndTime.minus(4, ChronoUnit.HOURS);
+    List<HeatMapRisk> heatMapRisks = new ArrayList<>();
+
+    for (Instant startTime = bucketStartTime; startTime.isBefore(bucketEndTime);
+         startTime = startTime.plus(5, ChronoUnit.MINUTES)) {
+      heatMapRisks.add(HeatMapRisk.builder()
+                           .riskScore(-1)
+                           .startTime(startTime)
+                           .endTime(startTime.plus(5, ChronoUnit.MINUTES))
+                           .build());
+    }
+
+    return HeatMap.builder()
+        .accountId(context.getAccountId())
+        .projectIdentifier(context.getProjectIdentifier())
+        .orgIdentifier(context.getOrgIdentifier())
+        .category(CVMonitoringCategory.ERRORS)
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier())
+        .heatMapResolution(HeatMapResolution.FIVE_MIN)
+        .heatMapBucketStartTime(bucketStartTime)
+        .heatMapBucketEndTime(bucketEndTime)
+        .heatMapRisks(heatMapRisks);
   }
 
   private HealthSource createHealthSource() {
@@ -128,6 +169,24 @@ public class BuilderFactory {
         .tierName(generateUuid())
         .connectorIdentifier("AppDynamics Connector")
         .category(CVMonitoringCategory.PERFORMANCE)
+        .productName(generateUuid());
+  }
+
+  public StackdriverLogCVConfigBuilder stackdriverLogCVConfigBuilder() {
+    return StackdriverLogCVConfig.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier())
+        .queryName(randomAlphabetic(10))
+        .query(randomAlphabetic(10))
+        .messageIdentifier(randomAlphabetic(10))
+        .serviceInstanceIdentifier(randomAlphabetic(10))
+        .identifier(generateUuid())
+        .monitoringSourceName(generateUuid())
+        .connectorIdentifier("StackdriverLog Connector")
+        .category(CVMonitoringCategory.ERRORS)
         .productName(generateUuid());
   }
 

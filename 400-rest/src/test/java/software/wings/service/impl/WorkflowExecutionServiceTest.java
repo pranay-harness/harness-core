@@ -94,6 +94,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -129,7 +130,6 @@ import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.impl.deployment.checks.AccountExpirationChecker;
 import software.wings.service.impl.security.auth.DeploymentAuthHandler;
 import software.wings.service.intfc.AppService;

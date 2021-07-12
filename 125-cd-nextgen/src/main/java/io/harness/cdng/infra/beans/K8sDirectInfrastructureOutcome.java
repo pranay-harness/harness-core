@@ -20,6 +20,7 @@ public class K8sDirectInfrastructureOutcome implements InfrastructureOutcome {
   String namespace;
   String releaseName;
   EnvironmentOutcome environment;
+  String infrastructureKey;
 
   @Override
   public String getKind() {

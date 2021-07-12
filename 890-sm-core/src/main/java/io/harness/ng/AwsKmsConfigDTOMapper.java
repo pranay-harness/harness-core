@@ -67,6 +67,7 @@ public class AwsKmsConfigDTOMapper {
         .kmsArn(kmsArn)
         .credential(populateCredentials(awsKmsConnectorDTO))
         .credentialType(awsKmsConnectorDTO.getCredential().getCredentialType())
+        .delegateSelectors(awsKmsConnectorDTO.getDelegateSelectors())
         .build();
   }
 

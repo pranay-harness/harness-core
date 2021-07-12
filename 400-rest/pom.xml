@@ -919,11 +919,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>960-recaster</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>970-api-services-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -935,6 +930,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>970-rbac-core</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>980-recaster</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

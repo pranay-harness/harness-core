@@ -77,6 +77,7 @@ BAZEL_MODULES="\
   //810-ng-triggers:module \
   //815-cg-triggers:module \
   //820-platform-service:module \
+  //820-platform-service:module_deploy.jar \
   //830-notification-service:module \
   //830-resource-group:module \
   //835-notification-senders:module \
@@ -166,7 +167,6 @@ BAZEL_MODULES="\
   //960-notification-beans:module \
   //960-persistence:module \
   //960-persistence:supporter-test \
-  //960-recaster:module \
   //960-yaml-sdk:module \
   //970-api-services-beans/src/main/proto/io/harness/logging:all \
   //970-api-services-beans:module \
@@ -175,6 +175,7 @@ BAZEL_MODULES="\
   //970-rbac-core:module \
   //970-telemetry-beans:module \
   //980-commons:module \
+  //980-recaster:module \
   //990-commons-test:module \
   //999-annotations:module \
   //product/ci/engine/proto:all \
@@ -332,6 +333,7 @@ build_proto_module() {
 }
 
 build_bazel_application 940-notification-client
+build_bazel_application 820-platform-service
 
 build_bazel_module 320-ci-execution
 build_bazel_module 330-ci-beans
@@ -415,12 +417,12 @@ build_bazel_module 960-expression-service
 build_bazel_module 960-ng-core-beans
 build_bazel_module 960-notification-beans
 build_bazel_module 960-persistence
-build_bazel_module 960-recaster
 build_bazel_module 960-yaml-sdk
 build_bazel_module 970-api-services-beans
 build_bazel_module 970-grpc
 build_bazel_module 970-ng-commons
 build_bazel_module 970-rbac-core
+build_bazel_module 980-recaster
 build_bazel_module 980-commons
 build_bazel_module 990-commons-test
 build_bazel_module 999-annotations

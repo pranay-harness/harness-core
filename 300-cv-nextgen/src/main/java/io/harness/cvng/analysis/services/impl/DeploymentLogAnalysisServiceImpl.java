@@ -148,7 +148,7 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
     if (recentHighestDeploymentLogAnalysis == null) {
       return Optional.empty();
     } else {
-      return Optional.of(recentHighestDeploymentLogAnalysis.getResultSummary().getRisk());
+      return Optional.of(recentHighestDeploymentLogAnalysis.getResultSummary().getRiskLevel());
     }
   }
 
@@ -219,7 +219,7 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
         .stream()
         .filter(clusterSummary -> logAnalysisClusterChartDTO.getLabel() == clusterSummary.getLabel())
         .findFirst()
-        .ifPresent(clusterSummary -> logAnalysisClusterChartDTO.setRisk(clusterSummary.getRisk()));
+        .ifPresent(clusterSummary -> logAnalysisClusterChartDTO.setRisk(clusterSummary.getRiskLevel()));
     return logAnalysisClusterChartDTO;
   }
 
@@ -252,7 +252,7 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
             -> logAnalysisClusters.add(LogAnalysisClusterDTO.builder()
                                            .label(cluster.getLabel())
                                            .message(cluster.getText())
-                                           .risk(clusterSummary.getRisk())
+                                           .risk(clusterSummary.getRiskLevel())
                                            .score(clusterSummary.getScore())
                                            .count(clusterSummary.getCount())
                                            .clusterType(clusterSummary.getClusterType())

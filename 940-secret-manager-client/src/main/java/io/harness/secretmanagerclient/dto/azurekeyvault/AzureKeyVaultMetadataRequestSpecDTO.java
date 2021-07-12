@@ -10,6 +10,7 @@ import io.harness.secretmanagerclient.dto.SecretManagerMetadataRequestSpecDTO;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,4 +27,5 @@ public class AzureKeyVaultMetadataRequestSpecDTO extends SecretManagerMetadataRe
   @ApiModelProperty(dataType = "string") @NotNull private SecretRefData secretKey;
   @NotNull private String subscription;
   private AzureEnvironmentType azureEnvironmentType = AZURE;
+  private Set<String> delegateSelectors;
 }

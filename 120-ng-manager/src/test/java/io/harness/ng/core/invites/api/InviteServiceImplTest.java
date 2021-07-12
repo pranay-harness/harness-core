@@ -48,6 +48,7 @@ import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.invites.spring.InviteRepository;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.user.remote.UserClient;
 
 import com.auth0.jwt.interfaces.Claim;
 import java.util.Collections;
@@ -78,6 +79,7 @@ public class InviteServiceImplTest extends CategoryTest {
   @Mock private TransactionTemplate transactionTemplate;
   @Mock private InviteRepository inviteRepository;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) AccountClient accountClient;
+  @Mock(answer = Answers.RETURNS_DEEP_STUBS) UserClient userClient;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private AccessControlClient accessControlClient;
   @Mock private NotificationClient notificationClient;
   @Mock private OutboxService outboxService;
@@ -92,7 +94,7 @@ public class InviteServiceImplTest extends CategoryTest {
     MongoConfig mongoConfig = MongoConfig.builder().uri("mongodb://localhost:27017/ng-harness").build();
     inviteService = new InviteServiceImpl(USER_VERIFICATION_SECRET, mongoConfig, jwtGeneratorUtils, ngUserService,
         transactionTemplate, inviteRepository, notificationClient, accountClient, outboxService, organizationService,
-        projectService, accessControlClient, "https://qa.harness.io/", "https://qa.harness.io/ng/#/",
+        projectService, accessControlClient, userClient, "https://qa.harness.io/", "https://qa.harness.io/ng/#/",
         "https://qa.harness.io/auth/#/", false);
 
     when(accountClient.getAccountDTO(any()).execute())

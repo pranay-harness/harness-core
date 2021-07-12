@@ -15,9 +15,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
+@SuperBuilder
 @NoArgsConstructor
 @FieldNameConstants(innerTypeName = "LogCVConfigKeys")
 @EqualsAndHashCode(callSuper = true)

@@ -1,10 +1,14 @@
 package io.harness.secretmanagerclient.dto;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.AccessType;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -12,6 +16,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+@OwnedBy(PL)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
@@ -28,11 +33,14 @@ public class VaultMetadataRequestSpecDTO extends SecretManagerMetadataRequestSpe
       })
   @Valid
   private VaultCredentialDTO spec;
+  private Set<String> delegateSelectors;
 
   @Builder
-  public VaultMetadataRequestSpecDTO(String url, AccessType accessType, VaultCredentialDTO spec) {
+  public VaultMetadataRequestSpecDTO(
+      String url, AccessType accessType, VaultCredentialDTO spec, Set<String> delegateSelectors) {
     this.url = url;
     this.accessType = accessType;
     this.spec = spec;
+    this.delegateSelectors = delegateSelectors;
   }
 }

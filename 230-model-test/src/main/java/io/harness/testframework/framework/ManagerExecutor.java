@@ -4,6 +4,7 @@ import static io.harness.testframework.framework.utils.ExecutorUtils.addConfig;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addGCVMOptions;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJacocoAgentVM;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJar;
+import static io.harness.testframework.framework.utils.ExecutorUtils.getJar;
 
 import static io.restassured.config.HttpClientConfig.httpClientConfig;
 import static java.time.Duration.ofMinutes;
@@ -79,12 +80,7 @@ public class ManagerExecutor {
 
     log.info("Execute the manager from {}", directory);
 
-    String home = System.getProperty("user.home");
-    if (home.contains("root")) {
-      home = "/home/jenkins";
-    }
-
-    final Path jar = Paths.get(home + "/.bazel-dirs/bin/360-cg-manager/module_deploy.jar");
+    final Path jar = getJar("360-cg-manager");
 
     final Path config = Paths.get(directory.getPath(), "360-cg-manager", "modified_config.yml");
 

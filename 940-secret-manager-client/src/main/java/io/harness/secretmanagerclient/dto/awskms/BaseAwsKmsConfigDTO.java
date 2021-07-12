@@ -7,6 +7,7 @@ import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredentialType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.util.Set;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,4 +32,5 @@ public class BaseAwsKmsConfigDTO {
   AwsKmsCredentialSpecConfig credential;
   String kmsArn;
   String region;
+  Set<String> delegateSelectors;
 }

@@ -20,6 +20,7 @@ public class GcpKmsEntityToDTO implements ConnectorEntityToDTOMapper<GcpKmsConne
             .region(connector.getRegion())
             .isDefault(connector.isDefault())
             .credentials(SecretRefHelper.createSecretRef(connector.getCredentialsRef()))
+            .delegateSelectors(connector.getDelegateSelectors())
             .build();
     gcpKmsConnectorDTO.setHarnessManaged(Boolean.TRUE.equals(connector.getHarnessManaged()));
     return gcpKmsConnectorDTO;

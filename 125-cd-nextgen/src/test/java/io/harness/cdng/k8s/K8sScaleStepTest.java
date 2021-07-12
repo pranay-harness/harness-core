@@ -183,7 +183,7 @@ public class K8sScaleStepTest extends CategoryTest {
     doReturn(infrastructureOutcome)
         .when(outcomeService)
         .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
-    doReturn("test-scale-count-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
+    doReturn("test-scale-count-release").when(k8sStepHelper).getReleaseName(ambiance, infrastructureOutcome);
     doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(LinkedList.class));
 
     scaleStep.obtainTask(ambiance, stepElementParameters, stepInputPackage);
@@ -238,7 +238,7 @@ public class K8sScaleStepTest extends CategoryTest {
     doReturn(infrastructureOutcome)
         .when(outcomeService)
         .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
-    doReturn("test-scale-percentage-release").when(k8sStepHelper).getReleaseName(infrastructureOutcome);
+    doReturn("test-scale-percentage-release").when(k8sStepHelper).getReleaseName(ambiance, infrastructureOutcome);
     doReturn(manifestOutcome).when(k8sStepHelper).getK8sSupportedManifestOutcome(any(LinkedList.class));
 
     scaleStep.obtainTask(ambiance, stepElementParameters, stepInputPackage);
