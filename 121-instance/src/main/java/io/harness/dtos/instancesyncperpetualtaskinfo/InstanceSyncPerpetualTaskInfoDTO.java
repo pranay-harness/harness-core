@@ -4,11 +4,14 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
 import java.util.List;
+import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 @OwnedBy(HarnessTeam.DX)
-@Value
+@Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class InstanceSyncPerpetualTaskInfoDTO {
   String accountIdentifier;
@@ -17,6 +20,7 @@ public class InstanceSyncPerpetualTaskInfoDTO {
   String infrastructureMappingId;
   List<String> deploymentSummaryIdList;
   List<DeploymentInfoDetailsDTO> deploymentInfoDetailsDTOList;
+  String perpetualTaskId;
   long createdAt;
   long lastUpdatedAt;
 }

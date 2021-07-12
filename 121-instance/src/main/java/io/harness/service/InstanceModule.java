@@ -10,6 +10,8 @@ import io.harness.service.instanceService.InstanceService;
 import io.harness.service.instanceService.InstanceServiceImpl;
 import io.harness.service.instancedashboardservice.InstanceDashboardService;
 import io.harness.service.instancedashboardservice.InstanceDashboardServiceImpl;
+import io.harness.service.instancesync.InstanceSyncService;
+import io.harness.service.instancesync.InstanceSyncServiceImpl;
 import io.harness.service.instancesynchandlerfactory.InstanceSyncHandlerFactoryService;
 import io.harness.service.instancesynchandlerfactory.InstanceSyncHandlerFactoryServiceImpl;
 import io.harness.service.instancesyncperpetualtask.InstanceSyncPerpetualTaskService;
@@ -40,6 +42,7 @@ public class InstanceModule extends AbstractModule {
     bind(InfrastructureMappingService.class).to(InfrastructureMappingServiceImpl.class);
     bind(InstanceSyncPerpetualTaskService.class).to(InstanceSyncPerpetualTaskServiceImpl.class);
     bind(InstanceSyncHandlerFactoryService.class).to(InstanceSyncHandlerFactoryServiceImpl.class);
+    bind(InstanceSyncService.class).to(InstanceSyncServiceImpl.class);
   }
 
   private void registerRequiredBindings() {
