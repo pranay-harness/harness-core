@@ -1038,17 +1038,31 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
   }
 
-  private void validateRemoteAppManifest(ApplicationManifest applicationManifest) {
+  @VisibleForTesting
+  void validateRemoteAppManifest(ApplicationManifest applicationManifest) {
     if (applicationManifest.getHelmChartConfig() != null) {
       throw new InvalidRequestException("helmChartConfig cannot be used with Remote. Use gitFileConfig instead.", USER);
     }
 
     if (applicationManifest.getCustomSourceConfig() != null) {
       throw new InvalidRequestException(
-          "customSourcceConfig cannot be used with Remote. Use gitFileConfig instead.", USER);
+          "customSourceConfig cannot be used with Remote. Use gitFileConfig instead.", USER);
     }
 
     gitFileConfigHelperService.validate(applicationManifest.getGitFileConfig());
+
+    Service service =
+        serviceResourceService.getWithDetails(applicationManifest.getAppId(), applicationManifest.getServiceId());
+
+    if (service == null) {
+      log.error("Remote Manifest validation failed as service with serviceId : {} does not exist for app manifest : {}",
+          applicationManifest.getServiceId(), applicationManifest.getUuid());
+      throw new InvalidRequestException("Remote manifest validation failed as service could not be found", USER);
+    }
+
+    if ((applicationManifest.getStoreType() == Remote) && (service.getDeploymentType() == DeploymentType.ECS)) {
+      gitFileConfigHelperService.validateEcsGitfileConfig(applicationManifest.getGitFileConfig());
+    }
   }
 
   private void validateKustomizeAppManifest(ApplicationManifest applicationManifest) {

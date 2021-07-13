@@ -248,6 +248,8 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
                                       .build();
     applicationManifest.setStoreType(Remote);
     applicationManifest.setGitFileConfig(gitFileConfig);
+    Service service = Service.builder().deploymentType(DeploymentType.KUBERNETES).build();
+    doReturn(service).when(serviceResourceService).getWithDetails(any(), any());
     ApplicationManifest savedApplicationManifest = applicationManifestService.update(applicationManifest);
     assertThat(savedApplicationManifest.getUuid()).isNotNull();
     assertThat(savedApplicationManifest.getEnvId()).isNull();
