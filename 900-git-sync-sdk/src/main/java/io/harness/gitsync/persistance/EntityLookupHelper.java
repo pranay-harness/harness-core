@@ -5,14 +5,12 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceBlockingStub;
-import io.harness.gitsync.IsGitSyncEnabled;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.concurrent.TimeUnit;
+import com.google.inject.name.Named;
 import javax.annotation.ParametersAreNonnullByDefault;
+import javax.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -21,30 +19,33 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 @Slf4j
 @OwnedBy(DX)
 public class EntityLookupHelper implements EntityKeySource {
-  private final @NonNull Cache<Object, Object> keyCache;
+  private final @NonNull Cache<String, Boolean> gitEnabledCache;
   HarnessToGitPushInfoServiceBlockingStub harnessToGitPushInfoServiceBlockingStub;
-  private final int SCOPE_GIT_SYNC_ENABLED_CACHE_TIME = 5 /*minutes*/;
-  private final int SCOPE_GIT_SYNC_ENABLED_CACHE_SIZE = 1000;
 
   @Inject
-  public EntityLookupHelper(HarnessToGitPushInfoServiceBlockingStub harnessToGitPushInfoServiceBlockingStub) {
-    this.keyCache = Caffeine.newBuilder()
-                        .maximumSize(SCOPE_GIT_SYNC_ENABLED_CACHE_SIZE)
-                        .expireAfterWrite(SCOPE_GIT_SYNC_ENABLED_CACHE_TIME, TimeUnit.MINUTES)
-                        .build();
+  public EntityLookupHelper(HarnessToGitPushInfoServiceBlockingStub harnessToGitPushInfoServiceBlockingStub,
+      @Named("gitSyncEnabledCache") Cache<String, Boolean> gitEnabledCache) {
+    this.gitEnabledCache = gitEnabledCache;
     this.harnessToGitPushInfoServiceBlockingStub = harnessToGitPushInfoServiceBlockingStub;
   }
 
   @Override
   public boolean fetchKey(EntityScopeInfo entityScopeInfo) {
-    return harnessToGitPushInfoServiceBlockingStub.isGitSyncEnabledForScope(entityScopeInfo).getEnabled();
+    final String scope = entityScopeInfo.toString();
+    Boolean isGitEnabled = gitEnabledCache.get(scope);
+    if (isGitEnabled != null) {
+      return isGitEnabled;
+    } else {
+      final Boolean gitSyncEnabled =
+          harnessToGitPushInfoServiceBlockingStub.isGitSyncEnabledForScope(entityScopeInfo).getEnabled();
+      gitEnabledCache.put(scope, gitSyncEnabled);
+      return gitSyncEnabled;
+    }
   }
 
   @Override
   public void updateKey(EntityScopeInfo entityScopeInfo) {
-    final IsGitSyncEnabled gitSyncEnabledForScope =
-        harnessToGitPushInfoServiceBlockingStub.isGitSyncEnabledForScope(entityScopeInfo);
     log.info("Invalidating cache {}", entityScopeInfo);
-    keyCache.put(entityScopeInfo, gitSyncEnabledForScope.getEnabled());
+    gitEnabledCache.remove(entityScopeInfo.toString());
   }
 }
