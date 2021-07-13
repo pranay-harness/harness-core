@@ -66,6 +66,9 @@ spec:
           limits:
             cpu: "0.5"
             memory: "1650Mi"
+          requests:
+            cpu: "0.45"
+            memory: "1550Mi"
         readinessProbe:
           exec:
             command:
