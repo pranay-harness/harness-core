@@ -33,7 +33,7 @@ public class GitSyncSdkServiceImpl implements GitSyncSdkService {
   @Override
   public boolean isGitSyncEnabled(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     try {
-      return entityKeySource.fetchKey(buildEntityScopeInfo(projectIdentifier, orgIdentifier, accountIdentifier));
+      return false;
     } catch (Exception ex) {
       log.error("Exception while communicating to the git sync service", ex);
       return false;
