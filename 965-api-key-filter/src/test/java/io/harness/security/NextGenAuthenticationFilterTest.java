@@ -8,10 +8,13 @@ import static io.harness.security.NextGenAuthenticationFilter.X_API_KEY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder.BCryptVersion.$2A;
 
 import io.harness.ApiKeyFilterTestBase;
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -29,9 +32,13 @@ import java.util.function.Predicate;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -48,6 +55,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({NGRestUtils.class})
 public class NextGenAuthenticationFilterTest extends ApiKeyFilterTestBase {
+  private static final String accountIdentifier = "accountIdentifier";
+
   private NextGenAuthenticationFilter authenticationFilter;
   private TokenClient tokenClient;
   private ContainerRequestContext containerRequestContext;
@@ -69,6 +78,13 @@ public class NextGenAuthenticationFilterTest extends ApiKeyFilterTestBase {
         Mockito.spy(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping, tokenClient));
     tokenClient = Mockito.mock(TokenClient.class);
     containerRequestContext = Mockito.mock(ContainerRequestContext.class);
+
+    final UriInfo mockUriInfo = mock(UriInfo.class);
+    doReturn(mockUriInfo).when(containerRequestContext).getUriInfo();
+    MultivaluedMap<String, String> queryParams = new MultivaluedHashMap<>();
+    queryParams.put(NGCommonEntityConstants.ACCOUNT_KEY, Lists.newArrayList("accountIdentifier"));
+    when(mockUriInfo.getQueryParameters()).thenReturn(queryParams);
+
     FieldUtils.writeField(authenticationFilter, "tokenClient", tokenClient, true);
   }
 
@@ -97,6 +113,7 @@ public class NextGenAuthenticationFilterTest extends ApiKeyFilterTestBase {
     TokenDTO tokenDTO = TokenDTO.builder()
                             .apiKeyType(ApiKeyType.SERVICE_ACCOUNT)
                             .encodedPassword(encodedPassword)
+                            .accountIdentifier(accountIdentifier)
                             .valid(true)
                             .parentIdentifier(generateUuid())
                             .build();
@@ -121,6 +138,7 @@ public class NextGenAuthenticationFilterTest extends ApiKeyFilterTestBase {
                             .apiKeyType(ApiKeyType.SERVICE_ACCOUNT)
                             .encodedPassword(encodedPassword)
                             .valid(true)
+                            .accountIdentifier(accountIdentifier)
                             .parentIdentifier(generateUuid())
                             .build();
     when(NGRestUtils.getResponse(any())).thenReturn(tokenDTO);
@@ -168,6 +186,7 @@ public class NextGenAuthenticationFilterTest extends ApiKeyFilterTestBase {
                             .apiKeyType(ApiKeyType.USER)
                             .encodedPassword(encodedPassword)
                             .valid(true)
+                            .accountIdentifier(accountIdentifier)
                             .parentIdentifier(generateUuid())
                             .email("user@harness.io")
                             .username("user")
@@ -193,6 +212,7 @@ public class NextGenAuthenticationFilterTest extends ApiKeyFilterTestBase {
                             .apiKeyType(ApiKeyType.USER)
                             .encodedPassword(encodedPassword)
                             .valid(true)
+                            .accountIdentifier(accountIdentifier)
                             .parentIdentifier(generateUuid())
                             .email("user@harness.io")
                             .username("user")
