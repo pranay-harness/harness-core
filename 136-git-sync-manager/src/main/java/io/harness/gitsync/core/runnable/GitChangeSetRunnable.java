@@ -70,11 +70,12 @@ public class GitChangeSetRunnable implements Runnable {
   @Override
   public void run() {
     final Stopwatch stopwatch = Stopwatch.createStarted();
-    //    log.info(GIT_YAML_LOG_PREFIX + "Started job to pick changesets for processing");
+    //    log.info("Started job to pick changesets for processing");
 
     try {
       if (!shouldRun()) {
         log.info("Not continuing with GitChangeSetRunnable job");
+        Thread.sleep(300);
         return;
       }
 
