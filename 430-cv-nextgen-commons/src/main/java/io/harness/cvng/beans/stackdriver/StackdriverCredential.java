@@ -11,8 +11,10 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import java.io.IOException;
 import lombok.Builder;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 @Data
+@Slf4j
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StackdriverCredential {
@@ -22,14 +24,20 @@ public class StackdriverCredential {
   @JsonProperty("private_key_id") private String privateKeyId;
   @JsonProperty("project_id") private String projectId;
 
-  public static StackdriverCredential fromGcpConnector(GcpConnectorDTO gcpConnectorDTO) throws IOException {
+  public static StackdriverCredential fromGcpConnector(GcpConnectorDTO gcpConnectorDTO) {
     switch (gcpConnectorDTO.getCredential().getGcpCredentialType()) {
       case MANUAL_CREDENTIALS:
         GcpManualDetailsDTO gcpManualDetailsDTO = (GcpManualDetailsDTO) gcpConnectorDTO.getCredential().getConfig();
         String decryptedSecret = new String(gcpManualDetailsDTO.getSecretKeyRef().getDecryptedValue());
         return JsonUtils.asObject(decryptedSecret, StackdriverCredential.class);
       case INHERIT_FROM_DELEGATE:
-        GoogleCredential googleCredential = GcpCredentialsHelperService.getApplicationDefaultCredentials();
+        GoogleCredential googleCredential = null;
+        try {
+          googleCredential = GcpCredentialsHelperService.getApplicationDefaultCredentials();
+        } catch (IOException e) {
+          log.error("Cannot fetch credentials from delegate", e);
+          throw new IllegalStateException("Cannot fetch credentials from delegate");
+        }
         return StackdriverCredential.builder()
             .privateKey(googleCredential.getServiceAccountPrivateKey().toString())
             .privateKeyId(googleCredential.getServiceAccountPrivateKeyId())
