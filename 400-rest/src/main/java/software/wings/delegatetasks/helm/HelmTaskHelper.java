@@ -341,8 +341,8 @@ public class HelmTaskHelper {
   public void updateRepo(String repoName, String workingDirectory, HelmVersion helmVersion, long timeoutInMillis) {
     try {
       String repoUpdateCommand = getRepoUpdateCommand(repoName, workingDirectory, helmVersion);
-      ProcessResult processResult = helmTaskHelperBase.executeCommand(
-          repoUpdateCommand, null, format("update helm repo %s", repoName), timeoutInMillis);
+      ProcessResult processResult = helmTaskHelperBase.executeCommand(repoUpdateCommand, null,
+          format("update helm repo %s", repoName), timeoutInMillis, HelmCliCommandType.REPO_UPDATE);
 
       log.info("Repo update command executed on delegate: {}", repoUpdateCommand);
       if (processResult.getExitValue() != 0) {
@@ -433,7 +433,7 @@ public class HelmTaskHelper {
     String commandOutput = executeCommandWithLogOutput(
         fetchHelmChartVersionsCommand(helmChartConfigParams.getHelmVersion(), helmChartConfigParams.getChartName(),
             helmChartConfigParams.getRepoName(), destinationDirectory),
-        workingDirectory, "Helm chart fetch versions command failed ");
+        workingDirectory, "Helm chart fetch versions command failed ", HelmCliCommandType.FETCH_ALL_VERSIONS);
 
     if (log.isDebugEnabled()) {
       log.debug("Result of the helm repo search command: {}, chart name: {}", commandOutput,
@@ -501,7 +501,7 @@ public class HelmTaskHelper {
       String commandOutput = executeCommandWithLogOutput(
           fetchHelmChartVersionsCommand(helmChartConfigParams.getHelmVersion(), helmChartConfigParams.getChartName(),
               helmChartConfigParams.getRepoName(), chartDirectory),
-          chartDirectory, "Helm chart fetch versions command failed ");
+          chartDirectory, "Helm chart fetch versions command failed ", HelmCliCommandType.FETCH_ALL_VERSIONS);
       return parseHelmVersionFetchOutput(commandOutput, helmChartCollectionParams);
     } finally {
       chartMuseumClient.stopChartMuseumServer(chartMuseumServer.getStartedProcess());
@@ -523,7 +523,8 @@ public class HelmTaskHelper {
     return helmTaskHelperBase.applyHelmHomePath(helmFetchCommand, workingDirectory);
   }
 
-  String executeCommandWithLogOutput(String command, String chartDirectory, String errorMessage) {
+  String executeCommandWithLogOutput(
+      String command, String chartDirectory, String errorMessage, HelmCliCommandType helmCliCommandType) {
     StringBuilder sb = new StringBuilder();
     ProcessExecutor processExecutor = createProcessExecutorWithRedirectOutput(command, chartDirectory, sb);
 
@@ -536,12 +537,12 @@ public class HelmTaskHelper {
       }
       return sb.toString();
     } catch (IOException e) {
-      throw new HelmClientException(format("[IO exception] %s", errorMessage), USER, e);
+      throw new HelmClientException(format("[IO exception] %s", errorMessage), USER, e, helmCliCommandType);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new HelmClientException(format("[Interrupted] %s", errorMessage), USER, e);
+      throw new HelmClientException(format("[Interrupted] %s", errorMessage), USER, e, helmCliCommandType);
     } catch (TimeoutException | UncheckedTimeoutException e) {
-      throw new HelmClientException(format("[Timed out] %s", errorMessage), USER, e);
+      throw new HelmClientException(format("[Timed out] %s", errorMessage), USER, e, helmCliCommandType);
     }
   }
 

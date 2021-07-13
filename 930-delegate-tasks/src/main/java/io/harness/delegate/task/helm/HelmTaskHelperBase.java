@@ -100,12 +100,12 @@ public class HelmTaskHelperBase {
       helmInitCommand = applyHelmHomePath(helmInitCommand, workingDirectory);
       log.info("Initing helm. Command " + helmInitCommand);
 
-      ProcessResult processResult =
-          executeCommand(helmInitCommand, workingDirectory, "Initing helm Command " + helmInitCommand, timeoutInMillis);
+      ProcessResult processResult = executeCommand(helmInitCommand, workingDirectory,
+          "Initing helm Command " + helmInitCommand, timeoutInMillis, HelmCliCommandType.INIT);
       if (processResult.getExitValue() != 0) {
         throw new HelmClientException(
             "Failed to init helm. Executed command " + helmInitCommand + ". " + processResult.getOutput().getUTF8(),
-            USER);
+            USER, HelmCliCommandType.INIT);
       }
     }
   }
@@ -120,12 +120,12 @@ public class HelmTaskHelperBase {
     log.info(repoAddCommandForLogging);
     log.info(ADD_COMMAND_FOR_REPOSITORY + repoDisplayName);
 
-    ProcessResult processResult = executeCommand(
-        repoAddCommand, chartDirectory, "add helm repo. Executed command" + repoAddCommandForLogging, timeoutInMillis);
+    ProcessResult processResult = executeCommand(repoAddCommand, chartDirectory,
+        "add helm repo. Executed command" + repoAddCommandForLogging, timeoutInMillis, HelmCliCommandType.REPO_ADD);
     if (processResult.getExitValue() != 0) {
       throw new HelmClientException("Failed to add helm repo. Executed command " + repoAddCommandForLogging + ". "
               + processResult.getOutput().getUTF8(),
-          USER);
+          USER, HelmCliCommandType.REPO_ADD);
     }
   }
 
@@ -187,7 +187,8 @@ public class HelmTaskHelperBase {
     return isBlank(passwordAsString) ? "" : "--password " + passwordAsString;
   }
 
-  public ProcessResult executeCommand(String command, String directoryPath, String errorMessage, long timeoutInMillis) {
+  public ProcessResult executeCommand(String command, String directoryPath, String errorMessage, long timeoutInMillis,
+      HelmCliCommandType helmCliCommandType) {
     errorMessage = isEmpty(errorMessage) ? "" : errorMessage;
     ProcessExecutor processExecutor = createProcessExecutor(command, directoryPath, timeoutInMillis);
 
@@ -195,12 +196,12 @@ public class HelmTaskHelperBase {
       return processExecutor.execute();
     } catch (IOException e) {
       // Not setting the cause here because it carries forward the commands which can contain passwords
-      throw new HelmClientException(format("[IO exception] %s", errorMessage), USER);
+      throw new HelmClientException(format("[IO exception] %s", errorMessage), USER, helmCliCommandType);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new HelmClientException(format("[Interrupted] %s", errorMessage), USER);
+      throw new HelmClientException(format("[Interrupted] %s", errorMessage), USER, helmCliCommandType);
     } catch (TimeoutException | UncheckedTimeoutException e) {
-      throw new HelmClientException(format("[Timed out] %s", errorMessage), USER);
+      throw new HelmClientException(format("[Timed out] %s", errorMessage), USER, helmCliCommandType);
     }
   }
 
@@ -228,8 +229,8 @@ public class HelmTaskHelperBase {
     try {
       String repoRemoveCommand = getRepoRemoveCommand(repoName, workingDirectory, helmVersion);
 
-      ProcessResult processResult =
-          executeCommand(repoRemoveCommand, null, format("remove helm repo %s", repoName), timeoutInMillis);
+      ProcessResult processResult = executeCommand(repoRemoveCommand, null, format("remove helm repo %s", repoName),
+          timeoutInMillis, HelmCliCommandType.REPO_REMOVE);
       if (processResult.getExitValue() != 0) {
         log.warn("Failed to remove helm repo {}. {}", repoName, processResult.getOutput().getUTF8());
       }
@@ -288,8 +289,8 @@ public class HelmTaskHelperBase {
       String chartName, String chartDirectory, String repoDisplayName, String helmFetchCommand, long timeoutInMillis) {
     log.info(helmFetchCommand);
 
-    ProcessResult processResult =
-        executeCommand(helmFetchCommand, chartDirectory, format("fetch chart %s", chartName), timeoutInMillis);
+    ProcessResult processResult = executeCommand(helmFetchCommand, chartDirectory, format("fetch chart %s", chartName),
+        timeoutInMillis, HelmCliCommandType.FETCH);
     if (processResult.getExitValue() != 0) {
       StringBuilder builder = new StringBuilder().append("Failed to fetch chart \"").append(chartName).append("\" ");
 
@@ -370,12 +371,12 @@ public class HelmTaskHelperBase {
     log.info(repoAddCommand);
     log.info(ADD_COMMAND_FOR_REPOSITORY + repoDisplayName);
 
-    ProcessResult processResult =
-        executeCommand(repoAddCommand, chartDirectory, ADD_COMMAND_FOR_REPOSITORY + repoDisplayName, timeoutInMillis);
+    ProcessResult processResult = executeCommand(repoAddCommand, chartDirectory,
+        ADD_COMMAND_FOR_REPOSITORY + repoDisplayName, timeoutInMillis, HelmCliCommandType.REPO_ADD);
     if (processResult.getExitValue() != 0) {
       throw new HelmClientException(
           "Failed to add helm repo. Executed command " + repoAddCommand + ". " + processResult.getOutput().getUTF8(),
-          USER);
+          USER, HelmCliCommandType.REPO_ADD);
     }
   }
 
