@@ -28,7 +28,7 @@ public class GcpCredentialsHelperService {
 
   public GoogleCredential getGoogleCredentialWithProxyConfiguredHttpTransport(char[] serviceAccountKeyFileContent)
       throws IOException {
-    HttpTransport httpTransport = gcpHttpTransportHelperService.getProxyConfiguredHttpTransport();
+    HttpTransport httpTransport = GcpHttpTransportHelperService.getProxyConfiguredHttpTransport();
     return appendScopesIfRequired(GoogleCredential.fromStream(
         IOUtils.toInputStream(String.valueOf(serviceAccountKeyFileContent), Charset.defaultCharset()), httpTransport,
         JacksonFactory.getDefaultInstance()));
@@ -41,10 +41,10 @@ public class GcpCredentialsHelperService {
     return googleCredential;
   }
 
-  public GoogleCredential getApplicationDefaultCredentials() throws IOException {
+  public static GoogleCredential getApplicationDefaultCredentials() throws IOException {
     return Http.getProxyHostName() != null && !Http.shouldUseNonProxy(OAuth2Utils.getMetadataServerUrl())
         ? GoogleCredential.getApplicationDefault(
-            gcpHttpTransportHelperService.getProxyConfiguredHttpTransport(), JacksonFactory.getDefaultInstance())
+            GcpHttpTransportHelperService.getProxyConfiguredHttpTransport(), JacksonFactory.getDefaultInstance())
         : GoogleCredential.getApplicationDefault();
   }
 }

@@ -1,9 +1,14 @@
 package io.harness.cvng.utils;
 
 import io.harness.cvng.beans.stackdriver.StackdriverCredential;
+import io.harness.gcp.helpers.GcpHttpTransportHelperService;
+import io.harness.network.Http;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.auth.oauth2.OAuth2Utils;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
