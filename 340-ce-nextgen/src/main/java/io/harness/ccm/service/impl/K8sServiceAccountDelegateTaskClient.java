@@ -66,7 +66,7 @@ public class K8sServiceAccountDelegateTaskClient {
         .taskSetupAbstractions(ngTaskSetupAbstractionsWithOwner)
         .executionTimeout(Duration.ofMinutes(2))
         .taskDescription(TaskType.K8S_SERVICE_ACCOUNT_INFO.getDisplayName())
-        .forceExecute(true)
+        .forceExecute(false)
         .build();
   }
 
