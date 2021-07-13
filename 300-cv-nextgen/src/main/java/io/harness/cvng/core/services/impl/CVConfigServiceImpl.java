@@ -261,15 +261,6 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
-  public void markFirstTaskCollected(CVConfig cvConfig) {
-    UpdateOperations<CVConfig> updateOperations =
-        hPersistence.createUpdateOperations(CVConfig.class).set(CVConfigKeys.firstTaskQueued, true);
-    Query<CVConfig> query =
-        hPersistence.createQuery(CVConfig.class, excludeAuthority).filter(CVConfigKeys.uuid, cvConfig.getUuid());
-    hPersistence.update(query, updateOperations);
-  }
-
-  @Override
   public Set<CVMonitoringCategory> getAvailableCategories(String accountId, String orgIdentifier,
       String projectIdentifier, String envIdentifier, String serviceIdentifier) {
     BasicDBObject cvConfigQuery = getQueryWithAccountOrgProjectFiltersSet(
