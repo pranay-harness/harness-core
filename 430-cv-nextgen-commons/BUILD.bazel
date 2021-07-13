@@ -25,7 +25,6 @@ java_library(
         "@maven//:com_google_inject_guice",
         "@maven//:com_nimbusds_nimbus_jose_jwt",
         "@maven//:commons_codec_commons_codec",
-        "@maven//:com_google_auth_google_auth_library_oauth2_http",
         "@maven//:javax_annotation_javax_annotation_api",
         "@maven//:javax_validation_validation_api",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
