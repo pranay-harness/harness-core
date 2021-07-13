@@ -14,6 +14,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.beans.PageRequest;
@@ -41,7 +42,7 @@ import org.springframework.data.domain.PageImpl;
 @OwnedBy(PL)
 public class InviteResourceTest extends CategoryTest {
   @Mock private InviteService inviteService;
-
+  @Mock private AccessControlClient accessControlClient;
   private final String accountIdentifier = randomAlphabetic(7);
   private final String orgIdentifier = randomAlphabetic(7);
   private final String projectIdentifier = randomAlphabetic(7);
@@ -54,7 +55,7 @@ public class InviteResourceTest extends CategoryTest {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-    inviteResource = new InviteResource(inviteService);
+    inviteResource = new InviteResource(inviteService, accessControlClient);
     invite = Invite.builder()
                  .accountIdentifier(accountIdentifier)
                  .orgIdentifier(orgIdentifier)

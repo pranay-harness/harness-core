@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.accesscontrol.PlatformPermissions.INVITE_PERMISSION_IDENTIFIER;
-import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USER_PERMISSION;
 import static io.harness.ng.core.invites.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.ng.core.invites.InviteType.USER_INITIATED_INVITE;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.FAIL;
@@ -222,14 +221,8 @@ public class InviteServiceImpl implements InviteService {
 
   @Override
   public Optional<Invite> getInvite(String inviteId, boolean allowDeleted) {
-    Optional<Invite> inviteOpt =
-        allowDeleted ? inviteRepository.findById(inviteId) : inviteRepository.findFirstByIdAndDeleted(inviteId, FALSE);
-    if (inviteOpt.isPresent()) {
-      Invite invite = inviteOpt.get();
-      checkPermissions(invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier(),
-          VIEW_USER_PERMISSION);
-    }
-    return inviteOpt;
+    return allowDeleted ? inviteRepository.findById(inviteId)
+                        : inviteRepository.findFirstByIdAndDeleted(inviteId, FALSE);
   }
 
   @Override
