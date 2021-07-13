@@ -1,12 +1,10 @@
 package io.harness.ng.core.user;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.annotations.dev.HarnessTeam.GTM;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ng.core.dto.GatewayAccountRequestDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -18,16 +16,11 @@ import lombok.experimental.FieldDefaults;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@OwnedBy(PL)
-public class UserInfo {
-  @EqualsAndHashCode.Include String uuid;
-  String name;
+@OwnedBy(GTM)
+public class SignupInviteDTO {
   String email;
-  String token;
-  String defaultAccountId;
+  String passwordHash;
   String intent;
-  List<GatewayAccountRequestDTO> accounts;
-  boolean admin;
-  boolean twoFactorAuthenticationEnabled;
-  boolean emailVerified;
+  boolean createdFromNG;
+  boolean completed;
 }
