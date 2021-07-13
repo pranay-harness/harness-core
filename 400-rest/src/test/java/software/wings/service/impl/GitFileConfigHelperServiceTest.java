@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.PRAKHAR;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -167,5 +168,29 @@ public class GitFileConfigHelperServiceTest extends WingsBaseTest {
 
     gitFileConfig.setRepoName("repo1");
     configHelperService.validate(gitFileConfig);
+  }
+
+  @Test
+  @Owner(developers = PRAKHAR)
+  @Category(UnitTests.class)
+  public void testValidateEcsGitfileConfig() {
+    GitFileConfig gitFileConfig = GitFileConfig.builder().build();
+    assertThatExceptionOfType(GeneralException.class)
+        .isThrownBy(() -> configHelperService.validateEcsGitfileConfig(null));
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> configHelperService.validateEcsGitfileConfig(gitFileConfig))
+        .withMessageContaining("File Path to Task Definition cannot be empty.");
+
+    gitFileConfig.setTaskSpecFilePath("taskSpecFilePath");
+    gitFileConfig.setUseInlineServiceDefinition(true);
+    configHelperService.validateEcsGitfileConfig(gitFileConfig);
+
+    gitFileConfig.setUseInlineServiceDefinition(false);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> configHelperService.validateEcsGitfileConfig(gitFileConfig))
+        .withMessageContaining("File Path to Service Definition cannot be empty.");
+
+    gitFileConfig.setServiceSpecFilePath("serviceSpecFilePath");
+    configHelperService.validateEcsGitfileConfig(gitFileConfig);
   }
 }

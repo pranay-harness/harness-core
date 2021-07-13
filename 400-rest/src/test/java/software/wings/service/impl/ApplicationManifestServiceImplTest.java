@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.PRABU;
+import static io.harness.rule.OwnerRule.PRAKHAR;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -62,6 +63,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
@@ -194,7 +196,6 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> applicationManifestServiceImpl.validateApplicationManifest(applicationManifest));
-
     applicationManifest.setServiceId("s1");
     doReturn(HelmVersion.V2).when(serviceResourceService).getHelmVersionWithDefault(anyString(), anyString());
     applicationManifestServiceImpl.validateApplicationManifest(applicationManifest);
@@ -538,6 +539,8 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
     gitFileConfig.setRepoName("repo-name");
     doReturn(HelmVersion.V2).when(serviceResourceService).getHelmVersionWithDefault(anyString(), anyString());
+    Service service = Service.builder().deploymentType(DeploymentType.HELM).build();
+    doReturn(service).when(serviceResourceService).getWithDetails(any(), any());
     applicationManifestServiceImpl.validateApplicationManifest(applicationManifest);
   }
 
@@ -929,6 +932,41 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     applicationManifestServiceImpl.upsertApplicationManifestFile(newManifestFile, applicationManifest, false);
     verify(yamlPushService, times(1))
         .pushYamlChangeSet(ACCOUNT_ID, oldManifestFile, newManifestFile, Type.UPDATE, false, false);
+  }
+
+  @Test
+  @Owner(developers = PRAKHAR)
+  @Category(UnitTests.class)
+  public void testValidateRemoteAppManifest() {
+    GitFileConfig gitFileConfig = GitFileConfig.builder().build();
+    ApplicationManifest applicationManifest = ApplicationManifest.builder()
+                                                  .storeType(Remote)
+                                                  .helmChartConfig(HelmChartConfig.builder().build())
+                                                  .gitFileConfig(gitFileConfig)
+                                                  .build();
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> applicationManifestServiceImpl.validateRemoteAppManifest(applicationManifest))
+        .withMessageContaining("helmChartConfig cannot be used with Remote. Use gitFileConfig instead.");
+
+    applicationManifest.setHelmChartConfig(null);
+    applicationManifest.setCustomSourceConfig(CustomSourceConfig.builder().build());
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> applicationManifestServiceImpl.validateRemoteAppManifest(applicationManifest))
+        .withMessageContaining("customSourceConfig cannot be used with Remote. Use gitFileConfig instead.");
+
+    applicationManifest.setCustomSourceConfig(null);
+    doNothing().when(gitFileConfigHelperService).validate(any());
+    when(serviceResourceService.getWithDetails(any(), any())).thenReturn(null);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> applicationManifestServiceImpl.validateRemoteAppManifest(applicationManifest))
+        .withMessageContaining("Remote manifest validation failed as service could not be found");
+
+    Service service = Service.builder().deploymentType(DeploymentType.ECS).build();
+    doNothing().when(gitFileConfigHelperService).validate(any());
+    when(serviceResourceService.getWithDetails(any(), any())).thenReturn(service);
+    doNothing().when(gitFileConfigHelperService).validateEcsGitfileConfig(any());
+    applicationManifestServiceImpl.validateRemoteAppManifest(applicationManifest);
+    verify(gitFileConfigHelperService, times(1)).validateEcsGitfileConfig(gitFileConfig);
   }
 
   @NotNull
