@@ -247,7 +247,8 @@ public class ExpressionEvaluatorUtils {
     while (c.getSuperclass() != null) {
       for (Field f : c.getDeclaredFields()) {
         // Ignore field if skipPredicate returns true or if the field is static.
-        if (f.isAnnotationPresent(NotExpression.class) || Modifier.isStatic(f.getModifiers())) {
+        if ((functor.supportsNotExpression() && f.isAnnotationPresent(NotExpression.class))
+            || Modifier.isStatic(f.getModifiers())) {
           continue;
         }
 
