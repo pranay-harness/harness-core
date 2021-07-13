@@ -10,7 +10,7 @@ import (
 
 type TiDB interface {
 	// GetTestsToRun reads in the changed files and returns which tests to run.
-	GetTestsToRun(ctx context.Context, req types.SelectTestsReq, account string) (types.SelectTestsResp, error)
+	GetTestsToRun(ctx context.Context, req types.SelectTestsReq, account string, enableReflection bool) (types.SelectTestsResp, error)
 
 	// UploadPartialCg uploads a call graph
 	UploadPartialCg(ctx context.Context, cg *ti.Callgraph, info mongodb.VCSInfo, account, org, project, target string) (types.SelectTestsResp, error)
