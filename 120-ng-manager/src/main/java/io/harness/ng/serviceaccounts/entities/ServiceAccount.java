@@ -48,10 +48,8 @@ public class ServiceAccount implements PersistentEntity, UuidAware, NGAccountAcc
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("unique_idx")
+                 .name("unique_sa_idx")
                  .field(ServiceAccountKeys.accountIdentifier)
-                 .field(ServiceAccountKeys.orgIdentifier)
-                 .field(ServiceAccountKeys.projectIdentifier)
                  .field(ServiceAccountKeys.identifier)
                  .unique(true)
                  .collation(
