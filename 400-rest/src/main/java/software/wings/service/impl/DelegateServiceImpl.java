@@ -1130,6 +1130,7 @@ public class DelegateServiceImpl implements DelegateService {
             .build(),
         false);
 
+    log.info(format("Returned jar and script run time params: %s", scriptParams.get("watcherStorageUrl")));
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
     if (isNotEmpty(scriptParams)) {
       String upgradeToVersion = scriptParams.get(UPGRADE_VERSION);
@@ -1148,6 +1149,7 @@ public class DelegateServiceImpl implements DelegateService {
       delegateScripts.setStopScript(processTemplate(scriptParams, "stop.sh.ftl"));
       delegateScripts.setSetupProxyScript(processTemplate(scriptParams, "setup-proxy.sh.ftl"));
     }
+    log.info(format("ScriptParams was empty. Print delegateScripts %s", delegateScripts));
     return delegateScripts;
   }
 
@@ -1229,7 +1231,7 @@ public class DelegateServiceImpl implements DelegateService {
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
         log.info("Multi-Version is enabled");
         latestVersion = inquiry.getVersion();
-        String minorVersion = Optional.ofNullable(getMinorVersion(inquiry.getVersion())).orElse(0).toString();
+        String minorVersion = Optional.ofNullable(getDelegateBuildVersion(inquiry.getVersion())).orElse(null);
         delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(minorVersion, inquiry.getAccountId());
         if (useCDN) {
           delegateStorageUrl = cdnConfig.getUrl();
@@ -1294,6 +1296,7 @@ public class DelegateServiceImpl implements DelegateService {
         accountSecret = delegateTokenService.getTokenValue(inquiry.getAccountId(), inquiry.getDelegateTokenName());
       }
 
+      log.info("Testing: Build params");
       ImmutableMap.Builder<String, String> params =
           ImmutableMap.<String, String>builder()
               .put("delegateDockerImage", delegateDockerImage)
@@ -1420,7 +1423,7 @@ public class DelegateServiceImpl implements DelegateService {
       } else {
         params.put("delegateNamespace", HARNESS_DELEGATE);
       }
-
+      log.info("Params built: ", params.toString());
       return params.build();
     }
 
@@ -1478,6 +1481,14 @@ public class DelegateServiceImpl implements DelegateService {
       } catch (NumberFormatException e) {
         // Leave it null
       }
+    }
+    return delegateVersionNumber;
+  }
+
+  private String getDelegateBuildVersion(String delegateVersion) {
+    String delegateVersionNumber = null;
+    if (isNotBlank(delegateVersion)) {
+      delegateVersionNumber = delegateVersion.substring(delegateVersion.lastIndexOf('.') + 1);
     }
     return delegateVersionNumber;
   }
