@@ -63,13 +63,12 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
   public boolean validateConnector(ServiceNowTaskParameters taskParameters) {
     ServiceNowConfig config = taskParameters.getServiceNowConfig();
     final Call<JsonNode> request;
-    if(config.getPassword() == null){
+    if (config.getPassword() == null) {
       request = getRestClient(taskParameters)
-              .validateConnection(Credentials.basic(config.getUsername(), config.getEncryptedPassword()));
-    }
-    else{
+                    .validateConnection(Credentials.basic(config.getUsername(), config.getEncryptedPassword()));
+    } else {
       request = getRestClient(taskParameters)
-              .validateConnection(Credentials.basic(config.getUsername(), new String(config.getPassword())));
+                    .validateConnection(Credentials.basic(config.getUsername(), new String(config.getPassword())));
     }
     Response<JsonNode> response = null;
     try {
