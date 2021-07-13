@@ -54,15 +54,14 @@ public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
       return;
     }
 
-    Optional<String> accountIdentifierOptional = getAccountIdentifierFromQueryParams(containerRequestContext);
-    if (!accountIdentifierOptional.isPresent()) {
-      throw new InvalidRequestException("Account detail is not present in the request");
-    }
-    String accountIdentifier = accountIdentifierOptional.get();
-
     Optional<String> apiKeyOptional = getApiKeyFromHeaders(containerRequestContext);
 
     if (apiKeyOptional.isPresent()) {
+      Optional<String> accountIdentifierOptional = getAccountIdentifierFromQueryParams(containerRequestContext);
+      if (!accountIdentifierOptional.isPresent()) {
+        throw new InvalidRequestException("Account detail is not present in the request");
+      }
+      String accountIdentifier = accountIdentifierOptional.get();
       validateApiKey(accountIdentifier, apiKeyOptional.get());
     } else {
       super.filter(containerRequestContext);
