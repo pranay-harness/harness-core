@@ -81,13 +81,7 @@ public class PasswordBasedAuthHandler implements AuthHandler {
     try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
       log.info("Authenticating via Username Password");
 
-      Account defaultAccount = accountId != null ? getAccount(accountId) : null;
-
-      // Check for a verified email if a default account doesn't exist OR if the default account is a CG account
-      // Accounts made from NG signup are allowed to access the application without email verification
-      boolean checkForVerifiedEmail = defaultAccount == null || !defaultAccount.isCreatedFromNG();
-
-      if (checkForVerifiedEmail && !user.isEmailVerified()) {
+      if (!user.isEmailVerified()) {
         throw new WingsException(EMAIL_NOT_VERIFIED, USER);
       }
 

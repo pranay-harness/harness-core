@@ -28,11 +28,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @StoreIn(DbAliases.NG_MANAGER)
 public class SignupVerificationToken {
   @Id @org.mongodb.morphia.annotations.Id String id;
-  @NotEmpty String accountIdentifier;
   @NotEmpty String token;
-  @NotEmpty String userId;
   @NotEmpty String email;
+  String accountIdentifier;
+  String userId;
   String appId;
+  Long validUntil;
   @CreatedDate long createdAt;
   @LastModifiedDate long lastUpdatedAt;
 
