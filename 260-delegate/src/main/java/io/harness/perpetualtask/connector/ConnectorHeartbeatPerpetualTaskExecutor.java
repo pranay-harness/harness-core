@@ -2,10 +2,12 @@ package io.harness.perpetualtask.connector;
 
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.network.SafeHttpCall.execute;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
@@ -36,6 +38,7 @@ import org.eclipse.jetty.server.Response;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(DX)
 public class ConnectorHeartbeatPerpetualTaskExecutor implements PerpetualTaskExecutor {
   Map<String, ConnectorValidationHandler> connectorTypeToConnectorValidationHandlerMap;
   private KryoSerializer kryoSerializer;

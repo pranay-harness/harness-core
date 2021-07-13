@@ -21,6 +21,7 @@ import io.harness.beans.NGInstanceUnitType;
 import io.harness.container.ContainerInfo;
 import io.harness.deployment.InstanceDetails;
 import io.harness.ecs.EcsContainerDetails;
+import io.harness.exception.HelmClientException;
 import io.harness.git.UsernamePasswordAuthRequest;
 import io.harness.git.model.AuthInfo;
 import io.harness.git.model.ChangeType;
@@ -35,6 +36,7 @@ import io.harness.git.model.PushResultGit;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.EntityOperationIdentifier;
 import io.harness.globalcontex.PurgeGlobalContextData;
+import io.harness.helm.HelmCliCommandType;
 import io.harness.helm.HelmSubCommandType;
 import io.harness.jira.JiraAction;
 import io.harness.jira.JiraActionNG;
@@ -317,5 +319,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(EntityOperationIdentifier.EntityOperation.class, 97022);
     kryo.register(CfCliVersion.class, 97023);
     kryo.register(KubernetesResourceId.class, 97031);
+    kryo.register(HelmClientException.class, 97032);
+    kryo.register(HelmCliCommandType.class, 97033);
   }
 }
