@@ -1,10 +1,11 @@
 package software.wings.helpers.ext.mail;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.audit.ResourceType.COLLABORATION_PROVIDER;
-import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
 import io.harness.encryption.Encrypted;
@@ -39,8 +40,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @ToString(exclude = {"password"})
 @EqualsAndHashCode(callSuper = false)
+@OwnedBy(PL)
 public class SmtpConfig extends SettingValue implements EncryptableSetting {
   private static final String HOST_PLACEHOLDER_STRING = "host_placeholder";
+  public static final String ENCRYPTED_VALUE_STR = "<KMS URL>";
+
   @Attributes(title = "Host", required = true) @NotEmpty private String host;
   @Attributes(title = "Port", required = true) private int port;
   @DefaultValue("wings") @Attributes(title = "From Address") private String fromAddress;

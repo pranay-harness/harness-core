@@ -22,6 +22,7 @@ import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.VaultConfig;
+import software.wings.helpers.ext.mail.SmtpConfig;
 
 import java.util.Set;
 
@@ -59,5 +60,6 @@ public class SMCoreMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.VaultConfig", VaultConfig.class);
     w.put("beans.SSHVaultConfig", SSHVaultConfig.class);
     w.put("beans.BaseVaultConfig", BaseVaultConfig.class);
+    w.put("helpers.ext.mail.SmtpConfig", SmtpConfig.class);
   }
 }

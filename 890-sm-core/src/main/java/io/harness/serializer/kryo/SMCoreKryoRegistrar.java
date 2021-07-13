@@ -43,6 +43,7 @@ import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.VaultConfig;
+import software.wings.helpers.ext.mail.SmtpConfig;
 
 import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
 import com.esotericsoftware.kryo.Kryo;
@@ -90,5 +91,6 @@ public class SMCoreKryoRegistrar implements KryoRegistrar {
     kryo.register(NGVaultRenewalAppRoleTaskResponse.class, 150021);
     kryo.register(NGAzureKeyVaultFetchEngineTaskParameters.class, 150022);
     kryo.register(NGAzureKeyVaultFetchEngineResponse.class, 150023);
+    kryo.register(SmtpConfig.class, 5304);
   }
 }

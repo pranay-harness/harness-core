@@ -1,5 +1,9 @@
 package software.wings.jre;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.google.inject.Singleton;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -10,6 +14,7 @@ import lombok.experimental.FieldDefaults;
 @Singleton
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@OwnedBy(PL)
 public class JreConfig {
   String version;
   String jreDirectory;

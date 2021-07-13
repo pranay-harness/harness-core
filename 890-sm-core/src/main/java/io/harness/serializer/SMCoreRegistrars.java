@@ -28,5 +28,6 @@ public class SMCoreRegistrars {
           .addAll(DelegateTasksRegistrars.morphiaRegistrars)
           .add(SMCoreMorphiaRegistrar.class)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
+          .addAll(EventsFrameworkRegistrars.morphiaRegistrars)
           .build();
 }

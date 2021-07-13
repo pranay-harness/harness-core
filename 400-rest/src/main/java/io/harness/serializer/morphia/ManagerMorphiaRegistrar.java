@@ -2,9 +2,7 @@ package io.harness.serializer.morphia;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.AzureKubernetesCluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
@@ -498,7 +496,6 @@ import software.wings.helpers.ext.k8s.response.K8sScaleResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTrafficSplitResponse;
 import software.wings.helpers.ext.mail.EmailData;
-import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.infra.AwsAmiInfrastructure;
 import software.wings.infra.AwsEcsInfrastructure;
 import software.wings.infra.AwsInstanceInfrastructure;
@@ -806,7 +803,6 @@ import java.security.Principal;
 import java.util.Set;
 
 @OwnedBy(PL)
-@TargetModule(HarnessModule._360_CG_MANAGER)
 public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
   private String cf = "helpers.ext.cloudformation.";
 
@@ -1376,7 +1372,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("helpers.ext.k8s.response.K8sScaleResponse", K8sScaleResponse.class);
     w.put("helpers.ext.k8s.response.K8sTaskExecutionResponse", K8sTaskExecutionResponse.class);
     w.put("helpers.ext.k8s.response.K8sTrafficSplitResponse", K8sTrafficSplitResponse.class);
-    w.put("helpers.ext.mail.SmtpConfig", SmtpConfig.class);
     w.put("infra.AwsAmiInfrastructure", AwsAmiInfrastructure.class);
     w.put("infra.AzureVMSSInfra", AzureVMSSInfra.class);
     w.put("infra.AzureWebAppInfra", AzureWebAppInfra.class);

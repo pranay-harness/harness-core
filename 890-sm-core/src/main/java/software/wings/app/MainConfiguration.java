@@ -6,9 +6,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
 import io.harness.AccessControlClientConfiguration;
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.cache.CacheConfig;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.cf.CfClientConfig;
@@ -85,7 +83,6 @@ import lombok.EqualsAndHashCode;
 /**
  * Used to load all the application configuration.
  */
-@TargetModule(HarnessModule._360_CG_MANAGER)
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Singleton

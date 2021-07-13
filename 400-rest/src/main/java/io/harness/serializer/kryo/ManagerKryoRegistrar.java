@@ -505,7 +505,6 @@ import software.wings.helpers.ext.k8s.response.PodStatus;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.helpers.ext.mail.EmailData;
-import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.helpers.ext.pcf.request.CfCommandSetupRequest;
 import software.wings.helpers.ext.trigger.request.TriggerDeploymentNeededRequest;
 import software.wings.helpers.ext.trigger.request.TriggerRequest;
@@ -1149,7 +1148,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(LdapResponse.Status.class, 5505);
     kryo.register(LdapResponse.class, 5504);
     kryo.register(EmailData.class, 5303);
-    kryo.register(SmtpConfig.class, 5304);
     kryo.register(CfCommandSetupRequest.class, 5279);
     kryo.register(TriggerDeploymentNeededRequest.class, 5553);
     kryo.register(TriggerRequest.class, 5557);

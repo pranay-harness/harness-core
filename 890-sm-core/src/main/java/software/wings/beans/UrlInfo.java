@@ -1,5 +1,9 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -9,6 +13,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(PL)
 public class UrlInfo {
   private String title;
   private String url;
