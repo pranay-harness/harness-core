@@ -14,6 +14,7 @@ public enum ActionType {
   CREATE_WORKFLOW(Collections.singletonList(LimitType.STATIC)),
   CREATE_INFRA_PROVISIONER(Collections.singletonList(LimitType.STATIC)),
   EXPORT_EXECUTIONS_REQUEST(Collections.singletonList(LimitType.STATIC)),
+  MAX_QPM_PER_MANAGER(Collections.singletonList(LimitType.STATIC)),
   INSTANCE_USAGE_LIMIT_EXCEEDED(Collections.emptyList()),
   GRAPHQL_CALL(Collections.singletonList(LimitType.RATE_LIMIT)),
   GRAPHQL_CUSTOM_DASH_CALL(Collections.singletonList(LimitType.RATE_LIMIT)),
