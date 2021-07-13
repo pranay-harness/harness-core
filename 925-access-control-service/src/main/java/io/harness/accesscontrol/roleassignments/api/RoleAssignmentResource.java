@@ -19,7 +19,6 @@ import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPL
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 
 import static java.util.stream.Collectors.toList;
-import static lombok.AccessLevel.PACKAGE;
 import static lombok.AccessLevel.PRIVATE;
 
 import io.harness.accesscontrol.AccessControlPermissions;
@@ -28,6 +27,7 @@ import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.accesscontrol.common.validation.ValidationResult;
+import io.harness.accesscontrol.commons.validation.HarnessActionValidator;
 import io.harness.accesscontrol.principals.Principal;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.principals.serviceaccounts.HarnessServiceAccountService;
@@ -48,7 +48,6 @@ import io.harness.accesscontrol.roleassignments.RoleAssignmentUpdateResult;
 import io.harness.accesscontrol.roleassignments.events.RoleAssignmentCreateEvent;
 import io.harness.accesscontrol.roleassignments.events.RoleAssignmentDeleteEvent;
 import io.harness.accesscontrol.roleassignments.events.RoleAssignmentUpdateEvent;
-import io.harness.accesscontrol.roleassignments.validation.RoleAssignmentActionValidator;
 import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.api.RoleDTOMapper;
 import io.harness.accesscontrol.roles.api.RoleResponseDTO;
@@ -94,7 +93,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
@@ -114,7 +112,6 @@ import retrofit2.http.Body;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @FieldDefaults(level = PRIVATE, makeFinal = true)
-@AllArgsConstructor(access = PACKAGE, onConstructor = @__({ @Inject }))
 @Slf4j
 public class RoleAssignmentResource {
   RoleAssignmentService roleAssignmentService;
@@ -130,12 +127,41 @@ public class RoleAssignmentResource {
   ServiceAccountService serviceAccountService;
   RoleAssignmentDTOMapper roleAssignmentDTOMapper;
   RoleDTOMapper roleDTOMapper;
-  @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate;
-  @Named(MODEL_NAME) RoleAssignmentActionValidator actionValidator;
+  TransactionTemplate transactionTemplate;
+  HarnessActionValidator<RoleAssignment> actionValidator;
   OutboxService outboxService;
   AccessControlClient accessControlClient;
 
   RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
+
+  @Inject
+  public RoleAssignmentResource(RoleAssignmentService roleAssignmentService,
+      HarnessResourceGroupService harnessResourceGroupService, HarnessUserGroupService harnessUserGroupService,
+      HarnessUserService harnessUserService, HarnessServiceAccountService harnessServiceAccountService,
+      ScopeService scopeService, RoleService roleService, ResourceGroupService resourceGroupService,
+      UserGroupService userGroupService, UserService userService, ServiceAccountService serviceAccountService,
+      RoleAssignmentDTOMapper roleAssignmentDTOMapper, RoleDTOMapper roleDTOMapper,
+      @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate,
+      @Named(MODEL_NAME) HarnessActionValidator<RoleAssignment> actionValidator, OutboxService outboxService,
+      AccessControlClient accessControlClient) {
+    this.roleAssignmentService = roleAssignmentService;
+    this.harnessResourceGroupService = harnessResourceGroupService;
+    this.harnessUserGroupService = harnessUserGroupService;
+    this.harnessUserService = harnessUserService;
+    this.harnessServiceAccountService = harnessServiceAccountService;
+    this.scopeService = scopeService;
+    this.roleService = roleService;
+    this.resourceGroupService = resourceGroupService;
+    this.userGroupService = userGroupService;
+    this.userService = userService;
+    this.serviceAccountService = serviceAccountService;
+    this.roleAssignmentDTOMapper = roleAssignmentDTOMapper;
+    this.roleDTOMapper = roleDTOMapper;
+    this.transactionTemplate = transactionTemplate;
+    this.actionValidator = actionValidator;
+    this.outboxService = outboxService;
+    this.accessControlClient = accessControlClient;
+  }
 
   @GET
   @ApiOperation(value = "Get Role Assignments", nickname = "getRoleAssignmentList")

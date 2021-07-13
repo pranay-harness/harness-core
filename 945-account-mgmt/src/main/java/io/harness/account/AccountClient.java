@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureFlag;
 import io.harness.ng.core.account.DefaultExperience;
 import io.harness.ng.core.dto.AccountDTO;
+import io.harness.ng.core.user.UserMetadata;
 import io.harness.rest.RestResponse;
 
 import java.util.Collection;
@@ -26,6 +27,7 @@ public interface AccountClient {
   String ACCOUNT_EXISTS = "ng/accounts/exists";
   String ACCOUNT_ADMIN_API = ACCOUNT_API + "/account-admins";
   String FEATURE_FLAG_LIST_API = "ng/user/feature-flags/{accountId}";
+  String HARNESS_USER_GROUP_API = "harnessUserGroup/internal";
 
   @POST(ACCOUNT_API) Call<RestResponse<AccountDTO>> create(@Body AccountDTO dto);
 
@@ -56,4 +58,10 @@ public interface AccountClient {
 
   @GET(FEATURE_FLAG_LIST_API)
   Call<RestResponse<Collection<FeatureFlag>>> listAllFeatureFlagsForAccount(@Path("accountId") String accountId);
+
+  @GET(HARNESS_USER_GROUP_API + "/listAllHarnessSupportUsers")
+  Call<RestResponse<Collection<UserMetadata>>> listAllHarnessSupportUsers(@Query("accountId") String accountId);
+
+  @GET(HARNESS_USER_GROUP_API + "/checkIfHarnessSupportEnabledForAccount")
+  Call<RestResponse<Boolean>> checkIfHarnessSupportEnabledForAccount(@Query("accountId") String accountId);
 }

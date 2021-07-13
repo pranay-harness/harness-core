@@ -42,12 +42,22 @@ import io.harness.accesscontrol.principals.users.events.UserMembershipEventConsu
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupServiceImpl;
 import io.harness.accesscontrol.resources.resourcegroups.events.ResourceGroupEventConsumer;
+import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
+import io.harness.accesscontrol.roleassignments.privileged.PrivilegedRoleAssignmentService;
+import io.harness.accesscontrol.roleassignments.privileged.PrivilegedRoleAssignmentServiceImpl;
+import io.harness.accesscontrol.roleassignments.privileged.persistence.PrivilegedRoleAssignmentDao;
+import io.harness.accesscontrol.roleassignments.privileged.persistence.PrivilegedRoleAssignmentDaoImpl;
 import io.harness.accesscontrol.roleassignments.validation.RoleAssignmentActionValidator;
 import io.harness.accesscontrol.scopes.core.ScopeLevel;
 import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParamsFactory;
 import io.harness.accesscontrol.scopes.harness.events.ScopeEventConsumer;
+import io.harness.accesscontrol.support.SupportService;
+import io.harness.accesscontrol.support.SupportServiceImpl;
+import io.harness.accesscontrol.support.persistence.SupportPreferenceDao;
+import io.harness.accesscontrol.support.persistence.SupportPreferenceDaoImpl;
+import io.harness.account.AccountClientModule;
 import io.harness.aggregator.AggregatorModule;
 import io.harness.aggregator.consumers.ChangeEventFailureHandler;
 import io.harness.annotations.dev.OwnedBy;
@@ -63,13 +73,10 @@ import io.harness.lock.PersistentLockModule;
 import io.harness.metrics.modules.MetricsModule;
 import io.harness.metrics.service.api.MetricsPublisher;
 import io.harness.migration.NGMigrationSdkModule;
-import io.harness.morphia.MorphiaRegistrar;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
-import io.harness.serializer.morphia.OutboxEventMorphiaRegistrar;
-import io.harness.serializer.morphia.PrimaryVersionManagerMorphiaRegistrar;
 import io.harness.serviceaccount.ServiceAccountClientModule;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -164,32 +171,20 @@ public class AccessControlModule extends AbstractModule {
   protected void configure() {
     install(VersionModule.getInstance());
     install(PrimaryVersionManagerModule.getInstance());
-    install(AccessControlPersistenceModule.getInstance(config.getMongoConfig()));
+    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
+        5, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
+    install(ExecutorModule.getInstance());
+    install(PersistentLockModule.getInstance());
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
-    ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
-        5, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
-    install(ExecutorModule.getInstance());
-    bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
-    install(PersistentLockModule.getInstance());
-    Multibinder<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
-        Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends MorphiaRegistrar>>() {});
-    morphiaRegistrars.addBinding().toInstance(OutboxEventMorphiaRegistrar.class);
-    morphiaRegistrars.addBinding().toInstance(PrimaryVersionManagerMorphiaRegistrar.class);
-    bind(OutboxEventHandler.class).to(AccessControlOutboxEventHandler.class);
     install(new ValidationModule(validatorFactory));
-    install(AccessControlCoreModule.getInstance());
+
     install(
         new ServiceAccountClientModule(config.getServiceAccountClientConfiguration().getServiceAccountServiceConfig(),
             config.getServiceAccountClientConfiguration().getServiceAccountServiceSecret(),
             ACCESS_CONTROL_SERVICE.getServiceId()));
-
-    if (config.getAggregatorConfiguration().isEnabled()) {
-      bind(ChangeEventFailureHandler.class).to(AccessControlChangeEventFailureHandler.class);
-      install(AggregatorModule.getInstance(config.getAggregatorConfiguration()));
-    }
 
     install(AccessControlClientModule.getInstance(
         config.getAccessControlClientConfiguration(), ACCESS_CONTROL_SERVICE.getServiceId()));
@@ -207,15 +202,33 @@ public class AccessControlModule extends AbstractModule {
     install(new AuditClientModule(config.getAuditClientConfig(), config.getDefaultServiceSecret(),
         ACCESS_CONTROL_SERVICE.getServiceId(), config.isEnableAudit()));
 
+    install(new AccountClientModule(config.getAccountClientConfiguration().getAccountServiceConfig(),
+        config.getAccountClientConfiguration().getAccountServiceSecret(), ACCESS_CONTROL_SERVICE.toString()));
+
     install(new TokenClientModule(config.getServiceAccountClientConfiguration().getServiceAccountServiceConfig(),
         config.getServiceAccountClientConfiguration().getServiceAccountServiceSecret(),
         ACCESS_CONTROL_SERVICE.getServiceId()));
 
-    install(AccessControlPreferenceModule.getInstance());
     install(
         FeatureFlagClientModule.getInstance(config.getFeatureFlagClientConfiguration().getFeatureFlagServiceConfig(),
             config.getFeatureFlagClientConfiguration().getFeatureFlagServiceSecret(),
             ACCESS_CONTROL_SERVICE.getServiceId()));
+
+    install(new TransactionOutboxModule(config.getOutboxPollConfig(), ACCESS_CONTROL_SERVICE.getServiceId(),
+        config.getAggregatorConfiguration().isExportMetricsToStackDriver()));
+    install(NGMigrationSdkModule.getInstance());
+
+    install(AccessControlPersistenceModule.getInstance(config.getMongoConfig()));
+    install(AccessControlCoreModule.getInstance());
+    install(AccessControlPreferenceModule.getInstance());
+
+    if (config.getAggregatorConfiguration().isEnabled()) {
+      install(AggregatorModule.getInstance(config.getAggregatorConfiguration()));
+      bind(ChangeEventFailureHandler.class).to(AccessControlChangeEventFailureHandler.class);
+    }
+    bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
+
+    bind(OutboxEventHandler.class).to(AccessControlOutboxEventHandler.class);
 
     MapBinder<String, ScopeLevel> scopesByKey = MapBinder.newMapBinder(binder(), String.class, ScopeLevel.class);
     scopesByKey.addBinding(ACCOUNT.toString()).toInstance(ACCOUNT);
@@ -246,9 +259,15 @@ public class AccessControlModule extends AbstractModule {
     userMembershipEventConsumers.addBinding().to(UserMembershipEventConsumer.class);
 
     binder()
-        .bind(HarnessActionValidator.class)
+        .bind(new TypeLiteral<HarnessActionValidator<RoleAssignment>>() {})
         .annotatedWith(Names.named(RoleAssignmentDTO.MODEL_NAME))
         .to(RoleAssignmentActionValidator.class);
+
+    bind(SupportPreferenceDao.class).to(SupportPreferenceDaoImpl.class);
+    bind(SupportService.class).to(SupportServiceImpl.class);
+
+    bind(PrivilegedRoleAssignmentDao.class).to(PrivilegedRoleAssignmentDaoImpl.class);
+    bind(PrivilegedRoleAssignmentService.class).to(PrivilegedRoleAssignmentServiceImpl.class);
 
     if (config.getAggregatorConfiguration().isExportMetricsToStackDriver()) {
       install(new MetricsModule());
@@ -256,13 +275,5 @@ public class AccessControlModule extends AbstractModule {
     } else {
       log.info("No configuration provided for Stack Driver, aggregator metrics will not be recorded");
     }
-
-    install(new TransactionOutboxModule(config.getOutboxPollConfig(), ACCESS_CONTROL_SERVICE.getServiceId(),
-        config.getAggregatorConfiguration().isExportMetricsToStackDriver()));
-    install(NGMigrationSdkModule.getInstance());
-
-    registerRequiredBindings();
   }
-
-  private void registerRequiredBindings() {}
 }
