@@ -56,7 +56,7 @@ public class DeleteInvalidArtifactStreamsTest extends WingsBaseTest {
     Service service = Service.builder().uuid(SERVICE_ID).artifactStreamIds(artifactStreamIds).build();
     wingsPersistence.save(service);
     List<ArtifactStream> artifactStreams = new LinkedList<>();
-    artifactStreams.add(EcrArtifactStream.builder().uuid("id4").serviceId(SERVICE_ID).build());
+    artifactStreams.add(SmbArtifactStream.builder().uuid("id4").serviceId(SERVICE_ID).build());
     artifactStreams.add(SmbArtifactStream.builder().uuid("id2").serviceId(SERVICE_ID).build());
     wingsPersistence.save(artifactStreams);
     deleteInvalidArtifactStreamMigration.migrate();
