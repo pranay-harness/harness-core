@@ -12,6 +12,7 @@ import io.harness.utils.RetryUtils;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Optional;
@@ -36,7 +37,8 @@ public class SupportServiceImpl implements SupportService {
           Lists.newArrayList(InvalidRequestException.class), Duration.ofSeconds(5), 3, log);
 
   @Inject
-  public SupportServiceImpl(SupportPreferenceDao supportPreferenceDao, AccountClient accountClient) {
+  public SupportServiceImpl(
+      SupportPreferenceDao supportPreferenceDao, @Named("PRIVILEGED") AccountClient accountClient) {
     this.supportPreferenceDao = supportPreferenceDao;
     this.accountClient = accountClient;
   }
