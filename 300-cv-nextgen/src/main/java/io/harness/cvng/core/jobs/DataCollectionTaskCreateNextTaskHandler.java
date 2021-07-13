@@ -8,11 +8,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
-public class DataCollectionTaskRecoverNextTaskHandler implements MongoPersistenceIterator.Handler<CVConfig> {
+public class DataCollectionTaskCreateNextTaskHandler implements MongoPersistenceIterator.Handler<CVConfig> {
   @Inject private DataCollectionTaskService dataCollectionTaskService;
 
   @Override
   public void handle(CVConfig entity) {
-    dataCollectionTaskService.handleRecoverNextTask(entity);
+    dataCollectionTaskService.handleCreateNextTask(entity);
   }
 }
