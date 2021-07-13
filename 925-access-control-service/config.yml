@@ -27,6 +27,7 @@ logging:
   loggers:
     org.glassfish.jersey: INFO
     org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
+    io.debezium.embedded.EmbeddedEngine$EmbeddedConfig: "OFF"
   appenders:
     - type: console
       threshold: TRACE
@@ -106,6 +107,16 @@ iteratorsConfig:
   serviceAccountIteratorConfig:
     enabled: ${SERVICEACCOUNT_ITERATOR_ENABLED:-true}
     targetIntervalInSeconds: ${SERVICEACCOUNT_ITERATOR_INTERVAL:-600}
+  supportPreferenceIteratorConfig:
+    enabled: ${SUPPORTPREFERENCE_ITERATOR_ENABLED:-true}
+    targetIntervalInSeconds: ${SUPPORTPREFERENCE_ITERATOR_INTERVAL:-600}
+
+accountClient:
+  accountServiceConfig:
+    baseUrl: ${ACCOUNT_CLIENT_BASE_URL:-https://localhost:9090/api/}
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  accountServiceSecret: ${ACCOUNT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 
 accessControlClient:
   enableAccessControl: ${ENABLE_ACCESS_CONTROL:-true}
@@ -151,7 +162,7 @@ aggregatorModuleConfig:
     key.converter.schemas.enable: ${KEY_CONVERTER_SCHEMAS_ENABLE:-false}
     value.converter.schemas.enable: ${VALUE_CONVERTER_SCHEMAS_ENABLE:-false}
     offset.flush.interval.ms: ${OFFSET_FLUSH_INTERVAL_MS:-5000}
-    mongodb.hosts: ${MONGODB_HOSTS:-rs0/localhost:27018}
+    mongodb.hosts: ${MONGODB_HOSTS:-rs0/localhost:27018,rs0/localhost:27019,rs0/localhost:27020}
     mongodb.name: ${MONGODB_NAME:-access_control_db}
     mongodb.user: ${MONGODB_USER:-""}
     mongodb.password: ${MONGODB_PASSWORD:-""}

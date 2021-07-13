@@ -112,8 +112,8 @@ public class RoleResource {
   @GET
   @Path("{identifier}")
   @ApiOperation(value = "Get Role", nickname = "getRole")
-  public ResponseDTO<RoleResponseDTO> get(@NotEmpty @PathParam(IDENTIFIER_KEY) String identifier,
-      @BeanParam HarnessScopeParams harnessScopeParams, @QueryParam("harnessManaged") boolean isHarnessManaged) {
+  public ResponseDTO<RoleResponseDTO> get(
+      @NotEmpty @PathParam(IDENTIFIER_KEY) String identifier, @BeanParam HarnessScopeParams harnessScopeParams) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
             harnessScopeParams.getProjectIdentifier()),

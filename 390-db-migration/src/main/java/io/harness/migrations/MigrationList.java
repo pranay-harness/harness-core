@@ -138,6 +138,7 @@ import io.harness.migrations.all.PipelineWorkflowExecutionActionMigration;
 import io.harness.migrations.all.PipelineWorkflowExecutionActionQlMigration;
 import io.harness.migrations.all.PreferenceUserIdRemoveDollarSignMigration;
 import io.harness.migrations.all.PrometheusCVMigration;
+import io.harness.migrations.all.QpsGraphQLMigration;
 import io.harness.migrations.all.RemoveDupInstanceStats;
 import io.harness.migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import io.harness.migrations.all.RemoveServiceVariablesFromActivity;
@@ -428,6 +429,7 @@ public class MigrationList {
         .add(Pair.of(360, AddEnableIteratorsToTriggers.class))
         .add(Pair.of(361, AddNgFieldToDelegateGroupMigration.class))
         .add(Pair.of(362, BaseMigration.class))
+        .add(Pair.of(363, QpsGraphQLMigration.class))
         .build();
   }
 }

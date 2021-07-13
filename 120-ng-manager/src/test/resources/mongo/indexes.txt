@@ -647,7 +647,7 @@ serverlessInstance {"name": "serverless_instance_index5", "background": true} {"
 serverlessInstance {"name": "serverless_instance_index7", "background": true} {"accountId": 1, "isDeleted": 1}
 serverlessInstance {"name": "serverless_instance_index8", "background": true} {"appId": 1, "serviceId": 1, "isDeleted": 1}
 serviceAccounts {"name": "list_accounts_idx", "background": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
-serviceAccounts {"name": "unique_idx", "unique": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
+serviceAccounts {"name": "unique_sa_idx", "unique": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "identifier": 1}
 serviceCommands {"name": "accountId_1", "background": true} {"accountId": 1}
 serviceCommands {"name": "appId_1", "background": true} {"appId": 1}
 serviceCommands {"name": "createdAt_1", "background": true} {"createdAt": 1}

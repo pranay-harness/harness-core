@@ -21,18 +21,20 @@ public class GCPCustomInstanceDetailProvider {
 
   private final String GENERAL_PURPOSE = "General purpose";
 
-  public boolean isCustomGCPInstance(@NonNull String instanceType, CloudProvider cloudProvider) {
-    return CloudProvider.GCP.equals(cloudProvider) && instanceType.contains(GCP_CUSTOM_INSTANCE_PREFIX);
+  public boolean isCustomGCPInstance(String instanceType, CloudProvider cloudProvider) {
+    return CloudProvider.GCP.equals(cloudProvider) && instanceType != null
+        && instanceType.contains(GCP_CUSTOM_INSTANCE_PREFIX);
   }
 
-  public Resource getCustomGcpInstanceResource(String instanceType) {
+  public Resource getCustomGcpInstanceResource(@NonNull String instanceType) {
     String[] split = instanceType.split("-");
     double cpu = Double.parseDouble(split[split.length - 2]);
     double memory = Double.parseDouble(split[split.length - 1]);
     return Resource.builder().cpuUnits(cpu * 1024.0).memoryMb(memory).build();
   }
 
-  public PricingData getGCPCustomInstancePricingData(String instanceFamily, InstanceCategory instanceCategory) {
+  public PricingData getGCPCustomInstancePricingData(
+      @NonNull String instanceFamily, InstanceCategory instanceCategory) {
     double cpuPricePerHr = 0.033174;
     double memoryPricePerHr = 0.004446;
     if (instanceCategory == InstanceCategory.SPOT) {
