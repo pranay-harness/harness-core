@@ -1247,14 +1247,14 @@ public class WatcherServiceImpl implements WatcherService {
     }
     try {
       // TODO - if multiVersion use manager endpoint
-      boolean upgrade;
+      boolean upgrade = false;
       String latestVersion = "";
-      if (watcherConfiguration.getDelegateCheckLocation().startsWith("file://")) {
-        upgrade = false;
-      } else {
+      if (!watcherConfiguration.getDelegateCheckLocation().startsWith("file://")) {
         String watcherMetadata = Http.getResponseStringFromUrl(watcherConfiguration.getUpgradeCheckLocation(), 10, 10);
         latestVersion = substringBefore(watcherMetadata, " ").trim();
-        upgrade = !StringUtils.equals(getVersion(), latestVersion);
+        if (Pattern.matches("\\d{1}\\.\\d{1}\\.\\d{5,6}(\\-\\d{3})?", latestVersion)) {
+          upgrade = !StringUtils.equals(getVersion(), latestVersion);
+        }
       }
       if (upgrade) {
         log.info("[Old] Upgrading watcher");
