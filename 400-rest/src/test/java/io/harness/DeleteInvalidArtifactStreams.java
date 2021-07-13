@@ -82,6 +82,7 @@ public class DeleteInvalidArtifactStreams {
         for (Service service : serviceSet) {
           System.out.println(service.getUuid());
           List<String> artifactStreamIds = service.getArtifactStreamIds();
+          System.out.println(artifactStreamIds);
           if (isNotEmpty(artifactStreamIds)) {
             artifactStreamIds.removeIf(id -> !artifactStreamIdSet.contains(id));
             wingsPersistence.updateField(
