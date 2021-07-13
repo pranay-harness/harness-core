@@ -14,8 +14,8 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @Data
-@Slf4j
 @Builder
+@Slf4j
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StackdriverCredential {
   @JsonProperty("client_email") private String clientEmail;
