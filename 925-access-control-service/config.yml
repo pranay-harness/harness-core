@@ -27,6 +27,7 @@ logging:
   loggers:
     org.glassfish.jersey: INFO
     org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
+    io.debezium.embedded.EmbeddedEngine$EmbeddedConfig: "OFF"
   appenders:
     - type: console
       threshold: TRACE
@@ -161,7 +162,7 @@ aggregatorModuleConfig:
     key.converter.schemas.enable: ${KEY_CONVERTER_SCHEMAS_ENABLE:-false}
     value.converter.schemas.enable: ${VALUE_CONVERTER_SCHEMAS_ENABLE:-false}
     offset.flush.interval.ms: ${OFFSET_FLUSH_INTERVAL_MS:-5000}
-    mongodb.hosts: ${MONGODB_HOSTS:-rs0/localhost:27018}
+    mongodb.hosts: ${MONGODB_HOSTS:-rs0/localhost:27018,rs0/localhost:27019,rs0/localhost:27020}
     mongodb.name: ${MONGODB_NAME:-access_control_db}
     mongodb.user: ${MONGODB_USER:-""}
     mongodb.password: ${MONGODB_PASSWORD:-""}
