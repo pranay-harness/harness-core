@@ -11,12 +11,17 @@ import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeLevel;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
+@OwnedBy(HarnessTeam.PL)
+@Singleton
 public class RoleAssignmentActionValidator implements HarnessActionValidator<RoleAssignment> {
   private final RoleAssignmentService roleAssignmentService;
   private final ScopeService scopeService;
