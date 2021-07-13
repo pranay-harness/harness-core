@@ -17,6 +17,7 @@ import lombok.Value;
 public class QLDelegateScope implements QLObject {
   String name;
   String accountId;
+  String uuid;
   List<QLTaskGroup> taskTypes;
   List<QLEnvironmentType> environmentTypes;
   List<String> applications;

@@ -1,5 +1,5 @@
 extend type Query {
-    # Get details about one or multiple Harness Environments.
+    # Get details about all delegates for account
     delegateList(filters: [DelegateFilter], limit: Int!, offset: Int): DelegateList
     @dataFetcher(name: delegateList)
 }

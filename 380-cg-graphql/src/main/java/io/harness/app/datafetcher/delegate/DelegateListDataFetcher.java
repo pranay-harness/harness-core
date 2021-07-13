@@ -21,14 +21,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
 public class DelegateListDataFetcher
-    extends AbstractConnectionV2DataFetcher<io.harness.app.schema.query.delegate.QLDelegateFilter, QLNoOpSortCriteria,
-        QLDelegateList> {
-  @Override
-  protected io.harness.app.schema.query.delegate.QLDelegateFilter generateFilter(
-      DataFetchingEnvironment environment, String key, String value) {
-    return null;
-  }
-
+    extends AbstractConnectionV2DataFetcher<QLDelegateFilter, QLNoOpSortCriteria, QLDelegateList> {
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLDelegateList fetchConnection(List<io.harness.app.schema.query.delegate.QLDelegateFilter> filters,
@@ -53,20 +46,26 @@ public class DelegateListDataFetcher
     filters.forEach(filter -> {
       FieldEnd<? extends Query<Delegate>> field;
       if (filter.getDelegateName() != null) {
-        field = query.field("delegateName");
+        field = query.field(Delegate.DelegateKeys.delegateName);
         String name = filter.getDelegateName();
         utils.setStringFilter(field, name);
       }
       if (filter.getDelegateStatus() != null) {
-        field = query.field("status");
+        field = query.field(Delegate.DelegateKeys.status);
         QLDelegateStatus filterDelegateStatus = filter.getDelegateStatus();
         // utils.setEnumFilter(field,filterDelegateStatus);
       }
       if (filter.getDelegateType() != null) {
-        field = query.field("delegateType");
+        field = query.field(Delegate.DelegateKeys.delegateType);
         String type = filter.getDelegateType().getStringValue();
         utils.setStringFilter(field, type);
       }
     });
+  }
+
+  @Override
+  protected io.harness.app.schema.query.delegate.QLDelegateFilter generateFilter(
+      DataFetchingEnvironment environment, String key, String value) {
+    return null;
   }
 }

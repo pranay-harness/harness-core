@@ -7,6 +7,7 @@ import io.harness.app.schema.type.delegate.QLTaskGroup;
 
 import software.wings.graphql.schema.mutation.QLMutationInput;
 import software.wings.graphql.schema.type.QLEnvironmentType;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
@@ -23,8 +24,8 @@ public class QLAddDelegateScopeInput implements QLMutationInput {
   String name;
   List<QLEnvironmentType> environmentTypes;
   List<QLTaskGroup> taskGroups;
-  List<String> environments;
-  List<String> applications;
-  List<String> services;
-  List<String> infrastructureDefinitions;
+  QLIdFilter application;
+  QLIdFilter service;
+  QLIdFilter environment;
+  QLIdFilter infrastructureDefinition;
 }
