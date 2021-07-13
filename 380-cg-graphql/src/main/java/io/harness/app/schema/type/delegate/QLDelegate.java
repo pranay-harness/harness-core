@@ -13,7 +13,7 @@ import lombok.Value;
 @AllArgsConstructor
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
 public class QLDelegate implements QLObject {
-  String id;
+  String uuid;
   String accountId;
   String delegateType;
   String delegateName;

@@ -17,15 +17,16 @@ input DelegateApprovalInput{
 }
 
 input AddDelegateScopeInput {
-    accountId:String
-    name:String
-    environmentType: [EnvironmentType]
-    taskGroup: [TaskGroup]
-    environment: [String]
-    application:[String]
-    services: [String]
-    infrastructureDefinition:[String]
+    accountId: String
+    name: String
+    environmentTypes: [EnvironmentType]
+    taskGroups: [TaskGroup]
+    application: IdFilter
+    service: IdFilter
+    environment: IdFilter
+    infrastructureDefinition: IdFilter
 }
+
 input DeleteDelegateInput{
     clientMutationId: String
     accountId: String!
@@ -49,7 +50,7 @@ type DeleteDelegatePayload{
     message: String
 }
 type Delegate{
-    id: String
+    uuid: String
     accountId: String
     delegateType: String
     delegateName: String
@@ -76,6 +77,7 @@ type AttachScopeToDelegatePayload {
 
 type DelegateScope{
     name: String
+    uuid: String
     taskTypes: [TaskGroup]
     environmentTypes: [EnvironmentType]
     applications: [String]

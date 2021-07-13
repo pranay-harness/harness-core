@@ -15,6 +15,7 @@ import io.harness.delegate.beans.TaskGroup;
 import software.wings.graphql.schema.type.QLEnvironmentType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +40,7 @@ public class DelegateController {
         .hostName(delegate.getHostName())
         .pollingModeEnabled(delegate.isPolllingModeEnabled())
         .ip(delegate.getIp())
+        .uuid(delegate.getUuid())
         .status(delegate.getStatus().toString())
         .delegateProfileId(delegate.getDelegateProfileId())
         .lastHeartBeat(delegate.getLastHeartBeat())
@@ -72,24 +74,49 @@ public class DelegateController {
                           .map(taskGroup -> taskGroupMapping().get(taskGroup.name()))
                           .collect(Collectors.toList());
     }
+    List<String> applicationList = new ArrayList<>();
+    if (delegateScopeInput.getApplication() != null) {
+      applicationList = Arrays.asList(delegateScopeInput.getApplication().getValues());
+    }
+    List<String> serviceList = new ArrayList<>();
+    if (delegateScopeInput.getService() != null) {
+      serviceList = Arrays.asList(delegateScopeInput.getService().getValues());
+    }
+    List<String> environmentList = new ArrayList<>();
+    if (delegateScopeInput.getEnvironment() != null) {
+      environmentList = Arrays.asList(delegateScopeInput.getEnvironment().getValues());
+    }
+    List<String> infrastructureDefinitionList = new ArrayList<>();
+    if (delegateScopeInput.getInfrastructureDefinition() != null) {
+      infrastructureDefinitionList = Arrays.asList(delegateScopeInput.getInfrastructureDefinition().getValues());
+    }
+
     delegateScopeBuilder.name(delegateScopeInput.getName())
         .accountId(accountId)
         .taskTypes(taskGroupList)
-        .environments(delegateScopeInput.getEnvironments())
+        .environments(environmentList)
         .environmentTypes(populateEnvironmentTypeList(delegateScopeInput.getEnvironmentTypes()))
-        .services(delegateScopeInput.getServices())
-        .applications(delegateScopeInput.getApplications())
+        .services(serviceList)
+        .applications(applicationList)
+        .infrastructureDefinitions(infrastructureDefinitionList)
         .build();
   }
 
   public static void populateQLDelegateScope(
       DelegateScope delegateScope, QLDelegateScope.QLDelegateScopeBuilder qlDelegateScopeBuilder) {
     qlDelegateScopeBuilder.name(delegateScope.getName())
-        .applications(delegateScope.getApplications())
+        .applications(delegateScope.getServices())
         .services(delegateScope.getApplications())
         .environments(delegateScope.getEnvironments())
+        .uuid(delegateScope.getUuid())
         .environmentTypes(populateQLEnvironmentTypeList(delegateScope.getEnvironmentTypes()))
         .build();
+  }
+
+  public static QLDelegateScope populateQLDelegateScope(DelegateScope delegateScope) {
+    QLDelegateScope.QLDelegateScopeBuilder qlDelegateScopeBuilder = QLDelegateScope.builder();
+    populateQLDelegateScope(delegateScope, qlDelegateScopeBuilder);
+    return qlDelegateScopeBuilder.build();
   }
 
   public static List<TaskGroup> populateTaskGroup(List<QLTaskGroup> qlTaskGroup) {
