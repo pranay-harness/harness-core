@@ -66,30 +66,33 @@ public class DeleteInvalidArtifactStreams implements Migration {
       while (services.hasNext()) {
         Service service = services.next();
         if (service != null) {
-          serviceSet.add(service);
+          migrate(artifactStreamIdSet, service);
         }
       }
     } catch (Exception ex) {
       log.error(String.join(DEBUG_LINE, " Exception while fetching services with account Id ", account.getUuid()));
     }
-    migrate(artifactStreamIdSet, serviceSet);
     artifactStreamIdSet.clear();
     serviceSet.clear();
   }
 
   @VisibleForTesting
-  void migrate(Set<String> artifactStreamIdSet, Set<Service> serviceSet) {
+  void migrate(Set<String> artifactStreamIdSet, Service service) {
     try {
       if (isNotEmpty(artifactStreamIdSet)) {
-        for (Service service : serviceSet) {
-          List<String> artifactStreamIds = service.getArtifactStreamIds();
-          if (isNotEmpty(artifactStreamIds)) {
-            artifactStreamIds.removeIf(id -> !artifactStreamIdSet.contains(id));
+        List<String> artifactStreamIds = service.getArtifactStreamIds();
+        if (isNotEmpty(artifactStreamIds)) {
+          int size = artifactStreamIds.size();
+          artifactStreamIds.removeIf(id -> !artifactStreamIdSet.contains(id));
+          if (size != artifactStreamIds.size()) {
             wingsPersistence.updateField(
                 Service.class, service.getUuid(), ServiceKeys.artifactStreamIds, artifactStreamIds);
+            log.info(String.join(DEBUG_LINE, " Invalid Artifact Deletion Successful for service ", service.getName(),
+                "with Id ", service.getUuid()));
           }
         }
       }
+
     } catch (RuntimeException e) {
       log.error(String.join(DEBUG_LINE, "Failed With RuntimeException ", e.getMessage()));
     } catch (Exception e) {
