@@ -48,7 +48,7 @@ func TestCreateJavaAgentArg(t *testing.T) {
 	expData := `outDir: /test/tmp/ti/callgraph/
 logLevel: 0
 logConsole: false
-writeTo: COVERAGE_JSON, GRAPH_DB_CSV
+writeTo: COVERAGE_JSON
 instrPackages: p1, p2, p3
 testAnnotations: a1, a2, a3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil)
@@ -85,7 +85,7 @@ func TestCreateJavaAgentArg_WithWriteFailure(t *testing.T) {
 	expData := `outDir: /test/tmp/ti/callgraph/
 logLevel: 0
 logConsole: false
-writeTo: COVERAGE_JSON, GRAPH_DB_CSV
+writeTo: COVERAGE_JSON
 instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil)
 	mf := filesystem.NewMockFile(ctrl)
@@ -110,7 +110,7 @@ func TestGetMavenCmd(t *testing.T) {
 	expData := `outDir: /test/tmp/ti/callgraph/
 logLevel: 0
 logConsole: false
-writeTo: COVERAGE_JSON, GRAPH_DB_CSV
+writeTo: COVERAGE_JSON
 instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
 	mf := filesystem.NewMockFile(ctrl)
@@ -220,7 +220,7 @@ func TestGetCmd_WithNoFilesChanged(t *testing.T) {
 	expData := `outDir: /test/tmp/ti/callgraph/
 logLevel: 0
 logConsole: false
-writeTo: COVERAGE_JSON, GRAPH_DB_CSV
+writeTo: COVERAGE_JSON
 instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
 	mf := filesystem.NewMockFile(ctrl)
@@ -293,7 +293,7 @@ func TestGetCmd_SelectAll(t *testing.T) {
 	expData := `outDir: /test/tmp/ti/callgraph/
 logLevel: 0
 logConsole: false
-writeTo: COVERAGE_JSON, GRAPH_DB_CSV
+writeTo: COVERAGE_JSON
 instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
 	mf := filesystem.NewMockFile(ctrl)
@@ -363,7 +363,7 @@ func TestGetCmd_RunAll(t *testing.T) {
 	expData := `outDir: /test/tmp/ti/callgraph/
 logLevel: 0
 logConsole: false
-writeTo: COVERAGE_JSON, GRAPH_DB_CSV
+writeTo: COVERAGE_JSON
 instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
 	mf := filesystem.NewMockFile(ctrl)
@@ -431,7 +431,7 @@ func TestGetCmd_ManualExecution(t *testing.T) {
 	expData := `outDir: /test/tmp/ti/callgraph/
 logLevel: 0
 logConsole: false
-writeTo: COVERAGE_JSON, GRAPH_DB_CSV
+writeTo: COVERAGE_JSON
 instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
 	mf := filesystem.NewMockFile(ctrl)
@@ -499,7 +499,7 @@ func TestGetCmd_ErrorIncorrectBuildTool(t *testing.T) {
 	expData := `outDir: /test/tmp/ti/callgraph/
 logLevel: 0
 logConsole: false
-writeTo: COVERAGE_JSON, GRAPH_DB_CSV
+writeTo: COVERAGE_JSON
 instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
 	mf := filesystem.NewMockFile(ctrl)
@@ -602,7 +602,7 @@ func TestRun_Success(t *testing.T) {
 	expData := `outDir: /test/tmp/ti/callgraph/
 logLevel: 0
 logConsole: false
-writeTo: COVERAGE_JSON, GRAPH_DB_CSV
+writeTo: COVERAGE_JSON
 instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
 	mf := filesystem.NewMockFile(ctrl)
@@ -703,7 +703,7 @@ func TestRun_Execution_Failure(t *testing.T) {
 	expData := `outDir: /test/tmp/ti/callgraph/
 logLevel: 0
 logConsole: false
-writeTo: COVERAGE_JSON, GRAPH_DB_CSV
+writeTo: COVERAGE_JSON
 instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil)
 	mf := filesystem.NewMockFile(ctrl)
@@ -805,7 +805,7 @@ func TestRun_Execution_Cg_Failure(t *testing.T) {
 	expData := `outDir: /test/tmp/ti/callgraph/
 logLevel: 0
 logConsole: false
-writeTo: COVERAGE_JSON, GRAPH_DB_CSV
+writeTo: COVERAGE_JSON
 instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil)
 	mf := filesystem.NewMockFile(ctrl)
@@ -903,7 +903,7 @@ func TestRun_Execution_Reports_Failure(t *testing.T) {
 	expData := `outDir: /test/tmp/ti/callgraph/
 logLevel: 0
 logConsole: false
-writeTo: COVERAGE_JSON, GRAPH_DB_CSV
+writeTo: COVERAGE_JSON
 instrPackages: p1, p2, p3`
 	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil)
 	mf := filesystem.NewMockFile(ctrl)
