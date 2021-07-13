@@ -269,12 +269,13 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     modules.add(cacheModule);
 
     Injector injector = Guice.createInjector(modules);
-    if (appConfig.getShouldDeployWithGitSync()) {
-      GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
-    }
 
     // Will create collections and Indexes
     injector.getInstance(HPersistence.class);
+    intializeGitSync(injector, appConfig);
+    if (appConfig.getShouldDeployWithGitSync()) {
+      GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
+    }
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment, injector);
@@ -295,7 +296,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerPmsSdkEvents(injector);
     initializeMonitoring(appConfig, injector);
 
-    intializeGitSync(injector, appConfig);
     registerManagedBeans(environment, injector);
 
     registerMigrations(injector);
