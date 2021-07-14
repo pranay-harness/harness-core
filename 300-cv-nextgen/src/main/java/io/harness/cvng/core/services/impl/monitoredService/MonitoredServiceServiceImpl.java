@@ -324,6 +324,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     }
     List<HistoricalTrend> historicalTrendList = heatMapService.getHistoricalTrend(
         accountId, orgIdentifier, projectIdentifier, serviceEnvironmentIdentifiers, 24);
+
     List<MonitoredServiceListItemDTO> monitoredServiceListDTOS = new ArrayList<>();
     int index = 0;
     for (MonitoredServiceListItemDTOBuilder monitoredServiceListDTOBuilder :
