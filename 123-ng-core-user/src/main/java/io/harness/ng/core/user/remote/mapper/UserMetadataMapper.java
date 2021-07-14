@@ -12,10 +12,20 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(HarnessTeam.PL)
 public class UserMetadataMapper {
   public static UserMetadataDTO toDTO(UserInfo user) {
-    return UserMetadataDTO.builder().name(user.getName()).email(user.getEmail()).uuid(user.getUuid()).build();
+    return UserMetadataDTO.builder()
+        .name(user.getName())
+        .email(user.getEmail())
+        .uuid(user.getUuid())
+        .locked(user.isLocked())
+        .build();
   }
 
   public static UserMetadataDTO toDTO(UserMetadata user) {
-    return UserMetadataDTO.builder().name(user.getName()).email(user.getEmail()).uuid(user.getUserId()).build();
+    return UserMetadataDTO.builder()
+        .name(user.getName())
+        .email(user.getEmail())
+        .uuid(user.getUserId())
+        .locked(Boolean.TRUE.equals(user.isLocked()))
+        .build();
   }
 }

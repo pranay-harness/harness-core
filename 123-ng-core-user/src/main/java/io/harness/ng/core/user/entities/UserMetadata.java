@@ -14,6 +14,7 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -48,8 +49,13 @@ public class UserMetadata implements PersistentEntity {
   @Id @org.mongodb.morphia.annotations.Id String userId;
   @NotEmpty String email;
   String name;
+  @Getter(value = AccessLevel.PRIVATE) @NotEmpty Boolean locked;
 
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
   @Version Long version;
+
+  public Boolean isLocked() {
+    return this.locked;
+  }
 }

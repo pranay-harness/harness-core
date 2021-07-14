@@ -66,6 +66,7 @@ public class UserEntityCrudStreamListener implements MessageListener {
                                  .uuid(stripToNull(userDTO.getUserId()))
                                  .name(stripToNull(userDTO.getName()))
                                  .email(stripToNull(userDTO.getEmail()))
+                                 .locked(userDTO.getLocked())
                                  .build();
       return ngUserService.updateUserMetadata(user);
     }

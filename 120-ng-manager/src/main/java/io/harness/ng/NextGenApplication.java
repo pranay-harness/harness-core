@@ -66,6 +66,7 @@ import io.harness.ng.core.migration.NGBeanMigrationProvider;
 import io.harness.ng.core.migration.ProjectMigrationProvider;
 import io.harness.ng.migration.NGCoreMigrationProvider;
 import io.harness.ng.migration.UserMembershipMigrationProvider;
+import io.harness.ng.migration.UserMetadataMigrationProvider;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEventPollService;
@@ -322,6 +323,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           { add(UserMembershipMigrationProvider.class); }
           { add(NGBeanMigrationProvider.class); }
           { add(InstanceMigrationProvider.class); }
+          { add(UserMetadataMigrationProvider.class); }
         })
         .build();
   }

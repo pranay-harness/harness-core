@@ -267,4 +267,18 @@ public class UserResource {
     }
     return userId;
   }
+
+  @PUT
+  @Path("unlock-user/{userId}")
+  @Produces("application/json")
+  @Consumes()
+  @ApiOperation(value = "unlock user", nickname = "unlockUser")
+  public ResponseDTO<UserInfo> unlockUser(@NotNull @PathParam("userId") String userId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USER, userId), MANAGE_USER_PERMISSION);
+    return ResponseDTO.newResponse(userInfoService.unlockUser(userId, accountIdentifier));
+  }
 }

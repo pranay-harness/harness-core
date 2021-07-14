@@ -280,6 +280,7 @@ public class UserResourceNG {
                    .email(user.getEmail())
                    .name(user.getName())
                    .uuid(user.getUuid())
+                   .locked(user.isUserLocked())
                    .admin(requireAdminStatus
                        && Optional.ofNullable(user.getUserGroups())
                               .map(x
@@ -300,6 +301,7 @@ public class UserResourceNG {
         .email(user.getEmail())
         .name(user.getName())
         .uuid(user.getUuid())
+        .locked(user.isUserLocked())
         .defaultAccountId(user.getDefaultAccountId())
         .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
         .emailVerified(user.isEmailVerified())
@@ -376,6 +378,13 @@ public class UserResourceNG {
   @Path("feature-flags/{accountId}")
   public RestResponse<Collection<FeatureFlag>> getFeatureFlags(@PathParam("accountId") String accountId) {
     return new RestResponse<>(accountService.getFeatureFlags(accountId));
+  }
+
+  @PUT
+  @Path("/unlock-user")
+  public RestResponse<Optional<UserInfo>> unlockUser(
+      @NotEmpty @QueryParam("email") String email, @NotEmpty @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(userService.unlockUser(email, accountId))));
   }
 
   private SignupInviteDTO convertUserInviteToSignupInviteDTO(UserInvite userInvite) {

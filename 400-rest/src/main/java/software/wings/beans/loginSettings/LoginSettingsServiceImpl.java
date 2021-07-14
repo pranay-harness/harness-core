@@ -282,7 +282,7 @@ public class LoginSettingsServiceImpl implements LoginSettingsService {
       User user, int newCountOfFailedLoginAttempts, UserLockoutPolicy userLockoutPolicy) {
     UpdateOperations<User> operations = wingsPersistence.createUpdateOperations(User.class);
     updateUserLockoutInfoOperations(user, newCountOfFailedLoginAttempts, userLockoutPolicy, operations);
-    userService.applyUpdateOperations(user, operations);
+    userService.updateUser(user.getUuid(), operations);
   }
 
   private void updateUserLockoutInfoOperations(User user, int newCountOfFailedLoginAttempts,
