@@ -46,7 +46,7 @@ public class NewRelicHealthSourceSpecTest extends CvNextGenTestBase {
   String identifier;
   String name;
   List<MetricPackDTO> metricPackDTOS;
-  private BuilderFactory builderFactory;
+  BuilderFactory builderFactory;
 
   @Before
   public void setup() {

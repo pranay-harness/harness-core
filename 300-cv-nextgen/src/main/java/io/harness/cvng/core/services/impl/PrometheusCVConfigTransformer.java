@@ -1,7 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
 import io.harness.cvng.core.beans.PrometheusDSConfig;
-import io.harness.cvng.core.beans.PrometheusDSConfig.PrometheusMetricDefinition;
+import io.harness.cvng.core.beans.PrometheusMetricDefinition;
 import io.harness.cvng.core.beans.RiskProfile;
 import io.harness.cvng.core.entities.PrometheusCVConfig;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
