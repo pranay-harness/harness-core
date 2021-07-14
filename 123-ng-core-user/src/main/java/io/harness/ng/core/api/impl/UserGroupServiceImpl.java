@@ -20,7 +20,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.accesscontrol.principals.PrincipalDTO;
-import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.OwnedBy;
@@ -187,21 +186,13 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public UserGroup delete(Scope scope, String identifier) {
-    RoleAssignmentFilterDTO roleAssignmentFilterDTO =
-        RoleAssignmentFilterDTO.builder()
-            .principalFilter(Collections.singleton(
-                PrincipalDTO.builder().type(PrincipalType.USER_GROUP).identifier(identifier).build()))
-            .build();
-    PageResponse<RoleAssignmentResponseDTO> pageResponse =
-        NGRestUtils.getResponse(accessControlAdminClient.getFilteredRoleAssignments(scope.getAccountIdentifier(),
-            scope.getOrgIdentifier(), scope.getProjectIdentifier(), 0, 10, roleAssignmentFilterDTO));
-    if (pageResponse.getTotalItems() > 0) {
-      throw new InvalidRequestException(String.format(
-          "There exists %s role assignments with this user group. Please delete them first and then try again",
-          pageResponse.getTotalItems()));
-    }
     validateAtleastOneAdminExistIfUserGroupRemoved(scope, identifier);
 
+    Optional<UserGroup> userGroupOptional =
+        get(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), identifier);
+    if (userGroupOptional.isPresent() && userGroupOptional.get().isHarnessManaged()) {
+      throw new InvalidRequestException("Cannot deleted a managed user group");
+    }
     Criteria criteria = createUserGroupFetchCriteria(
         scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), identifier);
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
