@@ -217,7 +217,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
   public QLCEViewGridData getEntityStatsDataPointsNg(BigQuery bigQuery, List<QLCEViewFilterWrapper> filters,
       List<QLCEViewGroupBy> groupBy, List<QLCEViewAggregation> aggregateFunction, List<QLCEViewSortCriteria> sort,
       String cloudProviderTableName, Integer limit, Integer offset, String accountId, boolean getCostTrend) {
-    boolean isClusterPerspective = isClusterPerspective(filters);
+    boolean isClusterPerspective = accountId != null && isClusterPerspective(filters);
     Map<String, ViewCostData> costTrendData = new HashMap<>();
     long startTimeForTrendData = 0L;
     if (getCostTrend) {
