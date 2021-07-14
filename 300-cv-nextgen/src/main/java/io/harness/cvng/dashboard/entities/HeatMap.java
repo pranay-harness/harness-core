@@ -2,6 +2,7 @@ package io.harness.cvng.dashboard.entities;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -102,6 +103,14 @@ public final class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, 
     @Override
     public int compareTo(HeatMapRisk o) {
       return this.startTime.compareTo(o.startTime);
+    }
+
+    public int getRiskValue() {
+      return (int) (riskScore * 100);
+    }
+
+    public Risk getRiskStatus() {
+      return Risk.getRiskFromRiskScore(riskScore);
     }
   }
 
