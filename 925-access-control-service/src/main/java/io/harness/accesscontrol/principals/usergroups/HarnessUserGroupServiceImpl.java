@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
+import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
@@ -52,25 +53,26 @@ public class HarnessUserGroupServiceImpl implements HarnessUserGroupService {
   @Override
   public void sync(String identifier, Scope scope) {
     ScopeParams scopeParams = scopeParamsFactory.buildScopeParams(scope);
-    String errorMessage = String.format("User group not found with the given identifier in scope %s", scope.toString());
-
-    UserGroupDTO userGroupDTO;
     try {
-      userGroupDTO = Failsafe.with(retryPolicy).get(() -> {
-        UserGroupDTO response = NGRestUtils.getResponse(userGroupClient.getUserGroup(identifier,
-            scopeParams.getParams().get(ACCOUNT_LEVEL_PARAM_NAME), scopeParams.getParams().get(ORG_LEVEL_PARAM_NAME),
-            scopeParams.getParams().get(PROJECT_LEVEL_PARAM_NAME)));
-        if (response == null) {
-          throw new InvalidRequestException(errorMessage);
-        }
-        return response;
-      });
-      userGroupService.upsert(userGroupFactory.buildUserGroup(userGroupDTO));
-    } catch (InvalidRequestException e) {
-      if (e.getMessage().equals(errorMessage)) {
-        log.warn("Did not find the user group with identifier {} in scope {}", identifier, scope.toString());
-        userGroupService.deleteIfPresent(identifier, scope.toString());
+      Optional<UserGroupDTO> userGroupDTOOpt =
+          Optional.ofNullable(Failsafe.with(retryPolicy)
+                                  .get(()
+                                           -> NGRestUtils.getResponse(userGroupClient.getUserGroup(identifier,
+                                               scopeParams.getParams().get(ACCOUNT_LEVEL_PARAM_NAME),
+                                               scopeParams.getParams().get(ORG_LEVEL_PARAM_NAME),
+                                               scopeParams.getParams().get(PROJECT_LEVEL_PARAM_NAME)))));
+      if (userGroupDTOOpt.isPresent()) {
+        userGroupService.upsert(userGroupFactory.buildUserGroup(userGroupDTOOpt.get()));
+      } else {
+        deleteIfPresent(identifier, scope);
       }
+    } catch (Exception e) {
+      log.error("Exception while syncing user groups", e);
     }
+  }
+
+  public void deleteIfPresent(String identifier, Scope scope) {
+    log.warn("Removing user group with identifier {} in scope {}.", identifier, scope.toString());
+    userGroupService.deleteIfPresent(identifier, scope.toString());
   }
 }
