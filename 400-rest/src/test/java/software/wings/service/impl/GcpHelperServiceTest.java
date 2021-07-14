@@ -15,7 +15,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.gcp.helpers.GcpCredentialsHelperService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import io.harness.yaml.YamlSdkModule;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
@@ -25,12 +24,15 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import java.io.IOException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 @OwnedBy(CDP)
+@RunWith(PowerMockRunner.class)
 public class GcpHelperServiceTest extends WingsBaseTest {
   @Mock private EncryptionService encryptionService;
   @Mock private GcpCredentialsHelperService gcpCredentialsHelperService;
