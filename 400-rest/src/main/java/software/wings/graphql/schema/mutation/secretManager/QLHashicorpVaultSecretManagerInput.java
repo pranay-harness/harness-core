@@ -15,6 +15,7 @@ import lombok.Value;
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLHashicorpVaultSecretManagerInput extends QLSecretManagerInput {
   String name;
+  String namespace;
   String vaultUrl;
   QLHashicorpVaultAuthDetails authDetails;
   String basePath;
