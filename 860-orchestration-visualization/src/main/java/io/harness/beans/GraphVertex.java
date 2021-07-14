@@ -14,6 +14,7 @@ import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.data.OrchestrationMap;
 import io.harness.tasks.ProgressData;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -25,7 +26,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.bson.Document;
 
 @OwnedBy(CDC)
 @Data
@@ -46,13 +46,13 @@ public class GraphVertex implements Serializable {
   private String stepType;
   private Status status;
   private FailureInfo failureInfo;
-  private Document stepParameters;
+  private OrchestrationMap stepParameters;
   private ExecutionMode mode;
 
   private List<ExecutableResponse> executableResponses;
   private List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParams;
   private List<InterruptEffect> interruptHistories;
-  private Map<String, Document> outcomeDocuments;
+  private Map<String, OrchestrationMap> outcomeDocuments;
   private List<String> retryIds;
 
   private Map<String, List<ProgressData>> progressDataMap;
@@ -63,7 +63,7 @@ public class GraphVertex implements Serializable {
   private SkipType skipType;
 
   private List<UnitProgress> unitProgresses;
-  private Document progressData;
+  private OrchestrationMap progressData;
 
   // UI
   @Builder.Default RepresentationStrategy representationStrategy = RepresentationStrategy.CAMELCASE;

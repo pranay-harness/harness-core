@@ -7,13 +7,14 @@ import io.harness.beans.GraphVertex;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.dto.GraphDelegateSelectionLogParams;
 import io.harness.execution.NodeExecution;
+import io.harness.pms.data.OrchestrationMap;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.utils.PmsExecutionUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
-import org.bson.Document;
 
 @OwnedBy(HarnessTeam.CDC)
 @Singleton
@@ -40,20 +41,19 @@ public class GraphVertexConverter {
         .failureInfo(nodeExecution.getFailureInfo())
         .skipInfo(nodeExecution.getSkipInfo())
         .nodeRunInfo(nodeExecution.getNodeRunInfo())
-        .stepParameters(
-            nodeExecution.getResolvedStepInputs() == null ? null : new Document(nodeExecution.getResolvedStepInputs()))
+        .stepParameters(PmsExecutionUtils.extractToOrchestrationMap(nodeExecution.getResolvedStepInputs()))
         .mode(nodeExecution.getMode())
         .executableResponses(CollectionUtils.emptyIfNull(nodeExecution.getExecutableResponses()))
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())
         .skipType(nodeExecution.getNode().getSkipType())
         .unitProgresses(nodeExecution.getUnitProgresses())
-        .progressData(nodeExecution.getProgressData() == null ? null : new Document(nodeExecution.getProgressData()))
+        .progressData(PmsExecutionUtils.extractToOrchestrationMap(nodeExecution.getProgressData()))
         .graphDelegateSelectionLogParams(graphDelegateSelectionLogParamsList)
         .build();
   }
 
-  public GraphVertex convertFrom(NodeExecution nodeExecution, Map<String, Document> outcomes) {
+  public GraphVertex convertFrom(NodeExecution nodeExecution, Map<String, OrchestrationMap> outcomes) {
     List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParamsList =
         delegateInfoHelper.getDelegateInformationForGivenTask(nodeExecution.getExecutableResponses(),
             nodeExecution.getMode(), AmbianceUtils.getAccountId(nodeExecution.getAmbiance()));
@@ -70,8 +70,7 @@ public class GraphVertexConverter {
         .stepType(nodeExecution.getNode().getStepType().getType())
         .status(nodeExecution.getStatus())
         .failureInfo(nodeExecution.getFailureInfo())
-        .stepParameters(
-            nodeExecution.getResolvedStepInputs() == null ? null : new Document(nodeExecution.getResolvedStepInputs()))
+        .stepParameters(PmsExecutionUtils.extractToOrchestrationMap(nodeExecution.getResolvedStepInputs()))
         .skipInfo(nodeExecution.getSkipInfo())
         .nodeRunInfo(nodeExecution.getNodeRunInfo())
         .mode(nodeExecution.getMode())
@@ -81,7 +80,7 @@ public class GraphVertexConverter {
         .skipType(nodeExecution.getNode().getSkipType())
         .outcomeDocuments(outcomes)
         .unitProgresses(nodeExecution.getUnitProgresses())
-        .progressData(nodeExecution.getProgressData() == null ? null : new Document(nodeExecution.getProgressData()))
+        .progressData(PmsExecutionUtils.extractToOrchestrationMap(nodeExecution.getProgressData()))
         .graphDelegateSelectionLogParams(graphDelegateSelectionLogParamsList)
         .build();
   }
