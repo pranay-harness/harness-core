@@ -40,6 +40,7 @@ public interface UserClient {
   String USER_TWO_FACTOR_AUTH_SETTINGS = "ng/user/two-factor-auth/{auth-mechanism}";
   String USER_ENABLE_TWO_FACTOR_AUTH = "ng/user/enable-two-factor-auth";
   String USER_DISABLE_TWO_FACTOR_AUTH = "ng/user/disable-two-factor-auth";
+  String USER_UNLOCK = "ng/user/unlock-user";
 
   @POST(USERS_API) Call<RestResponse<UserInfo>> createNewUser(@Body UserRequestDTO userRequest);
 
@@ -103,4 +104,8 @@ public interface UserClient {
 
   @PUT(USERS_API + "/{userId}/verified")
   Call<RestResponse<Boolean>> changeUserEmailVerified(@Path(value = "userId") String userId);
+
+  @PUT(USER_UNLOCK)
+  Call<RestResponse<Optional<UserInfo>>> unlockUser(
+      @Query(value = "email") String email, @Query("accountId") String accountId);
 }
