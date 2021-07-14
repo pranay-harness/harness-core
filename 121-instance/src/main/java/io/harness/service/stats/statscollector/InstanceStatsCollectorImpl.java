@@ -4,7 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.dtos.InstanceDTO;
 import io.harness.helper.SnapshotTimeProvider;
-import io.harness.service.instanceService.InstanceService;
+import io.harness.service.instance.InstanceService;
 import io.harness.service.instancestats.InstanceStatsService;
 import io.harness.service.stats.usagemetrics.eventpublisher.UsageMetricsEventPublisher;
 
