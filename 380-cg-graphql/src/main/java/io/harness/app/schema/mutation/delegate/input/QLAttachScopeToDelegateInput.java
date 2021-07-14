@@ -5,11 +5,11 @@ import static io.harness.annotations.dev.HarnessTeam.DEL;
 import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.graphql.schema.mutation.QLMutationInput;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 
@@ -24,6 +24,6 @@ public class QLAttachScopeToDelegateInput implements QLMutationInput {
 
   String accountId;
   String delegateId;
-  List<String> includeScopes;
-  List<String> excludeScopes;
+  QLIdFilter includeScopes;
+  QLIdFilter excludeScopes;
 }

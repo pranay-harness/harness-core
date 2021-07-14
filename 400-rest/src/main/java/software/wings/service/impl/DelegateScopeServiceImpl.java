@@ -64,6 +64,14 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
   }
 
   @Override
+  public DelegateScope getByName(String accountId, String name) {
+    return persistence.createQuery(DelegateScope.class)
+        .filter(DelegateScopeKeys.name, name)
+        .filter(DelegateScopeKeys.accountId, accountId)
+        .get();
+  }
+
+  @Override
   public DelegateScope update(DelegateScope delegateScope) {
     if (!delegateScope.isValid()) {
       throw new InvalidArgumentsException("Delegate scope cannot be empty.", USER);

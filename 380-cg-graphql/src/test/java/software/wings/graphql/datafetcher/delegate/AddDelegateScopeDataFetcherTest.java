@@ -9,7 +9,6 @@ import io.harness.app.datafetcher.delegate.AddDelegateScopeDataFetcher;
 import io.harness.app.schema.mutation.delegate.input.QLAddDelegateScopeInput;
 import io.harness.app.schema.mutation.delegate.payload.QLAddDelegateScopePayload;
 import io.harness.app.schema.type.delegate.QLTaskGroup;
-import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.exception.WingsException;
@@ -24,7 +23,11 @@ import software.wings.service.intfc.DelegateScopeService;
 import com.google.inject.Inject;
 import io.jsonwebtoken.lang.Assert;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -42,14 +45,8 @@ public class AddDelegateScopeDataFetcherTest extends AbstractDataFetcherTestBase
   @Test
   @Category(UnitTests.class)
   @Owner(developers = JENNY)
-  public void testAddInvalidDelegateScope() {
+  public void testAddDelegateScope() {
     String accountId = generateUuid();
-    String[] applications = {"app1", "app2"};
-    String[] environments = {"env1"};
-    String[] services = {"serv1", "sev2"};
-    List<TaskGroup> taskGroups = Arrays.asList(TaskGroup.JIRA, TaskGroup.AWS);
-    List<EnvironmentType> environmentTypeList = Arrays.asList(EnvironmentType.NON_PROD);
-
     QLAddDelegateScopeInput.QLAddDelegateScopeInputBuilder qlAddDelegateScopeInputBuilder =
         QLAddDelegateScopeInput.builder()
             .accountId(accountId)
@@ -63,11 +60,37 @@ public class AddDelegateScopeDataFetcherTest extends AbstractDataFetcherTestBase
         qlAddDelegateScopeInputBuilder.build(), MutationContext.builder().accountId(accountId).build());
     Assert.notNull(addDelegateScopePayload.getDelegateScope());
   }
+  @Test
+  @Category(UnitTests.class)
+  @Owner(developers = JENNY)
+  public void testAddDelegateScope2() {
+    String accountId = generateUuid();
+    String[] applications = {"app1", "app2"};
+    String[] environments = {"env1"};
+    String[] services = {"serv1", "sev2"};
+
+    QLIdFilter applicationsFilter = QLIdFilter.builder().values(applications).build();
+    QLIdFilter environmentFilter = QLIdFilter.builder().values(environments).build();
+    QLIdFilter servicesFilter = QLIdFilter.builder().values(services).build();
+
+    QLAddDelegateScopeInput.QLAddDelegateScopeInputBuilder qlAddDelegateScopeInputBuilder =
+        QLAddDelegateScopeInput.builder()
+            .accountId(accountId)
+            .name("DELEGATE_SCOPE")
+            .application(applicationsFilter)
+            .environment(environmentFilter)
+            .service(servicesFilter)
+            .environmentTypes(Collections.singletonList(QLEnvironmentType.NON_PROD))
+            .taskGroups(Collections.singletonList(QLTaskGroup.APPDYNAMICS));
+    QLAddDelegateScopePayload addDelegateScopePayload = delegateScopeDataFetcher.mutateAndFetch(
+        qlAddDelegateScopeInputBuilder.build(), MutationContext.builder().accountId(accountId).build());
+    Assert.notNull(addDelegateScopePayload.getDelegateScope());
+  }
 
   @Test
   @Category(UnitTests.class)
   @Owner(developers = JENNY)
-  public void testAddDelegateScope() {
+  public void testAddInvalidDelegateScope() {
     String accountId = generateUuid();
     QLAddDelegateScopeInput.QLAddDelegateScopeInputBuilder qlAddDelegateScopeInputBuilder =
         QLAddDelegateScopeInput.builder().accountId(accountId).name("DELEGATE_SCOPE");
