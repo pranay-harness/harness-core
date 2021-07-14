@@ -13,6 +13,7 @@ import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.EntityType;
@@ -713,5 +714,35 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     Page<Connector> connectors = connectorRepository.findAll(
         Criteria.where(ConnectorKeys.fullyQualifiedIdentifier).in(connectorFQN), pageable, false);
     return connectors.getContent().stream().map(connector -> connectorMapper.writeDTO(connector)).collect(toList());
+  }
+
+  @Override
+  public void deleteBatch(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> connectorIdentifiersList) {
+    for (String connectorIdentifier : connectorIdentifiersList) {
+      String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+          accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+      Optional<Connector> connectorOptional = connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+          fullyQualifiedIdentifier, projectIdentifier, orgIdentifier, accountIdentifier, true);
+      connectorOptional
+          .map(item -> {
+            String heartbeatTaskId = item.getHeartbeatPerpetualTaskId();
+            String connectorFQN = item.getFullyQualifiedIdentifier();
+            if (isNotBlank(heartbeatTaskId)) {
+              boolean perpetualTaskIsDeleted =
+                  connectorHeartbeatService.deletePerpetualTask(accountIdentifier, heartbeatTaskId, connectorFQN);
+              if (perpetualTaskIsDeleted == false) {
+                log.info("{} The perpetual task could not be deleted {}", CONNECTOR_HEARTBEAT_LOG_PREFIX, connectorFQN);
+                return false;
+              }
+            }
+            item.setDeleted(true);
+            connectorRepository.save(item, ChangeType.DELETE);
+            return true;
+          })
+          .orElseThrow(()
+                           -> new ConnectorNotFoundException(
+                               String.format("No connector found with identifier %s", connectorIdentifier), USER));
+    }
   }
 }

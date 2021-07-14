@@ -297,4 +297,10 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   public List<ConnectorResponseDTO> listbyFQN(String accountIdentifier, List<String> connectorFQN) {
     return defaultConnectorService.listbyFQN(accountIdentifier, connectorFQN);
   }
+
+  @Override
+  public void deleteBatch(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> connectorIdentifierList) {
+    defaultConnectorService.deleteBatch(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifierList);
+  }
 }
