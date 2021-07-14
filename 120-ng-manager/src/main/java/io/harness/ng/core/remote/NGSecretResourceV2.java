@@ -346,7 +346,7 @@ public class NGSecretResourceV2 {
       try {
         field.setAccessible(true);
         SecretRefData secretRefData = (SecretRefData) field.get(decryptableEntity);
-        if (!Optional.ofNullable(secretRefData).isPresent()) {
+        if (!Optional.ofNullable(secretRefData).isPresent() || secretRefData.isNull()) {
           continue;
         }
         Scope secretScope = secretRefData.getScope();
