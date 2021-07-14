@@ -27,7 +27,7 @@ do
     echo $KEY
     curl \
        -X PUT \
-       --data "{ \"fields\" : { \"labels\" : [\"${LABLE}\"] , \"${FIELD_ID}\": \"${VERSION}\" }}" \
+       --data "{ \"update\": { \"labels\": [ {\"add\": \"${LABLE}\"} ] },\"fields\" : { \"${FIELD_ID}\" : \"${VERSION}\" }}" \
        -H "Content-Type: application/json" \
        https://harness.atlassian.net/rest/api/2/issue/${KEY} \
        --user $JIRA_USERNAME:$JIRA_PASSWORD
