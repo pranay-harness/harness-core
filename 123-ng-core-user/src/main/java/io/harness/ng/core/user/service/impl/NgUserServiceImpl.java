@@ -9,6 +9,7 @@ import static io.harness.remote.client.NGRestUtils.getResponse;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 import static io.harness.utils.PageUtils.getPageRequest;
 
+import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -23,6 +24,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.beans.Scope.ScopeKeys;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.ProcessingException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.UserGroupService;
@@ -36,6 +38,7 @@ import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.entities.UserMembership.UserMembershipKeys;
 import io.harness.ng.core.user.entities.UserMetadata;
 import io.harness.ng.core.user.entities.UserMetadata.UserMetadataKeys;
+import io.harness.ng.core.user.exception.InvalidUserRemoveRequestException;
 import io.harness.ng.core.user.remote.dto.UserFilter;
 import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.remote.mapper.UserMetadataMapper;
@@ -49,6 +52,7 @@ import io.harness.user.remote.UserClient;
 import io.harness.user.remote.UserFilterNG;
 import io.harness.utils.PageUtils;
 import io.harness.utils.ScopeUtils;
+import io.harness.utils.TimeLogger;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -60,12 +64,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -78,12 +87,14 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Slf4j
 @OwnedBy(PL)
 public class NgUserServiceImpl implements NgUserService {
+  private static final String PROCESSING_EXCEPTION_MESSAGE = "Could not process user remove request in stipulated time";
+  public static final String THREAD_POOL_NAME = "user-service-delete";
   private static final String ACCOUNT_ADMIN = "_account_admin";
-  public static final String ACCOUNT_VIEWER = "_account_viewer";
-  public static final String ORGANIZATION_VIEWER = "_organization_viewer";
+  private static final String ACCOUNT_VIEWER = "_account_viewer";
+  private static final String ORGANIZATION_VIEWER = "_organization_viewer";
   private static final String ORG_ADMIN = "_organization_admin";
   private static final String PROJECT_ADMIN = "_project_admin";
-  public static final String PROJECT_VIEWER = "_project_viewer";
+  private static final String PROJECT_VIEWER = "_project_viewer";
   private static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
   private final List<String> MANAGED_ROLE_IDENTIFIERS =
       ImmutableList.of(ACCOUNT_VIEWER, ORGANIZATION_VIEWER, PROJECT_VIEWER);
@@ -95,14 +106,15 @@ public class NgUserServiceImpl implements NgUserService {
   private final OutboxService outboxService;
   private final UserGroupService userGroupService;
   private final UserMetadataRepository userMetadataRepository;
-
+  private final ExecutorService executorService;
   private static final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
 
   @Inject
   public NgUserServiceImpl(UserClient userClient, UserMembershipRepository userMembershipRepository,
       @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient,
       @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, OutboxService outboxService,
-      UserGroupService userGroupService, UserMetadataRepository userMetadataRepository) {
+      UserGroupService userGroupService, UserMetadataRepository userMetadataRepository,
+      @Named(THREAD_POOL_NAME) ExecutorService executorService) {
     this.userClient = userClient;
     this.userMembershipRepository = userMembershipRepository;
     this.accessControlAdminClient = accessControlAdminClient;
@@ -110,6 +122,7 @@ public class NgUserServiceImpl implements NgUserService {
     this.outboxService = outboxService;
     this.userGroupService = userGroupService;
     this.userMetadataRepository = userMetadataRepository;
+    this.executorService = executorService;
   }
 
   @Override
@@ -436,7 +449,7 @@ public class NgUserServiceImpl implements NgUserService {
 
   @Override
   public boolean isUserInAccount(String accountId, String userId) {
-    return Boolean.TRUE.equals(RestClientUtils.getResponse(userClient.isUserInAccount(accountId, userId)));
+    return TRUE.equals(RestClientUtils.getResponse(userClient.isUserInAccount(accountId, userId)));
   }
 
   @Override
@@ -462,34 +475,90 @@ public class NgUserServiceImpl implements NgUserService {
 
   @Override
   public boolean removeUserFromScope(String userId, Scope scope, UserMembershipUpdateSource source) {
-    Optional<UserMembership> userMembershipOptional = getUserMembership(userId, scope);
-    if (!userMembershipOptional.isPresent()) {
-      return false;
-    }
-    UserMembership userMembership = userMembershipOptional.get();
-    if (!UserMembershipUpdateSource.SYSTEM.equals(source)) {
-      ensureUserNotPartOfChildScope(userId, scope);
-      ensureUserNotLastAdminAtScope(userId, scope);
-    }
+    log.info("Trying to remove user {} from scope {}", userId, ScopeUtils.toString(scope));
+    try (TimeLogger timeLogger = new TimeLogger(LoggerFactory.getLogger(getClass().getName()))) {
+      Optional<UserMembership> currentScopeUserMembership = getUserMembership(userId, scope);
+      if (!currentScopeUserMembership.isPresent()) {
+        return false;
+      }
+      Criteria userMembershipCriteria = getCriteriaForFetchingChildScopes(userId, scope);
+      List<UserMembership> userMemberships = userMembershipRepository.findAll(userMembershipCriteria);
+      log.info(
+          "User {} is part of {} scopes in account {}", userId, userMemberships.size(), scope.getAccountIdentifier());
 
-    Optional<UserMetadata> userMetadata = userMetadataRepository.findDistinctByUserId(userId);
-    String publicIdentifier = userMetadata.map(UserMetadata::getEmail).orElse(userId);
-    Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
-      userMembershipRepository.delete(userMembership);
-      outboxService.save(
-          new RemoveCollaboratorEvent(scope.getAccountIdentifier(), scope, publicIdentifier, userId, source));
-      return userMembership;
-    }));
+      if (!UserMembershipUpdateSource.SYSTEM.equals(source)) {
+        List<Scope> childScopes = userMemberships.stream().map(UserMembership::getScope).collect(toList());
+        List<Scope> lastAdminScopes = getLastAdminScopes(userId, childScopes);
+        if (!lastAdminScopes.isEmpty()) {
+          throw new InvalidUserRemoveRequestException(
+              InvalidUserRemoveRequestException.getExceptionMessageForUserRemove(lastAdminScopes), lastAdminScopes);
+        }
+      }
 
-    UserMembership anotherMembership =
-        userMembershipRepository.findOne(Criteria.where(UserMetadataKeys.userId).is(userId));
-    if (anotherMembership == null) {
-      RestClientUtils.getResponse(userClient.safeDeleteUser(userId, scope.getAccountIdentifier()));
+      Optional<UserMetadata> userMetadata = userMetadataRepository.findDistinctByUserId(userId);
+      String publicIdentifier = userMetadata.map(UserMetadata::getEmail).orElse(userId);
+      userMemberships.forEach(
+          userMembership -> Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+            userMembershipRepository.delete(userMembership);
+            outboxService.save(
+                new RemoveCollaboratorEvent(scope.getAccountIdentifier(), scope, publicIdentifier, userId, source));
+            return userMembership;
+          })));
+
+      UserMembership anotherMembership =
+          userMembershipRepository.findOne(Criteria.where(UserMetadataKeys.userId).is(userId));
+      if (anotherMembership == null) {
+        RestClientUtils.getResponse(userClient.safeDeleteUser(userId, scope.getAccountIdentifier()));
+      }
     }
     return true;
   }
 
-  private void ensureUserNotLastAdminAtScope(String userId, Scope scope) {
+  private List<Scope> getLastAdminScopes(String userId, List<Scope> scopes) {
+    List<Callable<Boolean>> tasks = new ArrayList<>();
+    scopes.forEach(scope -> tasks.add(() -> isUserLastAdminAtScope(userId, scope)));
+    List<Future<Boolean>> futures;
+    try {
+      futures = executorService.invokeAll(tasks, 10, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ProcessingException(PROCESSING_EXCEPTION_MESSAGE);
+    }
+
+    List<Boolean> results = new ArrayList<>();
+    for (int i = 0; i < futures.size(); i++) {
+      try {
+        results.add(futures.get(i).get());
+      } catch (Exception e) {
+        log.error(PROCESSING_EXCEPTION_MESSAGE, e);
+        throw new ProcessingException(PROCESSING_EXCEPTION_MESSAGE);
+      }
+    }
+
+    List<Scope> lastAdminScopes = new ArrayList<>();
+    for (int i = 0; i < results.size(); i++) {
+      if (TRUE.equals(results.get(i))) {
+        lastAdminScopes.add(scopes.get(i));
+      }
+    }
+    return lastAdminScopes;
+  }
+
+  private Criteria getCriteriaForFetchingChildScopes(String userId, Scope scope) {
+    Criteria criteria = Criteria.where(UserMembershipKeys.userId)
+                            .is(userId)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
+                            .is(scope.getAccountIdentifier());
+    if (isNotBlank(scope.getProjectIdentifier())) {
+      criteria.and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier).is(scope.getOrgIdentifier());
+      criteria.and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier).is(scope.getProjectIdentifier());
+    } else if (isNotBlank(scope.getOrgIdentifier())) {
+      criteria.and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier).is(scope.getOrgIdentifier());
+    }
+    return criteria;
+  }
+
+  private Boolean isUserLastAdminAtScope(String userId, Scope scope) {
     String roleIdentifier;
     if (!isBlank(scope.getProjectIdentifier())) {
       roleIdentifier = PROJECT_ADMIN;
@@ -499,49 +568,7 @@ public class NgUserServiceImpl implements NgUserService {
       roleIdentifier = ACCOUNT_ADMIN;
     }
     List<UserMetadataDTO> scopeAdmins = listUsersHavingRole(scope, roleIdentifier);
-    if (scopeAdmins.stream().allMatch(userMetadata -> userId.equals(userMetadata.getUuid()))) {
-      throw new InvalidRequestException("User is the last admin left");
-    }
-  }
-
-  private String getDeleteUserFromChildScopeErrorMessage(Scope scope) {
-    return String.format("Please delete the user from the %ss in this %s and try again",
-        StringUtils.capitalize(ScopeUtils.getImmediateNextScope(scope.getAccountIdentifier(), scope.getOrgIdentifier())
-                                   .toString()
-                                   .toLowerCase()),
-        StringUtils.capitalize(ScopeUtils
-                                   .getMostSignificantScope(scope.getAccountIdentifier(), scope.getOrgIdentifier(),
-                                       scope.getProjectIdentifier())
-                                   .toString()
-                                   .toLowerCase()));
-  }
-
-  private void ensureUserNotPartOfChildScope(String userId, Scope scope) {
-    boolean userPartOfChildScope;
-    if (!isBlank(scope.getProjectIdentifier())) {
-      userPartOfChildScope = false;
-    } else if (!isBlank(scope.getOrgIdentifier())) {
-      Criteria criteria = Criteria.where(UserMetadataKeys.userId)
-                              .is(userId)
-                              .and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
-                              .is(scope.getAccountIdentifier())
-                              .and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
-                              .is(scope.getOrgIdentifier())
-                              .and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
-                              .exists(true);
-      userPartOfChildScope = userMembershipRepository.findOne(criteria) != null;
-    } else {
-      Criteria criteria = Criteria.where(UserMetadataKeys.userId)
-                              .is(userId)
-                              .and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
-                              .is(scope.getAccountIdentifier())
-                              .and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
-                              .exists(true);
-      userPartOfChildScope = userMembershipRepository.findOne(criteria) != null;
-    }
-    if (userPartOfChildScope) {
-      throw new InvalidRequestException(getDeleteUserFromChildScopeErrorMessage(scope));
-    }
+    return scopeAdmins.stream().allMatch(userMetadata -> userId.equals(userMetadata.getUuid()));
   }
 
   @Override
