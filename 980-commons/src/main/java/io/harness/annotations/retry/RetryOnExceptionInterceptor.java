@@ -22,7 +22,7 @@ public class RetryOnExceptionInterceptor implements MethodInterceptor {
   @Override
   public Object invoke(MethodInvocation methodInvocation) throws Throwable {
     Method method = methodInvocation.getMethod();
-    log.info("Retryable method invocation started: {}", method.getName());
+    log.debug("Retryable method invocation started: {}", method.getName());
     RetryOnException retryConfig = method.getDeclaredAnnotation(RetryOnException.class);
     int retryAttempts = retryConfig.retryCount();
     long sleepInterval = retryConfig.sleepDurationInMilliseconds();

@@ -14,6 +14,7 @@ import io.harness.ccm.commons.beans.billing.InstanceCategory;
 import io.harness.ccm.commons.beans.recommendation.K8sServiceProvider;
 import io.harness.ccm.commons.beans.recommendation.NodePoolId;
 import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
+import io.harness.ccm.commons.beans.recommendation.RecommendationUtils;
 import io.harness.ccm.commons.beans.recommendation.TotalResourceUsage;
 import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequest;
 import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse;
@@ -23,6 +24,7 @@ import io.harness.exception.InvalidRequestException;
 import java.net.ConnectException;
 import java.time.Instant;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +66,8 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
 
       try {
         calculateAndSaveRecommendation(nodePoolId, totalResourceUsage);
-      } catch (InvalidRequestException ex) {
+      } catch (InvalidRequestException
+              ex) { // This an acceptable exception in the sense that the next recommendation job should proceed.
         log.warn("Not generating recommendation for: {} with TRU: {}", nodePoolId, totalResourceUsage, ex);
       }
     }
@@ -87,14 +90,17 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
 
   private void calculateAndSaveRecommendation(
       @NonNull NodePoolId nodePoolId, @NonNull TotalResourceUsage totalResourceUsage) {
-    K8sServiceProvider serviceProvider = k8sRecommendationDAO.getServiceProvider(jobConstants, nodePoolId);
+    K8sServiceProvider serviceProvider = getCurrentNodePoolConfiguration(nodePoolId);
     log.info("serviceProvider: {}", serviceProvider);
 
-    RecommendationResponse recommendation = getRecommendation(serviceProvider, totalResourceUsage);
+    RecommendClusterRequest request = RecommendationUtils.constructNodeRecommendationRequest(totalResourceUsage);
+    log.info("RecommendClusterRequest: {}", request);
+
+    RecommendationResponse recommendation = getRecommendation(serviceProvider, request);
     log.info("RecommendationResponse: {}", recommendation);
 
     String mongoEntityId = k8sRecommendationDAO.insertNodeRecommendationResponse(
-        jobConstants, nodePoolId, totalResourceUsage, serviceProvider, recommendation);
+        jobConstants, nodePoolId, request, serviceProvider, recommendation);
 
     RecommendationOverviewStats stats = getMonthlyCostAndSaving(serviceProvider, recommendation);
     log.info("The monthly stat is: {}", stats);
@@ -102,12 +108,17 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
     k8sRecommendationDAO.updateCeRecommendation(mongoEntityId, jobConstants, nodePoolId, stats, Instant.now());
   }
 
+  private K8sServiceProvider getCurrentNodePoolConfiguration(@NonNull NodePoolId nodePoolId) {
+    K8sServiceProvider serviceProvider = k8sRecommendationDAO.getServiceProvider(jobConstants, nodePoolId);
+
+    populateVMInfo(serviceProvider);
+
+    return serviceProvider;
+  }
+
   @SneakyThrows
   private RecommendationResponse getRecommendation(
-      K8sServiceProvider serviceProvider, TotalResourceUsage totalResourceUsage) {
-    RecommendClusterRequest request = constructRequest(totalResourceUsage);
-    log.info("RecommendClusterRequest: {}", request);
-
+      K8sServiceProvider serviceProvider, RecommendClusterRequest request) {
     Response<RecommendationResponse> response =
         banzaiRecommenderClient
             .getRecommendation(serviceProvider.getCloudProvider().getCloudProviderName(),
@@ -133,35 +144,10 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
     return recommendation;
   }
 
-  private static RecommendClusterRequest constructRequest(TotalResourceUsage totalResourceUsage) {
-    if (!isResourceConsistent(totalResourceUsage)) {
-      throw new InvalidRequestException(String.format("Inconsistent TotalResourceUsage: %s", totalResourceUsage));
-    }
-
-    long minNodes = 3L;
-    long maxNodesPossible = (long) Math.min(Math.floor(totalResourceUsage.getSumcpu() / totalResourceUsage.getMaxcpu()),
-        Math.floor(totalResourceUsage.getSummemory() / totalResourceUsage.getMaxmemory()));
-
-    maxNodesPossible = Math.max(maxNodesPossible, 1L);
-    if (maxNodesPossible < 3L) {
-      minNodes = maxNodesPossible;
-    }
-
-    return RecommendClusterRequest.builder()
-        .maxNodes(maxNodesPossible)
-        .minNodes(minNodes)
-        .sumCpu(totalResourceUsage.getSumcpu() / 1024.0D)
-        .sumMem(totalResourceUsage.getSummemory() / 1024.0D)
-        .allowBurst(true)
-        .sameSize(true)
-        .build();
-  }
-
+  @NotNull
   private RecommendationOverviewStats getMonthlyCostAndSaving(
       @NonNull K8sServiceProvider serviceProvider, @NonNull RecommendationResponse recommendation) {
-    double currentPricePerVm = getCurrentInstancePrice(serviceProvider);
-
-    double currentHourlyCost = currentPricePerVm * (double) serviceProvider.getNodeCount();
+    double currentHourlyCost = serviceProvider.getCategoryAwareCost() * (double) serviceProvider.getNodeCount();
     double recommendedHourlyCost = recommendation.getAccuracy().getTotalPrice();
 
     final double toMonthly = 24 * 30;
@@ -171,10 +157,10 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
         .build();
   }
 
-  private double getCurrentInstancePrice(@NonNull K8sServiceProvider serviceProvider) {
+  private void populateVMInfo(@NonNull K8sServiceProvider serviceProvider) {
     if (serviceProvider.getInstanceFamily() == null) {
       log.warn("Incomplete K8sServiceProvider {}, returning currentCost = 0", serviceProvider);
-      return 0; // shall we use any default value?
+      return; // shall we use any default value?
     }
 
     VMComputePricingInfo vmComputePricingInfo = vmPricingService.getComputeVMPricingInfo(
@@ -183,24 +169,15 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
     log.info("Current Pricing {}", vmComputePricingInfo);
     if (vmComputePricingInfo == null) {
       log.error("Current Pricing not available for {}", serviceProvider);
-      throw new InvalidRequestException("Pricing not available, not saving recommendation in timescaleDB");
+      return;
     }
 
-    if (InstanceCategory.SPOT.equals(serviceProvider.getInstanceCategory())
-        && !isEmpty(vmComputePricingInfo.getSpotPrice())) {
-      // get any zone price, generally they all are same
-      return vmComputePricingInfo.getSpotPrice().get(0).getPrice();
+    serviceProvider.setCpusPerVm(vmComputePricingInfo.getCpusPerVm());
+    serviceProvider.setMemPerVm(vmComputePricingInfo.getMemPerVm());
+
+    serviceProvider.setCostPerVmPerHr(vmComputePricingInfo.getOnDemandPrice());
+    if (!isEmpty(vmComputePricingInfo.getSpotPrice())) {
+      serviceProvider.setSpotCostPerVmPerHr(vmComputePricingInfo.getSpotPrice().get(0).getPrice());
     }
-
-    return vmComputePricingInfo.getOnDemandPrice();
-  }
-
-  private static boolean isResourceConsistent(@NonNull TotalResourceUsage resource) {
-    boolean inconsistent = Math.round(resource.getSumcpu()) < Math.round(resource.getMaxcpu())
-        || Math.round(resource.getSummemory()) < Math.round(resource.getMaxmemory());
-    boolean anyZero = Math.round(resource.getSumcpu()) == 0L || Math.round(resource.getSummemory()) == 0L
-        || Math.round(resource.getMaxcpu()) == 0L || Math.round(resource.getMaxmemory()) == 0L;
-
-    return !inconsistent && !anyZero;
   }
 }
