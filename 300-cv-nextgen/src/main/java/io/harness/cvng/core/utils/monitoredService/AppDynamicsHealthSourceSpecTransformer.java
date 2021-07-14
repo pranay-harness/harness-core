@@ -23,9 +23,9 @@ public class AppDynamicsHealthSourceSpecTransformer
         "Application feature name should be same for List of all configs.");
 
     return AppDynamicsHealthSourceSpec.builder()
-        .appdApplicationName(cvConfigs.get(0).getApplicationName())
+        .applicationName(cvConfigs.get(0).getApplicationName())
         .connectorRef(cvConfigs.get(0).getConnectorIdentifier())
-        .appdTierName(cvConfigs.get(0).getTierName())
+        .tierName(cvConfigs.get(0).getTierName())
         .feature(cvConfigs.get(0).getProductName())
         .metricPacks(
             cvConfigs.stream().map(cv -> MetricPackDTO.toMetricPackDTO(cv.getMetricPack())).collect(Collectors.toSet()))

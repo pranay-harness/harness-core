@@ -131,9 +131,9 @@ public class AppDynamicsHealthSourceSpecTransformerTest extends CvNextGenTestBas
     AppDynamicsHealthSourceSpec appDynamicsHealthSourceSpec =
         appDynamicsHealthSourceSpecTransformer.transform(cvConfigs);
 
-    assertThat(appDynamicsHealthSourceSpec.getAppdApplicationName()).isEqualTo(applicationName);
+    assertThat(appDynamicsHealthSourceSpec.getApplicationName()).isEqualTo(applicationName);
     assertThat(appDynamicsHealthSourceSpec.getConnectorRef()).isEqualTo(connectorIdentifier);
-    assertThat(appDynamicsHealthSourceSpec.getAppdTierName()).isEqualTo(tierName);
+    assertThat(appDynamicsHealthSourceSpec.getTierName()).isEqualTo(tierName);
     assertThat(appDynamicsHealthSourceSpec.getFeature()).isEqualTo(productName);
     assertThat(appDynamicsHealthSourceSpec.getMetricPacks().size()).isEqualTo(2);
   }

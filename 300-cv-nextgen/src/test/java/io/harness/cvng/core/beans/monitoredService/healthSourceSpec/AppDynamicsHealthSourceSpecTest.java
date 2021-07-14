@@ -65,8 +65,8 @@ public class AppDynamicsHealthSourceSpecTest extends CvNextGenTestBase {
     name = "some-name";
     metricPackDTOS = Arrays.asList(MetricPackDTO.builder().identifier(CVMonitoringCategory.ERRORS).build());
     appDynamicsHealthSourceSpec = AppDynamicsHealthSourceSpec.builder()
-                                      .appdApplicationName(applicationName)
-                                      .appdTierName(tierName)
+                                      .applicationName(applicationName)
+                                      .tierName(tierName)
                                       .connectorRef(connectorIdentifier)
                                       .feature(feature)
                                       .metricPacks(metricPackDTOS.stream().collect(Collectors.toSet()))
