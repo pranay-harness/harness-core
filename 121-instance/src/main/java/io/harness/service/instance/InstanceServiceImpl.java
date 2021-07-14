@@ -1,4 +1,4 @@
-package io.harness.service.instanceService;
+package io.harness.service.instance;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -51,6 +51,13 @@ public class InstanceServiceImpl implements InstanceService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
     return InstanceMapper.toDTO(instanceRepository.getActiveInstancesByServiceId(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, timestampInMs));
+  }
+
+  @Override
+  public List<InstanceDTO> getActiveInstancesByInfrastructureMappingId(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String infrastructureMappingId, long timestampInMs) {
+    return InstanceMapper.toDTO(instanceRepository.getActiveInstancesByInfrastructureMappingId(
+        accountIdentifier, orgIdentifier, projectIdentifier, infrastructureMappingId, timestampInMs));
   }
 
   /*

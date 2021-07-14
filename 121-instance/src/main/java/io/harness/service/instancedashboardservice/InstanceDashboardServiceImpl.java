@@ -13,7 +13,7 @@ import io.harness.models.dashboard.InstanceCountDetails;
 import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeBase;
 import io.harness.models.dashboard.InstanceCountDetailsByService;
 import io.harness.ng.core.environment.beans.EnvironmentType;
-import io.harness.service.instanceService.InstanceService;
+import io.harness.service.instance.InstanceService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

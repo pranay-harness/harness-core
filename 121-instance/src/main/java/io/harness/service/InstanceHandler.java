@@ -21,7 +21,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.repositories.infrastructuremapping.InfrastructureMappingRepository;
-import io.harness.service.instanceService.InstanceService;
+import io.harness.service.instance.InstanceService;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;

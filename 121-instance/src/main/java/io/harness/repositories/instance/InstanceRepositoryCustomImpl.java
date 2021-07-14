@@ -87,6 +87,21 @@ public class InstanceRepositoryCustomImpl implements InstanceRepositoryCustom {
     return mongoTemplate.find(query, Instance.class);
   }
 
+  /*
+    Returns instances that are active at the given timestamp for specified accountIdentifier, projectIdentifier,
+    orgIdentifier and infrastructure mapping id
+  */
+  @Override
+  public List<Instance> getActiveInstancesByInfrastructureMappingId(String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, String infrastructureMappingId, long timestampInMs) {
+    Criteria criteria =
+        getCriteriaForActiveInstances(accountIdentifier, orgIdentifier, projectIdentifier, timestampInMs)
+            .and(InstanceKeys.infrastructureMappingId)
+            .is(infrastructureMappingId);
+    Query query = new Query().addCriteria(criteria);
+    return mongoTemplate.find(query, Instance.class);
+  }
+
   @Override
   public AggregationResults<EnvBuildInstanceCount> getEnvBuildInstanceCountByServiceId(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId, long timestampInMs) {
