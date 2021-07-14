@@ -4,7 +4,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CastedField;
 import io.harness.beans.RecasterMap;
-import io.harness.exceptions.MapKeyContainsDotException;
 import io.harness.transformers.RecastTransformer;
 import io.harness.utils.IterationHelper;
 import io.harness.utils.RecastReflectionUtils;
@@ -57,7 +56,6 @@ public class MapRecastTransformer extends RecastTransformer implements SimpleVal
       final Map<String, Object> mapToEncode = new LinkedHashMap<>();
       for (final Map.Entry<?, ?> entry : map.entrySet()) {
         final String strKey = getRecaster().getTransformer().encode(entry.getKey()).toString();
-        throwIfConstainsDots(strKey);
         if (getRecaster().getTransformer().hasSimpleValueTransformer(entry.getValue())) {
           mapToEncode.put(strKey, getRecaster().getTransformer().encode(entry.getValue()));
         } else {
@@ -75,12 +73,6 @@ public class MapRecastTransformer extends RecastTransformer implements SimpleVal
       return castedField.isMap();
     } else {
       return RecastReflectionUtils.implementsInterface(c, Map.class);
-    }
-  }
-
-  private void throwIfConstainsDots(String key) {
-    if (key.contains(".")) {
-      throw new MapKeyContainsDotException(String.format("Map key should not contain dots inside -> %s", key));
     }
   }
 }
