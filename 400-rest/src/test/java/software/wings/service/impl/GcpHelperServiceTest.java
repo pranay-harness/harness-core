@@ -15,6 +15,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.gcp.helpers.GcpCredentialsHelperService;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.yaml.YamlSdkModule;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
@@ -27,6 +28,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.powermock.api.mockito.PowerMockito;
 
 @OwnedBy(CDP)
 public class GcpHelperServiceTest extends WingsBaseTest {
@@ -57,9 +59,10 @@ public class GcpHelperServiceTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnProxyConfiguredCredentials() throws IOException {
+    PowerMockito.mockStatic(GcpCredentialsHelperService.class);
     System.setProperty("http.proxyHost", "proxyHost");
     GcpConfig gcpConfig = GcpConfig.builder().serviceAccountKeyFileContent(getServiceAccountKeyContent()).build();
-    when(gcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(
+    when(GcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(
              gcpConfig.getServiceAccountKeyFileContent()))
         .thenReturn(new GoogleCredential());
     gcpHelperService.getGoogleCredential(
@@ -73,8 +76,9 @@ public class GcpHelperServiceTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnDefaultConfiguredCredentials() throws IOException {
+    PowerMockito.mockStatic(GcpCredentialsHelperService.class);
     GcpConfig gcpConfig = GcpConfig.builder().serviceAccountKeyFileContent(getServiceAccountKeyContent()).build();
-    when(gcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(
+    when(GcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(
              gcpConfig.getServiceAccountKeyFileContent()))
         .thenReturn(new GoogleCredential());
     gcpHelperService.getGoogleCredential(
