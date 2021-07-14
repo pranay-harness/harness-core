@@ -9,8 +9,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import io.harness.app.datafetcher.delegate.DelegateApprovalDataFetcher;
-import io.harness.app.schema.mutation.delegate.input.QLDelegateApprovalInput;
-import io.harness.app.schema.mutation.delegate.payload.QLDelegateApprovalPayload;
+import io.harness.app.schema.mutation.delegate.input.QLDelegateApproveRejectInput;
+import io.harness.app.schema.mutation.delegate.payload.QLDelegateApproveRejectPayload;
 import io.harness.app.schema.type.delegate.QLDelegateApproval;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
@@ -64,12 +64,12 @@ public class DelegateApprovalDataFetcherTest extends AbstractDataFetcherTestBase
     existingDelegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
     persistence.save(existingDelegate);
 
-    QLDelegateApprovalInput input = QLDelegateApprovalInput.builder()
-                                        .accountId(existingDelegate.getAccountId())
-                                        .delegateId(existingDelegate.getUuid())
-                                        .delegateApproval(QLDelegateApproval.ACTIVATE)
-                                        .build();
-    QLDelegateApprovalPayload delegateApprovalPayload =
+    QLDelegateApproveRejectInput input = QLDelegateApproveRejectInput.builder()
+                                             .accountId(existingDelegate.getAccountId())
+                                             .delegateId(existingDelegate.getUuid())
+                                             .delegateApproval(QLDelegateApproval.ACTIVATE)
+                                             .build();
+    QLDelegateApproveRejectPayload delegateApprovalPayload =
         delegateApprovalDataFetcher.mutateAndFetch(input, MutationContext.builder().accountId(accountId).build());
     Assert.notNull(delegateApprovalPayload.getDelegate());
     Assert.isTrue(delegateApprovalPayload.getDelegate().getStatus().equals(DelegateInstanceStatus.ENABLED.toString()));
@@ -88,13 +88,13 @@ public class DelegateApprovalDataFetcherTest extends AbstractDataFetcherTestBase
     existingDelegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
     persistence.save(existingDelegate);
 
-    QLDelegateApprovalInput input = QLDelegateApprovalInput.builder()
-                                        .accountId(existingDelegate.getAccountId())
-                                        .delegateId(existingDelegate.getUuid())
-                                        .delegateApproval(QLDelegateApproval.REJECT)
-                                        .build();
+    QLDelegateApproveRejectInput input = QLDelegateApproveRejectInput.builder()
+                                             .accountId(existingDelegate.getAccountId())
+                                             .delegateId(existingDelegate.getUuid())
+                                             .delegateApproval(QLDelegateApproval.REJECT)
+                                             .build();
     when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
-    QLDelegateApprovalPayload delegateApprovalPayload =
+    QLDelegateApproveRejectPayload delegateApprovalPayload =
         delegateApprovalDataFetcher.mutateAndFetch(input, MutationContext.builder().accountId(accountId).build());
     Assert.notNull(delegateApprovalPayload.getDelegate());
     Assert.isTrue(delegateApprovalPayload.getDelegate().getStatus().equals(DelegateInstanceStatus.DELETED.toString()));
@@ -112,11 +112,11 @@ public class DelegateApprovalDataFetcherTest extends AbstractDataFetcherTestBase
     existingDelegate.setAccountId(accountId);
     existingDelegate.setStatus(DelegateInstanceStatus.ENABLED);
     persistence.save(existingDelegate);
-    QLDelegateApprovalInput input = QLDelegateApprovalInput.builder()
-                                        .accountId(existingDelegate.getAccountId())
-                                        .delegateId(existingDelegate.getUuid())
-                                        .delegateApproval(QLDelegateApproval.REJECT)
-                                        .build();
+    QLDelegateApproveRejectInput input = QLDelegateApproveRejectInput.builder()
+                                             .accountId(existingDelegate.getAccountId())
+                                             .delegateId(existingDelegate.getUuid())
+                                             .delegateApproval(QLDelegateApproval.REJECT)
+                                             .build();
     when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
     assertThatThrownBy(
         () -> delegateApprovalDataFetcher.mutateAndFetch(input, MutationContext.builder().accountId(accountId).build()))
@@ -131,11 +131,11 @@ public class DelegateApprovalDataFetcherTest extends AbstractDataFetcherTestBase
     String accountId = generateUuid();
     String delegateId = "TEST_DELEGATE_ID";
 
-    QLDelegateApprovalInput input = QLDelegateApprovalInput.builder()
-                                        .accountId(accountId)
-                                        .delegateId(delegateId)
-                                        .delegateApproval(QLDelegateApproval.ACTIVATE)
-                                        .build();
+    QLDelegateApproveRejectInput input = QLDelegateApproveRejectInput.builder()
+                                             .accountId(accountId)
+                                             .delegateId(delegateId)
+                                             .delegateApproval(QLDelegateApproval.ACTIVATE)
+                                             .build();
     when(broadcasterFactory.lookup(anyString(), anyBoolean())).thenReturn(broadcaster);
     assertThatThrownBy(
         () -> delegateApprovalDataFetcher.mutateAndFetch(input, MutationContext.builder().accountId(accountId).build()))

@@ -69,29 +69,8 @@ public class DeleteDelegateDataFetcherTest extends AbstractDataFetcherTestBase {
     existingDelegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
     persistence.save(existingDelegate);
     QLDeleteDelegateInput deleteDelegateInput =
-        QLDeleteDelegateInput.builder().delegateId(delegateId).accountId(accountId).forceDelete(false).build();
+        QLDeleteDelegateInput.builder().delegateId(delegateId).accountId(accountId).build();
     when(broadcasterFactory.lookup(any(), anyBoolean())).thenReturn(broadcaster);
-    QLDeleteDelegatePayload deleteDelegatePayload = deleteDelegateDataFetcher.mutateAndFetch(
-        deleteDelegateInput, MutationContext.builder().accountId(accountId).build());
-
-    Assert.assertTrue(deleteDelegatePayload.getMessage().equals("Delegate deleted"));
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  @Owner(developers = JENNY)
-  public void testForceDeleteDelegateDataFetcher() {
-    String accountId = generateUuid();
-    String delegateId = generateUuid();
-
-    Delegate existingDelegate = createDelegateBuilder().build();
-    existingDelegate.setUuid(delegateId);
-    existingDelegate.setAccountId(accountId);
-    existingDelegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
-    persistence.save(existingDelegate);
-    QLDeleteDelegateInput deleteDelegateInput =
-        QLDeleteDelegateInput.builder().delegateId(delegateId).accountId(accountId).forceDelete(true).build();
-
     QLDeleteDelegatePayload deleteDelegatePayload = deleteDelegateDataFetcher.mutateAndFetch(
         deleteDelegateInput, MutationContext.builder().accountId(accountId).build());
 
@@ -105,7 +84,7 @@ public class DeleteDelegateDataFetcherTest extends AbstractDataFetcherTestBase {
     String accountId = generateUuid();
     String delegateId = generateUuid();
     QLDeleteDelegateInput deleteDelegateInput =
-        QLDeleteDelegateInput.builder().delegateId(delegateId).accountId(accountId).forceDelete(true).build();
+        QLDeleteDelegateInput.builder().delegateId(delegateId).accountId(accountId).build();
     assertThatThrownBy(()
                            -> deleteDelegateDataFetcher.mutateAndFetch(
                                deleteDelegateInput, MutationContext.builder().accountId(accountId).build()))
@@ -120,7 +99,7 @@ public class DeleteDelegateDataFetcherTest extends AbstractDataFetcherTestBase {
     String accountId = generateUuid();
     String delegateId = generateUuid();
     QLDeleteDelegateInput deleteDelegateInput =
-        QLDeleteDelegateInput.builder().delegateId(delegateId).accountId(accountId).forceDelete(false).build();
+        QLDeleteDelegateInput.builder().delegateId(delegateId).accountId(accountId).build();
     assertThatThrownBy(()
                            -> deleteDelegateDataFetcher.mutateAndFetch(
                                deleteDelegateInput, MutationContext.builder().accountId(accountId).build()))

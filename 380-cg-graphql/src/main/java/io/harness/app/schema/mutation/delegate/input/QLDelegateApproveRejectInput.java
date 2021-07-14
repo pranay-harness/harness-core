@@ -18,7 +18,7 @@ import lombok.Value;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(DEL)
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
-public class QLDelegateApprovalInput implements QLMutationInput {
+public class QLDelegateApproveRejectInput implements QLMutationInput {
   String clientMutationId;
 
   String delegateId;

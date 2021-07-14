@@ -79,6 +79,7 @@ public class AttachScopeToDelegateDataFetcher
             .message("Unable to fetch delegate with delegate id " + delegateId)
             .build();
       }
+      List<DelegateScope> currentIncludedDelegateScopes = delegate.getIncludeScopes();
       if (!includeScopes.isEmpty()) {
         delegate.setIncludeScopes(delegateScopes.getIncludeScopeIds()
                                       .stream()
@@ -86,14 +87,14 @@ public class AttachScopeToDelegateDataFetcher
                                       .filter(Objects::nonNull)
                                       .collect(toList()));
         // add existing included delegate scopes to list coz on before update operation we unset all
-        if (delegate.getIncludeScopes() != null) {
-          List<DelegateScope> currentIncludedDelegateScopes = delegate.getIncludeScopes();
+        if (delegate.getIncludeScopes() != null && currentIncludedDelegateScopes != null) {
           delegate.setIncludeScopes(
               Stream.concat(currentIncludedDelegateScopes.stream(), delegate.getIncludeScopes().stream())
                   .distinct()
                   .collect(toList()));
         }
       }
+      List<DelegateScope> currentExcludedDelegateScopes = delegate.getExcludeScopes();
       if (!excludeScopes.isEmpty()) {
         delegate.setExcludeScopes(delegateScopes.getExcludeScopeIds()
                                       .stream()
@@ -101,8 +102,7 @@ public class AttachScopeToDelegateDataFetcher
                                       .filter(Objects::nonNull)
                                       .collect(toList()));
         // add existing excluded delegate scopes to list  coz on before update operation we unset all
-        if (delegate.getExcludeScopes() != null) {
-          List<DelegateScope> currentExcludedDelegateScopes = delegate.getExcludeScopes();
+        if (delegate.getExcludeScopes() != null && currentExcludedDelegateScopes != null) {
           delegate.setExcludeScopes(
               Stream.concat(currentExcludedDelegateScopes.stream(), delegate.getExcludeScopes().stream())
                   .distinct()

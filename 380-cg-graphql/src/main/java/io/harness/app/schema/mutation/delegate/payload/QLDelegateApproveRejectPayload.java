@@ -18,7 +18,7 @@ import lombok.Value;
 @AllArgsConstructor
 @OwnedBy(DEL)
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
-public class QLDelegateApprovalPayload implements QLMutationPayload {
+public class QLDelegateApproveRejectPayload implements QLMutationPayload {
   String clientMutationId;
   QLDelegate delegate;
 }

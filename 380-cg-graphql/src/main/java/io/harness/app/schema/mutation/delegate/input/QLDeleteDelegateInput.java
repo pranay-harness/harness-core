@@ -22,5 +22,4 @@ public class QLDeleteDelegateInput implements QLMutationInput {
 
   String accountId;
   String delegateId;
-  boolean forceDelete;
 }

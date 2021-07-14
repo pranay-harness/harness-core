@@ -36,10 +36,9 @@ public class DeleteDelegateDataFetcher extends BaseMutatorDataFetcher<QLDeleteDe
   public QLDeleteDelegatePayload mutateAndFetch(QLDeleteDelegateInput parameter, MutationContext mutationContext) {
     String accountId = parameter.getAccountId();
     String delegateId = parameter.getDelegateId();
-    boolean forceDelete = parameter.isForceDelete();
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      delegateService.delete(accountId, delegateId, forceDelete);
+      delegateService.delete(accountId, delegateId, false);
       return new QLDeleteDelegatePayload(mutationContext.getAccountId(), "Delegate deleted");
     }
   }
