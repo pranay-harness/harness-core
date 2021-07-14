@@ -5,34 +5,25 @@ import static io.harness.ccm.commons.utils.TimeUtils.offsetDateTimeNow;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.timescaledb.Tables.CE_RECOMMENDATIONS;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
 import io.harness.ccm.commons.beans.recommendation.ResourceType;
 import io.harness.ccm.graphql.core.recommendation.RecommendationService;
 import io.harness.ccm.graphql.dto.recommendation.FilterStatsDTO;
-import io.harness.ccm.graphql.dto.recommendation.NodeRecommendationDTO;
-import io.harness.ccm.graphql.dto.recommendation.RecommendationDetailsDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationItemDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationsDTO;
 import io.harness.ccm.graphql.utils.GraphQLUtils;
 import io.harness.ccm.graphql.utils.annotations.GraphQLApi;
-import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.tables.records.CeRecommendationsRecord;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.leangen.graphql.annotations.GraphQLArgument;
-import io.leangen.graphql.annotations.GraphQLContext;
 import io.leangen.graphql.annotations.GraphQLEnvironment;
-import io.leangen.graphql.annotations.GraphQLNonNull;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.execution.ResolutionEnvironment;
-import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
@@ -63,50 +54,6 @@ public class RecommendationsOverviewQuery {
     final List<RecommendationItemDTO> items = recommendationService.listAll(accountId, condition, offset, limit);
 
     return RecommendationsDTO.builder().items(items).offset(offset).limit(limit).build();
-  }
-
-  /**
-   * Note: If this query becomes slow due to n+1 serial calls in future. Then,
-   * we can use {@code CompletableFuture<RecommendationDetailsDTO>} to parallelize it,
-   * with optional dataLoader to make 1+1 db calls instead of n+1.
-   */
-  @GraphQLQuery(description = "recommendation details/drillDown")
-  public RecommendationDetailsDTO recommendationDetails(@GraphQLContext RecommendationItemDTO nodeDTO,
-      @GraphQLArgument(name = "startTime", description = "defaults to Now().minusDays(7)") OffsetDateTime startTime,
-      @GraphQLArgument(name = "endTime", description = "defaults to Now()") OffsetDateTime endTime,
-      @GraphQLEnvironment final ResolutionEnvironment env) {
-    final String accountIdentifier = graphQLUtils.getAccountIdentifier(env);
-
-    return recommendationDetailsInternal(
-        accountIdentifier, nodeDTO.getResourceType(), nodeDTO.getId(), startTime, endTime);
-  }
-
-  @GraphQLQuery(description = "recommendation details/drillDown")
-  public RecommendationDetailsDTO recommendationDetails(@GraphQLNonNull @GraphQLArgument(name = "id") String id,
-      @GraphQLNonNull @GraphQLArgument(name = "resourceType") ResourceType resourceType,
-      @GraphQLArgument(name = "startTime", description = "defaults to Now().minusDays(7)") OffsetDateTime startTime,
-      @GraphQLArgument(name = "endTime", description = "defaults to Now()") OffsetDateTime endTime,
-      @GraphQLEnvironment final ResolutionEnvironment env) {
-    final String accountIdentifier = graphQLUtils.getAccountIdentifier(env);
-
-    return recommendationDetailsInternal(accountIdentifier, resourceType, id, startTime, endTime);
-  }
-
-  private RecommendationDetailsDTO recommendationDetailsInternal(@NotNull final String accountIdentifier,
-      @NotNull ResourceType resourceType, @NotNull String id, @Nullable OffsetDateTime startTime,
-      @Nullable OffsetDateTime endTime) {
-    startTime = firstNonNull(startTime, OffsetDateTime.now().minusDays(7));
-    endTime = firstNonNull(endTime, OffsetDateTime.now());
-
-    switch (resourceType) {
-      case WORKLOAD:
-        return recommendationService.getWorkloadRecommendationById(accountIdentifier, id, startTime, endTime);
-      case NODE_POOL:
-        // TODO(UTSAV):  nodeRecommendationService.getById(accountIdentifier, ceRecommendationId, start, end);
-        return NodeRecommendationDTO.builder().id("id1").build();
-      default:
-        throw new InvalidRequestException("Not Implemented");
-    }
   }
 
   @GraphQLQuery(description = "top panel stats API")

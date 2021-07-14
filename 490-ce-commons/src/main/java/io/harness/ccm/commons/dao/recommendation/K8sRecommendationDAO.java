@@ -6,6 +6,7 @@ import static io.harness.ccm.commons.utils.TimeUtils.toEpocMilli;
 import static io.harness.ccm.commons.utils.TimeUtils.toInstant;
 import static io.harness.ccm.commons.utils.TimeUtils.toOffsetDateTime;
 import static io.harness.ccm.commons.utils.TimescaleUtils.isAliveAtInstant;
+import static io.harness.persistence.HQuery.excludeValidate;
 import static io.harness.timescaledb.Tables.CE_RECOMMENDATIONS;
 import static io.harness.timescaledb.Tables.KUBERNETES_UTILIZATION_DATA;
 import static io.harness.timescaledb.Tables.NODE_INFO;
@@ -32,6 +33,7 @@ import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
 import io.harness.ccm.commons.beans.recommendation.ResourceId;
 import io.harness.ccm.commons.beans.recommendation.ResourceType;
 import io.harness.ccm.commons.beans.recommendation.TotalResourceUsage;
+import io.harness.ccm.commons.beans.recommendation.models.RecommendClusterRequest;
 import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse;
 import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
@@ -61,6 +63,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Field;
@@ -288,7 +291,7 @@ public class K8sRecommendationDAO {
   // Will be used with GraphQL API with custom start and end Time
   @NonNull
   @RetryOnException(retryCount = RETRY_COUNT, sleepDurationInMilliseconds = SLEEP_DURATION)
-  public TotalResourceUsage aggregateMonthlyResourceRequirement(
+  public TotalResourceUsage aggregateTotalResourceRequirement(
       String accountId, NodePoolId nodePoolId, OffsetDateTime startTime, OffsetDateTime endTime) {
     return dslContext
         .select(max(NODE_POOL_AGGREGATED.SUMCPU).as(SUMCPU), max(NODE_POOL_AGGREGATED.SUMMEMORY).as(SUMMEMORY),
@@ -297,8 +300,8 @@ public class K8sRecommendationDAO {
         .where(NODE_POOL_AGGREGATED.ACCOUNTID.eq(accountId),
             NODE_POOL_AGGREGATED.CLUSTERID.eq(nodePoolId.getClusterid()),
             NODE_POOL_AGGREGATED.NAME.eq(nodePoolId.getNodepoolname()),
-            TimescaleUtils.isAlive(
-                NODE_INFO.STARTTIME, NODE_INFO.STOPTIME, toEpocMilli(startTime), toEpocMilli(endTime)))
+            TimescaleUtils.isAlive(NODE_POOL_AGGREGATED.STARTTIME, NODE_POOL_AGGREGATED.ENDTIME, toEpocMilli(startTime),
+                toEpocMilli(endTime)))
         .fetchOneInto(TotalResourceUsage.class);
   }
 
@@ -353,7 +356,7 @@ public class K8sRecommendationDAO {
   }
 
   public String insertNodeRecommendationResponse(JobConstants jobConstants, NodePoolId nodePoolId,
-      TotalResourceUsage totalResourceUsage, K8sServiceProvider serviceProvider,
+      RecommendClusterRequest recommendClusterRequest, K8sServiceProvider serviceProvider,
       RecommendationResponse recommendation) {
     // TODO: Any elegant way to do this, i.e., update other fields on duplicate unique key constraint?
     // on com.mongodb.DuplicateKeyException: Write failed with error code 11000 and error message 'E11000 duplicate key
@@ -373,7 +376,7 @@ public class K8sRecommendationDAO {
             .set(K8sNodeRecommendationKeys.accountId, jobConstants.getAccountId())
             .set(K8sNodeRecommendationKeys.nodePoolId, nodePoolId)
             .set(K8sNodeRecommendationKeys.recommendation, recommendation)
-            .set(K8sNodeRecommendationKeys.totalResourceUsage, totalResourceUsage)
+            .set(K8sNodeRecommendationKeys.recommendClusterRequest, recommendClusterRequest)
             .set(K8sNodeRecommendationKeys.currentServiceProvider, serviceProvider);
 
     return hPersistence.upsert(query, updateOperations, HPersistence.upsertReturnNewOptions).getUuid();
@@ -416,5 +419,13 @@ public class K8sRecommendationDAO {
                                                   isAliveAtInstant(NODE_INFO.STARTTIME, NODE_INFO.STOPTIME,
                                                       toInstant(jobConstants.getJobEndTime())))
                                               .fetchOne(0, int.class));
+  }
+
+  public Optional<K8sNodeRecommendation> fetchNodeRecommendationById(
+      @NonNull String accountIdentifier, @NonNull String uuid) {
+    return Optional.ofNullable(hPersistence.createQuery(K8sNodeRecommendation.class, excludeValidate)
+                                   .filter(K8sNodeRecommendationKeys.accountId, accountIdentifier)
+                                   .filter(K8sNodeRecommendationKeys.uuid, new ObjectId(uuid))
+                                   .get());
   }
 }
