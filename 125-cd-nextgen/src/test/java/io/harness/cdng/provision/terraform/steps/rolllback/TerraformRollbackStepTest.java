@@ -13,7 +13,11 @@ import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.common.step.StepHelper;
 import io.harness.cdng.manifest.yaml.GitStoreDTO;
 import io.harness.cdng.provision.terraform.TerraformConfig;
 import io.harness.cdng.provision.terraform.TerraformConfigHelper;
@@ -52,6 +56,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+@OwnedBy(HarnessTeam.CDP)
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({StepUtils.class})
 public class TerraformRollbackStepTest extends CategoryTest {
@@ -60,6 +65,7 @@ public class TerraformRollbackStepTest extends CategoryTest {
   @Mock private TerraformStepHelper terraformStepHelper;
   @Mock private TerraformConfigHelper terraformConfigHelper;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputService;
+  @Mock private StepHelper stepHelper;
 
   @InjectMocks private TerraformRollbackStep terraformRollbackStep;
 
@@ -96,6 +102,7 @@ public class TerraformRollbackStepTest extends CategoryTest {
     StepElementParameters stepElementParameters = StepElementParameters.builder().spec(rollbackSpec).build();
 
     doReturn("fullId").when(terraformStepHelper).generateFullIdentifier("id", ambiance);
+    doReturn(EnvironmentType.PROD).when(stepHelper).getEnvironmentType(ambiance);
 
     HIterator<TerraformConfig> iterator = mock(HIterator.class);
     doReturn(iterator).when(terraformConfigHelper).getIterator(ambiance, "fullId");
@@ -111,7 +118,7 @@ public class TerraformRollbackStepTest extends CategoryTest {
     doReturn(gitFetchFilesConfig).when(terraformStepHelper).getGitFetchFilesConfig(any(), any(), any());
     doReturn(null).when(terraformStepHelper).prepareTerraformVarFileInfo(any(), any());
     mockStatic(StepUtils.class);
-    PowerMockito.when(StepUtils.prepareTaskRequestWithTaskSelector(any(), any(), any(), any(), any(), any()))
+    PowerMockito.when(StepUtils.prepareCDTaskRequest(any(), any(), any(), any(), any(), any(), any()))
         .thenReturn(TaskRequest.newBuilder().build());
     ArgumentCaptor<TaskData> taskDataArgumentCaptor = ArgumentCaptor.forClass(TaskData.class);
 
@@ -119,7 +126,7 @@ public class TerraformRollbackStepTest extends CategoryTest {
 
     assertThat(taskRequest).isNotNull();
     PowerMockito.verifyStatic(StepUtils.class, times(1));
-    StepUtils.prepareTaskRequestWithTaskSelector(any(), taskDataArgumentCaptor.capture(), any(), any(), any(), any());
+    StepUtils.prepareCDTaskRequest(any(), taskDataArgumentCaptor.capture(), any(), any(), any(), any(), any());
     assertThat(taskDataArgumentCaptor.getValue()).isNotNull();
     assertThat(taskDataArgumentCaptor.getValue().getParameters()).isNotNull();
     TerraformTaskNGParameters taskParameters =
@@ -138,6 +145,7 @@ public class TerraformRollbackStepTest extends CategoryTest {
     StepElementParameters stepElementParameters = StepElementParameters.builder().spec(rollbackSpec).build();
 
     doReturn("fullId").when(terraformStepHelper).generateFullIdentifier("id", ambiance);
+    doReturn(EnvironmentType.PROD).when(stepHelper).getEnvironmentType(ambiance);
 
     HIterator<TerraformConfig> iterator = mock(HIterator.class);
     doReturn(iterator).when(terraformConfigHelper).getIterator(ambiance, "fullId");
@@ -155,7 +163,7 @@ public class TerraformRollbackStepTest extends CategoryTest {
     doReturn(gitFetchFilesConfig).when(terraformStepHelper).getGitFetchFilesConfig(any(), any(), any());
     doReturn(null).when(terraformStepHelper).prepareTerraformVarFileInfo(any(), any());
     mockStatic(StepUtils.class);
-    PowerMockito.when(StepUtils.prepareTaskRequestWithTaskSelector(any(), any(), any(), any(), any(), any()))
+    PowerMockito.when(StepUtils.prepareCDTaskRequest(any(), any(), any(), any(), any(), any(), any()))
         .thenReturn(TaskRequest.newBuilder().build());
     ArgumentCaptor<TaskData> taskDataArgumentCaptor = ArgumentCaptor.forClass(TaskData.class);
 
@@ -163,7 +171,7 @@ public class TerraformRollbackStepTest extends CategoryTest {
 
     assertThat(taskRequest).isNotNull();
     PowerMockito.verifyStatic(StepUtils.class, times(1));
-    StepUtils.prepareTaskRequestWithTaskSelector(any(), taskDataArgumentCaptor.capture(), any(), any(), any(), any());
+    StepUtils.prepareCDTaskRequest(any(), taskDataArgumentCaptor.capture(), any(), any(), any(), any(), any());
     assertThat(taskDataArgumentCaptor.getValue()).isNotNull();
     assertThat(taskDataArgumentCaptor.getValue().getParameters()).isNotNull();
     TerraformTaskNGParameters taskParameters =

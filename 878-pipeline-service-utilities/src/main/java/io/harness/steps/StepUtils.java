@@ -9,6 +9,7 @@ import static software.wings.beans.LogHelper.COMMAND_UNIT_PLACEHOLDER;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EnvironmentType;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
@@ -131,19 +132,25 @@ public class StepUtils {
   public static TaskRequest prepareTaskRequestWithTaskSelector(
       Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer, List<TaskSelector> selectors) {
     return prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2,
-        Collections.emptyList(), true, null, selectors, Scope.PROJECT);
+        Collections.emptyList(), true, null, selectors, Scope.PROJECT, EnvironmentType.ALL);
   }
 
   public static TaskRequest prepareTaskRequestWithTaskSelector(Ambiance ambiance, TaskData taskData,
       KryoSerializer kryoSerializer, String taskName, List<TaskSelector> selectors) {
     return prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2,
-        Collections.emptyList(), true, taskName, selectors, Scope.PROJECT);
+        Collections.emptyList(), true, taskName, selectors, Scope.PROJECT, EnvironmentType.ALL);
   }
 
   public static TaskRequest prepareTaskRequestWithTaskSelector(Ambiance ambiance, TaskData taskData,
       KryoSerializer kryoSerializer, List<String> units, String taskName, List<TaskSelector> selectors) {
     return prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, units, true, taskName,
-        selectors, Scope.PROJECT);
+        selectors, Scope.PROJECT, EnvironmentType.ALL);
+  }
+
+  public static TaskRequest prepareCDTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer,
+      List<String> units, String taskName, List<TaskSelector> selectors, EnvironmentType environmentType) {
+    return prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, units, true, taskName,
+        selectors, Scope.PROJECT, environmentType);
   }
 
   public static TaskRequest prepareTaskRequestWithoutLogs(
@@ -160,19 +167,19 @@ public class StepUtils {
   public static TaskRequest prepareTaskRequestWithTaskSelector(Ambiance ambiance, TaskData taskData,
       KryoSerializer kryoSerializer, TaskCategory taskCategory, List<String> units, boolean withLogs, String taskName,
       List<TaskSelector> selectors) {
-    return prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, taskCategory, units, withLogs, taskName, selectors, Scope.PROJECT);
+    return prepareTaskRequest(ambiance, taskData, kryoSerializer, taskCategory, units, withLogs, taskName, selectors,
+        Scope.PROJECT, EnvironmentType.ALL);
   }
 
   public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer,
       TaskCategory taskCategory, List<String> units, boolean withLogs, String taskName) {
-    return prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, taskCategory, units, withLogs, taskName, null, Scope.PROJECT);
+    return prepareTaskRequest(ambiance, taskData, kryoSerializer, taskCategory, units, withLogs, taskName, null,
+        Scope.PROJECT, EnvironmentType.ALL);
   }
 
   public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer,
       TaskCategory taskCategory, List<String> units, boolean withLogs, String taskName, List<TaskSelector> selectors,
-      Scope taskScope) {
+      Scope taskScope, EnvironmentType environmentType) {
     String accountId = Preconditions.checkNotNull(ambiance.getSetupAbstractionsMap().get("accountId"));
     TaskParameters taskParameters = (TaskParameters) taskData.getParameters()[0];
     List<ExecutionCapability> capabilities = new ArrayList<>();
@@ -196,14 +203,18 @@ public class StepUtils {
             .setType(TaskType.newBuilder().setType(taskData.getTaskType()).build())
             .build();
 
+    Map<String, String> setupAbstractionsMap = buildAbstractions(ambiance, taskScope);
+    if (environmentType != null && environmentType != EnvironmentType.ALL) {
+      setupAbstractionsMap.put("envType", environmentType.name());
+    }
+
     SubmitTaskRequest.Builder requestBuilder =
         SubmitTaskRequest.newBuilder()
             .setAccountId(AccountId.newBuilder().setId(accountId).build())
             .setDetails(taskDetails)
             .addAllSelectors(CollectionUtils.emptyIfNull(selectors))
             .setLogAbstractions(TaskLogAbstractions.newBuilder().putAllValues(logAbstractionMap).build())
-            .setSetupAbstractions(
-                TaskSetupAbstractions.newBuilder().putAllValues(buildAbstractions(ambiance, taskScope)).build())
+            .setSetupAbstractions(TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractionsMap).build())
             .setSelectionTrackingLogEnabled(true);
 
     if (isNotEmpty(capabilities)) {
