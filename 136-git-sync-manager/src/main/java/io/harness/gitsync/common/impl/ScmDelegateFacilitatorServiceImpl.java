@@ -27,6 +27,7 @@ import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
 import io.harness.delegate.task.scm.ScmPRTaskParams;
 import io.harness.delegate.task.scm.ScmPRTaskResponseData;
 import io.harness.exception.ExplanationException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.gitsync.common.dtos.CreatePRDTO;
@@ -129,6 +130,7 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
 
   @Override
   public CreatePRDTO createPullRequest(GitPRCreateRequest gitCreatePRRequest) {
+    validateTheCreatePRRequest(gitCreatePRRequest);
     YamlGitConfigDTO yamlGitConfigDTO =
         getYamlGitConfigDTO(gitCreatePRRequest.getAccountIdentifier(), gitCreatePRRequest.getOrgIdentifier(),
             gitCreatePRRequest.getProjectIdentifier(), gitCreatePRRequest.getYamlGitConfigRef());
@@ -140,12 +142,9 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
     checkAndSetUserFromUserProfile(gitCreatePRRequest.isUseUserFromToken(), yamlGitConfigDTO, connectorResponseDTO);
     final ScmConnector scmConnector = (ScmConnector) connectorResponseDTO.getConnector().getConnectorConfig();
     scmConnector.setUrl(yamlGitConfigDTO.getRepo());
-    final BaseNGAccess baseNGAccess = getBaseNGAccess(gitConnectorIdentifierRef.getAccountIdentifier(),
-        gitConnectorIdentifierRef.getOrgIdentifier(), gitConnectorIdentifierRef.getProjectIdentifier());
-    final DecryptableEntity apiAccessDecryptableEntity =
-        GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity(scmConnector);
     final List<EncryptedDataDetail> encryptionDetails =
-        secretManagerClientService.getEncryptionDetails(baseNGAccess, apiAccessDecryptableEntity);
+        getEncryptedDataDetails(gitCreatePRRequest.getAccountIdentifier(), gitCreatePRRequest.getOrgIdentifier(),
+            gitCreatePRRequest.getProjectIdentifier(), scmConnector);
     ScmPRTaskParams scmPRTaskParams = ScmPRTaskParams.builder()
                                           .scmConnector(scmConnector)
                                           .gitPRCreateRequest(gitCreatePRRequest)
@@ -174,6 +173,15 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
           e);
     }
     return CreatePRDTO.builder().prNumber(createPRResponse.getNumber()).build();
+  }
+
+  private void validateTheCreatePRRequest(GitPRCreateRequest gitCreatePRRequest) {
+    if (gitCreatePRRequest == null) {
+      throw new InvalidRequestException("The CreatePR request cannot be null");
+    }
+    if (gitCreatePRRequest.getSourceBranch().equals(gitCreatePRRequest.getTargetBranch())) {
+      throw new InvalidRequestException("The PR cannot be created for the same source and target branch");
+    }
   }
 
   @Override
