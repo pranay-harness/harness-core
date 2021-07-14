@@ -234,9 +234,9 @@ public class CENextGenModule extends AbstractModule {
       @Named("morphiaClasses")
       Map<Class, String> morphiaCustomCollectionNames() {
         return ImmutableMap.<Class, String>builder()
-            .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
-            .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
-            .put(DelegateTaskProgressResponse.class, "delegateTaskProgressResponses")
+            .put(DelegateSyncTaskResponse.class, "CENextGen_delegateSyncTaskResponses")
+            .put(DelegateAsyncTaskResponse.class, "CENextGen_delegateAsyncTaskResponses")
+            .put(DelegateTaskProgressResponse.class, "CENextGen_delegateTaskProgressResponses")
             .build();
       }
     });
