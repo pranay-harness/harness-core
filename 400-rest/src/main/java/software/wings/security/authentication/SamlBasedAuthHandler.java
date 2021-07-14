@@ -2,13 +2,14 @@ package software.wings.security.authentication;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 
-import com.google.common.collect.Lists;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.account.AuthenticationMechanism;
 
@@ -20,8 +21,8 @@ import software.wings.logcontext.UserLogContext;
 import software.wings.security.saml.SamlClientService;
 import software.wings.security.saml.SamlClientService.HostType;
 import software.wings.security.saml.SamlUserGroupSync;
-import io.harness.ff.FeatureFlagService;
 import software.wings.service.intfc.SSOSettingService;
+import software.wings.service.intfc.UserService;
 
 import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
@@ -43,7 +44,6 @@ import org.opensaml.core.xml.schema.XSString;
 import org.opensaml.core.xml.schema.impl.XSAnyImpl;
 import org.opensaml.saml.saml2.core.Attribute;
 import org.opensaml.saml.saml2.core.AttributeStatement;
-import software.wings.service.intfc.UserService;
 
 @OwnedBy(PL)
 @Singleton
@@ -265,20 +265,17 @@ public class SamlBasedAuthHandler implements AuthHandler {
     } catch (WingsException e) {
       log.warn("SamlResponse contains nameId=[{}] which does not exist in db, url=[{}], accountId=[{}]", nameId,
           samlSettings.getUrl(), samlSettings.getAccountId());
-      if(featureFlagService.isEnabled(FeatureName.SAML_LOGIN_WITHOUT_INVITE_ACCEPT,samlSettings.getAccountId())){
+      if (featureFlagService.isEnabled(FeatureName.SAML_LOGIN_WITHOUT_INVITE_ACCEPT, samlSettings.getAccountId())) {
         log.info("SAML_LOGIN_WITHOUT_INVITE_ACCEPT FF is enabled for account, Creating user with auto approved invite");
-        UserInvite userInvite = anUserInvite()
-                .withAccountId(samlSettings.getAccountId())
-                .withEmail(nameId)
-                .build();
+        UserInvite userInvite = anUserInvite().withAccountId(samlSettings.getAccountId()).withEmail(nameId).build();
         userService.inviteUser(userInvite, false, true);
-        User user= authenticationUtils.getUserByEmail(nameId);
-        if(user==null) {
-            throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST, "Tried creating user with auto accepted invite but failed",WingsException.USER);
+        User user = authenticationUtils.getUserByEmail(nameId);
+        if (user == null) {
+          throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST,
+              "Tried creating user with auto accepted invite but failed", WingsException.USER);
         }
       }
       throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST, e);
-
     }
   }
 
