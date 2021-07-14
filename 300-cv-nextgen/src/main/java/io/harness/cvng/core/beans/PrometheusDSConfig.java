@@ -5,7 +5,6 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.PrometheusCVConfig;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
@@ -91,7 +90,7 @@ public class PrometheusDSConfig extends DSConfig {
       cvConfig.setEnvIdentifier(key.getEnvIdentifier());
       cvConfig.setServiceIdentifier(key.getServiceIdentifier());
       cvConfig.setCategory(category);
-      cvConfig.fromDSConfigDefinitions(definitionList, category);
+      cvConfig.populateFromMetricDefinitions(definitionList, category);
       cvConfigs.add(cvConfig);
     });
 
@@ -114,40 +113,6 @@ public class PrometheusDSConfig extends DSConfig {
         .groupName(prometheusCVConfig.getGroupName())
         .category(prometheusCVConfig.getCategory())
         .build();
-  }
-
-  @Data
-  @Builder
-  public static class PrometheusMetricDefinition {
-    private String query;
-    private String serviceIdentifier;
-    private String envIdentifier;
-    private boolean isManualQuery;
-    private String groupName;
-    private String metricName;
-    private String serviceInstanceFieldName;
-    private String prometheusMetric;
-    private List<PrometheusFilter> serviceFilter;
-    private List<PrometheusFilter> envFilter;
-    private List<PrometheusFilter> additionalFilters;
-    private String aggregation;
-    RiskProfile riskProfile;
-
-    @JsonProperty(value = "isManualQuery")
-    public boolean isManualQuery() {
-      return isManualQuery;
-    }
-  }
-
-  @Data
-  @Builder
-  public static class PrometheusFilter {
-    private String labelName;
-    private String labelValue;
-
-    public String getQueryFilterString() {
-      return labelName + "=\"" + labelValue + "\"";
-    }
   }
 
   @Value

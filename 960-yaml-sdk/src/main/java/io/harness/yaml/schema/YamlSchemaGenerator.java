@@ -17,6 +17,7 @@ import static io.harness.yaml.schema.beans.SchemaConstants.ONE_OF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.PATTERN_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.REF_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.RUNTIME_INPUT_PATTERN;
 import static io.harness.yaml.schema.beans.SchemaConstants.STRING_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.TYPE_NODE;
 
@@ -363,6 +364,14 @@ public class YamlSchemaGenerator {
         return objectNode;
       case list:
         objectNode.put(TYPE_NODE, ARRAY_TYPE_NODE);
+        return objectNode;
+      case runtime:
+        /*
+        added to support runtime field type, like <+input>
+         */
+        objectNode.put(TYPE_NODE, STRING_TYPE_NODE);
+        objectNode.put(PATTERN_NODE, RUNTIME_INPUT_PATTERN);
+        objectNode.put(MIN_LENGTH_NODE, 1);
         return objectNode;
       case none:
         return null;

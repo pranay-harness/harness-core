@@ -16,6 +16,7 @@ import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
+import io.harness.ng.core.user.SignupInviteDTO;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 
@@ -89,6 +90,16 @@ public interface UserService extends OwnedByAccount {
    * Used for NG signup to create a new oauth user and login from an NG user object
    */
   User createNewOAuthUser(User user, String accountId);
+
+  /**
+   * Used for NG signup to create a new user invite
+   */
+  UserInvite createNewSignupInvite(SignupInviteDTO user);
+
+  /**
+   * Used for NG signup to finish provisioning of account, user etc.
+   */
+  User completeNewSignupInvite(UserInvite userInvite);
 
   UserInvite createUserInviteForMarketPlace();
 

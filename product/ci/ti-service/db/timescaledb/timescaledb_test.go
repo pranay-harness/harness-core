@@ -409,7 +409,7 @@ func Test_WriteSelectedTests_WithUpsert(t *testing.T) {
 	avgQuery := fmt.Sprintf(
 		`
 				SELECT AVG(time_taken_ms/test_selected) FROM (SELECT test_selected, time_taken_ms FROM %s
-				WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND stage_id = $5 AND step_id = $6 AND time_taken_ms != 0 AND test_selected != 0 LIMIT 10000)
+				WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND stage_id = $5 AND step_id = $6 AND time_taken_ms != 0 AND test_selected != 0 AND test_count = test_selected LIMIT 10000)
 				AS avg`, table)
 	avgQuery = regexp.QuoteMeta(avgQuery)
 	rows = sqlmock.NewRows([]string{"avg"}).AddRow(15)

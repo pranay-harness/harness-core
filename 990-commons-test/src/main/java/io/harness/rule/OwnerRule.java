@@ -67,6 +67,7 @@ public class OwnerRule implements TestRule {
   public static final String AADITI = "aaditi.joag";
   public static final String ABHIJITH = "abhijith.pradeep";
   public static final String ABHINAV = "abhinav.singh";
+  public static final String ACHYUTH = "achyuth.prakash";
   public static final String ADWAIT = "adwait.bhandare";
   public static final String ADARSH = "adarsh.agarwal";
   public static final String AKRITI = "akriti.garg";
@@ -149,6 +150,7 @@ public class OwnerRule implements TestRule {
   public static final String VENKATESH = "venkatesh.kotrike";
   public static final String VIKAS = "vikas.naiyar";
   public static final String VIKAS_S = "vikas.singh";
+  public static final String VIKAS_M = "vikas.maddukuri";
   public static final String VISTAAR = "vistaar.juneja";
   public static final String VLAD = "vladimir.peric";
   public static final String VOJIN = "vojin.djukic";
@@ -206,6 +208,7 @@ public class OwnerRule implements TestRule {
           .put(AADITI, defaultUserInfo(AADITI).slack("UCFPUNRAQ").team(CDC).build())
           .put(ABHIJITH, defaultUserInfo(ABHIJITH).slack("U0270PE0T24").team(CV).build())
           .put(ABHINAV, defaultUserInfo(ABHINAV).slack("UQQPR8M6Y").team(DX).build())
+          .put(ACHYUTH, defaultUserInfo(ACHYUTH).slack("U024FAWEZL7").team(CDP).build())
           .put(ADARSH, defaultUserInfo(ADARSH).slack("U01Q02K5LUR").team(CE).build())
           .put(ALEKSANDAR, defaultUserInfo(ALEKSANDAR).slack("U012MKR5FUZ").team(CI).build())
           .put(AGORODETKI, defaultUserInfo(AGORODETKI).slack("U013KM8H2NL").team(CDC).build())
@@ -292,6 +295,7 @@ public class OwnerRule implements TestRule {
           .put(VENKATESH, UserInfo.builder().email("venkatesh.kotrike@harness.io").slack("UGF55UEHF").build())
           .put(VIKAS, defaultUserInfo(VIKAS).slack("UE7M4CNMA").team(PL).build())
           .put(VIKAS_S, defaultUserInfo(VIKAS_S).slack("U01HMK9SY2V").team(CDC).build())
+          .put(VIKAS_M, defaultUserInfo(VIKAS_M).slack("U0257UVS11T").team(PL).build())
           .put(VOJIN, defaultUserInfo(VOJIN).slack("U015TFFL83G").team(PL).build())
           .put(VISTAAR, defaultUserInfo(VISTAAR).slack("U0138Q1JEHM").team(CI).build())
           .put(VUK, defaultUserInfo(VUK).slack("U0115RT3EQL").team(DEL).build())

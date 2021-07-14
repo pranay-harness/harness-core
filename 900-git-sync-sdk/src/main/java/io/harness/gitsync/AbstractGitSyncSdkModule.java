@@ -8,6 +8,7 @@ import io.harness.EntityType;
 import io.harness.SCMGrpcClientModule;
 import io.harness.ScmConnectionConfig;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.HarnessCacheManager;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.Producer;
@@ -20,6 +21,7 @@ import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.persistance.GitAwareRepository;
 import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.grpc.client.GrpcClientConfig;
+import io.harness.version.VersionInfoManager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
@@ -39,6 +41,9 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import javax.cache.Cache;
+import javax.cache.expiry.AccessedExpiryPolicy;
+import javax.cache.expiry.Duration;
 
 @OwnedBy(DX)
 public abstract class AbstractGitSyncSdkModule extends AbstractModule {
@@ -148,5 +153,14 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
   @Named("GitSyncObjectMapper")
   public ObjectMapper getGitSyncObjectMapper() {
     return getGitSyncSdkConfiguration().getObjectMapper();
+  }
+
+  @Provides
+  @Singleton
+  @Named("gitSyncEnabledCache")
+  public Cache<String, Boolean> gitEnabledCache(
+      HarnessCacheManager harnessCacheManager, VersionInfoManager versionInfoManager) {
+    return harnessCacheManager.getCache("gitEnabledCacheSdk", String.class, Boolean.class,
+        AccessedExpiryPolicy.factoryOf(Duration.FIVE_MINUTES), versionInfoManager.getVersionInfo().getBuildNo());
   }
 }

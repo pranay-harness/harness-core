@@ -9,6 +9,7 @@ shared_dependencies = [
     "//940-feature-flag:module",
     "//955-delegate-beans:module",
     "//950-delegate-tasks-beans:module",
+    "//959-file-service-commons:module",
     "//960-api-services:module",
     "//970-api-services-beans:module",
     "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",

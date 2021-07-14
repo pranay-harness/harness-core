@@ -42,9 +42,22 @@ public class JexlScenarioTest extends CategoryTest {
       + "  \"pull_request\": {\n"
       + "    \"id\": 526274089,\n"
       + "    \"assignee\": [\"test\", \"test1\"],\n"
-      + "    \"assignees\": [\n"
-      + "       {\"name\": \"wings\"},\n"
-      + "       {\"name\": \"harness\"}\n"
+      + "    \"Labels\": [\n"
+      + "       {\"name\": \"python\"},\n"
+      + "       {\"name\": \"java\"}\n"
+      + "    ]\n"
+      + "  }\n"
+      + "}";
+
+  private String jsonGo = "{\n"
+      + "  \"action\": \"opened\",\n"
+      + "  \"number\": 1,\n"
+      + "  \"pull_request\": {\n"
+      + "    \"id\": 526274089,\n"
+      + "    \"assignee\": [\"test\", \"test1\"],\n"
+      + "    \"Labels\": [\n"
+      + "       {\"name\": \"go\"},\n"
+      + "       {\"name\": \"java\"}\n"
       + "    ]\n"
       + "  }\n"
       + "}";
@@ -140,17 +153,40 @@ public class JexlScenarioTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = MATT)
+  @Category(UnitTests.class)
+  public void testJexlScript() {
+    TriggerExpressionEvaluator triggerExpressionEvaluator = new TriggerExpressionEvaluator(null, emptyList(), json);
+    Object o = triggerExpressionEvaluator.evaluateExpression(
+        "for (var item : <+trigger.payload.pull_request.Labels>) { if (item.name == 'java') return true; } return false;");
+    assertThat((Boolean) o).isTrue();
+
+    o = triggerExpressionEvaluator.evaluateExpression(
+        "for (var item : <+trigger.payload.pull_request.Labels>) { if (item.name == 'go') return true; } return false;");
+    assertThat((Boolean) o).isFalse();
+
+    triggerExpressionEvaluator = new TriggerExpressionEvaluator(null, emptyList(), jsonGo);
+    o = triggerExpressionEvaluator.evaluateExpression(
+        "for (var item : <+trigger.payload.pull_request.Labels>) { if (item.name == 'go') return true; } return false;");
+    assertThat((Boolean) o).isTrue();
+
+    o = triggerExpressionEvaluator.evaluateExpression(
+        "for (var item : <+trigger.payload.pull_request.Labels>) { if (item.name == 'go') return false; } return true;");
+    assertThat((Boolean) o).isFalse();
+  }
+
+  @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testMapWebhookEventToTriggers() {
     TriggerExpressionEvaluator triggerExpressionEvaluator = new TriggerExpressionEvaluator(null, emptyList(), json);
-    assertThat(triggerExpressionEvaluator.renderExpression("<+trigger.payload.pull_request.assignees[0].name>"))
-        .isEqualTo("wings");
+    assertThat(triggerExpressionEvaluator.renderExpression("<+trigger.payload.pull_request.Labels[0].name>"))
+        .isEqualTo("python");
     Object o =
         triggerExpressionEvaluator.evaluateExpression("<+trigger.payload.pull_request.assignee>.contains('test')");
     assertThat((Boolean) o).isTrue();
-    assertThat(triggerExpressionEvaluator.renderExpression("<+trigger.payload.pull_request.assignees[1].name>"))
-        .isEqualTo("harness");
+    assertThat(triggerExpressionEvaluator.renderExpression("<+trigger.payload.pull_request.Labels[1].name>"))
+        .isEqualTo("java");
   }
 
   @Test
@@ -184,16 +220,4 @@ public class JexlScenarioTest extends CategoryTest {
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.repoUrl>")).isEqualTo("https://github.com");
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.gitUser>")).isEqualTo("user");
   }
-
-  // If there's a way to parse a string to json using jexl, we can read the message to parse nested json
-  // @Test
-  // @Owner(developers = MATT)
-  // @Category(UnitTests.class)
-  // public void testJexlJsonParser() {
-  //   WebhookPayloadData webhookPayloadData =
-  //           WebhookPayloadData.builder()
-  //                   .originalEvent(TriggerWebhookEvent.builder().payload(bigPayload).build()).build();
-  //   assertThat(WebhookTriggerFilterUtils.checkIfJexlConditionsMatch(
-  //       webhookPayloadData,"size(JSON:parse(trigger.payload.Message)) > 0")).isTrue();
-  // }
 }

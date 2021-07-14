@@ -90,6 +90,10 @@ public class UserInvite extends Base implements AccountAccess {
 
   private UtmInfo utmInfo;
 
+  @Getter @Setter private boolean createdFromNG;
+
+  @Getter @Setter private String intent;
+
   @Override
   public boolean equals(Object o) {
     return super.equals(o) && true;
@@ -305,6 +309,8 @@ public class UserInvite extends Base implements AccountAccess {
     private String familyName;
     private List<String> freemiumProducts;
     private boolean freemiumAssistedOption;
+    private boolean createdFromNG;
+    private String intent;
 
     private UserInviteBuilder() {}
 
@@ -432,6 +438,16 @@ public class UserInvite extends Base implements AccountAccess {
       return this;
     }
 
+    public UserInviteBuilder withCreatedFromNG(boolean createdFromNG) {
+      this.createdFromNG = createdFromNG;
+      return this;
+    }
+
+    public UserInviteBuilder withIntent(String intent) {
+      this.intent = intent;
+      return this;
+    }
+
     public UserInvite build() {
       UserInvite userInvite = new UserInvite();
       userInvite.setAccountId(accountId);
@@ -458,6 +474,8 @@ public class UserInvite extends Base implements AccountAccess {
       userInvite.setGivenName(givenName);
       userInvite.setFreemiumAssistedOption(freemiumAssistedOption);
       userInvite.setFreemiumProducts(freemiumProducts);
+      userInvite.setCreatedFromNG(createdFromNG);
+      userInvite.setIntent(intent);
 
       return userInvite;
     }

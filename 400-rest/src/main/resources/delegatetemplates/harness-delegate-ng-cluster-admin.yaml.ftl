@@ -70,6 +70,9 @@ spec:
           limits:
             cpu: "${delegateCpu}"
             memory: "${delegateRam}Mi"
+          requests:
+            cpu: "${delegateRequestsCpu}"
+            memory: "${delegateRequestsRam}Mi"
         readinessProbe:
           exec:
             command:

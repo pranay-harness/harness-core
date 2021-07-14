@@ -308,6 +308,8 @@ public class DelegateServiceImpl implements DelegateService {
   private static final String ENV_ENV_VAR = "ENV";
   public static final String TASK_SELECTORS = "Task Selectors";
   public static final String TASK_CATEGORY_MAP = "Task Category Map";
+  public static final double RESERVED_CPU_FOR_NG_KUBERNETES = 0.05;
+  public static final int RESERVED_MEMORY_FOR_NG_KUBERNETES = 100;
 
   static {
     templateConfiguration.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -623,6 +625,8 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateReplicas(sizeDetails.getReplicas())
               .delegateRam(sizeDetails.getRam() / sizeDetails.getReplicas())
               .delegateCpu(sizeDetails.getCpu() / sizeDetails.getReplicas())
+              .delegateRequestsRam(sizeDetails.getRam() / sizeDetails.getReplicas() - RESERVED_MEMORY_FOR_NG_KUBERNETES)
+              .delegateRequestsCpu(sizeDetails.getCpu() / sizeDetails.getReplicas() - RESERVED_CPU_FOR_NG_KUBERNETES)
               .delegateGroupId(delegateGroup.getUuid())
               .delegateNamespace(delegateSetupDetails.getK8sConfigDetails().getNamespace())
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
@@ -1199,6 +1203,8 @@ public class DelegateServiceImpl implements DelegateService {
     private int delegateReplicas;
     private int delegateRam;
     private double delegateCpu;
+    private int delegateRequestsRam;
+    private double delegateRequestsCpu;
     private String delegateNamespace;
     private String delegateTokenName;
   }
@@ -1407,6 +1413,14 @@ public class DelegateServiceImpl implements DelegateService {
 
       if (inquiry.getDelegateCpu() != 0) {
         params.put("delegateCpu", String.valueOf(inquiry.getDelegateCpu()));
+      }
+
+      if (inquiry.getDelegateRequestsRam() != 0) {
+        params.put("delegateRequestsRam", String.valueOf(inquiry.getDelegateRequestsRam()));
+      }
+
+      if (inquiry.getDelegateRequestsCpu() != 0) {
+        params.put("delegateRequestsCpu", String.valueOf(inquiry.getDelegateRequestsCpu()));
       }
 
       if (isNotBlank(inquiry.getDelegateGroupId())) {

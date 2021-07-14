@@ -4,6 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.HeaderConfig;
 import io.harness.expression.EngineExpressionEvaluator;
+import io.harness.expression.EngineJexlContext;
 import io.harness.ngtriggers.expressions.functors.PayloadFunctor;
 import io.harness.ngtriggers.expressions.functors.TriggerPayloadFunctor;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -14,6 +15,7 @@ import io.harness.pms.plan.execution.SetupAbstractionKeys;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 
 import java.util.List;
+import javax.validation.constraints.NotNull;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class TriggerExpressionEvaluator extends EngineExpressionEvaluator {
@@ -42,9 +44,15 @@ public class TriggerExpressionEvaluator extends EngineExpressionEvaluator {
     Ambiance.newBuilder().setMetadata(ExecutionMetadata.newBuilder().build()).build();
     this.payload = payload;
   }
+
   @Override
   protected void initialize() {
     addToContext(SetupAbstractionKeys.trigger, new TriggerPayloadFunctor(payload, triggerPayload));
     addToContext(SetupAbstractionKeys.eventPayload, new PayloadFunctor(payload));
+  }
+
+  @Override
+  protected Object evaluateInternal(@NotNull String expression, @NotNull EngineJexlContext ctx) {
+    return evaluateByCreatingScript(expression, ctx);
   }
 }

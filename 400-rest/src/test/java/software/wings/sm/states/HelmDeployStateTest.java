@@ -107,6 +107,7 @@ import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
+import io.harness.helm.HelmCliCommandType;
 import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.ImageDetails;
@@ -976,7 +977,7 @@ public class HelmDeployStateTest extends CategoryTest {
     Map<String, ResponseData> responseDataMap = ImmutableMap.of(ACTIVITY_ID, response);
 
     // Rethrow instance of WingsException
-    doThrow(new HelmClientException("Client exception"))
+    doThrow(new HelmClientException("Client exception", HelmCliCommandType.INSTALL))
         .when(spyDeployState)
         .handleAsyncInternal(context, responseDataMap);
     assertThatThrownBy(() -> spyDeployState.handleAsyncResponse(context, responseDataMap))

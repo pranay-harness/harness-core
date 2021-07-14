@@ -206,6 +206,8 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
         .thenReturn(Application.Builder.anApplication().uuid(APP_ID).name(APP_NAME).build());
     when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME))
         .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
+    when(serviceResourceService.getWithDetails(any(), any()))
+        .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());
     when(serviceResourceService.exist(any(), any())).thenReturn(true);
     when(environmentService.getEnvironmentByName(APP_ID, ENV_NAME))
         .thenReturn(Environment.Builder.anEnvironment().uuid(ENV_ID).name(ENV_NAME).build());

@@ -2094,7 +2094,7 @@ public class K8sTaskHelperBase {
       String errorMsg = format("Failed to download manifest files from %s repo. ",
           manifestDelegateConfig.getStoreDelegateConfig().getType());
       logCallback.saveExecutionLog(errorMsg + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
-      throw new HelmClientException(errorMsg, e);
+      throw new HelmClientException(errorMsg, e, HelmCliCommandType.FETCH);
     }
 
     return true;

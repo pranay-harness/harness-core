@@ -1071,7 +1071,7 @@
             <dependency>
                 <groupId>io.harness.cv</groupId>
                 <artifactId>data-collection-dsl</artifactId>
-                <version>0.21-RELEASE</version>
+                <version>0.26-RELEASE</version>
             </dependency>
             <dependency>
                 <groupId>io.kubernetes</groupId>
@@ -2114,6 +2114,11 @@
             <id>harness-internal</id>
             <name>harness-internal-releases</name>
             <url>https://harness.jfrog.io/artifactory/harness-internal</url>
+        </repository>
+        <repository>
+            <id>harness-public</id>
+            <name>harness-public</name>
+            <url>https://harness.jfrog.io/harness/harness-public</url>
         </repository>
         <repository>
             <snapshots>

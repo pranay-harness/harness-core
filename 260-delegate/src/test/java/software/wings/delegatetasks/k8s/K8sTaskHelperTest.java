@@ -83,6 +83,7 @@ import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.git.model.GitFile;
+import io.harness.helm.HelmCliCommandType;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.AbstractExecutable;
 import io.harness.k8s.kubectl.ApplyCommand;
@@ -1872,7 +1873,7 @@ public class K8sTaskHelperTest extends CategoryTest {
     String manifestDirectory = "directory";
     String exceptionMessage = "Helm client exception message";
 
-    doThrow(new HelmClientException(exceptionMessage, WingsException.USER))
+    doThrow(new HelmClientException(exceptionMessage, WingsException.USER, HelmCliCommandType.FETCH))
         .when(mockHelmTaskHelper)
         .downloadChartFiles(manifestConfig.getHelmChartConfigParams(), manifestDirectory, LONG_TIMEOUT_INTERVAL,
             manifestConfig.getHelmCommandFlag());

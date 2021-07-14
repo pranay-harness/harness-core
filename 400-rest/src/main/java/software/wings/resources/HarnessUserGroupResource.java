@@ -9,6 +9,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.InternalApi;
 
 import software.wings.beans.security.HarnessSupportUserDTO;
 import software.wings.beans.security.HarnessUserGroup;
@@ -100,9 +101,26 @@ public class HarnessUserGroupResource {
   }
 
   @GET
+  @Path("internal/checkIfHarnessSupportEnabledForAccount")
+  @InternalApi
+  public RestResponse<Boolean> checkIfHarnessSupportEnabledForAccountInternal(
+      @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(harnessUserGroupService.isHarnessSupportEnabledForAccount(accountId));
+  }
+
+  @GET
   @Path("listAllHarnessSupportUsers")
   @AuthRule(permissionType = MANAGE_RESTRICTED_ACCESS)
   public RestResponse<List<HarnessSupportUserDTO>> listAllHarnessSupportUsers(
+      @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(
+        harnessUserGroupService.toHarnessSupportUser(harnessUserGroupService.listAllHarnessSupportUsers()));
+  }
+
+  @GET
+  @Path("internal/listAllHarnessSupportUsers")
+  @InternalApi
+  public RestResponse<List<HarnessSupportUserDTO>> listAllHarnessSupportUsersInternal(
       @QueryParam("accountId") String accountId) {
     return new RestResponse<>(
         harnessUserGroupService.toHarnessSupportUser(harnessUserGroupService.listAllHarnessSupportUsers()));

@@ -305,7 +305,7 @@ func Test_GetTestsToRun_Unsupported_File(t *testing.T) {
 
 	chFiles := []types.File{{Name: "a.xml", Status: types.FileModified}}
 
-	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{Files: chFiles, TargetBranch: "branch", Repo: "repo.git"}, "acct")
+	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{Files: chFiles, TargetBranch: "branch", Repo: "repo.git"}, "acct", false)
 	assert.Nil(t, err)
 	assert.Equal(t, resp.SelectAll, true)
 	assert.Equal(t, resp.TotalTests, 4)
@@ -338,7 +338,7 @@ func Test_GetTestsToRun_DifferentAccount(t *testing.T) {
 
 	chFiles := []types.File{{Name: "a.xml", Status: types.FileModified}}
 
-	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{Files: chFiles, TargetBranch: "branch", Repo: "repo.git"}, "diffAct")
+	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{Files: chFiles, TargetBranch: "branch", Repo: "repo.git"}, "diffAct", false)
 	assert.Nil(t, err)
 	assert.Equal(t, resp.SelectAll, true)
 	assert.Equal(t, resp.TotalTests, 0) // Nothing got returned
@@ -416,7 +416,7 @@ func Test_GetTestsToRun_TiConfig_Added_Deleted(t *testing.T) {
 	ticonfig := types.TiConfig{}
 	ticonfig.Config.Ignore = []string{"**/*.xml", "**/*.jsp"}
 
-	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{TiConfig: ticonfig, Files: chFiles, TargetBranch: "branch", Repo: "repo.git"}, "acct")
+	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{TiConfig: ticonfig, Files: chFiles, TargetBranch: "branch", Repo: "repo.git"}, "acct", false)
 	assert.Nil(t, err)
 	assert.Equal(t, resp.SelectAll, false)
 	assert.Equal(t, resp.TotalTests, 7)
@@ -459,7 +459,7 @@ func Test_GetTestsToRun_WithNewTests(t *testing.T) {
 	ticonfig := types.TiConfig{}
 	ticonfig.Config.Ignore = []string{"**/*.xml", "**/*.jsp"}
 
-	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{TiConfig: ticonfig, Files: chFiles, TargetBranch: "branch", Repo: "repo.git"}, "acct")
+	resp, err := db.GetTestsToRun(ctx, types.SelectTestsReq{TiConfig: ticonfig, Files: chFiles, TargetBranch: "branch", Repo: "repo.git"}, "acct", false)
 	assert.Nil(t, err)
 	assert.Equal(t, resp.SelectAll, false)
 	assert.Equal(t, resp.TotalTests, 1)    // new tests will get factored after CG

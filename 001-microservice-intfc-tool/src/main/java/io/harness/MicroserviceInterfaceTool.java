@@ -4,6 +4,7 @@ import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.beans.DelegateTaskEventsResponse;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.delegate.beans.ChecksumType;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
@@ -30,7 +31,10 @@ import com.google.common.hash.Hashing;
 import com.google.protobuf.GeneratedMessageV3;
 import com.google.protobuf.ProtocolMessageEnum;
 import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,7 +66,7 @@ class MicroserviceInterfaceTool {
     return jsonHashes;
   }
 
-  private static Map<String, String> computeProtoHashes() throws Exception {
+  private static Map<String, String> computeProtoHashes(Set<String> protoDependencies) throws Exception {
     Set<Class> protoClasses = new HashSet<>();
     Reflections reflections =
         new Reflections(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS, "io.serializer");
@@ -70,19 +74,22 @@ class MicroserviceInterfaceTool {
     protoClasses.addAll(reflections.getSubTypesOf(ProtocolMessageEnum.class));
     Map<String, String> classToHash = new HashMap<>();
     for (Class protoClass : protoClasses) {
-      classToHash.put(protoClass.getCanonicalName(), calculateStringHash(protoClass));
+      if (EmptyPredicate.isEmpty(protoDependencies) || protoDependencies.contains(protoClass.getCanonicalName())) {
+        classToHash.put(protoClass.getCanonicalName(), calculateStringHash(protoClass));
+      }
     }
-
     return classToHash;
   }
 
-  private static Map<String, String> computeKryoHashes() throws Exception {
+  private static Map<String, String> computeKryoHashes(Set<String> kryoDependencies) throws Exception {
     Kryo kryo = new Kryo();
     log("Loading all implementers of Kryo Registrars");
     Set<Class<? extends KryoRegistrar>> registrars = getAllImplementingClasses();
-    log("Found: " + registrars.size() + " registrars");
     for (Class<? extends KryoRegistrar> registrar : registrars) {
-      registrar.newInstance().register(kryo);
+      if (EmptyPredicate.isEmpty(kryoDependencies)
+          || kryoDependencies.stream().anyMatch(dependency -> registrar.getCanonicalName().endsWith(dependency))) {
+        registrar.newInstance().register(kryo);
+      }
     }
 
     DefaultClassResolver classResolver = (DefaultClassResolver) kryo.getClassResolver();
@@ -100,11 +107,33 @@ class MicroserviceInterfaceTool {
     return classToHash;
   }
 
+  private static void parseMicroserviceDependencies(
+      Set<String> kryoDependencies, Set<String> protoDependencies, String[] args) throws Exception {
+    for (String arg : args) {
+      if (arg.startsWith("kryo-file")) {
+        List<String> collect =
+            Files.lines(Paths.get(arg.substring(10)), Charset.defaultCharset()).collect(Collectors.toList());
+        kryoDependencies.addAll(collect.stream().filter(EmptyPredicate::isNotEmpty).collect(Collectors.toList()));
+      } else if (arg.startsWith("proto-file")) {
+        List<String> collect =
+            Files.lines(Paths.get(arg.substring(11)), Charset.defaultCharset()).collect(Collectors.toList());
+        protoDependencies.addAll(collect.stream().filter(EmptyPredicate::isNotEmpty).collect(Collectors.toList()));
+      } else if (!arg.equals("ignore-json")) {
+        log("Un recognized option: " + arg);
+      }
+    }
+  }
+
   public static void main(String[] args) {
     try {
-      Map<String, String> classToHash = computeKryoHashes();
-      classToHash.putAll(computeProtoHashes());
-      classToHash.putAll(computeJsonHashes());
+      Set<String> kryoDependencies = new HashSet<>();
+      Set<String> protoDependencies = new HashSet<>();
+      parseMicroserviceDependencies(kryoDependencies, protoDependencies, args);
+      Map<String, String> classToHash = computeKryoHashes(kryoDependencies);
+      classToHash.putAll(computeProtoHashes(protoDependencies));
+      if (!Arrays.asList(args).contains("ignore-json")) {
+        classToHash.putAll(computeJsonHashes());
+      }
       List<String> sortedClasses = classToHash.keySet().stream().sorted(String::compareTo).collect(Collectors.toList());
       List<String> sortedHashes = sortedClasses.stream().map(classToHash::get).collect(Collectors.toList());
       String concatenatedHashes = HarnessStringUtils.join(",", sortedHashes);

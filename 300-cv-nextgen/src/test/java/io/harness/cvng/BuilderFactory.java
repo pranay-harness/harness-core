@@ -3,6 +3,8 @@ package io.harness.cvng;
 import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo5MinBoundary;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
+
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
@@ -21,6 +23,10 @@ import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigBuil
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.NewRelicCVConfig;
 import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicCVConfigBuilder;
+import io.harness.cvng.core.entities.PrometheusCVConfig;
+import io.harness.cvng.core.entities.PrometheusCVConfig.PrometheusCVConfigBuilder;
+import io.harness.cvng.core.entities.StackdriverLogCVConfig;
+import io.harness.cvng.core.entities.StackdriverLogCVConfig.StackdriverLogCVConfigBuilder;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapBuilder;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
@@ -168,6 +174,24 @@ public class BuilderFactory {
         .productName(generateUuid());
   }
 
+  public StackdriverLogCVConfigBuilder stackdriverLogCVConfigBuilder() {
+    return StackdriverLogCVConfig.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier())
+        .queryName(randomAlphabetic(10))
+        .query(randomAlphabetic(10))
+        .messageIdentifier(randomAlphabetic(10))
+        .serviceInstanceIdentifier(randomAlphabetic(10))
+        .identifier(generateUuid())
+        .monitoringSourceName(generateUuid())
+        .connectorIdentifier("StackdriverLog Connector")
+        .category(CVMonitoringCategory.ERRORS)
+        .productName(generateUuid());
+  }
+
   public NewRelicCVConfigBuilder newRelicCVConfigBuilder() {
     return NewRelicCVConfig.builder()
         .accountId(context.getAccountId())
@@ -175,6 +199,17 @@ public class BuilderFactory {
         .projectIdentifier(context.getProjectIdentifier())
         .serviceIdentifier(context.getServiceIdentifier())
         .envIdentifier(context.getEnvIdentifier());
+  }
+
+  public PrometheusCVConfigBuilder prometheusCVConfigBuilder() {
+    return PrometheusCVConfig.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .envIdentifier(context.getEnvIdentifier())
+        .connectorIdentifier("connectorRef")
+        .category(CVMonitoringCategory.PERFORMANCE);
   }
 
   private VerificationJob getVerificationJob() {

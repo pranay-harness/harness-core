@@ -28,6 +28,8 @@ import io.harness.accesscontrol.principals.usergroups.iterators.UserGroupReconci
 import io.harness.accesscontrol.principals.users.iterators.UserReconciliationIterator;
 import io.harness.accesscontrol.principals.users.migration.UserBootstrapMigrationService;
 import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroupReconciliationIterator;
+import io.harness.accesscontrol.support.reconciliation.SupportPreferenceReconciliationIterator;
+import io.harness.accesscontrol.support.reconciliation.SupportRoleAssignmentsReconciliationService;
 import io.harness.aggregator.AggregatorService;
 import io.harness.aggregator.MongoOffsetCleanupJob;
 import io.harness.annotations.dev.OwnedBy;
@@ -173,6 +175,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     injector.getInstance(UserGroupReconciliationIterator.class).registerIterators();
     injector.getInstance(UserReconciliationIterator.class).registerIterators();
     injector.getInstance(ServiceAccountReconciliationIterator.class).registerIterators();
+    injector.getInstance(SupportPreferenceReconciliationIterator.class).registerIterators();
   }
 
   public void registerScheduledJobs(Injector injector) {
@@ -209,6 +212,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     }
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
     environment.lifecycle().manage(injector.getInstance(UserBootstrapMigrationService.class));
+    environment.lifecycle().manage(injector.getInstance(SupportRoleAssignmentsReconciliationService.class));
   }
 
   private void registerJerseyProviders(Environment environment) {

@@ -2,8 +2,6 @@ package io.harness.signup.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.GTM;
 
-import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
-
 import static java.lang.Boolean.TRUE;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -18,8 +16,6 @@ import io.harness.signup.dto.SignupDTO;
 import io.harness.signup.dto.VerifyTokenResponseDTO;
 import io.harness.signup.services.SignupService;
 
-import software.wings.security.annotations.AuthRule;
-
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -29,6 +25,7 @@ import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -59,12 +56,21 @@ public class SignupResource {
    */
   @POST
   @PublicApi
-  public RestResponse<UserInfo> signup(SignupDTO dto, @QueryParam("captchaToken") @Nullable String captchaToken) {
-    return new RestResponse<>(signupService.signup(dto, captchaToken));
+  public RestResponse<Void> signup(SignupDTO dto, @QueryParam("captchaToken") @Nullable String captchaToken) {
+    signupService.createSignupInvite(dto, captchaToken);
+    return new RestResponse<>();
+  }
+
+  @PUT
+  @Path("/complete/{token}")
+  @PublicApi
+  public RestResponse<UserInfo> completeSignupInvite(@PathParam("token") String token) {
+    return new RestResponse<>(signupService.completeSignupInvite(token));
   }
 
   /**
    * Follows the "oauth" path
+   *
    * @param dto
    * @return
    */
@@ -83,13 +89,13 @@ public class SignupResource {
   }
 
   @POST
-  @Path("{userId}/verify-notification")
+  @Path("verify-notification")
   @Produces("application/json")
   @Consumes("application/json")
   @ApiOperation(value = "Resend user verification email", nickname = "resendVerifyEmail")
-  @AuthRule(permissionType = LOGGED_IN)
-  public ResponseDTO<Boolean> resendVerifyEmail(@NotNull @PathParam("userId") String userId) {
-    signupService.resendVerificationEmail(userId);
+  @PublicApi
+  public ResponseDTO<Boolean> resendVerifyEmail(@NotNull @QueryParam("email") String email) {
+    signupService.resendVerificationEmail(email);
     return ResponseDTO.newResponse(TRUE);
   }
 }

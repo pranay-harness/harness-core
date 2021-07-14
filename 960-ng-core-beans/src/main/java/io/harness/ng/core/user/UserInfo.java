@@ -25,6 +25,7 @@ public class UserInfo {
   String email;
   String token;
   String defaultAccountId;
+  String intent;
   List<GatewayAccountRequestDTO> accounts;
   boolean admin;
   boolean twoFactorAuthenticationEnabled;

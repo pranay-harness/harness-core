@@ -65,6 +65,7 @@ import io.harness.delegate.exceptionhandler.handler.AuthenticationExceptionHandl
 import io.harness.delegate.exceptionhandler.handler.CVConnectorExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.DockerServerExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.GcpClientExceptionHandler;
+import io.harness.delegate.exceptionhandler.handler.HelmClientRuntimeExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.InterruptedIOExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.JGitExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.SCMExceptionHandler;
@@ -1572,5 +1573,7 @@ public class DelegateModule extends AbstractModule {
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(AuthenticationExceptionHandler.class));
     DelegateServiceDriverExceptionHandler.exceptions().forEach(
         exception -> exceptionHandlerMapBinder.addBinding(exception).to(DelegateServiceDriverExceptionHandler.class));
+    HelmClientRuntimeExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(HelmClientRuntimeExceptionHandler.class));
   }
 }
