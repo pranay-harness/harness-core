@@ -7,7 +7,6 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
