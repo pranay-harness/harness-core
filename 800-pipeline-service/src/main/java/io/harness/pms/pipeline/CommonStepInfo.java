@@ -19,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class CommonStepInfo {
+  private static final String APPROVAL_STEP_CATEGORY = "Approval";
+
   @Inject PmsFeatureFlagHelper pmsFeatureFlagHelper;
 
   StepInfo shellScriptStepInfo =
@@ -75,9 +77,12 @@ public class CommonStepInfo {
           .setFeatureFlag(FeatureName.NG_BARRIERS.name())
           .build();
 
-  public List<StepInfo> getCommonSteps() {
+  public List<StepInfo> getCommonSteps(String category) {
     List<StepInfo> stepInfos = new ArrayList<>();
-    stepInfos.add(shellScriptStepInfo);
+    // Remove shell script from approval stage till shell script step is moved to pipeline service.
+    if (!APPROVAL_STEP_CATEGORY.equals(category)) {
+      stepInfos.add(shellScriptStepInfo);
+    }
     stepInfos.add(httpStepInfo);
     stepInfos.add(harnessApprovalStepInfo);
     stepInfos.add(jiraApprovalStepInfo);

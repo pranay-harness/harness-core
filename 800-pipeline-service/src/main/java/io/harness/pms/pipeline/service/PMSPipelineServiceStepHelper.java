@@ -67,7 +67,7 @@ public class PMSPipelineServiceStepHelper {
                       || EmptyPredicate.isEmpty(stepInfo.getStepMetaData().getCategoryList()))
               .collect(Collectors.toList());
     }
-    filteredStepTypes.addAll(commonStepInfo.getCommonSteps());
+    filteredStepTypes.addAll(commonStepInfo.getCommonSteps(category));
     return calculateStepsForCategory(LIBRARY, filteredStepTypes, accountId);
   }
 
