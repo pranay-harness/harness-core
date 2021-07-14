@@ -1,6 +1,7 @@
 package software.wings.security.authentication;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.FeatureName.SAML_LOGIN_WITHOUT_INVITE_ACCEPT;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
@@ -13,6 +14,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.account.AuthenticationMechanism;
 
+import org.jetbrains.annotations.Nullable;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -265,18 +267,24 @@ public class SamlBasedAuthHandler implements AuthHandler {
     } catch (WingsException e) {
       log.warn("SamlResponse contains nameId=[{}] which does not exist in db, url=[{}], accountId=[{}]", nameId,
           samlSettings.getUrl(), samlSettings.getAccountId());
-      if (featureFlagService.isEnabled(FeatureName.SAML_LOGIN_WITHOUT_INVITE_ACCEPT, samlSettings.getAccountId())) {
-        log.info("SAML_LOGIN_WITHOUT_INVITE_ACCEPT FF is enabled for account, Creating user with auto approved invite");
-        UserInvite userInvite = anUserInvite().withAccountId(samlSettings.getAccountId()).withEmail(nameId).build();
-        userService.inviteUser(userInvite, false, true);
-        User user = authenticationUtils.getUserByEmail(nameId);
-        if (user == null) {
-          throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST,
-              "Tried creating user with auto accepted invite but failed", WingsException.USER);
-        }
+      User user = tryAutoAcceptingInvite(samlSettings, nameId);
+      if (user != null) {
+        return user;
       }
       throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST, e);
     }
+  }
+
+  @Nullable
+  private User tryAutoAcceptingInvite(SamlSettings samlSettings, String nameId) {
+    if (featureFlagService.isEnabled(SAML_LOGIN_WITHOUT_INVITE_ACCEPT, samlSettings.getAccountId())) {
+      log.info(SAML_LOGIN_WITHOUT_INVITE_ACCEPT+ "FF is enabled for account, Creating user with auto approved invite");
+      UserInvite userInvite = anUserInvite().withAccountId(samlSettings.getAccountId()).withEmail(nameId).build();
+      userService.inviteUser(userInvite, false, true);
+      User user = authenticationUtils.getUserByEmail(nameId);
+      return user;
+    }
+    return null;
   }
 
   // TODO : revisit this method when we are doing SAML authorization
