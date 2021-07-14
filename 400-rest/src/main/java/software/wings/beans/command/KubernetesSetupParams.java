@@ -37,7 +37,6 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private boolean useAutoscaler;
   private int minAutoscaleInstances;
   private int maxAutoscaleInstances;
-  private int targetCpuUtilizationPercentage;
   private String customMetricYamlConfig;
   private String subscriptionId;
   private String resourceGroup;
@@ -86,7 +85,6 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private boolean useAutoscaler;
     private int minAutoscaleInstances;
     private int maxAutoscaleInstances;
-    private int targetCpuUtilizationPercentage;
     private String customMetricYamlConfig;
     private String subscriptionId;
     private String resourceGroup;
@@ -250,11 +248,6 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       return this;
     }
 
-    public KubernetesSetupParamsBuilder withTargetCpuUtilizationPercentage(int targetCpuUtilizationPercentage) {
-      this.targetCpuUtilizationPercentage = targetCpuUtilizationPercentage;
-      return this;
-    }
-
     public KubernetesSetupParamsBuilder withCustomMetricYamlConfig(String customMetricYamlConfig) {
       this.customMetricYamlConfig = customMetricYamlConfig;
       return this;
@@ -365,7 +358,6 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withUseAutoscaler(useAutoscaler)
           .withMinAutoscaleInstances(minAutoscaleInstances)
           .withMaxAutoscaleInstances(maxAutoscaleInstances)
-          .withTargetCpuUtilizationPercentage(targetCpuUtilizationPercentage)
           .withCustomMetricYamlConfig(customMetricYamlConfig)
           .withSubscriptionId(subscriptionId)
           .withResourceGroup(resourceGroup)
@@ -414,7 +406,6 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setUseAutoscaler(useAutoscaler);
       kubernetesSetupParams.setMinAutoscaleInstances(minAutoscaleInstances);
       kubernetesSetupParams.setMaxAutoscaleInstances(maxAutoscaleInstances);
-      kubernetesSetupParams.setTargetCpuUtilizationPercentage(targetCpuUtilizationPercentage);
       kubernetesSetupParams.setCustomMetricYamlConfig(customMetricYamlConfig);
       kubernetesSetupParams.setSubscriptionId(subscriptionId);
       kubernetesSetupParams.setResourceGroup(resourceGroup);

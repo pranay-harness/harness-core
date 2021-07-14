@@ -175,10 +175,10 @@ import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.networking.v1alpha3.Destination;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationRule;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationRuleBuilder;
-import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
 import me.snowdrop.istio.api.networking.v1alpha3.DoneableDestinationRule;
 import me.snowdrop.istio.api.networking.v1alpha3.DoneableVirtualService;
 import me.snowdrop.istio.api.networking.v1alpha3.HTTPRoute;
+import me.snowdrop.istio.api.networking.v1alpha3.HTTPRouteDestination;
 import me.snowdrop.istio.api.networking.v1alpha3.PortSelector;
 import me.snowdrop.istio.api.networking.v1alpha3.Subset;
 import me.snowdrop.istio.api.networking.v1alpha3.TCPRoute;
@@ -534,26 +534,26 @@ public class K8sTaskHelperBase {
     }
   }
 
-  private List<DestinationWeight> generateDestinationWeights(
+  private List<HTTPRouteDestination> generateDestinationWeights(
       List<IstioDestinationWeight> istioDestinationWeights, String host, PortSelector portSelector) throws IOException {
-    List<DestinationWeight> destinationWeights = new ArrayList<>();
+    List<HTTPRouteDestination> httpRouteDestinations = new ArrayList<>();
 
     for (IstioDestinationWeight istioDestinationWeight : istioDestinationWeights) {
       String destinationYaml = getDestinationYaml(istioDestinationWeight.getDestination(), host);
       Destination destination = new YamlUtils().read(destinationYaml, Destination.class);
       destination.setPort(portSelector);
 
-      DestinationWeight destinationWeight = new DestinationWeight();
-      destinationWeight.setWeight(Integer.parseInt(istioDestinationWeight.getWeight()));
-      destinationWeight.setDestination(destination);
+      HTTPRouteDestination httpRouteDestination = new HTTPRouteDestination();
+      httpRouteDestination.setWeight(Integer.parseInt(istioDestinationWeight.getWeight()));
+      httpRouteDestination.setDestination(destination);
 
-      destinationWeights.add(destinationWeight);
+      httpRouteDestinations.add(httpRouteDestination);
     }
 
-    return destinationWeights;
+    return httpRouteDestinations;
   }
 
-  private String getHostFromRoute(List<DestinationWeight> routes) {
+  private String getHostFromRoute(List<HTTPRouteDestination> routes) {
     if (isEmpty(routes)) {
       throw new InvalidRequestException("No routes exist in VirtualService", USER);
     }
@@ -569,7 +569,7 @@ public class K8sTaskHelperBase {
     return routes.get(0).getDestination().getHost();
   }
 
-  private PortSelector getPortSelectorFromRoute(List<DestinationWeight> routes) {
+  private PortSelector getPortSelectorFromRoute(List<HTTPRouteDestination> routes) {
     return routes.get(0).getDestination().getPort();
   }
 

@@ -363,7 +363,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testDeleteAutoScalarIsCalled() throws IOException {
-    String yamlHPA = workflowService.getHPAYamlStringWithCustomMetric(2, 10, 60);
+    String yamlHPA = workflowService.getHPAYamlStringWithCustomMetric(2, 10);
     HorizontalPodAutoscaler horizontalPodAutoscaler = KubernetesHelper.loadYaml(yamlHPA);
     when(kubernetesContainerService.getAutoscaler(any(KubernetesConfig.class), anyString(), anyString()))
         .thenReturn(horizontalPodAutoscaler);

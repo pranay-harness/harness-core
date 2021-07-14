@@ -1061,10 +1061,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public String getHPAYamlStringWithCustomMetric(
-      Integer minAutoscaleInstances, Integer maxAutoscaleInstances, Integer targetCpuUtilizationPercentage) {
-    return workflowServiceHelper.getHPAYamlStringWithCustomMetric(
-        minAutoscaleInstances, maxAutoscaleInstances, targetCpuUtilizationPercentage);
+  public String getHPAYamlStringWithCustomMetric(Integer minAutoscaleInstances, Integer maxAutoscaleInstances) {
+    return workflowServiceHelper.getHPAYamlStringWithCustomMetric(minAutoscaleInstances, maxAutoscaleInstances);
   }
 
   @Override

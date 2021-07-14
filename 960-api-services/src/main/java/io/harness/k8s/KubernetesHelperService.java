@@ -81,7 +81,6 @@ import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Comparator;
 import java.util.List;
-import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
@@ -89,7 +88,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.IstioResource;
-import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
+import me.snowdrop.istio.api.networking.v1alpha3.HTTPRouteDestination;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceSpec;
 import me.snowdrop.istio.client.DefaultIstioClient;
@@ -248,11 +247,11 @@ public class KubernetesHelperService {
       IstioResource virtualService, String controllerPrefix, LogCallback logCallback) {
     VirtualServiceSpec virtualServiceSpec = ((VirtualService) virtualService).getSpec();
     if (isNotEmpty(virtualServiceSpec.getHttp().get(0).getRoute())) {
-      List<DestinationWeight> sorted = virtualServiceSpec.getHttp().get(0).getRoute();
+      List<HTTPRouteDestination> sorted = virtualServiceSpec.getHttp().get(0).getRoute();
       sorted.sort(Comparator.comparing(a -> Integer.valueOf(a.getDestination().getSubset())));
-      for (DestinationWeight destinationWeight : sorted) {
-        int weight = destinationWeight.getWeight();
-        String rev = destinationWeight.getDestination().getSubset();
+      for (HTTPRouteDestination httpRouteDestination : sorted) {
+        int weight = httpRouteDestination.getWeight();
+        String rev = httpRouteDestination.getDestination().getSubset();
         logCallback.saveExecutionLog(format("   %s%s%s: %d%%", controllerPrefix, DASH, rev, weight));
       }
     } else {
@@ -292,7 +291,7 @@ public class KubernetesHelperService {
         }
 
         try {
-          SSLContext sslContext = SSLUtils.sslContext(keyManagers, trustManagers, config.isTrustCerts());
+          SSLContext sslContext = SSLUtils.sslContext(keyManagers, trustManagers);
           httpClientBuilder.sslSocketFactory(sslContext.getSocketFactory(), trustManager);
         } catch (GeneralSecurityException e) {
           throw new AssertionError(); // The system has no TLS. Just give up.
@@ -454,9 +453,8 @@ public class KubernetesHelperService {
      * */
     MixedOperation<HorizontalPodAutoscaler, HorizontalPodAutoscalerList, DoneableHorizontalPodAutoscaler,
         Resource<HorizontalPodAutoscaler, DoneableHorizontalPodAutoscaler>> mixedOperation =
-        new HorizontalPodAutoscalerOperationsImpl(kubernetesClient.getHttpClient(), kubernetesClient.getConfiguration(),
-            apiName, kubernetesClient.getNamespace(), null, true, null, null, false, -1, new TreeMap<>(),
-            new TreeMap<>(), new TreeMap<>(), new TreeMap<>(), new TreeMap<>());
+        new HorizontalPodAutoscalerOperationsImpl(
+            kubernetesClient.getHttpClient(), kubernetesClient.getConfiguration(), kubernetesClient.getNamespace());
 
     return mixedOperation.inNamespace(kubernetesConfig.getNamespace());
   }
