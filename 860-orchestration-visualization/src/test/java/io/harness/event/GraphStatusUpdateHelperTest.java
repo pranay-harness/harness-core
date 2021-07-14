@@ -32,6 +32,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.data.OrchestrationMap;
 import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
@@ -48,7 +49,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.assertj.core.util.Maps;
 import org.awaitility.Awaitility;
-import org.bson.Document;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -204,7 +204,7 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
             .planExecutionId(planExecution.getUuid())
             .producedBy(LevelUtils.buildLevelFromPlanNode(dummyStart.getUuid(), dummyStart.getNode()))
             .createdAt(System.currentTimeMillis())
-            .outcome(new Document(doc))
+            .outcomeValue(OrchestrationMap.parse(doc))
             .build();
     mongoTemplate.insert(outcome);
 
@@ -221,7 +221,7 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
     assertThat(graphVertexMap.size()).isEqualTo(1);
     assertThat(graphVertexMap.get(dummyStart.getUuid()).getStatus()).isEqualTo(SUCCEEDED);
     assertThat(graphVertexMap.get(dummyStart.getUuid()).getOutcomeDocuments().values())
-        .containsExactlyInAnyOrder(new Document(RecastOrchestrationUtils.toMap(dummyVisualizationOutcome)));
+        .containsExactlyInAnyOrder(OrchestrationMap.parse(RecastOrchestrationUtils.toMap(dummyVisualizationOutcome)));
     assertThat(updatedGraph.getAdjacencyList().getAdjacencyMap().size()).isEqualTo(1);
     assertThat(updatedGraph.getStatus()).isEqualTo(planExecution.getStatus());
   }
@@ -238,9 +238,7 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
         .stepType(nodeExecution.getNode().getStepType().getType())
         .status(SUCCEEDED)
         .failureInfo(nodeExecution.getFailureInfo())
-        .stepParameters(nodeExecution.getResolvedStepParameters() == null
-                ? null
-                : new Document(nodeExecution.getResolvedStepParameters()))
+        .stepParameters(OrchestrationMap.parse(nodeExecution.getResolvedStepParameters()))
         .mode(nodeExecution.getMode())
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())

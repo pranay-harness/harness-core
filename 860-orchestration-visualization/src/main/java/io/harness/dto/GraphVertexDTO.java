@@ -11,6 +11,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.data.OrchestrationMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -19,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
-import org.bson.Document;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Value
@@ -41,17 +41,17 @@ public class GraphVertexDTO {
   FailureInfoDTO failureInfo;
   SkipInfo skipInfo;
   NodeRunInfo nodeRunInfo;
-  Document stepParameters;
+  OrchestrationMap stepParameters;
   ExecutionMode mode;
 
   List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParams;
   List<ExecutableResponse> executableResponses;
   List<InterruptEffect> interruptHistories;
-  Map<String, Document> outcomes;
+  Map<String, OrchestrationMap> outcomes;
   List<String> retryIds;
 
   List<UnitProgress> unitProgresses;
-  Document progressData;
+  OrchestrationMap progressData;
 
   // skip
   SkipType skipType;

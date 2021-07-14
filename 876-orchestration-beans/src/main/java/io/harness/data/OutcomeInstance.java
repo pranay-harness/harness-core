@@ -1,6 +1,7 @@
 package io.harness.data;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
@@ -12,6 +13,7 @@ import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.data.OrchestrationMap;
 
 import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
@@ -68,10 +70,23 @@ public class OutcomeInstance implements PersistentEntity, UuidAccess {
   Level producedBy;
   @NotEmpty @Trimmed String name;
   String levelRuntimeIdIdx;
-  org.bson.Document outcome;
+  @Deprecated org.bson.Document outcome;
+  OrchestrationMap outcomeValue;
   @Wither @CreatedDate Long createdAt;
   @Wither @Version Long version;
   @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
+
+  public String getOutcomeJsonValue() {
+    if (!isEmpty(outcomeValue)) {
+      return outcomeValue.toJson();
+    }
+
+    if (!isEmpty(outcome)) {
+      return outcome.toJson();
+    }
+
+    return null;
+  }
 
   @UtilityClass
   public static class OutcomeInstanceKeys {

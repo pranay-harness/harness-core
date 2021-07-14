@@ -2,6 +2,7 @@ package io.harness.pms.sdk.core.resolver.outcome.mapper;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.pms.data.OrchestrationMap;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
@@ -11,7 +12,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
-import org.bson.Document;
 
 @UtilityClass
 public class PmsOutcomeMapper {
@@ -34,14 +34,13 @@ public class PmsOutcomeMapper {
     return outcomes;
   }
 
-  public Map<String, Document> convertJsonToDocument(Map<String, String> outcomeAsJsonList) {
+  public Map<String, OrchestrationMap> convertJsonToOrchestrationMap(Map<String, String> outcomeAsJsonList) {
     if (isEmpty(outcomeAsJsonList)) {
       return Collections.emptyMap();
     }
-    Map<String, Document> outcomes = new LinkedHashMap<>();
+    Map<String, OrchestrationMap> outcomes = new LinkedHashMap<>();
     for (Map.Entry<String, String> entry : outcomeAsJsonList.entrySet()) {
-      outcomes.put(entry.getKey(),
-          entry.getValue() == null ? null : new Document(RecastOrchestrationUtils.fromJson(entry.getValue())));
+      outcomes.put(entry.getKey(), entry.getValue() == null ? null : OrchestrationMap.parse(entry.getValue()));
     }
     return outcomes;
   }
