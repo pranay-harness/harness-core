@@ -60,7 +60,7 @@ public interface CloudToHarnessMappingService {
   List<SettingAttribute> listSettingAttributesCreatedInDuration(
       String accountId, SettingCategory category, SettingVariableTypes valueType, long startTime, long endTime);
 
-  List<GcpBillingAccount> listGcpBillingAccountUpdatedInDuration(String accountId, long startTime, long endTime);
+  List<GcpBillingAccount> listGcpBillingAccountUpdatedInDuration(String accountId);
 
   String getEntityName(BillingDataQueryMetadata.BillingDataMetaDataFields field, String entityId);
 

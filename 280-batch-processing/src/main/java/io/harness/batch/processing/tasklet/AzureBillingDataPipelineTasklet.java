@@ -41,9 +41,7 @@ public class AzureBillingDataPipelineTasklet implements Tasklet {
     String accountName = account.getAccountName();
 
     List<SettingAttribute> ceConnectorsList = cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
-        accountId, SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AZURE,
-        CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE).toEpochMilli(),
-        CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE).toEpochMilli());
+        accountId, SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AZURE);
     log.info("Found {} Azure connectors", ceConnectorsList.size());
     ceConnectorsList.forEach(settingAttribute -> {
       String settingId = settingAttribute.getUuid();

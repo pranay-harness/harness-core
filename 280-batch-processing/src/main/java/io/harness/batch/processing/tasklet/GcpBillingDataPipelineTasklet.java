@@ -58,9 +58,7 @@ public class GcpBillingDataPipelineTasklet implements Tasklet {
     String gcpProjectId = mainConfig.getBillingDataPipelineConfig().getGcpProjectId();
     log.info("Executing GcpBillingDataPipelineTasklet");
     List<GcpBillingAccount> gcpBillingAccounts =
-        cloudToHarnessMappingService.listGcpBillingAccountUpdatedInDuration(accountId,
-            CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE).toEpochMilli(),
-            CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE).toEpochMilli());
+        cloudToHarnessMappingService.listGcpBillingAccountUpdatedInDuration(accountId);
     log.info("Found gcpBillingAccounts {}", gcpBillingAccounts);
     gcpBillingAccounts.stream()
         .filter(gcpBillingAccount -> {
