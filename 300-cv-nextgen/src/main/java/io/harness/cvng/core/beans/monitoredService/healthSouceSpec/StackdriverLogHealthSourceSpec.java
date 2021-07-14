@@ -37,7 +37,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class StackdriverLogHealthSourceSpec extends HealthSourceSpec {
-  @NotNull String connectorRef;
   @NotNull String feature;
   @NotNull @NotEmpty @Valid List<QueryDTO> queries;
 
@@ -127,16 +126,23 @@ public class StackdriverLogHealthSourceSpec extends HealthSourceSpec {
       String environmentRef, String serviceRef, String identifier, String name) {
     List<StackdriverLogCVConfig> cvConfigs = new ArrayList<>();
     queries.forEach(queryDTO -> {
-      StackdriverLogCVConfig stackdriverLogCVConfig = new StackdriverLogCVConfig();
-      fillCommonFields(
-          stackdriverLogCVConfig, accountId, orgIdentifier, projectIdentifier, identifier, connectorRef, name, feature);
-      stackdriverLogCVConfig.setEnvIdentifier(environmentRef);
-      stackdriverLogCVConfig.setServiceIdentifier(serviceRef);
-      stackdriverLogCVConfig.setQueryName(queryDTO.getName());
-      stackdriverLogCVConfig.setQuery(queryDTO.getQuery());
-      stackdriverLogCVConfig.setServiceInstanceIdentifier(queryDTO.getServiceInstanceIdentifier());
-      stackdriverLogCVConfig.setMessageIdentifier(queryDTO.getMessageIdentifier());
-      stackdriverLogCVConfig.setCategory(CVMonitoringCategory.ERRORS);
+      StackdriverLogCVConfig stackdriverLogCVConfig =
+          StackdriverLogCVConfig.builder()
+              .accountId(accountId)
+              .orgIdentifier(orgIdentifier)
+              .projectIdentifier(projectIdentifier)
+              .identifier(identifier)
+              .connectorIdentifier(getConnectorRef())
+              .monitoringSourceName(name)
+              .productName(feature)
+              .envIdentifier(environmentRef)
+              .serviceIdentifier(serviceRef)
+              .queryName(queryDTO.getName())
+              .query(queryDTO.getQuery())
+              .serviceInstanceIdentifier(queryDTO.getServiceInstanceIdentifier())
+              .messageIdentifier(queryDTO.getMessageIdentifier())
+              .category(CVMonitoringCategory.ERRORS)
+              .build();
       cvConfigs.add(stackdriverLogCVConfig);
     });
     return cvConfigs;

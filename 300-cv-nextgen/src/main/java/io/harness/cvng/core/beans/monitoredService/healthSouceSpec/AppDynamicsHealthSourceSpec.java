@@ -33,7 +33,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AppDynamicsHealthSourceSpec extends HealthSourceSpec {
-  @NotNull String connectorRef;
   @NotNull String feature;
   @NotNull String appdApplicationName;
   @NotNull String appdTierName;
@@ -80,16 +79,22 @@ public class AppDynamicsHealthSourceSpec extends HealthSourceSpec {
       String environmentRef, String serviceRef, String identifier, String name, MetricPackService metricPackService) {
     List<AppDynamicsCVConfig> cvConfigs = new ArrayList<>();
     metricPacks.forEach(metricPack -> {
-      AppDynamicsCVConfig appDynamicsCVConfig = new AppDynamicsCVConfig();
-      fillCommonFields(
-          appDynamicsCVConfig, accountId, orgIdentifier, projectIdentifier, identifier, connectorRef, name, feature);
-      appDynamicsCVConfig.setApplicationName(appdApplicationName);
-      appDynamicsCVConfig.setEnvIdentifier(environmentRef);
-      appDynamicsCVConfig.setTierName(appdTierName);
-      appDynamicsCVConfig.setServiceIdentifier(serviceRef);
-      appDynamicsCVConfig.setMetricPack(
-          metricPack.toMetricPack(accountId, orgIdentifier, projectIdentifier, getType(), metricPackService));
-      appDynamicsCVConfig.setCategory(metricPack.getIdentifier());
+      AppDynamicsCVConfig appDynamicsCVConfig = AppDynamicsCVConfig.builder()
+                                                    .accountId(accountId)
+                                                    .orgIdentifier(orgIdentifier)
+                                                    .projectIdentifier(projectIdentifier)
+                                                    .identifier(identifier)
+                                                    .connectorIdentifier(getConnectorRef())
+                                                    .monitoringSourceName(name)
+                                                    .productName(feature)
+                                                    .applicationName(appdApplicationName)
+                                                    .tierName(appdTierName)
+                                                    .envIdentifier(environmentRef)
+                                                    .serviceIdentifier(serviceRef)
+                                                    .metricPack(metricPack.toMetricPack(accountId, orgIdentifier,
+                                                        projectIdentifier, getType(), metricPackService))
+                                                    .category(metricPack.getIdentifier())
+                                                    .build();
       cvConfigs.add(appDynamicsCVConfig);
     });
     return cvConfigs;

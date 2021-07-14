@@ -125,7 +125,7 @@ public class HealthSourceServiceImpl implements HealthSourceService {
         .name(cvConfigs.get(0).getMonitoringSourceName())
         .type(dataSourceTypeMonitoredServiceDataSourceTypeMap.get(cvConfigs.get(0).getType()))
         .identifier(identifier)
-        .spec(cvConfigToHealthSourceTransformer.transformToHealthSourceConfig(cvConfigs))
+        .spec(cvConfigToHealthSourceTransformer.transform(cvConfigs))
         .build();
   }
 }

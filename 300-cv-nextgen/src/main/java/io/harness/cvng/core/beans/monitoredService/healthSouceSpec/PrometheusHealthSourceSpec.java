@@ -1,11 +1,14 @@
-package io.harness.cvng.core.beans;
+package io.harness.cvng.core.beans.monitoredService.healthSouceSpec;
 
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.core.beans.PrometheusMetricDefinition;
+import io.harness.cvng.core.beans.monitoredService.HealthSource.CVConfigUpdateResult;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.PrometheusCVConfig;
+import io.harness.cvng.core.services.api.MetricPackService;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,27 +16,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.Value;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.SuperBuilder;
 
 @Data
-@JsonTypeName("PROMETHEUS")
+@SuperBuilder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-public class PrometheusDSConfig extends DSConfig {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class PrometheusHealthSourceSpec extends HealthSourceSpec {
   List<PrometheusMetricDefinition> metricDefinitions;
 
   @Override
-  public DataSourceType getType() {
-    return DataSourceType.PROMETHEUS;
-  }
-
-  @Override
-  public CVConfigUpdateResult getCVConfigUpdateResult(List<CVConfig> existingCVConfigs) {
-    List<PrometheusCVConfig> cvConfigsFromThisObj = toCVConfigs();
+  public CVConfigUpdateResult getCVConfigUpdateResult(String accountId, String orgIdentifier, String projectIdentifier,
+      String environmentRef, String serviceRef, String identifier, String name, List<CVConfig> existingCVConfigs,
+      MetricPackService metricPackService) {
+    metricDefinitions.forEach(metricDefinition -> {
+      metricDefinition.setServiceIdentifier(serviceRef);
+      metricDefinition.setEnvIdentifier(environmentRef);
+    });
+    List<PrometheusCVConfig> cvConfigsFromThisObj =
+        toCVConfigs(accountId, orgIdentifier, projectIdentifier, environmentRef, serviceRef, identifier, name);
     Map<Key, PrometheusCVConfig> existingConfigMap = new HashMap<>();
 
     List<PrometheusCVConfig> existingSDCVConfigs = (List<PrometheusCVConfig>) (List<?>) existingCVConfigs;
@@ -68,9 +76,12 @@ public class PrometheusDSConfig extends DSConfig {
   }
 
   @Override
-  public void validate(List<CVConfig> existingMapping) {}
+  public DataSourceType getType() {
+    return DataSourceType.PROMETHEUS;
+  }
 
-  private List<PrometheusCVConfig> toCVConfigs() {
+  private List<PrometheusCVConfig> toCVConfigs(String accountId, String orgIdentifier, String projectIdentifier,
+      String environmentRef, String serviceRef, String identifier, String name) {
     List<PrometheusCVConfig> cvConfigs = new ArrayList<>();
     // One cvConfig per service+environment+groupName+category.
     Map<Key, List<PrometheusMetricDefinition>> keyDefinitionMap = new HashMap<>();
@@ -83,20 +94,26 @@ public class PrometheusDSConfig extends DSConfig {
     });
 
     keyDefinitionMap.forEach((key, definitionList) -> {
-      PrometheusCVConfig cvConfig = PrometheusCVConfig.builder().groupName(key.getGroupName()).build();
-      fillCommonFields(cvConfig);
-
       CVMonitoringCategory category = key.getCategory();
-      cvConfig.setEnvIdentifier(key.getEnvIdentifier());
-      cvConfig.setServiceIdentifier(key.getServiceIdentifier());
-      cvConfig.setCategory(category);
+      PrometheusCVConfig cvConfig = PrometheusCVConfig.builder()
+                                        .accountId(accountId)
+                                        .orgIdentifier(orgIdentifier)
+                                        .projectIdentifier(projectIdentifier)
+                                        .identifier(identifier)
+                                        .connectorIdentifier(getConnectorRef())
+                                        .monitoringSourceName(name)
+                                        .groupName(key.getGroupName())
+                                        .envIdentifier(environmentRef)
+                                        .serviceIdentifier(serviceRef)
+                                        .category(category)
+                                        .build();
+
       cvConfig.populateFromMetricDefinitions(definitionList, category);
       cvConfigs.add(cvConfig);
     });
 
     return cvConfigs;
   }
-
   private Key getKeyFromPrometheusMetricDefinition(PrometheusMetricDefinition prometheusMetricDefinition) {
     return Key.builder()
         .envIdentifier(prometheusMetricDefinition.getEnvIdentifier())

@@ -1,54 +1,76 @@
-package io.harness.cvng.core.beans;
+package io.harness.cvng.core.beans.monitoredService.healthSourceSpec;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.TimeSeriesThresholdType;
-import io.harness.cvng.core.beans.DSConfig.CVConfigUpdateResult;
-import io.harness.cvng.core.beans.PrometheusMetricDefinition.PrometheusFilter;
+import io.harness.cvng.core.beans.PrometheusMetricDefinition;
+import io.harness.cvng.core.beans.RiskProfile;
+import io.harness.cvng.core.beans.monitoredService.HealthSource.CVConfigUpdateResult;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.PrometheusHealthSourceSpec;
 import io.harness.cvng.core.entities.PrometheusCVConfig;
-import io.harness.cvng.core.entities.PrometheusCVConfig.MetricInfo;
 import io.harness.rule.Owner;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class PrometheusDSConfigTest extends DSConfigTestBase {
-  private PrometheusDSConfig prometheusDSConfig;
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class PrometheusHealthSourceSpecTest extends CvNextGenTestBase {
+  String orgIdentifier;
+  String projectIdentifier;
+  String accountId;
+  String connectorIdentifier;
   String serviceIdentifier;
   String envIdentifier;
+  String identifier;
+  String name;
+  BuilderFactory builderFactory;
+  PrometheusHealthSourceSpec prometheusHealthSourceSpec;
 
   @Before
   public void setup() {
-    prometheusDSConfig = new PrometheusDSConfig();
-    fillCommonFields(prometheusDSConfig);
-    envIdentifier = generateUuid();
-    serviceIdentifier = generateUuid();
+    builderFactory = BuilderFactory.getDefault();
+    accountId = builderFactory.getContext().getAccountId();
+    orgIdentifier = builderFactory.getContext().getOrgIdentifier();
+    projectIdentifier = builderFactory.getContext().getProjectIdentifier();
+    serviceIdentifier = builderFactory.getContext().getServiceIdentifier();
+    envIdentifier = builderFactory.getContext().getEnvIdentifier();
+    connectorIdentifier = "connectorRef";
+
+    identifier = "identifier";
+    name = "some-name";
+    prometheusHealthSourceSpec = PrometheusHealthSourceSpec.builder().connectorRef(connectorIdentifier).build();
   }
 
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  @Ignore("We are moving away from DSConfig into HealthSource object")
   public void getCVConfigUpdateResult_whenNoConfigExists() {
     PrometheusMetricDefinition metricDefinition =
         PrometheusMetricDefinition.builder()
             .metricName("sampleMetric")
             .groupName("myMetricGroupName")
             .prometheusMetric("container.cpu.usage.total")
-            .serviceFilter(
-                Arrays.asList(PrometheusFilter.builder().labelName("namespace").labelValue("cv-demo").build()))
-            .envFilter(Arrays.asList(PrometheusFilter.builder().labelName("container").labelValue("cv-demo").build()))
+            .serviceFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
+                                             .labelName("namespace")
+                                             .labelValue("cv-demo")
+                                             .build()))
+            .envFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
+                                         .labelName("container")
+                                         .labelValue("cv-demo")
+                                         .build()))
             .serviceIdentifier(serviceIdentifier)
             .envIdentifier(envIdentifier)
             .serviceInstanceFieldName("pod")
@@ -58,9 +80,11 @@ public class PrometheusDSConfigTest extends DSConfigTestBase {
                              .thresholdTypes(Arrays.asList(TimeSeriesThresholdType.ACT_WHEN_HIGHER))
                              .build())
             .build();
-    prometheusDSConfig.setMetricDefinitions(Arrays.asList(metricDefinition));
-    CVConfigUpdateResult cvConfigUpdateResult = prometheusDSConfig.getCVConfigUpdateResult(Collections.emptyList());
+    prometheusHealthSourceSpec.setMetricDefinitions(Arrays.asList(metricDefinition));
 
+    CVConfigUpdateResult cvConfigUpdateResult =
+        prometheusHealthSourceSpec.getCVConfigUpdateResult(accountId, orgIdentifier, projectIdentifier, envIdentifier,
+            serviceIdentifier, identifier, name, Collections.emptyList(), null);
     assertThat(cvConfigUpdateResult).isNotNull();
     assertThat(cvConfigUpdateResult.getAdded()).isNotEmpty();
     assertThat(cvConfigUpdateResult.getUpdated()).isEmpty();
@@ -73,7 +97,7 @@ public class PrometheusDSConfigTest extends DSConfigTestBase {
     assertThat(cvConfig.getServiceIdentifier()).isEqualTo(serviceIdentifier);
     assertThat(cvConfig.getEnvIdentifier()).isEqualTo(envIdentifier);
     assertThat(cvConfig.getMetricInfoList().size()).isEqualTo(1);
-    MetricInfo metricInfo = cvConfig.getMetricInfoList().get(0);
+    PrometheusCVConfig.MetricInfo metricInfo = cvConfig.getMetricInfoList().get(0);
     assertThat(metricInfo.getMetricName()).isEqualTo("sampleMetric");
     assertThat(metricInfo.getPrometheusMetricName()).isEqualTo(metricDefinition.getPrometheusMetric());
     assertThat(metricInfo.getEnvFilter()).isEqualTo(metricDefinition.getEnvFilter());
@@ -86,16 +110,20 @@ public class PrometheusDSConfigTest extends DSConfigTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  @Ignore("We are moving away from DSConfig into HealthSource object")
   public void getCVConfigUpdateResult_whenNoConfigExists2ItemsSameGroup() {
     PrometheusMetricDefinition metricDefinition =
         PrometheusMetricDefinition.builder()
             .metricName("sampleMetric")
             .groupName("myMetricGroupName")
             .prometheusMetric("container.cpu.usage.total")
-            .serviceFilter(
-                Arrays.asList(PrometheusFilter.builder().labelName("namespace").labelValue("cv-demo").build()))
-            .envFilter(Arrays.asList(PrometheusFilter.builder().labelName("container").labelValue("cv-demo").build()))
+            .serviceFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
+                                             .labelName("namespace")
+                                             .labelValue("cv-demo")
+                                             .build()))
+            .envFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
+                                         .labelName("container")
+                                         .labelValue("cv-demo")
+                                         .build()))
             .serviceIdentifier(serviceIdentifier)
             .envIdentifier(envIdentifier)
             .serviceInstanceFieldName("pod")
@@ -111,9 +139,14 @@ public class PrometheusDSConfigTest extends DSConfigTestBase {
             .metricName("sampleMetric2")
             .groupName("myMetricGroupName")
             .prometheusMetric("container.cpu.usage")
-            .serviceFilter(
-                Arrays.asList(PrometheusFilter.builder().labelName("namespace").labelValue("cv-demo").build()))
-            .envFilter(Arrays.asList(PrometheusFilter.builder().labelName("container").labelValue("cv-demo").build()))
+            .serviceFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
+                                             .labelName("namespace")
+                                             .labelValue("cv-demo")
+                                             .build()))
+            .envFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
+                                         .labelName("container")
+                                         .labelValue("cv-demo")
+                                         .build()))
             .serviceIdentifier(serviceIdentifier)
             .envIdentifier(envIdentifier)
             .serviceInstanceFieldName("pod")
@@ -123,9 +156,10 @@ public class PrometheusDSConfigTest extends DSConfigTestBase {
                              .thresholdTypes(Arrays.asList(TimeSeriesThresholdType.ACT_WHEN_HIGHER))
                              .build())
             .build();
-    prometheusDSConfig.setMetricDefinitions(Arrays.asList(metricDefinition, metricDefinition2));
-    CVConfigUpdateResult cvConfigUpdateResult = prometheusDSConfig.getCVConfigUpdateResult(Collections.emptyList());
-
+    prometheusHealthSourceSpec.setMetricDefinitions(Arrays.asList(metricDefinition, metricDefinition2));
+    CVConfigUpdateResult cvConfigUpdateResult =
+        prometheusHealthSourceSpec.getCVConfigUpdateResult(accountId, orgIdentifier, projectIdentifier, envIdentifier,
+            serviceIdentifier, identifier, name, Collections.emptyList(), null);
     assertThat(cvConfigUpdateResult).isNotNull();
     assertThat(cvConfigUpdateResult.getAdded()).isNotEmpty();
     assertThat(cvConfigUpdateResult.getUpdated()).isEmpty();
@@ -139,7 +173,7 @@ public class PrometheusDSConfigTest extends DSConfigTestBase {
     assertThat(cvConfig.getEnvIdentifier()).isEqualTo(envIdentifier);
     assertThat(cvConfig.getCategory().name()).isEqualTo(CVMonitoringCategory.PERFORMANCE.name());
     assertThat(cvConfig.getMetricInfoList().size()).isEqualTo(2);
-    MetricInfo metricInfo = cvConfig.getMetricInfoList().get(0);
+    PrometheusCVConfig.MetricInfo metricInfo = cvConfig.getMetricInfoList().get(0);
     assertThat(metricInfo.getMetricName()).isEqualTo("sampleMetric");
     assertThat(metricInfo.getPrometheusMetricName()).isEqualTo(metricDefinition.getPrometheusMetric());
     assertThat(metricInfo.getEnvFilter()).isEqualTo(metricDefinition.getEnvFilter());
@@ -161,21 +195,20 @@ public class PrometheusDSConfigTest extends DSConfigTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  @Ignore("We are moving away from DSConfig into HealthSource object")
   public void getCVConfigUpdateResult_whenUpdated() {
-    PrometheusCVConfig cvConfig = PrometheusCVConfig.builder().groupName("groupName").build();
-    cvConfig.setEnvIdentifier(envIdentifier);
-    cvConfig.setServiceIdentifier(serviceIdentifier);
-    cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
-
     PrometheusMetricDefinition metricDefinition2 =
         PrometheusMetricDefinition.builder()
             .metricName("sampleMetric2")
             .groupName("groupName")
             .prometheusMetric("container.cpu.usage")
-            .serviceFilter(
-                Arrays.asList(PrometheusFilter.builder().labelName("namespace").labelValue("cv-demo").build()))
-            .envFilter(Arrays.asList(PrometheusFilter.builder().labelName("container").labelValue("cv-demo").build()))
+            .serviceFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
+                                             .labelName("namespace")
+                                             .labelValue("cv-demo")
+                                             .build()))
+            .envFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
+                                         .labelName("container")
+                                         .labelValue("cv-demo")
+                                         .build()))
             .serviceIdentifier(serviceIdentifier)
             .envIdentifier(envIdentifier)
             .serviceInstanceFieldName("pod")
@@ -185,9 +218,11 @@ public class PrometheusDSConfigTest extends DSConfigTestBase {
                              .thresholdTypes(Arrays.asList(TimeSeriesThresholdType.ACT_WHEN_HIGHER))
                              .build())
             .build();
-    prometheusDSConfig.setMetricDefinitions(Arrays.asList(metricDefinition2));
+    prometheusHealthSourceSpec.setMetricDefinitions(Arrays.asList(metricDefinition2));
 
-    CVConfigUpdateResult cvConfigUpdateResult = prometheusDSConfig.getCVConfigUpdateResult(Arrays.asList(cvConfig));
+    CVConfigUpdateResult cvConfigUpdateResult =
+        prometheusHealthSourceSpec.getCVConfigUpdateResult(accountId, orgIdentifier, projectIdentifier, envIdentifier,
+            serviceIdentifier, identifier, name, Arrays.asList(createCVConfig()), null);
 
     assertThat(cvConfigUpdateResult).isNotNull();
     assertThat(cvConfigUpdateResult.getAdded()).isEmpty();
@@ -200,21 +235,20 @@ public class PrometheusDSConfigTest extends DSConfigTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  @Ignore("We are moving away from DSConfig into HealthSource object")
   public void getCVConfigUpdateResult_whenDeleted() {
-    PrometheusCVConfig cvConfig = PrometheusCVConfig.builder().groupName("groupName").build();
-    cvConfig.setEnvIdentifier(envIdentifier);
-    cvConfig.setServiceIdentifier(serviceIdentifier);
-    cvConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
-
     PrometheusMetricDefinition metricDefinition2 =
         PrometheusMetricDefinition.builder()
             .metricName("sampleMetric2")
             .groupName("groupNameNew")
             .prometheusMetric("container.cpu.usage")
-            .serviceFilter(
-                Arrays.asList(PrometheusFilter.builder().labelName("namespace").labelValue("cv-demo").build()))
-            .envFilter(Arrays.asList(PrometheusFilter.builder().labelName("container").labelValue("cv-demo").build()))
+            .serviceFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
+                                             .labelName("namespace")
+                                             .labelValue("cv-demo")
+                                             .build()))
+            .envFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
+                                         .labelName("container")
+                                         .labelValue("cv-demo")
+                                         .build()))
             .serviceIdentifier(serviceIdentifier)
             .envIdentifier(envIdentifier)
             .serviceInstanceFieldName("pod")
@@ -224,9 +258,11 @@ public class PrometheusDSConfigTest extends DSConfigTestBase {
                              .thresholdTypes(Arrays.asList(TimeSeriesThresholdType.ACT_WHEN_HIGHER))
                              .build())
             .build();
-    prometheusDSConfig.setMetricDefinitions(Arrays.asList(metricDefinition2));
+    prometheusHealthSourceSpec.setMetricDefinitions(Arrays.asList(metricDefinition2));
 
-    CVConfigUpdateResult cvConfigUpdateResult = prometheusDSConfig.getCVConfigUpdateResult(Arrays.asList(cvConfig));
+    CVConfigUpdateResult cvConfigUpdateResult =
+        prometheusHealthSourceSpec.getCVConfigUpdateResult(accountId, orgIdentifier, projectIdentifier, envIdentifier,
+            serviceIdentifier, identifier, name, Arrays.asList(createCVConfig()), null);
 
     assertThat(cvConfigUpdateResult).isNotNull();
     assertThat(cvConfigUpdateResult.getAdded()).isNotEmpty();
@@ -234,5 +270,9 @@ public class PrometheusDSConfigTest extends DSConfigTestBase {
     assertThat(cvConfigUpdateResult.getDeleted()).isNotEmpty();
 
     assertThat(cvConfigUpdateResult.getDeleted().size()).isEqualTo(1);
+  }
+
+  private PrometheusCVConfig createCVConfig() {
+    return builderFactory.prometheusCVConfigBuilder().groupName("groupName").build();
   }
 }
