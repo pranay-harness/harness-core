@@ -16,6 +16,7 @@ import io.harness.rule.Owner;
 
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.MutationContext;
+import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 
@@ -59,24 +60,23 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
     existingDelegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
     persistence.save(existingDelegate);
 
-    String delegateScopeId = "delegateScope22";
     List<String> applicationList = Arrays.asList("app1", "app2");
     List<TaskGroup> taskGroups = Arrays.asList(TaskGroup.JIRA, TaskGroup.AWS);
     DelegateScope delegateScope = DelegateScope.builder()
                                       .accountId(accountId)
-                                      .name("DELEGATE_SCOPE_TEST")
+                                      .name("delegateScopeId22")
                                       .applications(applicationList)
-                                      .uuid("delegateScopeId")
                                       .taskTypes(taskGroups)
                                       .build();
     persistence.save(delegateScope);
 
-    List<String> includeScopeList = Arrays.asList(delegateScopeId);
+    String[] delegateScopeName = {"delegateScope22"};
+    QLIdFilter includedScopeIds = QLIdFilter.builder().values(delegateScopeName).build();
     QLAttachScopeToDelegateInput.QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder =
         QLAttachScopeToDelegateInput.builder();
     attachScopeToDelegateInputBuilder.accountId(accountId)
         .delegateId(delegateId)
-        .includeScopes(includeScopeList)
+        .includeScopes(includedScopeIds)
         .build();
 
     QLAttachScopeToDelegatePayload qlAttachScopeToDelegatePayload = attachScopeToDelegateDataFetcher.mutateAndFetch(
@@ -120,16 +120,18 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
                                        .uuid(delegateScopeId1)
                                        .taskTypes(taskGroups)
                                        .build();
-    persistence.save(delegateScope);
+    persistence.save(delegateScope1);
 
-    List<String> includeScopeList = Arrays.asList(delegateScopeId);
-    List<String> excludeScopeList = Arrays.asList(delegateScopeId1);
+    String[] includeScopeIds = {"delegateScope22"};
+    String[] excludeScopeIds = {"delegateScope11"};
+    QLIdFilter includedScopeIds = QLIdFilter.builder().values(includeScopeIds).build();
+    QLIdFilter excludedScopeIds = QLIdFilter.builder().values(excludeScopeIds).build();
     QLAttachScopeToDelegateInput.QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder =
         QLAttachScopeToDelegateInput.builder();
     attachScopeToDelegateInputBuilder.accountId(accountId)
         .delegateId(delegateId)
-        .includeScopes(includeScopeList)
-        .excludeScopes(excludeScopeList)
+        .includeScopes(includedScopeIds)
+        .excludeScopes(excludedScopeIds)
         .build();
 
     QLAttachScopeToDelegatePayload qlAttachScopeToDelegatePayload = attachScopeToDelegateDataFetcher.mutateAndFetch(
@@ -157,12 +159,14 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
                                       .taskTypes(taskGroups)
                                       .build();
     persistence.save(delegateScope);
-    List<String> includeScopeList = Arrays.asList(delegateScopeId);
+    String[] delegateScopeIds = {"delegateScope22"};
+    QLIdFilter includedScopeIds = QLIdFilter.builder().values(delegateScopeIds).build();
+
     QLAttachScopeToDelegateInput.QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder =
         QLAttachScopeToDelegateInput.builder();
     attachScopeToDelegateInputBuilder.accountId(accountId)
         .delegateId(delegateId)
-        .includeScopes(includeScopeList)
+        .includeScopes(includedScopeIds)
         .build();
 
     QLAttachScopeToDelegatePayload qlAttachScopeToDelegatePayload = attachScopeToDelegateDataFetcher.mutateAndFetch(

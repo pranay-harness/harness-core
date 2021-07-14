@@ -59,6 +59,27 @@ public class DeleteDelegateDataFetcherTest extends AbstractDataFetcherTestBase {
   @Test
   @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  public void testSetStatusDeleteDelegate() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+
+    Delegate existingDelegate = createDelegateBuilder().build();
+    existingDelegate.setUuid(delegateId);
+    existingDelegate.setAccountId(accountId);
+    existingDelegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
+    persistence.save(existingDelegate);
+    QLDeleteDelegateInput deleteDelegateInput =
+        QLDeleteDelegateInput.builder().delegateId(delegateId).accountId(accountId).forceDelete(false).build();
+    when(broadcasterFactory.lookup(any(), anyBoolean())).thenReturn(broadcaster);
+    QLDeleteDelegatePayload deleteDelegatePayload = deleteDelegateDataFetcher.mutateAndFetch(
+        deleteDelegateInput, MutationContext.builder().accountId(accountId).build());
+
+    Assert.assertTrue(deleteDelegatePayload.getMessage().equals("Delegate deleted"));
+  }
+
+  @Test
+  @Category(UnitTests.class)
+  @Owner(developers = JENNY)
   public void testForceDeleteDelegateDataFetcher() {
     String accountId = generateUuid();
     String delegateId = generateUuid();
@@ -90,27 +111,6 @@ public class DeleteDelegateDataFetcherTest extends AbstractDataFetcherTestBase {
                                deleteDelegateInput, MutationContext.builder().accountId(accountId).build()))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Unable to fetch delegate with delegate id " + delegateId);
-  }
-
-  @Test
-  @Category(UnitTests.class)
-  @Owner(developers = JENNY)
-  public void testSetStatusDeleteDelegate() {
-    String accountId = generateUuid();
-    String delegateId = generateUuid();
-
-    Delegate existingDelegate = createDelegateBuilder().build();
-    existingDelegate.setUuid(delegateId);
-    existingDelegate.setAccountId(accountId);
-    existingDelegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
-    persistence.save(existingDelegate);
-    QLDeleteDelegateInput deleteDelegateInput =
-        QLDeleteDelegateInput.builder().delegateId(delegateId).accountId(accountId).forceDelete(false).build();
-    when(broadcasterFactory.lookup(any(), anyBoolean())).thenReturn(broadcaster);
-    QLDeleteDelegatePayload deleteDelegatePayload = deleteDelegateDataFetcher.mutateAndFetch(
-        deleteDelegateInput, MutationContext.builder().accountId(accountId).build());
-
-    Assert.assertTrue(deleteDelegatePayload.getMessage().equals("Delegate deleted"));
   }
 
   @Test

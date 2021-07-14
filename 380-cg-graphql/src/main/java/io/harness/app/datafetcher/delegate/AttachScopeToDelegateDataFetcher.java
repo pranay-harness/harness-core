@@ -11,6 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.schema.mutation.delegate.input.QLAttachScopeToDelegateInput;
 import io.harness.app.schema.mutation.delegate.payload.QLAttachScopeToDelegatePayload;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.DelegateScope;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
@@ -23,8 +24,11 @@ import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
@@ -52,10 +56,16 @@ public class AttachScopeToDelegateDataFetcher
       QLAttachScopeToDelegateInput parameter, MutationContext mutationContext) {
     String delegateId = parameter.getDelegateId();
     String accountId = parameter.getAccountId();
-    List<String> includeScopes = parameter.getIncludeScopes();
-    List<String> excludeScopes = parameter.getExcludeScopes();
+    List<String> includeScopes = new ArrayList<>();
+    if ((parameter.getIncludeScopes() != null)) {
+      includeScopes = Arrays.asList(parameter.getIncludeScopes().getValues());
+    }
+    List<String> excludeScopes = new ArrayList<>();
+    if (parameter.getExcludeScopes() != null) {
+      excludeScopes = Arrays.asList(parameter.getExcludeScopes().getValues());
+    }
 
-    if ((includeScopes == null && excludeScopes == null) || includeScopes.isEmpty() && excludeScopes.isEmpty()) {
+    if (includeScopes.isEmpty() && excludeScopes.isEmpty()) {
       return QLAttachScopeToDelegatePayload.builder().message("No scopes to attach to delegate").build();
     }
     DelegateScopes delegateScopes =
@@ -69,19 +79,35 @@ public class AttachScopeToDelegateDataFetcher
             .message("Unable to fetch delegate with delegate id " + delegateId)
             .build();
       }
-      if (includeScopes != null && !includeScopes.isEmpty()) {
+      if (!includeScopes.isEmpty()) {
         delegate.setIncludeScopes(delegateScopes.getIncludeScopeIds()
                                       .stream()
-                                      .map(s -> delegateScopeService.get(accountId, s))
+                                      .map(name -> delegateScopeService.getByName(accountId, name))
                                       .filter(Objects::nonNull)
                                       .collect(toList()));
+        // add existing included delegate scopes to list coz on before update operation we unset all
+        if (delegate.getIncludeScopes() != null) {
+          List<DelegateScope> currentIncludedDelegateScopes = delegate.getIncludeScopes();
+          delegate.setIncludeScopes(
+              Stream.concat(currentIncludedDelegateScopes.stream(), delegate.getIncludeScopes().stream())
+                  .distinct()
+                  .collect(toList()));
+        }
       }
-      if (excludeScopes != null && !excludeScopes.isEmpty()) {
+      if (!excludeScopes.isEmpty()) {
         delegate.setExcludeScopes(delegateScopes.getExcludeScopeIds()
                                       .stream()
-                                      .map(s -> delegateScopeService.get(accountId, s))
+                                      .map(name -> delegateScopeService.getByName(accountId, name))
                                       .filter(Objects::nonNull)
                                       .collect(toList()));
+        // add existing excluded delegate scopes to list  coz on before update operation we unset all
+        if (delegate.getExcludeScopes() != null) {
+          List<DelegateScope> currentExcludedDelegateScopes = delegate.getExcludeScopes();
+          delegate.setExcludeScopes(
+              Stream.concat(currentExcludedDelegateScopes.stream(), delegate.getExcludeScopes().stream())
+                  .distinct()
+                  .collect(toList()));
+        }
       }
       delegateService.updateScopes(delegate);
       return QLAttachScopeToDelegatePayload.builder()

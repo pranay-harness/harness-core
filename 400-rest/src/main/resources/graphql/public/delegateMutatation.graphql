@@ -1,24 +1,27 @@
 extend type Mutation {
     # Approve or reject delegate
-    delegateApproval(input: DelegateApprovalInput!): DelegateApprovalPayload @dataFetcher(name: delegateApproval)
+    delegateApproval(input: DelegateApprovalInput!): DelegateApprovalPayload
+    @dataFetcher(name: delegateApproval)
     # Deletes delegate.
-    deleteDelegate(input: DeleteDelegateInput!): DeleteDelegatePayload @dataFetcher(name: deleteDelegate)
+    deleteDelegate(input: DeleteDelegateInput!): DeleteDelegatePayload
+    @dataFetcher(name: deleteDelegate)
     # Add delegate scope
-    addDelegegateScope(input: AddDelegateScopeInput!): AddDelegateScopePayload  @dataFetcher(name: addDelegateScope)
+    addDelegegateScope(input: AddDelegateScopeInput!): AddDelegateScopePayload
+    @dataFetcher(name: addDelegateScope)
     # attach scope to delegate
-    attachScopeToDelegate(input: AttachScopeToDelegateInput!): AttachScopeToDelegatePayload @dataFetcher(name: attachScopeToDelegate)
-
+    attachScopeToDelegate(input: AttachScopeToDelegateInput!): AttachScopeToDelegatePayload
+    @dataFetcher(name: attachScopeToDelegate)
 }
 
-input DelegateApprovalInput{
+input DelegateApprovalInput {
     delegateId: String!
     accountId: String!
-    delegateApproval: DelegateApproval
+    delegateApproval: DelegateApproval!
 }
 
 input AddDelegateScopeInput {
-    accountId: String
-    name: String
+    accountId: String!
+    name: String!
     environmentTypes: [EnvironmentType]
     taskGroups: [TaskGroup]
     application: IdFilter
@@ -27,7 +30,7 @@ input AddDelegateScopeInput {
     infrastructureDefinition: IdFilter
 }
 
-input DeleteDelegateInput{
+input DeleteDelegateInput {
     clientMutationId: String
     accountId: String!
     delegateId: String!
@@ -36,20 +39,20 @@ input DeleteDelegateInput{
 input AttachScopeToDelegateInput {
     accountId: String!
     delegateId: String!
-    includeScopes: [String]
-    excludeScopes: [String]
+    includeScopes: IdFilter
+    excludeScopes: IdFilter
 }
 
-type DelegateApprovalPayload{
+type DelegateApprovalPayload {
     clientMutationId: String
     delegate: Delegate
 }
 
-type DeleteDelegatePayload{
+type DeleteDelegatePayload {
     clientMutationId: String
     message: String
 }
-type Delegate{
+type Delegate {
     uuid: String
     accountId: String
     delegateType: String
@@ -75,7 +78,7 @@ type AttachScopeToDelegatePayload {
     message: String
 }
 
-type DelegateScope{
+type DelegateScope {
     name: String
     uuid: String
     taskTypes: [TaskGroup]
@@ -84,11 +87,9 @@ type DelegateScope{
     environments: [String]
     services: [String]
     infrastructureDefinitions: [String]
-
 }
 
-
-enum DelegateApproval{
+enum DelegateApproval {
     ACTIVATE
     REJECT
 }
@@ -127,7 +128,7 @@ enum TaskGroup {
     HOST_VALIDATION
     KMS
     GIT
-    CONTAINER,
+    CONTAINER
     AMI
     HELM
     COLLABORATION_PROVIDER
@@ -170,5 +171,3 @@ enum TaskGroup {
     TERRAFORM_NG
     CE
 }
-
-
