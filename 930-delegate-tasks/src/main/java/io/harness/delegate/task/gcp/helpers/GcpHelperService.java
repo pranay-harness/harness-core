@@ -60,7 +60,6 @@ public class GcpHelperService {
   private static final String GOOGLE_META_BASE_URL = "http://metadata.google.internal/computeMetadata";
 
   @Inject private GcpHttpTransportHelperService gcpHttpTransportHelperService;
-  @Inject private GcpCredentialsHelperService gcpCredentialsHelperService;
 
   /**
    * Gets a GCP container service.
@@ -163,7 +162,7 @@ public class GcpHelperService {
     }
   }
 
-  public GoogleCredential getGoogleCredential(char[] serviceAccountKeyFileContent, boolean isUseDelegate)
+  public static GoogleCredential getGoogleCredential(char[] serviceAccountKeyFileContent, boolean isUseDelegate)
       throws IOException {
     if (isUseDelegate) {
       return GcpCredentialsHelperService.getApplicationDefaultCredentials();
@@ -172,16 +171,16 @@ public class GcpHelperService {
     return checkIfUseProxyAndGetGoogleCredentials(serviceAccountKeyFileContent);
   }
 
-  private GoogleCredential checkIfUseProxyAndGetGoogleCredentials(char[] serviceAccountKeyFileContent)
+  private static GoogleCredential checkIfUseProxyAndGetGoogleCredentials(char[] serviceAccountKeyFileContent)
       throws IOException {
     String tokenUri =
         (String) (JsonUtils.asObject(new String(serviceAccountKeyFileContent), HashMap.class)).get("token_uri");
     return Http.getProxyHostName() != null && !Http.shouldUseNonProxy(tokenUri)
-        ? gcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(serviceAccountKeyFileContent)
-        : gcpCredentialsHelperService.getGoogleCredentialWithDefaultHttpTransport(serviceAccountKeyFileContent);
+        ? GcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(serviceAccountKeyFileContent)
+        : GcpCredentialsHelperService.getGoogleCredentialWithDefaultHttpTransport(serviceAccountKeyFileContent);
   }
 
-  private void validateServiceAccountKey(char[] serviceAccountKeyFileContent) {
+  private static void validateServiceAccountKey(char[] serviceAccountKeyFileContent) {
     if (isEmpty(serviceAccountKeyFileContent)) {
       throw new InvalidRequestException("Empty service key found. Unable to validate", USER);
     }

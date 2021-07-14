@@ -9,6 +9,7 @@ import io.harness.cvng.utils.StackdriverUtils;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import java.util.Collections;
 import java.util.Map;
 import lombok.NoArgsConstructor;
@@ -31,7 +32,6 @@ public abstract class StackdriverRequest extends DataCollectionRequest<GcpConnec
 
   @Override
   public Map<String, Object> fetchDslEnvVariables() {
-    StackdriverCredential credential = StackdriverCredential.fromGcpConnector(getConnectorConfigDTO());
-    return StackdriverUtils.getCommonEnvVariables(credential, METRIC_SCOPE);
+    return StackdriverUtils.getCommonEnvVariables(getConnectorConfigDTO(), METRIC_SCOPE);
   }
 }

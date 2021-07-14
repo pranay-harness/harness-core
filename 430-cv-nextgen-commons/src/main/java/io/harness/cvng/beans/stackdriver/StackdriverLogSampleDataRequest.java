@@ -6,7 +6,9 @@ import static io.harness.cvng.utils.StackdriverUtils.Scope.LOG_SCOPE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.utils.StackdriverUtils;
 
+import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import java.time.Instant;
 import java.util.Map;
 import lombok.Data;
@@ -36,8 +38,7 @@ public class StackdriverLogSampleDataRequest extends StackdriverLogRequest {
 
   @Override
   public Map<String, Object> fetchDslEnvVariables() {
-    StackdriverCredential credential = StackdriverCredential.fromGcpConnector(getConnectorConfigDTO());
-    Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(credential, LOG_SCOPE);
+    Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(getConnectorConfigDTO(), LOG_SCOPE);
 
     dslEnvVariables.put(StackdriverLogSampleDataRequestKeys.query, query);
 

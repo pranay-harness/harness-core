@@ -30,6 +30,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         onboardingRequestDTO.getOrgIdentifier(), onboardingRequestDTO.getProjectIdentifier());
     onboardingRequestDTO.getDataCollectionRequest().setConnectorInfoDTO(connectorInfoDTO);
     onboardingRequestDTO.getDataCollectionRequest().setTracingId(onboardingRequestDTO.getTracingId());
+    onboardingRequestDTO.getDataCollectionRequest().fetchDslEnvVariables();
     String response =
         verificationManagerService.getDataCollectionResponse(accountId, onboardingRequestDTO.getOrgIdentifier(),
             onboardingRequestDTO.getProjectIdentifier(), onboardingRequestDTO.getDataCollectionRequest());

@@ -10,6 +10,7 @@ import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition.StackDriver
 import io.harness.cvng.utils.StackdriverUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,8 +47,7 @@ public class StackdriverSampleDataRequest extends StackdriverRequest {
   @Override
   public Map<String, Object> fetchDslEnvVariables() {
     StackDriverMetricDefinition.Aggregation aggregation = metricDefinition.getAggregation();
-    StackdriverCredential credential = StackdriverCredential.fromGcpConnector(getConnectorConfigDTO());
-    Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(credential, METRIC_SCOPE);
+    Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(getConnectorConfigDTO(), METRIC_SCOPE);
     dslEnvVariables.put(
         AggregationKeys.alignmentPeriod, checkForNullAndReturnValue(aggregation.getAlignmentPeriod(), "60s"));
     dslEnvVariables.put(

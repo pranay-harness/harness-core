@@ -20,21 +20,21 @@ import org.apache.commons.io.IOUtils;
 public class GcpCredentialsHelperService {
   @Inject private GcpHttpTransportHelperService gcpHttpTransportHelperService;
 
-  public GoogleCredential getGoogleCredentialWithDefaultHttpTransport(char[] serviceAccountKeyFileContent)
+  public static GoogleCredential getGoogleCredentialWithDefaultHttpTransport(char[] serviceAccountKeyFileContent)
       throws IOException {
     return appendScopesIfRequired(GoogleCredential.fromStream(
         IOUtils.toInputStream(String.valueOf(serviceAccountKeyFileContent), Charset.defaultCharset())));
   }
 
-  public GoogleCredential getGoogleCredentialWithProxyConfiguredHttpTransport(char[] serviceAccountKeyFileContent)
-      throws IOException {
+  public static GoogleCredential getGoogleCredentialWithProxyConfiguredHttpTransport(
+      char[] serviceAccountKeyFileContent) throws IOException {
     HttpTransport httpTransport = GcpHttpTransportHelperService.getProxyConfiguredHttpTransport();
     return appendScopesIfRequired(GoogleCredential.fromStream(
         IOUtils.toInputStream(String.valueOf(serviceAccountKeyFileContent), Charset.defaultCharset()), httpTransport,
         JacksonFactory.getDefaultInstance()));
   }
 
-  private GoogleCredential appendScopesIfRequired(GoogleCredential googleCredential) {
+  private static GoogleCredential appendScopesIfRequired(GoogleCredential googleCredential) {
     if (googleCredential.createScopedRequired()) {
       return googleCredential.createScoped(Collections.singletonList(ContainerScopes.CLOUD_PLATFORM));
     }

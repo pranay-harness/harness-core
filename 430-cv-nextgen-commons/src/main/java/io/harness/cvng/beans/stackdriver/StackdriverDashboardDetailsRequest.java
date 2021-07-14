@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.utils.StackdriverUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import java.util.Map;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -35,8 +36,7 @@ public class StackdriverDashboardDetailsRequest extends StackdriverRequest {
 
   @Override
   public Map<String, Object> fetchDslEnvVariables() {
-    StackdriverCredential credential = StackdriverCredential.fromGcpConnector(getConnectorConfigDTO());
-    Map<String, Object> envVariables = StackdriverUtils.getCommonEnvVariables(credential, METRIC_SCOPE);
+    Map<String, Object> envVariables = StackdriverUtils.getCommonEnvVariables(getConnectorConfigDTO(), METRIC_SCOPE);
     envVariables.put("path", path);
     return envVariables;
   }
