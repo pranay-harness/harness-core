@@ -3514,9 +3514,11 @@ public class UserServiceImpl implements UserService {
   private void moveAccountFromPendingToConfirmed(
       User existingUser, Account invitationAccount, List<UserGroup> userGroups, boolean markEmailVerified) {
     addUserToUserGroups(invitationAccount.getUuid(), existingUser, userGroups, false, false);
-
+    String invitationAccountId = invitationAccount.getUuid();
     List<Account> newAccountsList = new ArrayList<>(existingUser.getAccounts());
-    newAccountsList.add(invitationAccount);
+    if (newAccountsList.stream().map(Account::getUuid).noneMatch(invitationAccountId::equals)) {
+      newAccountsList.add(invitationAccount);
+    }
 
     List<Account> newPendingAccountsList = new ArrayList<>();
     if (existingUser.getPendingAccounts() != null) {
