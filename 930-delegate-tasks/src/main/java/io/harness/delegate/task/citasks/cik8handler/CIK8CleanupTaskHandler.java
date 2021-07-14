@@ -144,7 +144,7 @@ public class CIK8CleanupTaskHandler implements CICleanupTaskHandler {
           Boolean isDeletedContainerImageSecret =
               cik8JavaClientHandler.deleteSecret(coreV1Api, namespace, containerSecretName);
           if (isDeletedContainerImageSecret.equals(Boolean.FALSE)) {
-            log.error("Failed to delete secret {}", secretName);
+            log.error("Failed to delete secret {}", containerSecretName);
             isSuccess = false;
           }
         }
