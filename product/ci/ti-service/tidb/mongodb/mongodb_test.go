@@ -20,7 +20,7 @@ var err error
 
 func TestMain(m *testing.M) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	mongoUri := os.Getenv("TEST_MONGO_URI")
+	mongoUri := os.Getenv("TEST_MONGO_URI_TI")
 	if mongoUri == "" {
 		os.Exit(0)
 	}
