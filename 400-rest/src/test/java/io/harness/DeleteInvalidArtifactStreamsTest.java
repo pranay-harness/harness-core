@@ -38,43 +38,51 @@ public class DeleteInvalidArtifactStreamsTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private DeleteInvalidArtifactStreams deleteInvalidArtifactStreamMigration;
 
+
   @Test
   @Owner(developers = MOUNIK)
   @Category(UnitTests.class)
   public void shouldNotDeleteAnyArtifactStreams() {
     List<String> artifactStreamIds = new ArrayList<>(Arrays.asList("id1", "id2", "id3"));
-    Service service = Service.builder().uuid(SERVICE_ID).artifactStreamIds(artifactStreamIds).build();
+    Account account = Account.Builder.anAccount().build();
+    account.setUuid(ACCOUNT_ID);
+    wingsPersistence.save(account);
+    Service service =
+            Service.builder().accountId(ACCOUNT_ID).uuid(SERVICE_ID).artifactStreamIds(artifactStreamIds).build();
     wingsPersistence.save(service);
     List<ArtifactStream> artifactStreams = new LinkedList<>();
-    artifactStreams.add(EcrArtifactStream.builder().uuid("id4").serviceId(SERVICE_ID).build());
-    artifactStreams.add(SmbArtifactStream.builder().uuid("id3").serviceId(SERVICE_ID).build());
+    artifactStreams.add(EcrArtifactStream.builder().accountId(ACCOUNT_ID).uuid("id4").serviceId(SERVICE_ID).build());
+    artifactStreams.add(
+            AmazonS3ArtifactStream.builder().accountId(ACCOUNT_ID).uuid("id2").serviceId(SERVICE_ID).build());
+    artifactStreams.add(DockerArtifactStream.builder().accountId(ACCOUNT_ID).uuid("id3").serviceId(SERVICE_ID).build());
+    artifactStreams.add(SmbArtifactStream.builder().accountId(ACCOUNT_ID).uuid("id1").serviceId(SERVICE_ID).build());
     wingsPersistence.save(artifactStreams);
-    migrate();
+    deleteInvalidArtifactStreamMigration.migrate();
     Service service1 = wingsPersistence.get(Service.class, service.getUuid());
-    System.out.println(service1.getArtifactStreamIds());
-    List<String> requiredArtifacts = new ArrayList<>(Arrays.asList("id2"));
-    assertThat(service1.getArtifactStreamIds().equals(requiredArtifacts)).isTrue();
+    assertThat(service1.getArtifactStreamIds().equals(artifactStreamIds)).isTrue();
   }
 
   @Test
   @Owner(developers = MOUNIK)
   @Category(UnitTests.class)
   public void shouldDeleteArtifactStreams() {
-    List<String> artifactStreamIds = new ArrayList<>(Arrays.asList("id1", "id2", "id3"));
-    Account account = (Account.Builder.anAccount().build());
+    List<String> artifactStreamIds = new ArrayList<>(Arrays.asList("id1", "id5", "id3"));
+    Account account = Account.Builder.anAccount().build();
     account.setUuid(ACCOUNT_ID);
     wingsPersistence.save(account);
-    Service service = Service.builder().accountId(ACCOUNT_ID).uuid(SERVICE_ID).artifactStreamIds(artifactStreamIds).build();
+    Service service =
+            Service.builder().accountId(ACCOUNT_ID).uuid(SERVICE_ID).artifactStreamIds(artifactStreamIds).build();
     wingsPersistence.save(service);
     List<ArtifactStream> artifactStreams = new LinkedList<>();
-    artifactStreams.add(EcrArtifactStream.builder().accountId(ACCOUNT_ID).uuid("id4").serviceId(SERVICE_ID).build());
+    artifactStreams.add(SmbArtifactStream.builder().accountId(ACCOUNT_ID).uuid("id4").serviceId(SERVICE_ID).build());
     artifactStreams.add(SmbArtifactStream.builder().accountId(ACCOUNT_ID).uuid("id2").serviceId(SERVICE_ID).build());
     wingsPersistence.save(artifactStreams);
-    migrate();
+    deleteInvalidArtifactStreamMigration.migrate();
     Service service1 = wingsPersistence.get(Service.class, service.getUuid());
-    List<String> requiredArtifacts = new ArrayList<>(Arrays.asList("id2"));
-    assertThat(service1.getArtifactStreamIds().equals(requiredArtifacts)).isTrue();
+    List<String> requiredArtifacts = null;
+    assertThat(service1.getArtifactStreamIds() == null).isTrue();
   }
+
 
   public void migrate() {
     log.info(String.join(DEBUG_LINE, "Starting Migration"));
