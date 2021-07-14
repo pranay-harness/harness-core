@@ -6,9 +6,11 @@ import io.harness.gitsync.beans.YamlDTO;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -27,7 +29,7 @@ public class MonitoredServiceDTO implements YamlDTO {
   String description;
   @NotNull String serviceRef;
   @NotNull String environmentRef;
-
+  @NotNull @Size(max = 128) Map<String, String> tags;
   @Valid Sources sources;
 
   @Data

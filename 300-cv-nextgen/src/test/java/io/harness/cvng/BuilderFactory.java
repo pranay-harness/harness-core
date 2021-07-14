@@ -135,8 +135,8 @@ public class BuilderFactory {
 
   private HealthSourceSpec createHealthSourceSpec() {
     return AppDynamicsHealthSourceSpec.builder()
-        .appdApplicationName("appApplicationName")
-        .appdTierName("tier")
+        .applicationName("appApplicationName")
+        .tierName("tier")
         .connectorRef(CONNECTOR_IDENTIFIER)
         .feature("Application Monitoring")
         .metricPacks(new HashSet<MetricPackDTO>() {
