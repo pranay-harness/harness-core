@@ -55,6 +55,44 @@ func CreatePR(ctx context.Context, request *pb.CreatePRRequest, log *zap.Sugared
 	return out, nil
 }
 
+func FindPR(ctx context.Context, request *pb.FindPRRequest, log *zap.SugaredLogger) (out *pb.FindPRResponse, err error) {
+	start := time.Now()
+	log.Infow("FindPR starting", "slug", request.GetSlug())
+
+	client, err := gitclient.GetGitClient(*request.GetProvider(), log)
+	if err != nil {
+		log.Errorw("FindPR failure", "bad provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
+
+	pr, response, err := client.PullRequests.Find(ctx, request.GetSlug(), int(request.GetNumber()))
+	if err != nil {
+		log.Errorw("FindPR failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "number", request.GetNumber(),
+			"elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+
+		// hard error from git
+		if response == nil {
+			return nil, err
+		}
+		// this is an error from git provider
+		out = &pb.FindPRResponse{
+			Status: int32(response.Status),
+			Error:  err.Error(),
+		}
+	}
+	log.Infow("FindPR success", "slug", request.GetSlug(), "number", request.GetNumber(), "elapsed_time_ms", utils.TimeSince(start))
+
+	protoPR, err := converter.ConvertPR(pr)
+	if err != nil {
+		return nil, err
+	}
+	out = &pb.FindPRResponse{
+		Pr:     protoPR,
+		Status: int32(response.Status),
+	}
+	return out, nil
+}
+
 func FindFilesInPR(ctx context.Context, request *pb.FindFilesInPRRequest, log *zap.SugaredLogger) (out *pb.FindFilesInPRResponse, err error) {
 	start := time.Now()
 	log.Infow("FindFilesInPR starting", "slug", request.GetSlug())
