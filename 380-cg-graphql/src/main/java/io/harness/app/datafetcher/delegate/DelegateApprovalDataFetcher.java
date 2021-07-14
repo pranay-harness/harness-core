@@ -6,8 +6,8 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.app.schema.mutation.delegate.input.QLDelegateApprovalInput;
-import io.harness.app.schema.mutation.delegate.payload.QLDelegateApprovalPayload;
+import io.harness.app.schema.mutation.delegate.input.QLDelegateApproveRejectInput;
+import io.harness.app.schema.mutation.delegate.payload.QLDelegateApproveRejectPayload;
 import io.harness.app.schema.type.delegate.QLDelegate;
 import io.harness.app.schema.type.delegate.QLDelegateApproval;
 import io.harness.delegate.beans.Delegate;
@@ -28,18 +28,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(DEL)
 public class DelegateApprovalDataFetcher
-    extends BaseMutatorDataFetcher<QLDelegateApprovalInput, QLDelegateApprovalPayload> {
+    extends BaseMutatorDataFetcher<QLDelegateApproveRejectInput, QLDelegateApproveRejectPayload> {
   @Inject DelegateService delegateService;
 
   @Inject
   public DelegateApprovalDataFetcher(DelegateService delegateService) {
-    super(QLDelegateApprovalInput.class, QLDelegateApprovalPayload.class);
+    super(QLDelegateApproveRejectInput.class, QLDelegateApproveRejectPayload.class);
     this.delegateService = delegateService;
   }
 
   @Override
   @AuthRule(permissionType = MANAGE_DELEGATES)
-  public QLDelegateApprovalPayload mutateAndFetch(QLDelegateApprovalInput parameter, MutationContext mutationContext) {
+  public QLDelegateApproveRejectPayload mutateAndFetch(
+      QLDelegateApproveRejectInput parameter, MutationContext mutationContext) {
     String delegateId = parameter.getDelegateId();
     String accountId = parameter.getAccountId();
     DelegateApproval delegateApproval = QLDelegateApproval.toDelegateApproval(parameter.getDelegateApproval());
@@ -49,7 +50,7 @@ public class DelegateApprovalDataFetcher
       Assert.notNull(delegate, "Unable to perform the operation");
       QLDelegate.QLDelegateBuilder qlDelegateBuilder = QLDelegate.builder();
       DelegateController.populateQLDelegate(delegate, qlDelegateBuilder);
-      return new QLDelegateApprovalPayload(mutationContext.getAccountId(), qlDelegateBuilder.build());
+      return new QLDelegateApproveRejectPayload(mutationContext.getAccountId(), qlDelegateBuilder.build());
     }
   }
 }

@@ -1,6 +1,6 @@
 extend type Mutation {
     # Approve or reject delegate
-    delegateApproval(input: DelegateApprovalInput!): DelegateApprovalPayload
+    delegateApproveReject(input: DelegateApproveRejectInput!): DelegateApproveRejectPayload
     @dataFetcher(name: delegateApproval)
     # Deletes delegate.
     deleteDelegate(input: DeleteDelegateInput!): DeleteDelegatePayload
@@ -13,7 +13,7 @@ extend type Mutation {
     @dataFetcher(name: attachScopeToDelegate)
 }
 
-input DelegateApprovalInput {
+input DelegateApproveRejectInput {
     clientMutationId: String
     delegateId: String!
     accountId: String!
@@ -36,8 +36,8 @@ input DeleteDelegateInput {
     clientMutationId: String
     accountId: String!
     delegateId: String!
-    forceDelete: Boolean!
 }
+
 input AttachScopeToDelegateInput {
     clientMutationId: String
     accountId: String!
@@ -46,7 +46,7 @@ input AttachScopeToDelegateInput {
     excludeScopes: IdFilter
 }
 
-type DelegateApprovalPayload {
+type DelegateApproveRejectPayload {
     clientMutationId: String
     delegate: Delegate
 }
