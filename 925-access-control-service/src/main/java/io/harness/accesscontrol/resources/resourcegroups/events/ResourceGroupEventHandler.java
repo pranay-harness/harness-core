@@ -1,5 +1,8 @@
 package io.harness.accesscontrol.resources.resourcegroups.events;
 
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
+
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.accesscontrol.commons.events.EventHandler;
@@ -16,6 +19,7 @@ import io.harness.eventsframework.entity_crud.resourcegroup.ResourceGroupEntityC
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.InvalidProtocolBufferException;
+import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,11 +54,20 @@ public class ResourceGroupEventHandler implements EventHandler {
                                     .projectIdentifier(stripToNull(resourceGroupEntityChangeDTO.getProjectIdentifier()))
                                     .build();
       Scope scope = scopeService.buildScopeFromParams(scopeParams);
-      harnessResourceGroupService.sync(stripToNull(resourceGroupEntityChangeDTO.getIdentifier()), scope);
+      if (getEventType(message).equals(DELETE_ACTION)) {
+        harnessResourceGroupService.deleteIfPresent(stripToNull(resourceGroupEntityChangeDTO.getIdentifier()), scope);
+      } else {
+        harnessResourceGroupService.sync(stripToNull(resourceGroupEntityChangeDTO.getIdentifier()), scope);
+      }
     } catch (Exception e) {
       log.error("Could not process the resource group change event {} due to error", resourceGroupEntityChangeDTO, e);
       return false;
     }
     return true;
+  }
+
+  private String getEventType(Message message) {
+    Map<String, String> metadataMap = message.getMessage().getMetadataMap();
+    return metadataMap.get(ACTION);
   }
 }
