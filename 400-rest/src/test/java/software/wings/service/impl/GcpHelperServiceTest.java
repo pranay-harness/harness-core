@@ -24,15 +24,11 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import java.io.IOException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 @OwnedBy(CDP)
-@RunWith(PowerMockRunner.class)
 public class GcpHelperServiceTest extends WingsBaseTest {
   @Mock private EncryptionService encryptionService;
   @Mock private GcpCredentialsHelperService gcpCredentialsHelperService;
@@ -61,10 +57,9 @@ public class GcpHelperServiceTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnProxyConfiguredCredentials() throws IOException {
-    PowerMockito.mockStatic(GcpCredentialsHelperService.class);
     System.setProperty("http.proxyHost", "proxyHost");
     GcpConfig gcpConfig = GcpConfig.builder().serviceAccountKeyFileContent(getServiceAccountKeyContent()).build();
-    when(GcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(
+    when(gcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(
              gcpConfig.getServiceAccountKeyFileContent()))
         .thenReturn(new GoogleCredential());
     gcpHelperService.getGoogleCredential(
@@ -78,9 +73,8 @@ public class GcpHelperServiceTest extends WingsBaseTest {
   @Owner(developers = OwnerRule.AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnDefaultConfiguredCredentials() throws IOException {
-    PowerMockito.mockStatic(GcpCredentialsHelperService.class);
     GcpConfig gcpConfig = GcpConfig.builder().serviceAccountKeyFileContent(getServiceAccountKeyContent()).build();
-    when(GcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(
+    when(gcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(
              gcpConfig.getServiceAccountKeyFileContent()))
         .thenReturn(new GoogleCredential());
     gcpHelperService.getGoogleCredential(

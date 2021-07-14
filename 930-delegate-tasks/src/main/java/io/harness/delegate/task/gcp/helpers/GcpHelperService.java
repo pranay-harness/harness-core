@@ -162,7 +162,7 @@ public class GcpHelperService {
     }
   }
 
-  public static GoogleCredential getGoogleCredential(char[] serviceAccountKeyFileContent, boolean isUseDelegate)
+  public GoogleCredential getGoogleCredential(char[] serviceAccountKeyFileContent, boolean isUseDelegate)
       throws IOException {
     if (isUseDelegate) {
       return GcpCredentialsHelperService.getApplicationDefaultCredentials();
@@ -171,7 +171,7 @@ public class GcpHelperService {
     return checkIfUseProxyAndGetGoogleCredentials(serviceAccountKeyFileContent);
   }
 
-  private static GoogleCredential checkIfUseProxyAndGetGoogleCredentials(char[] serviceAccountKeyFileContent)
+  public static GoogleCredential checkIfUseProxyAndGetGoogleCredentials(char[] serviceAccountKeyFileContent)
       throws IOException {
     String tokenUri =
         (String) (JsonUtils.asObject(new String(serviceAccountKeyFileContent), HashMap.class)).get("token_uri");
@@ -180,7 +180,7 @@ public class GcpHelperService {
         : GcpCredentialsHelperService.getGoogleCredentialWithDefaultHttpTransport(serviceAccountKeyFileContent);
   }
 
-  private static void validateServiceAccountKey(char[] serviceAccountKeyFileContent) {
+  private void validateServiceAccountKey(char[] serviceAccountKeyFileContent) {
     if (isEmpty(serviceAccountKeyFileContent)) {
       throw new InvalidRequestException("Empty service key found. Unable to validate", USER);
     }

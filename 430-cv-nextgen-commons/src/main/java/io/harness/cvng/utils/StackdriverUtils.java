@@ -4,6 +4,7 @@ import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.task.gcp.helpers.GcpHelperService;
+import io.harness.gcp.helpers.GcpCredentialsHelperService;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.common.collect.Lists;
@@ -33,16 +34,14 @@ public class StackdriverUtils {
   private StackdriverUtils() {}
 
   private static GoogleCredential getGoogleCredential(GcpConnectorDTO gcpConnectorDTO) {
-    char[] content = null;
-    boolean isUseDelegate = true;
-
-    if (gcpConnectorDTO.getCredential().getGcpCredentialType() == GcpCredentialType.MANUAL_CREDENTIALS) {
-      GcpManualDetailsDTO gcpManualDetailsDTO = (GcpManualDetailsDTO) gcpConnectorDTO.getCredential().getConfig();
-      content = gcpManualDetailsDTO.getSecretKeyRef().getDecryptedValue();
-      isUseDelegate = false;
-    }
     try {
-      return GcpHelperService.getGoogleCredential(content, isUseDelegate);
+      if (gcpConnectorDTO.getCredential().getGcpCredentialType() == GcpCredentialType.MANUAL_CREDENTIALS) {
+        GcpManualDetailsDTO gcpManualDetailsDTO = (GcpManualDetailsDTO) gcpConnectorDTO.getCredential().getConfig();
+        return GcpHelperService.checkIfUseProxyAndGetGoogleCredentials(
+            gcpManualDetailsDTO.getSecretKeyRef().getDecryptedValue());
+      } else {
+        return GcpCredentialsHelperService.getApplicationDefaultCredentials();
+      }
     } catch (IOException e) {
       log.error("Exception while fetching google credential", e);
       throw new IllegalStateException("Cannot fetch google credential");
