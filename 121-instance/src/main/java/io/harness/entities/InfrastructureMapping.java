@@ -1,34 +1,40 @@
-package io.harness.entities.infrastructureMapping;
+package io.harness.entities;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
-import io.harness.persistence.PersistentEntity;
+import io.harness.ng.DbAliases;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Persistent;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
-@FieldNameConstants(innerTypeName = "InfrastructureMappingKeys")
-@Entity(value = "InfrastructureMapping")
-// TODO check use-case of @Document
-@Document("infrastructureMapping")
+@Builder
+@FieldNameConstants(innerTypeName = "InfrastructureMappingNGKeys")
+@Entity(value = "InfrastructureMappingNG", noClassnameStored = true)
+@Document("infrastructureMappingNG")
+@StoreIn(DbAliases.NG_MANAGER)
+@Persistent
 @OwnedBy(HarnessTeam.DX)
-public abstract class InfrastructureMapping implements PersistentEntity {
+public class InfrastructureMapping {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .name("unique_account_org_project_id")
                  .unique(true)
-                 .field(InfrastructureMappingKeys.accountIdentifier)
-                 .field(InfrastructureMappingKeys.orgIdentifier)
-                 .field(InfrastructureMappingKeys.projectIdentifier)
+                 .field(InfrastructureMappingNGKeys.accountIdentifier)
+                 .field(InfrastructureMappingNGKeys.orgIdentifier)
+                 .field(InfrastructureMappingNGKeys.projectIdentifier)
                  .build())
         .build();
   }
@@ -42,4 +48,5 @@ public abstract class InfrastructureMapping implements PersistentEntity {
   private String envId;
   private String deploymentType;
   private String serviceId;
+  @FdUniqueIndex private String infrastructureKey;
 }
