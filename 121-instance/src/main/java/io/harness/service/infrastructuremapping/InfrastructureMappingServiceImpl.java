@@ -1,9 +1,9 @@
 package io.harness.service.infrastructuremapping;
 
 import io.harness.annotations.dev.HarnessTeam;
-import io.harness.dtos.infrastructuremapping.InfrastructureMappingDTO;
-import io.harness.entities.infrastructureMapping.InfrastructureMapping;
-import io.harness.mappers.infrastructuremappingmapper.InfrastructureMappingMapper;
+import io.harness.dtos.InfrastructureMappingDTO;
+import io.harness.entities.InfrastructureMapping;
+import io.harness.mappers.InfrastructureMappingMapper;
 import io.harness.repositories.infrastructuremapping.InfrastructureMappingRepository;
 
 import com.google.inject.Inject;
