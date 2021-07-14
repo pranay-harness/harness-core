@@ -8,8 +8,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.harness.app.datafetcher.delegate.AddDelegateScopeDataFetcher;
 import io.harness.app.schema.mutation.delegate.input.QLAddDelegateScopeInput;
 import io.harness.app.schema.mutation.delegate.payload.QLAddDelegateScopePayload;
+import io.harness.app.schema.type.delegate.QLDelegateStatus;
 import io.harness.app.schema.type.delegate.QLTaskGroup;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -23,11 +25,7 @@ import software.wings.service.intfc.DelegateScopeService;
 import com.google.inject.Inject;
 import io.jsonwebtoken.lang.Assert;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -108,10 +106,25 @@ public class AddDelegateScopeDataFetcherTest extends AbstractDataFetcherTestBase
     Set<TaskGroup> taskGroupSet = EnumSet.allOf(TaskGroup.class);
     Set<QLTaskGroup> qlTaskGroupSet = EnumSet.allOf(QLTaskGroup.class);
     Assert.isTrue(taskGroupSet.size() == qlTaskGroupSet.size());
-    Map<String, QLTaskGroup> qlTaskGroupTaskMap = new HashMap<>();
-    qlTaskGroupSet.forEach(qltaskGroup -> qlTaskGroupTaskMap.put(qltaskGroup.name(), qltaskGroup));
+    List<String> qlTaskGroupTaskList = new ArrayList<>();
+    qlTaskGroupSet.forEach(qltaskGroup -> qlTaskGroupTaskList.add(qltaskGroup.name()));
     for (TaskGroup taskGroup : taskGroupSet) {
-      Assert.isTrue(qlTaskGroupTaskMap.containsKey(taskGroup.name()));
+      Assert.isTrue(qlTaskGroupTaskList.contains(taskGroup.name()));
+    }
+  }
+  @Test
+  @Category(UnitTests.class)
+  @Owner(developers = JENNY)
+  public void testDelegateStatusEnumCheck() {
+    Set<DelegateInstanceStatus> delegateInstanceStatuses = EnumSet.allOf(DelegateInstanceStatus.class);
+    Set<QLDelegateStatus> qlDelegateStatuses = EnumSet.allOf(QLDelegateStatus.class);
+    List<String> statusList = new ArrayList<>();
+    qlDelegateStatuses.forEach(qlDelegateStatus -> statusList.add(qlDelegateStatus.getStringValue()));
+    for (DelegateInstanceStatus delegateInstanceStatus : delegateInstanceStatuses) {
+      if (delegateInstanceStatus == DelegateInstanceStatus.DISABLED) {
+        continue;
+      }
+      Assert.isTrue(statusList.contains(delegateInstanceStatus.toString()));
     }
   }
 }
