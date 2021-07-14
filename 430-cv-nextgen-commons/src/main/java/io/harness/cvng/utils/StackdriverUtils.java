@@ -56,7 +56,8 @@ public class StackdriverUtils {
     try {
       credential.refreshToken();
     } catch (IOException e) {
-      e.printStackTrace();
+      log.error("Exception while fetching token for google credential", e);
+      throw new IllegalStateException("Cannot fetch google credential token");
     }
     String accessToken = credential.getAccessToken();
     envVariables.put("accessToken", accessToken);
