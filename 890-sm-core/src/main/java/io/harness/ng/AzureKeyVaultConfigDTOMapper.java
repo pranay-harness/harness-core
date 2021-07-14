@@ -52,6 +52,7 @@ public class AzureKeyVaultConfigDTOMapper {
             .vaultName(azureKeyVaultConnectorDTO.getVaultName())
             .isDefault(false)
             .encryptionType(EncryptionType.AZURE_VAULT)
+            .delegateSelectors(azureKeyVaultConnectorDTO.getDelegateSelectors())
 
             .name(connector.getName())
             .accountIdentifier(accountIdentifier)

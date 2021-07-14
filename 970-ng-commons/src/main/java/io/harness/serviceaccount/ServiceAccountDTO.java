@@ -25,7 +25,7 @@ public class ServiceAccountDTO {
   @ApiModelProperty(required = true) @Email String email;
   @Size(max = 1024) String description;
   @Size(max = 128) Map<String, String> tags;
-  @EntityIdentifier String accountIdentifier;
+  @ApiModelProperty(required = true) String accountIdentifier;
   @EntityIdentifier(allowBlank = true) String orgIdentifier;
   @EntityIdentifier(allowBlank = true) String projectIdentifier;
 }

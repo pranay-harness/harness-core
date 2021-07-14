@@ -9,6 +9,7 @@ import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
 import io.harness.filters.ConnectorRefExtractorHelper;
 import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.SkipAutoEvaluation;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -33,7 +34,11 @@ import org.springframework.data.annotation.TypeAlias;
 public class K8SDirectInfrastructure implements Infrastructure, Visitable, WithConnectorRef {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> connectorRef;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> namespace;
-  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> releaseName;
+  @NotNull
+  @SkipAutoEvaluation
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  ParameterField<String> releaseName;
 
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
@@ -54,6 +59,11 @@ public class K8SDirectInfrastructure implements Infrastructure, Visitable, WithC
   @Override
   public ParameterField<String> getConnectorReference() {
     return connectorRef;
+  }
+
+  @Override
+  public String[] getInfrastructureKeyValues() {
+    return new String[] {connectorRef.getValue(), namespace.getValue()};
   }
 
   @Override

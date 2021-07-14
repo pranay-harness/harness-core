@@ -18,6 +18,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
+import io.harness.ng.core.account.AuthenticationMechanism;
 
 import software.wings.beans.Account;
 import software.wings.beans.User;
@@ -162,7 +163,7 @@ public class PasswordBasedAuthHandler implements AuthHandler {
   }
 
   @Override
-  public AuthenticationMechanism getAuthenticationMechanism() {
+  public io.harness.ng.core.account.AuthenticationMechanism getAuthenticationMechanism() {
     return AuthenticationMechanism.USER_PASSWORD;
   }
 

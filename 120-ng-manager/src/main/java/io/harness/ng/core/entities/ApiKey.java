@@ -76,7 +76,7 @@ public class ApiKey implements PersistentEntity, UuidAware, NGAccountAccess, NGO
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
 
-  @EntityIdentifier String accountIdentifier;
+  @NotNull String accountIdentifier;
   @EntityIdentifier(allowBlank = true) String orgIdentifier;
   @EntityIdentifier(allowBlank = true) String projectIdentifier;
 

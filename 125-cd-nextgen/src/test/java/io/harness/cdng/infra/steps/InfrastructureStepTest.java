@@ -160,12 +160,6 @@ public class InfrastructureStepTest extends CategoryTest {
     assertThatThrownBy(() -> infrastructureStep.validateInfrastructure(k8SDirectInfrastructureBuilder.build()))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Unresolved Expression : [expression1]");
-
-    k8SDirectInfrastructureBuilder.connectorRef(ParameterField.createValueField("connector"));
-    k8SDirectInfrastructureBuilder.releaseName(new ParameterField<>(null, true, "expression2", null, true));
-    assertThatThrownBy(() -> infrastructureStep.validateInfrastructure(k8SDirectInfrastructureBuilder.build()))
-        .isInstanceOf(InvalidRequestException.class)
-        .hasMessageContaining("Unresolved Expression : [expression2]");
   }
 
   @Test

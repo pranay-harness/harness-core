@@ -26,6 +26,7 @@ public class GcpKmsConfigDTOMapper {
         .projectId(gcpKmsConnectorDTO.getProjectId())
         .isDefault(false)
         .encryptionType(EncryptionType.GCP_KMS)
+        .delegateSelectors(gcpKmsConnectorDTO.getDelegateSelectors())
 
         .name(connector.getName())
         .accountIdentifier(accountIdentifier)

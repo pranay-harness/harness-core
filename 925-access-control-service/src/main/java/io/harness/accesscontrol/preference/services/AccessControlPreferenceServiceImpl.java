@@ -34,7 +34,7 @@ public class AccessControlPreferenceServiceImpl implements AccessControlPreferen
     this.featureFlagClient = featureFlagClient;
     executorService = Executors.newSingleThreadScheduledExecutor(
         new ThreadFactoryBuilder().setNameFormat("global-accesscontrol-enabled-feature-reconciliation").build());
-    executorService.scheduleAtFixedRate(this::updateGlobalPreference, 1, 1, TimeUnit.MINUTES);
+    executorService.scheduleAtFixedRate(this::updateGlobalPreference, 0, 1, TimeUnit.MINUTES);
   }
 
   private void updateGlobalPreference() {

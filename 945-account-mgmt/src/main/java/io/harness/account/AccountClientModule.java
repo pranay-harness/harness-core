@@ -5,13 +5,17 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.account.services.AccountService;
 import io.harness.account.services.impl.AccountServiceImpl;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.remote.client.ClientMode;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 
 @OwnedBy(PL)
 public class AccountClientModule extends AbstractModule {
@@ -27,13 +31,24 @@ public class AccountClientModule extends AbstractModule {
 
   @Provides
   private AccountHttpClientFactory accountClientFactory(KryoConverterFactory kryoConverterFactory) {
-    return new AccountHttpClientFactory(
-        serviceHttpClientConfig, serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory, clientId);
+    return new AccountHttpClientFactory(serviceHttpClientConfig, serviceSecret, new ServiceTokenGenerator(),
+        kryoConverterFactory, clientId, ClientMode.NON_PRIVILEGED);
+  }
+
+  @Provides
+  @Named("PRIVILEGED")
+  private AccountHttpClientFactory privilegedAccountClientFactory(KryoConverterFactory kryoConverterFactory) {
+    return new AccountHttpClientFactory(serviceHttpClientConfig, serviceSecret, new ServiceTokenGenerator(),
+        kryoConverterFactory, clientId, ClientMode.PRIVILEGED);
   }
 
   @Override
   protected void configure() {
     bind(AccountClient.class).toProvider(AccountHttpClientFactory.class).in(Scopes.SINGLETON);
+    bind(AccountClient.class)
+        .annotatedWith(Names.named(ClientMode.PRIVILEGED.name()))
+        .toProvider(Key.get(AccountHttpClientFactory.class, Names.named(ClientMode.PRIVILEGED.name())))
+        .in(Scopes.SINGLETON);
     bind(AccountService.class).to(AccountServiceImpl.class).in(Scopes.SINGLETON);
   }
 }

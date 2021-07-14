@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Set;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,4 +34,5 @@ public class VaultConfigDTO extends SecretManagerConfigDTO {
   private int secretEngineVersion;
   private String namespace;
   private boolean engineManuallyEntered;
+  private Set<String> delegateSelectors;
 }

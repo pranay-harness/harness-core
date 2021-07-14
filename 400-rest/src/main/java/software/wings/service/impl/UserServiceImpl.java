@@ -11,6 +11,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.ng.core.account.AuthenticationMechanism.USER_PASSWORD;
 import static io.harness.ng.core.common.beans.Generation.NG;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
@@ -32,7 +33,6 @@ import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMEN
 import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONMENT;
 import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
 import static software.wings.security.PermissionAttribute.ResourceType.WORKFLOW;
-import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.collect.Lists.newArrayList;
@@ -86,6 +86,7 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.account.DefaultExperience;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.dto.UserInviteDTO;
@@ -162,7 +163,6 @@ import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AuthenticationManager;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.LogoutResponse;
 import software.wings.security.authentication.OauthProviderType;
@@ -317,7 +317,7 @@ public class UserServiceImpl implements UserService {
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private ConfigurationController configurationController;
   @Inject private HtmlInputSanitizer userNameSanitizer;
-  @Inject private NgInviteClient ngInviteClient;
+  @Inject @Named("PRIVILEGED") private NgInviteClient ngInviteClient;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
   @Inject private AccessRequestService accessRequestService;
   @Inject private SegmentHelper segmentHelper;
@@ -691,10 +691,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public boolean isUserPasswordPresent(String accountId, String emailId) {
     User user = getUserByEmail(emailId);
-
-    Account account = accountService.get(accountId);
-    AuthenticationMechanism authMechanism = account.getAuthenticationMechanism();
-    return !((authMechanism == null || authMechanism == USER_PASSWORD) && isEmpty(user.getPasswordHash()));
+    return isNotEmpty(user.getPasswordHash());
   }
 
   @Override
@@ -1440,6 +1437,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User completeNGInviteAndSignIn(UserInviteDTO userInvite) {
+    signupService.validateName(userInvite.getName());
     if (!validateNgInvite(userInvite)) {
       throw new InvalidRequestException("User invite token invalid");
     }
@@ -1502,7 +1500,8 @@ public class UserServiceImpl implements UserService {
     return authenticationManager.defaultLogin(userInvite.getEmail(), String.valueOf(userInvite.getPassword()));
   }
 
-  private void completeNGInvite(UserInviteDTO userInvite) {
+  @Override
+  public void completeNGInvite(UserInviteDTO userInvite) {
     String accountId = userInvite.getAccountId();
     limitCheck(accountId, userInvite.getEmail());
     Account account = accountService.get(accountId);
@@ -1517,19 +1516,17 @@ public class UserServiceImpl implements UserService {
       user.setAccounts(new ArrayList<>(Collections.singletonList(account)));
     }
     String name = userInvite.getName().trim();
-    signupService.validateName(name);
     user.setName(name);
-    if (userInvite.getPassword() == null) {
-      throw new InvalidRequestException("User name/password is not provided", USER);
-    }
-    AuthenticationMechanism authenticationMechanism =
-        account.getAuthenticationMechanism() == null ? USER_PASSWORD : account.getAuthenticationMechanism();
-    Preconditions.checkState(authenticationMechanism == USER_PASSWORD,
-        "Invalid request. Complete invite should only be called if Auth Mechanism is UsePass");
-    loginSettingsService.verifyPasswordStrength(
-        accountService.get(userInvite.getAccountId()), userInvite.getPassword().toCharArray());
+    if (userInvite.getPassword() != null) {
+      AuthenticationMechanism authenticationMechanism =
+          account.getAuthenticationMechanism() == null ? USER_PASSWORD : account.getAuthenticationMechanism();
+      Preconditions.checkState(authenticationMechanism == USER_PASSWORD,
+          "Invalid request. Complete invite should only be called if Auth Mechanism is UserPassword");
+      loginSettingsService.verifyPasswordStrength(
+          accountService.get(userInvite.getAccountId()), userInvite.getPassword().toCharArray());
 
-    user.setPasswordHash(hashpw(userInvite.getPassword(), BCrypt.gensalt()));
+      user.setPasswordHash(hashpw(userInvite.getPassword(), BCrypt.gensalt()));
+    }
     user = createUser(user, accountId);
     user = checkIfTwoFactorAuthenticationIsEnabledForAccount(user, account);
     eventPublishHelper.publishUserRegistrationCompletionEvent(userInvite.getAccountId(), user);
@@ -3404,20 +3401,35 @@ public class UserServiceImpl implements UserService {
     if (inviteAcceptResponse.getResponse().equals(FAIL)) {
       return FAIL;
     }
+
+    Account account = accountService.get(inviteAcceptResponse.getAccountIdentifier());
+    AuthenticationMechanism authMechanism = account.getAuthenticationMechanism();
+    boolean isPasswordRequired = authMechanism == null || authMechanism == USER_PASSWORD;
+
     UserInfo userInfo = inviteAcceptResponse.getUserInfo();
     if (userInfo == null) {
-      return ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
+      if (isPasswordRequired) {
+        return ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
+      } else {
+        String email = inviteAcceptResponse.getEmail();
+        UserInviteDTO userInviteDTO = UserInviteDTO.builder()
+                                          .accountId(userInvite.getAccountId())
+                                          .email(email)
+                                          .name(email.trim())
+                                          .token(userInvite.getUuid())
+                                          .build();
+        completeNGInvite(userInviteDTO);
+        return ACCOUNT_INVITE_ACCEPTED;
+      }
+    } else {
+      User user = getUserByEmail(userInfo.getEmail());
+      if (isPasswordRequired && isEmpty(user.getPasswordHash())) {
+        return ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
+      } else {
+        NGRestUtils.getResponse(ngInviteClient.completeInvite(userInvite.getUuid()));
+        return ACCOUNT_INVITE_ACCEPTED;
+      }
     }
-    User user = getUserByEmail(userInfo.getEmail());
-    Account account = accountService.get(userInvite.getAccountId());
-    AuthenticationMechanism authMechanism = account.getAuthenticationMechanism();
-    boolean isPasswordRequired =
-        (authMechanism == null || authMechanism == USER_PASSWORD) && isEmpty(user.getPasswordHash());
-    if (isPasswordRequired) {
-      return ACCOUNT_INVITE_ACCEPTED_NEED_PASSWORD;
-    }
-    NGRestUtils.getResponse(ngInviteClient.completeInvite(userInvite.getUuid()));
-    return ACCOUNT_INVITE_ACCEPTED;
   }
 
   private void moveAccountFromPendingToConfirmed(

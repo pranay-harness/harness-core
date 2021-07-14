@@ -1,21 +1,15 @@
 package io.harness.service.instancesyncperpetualtask;
 
-import io.harness.entities.DeploymentSummary;
-import io.harness.entities.infrastructureMapping.InfrastructureMapping;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.dtos.infrastructuremapping.InfrastructureMappingDTO;
+import io.harness.service.instancesynchandler.AbstractInstanceSyncHandler;
+
+@OwnedBy(DX)
 public interface InstanceSyncPerpetualTaskService {
-  void createPerpetualTasks(InfrastructureMapping infrastructureMapping);
+  String createPerpetualTask(
+      InfrastructureMappingDTO infrastructureMappingDTO, AbstractInstanceSyncHandler abstractInstanceSyncHandler);
 
-  void createPerpetualTasksForNewDeployment(
-      InfrastructureMapping infrastructureMapping, DeploymentSummary deploymentSummary);
-
-  void deletePerpetualTasks(InfrastructureMapping infrastructureMapping);
-
-  void deletePerpetualTasks(String accountId, String infrastructureMappingId);
-
-  void resetPerpetualTask(String accountId, String perpetualTaskId);
-
-  void deletePerpetualTask(String accountId, String infrastructureMappingId, String perpetualTaskId);
-
-  boolean isInstanceSyncByPerpetualTaskEnabled(InfrastructureMapping infrastructureMapping);
+  void resetPerpetualTask(String accountIdentifier, String perpetualTaskId);
 }

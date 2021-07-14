@@ -18,9 +18,9 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(PL)
 public class GcpKmsConfigMapper {
   public static GcpKmsConfig fromDTO(GcpKmsConfigDTO gcpKmsConfigDTO) {
-    GcpKmsConfig gcpKmsConfig =
-        new GcpKmsConfig(gcpKmsConfigDTO.getName(), gcpKmsConfigDTO.getProjectId(), gcpKmsConfigDTO.getRegion(),
-            gcpKmsConfigDTO.getKeyRing(), gcpKmsConfigDTO.getKeyName(), gcpKmsConfigDTO.getCredentials());
+    GcpKmsConfig gcpKmsConfig = new GcpKmsConfig(gcpKmsConfigDTO.getName(), gcpKmsConfigDTO.getProjectId(),
+        gcpKmsConfigDTO.getRegion(), gcpKmsConfigDTO.getKeyRing(), gcpKmsConfigDTO.getKeyName(),
+        gcpKmsConfigDTO.getCredentials(), gcpKmsConfigDTO.getDelegateSelectors());
     gcpKmsConfig.setNgMetadata(SecretManagerConfigMapper.ngMetaDataFromDto(gcpKmsConfigDTO));
     gcpKmsConfig.setAccountId(gcpKmsConfigDTO.getAccountIdentifier());
     gcpKmsConfig.setEncryptionType(gcpKmsConfigDTO.getEncryptionType());

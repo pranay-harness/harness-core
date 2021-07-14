@@ -77,7 +77,7 @@ public class GcpSecretsManagerResource {
       BoundedInputStream boundedInputStream =
           new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit());
       char[] credentials = IOUtils.toString(boundedInputStream, Charset.defaultCharset()).toCharArray();
-      GcpKmsConfig gcpKmsConfig = new GcpKmsConfig(name, projectId, region, keyRing, keyName, credentials);
+      GcpKmsConfig gcpKmsConfig = new GcpKmsConfig(name, projectId, region, keyRing, keyName, credentials, null);
       gcpKmsConfig.setDefault(isDefault);
       gcpKmsConfig.setEncryptionType(encryptionType);
       gcpKmsConfig.setUsageRestrictions(usageRestrictions);
@@ -104,7 +104,7 @@ public class GcpSecretsManagerResource {
       BoundedInputStream boundedInputStream =
           new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit());
       char[] credentials = IOUtils.toString(boundedInputStream, Charset.defaultCharset()).toCharArray();
-      GcpKmsConfig gcpKmsConfig = new GcpKmsConfig(name, projectId, region, keyRing, keyName, credentials);
+      GcpKmsConfig gcpKmsConfig = new GcpKmsConfig(name, projectId, region, keyRing, keyName, credentials, null);
       gcpKmsConfig.setUuid(secretMangerId);
       gcpKmsConfig.setDefault(isDefault);
       gcpKmsConfig.setEncryptionType(encryptionType);
@@ -126,7 +126,7 @@ public class GcpSecretsManagerResource {
       BoundedInputStream boundedInputStream =
           new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getEncryptedFileLimit());
       char[] credentials = IOUtils.toString(boundedInputStream, Charset.defaultCharset()).toCharArray();
-      GcpKmsConfig gcpKmsConfig = new GcpKmsConfig(name, projectId, region, keyRing, keyName, credentials);
+      GcpKmsConfig gcpKmsConfig = new GcpKmsConfig(name, projectId, region, keyRing, keyName, credentials, null);
       gcpKmsConfig.setDefault(isDefault);
       gcpKmsConfig.setEncryptionType(encryptionType);
       gcpKmsConfig.setUsageRestrictions(usageRestrictions);

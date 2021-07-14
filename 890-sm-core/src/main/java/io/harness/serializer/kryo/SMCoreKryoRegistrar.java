@@ -12,6 +12,8 @@ import io.harness.delegatetasks.EncryptSecretTaskParameters;
 import io.harness.delegatetasks.EncryptSecretTaskResponse;
 import io.harness.delegatetasks.FetchSecretTaskParameters;
 import io.harness.delegatetasks.FetchSecretTaskResponse;
+import io.harness.delegatetasks.NGAzureKeyVaultFetchEngineResponse;
+import io.harness.delegatetasks.NGAzureKeyVaultFetchEngineTaskParameters;
 import io.harness.delegatetasks.NGVaultFetchEngineTaskResponse;
 import io.harness.delegatetasks.NGVaultRenewalAppRoleTaskResponse;
 import io.harness.delegatetasks.NGVaultRenewalTaskParameters;
@@ -86,5 +88,7 @@ public class SMCoreKryoRegistrar implements KryoRegistrar {
     kryo.register(NGVaultRenewalTaskResponse.class, 150019);
     kryo.register(NGVaultFetchEngineTaskResponse.class, 150020);
     kryo.register(NGVaultRenewalAppRoleTaskResponse.class, 150021);
+    kryo.register(NGAzureKeyVaultFetchEngineTaskParameters.class, 150022);
+    kryo.register(NGAzureKeyVaultFetchEngineResponse.class, 150023);
   }
 }

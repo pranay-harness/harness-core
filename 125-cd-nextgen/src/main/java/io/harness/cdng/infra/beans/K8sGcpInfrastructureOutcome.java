@@ -21,6 +21,7 @@ public class K8sGcpInfrastructureOutcome implements InfrastructureOutcome {
   String cluster;
   String releaseName;
   EnvironmentOutcome environment;
+  String infrastructureKey;
 
   @Override
   public String getKind() {

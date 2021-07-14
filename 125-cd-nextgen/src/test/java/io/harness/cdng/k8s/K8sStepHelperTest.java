@@ -23,6 +23,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
@@ -158,6 +159,9 @@ public class K8sStepHelperTest extends CategoryTest {
   @Before
   public void setup() {
     doReturn(mockLogCallback).when(k8sStepHelper).getLogCallback(anyString(), eq(ambiance), anyBoolean());
+    doAnswer(invocation -> invocation.getArgumentAt(1, String.class))
+        .when(engineExpressionService)
+        .renderExpression(eq(ambiance), anyString());
   }
 
   @Test
@@ -194,32 +198,35 @@ public class K8sStepHelperTest extends CategoryTest {
   public void testGetReleaseName() {
     // Invalid formats
     assertThatThrownBy(()
-                           -> k8sStepHelper.getReleaseName(
+                           -> k8sStepHelper.getReleaseName(ambiance,
                                K8sDirectInfrastructureOutcome.builder().releaseName("NameWithUpperCase").build()))
         .isInstanceOf(InvalidRequestException.class);
     assertThatThrownBy(
         ()
             -> k8sStepHelper.getReleaseName(
-                K8sGcpInfrastructureOutcome.builder().releaseName("-starting.with.non.alphanumeric").build()))
+                ambiance, K8sGcpInfrastructureOutcome.builder().releaseName("-starting.with.non.alphanumeric").build()))
         .isInstanceOf(InvalidRequestException.class);
     assertThatThrownBy(
         ()
-            -> k8sStepHelper.getReleaseName(
+            -> k8sStepHelper.getReleaseName(ambiance,
                 K8sDirectInfrastructureOutcome.builder().releaseName(".starting.with.non.alphanumeric").build()))
         .isInstanceOf(InvalidRequestException.class);
     assertThatThrownBy(
         ()
             -> k8sStepHelper.getReleaseName(
-                K8sGcpInfrastructureOutcome.builder().releaseName("containing)invalid.characters+").build()))
+                ambiance, K8sGcpInfrastructureOutcome.builder().releaseName("containing)invalid.characters+").build()))
         .isInstanceOf(InvalidRequestException.class);
 
     // Valid Formats
-    k8sStepHelper.getReleaseName(K8sDirectInfrastructureOutcome.builder().releaseName("alphanumeriname124").build());
-    k8sStepHelper.getReleaseName(K8sGcpInfrastructureOutcome.builder().releaseName("1starting.with.number").build());
     k8sStepHelper.getReleaseName(
-        K8sDirectInfrastructureOutcome.builder().releaseName("starting.with.alphabet").build());
-    k8sStepHelper.getReleaseName(K8sGcpInfrastructureOutcome.builder().releaseName("containing.dot").build());
-    k8sStepHelper.getReleaseName(K8sDirectInfrastructureOutcome.builder().releaseName("containing-hyphen").build());
+        ambiance, K8sDirectInfrastructureOutcome.builder().releaseName("alphanumeriname124").build());
+    k8sStepHelper.getReleaseName(
+        ambiance, K8sGcpInfrastructureOutcome.builder().releaseName("1starting.with.number").build());
+    k8sStepHelper.getReleaseName(
+        ambiance, K8sDirectInfrastructureOutcome.builder().releaseName("starting.with.alphabet").build());
+    k8sStepHelper.getReleaseName(ambiance, K8sGcpInfrastructureOutcome.builder().releaseName("containing.dot").build());
+    k8sStepHelper.getReleaseName(
+        ambiance, K8sDirectInfrastructureOutcome.builder().releaseName("containing-hyphen").build());
   }
 
   @Test

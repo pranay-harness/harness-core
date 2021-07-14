@@ -182,7 +182,7 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
             .commandUnitsProgress(UnitProgressData.builder().build())
             .commandExecutionStatus(SUCCESS)
             .build();
-    when(k8sStepHelper.getReleaseName(any())).thenReturn("releaseName");
+    when(k8sStepHelper.getReleaseName(any(), any())).thenReturn("releaseName");
 
     StepResponse response = k8sCanaryStep.finalizeExecutionWithSecurityContext(
         ambiance, stepElementParameters, K8sExecutionPassThroughData.builder().build(), () -> k8sDeployResponse);

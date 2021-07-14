@@ -73,7 +73,7 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
   public void testCheckIfAlreadyPresent_ExistingConfigsWithIdentifier() {
     HealthSource healthSource = createHealthSource(CVMonitoringCategory.ERRORS);
     healthSourceService.create(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier,
-        nameSpaceIdentifier, Sets.newHashSet(healthSource));
+        nameSpaceIdentifier, Sets.newHashSet(healthSource), true);
     assertThatThrownBy(()
                            -> healthSourceService.checkIfAlreadyPresent(accountId, orgIdentifier, projectIdentifier,
                                nameSpaceIdentifier, Sets.newHashSet(healthSource)))
@@ -90,13 +90,14 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
   public void testCreate_CVConfigsCreation() {
     HealthSource healthSource = createHealthSource(CVMonitoringCategory.ERRORS);
     healthSourceService.create(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier,
-        nameSpaceIdentifier, Sets.newHashSet(healthSource));
+        nameSpaceIdentifier, Sets.newHashSet(healthSource), true);
     List<CVConfig> cvConfigs = cvConfigService.list(accountId, orgIdentifier, projectIdentifier,
         HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, healthSource.getIdentifier()));
     assertThat(cvConfigs.size()).isEqualTo(1);
     AppDynamicsCVConfig cvConfig = (AppDynamicsCVConfig) cvConfigs.get(0);
     commonCVConfigAssert(cvConfig);
     assertThat(cvConfig.getCategory()).isEqualTo(CVMonitoringCategory.ERRORS);
+    assertThat(cvConfig.isEnabled()).isTrue();
     assertThat(cvConfig.getMetricPack())
         .isEqualTo(metricPackService.getMetricPack(
             accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS, CVMonitoringCategory.ERRORS));
@@ -108,7 +109,7 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
   public void testGet() {
     HealthSource healthSource = createHealthSource(CVMonitoringCategory.ERRORS);
     healthSourceService.create(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier,
-        nameSpaceIdentifier, Sets.newHashSet(healthSource));
+        nameSpaceIdentifier, Sets.newHashSet(healthSource), false);
     Set<HealthSource> savedHealthSources = healthSourceService.get(
         accountId, orgIdentifier, projectIdentifier, nameSpaceIdentifier, Arrays.asList(identifier));
     assertThat(savedHealthSources.size()).isEqualTo(1);
@@ -122,7 +123,7 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
   public void testDelete() {
     HealthSource healthSource = createHealthSource(CVMonitoringCategory.ERRORS);
     healthSourceService.create(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier,
-        nameSpaceIdentifier, Sets.newHashSet(healthSource));
+        nameSpaceIdentifier, Sets.newHashSet(healthSource), true);
     healthSourceService.delete(
         accountId, orgIdentifier, projectIdentifier, nameSpaceIdentifier, Arrays.asList(identifier));
     List<CVConfig> cvConfigs =
@@ -136,7 +137,7 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
   public void testUpdate_updateName() {
     HealthSource healthSource = createHealthSource(CVMonitoringCategory.ERRORS);
     healthSourceService.create(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier,
-        nameSpaceIdentifier, Sets.newHashSet(healthSource));
+        nameSpaceIdentifier, Sets.newHashSet(healthSource), true);
     healthSource.setName("new-name");
     healthSourceService.update(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier,
         nameSpaceIdentifier, Sets.newHashSet(healthSource));
@@ -152,7 +153,7 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
   public void testUpdate_deleteAndAddCVConfigs() {
     HealthSource healthSource = createHealthSource(CVMonitoringCategory.ERRORS);
     healthSourceService.create(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier,
-        nameSpaceIdentifier, Sets.newHashSet(healthSource));
+        nameSpaceIdentifier, Sets.newHashSet(healthSource), true);
     List<CVConfig> cvConfigs = cvConfigService.list(accountId, orgIdentifier, projectIdentifier,
         HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, healthSource.getIdentifier()));
     assertThat(cvConfigs.size()).isEqualTo(1);
@@ -177,7 +178,7 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
   public void testUpdate_updateCVConfigs() {
     HealthSource healthSource = createHealthSource(CVMonitoringCategory.ERRORS);
     healthSourceService.create(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier,
-        nameSpaceIdentifier, Sets.newHashSet(healthSource));
+        nameSpaceIdentifier, Sets.newHashSet(healthSource), true);
     healthSource.setIdentifier("new-identifier");
     healthSource.setName("new-name");
     healthSourceService.update(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier,

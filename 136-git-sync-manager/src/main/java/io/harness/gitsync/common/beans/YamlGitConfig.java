@@ -2,6 +2,7 @@ package io.harness.gitsync.common.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityIdentifier;
@@ -12,6 +13,7 @@ import io.harness.encryption.Scope;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -47,6 +49,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "yamlGitConfigs", noClassnameStored = true)
 @OwnedBy(DX)
+@StoreIn(DbAliases.NG_MANAGER)
 @FieldNameConstants(innerTypeName = "YamlGitConfigKeys")
 public class YamlGitConfig implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                       UpdatedByAware, AccountAccess {
@@ -88,6 +91,11 @@ public class YamlGitConfig implements PersistentEntity, UuidAware, CreatedAtAwar
                 .name("repo_branch_index")
                 .fields(Arrays.asList(YamlGitConfigKeys.repo, YamlGitConfigKeys.branch))
                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_orgId_projectId_Index")
+                 .fields(Arrays.asList(
+                     YamlGitConfigKeys.accountId, YamlGitConfigKeys.orgIdentifier, YamlGitConfigKeys.projectIdentifier))
+                 .build())
         .build();
   }
 }

@@ -96,7 +96,7 @@ public class K8sApplyStep extends TaskChainExecutableWithRollbackAndRbac impleme
       StepElementParameters stepElementParameters, List<String> valuesFileContents,
       K8sExecutionPassThroughData executionPassThroughData, boolean shouldOpenFetchFilesLogStream) {
     InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
-    String releaseName = k8sStepHelper.getReleaseName(infrastructure);
+    String releaseName = k8sStepHelper.getReleaseName(ambiance, infrastructure);
     K8sApplyStepParameters k8sApplyStepParameters = (K8sApplyStepParameters) stepElementParameters.getSpec();
     boolean skipDryRun = K8sStepHelper.getParameterFieldBooleanValue(
         k8sApplyStepParameters.getSkipDryRun(), K8sApplyBaseStepInfoKeys.skipDryRun, stepElementParameters);

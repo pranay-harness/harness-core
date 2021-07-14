@@ -3,6 +3,7 @@ package io.harness.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.DelegateType.KUBERNETES;
+import static io.harness.mongo.MongoUtils.setUnset;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
@@ -48,6 +49,7 @@ import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @ValidateOnExecution
@@ -392,5 +394,43 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
     return identifiers.stream()
         .map(i -> existingRecordsKeys.contains(i) || existingRecordsIdentifiers.contains(i))
         .collect(toList());
+  }
+
+  @Override
+  public DelegateGroupDetails updateDelegateGroup(
+      String accountId, String delegateGroupId, DelegateGroupDetails delegateGroupDetails) {
+    Query<DelegateGroup> updateQuery = persistence.createQuery(DelegateGroup.class)
+                                           .filter(DelegateKeys.accountId, accountId)
+                                           .filter(DelegateKeys.uuid, delegateGroupId);
+
+    UpdateOperations<DelegateGroup> updateOperations = persistence.createUpdateOperations(DelegateGroup.class);
+    setUnset(updateOperations, DelegateGroupKeys.tags, delegateGroupDetails.getGroupCustomSelectors());
+
+    DelegateGroup updatedDelegateGroup =
+        persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
+    delegateCache.invalidateDelegateGroupCache(accountId, delegateGroupId);
+
+    return buildDelegateGroupDetails(accountId, updatedDelegateGroup, null, delegateGroupId);
+  }
+
+  @Override
+  public DelegateGroupDetails updateDelegateGroup(
+      String accountId, String orgId, String projectId, String identifier, DelegateGroupDetails delegateGroupDetails) {
+    DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
+
+    Query<DelegateGroup> updateQuery = persistence.createQuery(DelegateGroup.class)
+                                           .filter(DelegateGroupKeys.accountId, accountId)
+                                           .filter(DelegateGroupKeys.owner, owner)
+                                           .filter(DelegateGroupKeys.identifier, identifier);
+
+    UpdateOperations<DelegateGroup> updateOperations = persistence.createUpdateOperations(DelegateGroup.class);
+    setUnset(updateOperations, DelegateGroupKeys.tags, delegateGroupDetails.getGroupCustomSelectors());
+
+    DelegateGroup updatedDelegateGroup =
+        persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
+    delegateCache.invalidateDelegateGroupCacheByIdentifier(accountId, owner, identifier);
+
+    String delegateGroupId = updatedDelegateGroup != null ? updatedDelegateGroup.getUuid() : null;
+    return buildDelegateGroupDetails(accountId, updatedDelegateGroup, null, delegateGroupId);
   }
 }

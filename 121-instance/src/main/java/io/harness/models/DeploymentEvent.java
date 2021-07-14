@@ -2,7 +2,7 @@ package io.harness.models;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.entities.DeploymentSummary;
+import io.harness.dtos.DeploymentSummaryDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,6 +13,6 @@ import lombok.EqualsAndHashCode;
 @OwnedBy(HarnessTeam.DX)
 @EqualsAndHashCode(callSuper = false)
 public class DeploymentEvent {
-  private DeploymentSummary deploymentSummary;
+  private DeploymentSummaryDTO deploymentSummaryDTO;
   private RollbackInfo rollbackInfo;
 }

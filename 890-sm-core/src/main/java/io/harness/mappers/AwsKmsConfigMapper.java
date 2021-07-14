@@ -54,6 +54,7 @@ public class AwsKmsConfigMapper {
     kmsConfig.setRegion(baseAwsKmsConfigDTO.getRegion());
     kmsConfig.setAssumeStsRoleOnDelegate(false);
     kmsConfig.setAssumeIamRoleOnDelegate(false);
+    kmsConfig.setDelegateSelectors(baseAwsKmsConfigDTO.getDelegateSelectors());
 
     AwsKmsCredentialType credentialType = baseAwsKmsConfigDTO.getCredentialType();
     switch (credentialType) {

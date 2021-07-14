@@ -107,6 +107,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepConstants;
+import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
@@ -165,6 +166,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDP)
@@ -189,7 +191,7 @@ public class K8sStepHelper {
   @Inject private EncryptionHelper encryptionHelper;
   @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
 
-  String getReleaseName(InfrastructureOutcome infrastructure) {
+  String getReleaseName(Ambiance ambiance, InfrastructureOutcome infrastructure) {
     String releaseName;
     switch (infrastructure.getKind()) {
       case KUBERNETES_DIRECT:
@@ -203,11 +205,19 @@ public class K8sStepHelper {
       default:
         throw new UnsupportedOperationException(format("Unknown infrastructure type: [%s]", infrastructure.getKind()));
     }
+    if (EngineExpressionEvaluator.hasExpressions(releaseName)) {
+      releaseName = engineExpressionService.renderExpression(ambiance, releaseName);
+    }
+
     validateReleaseName(releaseName);
     return releaseName;
   }
 
   private static void validateReleaseName(String name) {
+    if (isEmpty(name)) {
+      throw new InvalidArgumentsException(Pair.of("releaseName", "Cannot be empty"));
+    }
+
     if (!ExpressionUtils.matchesPattern(releaseNamePattern, name)) {
       throw new InvalidRequestException(format(
           "Invalid Release name format: %s. Release name must consist of lower case alphanumeric characters, '-' or '.'"
@@ -434,7 +444,8 @@ public class K8sStepHelper {
         paths.add(getParameterFieldValue(gitstoreConfig.getFolderPath()));
         break;
       case ManifestType.Kustomize:
-        paths.add("");
+        // Set as repository root
+        paths.add("/");
         break;
 
       default:
@@ -1299,22 +1310,22 @@ public class K8sStepHelper {
 
   public static boolean getParameterFieldBooleanValue(
       ParameterField<?> fieldValue, String fieldName, StepElementParameters stepElement) {
-    try {
-      return getBooleanParameterFieldValue(fieldValue);
-    } catch (Exception e) {
-      String message = String.format("%s for field %s in %s step with identifier: %s", e.getMessage(), fieldName,
-          stepElement.getType(), stepElement.getIdentifier());
-      throw new InvalidArgumentsException(message);
-    }
+    return getParameterFieldBooleanValue(fieldValue, fieldName,
+        String.format("%s step with identifier: %s", stepElement.getType(), stepElement.getIdentifier()));
   }
 
   public static boolean getParameterFieldBooleanValue(
       ParameterField<?> fieldValue, String fieldName, ManifestOutcome manifestOutcome) {
+    return getParameterFieldBooleanValue(fieldValue, fieldName,
+        String.format("%s manifest with identifier: %s", manifestOutcome.getType(), manifestOutcome.getIdentifier()));
+  }
+
+  public static boolean getParameterFieldBooleanValue(
+      ParameterField<?> fieldValue, String fieldName, String description) {
     try {
       return getBooleanParameterFieldValue(fieldValue);
     } catch (Exception e) {
-      String message = String.format("%s for field %s in %s manifest with identifier: %s", e.getMessage(), fieldName,
-          manifestOutcome.getType(), manifestOutcome.getIdentifier());
+      String message = String.format("%s for field %s in %s", e.getMessage(), fieldName, description);
       throw new InvalidArgumentsException(message);
     }
   }

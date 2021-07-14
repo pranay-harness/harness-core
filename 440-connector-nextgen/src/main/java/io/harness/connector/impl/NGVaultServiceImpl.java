@@ -3,7 +3,6 @@ package io.harness.connector.impl;
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.FeatureName.ENABLE_CERT_VALIDATION;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_AZURE_VAULT_CONFIGURATION;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
@@ -15,6 +14,7 @@ import static io.harness.security.encryption.EncryptionType.AZURE_VAULT;
 import static io.harness.security.encryption.EncryptionType.VAULT;
 import static io.harness.threading.Morpheus.sleep;
 
+import static software.wings.beans.TaskType.NG_AZURE_VAULT_FETCH_ENGINES;
 import static software.wings.beans.TaskType.NG_VAULT_FETCHING_TASK;
 import static software.wings.beans.TaskType.NG_VAULT_RENEW_APP_ROLE_TOKEN;
 import static software.wings.beans.TaskType.NG_VAULT_RENEW_TOKEN;
@@ -23,7 +23,6 @@ import static java.time.Duration.ofMillis;
 
 import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.azure.AzureEnvironmentType;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.connector.ConnectorDTO;
@@ -36,7 +35,10 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
+import io.harness.delegatetasks.NGAzureKeyVaultFetchEngineResponse;
+import io.harness.delegatetasks.NGAzureKeyVaultFetchEngineTaskParameters;
 import io.harness.delegatetasks.NGVaultFetchEngineTaskResponse;
 import io.harness.delegatetasks.NGVaultRenewalAppRoleTaskResponse;
 import io.harness.delegatetasks.NGVaultRenewalTaskParameters;
@@ -86,18 +88,12 @@ import software.wings.beans.VaultConfig;
 import software.wings.service.impl.security.NGEncryptorService;
 
 import com.google.inject.Inject;
-import com.microsoft.azure.AzureEnvironment;
-import com.microsoft.azure.credentials.ApplicationTokenCredentials;
-import com.microsoft.azure.management.Azure;
-import com.microsoft.azure.management.Azure.Authenticated;
-import com.microsoft.azure.management.keyvault.Vault;
-import com.microsoft.azure.management.resources.ResourceGroup;
-import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.ws.rs.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -107,7 +103,7 @@ import org.jetbrains.annotations.Nullable;
 @OwnedBy(PL)
 @Slf4j
 public class NGVaultServiceImpl implements NGVaultService {
-  private static int NUM_OF_RETRIES = 3;
+  private static final int NUM_OF_RETRIES = 3;
   private final DelegateGrpcClientWrapper delegateService;
   private final NGConnectorSecretManagerService ngConnectorSecretManagerService;
   private final ConnectorRepository connectorRepository;
@@ -250,150 +246,155 @@ public class NGVaultServiceImpl implements NGVaultService {
   @Override
   public SecretManagerMetadataDTO getListOfEngines(
       String accountIdentifier, SecretManagerMetadataRequestDTO requestDTO) {
-    if (null != requestDTO) {
-      SecretRefData secretRefData = getSecretRefData(requestDTO);
+    SecretRefData secretRefData = getSecretRefData(requestDTO);
 
-      // get Decrypted SecretRefData
-      decryptSecretRefData(
-          accountIdentifier, requestDTO.getOrgIdentifier(), requestDTO.getProjectIdentifier(), secretRefData);
-
-      // Check if Vault Config already exists
-      EncryptionConfig existingVaultEncryptionConfig = getDecryptedEncryptionConfig(accountIdentifier,
-          requestDTO.getOrgIdentifier(), requestDTO.getProjectIdentifier(), requestDTO.getIdentifier());
-
-      if (VAULT == requestDTO.getEncryptionType()) {
-        BaseVaultConfig vaultConfig;
-        if (null == existingVaultEncryptionConfig) {
-          vaultConfig = VaultConfig.builder().accountId(accountIdentifier).build();
-          vaultConfig.setNgMetadata(NGSecretManagerMetadata.builder()
-                                        .accountIdentifier(accountIdentifier)
-                                        .orgIdentifier(requestDTO.getOrgIdentifier())
-                                        .projectIdentifier(requestDTO.getProjectIdentifier())
-                                        .build());
-        } else {
-          vaultConfig = (BaseVaultConfig) existingVaultEncryptionConfig;
-        }
-
-        VaultMetadataRequestSpecDTO specDTO = (VaultMetadataRequestSpecDTO) requestDTO.getSpec();
-        Optional<String> urlFromRequest = Optional.ofNullable(specDTO).map(VaultMetadataRequestSpecDTO::getUrl);
-        urlFromRequest.ifPresent(vaultConfig::setVaultUrl);
-
-        Optional<String> tokenFromRequest =
-            Optional.ofNullable(specDTO)
-                .filter(x -> x.getAccessType() == TOKEN)
-                .map(x
-                    -> String.valueOf(((VaultAuthTokenCredentialDTO) (x.getSpec())).getAuthToken().getDecryptedValue()))
-                .filter(x -> !x.isEmpty());
-        tokenFromRequest.ifPresent(x -> {
-          vaultConfig.setAuthToken(x);
-          vaultConfig.setAppRoleId(null);
-          vaultConfig.setSecretId(null);
-        });
-
-        Optional<String> appRoleIdFromRequest =
-            Optional.ofNullable(specDTO)
-                .filter(x -> x.getAccessType() == AccessType.APP_ROLE)
-                .map(x -> ((VaultAppRoleCredentialDTO) (x.getSpec())).getAppRoleId())
-                .filter(x -> !x.isEmpty());
-        appRoleIdFromRequest.ifPresent(approleId -> {
-          vaultConfig.setAppRoleId(approleId);
-          vaultConfig.setSecretId(null);
-          vaultConfig.setAuthToken(null);
-        });
-
-        Optional<String> secretIdFromRequest =
-            Optional.ofNullable(specDTO)
-                .filter(x -> x.getAccessType() == AccessType.APP_ROLE)
-                .map(x -> String.valueOf(((VaultAppRoleCredentialDTO) (x.getSpec())).getSecretId().getDecryptedValue()))
-                .filter(x -> !x.isEmpty());
-        secretIdFromRequest.ifPresent(secretId -> {
-          vaultConfig.setSecretId(secretId);
-          vaultConfig.setAuthToken(null);
-        });
-
-        return getSecretManagerMetadataDTO(listSecretEngines(vaultConfig));
-      } else if (AZURE_VAULT == requestDTO.getEncryptionType()) {
-        AzureKeyVaultMetadataRequestSpecDTO specDTO = (AzureKeyVaultMetadataRequestSpecDTO) requestDTO.getSpec();
-        AzureVaultConfig azureVaultConfig;
-        if (null != existingVaultEncryptionConfig) {
-          azureVaultConfig = (AzureVaultConfig) existingVaultEncryptionConfig;
-        } else {
-          azureVaultConfig = AzureVaultConfig.builder().build();
-          azureVaultConfig.setAccountId(accountIdentifier);
-          azureVaultConfig.setNgMetadata(NGSecretManagerMetadata.builder()
-                                             .orgIdentifier(requestDTO.getOrgIdentifier())
-                                             .projectIdentifier(requestDTO.getProjectIdentifier())
-                                             .build());
-        }
-        Optional.ofNullable(specDTO.getClientId()).ifPresent(azureVaultConfig::setClientId);
-        Optional.ofNullable(specDTO.getTenantId()).ifPresent(azureVaultConfig::setTenantId);
-        Optional.ofNullable(specDTO.getSubscription()).ifPresent(azureVaultConfig::setSubscription);
-        Optional.ofNullable(specDTO.getSecretKey())
-            .ifPresent(secretKey -> azureVaultConfig.setSecretKey(String.valueOf(secretKey.getDecryptedValue())));
-        Optional.ofNullable(specDTO.getAzureEnvironmentType()).ifPresent(azureVaultConfig::setAzureEnvironmentType);
-        List<String> vaultNames = null;
-        try {
-          vaultNames = listVaultsInternal(accountIdentifier, azureVaultConfig);
-        } catch (Exception e) {
-          log.error("Listing vaults failed for account Id {}", accountIdentifier, e);
-          throw new AzureServiceException("Failed to list vaults.", INVALID_AZURE_VAULT_CONFIGURATION, USER);
-        }
-
-        return SecretManagerMetadataDTO.builder()
-            .encryptionType(AZURE_VAULT)
-            .spec(AzureKeyVaultMetadataSpecDTO.builder().vaultNames(vaultNames).build())
-            .build();
-      }
+    // get Decrypted SecretRefData
+    decryptSecretRefData(
+        accountIdentifier, requestDTO.getOrgIdentifier(), requestDTO.getProjectIdentifier(), secretRefData);
+    EncryptionConfig existingVaultEncryptionConfig = getDecryptedEncryptionConfig(accountIdentifier,
+        requestDTO.getOrgIdentifier(), requestDTO.getProjectIdentifier(), requestDTO.getIdentifier());
+    if (VAULT == requestDTO.getEncryptionType()) {
+      return getHashicorpVaultMetadata(accountIdentifier, requestDTO, existingVaultEncryptionConfig);
+    } else if (AZURE_VAULT == requestDTO.getEncryptionType()) {
+      return getAzureKeyVaultMetadata(accountIdentifier, requestDTO, existingVaultEncryptionConfig);
+    } else {
+      throw new UnsupportedOperationException(
+          "This API is not supported for secret manager of type: " + requestDTO.getEncryptionType());
     }
-    throw new UnsupportedOperationException(
-        "This API is not supported for secret manager of type: " + requestDTO.getEncryptionType());
+  }
+
+  private SecretManagerMetadataDTO getHashicorpVaultMetadata(String accountIdentifier,
+      SecretManagerMetadataRequestDTO requestDTO, EncryptionConfig existingVaultEncryptionConfig) {
+    BaseVaultConfig vaultConfig;
+    if (null == existingVaultEncryptionConfig) {
+      vaultConfig = VaultConfig.builder().accountId(accountIdentifier).build();
+      vaultConfig.setNgMetadata(NGSecretManagerMetadata.builder()
+                                    .accountIdentifier(accountIdentifier)
+                                    .orgIdentifier(requestDTO.getOrgIdentifier())
+                                    .projectIdentifier(requestDTO.getProjectIdentifier())
+                                    .build());
+    } else {
+      vaultConfig = (BaseVaultConfig) existingVaultEncryptionConfig;
+    }
+
+    VaultMetadataRequestSpecDTO specDTO = (VaultMetadataRequestSpecDTO) requestDTO.getSpec();
+    Optional<String> urlFromRequest = Optional.ofNullable(specDTO).map(VaultMetadataRequestSpecDTO::getUrl);
+    urlFromRequest.ifPresent(vaultConfig::setVaultUrl);
+
+    Optional<String> tokenFromRequest =
+        Optional.ofNullable(specDTO)
+            .filter(x -> x.getAccessType() == TOKEN)
+            .map(x -> String.valueOf(((VaultAuthTokenCredentialDTO) (x.getSpec())).getAuthToken().getDecryptedValue()))
+            .filter(x -> !x.isEmpty());
+    tokenFromRequest.ifPresent(x -> {
+      vaultConfig.setAuthToken(x);
+      vaultConfig.setAppRoleId(null);
+      vaultConfig.setSecretId(null);
+    });
+
+    Optional<String> appRoleIdFromRequest = Optional.ofNullable(specDTO)
+                                                .filter(x -> x.getAccessType() == AccessType.APP_ROLE)
+                                                .map(x -> ((VaultAppRoleCredentialDTO) (x.getSpec())).getAppRoleId())
+                                                .filter(x -> !x.isEmpty());
+    appRoleIdFromRequest.ifPresent(approleId -> {
+      vaultConfig.setAppRoleId(approleId);
+      vaultConfig.setSecretId(null);
+      vaultConfig.setAuthToken(null);
+    });
+
+    Optional<String> secretIdFromRequest =
+        Optional.ofNullable(specDTO)
+            .filter(x -> x.getAccessType() == AccessType.APP_ROLE)
+            .map(x -> String.valueOf(((VaultAppRoleCredentialDTO) (x.getSpec())).getSecretId().getDecryptedValue()))
+            .filter(x -> !x.isEmpty());
+    secretIdFromRequest.ifPresent(secretId -> {
+      vaultConfig.setSecretId(secretId);
+      vaultConfig.setAuthToken(null);
+    });
+
+    Optional<Set<String>> delegateSelectors =
+        Optional.ofNullable(specDTO).map(VaultMetadataRequestSpecDTO::getDelegateSelectors);
+    delegateSelectors.ifPresent(vaultConfig::setDelegateSelectors);
+
+    return getSecretManagerMetadataDTO(listSecretEngines(vaultConfig));
+  }
+
+  private SecretManagerMetadataDTO getAzureKeyVaultMetadata(String accountIdentifier,
+      SecretManagerMetadataRequestDTO requestDTO, EncryptionConfig existingVaultEncryptionConfig) {
+    AzureKeyVaultMetadataRequestSpecDTO specDTO = (AzureKeyVaultMetadataRequestSpecDTO) requestDTO.getSpec();
+    AzureVaultConfig azureVaultConfig;
+    if (null != existingVaultEncryptionConfig) {
+      azureVaultConfig = (AzureVaultConfig) existingVaultEncryptionConfig;
+    } else {
+      azureVaultConfig = AzureVaultConfig.builder().build();
+      azureVaultConfig.setAccountId(accountIdentifier);
+      azureVaultConfig.setNgMetadata(NGSecretManagerMetadata.builder()
+                                         .orgIdentifier(requestDTO.getOrgIdentifier())
+                                         .projectIdentifier(requestDTO.getProjectIdentifier())
+                                         .build());
+    }
+    Optional.ofNullable(specDTO.getClientId()).ifPresent(azureVaultConfig::setClientId);
+    Optional.ofNullable(specDTO.getTenantId()).ifPresent(azureVaultConfig::setTenantId);
+    Optional.ofNullable(specDTO.getSubscription()).ifPresent(azureVaultConfig::setSubscription);
+    Optional.ofNullable(specDTO.getSecretKey())
+        .ifPresent(secretKey -> azureVaultConfig.setSecretKey(String.valueOf(secretKey.getDecryptedValue())));
+    Optional.ofNullable(specDTO.getAzureEnvironmentType()).ifPresent(azureVaultConfig::setAzureEnvironmentType);
+    Optional.ofNullable(specDTO.getDelegateSelectors()).ifPresent(azureVaultConfig::setDelegateSelectors);
+    List<String> vaultNames;
+    try {
+      vaultNames = listVaultsInternal(accountIdentifier, azureVaultConfig);
+    } catch (Exception e) {
+      log.error("Listing vaults failed for account Id {}", accountIdentifier, e);
+      throw new AzureServiceException("Failed to list vaults.", INVALID_AZURE_VAULT_CONFIGURATION, USER);
+    }
+
+    return SecretManagerMetadataDTO.builder()
+        .encryptionType(AZURE_VAULT)
+        .spec(AzureKeyVaultMetadataSpecDTO.builder().vaultNames(vaultNames).build())
+        .build();
   }
 
   private List<String> listVaultsInternal(String accountId, AzureVaultConfig azureVaultConfig) throws IOException {
-    Azure azure = null;
-    List<Vault> vaultList = new ArrayList<>();
-    ApplicationTokenCredentials credentials =
-        new ApplicationTokenCredentials(azureVaultConfig.getClientId(), azureVaultConfig.getTenantId(),
-            azureVaultConfig.getSecretKey(), getAzureEnvironment(azureVaultConfig.getAzureEnvironmentType()));
-
-    Authenticated authenticate = Azure.configure().authenticate(credentials);
-
-    if (isEmpty(azureVaultConfig.getSubscription())) {
-      azure = authenticate.withDefaultSubscription();
-    } else {
-      azure = authenticate.withSubscription(azureVaultConfig.getSubscription());
+    AzureKeyVaultConnectorDTO azureKeyVaultConnectorDTO =
+        AzureKeyVaultConnectorDTO.builder()
+            .tenantId(azureVaultConfig.getTenantId())
+            .clientId(azureVaultConfig.getClientId())
+            .secretKey(SecretRefData.builder().decryptedValue(azureVaultConfig.getSecretKey().toCharArray()).build())
+            .subscription(azureVaultConfig.getSubscription())
+            .delegateSelectors(azureVaultConfig.getDelegateSelectors())
+            .azureEnvironmentType(azureVaultConfig.getAzureEnvironmentType())
+            .build();
+    int failedAttempts = 0;
+    while (true) {
+      try {
+        NGAzureKeyVaultFetchEngineTaskParameters parameters = NGAzureKeyVaultFetchEngineTaskParameters.builder()
+                                                                  .azureKeyVaultConnectorDTO(azureKeyVaultConnectorDTO)
+                                                                  .build();
+        DelegateTaskRequest delegateTaskRequest =
+            DelegateTaskRequest.builder()
+                .taskType(NG_AZURE_VAULT_FETCH_ENGINES.name())
+                .taskParameters(parameters)
+                .executionTimeout(Duration.ofMillis(TaskData.DEFAULT_SYNC_CALL_TIMEOUT))
+                .accountId(accountId)
+                .taskSetupAbstractions(ngManagerEncryptorHelper.buildAbstractions(azureVaultConfig))
+                .build();
+        DelegateResponseData delegateResponseData = delegateService.executeSyncTask(delegateTaskRequest);
+        DelegateTaskUtils.validateDelegateTaskResponse(delegateResponseData);
+        if (!(delegateResponseData instanceof NGAzureKeyVaultFetchEngineResponse)) {
+          throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "Unknown Response from delegate", USER);
+        }
+        return ((NGAzureKeyVaultFetchEngineResponse) delegateResponseData).getSecretEngines();
+      } catch (WingsException e) {
+        failedAttempts++;
+        log.warn("Azure Key Vault Decryption failed for list secret engines. trial num: {}", failedAttempts, e);
+        if (failedAttempts == NUM_OF_RETRIES) {
+          throw e;
+        }
+        sleep(ofMillis(1000));
+      }
     }
-    log.info("Subscription {} is being used for account Id {}", azure.subscriptionId(), accountId);
-
-    for (ResourceGroup rGroup : azure.resourceGroups().list()) {
-      vaultList.addAll(azure.vaults().listByResourceGroup(rGroup.name()));
-    }
-    log.info("Found azure vaults {} or account id: {}", vaultList, accountId);
-
-    return vaultList.stream().map(HasName::name).collect(Collectors.toList());
   }
 
-  private AzureEnvironment getAzureEnvironment(AzureEnvironmentType azureEnvironmentType) {
-    if (azureEnvironmentType == null) {
-      return AzureEnvironment.AZURE;
-    }
-
-    switch (azureEnvironmentType) {
-      case AZURE_US_GOVERNMENT:
-        return AzureEnvironment.AZURE_US_GOVERNMENT;
-
-      case AZURE:
-      default:
-        return AzureEnvironment.AZURE;
-    }
-  }
-
-  /**
-   * @param connectorDTO
-   * @param existingConnectorConfigDTO
-   * @param accountIdentifier
-   * @param create
-   */
   @Override
   public void processAppRole(ConnectorDTO connectorDTO, ConnectorConfigDTO existingConnectorConfigDTO,
       String accountIdentifier, boolean create) {

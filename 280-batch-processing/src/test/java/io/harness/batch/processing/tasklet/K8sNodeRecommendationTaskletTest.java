@@ -155,6 +155,25 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
+  public void testJobSuccessOnCurrentPricingInfoNotAvailable() throws Exception {
+    when(vmPricingService.getComputeVMPricingInfo(eq(k8sServiceProvider.getInstanceFamily()),
+             eq(k8sServiceProvider.getRegion()), eq(k8sServiceProvider.getCloudProvider())))
+        .thenReturn(null);
+
+    // job was successful but the recommendation was not generated and skipped
+    assertThat(tasklet.execute(null, chunkContext)).isNull();
+
+    // effectively 1 times
+    verify(banzaiRecommenderClient, times(2)).getRecommendation(any(), any(), any(), any());
+    // detailed recommendation saved in mongo DB
+    verify(k8sRecommendationDAO, times(1)).insertNodeRecommendationResponse(any(), any(), any(), any(), any());
+    // but savings stats not saved in timescaleDB
+    verify(k8sRecommendationDAO, times(0)).updateCeRecommendation(any(), any(), any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
   public void testWithInconsistentTotalResourceUsage_zeroResource() throws Exception {
     TotalResourceUsage totalResourceUsage =
         TotalResourceUsage.builder().sumcpu(0D).summemory(64D).maxcpu(20D).maxmemory(4.1D).build();

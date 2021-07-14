@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
@@ -22,7 +23,6 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.pipeline.yaml.BasicPipeline;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
-import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.yaml.YamlUtils;
 
 import com.google.common.collect.ImmutableMap;
@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -48,7 +47,7 @@ public class NotificationHelper {
   @Inject PlanExecutionMetadataService planExecutionMetadataService;
 
   public Optional<PipelineEventType> getEventTypeForStage(NodeExecution nodeExecution) {
-    if (!isStageNode(nodeExecution)) {
+    if (!OrchestrationUtils.isStageNode(nodeExecution)) {
       return Optional.empty();
     }
     if (nodeExecution.getStatus() == Status.SUCCEEDED) {
@@ -58,10 +57,6 @@ public class NotificationHelper {
       return Optional.of(io.harness.notification.PipelineEventType.STAGE_FAILED);
     }
     return Optional.empty();
-  }
-
-  public boolean isStageNode(NodeExecution nodeExecution) {
-    return Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.STAGE.name());
   }
 
   public void sendNotification(

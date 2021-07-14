@@ -1,7 +1,8 @@
 package io.harness.cvng.core.services.api.monitoredService;
 
+import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
-import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListDTO;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
 import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
@@ -20,10 +21,11 @@ public interface MonitoredServiceService extends DeleteEntityByHandler<Monitored
       String accountId, String orgIdentifier, String projectIdentifier, String identifier);
   MonitoredServiceDTO getMonitoredServiceDTO(
       String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, String envIdentifier);
-  PageResponse<MonitoredServiceListDTO> list(String accountId, String orgIdentifier, String projectIdentifier,
+  PageResponse<MonitoredServiceListItemDTO> list(String accountId, String orgIdentifier, String projectIdentifier,
       String environmentIdentifier, Integer offset, Integer pageSize, String filter);
   List<String> listEnvironments(String accountId, String orgIdentifier, String projectIdentifier);
-
   MonitoredServiceResponse createDefault(String accountId, String orgIdentifier, String projectIdentifier,
       String serviceIdentifier, String environmentIdentifier);
+  HealthMonitoringFlagResponse setHealthMonitoringFlag(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier, boolean enable);
 }

@@ -14,6 +14,9 @@ import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ProjectIdentifier;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
@@ -44,7 +47,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -78,10 +83,12 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @OwnedBy(HarnessTeam.PL)
 public class InviteResource {
   private final InviteService inviteService;
+  private final AccessControlClient accessControlClient;
 
   @Inject
-  InviteResource(InviteService inviteService) {
+  InviteResource(InviteService inviteService, AccessControlClient accessControlClient) {
     this.inviteService = inviteService;
+    this.accessControlClient = accessControlClient;
   }
 
   @GET
@@ -92,13 +99,19 @@ public class InviteResource {
     if ((isBlank(inviteId) && isBlank(jwtToken)) || (!isBlank(inviteId) && !isBlank(jwtToken))) {
       throw new InvalidRequestException("Specify either inviteId or jwtToken");
     }
-    Optional<Invite> invite = Optional.empty();
+    Optional<Invite> inviteOpt = Optional.empty();
     if (!isBlank(inviteId)) {
-      invite = inviteService.getInvite(inviteId, false);
+      inviteOpt = inviteService.getInvite(inviteId, false);
     } else if (!isBlank(jwtToken)) {
-      invite = inviteService.getInviteFromToken(jwtToken, false);
+      inviteOpt = inviteService.getInviteFromToken(jwtToken, false);
     }
-    return ResponseDTO.newResponse(writeDTO(invite.orElse(null)));
+    if (inviteOpt.isPresent()) {
+      Invite invite = inviteOpt.get();
+      accessControlClient.checkForAccessOrThrow(
+          ResourceScope.of(invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier()),
+          Resource.of("USER", null), VIEW_USER_PERMISSION);
+    }
+    return ResponseDTO.newResponse(writeDTO(inviteOpt.orElse(null)));
   }
 
   @GET
@@ -182,8 +195,13 @@ public class InviteResource {
   verifyInviteViaNGAuthUi(@QueryParam("token") @NotNull String jwtToken,
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier, @QueryParam("email") @NotNull String email) {
     InviteAcceptResponse inviteAcceptResponse = inviteService.acceptInvite(jwtToken);
-    URI redirectURL = inviteService.getRedirectUrl(inviteAcceptResponse, email, jwtToken);
-    return Response.seeOther(redirectURL).build();
+    try {
+      String decodedEmail = URLDecoder.decode(email, "UTF-8");
+      URI redirectURL = inviteService.getRedirectUrl(inviteAcceptResponse, decodedEmail, jwtToken);
+      return Response.seeOther(redirectURL).build();
+    } catch (UnsupportedEncodingException e) {
+      throw new InvalidRequestException("Unable to decode email");
+    }
   }
 
   @GET

@@ -96,7 +96,7 @@ public class K8sDeleteStep extends TaskChainExecutableWithRollbackAndRbac implem
     boolean isManifestFiles = DeleteResourcesType.ManifestPath == deleteStepParameters.getDeleteResources().getType();
 
     InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
-    String releaseName = k8sStepHelper.getReleaseName(infrastructure);
+    String releaseName = k8sStepHelper.getReleaseName(ambiance, infrastructure);
     final String accountId = AmbianceHelper.getAccountId(ambiance);
 
     K8sDeleteRequest request =

@@ -2118,7 +2118,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegate.setUuid(DELEGATE_ID);
     persistence.save(delegate);
     DelegateScripts delegateScripts =
-        delegateService.getDelegateScripts(ACCOUNT_ID, "0.0.0", "https://localhost:9090", "https://localhost:7070");
+        delegateService.getDelegateScripts(ACCOUNT_ID, "0.0.0", "https://localhost:9090", "https://localhost:7070", "");
     assertThat(delegateScripts.isDoUpgrade()).isTrue();
   }
 
@@ -2133,7 +2133,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegate.setUuid(DELEGATE_ID);
     persistence.save(delegate);
     DelegateScripts delegateScripts =
-        delegateService.getDelegateScripts(ACCOUNT_ID, "9.9.9", "https://localhost:9090", "https://localhost:7070");
+        delegateService.getDelegateScripts(ACCOUNT_ID, "9.9.9", "https://localhost:9090", "https://localhost:7070", "");
     assertThat(delegateScripts.isDoUpgrade()).isFalse();
   }
 

@@ -10,6 +10,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.event.model.EventType;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.invites.dto.InviteOperationResponse;
@@ -33,7 +34,6 @@ import software.wings.beans.security.UserGroup;
 import software.wings.resources.UserResource;
 import software.wings.security.JWT_CATEGORY;
 import software.wings.security.UserPermissionInfo;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.LogoutResponse;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.security.authentication.oauth.OauthUserInfo;
@@ -351,6 +351,13 @@ public interface UserService extends OwnedByAccount {
    * @return the user invite
    */
   InviteOperationResponse completeInvite(UserInvite userInvite);
+
+  /**
+   * Complete NG invite and create user
+   *
+   * @param userInvite the user invite DTO
+   */
+  void completeNGInvite(UserInviteDTO userInvite);
 
   /**
    * Complete the user invite and login the user in one call.

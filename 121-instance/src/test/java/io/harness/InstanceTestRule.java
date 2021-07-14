@@ -12,7 +12,10 @@ import io.harness.persistence.HPersistence;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
-import io.harness.service.InstanceModule;
+import io.harness.service.instanceService.InstanceService;
+import io.harness.service.instanceService.InstanceServiceImpl;
+import io.harness.service.instancedashboardservice.InstanceDashboardService;
+import io.harness.service.instancedashboardservice.InstanceDashboardServiceImpl;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -53,6 +56,8 @@ public class InstanceTestRule implements InjectorRuleMixin, MethodRule, MongoRul
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
+        bind(InstanceDashboardService.class).to(InstanceDashboardServiceImpl.class);
+        bind(InstanceService.class).to(InstanceServiceImpl.class);
       }
     });
 
@@ -89,7 +94,6 @@ public class InstanceTestRule implements InjectorRuleMixin, MethodRule, MongoRul
     modules.add(mongoTypeModule(annotations));
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
-    modules.add(InstanceModule.getInstance());
 
     return modules;
   }

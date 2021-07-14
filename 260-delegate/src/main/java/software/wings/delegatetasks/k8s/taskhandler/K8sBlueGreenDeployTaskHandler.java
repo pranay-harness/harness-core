@@ -15,7 +15,7 @@ import static io.harness.k8s.manifest.ManifestHelper.getManagedWorkload;
 import static io.harness.k8s.manifest.ManifestHelper.getPrimaryService;
 import static io.harness.k8s.manifest.ManifestHelper.getServices;
 import static io.harness.k8s.manifest.ManifestHelper.getStageService;
-import static io.harness.k8s.manifest.ManifestHelper.getWorkloadsForCanaryAndBG;
+import static io.harness.k8s.manifest.ManifestHelper.getWorkloadsForBG;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
@@ -262,7 +262,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
       executionLogCallback.saveExecutionLog("Manifests processed. Found following resources: \n"
           + k8sTaskHelperBase.getResourcesInTableFormat(resources));
 
-      List<KubernetesResource> workloads = getWorkloadsForCanaryAndBG(resources);
+      List<KubernetesResource> workloads = getWorkloadsForBG(resources);
 
       if (workloads.size() != 1) {
         if (workloads.isEmpty()) {

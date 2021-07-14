@@ -19,4 +19,8 @@ public interface DelegateCache {
   DelegateProfile getDelegateProfile(String accountId, String delegateProfileId);
 
   void invalidateDelegateProfileCache(String accountId, String delegateProfileId);
+
+  void invalidateDelegateGroupCache(String accountId, String delegateGroupId);
+
+  void invalidateDelegateGroupCacheByIdentifier(String accountId, DelegateEntityOwner owner, String identifier);
 }

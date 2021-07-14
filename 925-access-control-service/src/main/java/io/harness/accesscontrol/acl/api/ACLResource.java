@@ -13,9 +13,13 @@ import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.ACLService;
 import io.harness.accesscontrol.clients.AccessCheckRequestDTO;
 import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
+import io.harness.accesscontrol.clients.AccessControlDTO;
 import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.accesscontrol.preference.services.AccessControlPreferenceService;
 import io.harness.accesscontrol.principals.PrincipalType;
+import io.harness.accesscontrol.roleassignments.privileged.PrivilegedAccessCheck;
+import io.harness.accesscontrol.roleassignments.privileged.PrivilegedAccessResult;
+import io.harness.accesscontrol.roleassignments.privileged.PrivilegedRoleAssignmentService;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
@@ -31,6 +35,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -59,6 +64,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ACLResource {
   private final ACLService aclService;
   private final AccessControlPreferenceService accessControlPreferenceService;
+  private final PrivilegedRoleAssignmentService privilegedRoleAssignmentService;
 
   @POST
   @ApiOperation(value = "Check for access to resources", nickname = "getAccessControlList")
@@ -108,6 +114,29 @@ public class ACLResource {
 
     AccessCheckResponseDTO accessCheckResponseDTO =
         aclService.checkAccess(principalToCheckPermissionsFor, permissionChecks);
+
+    if (accountIdentifierOptional.isPresent()) {
+      io.harness.accesscontrol.principals.Principal principal =
+          io.harness.accesscontrol.principals.Principal.builder()
+              .principalIdentifier(principalToCheckPermissionsFor.getPrincipalIdentifier())
+              .principalType(principalToCheckPermissionsFor.getPrincipalType())
+              .build();
+      PrivilegedAccessCheck privilegedAccessCheck = PrivilegedAccessCheck.builder()
+                                                        .principal(principal)
+                                                        .accountIdentifier(accountIdentifierOptional.get())
+                                                        .permissions(permissionChecks)
+                                                        .build();
+      PrivilegedAccessResult privilegedAccessResult =
+          privilegedRoleAssignmentService.checkAccess(privilegedAccessCheck);
+      Iterator<AccessControlDTO> iterator = accessCheckResponseDTO.getAccessControlList().iterator();
+      int index = 0;
+      while (iterator.hasNext()) {
+        AccessControlDTO rbacAccess = iterator.next();
+        AccessControlDTO privilegedAccess = privilegedAccessResult.getPermissionCheckResults().get(index);
+        rbacAccess.setPermitted(privilegedAccess.isPermitted() || rbacAccess.isPermitted());
+        index++;
+      }
+    }
     return ResponseDTO.newResponse(accessCheckResponseDTO);
   }
 }

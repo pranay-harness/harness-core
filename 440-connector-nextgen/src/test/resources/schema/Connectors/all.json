@@ -493,6 +493,13 @@
             "default": {
               "type": "boolean"
             },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
             "kmsArn": {
               "type": "string"
             },
@@ -658,6 +665,13 @@
             },
             "default": {
               "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "secretKey": {
               "type": "string"
@@ -1947,6 +1961,13 @@
             },
             "default": {
               "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "keyName": {
               "type": "string"
@@ -3561,6 +3582,13 @@
             },
             "default": {
               "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "readOnly": {
               "type": "boolean"

@@ -62,6 +62,7 @@ public class VaultConfigDTOMapper {
                                               .isDefault(false)
                                               .encryptionType(EncryptionType.VAULT)
                                               .secretEngineVersion(vaultConnectorDTO.getSecretEngineVersion())
+                                              .delegateSelectors(vaultConnectorDTO.getDelegateSelectors())
 
                                               .name(connector.getName())
                                               .accountIdentifier(accountIdentifier)
