@@ -14,12 +14,14 @@ extend type Mutation {
 }
 
 input DelegateApprovalInput {
+    clientMutationId: String
     delegateId: String!
     accountId: String!
     delegateApproval: DelegateApproval!
 }
 
 input AddDelegateScopeInput {
+    clientMutationId: String
     accountId: String!
     name: String!
     environmentTypes: [EnvironmentType]
@@ -37,6 +39,7 @@ input DeleteDelegateInput {
     forceDelete: Boolean!
 }
 input AttachScopeToDelegateInput {
+    clientMutationId: String
     accountId: String!
     delegateId: String!
     includeScopes: IdFilter
