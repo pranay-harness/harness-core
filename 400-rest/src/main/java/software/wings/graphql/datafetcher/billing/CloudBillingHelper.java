@@ -72,13 +72,16 @@ public class CloudBillingHelper {
   public BillingDataPipelineCacheObject getBillingDataPipelineCacheObject(String accountId) {
     List<BillingDataPipelineRecord> listOfPipelineRecords =
         billingDataPipelineRecordDao.fetchBillingPipelineRecords(accountId);
-
-    BillingDataPipelineRecord billingDataPipelineRecord = getPipelineRecord(listOfPipelineRecords);
-    return BillingDataPipelineCacheObject.builder()
-        .dataSetId(billingDataPipelineRecord.getDataSetId())
-        .awsLinkedAccountsToExclude(billingDataPipelineRecord.getAwsLinkedAccountsToExclude())
-        .awsLinkedAccountsToInclude(billingDataPipelineRecord.getAwsLinkedAccountsToInclude())
-        .build();
+    if (listOfPipelineRecords.isEmpty()) {
+      return BillingDataPipelineCacheObject.builder().build();
+    } else {
+      BillingDataPipelineRecord billingDataPipelineRecord = getPipelineRecord(listOfPipelineRecords);
+      return BillingDataPipelineCacheObject.builder()
+          .dataSetId(billingDataPipelineRecord.getDataSetId())
+          .awsLinkedAccountsToExclude(billingDataPipelineRecord.getAwsLinkedAccountsToExclude())
+          .awsLinkedAccountsToInclude(billingDataPipelineRecord.getAwsLinkedAccountsToInclude())
+          .build();
+    }
   }
 
   private BillingDataPipelineRecord getPipelineRecord(List<BillingDataPipelineRecord> listOfPipelineRecords) {
