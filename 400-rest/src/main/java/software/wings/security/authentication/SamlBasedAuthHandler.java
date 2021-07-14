@@ -14,7 +14,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.account.AuthenticationMechanism;
 
-import org.jetbrains.annotations.Nullable;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
@@ -41,6 +40,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.jetbrains.annotations.Nullable;
 import org.opensaml.core.xml.XMLObject;
 import org.opensaml.core.xml.schema.XSString;
 import org.opensaml.core.xml.schema.impl.XSAnyImpl;
@@ -216,14 +216,12 @@ public class SamlBasedAuthHandler implements AuthHandler {
     SamlResponse samlResponse = samlClient.decodeAndValidateSamlResponse(samlResponseString);
     String groupMembershipAttr = samlSettings.getGroupMembershipAttr();
     List<AttributeStatement> attributeStatements = samlResponse.getAssertion().getAttributeStatements();
-    log.info("GroupMemberShipAttribute:{}", groupMembershipAttr);
+
     for (AttributeStatement attributeStatement : attributeStatements) {
       for (Attribute attribute : attributeStatement.getAttributes()) {
-        log.info("GroupMemberShipAttribute:{} AttributeName:{}", groupMembershipAttr, attribute.getName());
         if (attribute.getName().equals(groupMembershipAttr)) {
           for (XMLObject xmlObject : attribute.getAttributeValues()) {
             final String userGroup = getAttributeValue(xmlObject);
-            log.info("Found Group from SAML Assertion", userGroup);
             if (userGroup != null) {
               userGroups.add(userGroup);
             }
@@ -278,7 +276,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
   @Nullable
   private User tryAutoAcceptingInvite(SamlSettings samlSettings, String nameId) {
     if (featureFlagService.isEnabled(SAML_LOGIN_WITHOUT_INVITE_ACCEPT, samlSettings.getAccountId())) {
-      log.info(SAML_LOGIN_WITHOUT_INVITE_ACCEPT+ "FF is enabled for account, Creating user with auto approved invite");
+      log.info(SAML_LOGIN_WITHOUT_INVITE_ACCEPT + "FF is enabled for account, Creating user with auto approved invite");
       UserInvite userInvite = anUserInvite().withAccountId(samlSettings.getAccountId()).withEmail(nameId).build();
       userService.inviteUser(userInvite, false, true);
       User user = authenticationUtils.getUserByEmail(nameId);
