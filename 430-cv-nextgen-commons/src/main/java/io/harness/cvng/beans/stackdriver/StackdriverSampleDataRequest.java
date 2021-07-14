@@ -10,7 +10,6 @@ import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition.StackDriver
 import io.harness.cvng.utils.StackdriverUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;

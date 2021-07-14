@@ -7,7 +7,6 @@ import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition;
 import io.harness.cvng.utils.StackdriverUtils;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.Collections;

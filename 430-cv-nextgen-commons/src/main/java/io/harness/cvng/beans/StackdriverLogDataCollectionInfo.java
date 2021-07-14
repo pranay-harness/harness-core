@@ -6,7 +6,6 @@ import io.harness.cvng.beans.stackdriver.StackdriverLogDefinition;
 import io.harness.cvng.utils.StackdriverUtils;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import java.util.Collections;
 import java.util.Map;
 import lombok.Builder;

@@ -9,7 +9,6 @@ import io.harness.cvng.utils.StackdriverUtils;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import java.util.Collections;
 import java.util.Map;
 import lombok.NoArgsConstructor;

@@ -7,7 +7,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.utils.StackdriverUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import java.util.Map;
 import lombok.Data;
 import lombok.NoArgsConstructor;
