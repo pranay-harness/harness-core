@@ -57,6 +57,8 @@ public class StackdriverUtils {
       log.error("Exception while fetching token for google credential", e);
       throw new IllegalStateException("Cannot fetch google credential token");
     }
+    log.info(String.format("Access token %s for service account %s and project %s", credential.getAccessToken(),
+        credential.getServiceAccountId(), credential.getServiceAccountProjectId()));
     String accessToken = credential.getAccessToken();
     envVariables.put("accessToken", accessToken);
     envVariables.put("project", credential.getServiceAccountProjectId());
