@@ -86,6 +86,21 @@ public class AwsHelperResource {
     return new RestResponse(awsHelperResourceService.listBuckets(settingId));
   }
 
+  /**
+   * Get All Cloudformation Statues
+   *
+   * @param accountId                the account id
+   * @return the rest response
+   */
+  @GET
+  @Path("/cf-states")
+  @Timed
+  @ExceptionMetered
+  @Deprecated
+  public RestResponse<Set<String>> listCloudFormationStatues(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(awsHelperResourceService.listCloudFormationStatues());
+  }
+
   @GET
   @Path("/cloudformation/capabilities")
   @Timed

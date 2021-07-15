@@ -28,17 +28,24 @@ public class CfSetupCommandResponse extends CfCommandResponse {
   private List<CfAppSetupTimeDetails> downsizeDetails;
   private Integer instanceCountForMostRecentVersion;
   private CfAppSetupTimeDetails mostRecentInactiveAppVersion;
+  private boolean versioningChanged;
+  private boolean nonVersioning;
+  private Integer activeAppRevision;
 
   @Builder
   public CfSetupCommandResponse(CommandExecutionStatus commandExecutionStatus, String output,
       CfAppSetupTimeDetails newApplicationDetails, Integer totalPreviousInstanceCount,
       List<CfAppSetupTimeDetails> downsizeDetails, Integer instanceCountForMostRecentVersion,
-      CfAppSetupTimeDetails mostRecentInactiveAppVersion) {
+      CfAppSetupTimeDetails mostRecentInactiveAppVersion, boolean versioningChanged, boolean nonVersioning,
+      Integer activeAppRevision) {
     super(commandExecutionStatus, output);
     this.newApplicationDetails = newApplicationDetails;
     this.totalPreviousInstanceCount = totalPreviousInstanceCount;
     this.downsizeDetails = downsizeDetails;
     this.instanceCountForMostRecentVersion = instanceCountForMostRecentVersion;
     this.mostRecentInactiveAppVersion = mostRecentInactiveAppVersion;
+    this.versioningChanged = versioningChanged;
+    this.nonVersioning = nonVersioning;
+    this.activeAppRevision = activeAppRevision;
   }
 }

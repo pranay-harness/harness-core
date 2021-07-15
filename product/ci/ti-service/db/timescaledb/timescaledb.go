@@ -439,7 +439,7 @@ func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, accountID, orgId
 		// Upsert time_taken_ms and time_saved_ms
 		/*
 			Calculation of time_saved:
-				Get list of 10000 runs for the same step_id over previous builds where num_selected != 0 and time_taken_ms != 0
+				Get list of 10000 runs for the same step_id over previous builds where num_selected != 0 and time_taken_ms != 0 AND test_count = test_selected
 				If there are none, set time_saved = 0
 				Calculate average time / test
 				time_saved = (Total tests skipped) * (Average time per test)
@@ -450,11 +450,10 @@ func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, accountID, orgId
 		if err != nil {
 			return err
 		}
-		fmt.Println("overview: ", overview)
 		query := fmt.Sprintf(
 			`
 				SELECT AVG(time_taken_ms/test_selected) FROM (SELECT test_selected, time_taken_ms FROM %s
-				WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND stage_id = $5 AND step_id = $6 AND time_taken_ms != 0 AND test_selected != 0 LIMIT 10000)
+				WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND stage_id = $5 AND step_id = $6 AND time_taken_ms != 0 AND test_selected != 0 AND test_count = test_selected LIMIT 10000)
 				AS avg`, tdb.SelectionTable)
 		rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, stageId, stepId)
 		if err != nil {

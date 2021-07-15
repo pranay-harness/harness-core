@@ -1,6 +1,7 @@
 package io.harness.delegate.task.gcp.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.gcp.helpers.GcpHelperService.ALL_LOCATIONS;
 import static io.harness.delegate.task.gcp.helpers.GcpHelperService.LOCATION_DELIMITER;
 import static io.harness.eraro.ErrorCode.CLUSTER_NOT_FOUND;
@@ -14,6 +15,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.concurrent.HTimeLimiter;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.GcpServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesConfig;
@@ -161,10 +163,22 @@ public class GkeClusterHelper {
                                     .map(cluster -> cluster.getZone() + LOCATION_DELIMITER + cluster.getName())
                                     .collect(toList())
                               : ImmutableList.of();
+    } catch (GoogleJsonResponseException e) {
+      String errorMessage;
+      if (e.getDetails() != null && isNotEmpty(e.getDetails().getMessage())) {
+        errorMessage = e.getDetails().getMessage();
+      } else {
+        errorMessage = e.getMessage();
+      }
+      log.error(errorMessage, e);
+      throw new GcpServerException(
+          String.format("Error listing clusters for project %s. Error: %s", projectId, errorMessage));
     } catch (IOException e) {
-      log.error("Error listing clusters for project " + projectId, e);
+      String errorMessage =
+          String.format("Error listing clusters for project %s. Error: %s", projectId, e.getMessage());
+      log.error(errorMessage, e);
+      throw new GcpServerException(errorMessage);
     }
-    return null;
   }
 
   private KubernetesConfig configFromCluster(Cluster cluster, String namespace) {

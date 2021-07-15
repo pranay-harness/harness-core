@@ -3,7 +3,7 @@ package io.harness.service.instancesyncperpetualtask;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.dtos.infrastructuremapping.InfrastructureMappingDTO;
+import io.harness.dtos.InfrastructureMappingDTO;
 import io.harness.service.instancesynchandler.AbstractInstanceSyncHandler;
 
 @OwnedBy(DX)

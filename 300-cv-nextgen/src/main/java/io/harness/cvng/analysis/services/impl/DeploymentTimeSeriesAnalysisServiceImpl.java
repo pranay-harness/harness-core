@@ -13,6 +13,7 @@ import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis.DeploymentTimeSeriesAnalysisKeys;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
@@ -76,8 +77,10 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
       transactionMetricInfoList =
           transactionMetricInfoList.stream()
               .filter(transactionMetricInfo
-                  -> transactionMetricInfo.getTransactionMetric().getMetricName().contains(filter)
-                      || transactionMetricInfo.getTransactionMetric().getTransactionName().contains(filter))
+                  -> transactionMetricInfo.getTransactionMetric().getMetricName().toLowerCase().contains(
+                         filter.toLowerCase())
+                      || transactionMetricInfo.getTransactionMetric().getTransactionName().toLowerCase().contains(
+                          filter.toLowerCase()))
               .collect(Collectors.toList());
     }
 
@@ -128,7 +131,14 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
 
     Set<TransactionMetricInfo> transactionMetricInfoSet = new HashSet();
     for (DeploymentTimeSeriesAnalysis timeSeriesAnalysis : latestDeploymentTimeSeriesAnalysis) {
-      String connectorName = getConnectorName(timeSeriesAnalysis);
+      VerificationTask verificationTask = verificationTaskService.get(timeSeriesAnalysis.getVerificationTaskId());
+      Preconditions.checkNotNull(
+          verificationTask.getVerificationJobInstanceId(), "VerificationJobInstance should be present");
+      CVConfig cvConfig = verificationJobInstanceService.getEmbeddedCVConfig(
+          verificationTask.getCvConfigId(), verificationTask.getVerificationJobInstanceId());
+
+      String connectorName = getConnectorName(cvConfig);
+      DataSourceType dataSourceType = cvConfig.getType();
 
       timeSeriesAnalysis.getTransactionMetricSummaries()
           .stream()
@@ -139,6 +149,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
                 TransactionMetricInfo.builder()
                     .transactionMetric(createTransactionMetric(transactionMetricHostData))
                     .connectorName(connectorName)
+                    .dataSourceType(dataSourceType)
                     .build();
             SortedSet<DeploymentTimeSeriesAnalysisDTO.HostData> nodeDataSet = new TreeSet();
             transactionMetricHostData.getHostData()
@@ -276,13 +287,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
   }
 
   @Nullable
-  private String getConnectorName(DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis) {
-    VerificationTask verificationTask =
-        verificationTaskService.get(deploymentTimeSeriesAnalysis.getVerificationTaskId());
-    Preconditions.checkNotNull(
-        verificationTask.getVerificationJobInstanceId(), "VerificationJobInstance should be present");
-    CVConfig cvConfig = verificationJobInstanceService.getEmbeddedCVConfig(
-        verificationTask.getCvConfigId(), verificationTask.getVerificationJobInstanceId());
+  private String getConnectorName(CVConfig cvConfig) {
     Preconditions.checkNotNull(cvConfig, "CVConfig should not be null");
     Optional<ConnectorInfoDTO> connectorInfoDTO = nextGenService.get(cvConfig.getAccountId(),
         cvConfig.getConnectorIdentifier(), cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier());

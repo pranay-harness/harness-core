@@ -17,7 +17,7 @@ import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeBase;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.repositories.instance.InstanceRepository;
 import io.harness.rule.Owner;
-import io.harness.service.instanceService.InstanceService;
+import io.harness.service.instance.InstanceService;
 import io.harness.service.instancedashboardservice.InstanceDashboardService;
 
 import com.google.inject.Inject;

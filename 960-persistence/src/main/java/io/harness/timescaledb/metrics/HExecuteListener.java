@@ -13,8 +13,8 @@ import org.jooq.impl.DefaultExecuteListener;
 @Singleton
 public class HExecuteListener extends DefaultExecuteListener implements QueryStatsPrinter {
   private static final long toSeconds = 1000;
-  private static long slowQuery = 2 * toSeconds;
-  private static long extremelySlowQuery = 4 * toSeconds;
+  private static long slowQuery = 1 * toSeconds;
+  private static long extremelySlowQuery = 2 * toSeconds;
   private static final String START_TIME = "startTime";
 
   private final Map<String, QueryStat> queryStatMap = new ConcurrentHashMap<>();

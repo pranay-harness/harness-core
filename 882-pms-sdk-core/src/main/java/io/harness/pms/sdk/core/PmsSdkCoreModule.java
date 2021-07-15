@@ -64,7 +64,7 @@ public class PmsSdkCoreModule extends AbstractModule {
   @Singleton
   @Named(PmsSdkModuleUtils.SDK_EXECUTOR_NAME)
   public ExecutorService sdkExecutorService() {
-    return ThreadPool.create(5, 20, 30L, TimeUnit.SECONDS,
+    return ThreadPool.create(5, 20, 120L, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("PmsSdkOrchestrationEventListener-%d").build());
   }
 }

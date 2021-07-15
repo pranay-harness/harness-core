@@ -50,6 +50,8 @@ import com.amazonaws.services.identitymanagement.model.ListRolePoliciesRequest;
 import com.amazonaws.services.identitymanagement.model.ListRolePoliciesResult;
 import com.amazonaws.services.identitymanagement.model.SimulatePrincipalPolicyRequest;
 import com.amazonaws.services.identitymanagement.model.SimulatePrincipalPolicyResult;
+import com.amazonaws.services.organizations.AWSOrganizationsClient;
+import com.amazonaws.services.organizations.AWSOrganizationsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectListing;
@@ -383,5 +385,20 @@ public class AwsClientImpl implements AwsClient {
       log.error("Exception getBucket", e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
+  }
+
+  @Override
+  public AWSOrganizationsClient getAWSOrganizationsClient(
+      String crossAccountRoleArn, String externalId, String awsAccessKey, String awsSecretKey) {
+    AWSSecurityTokenService awsSecurityTokenService =
+        constructAWSSecurityTokenService(constructStaticBasicAwsCredentials(awsAccessKey, awsSecretKey));
+    AWSOrganizationsClientBuilder builder = AWSOrganizationsClientBuilder.standard().withRegion(DEFAULT_REGION);
+    AWSCredentialsProvider credentialsProvider =
+        new STSAssumeRoleSessionCredentialsProvider.Builder(crossAccountRoleArn, UUID.randomUUID().toString())
+            .withExternalId(externalId)
+            .withStsClient(awsSecurityTokenService)
+            .build();
+    builder.withCredentials(credentialsProvider);
+    return (AWSOrganizationsClient) builder.build();
   }
 }

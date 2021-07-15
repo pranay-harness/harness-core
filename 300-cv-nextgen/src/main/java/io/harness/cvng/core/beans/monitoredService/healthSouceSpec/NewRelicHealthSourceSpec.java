@@ -30,7 +30,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NewRelicHealthSourceSpec extends HealthSourceSpec {
-  @NotNull String connectorRef;
   @NotNull String applicationName;
   @NotNull String applicationId;
   @NotNull String feature;
@@ -88,16 +87,22 @@ public class NewRelicHealthSourceSpec extends HealthSourceSpec {
       String environmentRef, String serviceRef, String identifier, String name, MetricPackService metricPackService) {
     List<NewRelicCVConfig> cvConfigs = new ArrayList<>();
     metricPacks.forEach(metricPack -> {
-      NewRelicCVConfig newRelicCVConfig = new NewRelicCVConfig();
-      fillCommonFields(
-          newRelicCVConfig, accountId, orgIdentifier, projectIdentifier, identifier, connectorRef, name, feature);
-      newRelicCVConfig.setApplicationName(applicationName);
-      newRelicCVConfig.setEnvIdentifier(environmentRef);
-      newRelicCVConfig.setApplicationId(Long.valueOf(applicationId));
-      newRelicCVConfig.setServiceIdentifier(serviceRef);
-      newRelicCVConfig.setMetricPack(
-          metricPack.toMetricPack(accountId, orgIdentifier, projectIdentifier, getType(), metricPackService));
-      newRelicCVConfig.setCategory(metricPack.getIdentifier());
+      NewRelicCVConfig newRelicCVConfig = NewRelicCVConfig.builder()
+                                              .accountId(accountId)
+                                              .orgIdentifier(orgIdentifier)
+                                              .projectIdentifier(projectIdentifier)
+                                              .identifier(identifier)
+                                              .connectorIdentifier(getConnectorRef())
+                                              .monitoringSourceName(name)
+                                              .applicationName(applicationName)
+                                              .applicationId(Long.valueOf(applicationId))
+                                              .envIdentifier(environmentRef)
+                                              .serviceIdentifier(serviceRef)
+                                              .metricPack(metricPack.toMetricPack(accountId, orgIdentifier,
+                                                  projectIdentifier, getType(), metricPackService))
+                                              .category(metricPack.getIdentifier())
+                                              .productName(feature)
+                                              .build();
       cvConfigs.add(newRelicCVConfig);
     });
     return cvConfigs;

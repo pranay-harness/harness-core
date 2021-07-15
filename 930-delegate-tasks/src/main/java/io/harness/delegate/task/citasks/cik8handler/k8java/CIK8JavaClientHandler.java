@@ -35,6 +35,7 @@ import io.kubernetes.client.openapi.models.V1ContainerStatus;
 import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodCondition;
+import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1SecretBuilder;
 import io.kubernetes.client.openapi.models.V1Service;
@@ -42,6 +43,8 @@ import io.kubernetes.client.openapi.models.V1ServiceBuilder;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import io.kubernetes.client.openapi.models.V1ServicePortBuilder;
 import io.kubernetes.client.openapi.models.V1Status;
+import io.kubernetes.client.util.generic.GenericKubernetesApi;
+import io.kubernetes.client.util.generic.KubernetesApiResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -182,8 +185,10 @@ public class CIK8JavaClientHandler {
 
     if (podGet != null) {
       try {
-        deletePod(coreV1Api, pod.getMetadata().getName(), namespace);
-      } catch (ApiException ex) {
+        GenericKubernetesApi<V1Pod, V1PodList> podClient =
+            new GenericKubernetesApi(V1Pod.class, V1PodList.class, "", "v1", "pods", coreV1Api.getApiClient());
+        deletePod(podClient, pod.getMetadata().getName(), namespace);
+      } catch (Exception ex) {
         log.info("CreateOrReplace Pod: Pod delete failed with err: %s", ex);
       }
     }
@@ -205,11 +210,26 @@ public class CIK8JavaClientHandler {
         getRetryPolicyForDeletion(format("[Retrying failed to delete pod: [%s]; attempt: {}", podName),
             format("Failed to delete pod after retrying {} times", podName));
 
-    return Failsafe.with(retryPolicy).get(() -> deletePod(coreV1Api, podName, namespace));
+    GenericKubernetesApi<V1Pod, V1PodList> podClient =
+        new GenericKubernetesApi(V1Pod.class, V1PodList.class, "", "v1", "pods", coreV1Api.getApiClient());
+    return Failsafe.with(retryPolicy).get(() -> deletePod(podClient, podName, namespace));
   }
 
-  public V1Status deletePod(CoreV1Api coreV1Api, String podName, String namespace) throws ApiException {
-    return coreV1Api.deleteNamespacedPod(podName, namespace, null, null, null, null, null, null);
+  public V1Status deletePod(GenericKubernetesApi<V1Pod, V1PodList> podClient, String podName, String namespace) {
+    V1Status v1Status = new V1Status();
+    KubernetesApiResponse kubernetesApiResponse = podClient.delete(namespace, podName);
+    if (kubernetesApiResponse.isSuccess()) {
+      v1Status.setStatus("Success");
+      return v1Status;
+    }
+
+    if (kubernetesApiResponse.getHttpStatusCode() == 404) {
+      log.warn("Pod {} not found ", podName);
+      v1Status.setStatus("Failure");
+      return v1Status;
+    } else {
+      throw new RuntimeException("Failed to delete pod " + podName);
+    }
   }
 
   public V1Pod getPod(CoreV1Api coreV1Api, String podName, String namespace) throws ApiException {
@@ -389,9 +409,14 @@ public class CIK8JavaClientHandler {
             format("Failed to delete service after retrying {} times", serviceName));
 
     return Failsafe.with(retryPolicy).get(() -> {
-      return coreV1Api.deleteNamespacedService(serviceName, namespace, null, null, null, null, null, null)
-          .getStatus()
-          .equals("Success");
+      try {
+        return coreV1Api.deleteNamespacedService(serviceName, namespace, null, null, null, null, null, null)
+            .getStatus()
+            .equals("Success");
+      } catch (ApiException ex) {
+        ignoreResourceNotFound(ex, serviceName);
+        return false;
+      }
     });
   }
 
@@ -401,10 +426,23 @@ public class CIK8JavaClientHandler {
             format("Failed to delete secret after retrying {} times", secretName));
 
     return Failsafe.with(retryPolicy).get(() -> {
-      return coreV1Api.deleteNamespacedSecret(secretName, namespace, null, null, null, null, null, null)
-          .getStatus()
-          .equals("Success");
+      try {
+        return coreV1Api.deleteNamespacedSecret(secretName, namespace, null, null, null, null, null, null)
+            .getStatus()
+            .equals("Success");
+      } catch (ApiException ex) {
+        ignoreResourceNotFound(ex, secretName);
+        return false;
+      }
     });
+  }
+
+  private void ignoreResourceNotFound(ApiException ex, String resourceName) throws ApiException {
+    if (ex.getCode() == 404) {
+      log.warn("K8 resource {}  not found ", resourceName);
+    } else {
+      throw ex;
+    }
   }
 
   private RetryPolicy<Object> getRetryPolicyForDeletion(String failedAttemptMessage, String failureMessage) {

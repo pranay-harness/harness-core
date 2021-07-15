@@ -232,7 +232,7 @@ func isValid(t types.RunnableTest) bool {
 	return t.Pkg != "" && t.Class != ""
 }
 
-func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq, account string) (types.SelectTestsResp, error) {
+func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq, account string, enableReflection bool) (types.SelectTestsResp, error) {
 	// parse package and class names from the files
 	fileNames := []string{}
 	for _, f := range req.Files {
@@ -380,16 +380,19 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 		}
 	}
 
-	// Go through reflection tests and add anything that hasn't been added before
-	for _, rt := range reflectionTests {
-		if _, ok := m[rt]; !ok {
-			m[rt] = struct{}{}
-			for _, src := range methodMap[rt] {
-				l = append(l, types.RunnableTest{Pkg: src.Pkg, Class: src.Class,
-					Method: src.Method, Selection: types.SelectSourceCode})
+	if enableReflection {
+		// Go through reflection tests and add anything that hasn't been added before
+		for _, rt := range reflectionTests {
+			if _, ok := m[rt]; !ok {
+				m[rt] = struct{}{}
+				for _, src := range methodMap[rt] {
+					l = append(l, types.RunnableTest{Pkg: src.Pkg, Class: src.Class,
+						Method: src.Method, Selection: types.SelectSourceCode})
+				}
 			}
 		}
 	}
+
 	return types.SelectTestsResp{
 		TotalTests:    totalTests,
 		SelectedTests: len(l) - new, // new tests will be added later in upsert with uploading of partial CG

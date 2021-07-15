@@ -1024,7 +1024,8 @@
                   "OPTIMIZATION",
                   "VISIBILITY"
                 ]
-              }
+              },
+              "minLength": 1
             }
           }
         }
@@ -1055,7 +1056,8 @@
                   "OPTIMIZATION",
                   "VISIBILITY"
                 ]
-              }
+              },
+              "minLength": 1
             },
             "subscriptionId": {
               "type": "string"
@@ -1091,7 +1093,8 @@
                   "OPTIMIZATION",
                   "VISIBILITY"
                 ]
-              }
+              },
+              "minLength": 1
             }
           }
         }
@@ -1874,7 +1877,8 @@
                   "OPTIMIZATION",
                   "VISIBILITY"
                 ]
-              }
+              },
+              "minLength": 1
             },
             "projectId": {
               "type": "string"

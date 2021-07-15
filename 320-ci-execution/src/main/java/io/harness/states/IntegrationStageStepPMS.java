@@ -17,6 +17,7 @@ import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.plancreator.steps.common.StageElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -30,6 +31,7 @@ import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -80,7 +82,14 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
   @Override
   public StepResponse handleChildResponse(
       Ambiance ambiance, StageElementParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    log.info("executed integration stage =[{}]", stepParameters);
+    long startTime = AmbianceUtils.getCurrentLevelStartTs(ambiance);
+    long currentTime = System.currentTimeMillis();
+    StepResponseNotifyData stepResponseNotifyData = filterStepResponse(responseDataMap);
+
+    Status stageStatus = stepResponseNotifyData.getStatus();
+    log.info("Executed integration stage {} in {} milliseconds with status {} ", stepParameters.getIdentifier(),
+        currentTime - startTime, stageStatus);
+
     IntegrationStageStepParametersPMS integrationStageStepParametersPMS =
         (IntegrationStageStepParametersPMS) stepParameters.getSpecConfig();
     StepResponseBuilder stepResponseBuilder = createStepResponseFromChildResponse(responseDataMap).toBuilder();
@@ -120,5 +129,15 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
     }
 
     return stepResponseBuilder.build();
+  }
+
+  private StepResponseNotifyData filterStepResponse(Map<String, ResponseData> responseDataMap) {
+    // Filter final response from step
+    return responseDataMap.entrySet()
+        .stream()
+        .filter(entry -> entry.getValue() instanceof StepResponseNotifyData)
+        .findFirst()
+        .map(obj -> (StepResponseNotifyData) obj.getValue())
+        .orElse(null);
   }
 }

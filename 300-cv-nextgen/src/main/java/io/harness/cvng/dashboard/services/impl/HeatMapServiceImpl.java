@@ -1,6 +1,7 @@
 package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo5MinBoundary;
+import static io.harness.cvng.core.utils.DateTimeUtils.roundDownToMinBoundary;
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.getHeatMapResolution;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -11,6 +12,7 @@ import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
+import io.harness.cvng.core.beans.monitoredService.RiskData;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
@@ -412,7 +414,7 @@ public class HeatMapServiceImpl implements HeatMapService {
       List<Pair<String, String>> serviceEnvIdentifiers, int hours) {
     Preconditions.checkArgument(serviceEnvIdentifiers.size() <= 10,
         "Based on page size, the health score calculation should be done for less than 10 services");
-    int bucketsBasedOn5MinFrame = hours * 12;
+    int bucketsBasedOn30MinFrame = hours * 2;
     int size = serviceEnvIdentifiers.size();
     if (size == 0) {
       return Collections.emptyList();
@@ -421,14 +423,14 @@ public class HeatMapServiceImpl implements HeatMapService {
     Map<Pair<String, String>, Integer> serviceEnvironmentIndex = new HashMap<>();
 
     for (int i = 0; i < size; i++) {
-      historicalTrendList.add(HistoricalTrend.builder().size(bucketsBasedOn5MinFrame).build());
+      historicalTrendList.add(HistoricalTrend.builder().size(bucketsBasedOn30MinFrame).build());
       serviceEnvironmentIndex.put(serviceEnvIdentifiers.get(i), i);
     }
 
-    Instant endTime = roundDownTo5MinBoundary(clock.instant());
+    Instant endTime = roundDownToMinBoundary(clock.instant(), 30);
     Instant startTime = endTime.minus(hours, ChronoUnit.HOURS);
 
-    HeatMapResolution heatMapResolution = HeatMapResolution.FIVE_MIN;
+    HeatMapResolution heatMapResolution = HeatMapResolution.THIRTY_MINUTES;
 
     Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class, excludeAuthority)
                                       .filter(HeatMapKeys.accountId, accountId)
@@ -451,12 +453,14 @@ public class HeatMapServiceImpl implements HeatMapService {
     heatMaps.forEach(heatMap -> {
       SortedSet<HeatMapRisk> risks = new TreeSet<>(heatMap.getHeatMapRisks());
       risks.forEach(heatMapRisk -> {
-        int index = getIndex(bucketsBasedOn5MinFrame, heatMapRisk.getEndTime(), endTime);
-        if (index >= 0) {
+        int index = getIndex(bucketsBasedOn30MinFrame, heatMapRisk.getEndTime(), endTime);
+        if (index >= 0 && index < bucketsBasedOn30MinFrame) {
           int indexPosition =
               serviceEnvironmentIndex.get(Pair.of(heatMap.getServiceIdentifier(), heatMap.getEnvIdentifier()));
-          if (historicalTrendList.get(indexPosition).getHealthScores().get(index) < heatMapRisk.getRiskScore()) {
-            historicalTrendList.get(indexPosition).getHealthScores().set(index, heatMapRisk.getRiskScore());
+          RiskData riskData = historicalTrendList.get(indexPosition).getHealthScores().get(index);
+          if (riskData.getRiskValue() < heatMapRisk.getRiskValue()) {
+            riskData.setRiskValue(heatMapRisk.getRiskValue());
+            riskData.setRiskStatus(heatMapRisk.getRiskStatus());
           }
         }
       });
@@ -464,8 +468,8 @@ public class HeatMapServiceImpl implements HeatMapService {
     return historicalTrendList;
   }
 
-  private int getIndex(int bucketsBasedOn5MinFrame, Instant timeFrame, Instant endTime) {
-    return bucketsBasedOn5MinFrame - 1 - (int) ChronoUnit.MINUTES.between(timeFrame, endTime) / 5;
+  private int getIndex(int bucketsBasedOn30MinFrame, Instant timeFrame, Instant endTime) {
+    return bucketsBasedOn30MinFrame - 1 - (int) ChronoUnit.MINUTES.between(timeFrame, endTime) / 30;
   }
 
   private Map<Instant, HeatMapDTO> getHeatMapsFromDB(String accountId, String orgIdentifier, String projectIdentifier,

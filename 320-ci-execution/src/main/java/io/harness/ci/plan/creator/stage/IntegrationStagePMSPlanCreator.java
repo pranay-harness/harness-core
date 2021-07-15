@@ -66,6 +66,7 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
   @Override
   public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
       PlanCreationContext ctx, StageElementConfig stageElementConfig) {
+    log.info("Received plan creation request for integration stage {}", stageElementConfig.getIdentifier());
     LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
     Map<String, YamlField> dependenciesNodeMap = new HashMap<>();
     final String podName = generatePodName(stageElementConfig.getIdentifier());
@@ -104,6 +105,7 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
     planCreationResponseMap.put(
         specPlanNode.getUuid(), PlanCreationResponse.builder().node(specPlanNode.getUuid(), specPlanNode).build());
 
+    log.info("Successfully created plan for integration stage {}", stageElementConfig.getIdentifier());
     return planCreationResponseMap;
   }
 

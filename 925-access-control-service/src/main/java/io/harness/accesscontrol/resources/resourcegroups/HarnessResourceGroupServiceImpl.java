@@ -17,14 +17,19 @@ import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
+import java.util.Optional;
+import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 
 @OwnedBy(PL)
 @Slf4j
+@ValidateOnExecution
+@Singleton
 public class HarnessResourceGroupServiceImpl implements HarnessResourceGroupService {
   private final ResourceGroupClient resourceGroupClient;
   private final ResourceGroupFactory resourceGroupFactory;
@@ -49,26 +54,27 @@ public class HarnessResourceGroupServiceImpl implements HarnessResourceGroupServ
   @Override
   public void sync(String identifier, Scope scope) {
     ScopeParams scopeParams = scopeParamsFactory.buildScopeParams(scope);
-    String errorMessage =
-        String.format("Resource group not found with the given identifier in scope %s", scope.toString());
-
-    ResourceGroupResponse resourceGroupResponse;
     try {
-      resourceGroupResponse = Failsafe.with(retryPolicy).get(() -> {
+      Optional<ResourceGroupResponse> resourceGroupResponse = Failsafe.with(retryPolicy).get(() -> {
         ResourceGroupResponse response = NGRestUtils.getResponse(resourceGroupClient.getResourceGroup(identifier,
             scopeParams.getParams().get(ACCOUNT_LEVEL_PARAM_NAME), scopeParams.getParams().get(ORG_LEVEL_PARAM_NAME),
             scopeParams.getParams().get(PROJECT_LEVEL_PARAM_NAME)));
-        if (response == null || response.getResourceGroup() == null) {
-          throw new InvalidRequestException(errorMessage);
-        }
-        return response;
+        return Optional.ofNullable(response);
       });
-      resourceGroupService.upsert(resourceGroupFactory.buildResourceGroup(resourceGroupResponse, scope.toString()));
-    } catch (InvalidRequestException e) {
-      if (e.getMessage().equals(errorMessage)) {
-        log.warn("Did not find the resource group with identifier {} in scope {}", identifier, scope.toString());
-        resourceGroupService.deleteIfPresent(identifier, scope.toString());
+      if (resourceGroupResponse.isPresent()) {
+        resourceGroupService.upsert(
+            resourceGroupFactory.buildResourceGroup(resourceGroupResponse.get(), scope.toString()));
+      } else {
+        deleteIfPresent(identifier, scope);
       }
+    } catch (Exception e) {
+      log.error("Exception while syncing resource group", e);
     }
+  }
+
+  @Override
+  public void deleteIfPresent(String identifier, Scope scope) {
+    log.warn("Removing resource group with identifier {} in scope {}", identifier, scope.toString());
+    resourceGroupService.deleteIfPresent(identifier, scope.toString());
   }
 }

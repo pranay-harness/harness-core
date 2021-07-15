@@ -33,6 +33,8 @@ public class PcfRouteUpdateStateExecutionData extends StateExecutionData impleme
   private String commandName;
   private CfRouteUpdateRequestConfigData pcfRouteUpdateRequestConfigData;
   private List<String> tags;
+  private boolean isRollback;
+  private boolean isUpSizeInActiveApp;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
@@ -69,7 +71,8 @@ public class PcfRouteUpdateStateExecutionData extends StateExecutionData impleme
       stringBuilder.append('{')
           .append(pcfRouteUpdateRequestConfigData.getNewApplicatiaonName())
           .append(" : ")
-          .append(pcfRouteUpdateRequestConfigData.getFinalRoutes())
+          .append(isRollback ? pcfRouteUpdateRequestConfigData.getTempRoutes()
+                             : pcfRouteUpdateRequestConfigData.getFinalRoutes())
           .append('}');
 
       if (isNotEmpty(pcfRouteUpdateRequestConfigData.getExistingApplicationNames())) {
@@ -77,7 +80,8 @@ public class PcfRouteUpdateStateExecutionData extends StateExecutionData impleme
             -> stringBuilder.append(", {")
                    .append(appName)
                    .append(" : ")
-                   .append(pcfRouteUpdateRequestConfigData.getTempRoutes())
+                   .append(isRollback ? pcfRouteUpdateRequestConfigData.getFinalRoutes()
+                                      : pcfRouteUpdateRequestConfigData.getTempRoutes())
                    .append('}'));
       }
     } else {

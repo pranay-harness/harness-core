@@ -556,8 +556,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       yaml = yamlHandler.toYaml(settingAttribute, GLOBAL_APP_ID);
     }
 
-    return YamlHelper.getYamlRestResponse(yamlGitSyncService, settingAttribute.getUuid(), accountId, yaml,
-        YamlConstants.LAMBDA_SPEC_YAML_FILE_NAME + YAML_EXTENSION);
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, settingAttribute.getUuid(), accountId, yaml, settingAttribute.getName() + YAML_EXTENSION);
   }
 
   @Override

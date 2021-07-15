@@ -1,6 +1,6 @@
 package io.harness.service.infrastructuremapping;
 
-import io.harness.dtos.infrastructuremapping.InfrastructureMappingDTO;
+import io.harness.dtos.InfrastructureMappingDTO;
 
 import java.util.Optional;
 

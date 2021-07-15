@@ -785,7 +785,10 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     }
 
     try {
-      List<String> activeDelegates = retrieveActiveDelegates(delegateTask.getAccountId(), null);
+      // We are skipping invocation of the delegateSelectionLogsService.save intentionally, becuase we do not need to
+      // track selection logs here, we just want retrieveActiveDelegates method to respect cg/ng isolation, if necessary
+      BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(delegateTask);
+      List<String> activeDelegates = retrieveActiveDelegates(delegateTask.getAccountId(), batch);
 
       List<String> whitelistedDelegates = connectedWhitelistedDelegates(delegateTask);
       if (activeDelegates.isEmpty()) {
@@ -859,6 +862,11 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
          * for the whole cache validity period to pass and returning empty list.
          * */
         accountDelegatesCache.invalidate(accountId);
+      }
+
+      if (batch != null && featureFlagService.isEnabled(FeatureName.NG_CG_TASK_ASSIGNMENT_ISOLATION, accountId)) {
+        accountDelegates =
+            accountDelegates.stream().filter(delegate -> delegate.isNg() == batch.isTaskNg()).collect(toList());
       }
 
       return identifyActiveDelegateIds(accountDelegates, accountId, batch);

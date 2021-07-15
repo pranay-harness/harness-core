@@ -6,6 +6,7 @@ import static java.time.Duration.ofDays;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -14,6 +15,8 @@ import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.common.collect.ImmutableList;
 import java.time.Duration;
@@ -23,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
@@ -63,10 +65,19 @@ public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAc
   @NotNull @Trimmed String name;
   String levelRuntimeIdIdx;
 
-  @Getter Map<String, Object> value;
+  @Deprecated Map<String, Object> value; // use valueOutput instead
+  OrchestrationMap valueOutput;
   @Wither @CreatedDate Long createdAt;
 
   @FdIndex @Builder.Default Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
 
   @Wither @Version Long version;
+
+  public String getOutputValue() {
+    if (!EmptyPredicate.isEmpty(valueOutput)) {
+      return RecastOrchestrationUtils.toJson(valueOutput);
+    }
+
+    return RecastOrchestrationUtils.toJson(value);
+  }
 }

@@ -12,19 +12,15 @@ import static java.lang.Boolean.TRUE;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
-import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
-import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.beans.SortOrder;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
-import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.outbox.api.OutboxService;
 import io.harness.remote.NGObjectMapperHelper;
-import io.harness.remote.client.NGRestUtils;
 import io.harness.resourcegroup.framework.events.ResourceGroupCreateEvent;
 import io.harness.resourcegroup.framework.events.ResourceGroupDeleteEvent;
 import io.harness.resourcegroup.framework.events.ResourceGroupUpdateEvent;
@@ -39,7 +35,6 @@ import io.harness.resourcegroupclient.ResourceGroupResponse;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -144,17 +139,10 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     }
 
     ResourceGroup resourceGroup = resourceGroupOpt.get();
-    RoleAssignmentFilterDTO roleAssignmentFilterDTO =
-        RoleAssignmentFilterDTO.builder()
-            .resourceGroupFilter(Collections.singleton(resourceGroup.getIdentifier()))
-            .build();
-    PageResponse<RoleAssignmentResponseDTO> pageResponse =
-        NGRestUtils.getResponse(accessControlAdminClient.getFilteredRoleAssignments(scope.getAccountIdentifier(),
-            scope.getOrgIdentifier(), scope.getProjectIdentifier(), 0, 10, roleAssignmentFilterDTO));
-    if (pageResponse.getPageItemCount() > 0) {
-      throw new InvalidRequestException(
-          "There exists role assignments with this resource group. Please delete them first and then try again");
+    if (Boolean.TRUE.equals(resourceGroup.getHarnessManaged())) {
+      throw new InvalidRequestException("Managed resource group cannot be deleted");
     }
+
     Failsafe.with(DEFAULT_TRANSACTION_RETRY_POLICY).get(() -> transactionTemplate.execute(status -> {
       resourceGroupRepository.delete(resourceGroup);
       outboxService.save(

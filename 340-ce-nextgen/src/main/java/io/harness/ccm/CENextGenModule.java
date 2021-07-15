@@ -11,6 +11,8 @@ import io.harness.annotations.retry.MethodExecutionHelper;
 import io.harness.annotations.retry.RetryOnException;
 import io.harness.annotations.retry.RetryOnExceptionInterceptor;
 import io.harness.app.PrimaryVersionManagerModule;
+import io.harness.aws.AwsClient;
+import io.harness.aws.AwsClientImpl;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -172,6 +174,7 @@ public class CENextGenModule extends AbstractModule {
 
     // Bind Services
     bind(CEYamlService.class).to(CEYamlServiceImpl.class);
+    bind(AwsClient.class).to(AwsClientImpl.class);
     bind(AwsEntityChangeEventService.class).to(AwsEntityChangeEventServiceImpl.class);
 
     install(new CENextGenPersistenceModule());
@@ -234,9 +237,9 @@ public class CENextGenModule extends AbstractModule {
       @Named("morphiaClasses")
       Map<Class, String> morphiaCustomCollectionNames() {
         return ImmutableMap.<Class, String>builder()
-            .put(DelegateSyncTaskResponse.class, "delegateSyncTaskResponses")
-            .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
-            .put(DelegateTaskProgressResponse.class, "delegateTaskProgressResponses")
+            .put(DelegateSyncTaskResponse.class, "CENextGen_delegateSyncTaskResponses")
+            .put(DelegateAsyncTaskResponse.class, "CENextGen_delegateAsyncTaskResponses")
+            .put(DelegateTaskProgressResponse.class, "CENextGen_delegateTaskProgressResponses")
             .build();
       }
     });

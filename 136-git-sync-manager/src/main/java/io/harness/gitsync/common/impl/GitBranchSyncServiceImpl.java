@@ -109,6 +109,7 @@ public class GitBranchSyncServiceImpl implements GitBranchSyncService {
     return GitToHarnessProcessMsvcStepResponse.builder().gitToHarnessProgressStatus(gitToHarnessProgressStatus).build();
   }
 
+  // todo deepak: if for loop is removed from here take care of branch push case
   private List<GitFileChangeDTO> getFilesToBeProcessed(
       List<YamlGitConfigDTO> yamlGitConfigDTOs, String accountIdentifier, Set<String> foldersList, String branchName) {
     List<GitFileChangeDTO> filesInBranch = new ArrayList<>();

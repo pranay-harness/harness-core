@@ -112,7 +112,7 @@ public class HealthSourceServiceImpl implements HealthSourceService {
       String accountId, String orgIdentifier, String projectIdentifier, String nameSpaceIdentifier, String identifier) {
     List<CVConfig> cvConfigs = cvConfigService.list(accountId, orgIdentifier, projectIdentifier,
         HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, identifier));
-    Preconditions.checkNotNull(cvConfigs,
+    Preconditions.checkState(!cvConfigs.isEmpty(),
         String.format("CVConfigs are not present for identifier %s, orgIdentifier %s and projectIdentifier %s",
             HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, identifier), orgIdentifier,
             projectIdentifier));
@@ -125,7 +125,7 @@ public class HealthSourceServiceImpl implements HealthSourceService {
         .name(cvConfigs.get(0).getMonitoringSourceName())
         .type(dataSourceTypeMonitoredServiceDataSourceTypeMap.get(cvConfigs.get(0).getType()))
         .identifier(identifier)
-        .spec(cvConfigToHealthSourceTransformer.transformToHealthSourceConfig(cvConfigs))
+        .spec(cvConfigToHealthSourceTransformer.transform(cvConfigs))
         .build();
   }
 }

@@ -180,7 +180,7 @@ public class InfrastructureStep implements SyncExecutableWithRbac<Infrastructure
       case InfrastructureKind.KUBERNETES_GCP:
         K8sGcpInfrastructure k8sGcpInfrastructure = (K8sGcpInfrastructure) infrastructure;
         validateExpression(k8sGcpInfrastructure.getConnectorRef(), k8sGcpInfrastructure.getNamespace(),
-            k8sGcpInfrastructure.getReleaseName(), k8sGcpInfrastructure.getCluster());
+            k8sGcpInfrastructure.getCluster());
         break;
       default:
         throw new InvalidArgumentsException(format("Unknown Infrastructure Kind : [%s]", infrastructure.getKind()));

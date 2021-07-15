@@ -8,6 +8,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
+import static com.amazonaws.services.cloudformation.model.StackStatus.UPDATE_ROLLBACK_COMPLETE;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -302,6 +303,53 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
         singletonList(new Stack().withStackStatus("CREATE_COMPLETE").withStackName("HarnessStack-" + stackNameSuffix));
     List<Stack> updateProgressList = singletonList(new Stack().withStackStatus("UPDATE_IN_PROGRESS"));
     List<Stack> updateCompleteList = singletonList(new Stack().withStackStatus("UPDATE_COMPLETE"));
+    doReturn(exitingList)
+        .doReturn(updateProgressList)
+        .doReturn(updateCompleteList)
+        .when(mockAwsHelperService)
+        .getAllStacks(anyString(), any(), any());
+    doReturn("Body").when(mockAwsCFHelperServiceDelegate).getStackBody(any(), anyString(), anyString());
+
+    CloudFormationCommandExecutionResponse response = createStackHandler.execute(request, null);
+    assertThat(response).isNotNull();
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    CloudFormationCommandResponse formationCommandResponse = response.getCommandResponse();
+    assertThat(formationCommandResponse).isNotNull();
+    assertThat(formationCommandResponse instanceof CloudFormationCreateStackResponse).isTrue();
+    CloudFormationCreateStackResponse createStackResponse =
+        (CloudFormationCreateStackResponse) formationCommandResponse;
+    ExistingStackInfo existingStackInfo = createStackResponse.getExistingStackInfo();
+    assertThat(existingStackInfo).isNotNull();
+    assertThat(existingStackInfo.isStackExisted()).isTrue();
+    assertThat("Body").isEqualTo(existingStackInfo.getOldStackBody());
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testUpdateStackWithStackStatusToMarkAsSuccess() {
+    String templateBody = "Template Body";
+    char[] accessKey = "abcd".toCharArray();
+    char[] secretKey = "pqrs".toCharArray();
+    String stackNameSuffix = "Stack Name 00";
+    CloudFormationCreateStackRequest request =
+        CloudFormationCreateStackRequest.builder()
+            .commandType(CloudFormationCommandType.CREATE_STACK)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .activityId(ACTIVITY_ID)
+            .commandName("Create Stack")
+            .awsConfig(AwsConfig.builder().accessKey(accessKey).accountId(ACCOUNT_ID).secretKey(secretKey).build())
+            .timeoutInMs(10 * 60 * 1000)
+            .stackStatusesToMarkAsSuccess(singletonList(UPDATE_ROLLBACK_COMPLETE))
+            .createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY)
+            .data(templateBody)
+            .stackNameSuffix(stackNameSuffix)
+            .build();
+    List<Stack> exitingList =
+        singletonList(new Stack().withStackStatus("CREATE_COMPLETE").withStackName("HarnessStack-" + stackNameSuffix));
+    List<Stack> updateProgressList = singletonList(new Stack().withStackStatus("UPDATE_IN_PROGRESS"));
+    List<Stack> updateCompleteList = singletonList(new Stack().withStackStatus("UPDATE_ROLLBACK_COMPLETE"));
     doReturn(exitingList)
         .doReturn(updateProgressList)
         .doReturn(updateCompleteList)
@@ -915,6 +963,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     verify(mockAwsHelperService).deleteStack(anyString(), any(), any());
   }
+
   private void testFailureForCreateStackStatus(String status) {
     String templateBody = "Template Body";
     char[] accessKey = "abcd".toCharArray();
@@ -942,21 +991,36 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     String stackId = "Stack Id 00";
     CreateStackResult createStackResult = new CreateStackResult().withStackId(stackId);
     doReturn(createStackResult).when(mockAwsHelperService).createStack(anyString(), any(), any());
-    List<Stack> rollbackList = singletonList(new Stack().withStackStatus(status));
-    List<Stack> rollbackCompleteList = singletonList(new Stack().withStackStatus("ROLLBACK_COMPLETE"));
-    doReturn(Collections.emptyList())
-        .doReturn(rollbackList)
-        .when(mockAwsHelperService)
-        .getAllStacks(anyString(), any(), any());
+    List<Stack> rollbackList =
+        singletonList(new Stack().withStackStatus(status).withStackName("HarnessStack-" + stackNameSuffix));
+    List<Stack> rollbackCompleteList = singletonList(
+        new Stack().withStackStatus("ROLLBACK_COMPLETE").withStackName("HarnessStack-" + stackNameSuffix));
+
     if ("ROLLBACK_IN_PROGRESS".equalsIgnoreCase(status)) {
-      doReturn(rollbackCompleteList).when(mockAwsHelperService).getAllStacks(anyString(), any(), any());
+      doReturn(Collections.emptyList())
+          .doReturn(rollbackList)
+          .doReturn(rollbackCompleteList)
+          .when(mockAwsHelperService)
+          .getAllStacks(anyString(), any(), any());
+    } else {
+      doReturn(Collections.emptyList())
+          .doReturn(rollbackList)
+          .when(mockAwsHelperService)
+          .getAllStacks(anyString(), any(), any());
     }
 
     CloudFormationCommandExecutionResponse response = createStackHandler.execute(request, null);
     assertThat(response).isNotNull();
     assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
     CloudFormationCommandResponse formationCommandResponse = response.getCommandResponse();
-    assertThat(formationCommandResponse).isNull();
+    CloudFormationCreateStackResponse expectedCreateStackResponse =
+        CloudFormationCreateStackResponse.builder().stackStatus(status).build();
+    if ("ROLLBACK_IN_PROGRESS".equalsIgnoreCase(status)) {
+      expectedCreateStackResponse =
+          CloudFormationCreateStackResponse.builder().stackStatus("ROLLBACK_COMPLETE").build();
+    }
+
+    assertThat(formationCommandResponse).isEqualTo(expectedCreateStackResponse);
   }
 
   private void validateStackSummaryInfo(

@@ -634,6 +634,18 @@ message GetUserReposResponse {
   string error = 4;
 }
 
+message FindPRRequest {
+  int64 number = 1;
+  string slug = 2;
+  Provider provider = 3;
+}
+
+message FindPRResponse {
+  PullRequest pr = 1;
+  int32 status = 2;
+  string error = 3;
+}
+
 service SCM {
   // RPC to stop tailing on a file.
   rpc ParseWebhook(ParseWebhookRequest) returns (ParseWebhookResponse);
@@ -653,6 +665,7 @@ service SCM {
 
   // Git functions. branch and commits
   rpc CreatePR(CreatePRRequest) returns (CreatePRResponse);
+  rpc FindPR(FindPRRequest) returns (FindPRResponse);
   rpc FindFilesInPR(FindFilesInPRRequest) returns (FindFilesInPRResponse);
   rpc CreateBranch(CreateBranchRequest) returns (CreateBranchResponse);
   rpc GetLatestCommit(GetLatestCommitRequest) returns (GetLatestCommitResponse);

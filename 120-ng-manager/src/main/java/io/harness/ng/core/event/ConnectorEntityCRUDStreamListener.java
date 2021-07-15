@@ -9,6 +9,7 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANI
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.RESTORE_ACTION;
 
+import io.harness.connector.eventHandlers.ConnectorEntityCRUDEventHandler;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.account.AccountEntityChangeDTO;
 import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
@@ -26,12 +27,14 @@ import lombok.extern.slf4j.Slf4j;
 public class ConnectorEntityCRUDStreamListener implements MessageListener {
   private final HarnessSMManager harnessSMManager;
   private final CIDefaultEntityManager ciDefaultEntityManager;
+  private final ConnectorEntityCRUDEventHandler connectorEntityCRUDEventHandler;
 
   @Inject
-  public ConnectorEntityCRUDStreamListener(
-      HarnessSMManager harnessSMManager, CIDefaultEntityManager ciDefaultEntityManager) {
+  public ConnectorEntityCRUDStreamListener(HarnessSMManager harnessSMManager,
+      CIDefaultEntityManager ciDefaultEntityManager, ConnectorEntityCRUDEventHandler connectorEntityCRUDEventHandler) {
     this.harnessSMManager = harnessSMManager;
     this.ciDefaultEntityManager = ciDefaultEntityManager;
+    this.connectorEntityCRUDEventHandler = connectorEntityCRUDEventHandler;
   }
 
   @Override
@@ -159,7 +162,8 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
   }
 
   private boolean processProjectDeleteEvent(ProjectEntityChangeDTO projectEntityChangeDTO) {
-    return true;
+    return connectorEntityCRUDEventHandler.deleteAssociatedConnectors(projectEntityChangeDTO.getAccountIdentifier(),
+        projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
   }
 
   private boolean processProjectRestoreEvent(ProjectEntityChangeDTO projectEntityChangeDTO) {

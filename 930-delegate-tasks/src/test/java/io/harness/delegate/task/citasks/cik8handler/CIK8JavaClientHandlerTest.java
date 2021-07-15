@@ -8,7 +8,9 @@ import static io.harness.rule.OwnerRule.SHUBHAM;
 
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,10 +36,13 @@ import io.kubernetes.client.openapi.models.V1ContainerStatusBuilder;
 import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodBuilder;
+import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1PodStatusBuilder;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1SecretBuilder;
 import io.kubernetes.client.openapi.models.V1StatusBuilder;
+import io.kubernetes.client.util.generic.GenericKubernetesApi;
+import io.kubernetes.client.util.generic.KubernetesApiResponse;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -56,6 +61,7 @@ public class CIK8JavaClientHandlerTest extends CategoryTest {
   @Mock private SecretSpecBuilder mockSecretSpecBuilder;
 
   @Mock private CoreV1Api coreV1Api;
+  @Mock private GenericKubernetesApi<V1Pod, V1PodList> podClient;
   @Mock private Sleeper sleeper;
   @Mock private ImageSecretBuilder imageSecretBuilder;
   @InjectMocks private io.harness.delegate.task.citasks.cik8handler.k8java.CIK8JavaClientHandler cik8JavaClientHandler;
@@ -150,18 +156,34 @@ public class CIK8JavaClientHandlerTest extends CategoryTest {
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void deletePodWithSuccess() throws ApiException {
-    when(coreV1Api.deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any(), any()))
-        .thenReturn(new V1StatusBuilder().withStatus("Success").build());
-    assertEquals(cik8JavaClientHandler.deletePod(coreV1Api, podName, namespace).getStatus(), "Success");
+    KubernetesApiResponse kubernetesApiResponse =
+        new KubernetesApiResponse(new V1StatusBuilder().withStatus("Success").build(), -1);
+
+    when(podClient.delete(anyString(), anyString())).thenReturn(kubernetesApiResponse);
+    assertEquals(cik8JavaClientHandler.deletePod(podClient, podName, namespace).getStatus(), "Success");
+  }
+
+  @Test
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void deletePodWithPodNotFound() throws ApiException {
+    KubernetesApiResponse kubernetesApiResponse =
+        new KubernetesApiResponse(new V1StatusBuilder().withStatus("Failure").build(), 404);
+
+    when(podClient.delete(anyString(), anyString())).thenReturn(kubernetesApiResponse);
+    assertEquals(cik8JavaClientHandler.deletePod(podClient, podName, namespace).getStatus(), "Failure");
   }
 
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void deletePodWithFailure() throws ApiException {
-    when(coreV1Api.deleteNamespacedPod(any(), any(), any(), any(), any(), any(), any(), any()))
-        .thenReturn(new V1StatusBuilder().withStatus("Failure").build());
-    assertEquals(cik8JavaClientHandler.deletePod(coreV1Api, podName, namespace).getStatus(), "Failure");
+    KubernetesApiResponse kubernetesApiResponse =
+        new KubernetesApiResponse(new V1StatusBuilder().withStatus("Failure").build(), 401);
+
+    when(podClient.delete(anyString(), anyString())).thenReturn(kubernetesApiResponse);
+    assertThatThrownBy(() -> cik8JavaClientHandler.deletePod(podClient, podName, namespace).getStatus())
+        .isInstanceOf(RuntimeException.class);
   }
 
   @Test(expected = PodNotFoundException.class)

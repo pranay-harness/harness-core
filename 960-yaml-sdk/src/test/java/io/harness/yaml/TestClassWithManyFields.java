@@ -17,6 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(HarnessTeam.DX)
 public class TestClassWithManyFields {
@@ -86,5 +87,13 @@ public class TestClassWithManyFields {
     String testString;
     @YamlSchemaTypes(value = {string, map}, defaultType = string, pattern = "abc", minLength = 1)
     TestRandomClass1 testRandomClass1;
+  }
+
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @FieldDefaults(level = AccessLevel.PUBLIC)
+  public static class ClassWithNonEmptyField {
+    @NotEmpty String testString1;
+    String testString2;
   }
 }

@@ -10,7 +10,6 @@ import io.harness.accesscontrol.permissions.PermissionFilter;
 import io.harness.accesscontrol.permissions.PermissionFilter.IncludedInAllRolesFilter;
 import io.harness.accesscontrol.permissions.PermissionService;
 import io.harness.accesscontrol.permissions.PermissionStatus;
-import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
 import io.harness.accesscontrol.roles.filter.RoleFilter;
@@ -30,6 +29,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -161,16 +161,19 @@ public class RoleServiceImpl implements RoleService {
   }
 
   private Role deleteCustomRole(String identifier, String scopeIdentifier) {
-    PageResponse<RoleAssignment> pageResponse = roleAssignmentService.list(PageRequest.builder().pageSize(1).build(),
-        RoleAssignmentFilter.builder().scopeFilter(scopeIdentifier).roleFilter(Sets.newHashSet(identifier)).build());
-    if (pageResponse.getTotalItems() > 0) {
-      throw new InvalidRequestException(String.format(
-          "Cannot delete role because %s role assignments exists using the role", pageResponse.getTotalItems()));
-    }
-    return roleDao.delete(identifier, scopeIdentifier, false)
-        .orElseThrow(()
-                         -> new UnexpectedException(String.format(
-                             "Failed to delete the role %s in the scope %s", identifier, scopeIdentifier)));
+    return Failsafe.with(removeRoleTransactionPolicy).get(() -> transactionTemplate.execute(status -> {
+      Optional<Role> roleOptional = roleDao.delete(identifier, scopeIdentifier, false);
+      if (roleOptional.isPresent()) {
+        roleAssignmentService.deleteMulti(RoleAssignmentFilter.builder()
+                                              .scopeFilter(scopeIdentifier)
+                                              .roleFilter(Collections.singleton(identifier))
+                                              .build());
+      }
+      return roleOptional.orElseThrow(
+          ()
+              -> new UnexpectedException(
+                  String.format("Failed to delete the role %s in the scope %s", identifier, scopeIdentifier)));
+    }));
   }
 
   private void validatePermissions(Role role) {

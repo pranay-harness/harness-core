@@ -94,6 +94,7 @@ import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
+import io.harness.ng.core.user.SignupInviteDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UuidAware;
@@ -201,6 +202,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -390,6 +392,82 @@ public class UserServiceImpl implements UserService {
     createSSOSettingsAndMarkAsDefaultAuthMechanism(accountId);
 
     return savedUser;
+  }
+
+  @Override
+  public UserInvite createNewSignupInvite(SignupInviteDTO signupInvite) {
+    final String emailAddress = signupInvite.getEmail().toLowerCase();
+    UserInvite userInviteInDB = signupService.getUserInviteByEmail(emailAddress);
+
+    if (userInviteInDB == null) {
+      UserInvite userInvite = new UserInvite();
+      userInvite.setEmail(emailAddress);
+      userInvite.setPasswordHash(signupInvite.getPasswordHash());
+      userInvite.setIntent(signupInvite.getIntent());
+      userInvite.setCreatedFromNG(true);
+      userInvite.setSource(UserInviteSource.builder().type(SourceType.TRIAL).build());
+      userInvite.setCompleted(false);
+
+      String inviteId = wingsPersistence.save(userInvite);
+      userInvite.setUuid(inviteId);
+
+      log.info("Created a new ng signup user invite for {}", emailAddress);
+
+      return userInvite;
+    } else if (userInviteInDB.isCompleted()) {
+      if (spamChecker.isSpam(userInviteInDB)) {
+        throw new InvalidRequestException("User already finished registration.");
+      }
+    }
+
+    if (spamChecker.isSpam(userInviteInDB)) {
+      throw new InvalidRequestException("Spam signup request");
+    }
+
+    throw new UserRegistrationException(EXC_USER_ALREADY_REGISTERED, ErrorCode.USER_ALREADY_REGISTERED, USER);
+  }
+
+  @Override
+  public User completeNewSignupInvite(UserInvite userInvite) {
+    User existingUser = getUserByEmail(userInvite.getEmail());
+    if (existingUser != null) {
+      throw new UserRegistrationException(EXC_USER_ALREADY_REGISTERED, ErrorCode.USER_ALREADY_REGISTERED, USER);
+    }
+
+    // create account
+    String username = userInvite.getEmail().split("@")[0];
+    Account account = Account.Builder.anAccount()
+                          .withAccountName(username)
+                          .withCompanyName(username)
+                          .withDefaultExperience(DefaultExperience.NG)
+                          .withCreatedFromNG(true)
+                          .withAppId(GLOBAL_APP_ID)
+                          .build();
+    account.setLicenseInfo(LicenseInfo.builder()
+                               .accountType(AccountType.TRIAL)
+                               .accountStatus(AccountStatus.ACTIVE)
+                               .licenseUnits(50)
+                               .build());
+
+    // TODO: remove this code when CD/CE GA. Presume to set CG default Experience with CD/CE intent.
+    if ("CD".equalsIgnoreCase(userInvite.getIntent()) || "CE".equalsIgnoreCase(userInvite.getIntent())) {
+      account.setDefaultExperience(DefaultExperience.CG);
+    }
+    Account createdAccount = accountService.save(account, false);
+
+    // create user
+    User user = User.Builder.anUser()
+                    .email(userInvite.getEmail())
+                    .name(createdAccount.getAccountName())
+                    .passwordHash(userInvite.getPasswordHash())
+                    .accountName(createdAccount.getAccountName())
+                    .companyName(createdAccount.getCompanyName())
+                    .accounts(Lists.newArrayList(createdAccount))
+                    .emailVerified(true)
+                    .defaultAccountId(createdAccount.getUuid())
+                    .build();
+    completeUserInviteForSignup(userInvite, createdAccount.getUuid());
+    return createNewUserAndSignIn(user, createdAccount.getUuid());
   }
 
   @Override
@@ -2259,7 +2337,7 @@ public class UserServiceImpl implements UserService {
     setUnset(operations, UserKeys.userLockoutInfo, new UserLockoutInfo());
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Type.UNLOCK);
     log.info("Auditing unlocking of user={} in account={}", user.getName(), accountId);
-    return applyUpdateOperations(user, operations);
+    return updateUser(user.getUuid(), operations);
   }
 
   @Override
@@ -2487,9 +2565,9 @@ public class UserServiceImpl implements UserService {
       action = EventsFrameworkMetadataConstants.UPDATE_ACTION;
       /**
        * Dont send unnecessary events. Right now we only send events when username has changed or user is
-       * created/deleted.
+       * created/deleted or user locked status has changed.
        */
-      if (updatedUser.getName().equals(oldUser.getName())) {
+      if (updatedUser.getName().equals(oldUser.getName()) && updatedUser.isUserLocked() == oldUser.isUserLocked()) {
         return;
       }
     }
@@ -2498,6 +2576,7 @@ public class UserServiceImpl implements UserService {
     userDTOBuilder.setUserId(updatedUser != null ? updatedUser.getUuid() : oldUser.getUuid());
     userDTOBuilder.setName(updatedUser != null ? updatedUser.getName() : oldUser.getName());
     userDTOBuilder.setEmail(updatedUser != null ? updatedUser.getEmail() : oldUser.getEmail());
+    userDTOBuilder.setLocked(updatedUser != null ? updatedUser.isUserLocked() : oldUser.isUserLocked());
     userDTO = userDTOBuilder.build();
 
     try {
@@ -3435,9 +3514,11 @@ public class UserServiceImpl implements UserService {
   private void moveAccountFromPendingToConfirmed(
       User existingUser, Account invitationAccount, List<UserGroup> userGroups, boolean markEmailVerified) {
     addUserToUserGroups(invitationAccount.getUuid(), existingUser, userGroups, false, false);
-
+    String invitationAccountId = invitationAccount.getUuid();
     List<Account> newAccountsList = new ArrayList<>(existingUser.getAccounts());
-    newAccountsList.add(invitationAccount);
+    if (newAccountsList.stream().map(Account::getUuid).noneMatch(invitationAccountId::equals)) {
+      newAccountsList.add(invitationAccount);
+    }
 
     List<Account> newPendingAccountsList = new ArrayList<>();
     if (existingUser.getPendingAccounts() != null) {

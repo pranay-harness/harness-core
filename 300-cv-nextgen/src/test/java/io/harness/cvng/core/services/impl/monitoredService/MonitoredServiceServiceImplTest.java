@@ -33,13 +33,16 @@ import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceServic
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.mapper.TagMapper;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
@@ -65,6 +68,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   String monitoredServiceName;
   String monitoredServiceIdentifier;
   String description;
+  Map<String, String> tags;
 
   @Before
   public void setup() {
@@ -84,6 +88,12 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     monitoredServiceName = "monitoredServiceName";
     monitoredServiceIdentifier = "monitoredServiceIdentifier";
     description = "description";
+    tags = new HashMap<String, String>() {
+      {
+        put("tag1", "value1");
+        put("tag2", "");
+      }
+    };
   }
 
   @Test
@@ -544,6 +554,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
         .serviceRef(serviceIdentifier)
         .environmentRef(environmentIdentifier)
         .name(monitoredServiceName)
+        .tags(tags)
         .sources(
             MonitoredServiceDTO.Sources.builder()
                 .healthSources(
@@ -563,8 +574,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
 
   HealthSourceSpec createHealthSourceSpec(CVMonitoringCategory cvMonitoringCategory) {
     return AppDynamicsHealthSourceSpec.builder()
-        .appdApplicationName(applicationName)
-        .appdTierName(appTierName)
+        .applicationName(applicationName)
+        .tierName(appTierName)
         .connectorRef(connectorIdentifier)
         .feature(feature)
         .metricPacks(new HashSet<MetricPackDTO>() {
@@ -582,6 +593,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     assertThat(monitoredService.getEnvironmentIdentifier()).isEqualTo(monitoredServiceDTO.getEnvironmentRef());
     assertThat(monitoredService.getOrgIdentifier()).isEqualTo(monitoredServiceDTO.getOrgIdentifier());
     assertThat(monitoredService.getProjectIdentifier()).isEqualTo(monitoredServiceDTO.getProjectIdentifier());
+    assertThat(monitoredService.getTags()).isEqualTo(TagMapper.convertToList(monitoredServiceDTO.getTags()));
     assertThat(monitoredService.getHealthSourceIdentifiers())
         .isEqualTo(monitoredServiceDTO.getSources()
                        .getHealthSources()

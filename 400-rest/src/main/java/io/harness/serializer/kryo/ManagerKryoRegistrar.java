@@ -806,6 +806,7 @@ import software.wings.verification.VerificationStateAnalysisExecutionData;
 import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import com.amazonaws.services.cloudformation.model.StackStatus;
 import com.amazonaws.services.cloudwatch.model.Datapoint;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.StandardUnit;
@@ -1734,5 +1735,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ArtifactCollectionCallback.class, 40011);
     kryo.register(ExecutionWaitCallback.class, 40012);
     kryo.register(AzureContainerRegistry.class, 40013);
+    kryo.register(StackStatus.class, 40113);
   }
 }

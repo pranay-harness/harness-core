@@ -64,8 +64,10 @@ import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.handler.NGVaultSecretManagerRenewalHandler;
 import io.harness.ng.core.migration.NGBeanMigrationProvider;
 import io.harness.ng.core.migration.ProjectMigrationProvider;
+import io.harness.ng.core.user.exception.mapper.InvalidUserRemoveRequestExceptionMapper;
 import io.harness.ng.migration.NGCoreMigrationProvider;
 import io.harness.ng.migration.UserMembershipMigrationProvider;
+import io.harness.ng.migration.UserMetadataMigrationProvider;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.OutboxEventPollService;
@@ -269,12 +271,13 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     modules.add(cacheModule);
 
     Injector injector = Guice.createInjector(modules);
-    if (appConfig.getShouldDeployWithGitSync()) {
-      GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
-    }
 
     // Will create collections and Indexes
     injector.getInstance(HPersistence.class);
+    intializeGitSync(injector, appConfig);
+    if (appConfig.getShouldDeployWithGitSync()) {
+      GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
+    }
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment, injector);
@@ -295,7 +298,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerPmsSdkEvents(injector);
     initializeMonitoring(appConfig, injector);
 
-    intializeGitSync(injector, appConfig);
     registerManagedBeans(environment, injector);
 
     registerMigrations(injector);
@@ -322,6 +324,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           { add(UserMembershipMigrationProvider.class); }
           { add(NGBeanMigrationProvider.class); }
           { add(InstanceMigrationProvider.class); }
+          { add(UserMetadataMigrationProvider.class); }
         })
         .build();
   }
@@ -481,6 +484,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.jersey().register(JerseyViolationExceptionMapperV2.class);
     environment.jersey().register(OptimisticLockingFailureExceptionMapper.class);
     environment.jersey().register(NotFoundExceptionMapper.class);
+    environment.jersey().register(InvalidUserRemoveRequestExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
     environment.jersey().register(GenericExceptionMapperV2.class);
   }

@@ -3,7 +3,6 @@ package io.harness.dtos;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.dtos.deploymentinfo.DeploymentInfoDTO;
-import io.harness.dtos.infrastructuremapping.InfrastructureMappingDTO;
 import io.harness.entities.ArtifactDetails;
 
 import javax.annotation.Nullable;

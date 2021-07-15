@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.TimeSeriesMetricType;
-import io.harness.cvng.core.beans.PrometheusDSConfig.PrometheusFilter;
+import io.harness.cvng.core.beans.PrometheusMetricDefinition.PrometheusFilter;
 import io.harness.cvng.core.entities.PrometheusCVConfig.MetricInfo;
 import io.harness.rule.Owner;
 

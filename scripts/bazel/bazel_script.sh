@@ -82,6 +82,7 @@ BAZEL_MODULES="\
   //830-resource-group:module \
   //835-notification-senders:module \
   //835-notification-senders:module \
+  //840-template-service:module \
   //850-ng-pipeline-commons:module \
   //860-orchestration-steps:module \
   //860-orchestration-visualization:module \

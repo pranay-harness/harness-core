@@ -84,7 +84,7 @@ func convertIssue(i *scm.Issue) (*pb.Issue, error) {
 		return nil, err
 	}
 
-	pr, err := convertPR(&i.PullRequest)
+	pr, err := ConvertPR(&i.PullRequest)
 	if err != nil {
 		return nil, err
 	}

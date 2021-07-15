@@ -339,3 +339,36 @@ func TestGetAuthenticatedUser(t *testing.T) {
 	assert.Nil(t, err, "no errors")
 	assert.Equal(t, got.Username, "monalisa octocat", "user: octocat")
 }
+
+func TestFindPR(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+		content, _ := ioutil.ReadFile("testdata/find_pr.json")
+		fmt.Fprint(w, string(content))
+	}))
+	defer ts.Close()
+
+	in := &pb.FindPRRequest{
+		Slug:   "octocat/hello-world",
+		Number: 1,
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_Github{
+				Github: &pb.GithubProvider{
+					Provider: &pb.GithubProvider_AccessToken{
+						AccessToken: "963408579168567c07ff8bfd2a5455e5307f74d4",
+					},
+				},
+			},
+			Endpoint: ts.URL,
+		},
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := FindPR(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.NotNil(t, got.Pr, "no errors")
+	assert.Equal(t, got.Pr.Number, int64(1), "number: 1")
+	assert.Equal(t, got.Pr.Sha, "7044a8a032e85b6ab611033b2ac8af7ce85805b2", "sha: 7044a8a032e85b6ab611033b2ac8af7ce85805b2")
+}

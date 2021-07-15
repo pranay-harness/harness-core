@@ -46,7 +46,7 @@ public class AppDynamicsHealthSourceSpecTest extends CvNextGenTestBase {
   String identifier;
   String name;
   List<MetricPackDTO> metricPackDTOS;
-  private BuilderFactory builderFactory;
+  BuilderFactory builderFactory;
 
   @Before
   public void setup() {
@@ -65,8 +65,8 @@ public class AppDynamicsHealthSourceSpecTest extends CvNextGenTestBase {
     name = "some-name";
     metricPackDTOS = Arrays.asList(MetricPackDTO.builder().identifier(CVMonitoringCategory.ERRORS).build());
     appDynamicsHealthSourceSpec = AppDynamicsHealthSourceSpec.builder()
-                                      .appdApplicationName(applicationName)
-                                      .appdTierName(tierName)
+                                      .applicationName(applicationName)
+                                      .tierName(tierName)
                                       .connectorRef(connectorIdentifier)
                                       .feature(feature)
                                       .metricPacks(metricPackDTOS.stream().collect(Collectors.toSet()))

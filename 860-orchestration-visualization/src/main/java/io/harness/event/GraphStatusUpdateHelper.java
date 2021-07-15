@@ -14,19 +14,17 @@ import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
-import io.harness.service.GraphGenerationService;
+import io.harness.pms.utils.PmsExecutionUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 
 @Singleton
 @Slf4j
 public class GraphStatusUpdateHelper {
   @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private GraphGenerationService graphGenerationService;
   @Inject private PmsOutcomeService pmsOutcomeService;
   @Inject private OrchestrationAdjacencyListGenerator orchestrationAdjacencyListGenerator;
   @Inject private DelegateInfoHelper delegateInfoHelper;
@@ -76,7 +74,7 @@ public class GraphStatusUpdateHelper {
     graphVertexMap.computeIfPresent(nodeExecutionId, (key, prevValue) -> {
       GraphVertex newValue = convertFromNodeExecution(prevValue, nodeExecution);
       if (StatusUtils.isFinalStatus(newValue.getStatus())) {
-        newValue.setOutcomeDocuments(PmsOutcomeMapper.convertJsonToDocument(
+        newValue.setOutcomeDocuments(PmsOutcomeMapper.convertJsonToOrchestrationMap(
             pmsOutcomeService.findAllOutcomesMapByRuntimeId(planExecutionId, nodeExecutionId)));
         newValue.setGraphDelegateSelectionLogParams(
             delegateInfoHelper.getDelegateInformationForGivenTask(nodeExecution.getExecutableResponses(),
@@ -102,15 +100,14 @@ public class GraphStatusUpdateHelper {
         .failureInfo(nodeExecution.getFailureInfo())
         .skipInfo(nodeExecution.getSkipInfo())
         .nodeRunInfo(nodeExecution.getNodeRunInfo())
-        .stepParameters(
-            nodeExecution.getResolvedStepInputs() == null ? null : new Document(nodeExecution.getResolvedStepInputs()))
+        .stepParameters(PmsExecutionUtils.extractToOrchestrationMap(nodeExecution.getResolvedStepInputs()))
         .mode(nodeExecution.getMode())
         .executableResponses(CollectionUtils.emptyIfNull(nodeExecution.getExecutableResponses()))
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())
         .skipType(nodeExecution.getNode().getSkipType())
         .unitProgresses(nodeExecution.getUnitProgresses())
-        .progressData(nodeExecution.getProgressData() == null ? null : new Document(nodeExecution.getProgressData()))
+        .progressData(PmsExecutionUtils.extractToOrchestrationMap(nodeExecution.getProgressData()))
         .build();
   }
 }

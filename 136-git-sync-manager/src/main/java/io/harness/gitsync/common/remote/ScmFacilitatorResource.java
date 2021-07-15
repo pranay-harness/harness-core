@@ -123,7 +123,7 @@ public class ScmFacilitatorResource {
   @POST
   @Path("createPR")
   @ApiOperation(value = "creates a pull request", nickname = "createPR")
-  public ResponseDTO<CreatePRDTO> createPR(@Valid GitPRCreateRequest gitCreatePRRequest) {
+  public ResponseDTO<CreatePRDTO> createPR(@Valid @NotNull GitPRCreateRequest gitCreatePRRequest) {
     return ResponseDTO.newResponse(scmOrchestratorService.processScmRequest(scmClientFacilitatorService
         -> scmClientFacilitatorService.createPullRequest(gitCreatePRRequest),
         gitCreatePRRequest.getProjectIdentifier(), gitCreatePRRequest.getOrgIdentifier(),

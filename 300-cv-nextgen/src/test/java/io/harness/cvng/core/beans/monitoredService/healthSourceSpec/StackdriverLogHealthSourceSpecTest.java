@@ -43,9 +43,9 @@ public class StackdriverLogHealthSourceSpecTest extends CvNextGenTestBase {
   String identifier;
   String name;
   List<QueryDTO> queryDTOS;
-  private BuilderFactory builderFactory;
+  BuilderFactory builderFactory;
 
-  @Inject private MetricPackService metricPackService;
+  @Inject MetricPackService metricPackService;
 
   @Before
   public void setup() {

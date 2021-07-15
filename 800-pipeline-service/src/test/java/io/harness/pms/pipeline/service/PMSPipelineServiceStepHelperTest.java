@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.NAMAN;
 import static io.harness.rule.OwnerRule.SAMARTH;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
@@ -88,7 +89,7 @@ public class PMSPipelineServiceStepHelperTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testCalculateStepsForModuleBasedOnCategory() {
-    Mockito.when(commonStepInfo.getCommonSteps()).thenReturn(new ArrayList<>());
+    Mockito.when(commonStepInfo.getCommonSteps(any())).thenReturn(new ArrayList<>());
     List<StepInfo> stepInfoList = new ArrayList<>();
     stepInfoList.add(
         StepInfo.newBuilder()

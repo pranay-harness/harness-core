@@ -196,8 +196,8 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
   HealthSource createHealthSource(CVMonitoringCategory cvMonitoringCategory) {
     HealthSourceSpec healthSourceSpec =
         AppDynamicsHealthSourceSpec.builder()
-            .appdApplicationName(applicationName)
-            .appdTierName(appTierName)
+            .applicationName(applicationName)
+            .tierName(appTierName)
             .connectorRef(connectorIdentifier)
             .feature(feature)
             .metricPacks(Arrays.asList(MetricPackDTO.builder().identifier(cvMonitoringCategory).build())

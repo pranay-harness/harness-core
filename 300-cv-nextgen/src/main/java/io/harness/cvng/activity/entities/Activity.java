@@ -126,6 +126,7 @@ public abstract class Activity
     setActivityStartTime(Instant.ofEpochMilli(activityDTO.getActivityStartTime()));
     setActivityEndTime(
         activityDTO.getActivityEndTime() != null ? Instant.ofEpochMilli(activityDTO.getActivityEndTime()) : null);
+    setType(activityDTO.getType());
     setTags(activityDTO.getTags());
   }
 
@@ -137,6 +138,7 @@ public abstract class Activity
     Preconditions.checkNotNull(orgIdentifier, generateErrorMessageFromParam(ActivityKeys.orgIdentifier));
     Preconditions.checkNotNull(activityName, generateErrorMessageFromParam(ActivityKeys.activityName));
     Preconditions.checkNotNull(activityStartTime, generateErrorMessageFromParam(ActivityKeys.activityStartTime));
+    Preconditions.checkNotNull(type, generateErrorMessageFromParam(ActivityKeys.type));
     this.validateActivityParams();
   }
 

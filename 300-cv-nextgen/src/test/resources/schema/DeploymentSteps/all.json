@@ -293,7 +293,8 @@
           "type": "string"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -940,7 +941,8 @@
       ],
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         },
         "value": {
           "type": "string"

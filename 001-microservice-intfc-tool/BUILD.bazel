@@ -35,6 +35,7 @@ java_binary(
         "//410-cg-rest:module",
         "//420-delegate-agent:module",
         "//420-delegate-service:module",
+        "//425-verification-commons:module",
         "//430-cv-nextgen-commons:module",
         "//440-connector-nextgen:module",
         "//445-cg-connectors:module",

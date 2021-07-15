@@ -9,7 +9,7 @@ import lombok.experimental.FieldDefaults;
 
 @Value
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Builder(buildMethodName = "unsafeBuild")
+@Builder
 public class MonitoredServiceListItemDTO {
   String name;
   String identifier;
@@ -31,22 +31,6 @@ public class MonitoredServiceListItemDTO {
 
     public HistoricalTrend getHistoricalTrend() {
       return historicalTrend;
-    }
-
-    public MonitoredServiceListItemDTO build() {
-      return this.currentHealthScore(recentHealthScore(getHistoricalTrend())).unsafeBuild();
-    }
-
-    private int recentHealthScore(HistoricalTrend historicalTrend) {
-      int recentHealthScore = -1;
-      int iteratorFromLast = historicalTrend.getHealthScores().size() - 1;
-      while (iteratorFromLast >= 0 && historicalTrend.getHealthScores().get(iteratorFromLast) == -1) {
-        iteratorFromLast--;
-      }
-      if (iteratorFromLast >= 0) {
-        recentHealthScore = historicalTrend.getHealthScores().get(iteratorFromLast).intValue();
-      }
-      return recentHealthScore;
     }
   }
 }

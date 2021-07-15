@@ -1,6 +1,8 @@
 package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.EnvironmentType.NON_PROD;
+import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.cdng.k8s.K8sStepHelper.K8S_SUPPORTED_MANIFEST_TYPES;
 import static io.harness.cdng.k8s.K8sStepHelper.MISSING_INFRASTRUCTURE_ERROR;
 import static io.harness.delegate.beans.connector.ConnectorType.AWS;
@@ -33,6 +35,7 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
+import io.harness.cdng.common.step.StepHelper;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome.K8sDirectInfrastructureOutcomeBuilder;
 import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
@@ -69,6 +72,9 @@ import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.helm.HttpHelmAuthType;
 import io.harness.delegate.beans.connector.helm.HttpHelmAuthenticationDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
@@ -85,8 +91,10 @@ import io.harness.delegate.task.git.GitFetchResponse;
 import io.harness.delegate.task.git.TaskStatus;
 import io.harness.delegate.task.helm.HelmValuesFetchRequest;
 import io.harness.delegate.task.helm.HelmValuesFetchResponse;
+import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
+import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
 import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestType;
@@ -151,6 +159,7 @@ public class K8sStepHelperTest extends CategoryTest {
   @Mock private OutcomeService outcomeService;
   @Mock private K8sStepExecutor k8sStepExecutor;
   @Mock private KryoSerializer kryoSerializer;
+  @Mock private StepHelper stepHelper;
   @Spy @InjectMocks private K8sStepHelper k8sStepHelper;
 
   @Mock private LogCallback mockLogCallback;
@@ -1361,5 +1370,75 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(stepResponse.getUnitProgressList().get(0).getStatus()).isEqualTo(UnitStatus.SUCCESS);
     assertThat(stepResponse.getUnitProgressList().get(1).getStatus()).isEqualTo(UnitStatus.FAILURE);
     assertThat(stepResponse.getUnitProgressList().get(1).getEndTime()).isNotZero();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldCreateTaskRequestWithNonProdEnvType() {
+    doReturn(NON_PROD).when(stepHelper).getEnvironmentType(ambiance);
+
+    K8sSpecParameters k8sSpecParameters = K8sRollingStepParameters.infoBuilder().build();
+    TaskChainResponse taskChainResponse = k8sStepHelper.queueK8sTask(
+        StepElementParameters.builder().spec(k8sSpecParameters).build(),
+        K8sRollingDeployRequest.builder()
+            .commandName("Rolling Deploy")
+            .k8sInfraDelegateConfig(
+                DirectK8sInfraDelegateConfig.builder()
+                    .encryptionDataDetails(Collections.emptyList())
+                    .kubernetesClusterConfigDTO(
+                        KubernetesClusterConfigDTO.builder()
+                            .credential(KubernetesCredentialDTO.builder()
+                                            .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
+                                            .build())
+                            .build())
+                    .build())
+            .build(),
+        ambiance, K8sExecutionPassThroughData.builder().build());
+    assertThat(
+        taskChainResponse.getTaskRequest().getDelegateTaskRequest().getRequest().getSetupAbstractions().containsValues(
+            "envType"))
+        .isTrue();
+    String value = taskChainResponse.getTaskRequest()
+                       .getDelegateTaskRequest()
+                       .getRequest()
+                       .getSetupAbstractions()
+                       .getValuesOrThrow("envType");
+    assertThat(value).isEqualTo(NON_PROD.name());
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldCreateTaskRequestWithProdEnvType() {
+    doReturn(PROD).when(stepHelper).getEnvironmentType(ambiance);
+
+    K8sSpecParameters k8sSpecParameters = K8sRollingStepParameters.infoBuilder().build();
+    TaskChainResponse taskChainResponse = k8sStepHelper.queueK8sTask(
+        StepElementParameters.builder().spec(k8sSpecParameters).build(),
+        K8sRollingDeployRequest.builder()
+            .commandName("Rolling Deploy")
+            .k8sInfraDelegateConfig(
+                DirectK8sInfraDelegateConfig.builder()
+                    .encryptionDataDetails(Collections.emptyList())
+                    .kubernetesClusterConfigDTO(
+                        KubernetesClusterConfigDTO.builder()
+                            .credential(KubernetesCredentialDTO.builder()
+                                            .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
+                                            .build())
+                            .build())
+                    .build())
+            .build(),
+        ambiance, K8sExecutionPassThroughData.builder().build());
+    assertThat(
+        taskChainResponse.getTaskRequest().getDelegateTaskRequest().getRequest().getSetupAbstractions().containsValues(
+            "envType"))
+        .isTrue();
+    String value = taskChainResponse.getTaskRequest()
+                       .getDelegateTaskRequest()
+                       .getRequest()
+                       .getSetupAbstractions()
+                       .getValuesOrThrow("envType");
+    assertThat(value).isEqualTo(PROD.name());
   }
 }

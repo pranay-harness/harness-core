@@ -9,8 +9,8 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.dtos.InstanceDTO;
 import io.harness.dtos.InstanceDTO.InstanceDTOBuilder;
 import io.harness.entities.DeploymentSummary;
+import io.harness.entities.InfrastructureMapping;
 import io.harness.entities.deploymentinfo.DeploymentInfo;
-import io.harness.entities.infrastructureMapping.InfrastructureMapping;
 import io.harness.entities.instanceinfo.InstanceInfo;
 import io.harness.models.InstanceHandlerKey;
 import io.harness.models.InstanceSyncFlowType;
@@ -21,7 +21,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.repositories.infrastructuremapping.InfrastructureMappingRepository;
-import io.harness.service.instanceService.InstanceService;
+import io.harness.service.instance.InstanceService;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
