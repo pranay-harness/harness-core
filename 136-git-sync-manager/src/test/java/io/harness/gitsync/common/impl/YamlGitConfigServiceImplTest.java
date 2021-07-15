@@ -4,8 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toSetupGitSyncDTO;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConfigDTO;
 import static io.harness.rule.OwnerRule.ABHINAV;
+import static io.harness.rule.OwnerRule.DEEPAK;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -16,13 +18,15 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.GitSyncTestBase;
 import io.harness.gitsync.common.dtos.GitSyncConfigDTO;
 import io.harness.gitsync.common.dtos.GitSyncFolderConfigDTO;
-import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -36,7 +40,7 @@ import org.mockito.MockitoAnnotations;
 @OwnedBy(DX)
 public class YamlGitConfigServiceImplTest extends GitSyncTestBase {
   @Mock ConnectorService defaultConnectorService;
-  @Inject YamlGitConfigService yamlGitConfigService;
+  @Inject YamlGitConfigServiceImpl yamlGitConfigService;
   private final String ACCOUNT_ID = "ACCOUNT_ID";
   private final String ORG_ID = "ORG_ID";
   private final String PROJECT_ID = "PROJECT_ID";
@@ -117,5 +121,28 @@ public class YamlGitConfigServiceImplTest extends GitSyncTestBase {
       List<GitSyncFolderConfigDTO> rootFolder, String connectorId, String repo, String branch, String identifier) {
     GitSyncConfigDTO gitSyncConfigDTO = buildGitSyncDTO(rootFolder, connectorId, repo, branch, identifier);
     return toSetupGitSyncDTO(yamlGitConfigService.save(toYamlGitConfigDTO(gitSyncConfigDTO, ACCOUNT_ID)));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testValidateThatHarnessStringComesOnceWithValidInput() {
+    List<YamlGitConfigDTO.RootFolder> rootFolders =
+        Arrays.asList(YamlGitConfigDTO.RootFolder.builder().rootFolder(ROOT_FOLDER).build(),
+            YamlGitConfigDTO.RootFolder.builder().rootFolder(ROOT_FOLDER_1).build());
+    YamlGitConfigDTO yamlGitConfigDTO = YamlGitConfigDTO.builder().rootFolders(rootFolders).build();
+    yamlGitConfigService.validateThatHarnessStringComesOnce(yamlGitConfigDTO);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK)
+  @Category(UnitTests.class)
+  public void testValidateThatHarnessStringComesOnceWithInValidInput() {
+    List<YamlGitConfigDTO.RootFolder> rootFolders =
+        Arrays.asList(YamlGitConfigDTO.RootFolder.builder().rootFolder("/src/.harness/src1/.harness").build(),
+            YamlGitConfigDTO.RootFolder.builder().rootFolder(ROOT_FOLDER_1).build());
+    YamlGitConfigDTO yamlGitConfigDTO = YamlGitConfigDTO.builder().rootFolders(rootFolders).build();
+    assertThatThrownBy(() -> yamlGitConfigService.validateThatHarnessStringComesOnce(yamlGitConfigDTO))
+        .isInstanceOf(InvalidRequestException.class);
   }
 }
