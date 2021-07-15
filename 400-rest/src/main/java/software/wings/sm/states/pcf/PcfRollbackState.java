@@ -113,6 +113,11 @@ public class PcfRollbackState extends PcfDeployState {
             featureFlagService.isEnabled(IGNORE_PCF_CONNECTION_CONTEXT_CACHE, pcfConfig.getAccountId()))
         .cfCliVersion(
             pcfStateHelper.getCfCliVersionOrDefault(application.getAppId(), setupSweepingOutputPcf.getServiceId()))
+        .versioningChanged(setupSweepingOutputPcf.isVersioningChanged())
+        .nonVersioning(setupSweepingOutputPcf.isNonVersioning())
+        .cfAppNamePrefix(setupSweepingOutputPcf.getCfAppNamePrefix())
+        .existingInActiveApplicationDetails(setupSweepingOutputPcf.getMostRecentInactiveAppVersionDetails())
+        .activeAppRevision(setupSweepingOutputPcf.getActiveAppRevision())
         .build();
   }
 

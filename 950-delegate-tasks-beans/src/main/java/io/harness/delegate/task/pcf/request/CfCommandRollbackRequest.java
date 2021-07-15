@@ -32,6 +32,11 @@ public class CfCommandRollbackRequest extends CfCommandRequest {
   private List<CfAppSetupTimeDetails> appsToBeDownSized;
   private CfAppSetupTimeDetails newApplicationDetails;
   private boolean isStandardBlueGreenWorkflow;
+  private boolean versioningChanged;
+  private boolean nonVersioning;
+  private String cfAppNamePrefix;
+  private CfAppSetupTimeDetails existingInActiveApplicationDetails;
+  private Integer activeAppRevision;
 
   @Builder
   public CfCommandRollbackRequest(String accountId, String appId, String commandName, String activityId,
@@ -40,7 +45,9 @@ public class CfCommandRollbackRequest extends CfCommandRequest {
       List<String> routeMaps, List<String> tempRouteMaps, Integer timeoutIntervalInMin,
       List<CfAppSetupTimeDetails> appsToBeDownSized, CfAppSetupTimeDetails newApplicationDetails,
       boolean isStandardBlueGreenWorkflow, boolean useCfCLI, boolean useAppAutoscalar, boolean enforceSslValidation,
-      boolean limitPcfThreads, boolean ignorePcfConnectionContextCache, CfCliVersion cfCliVersion) {
+      boolean limitPcfThreads, boolean ignorePcfConnectionContextCache, CfCliVersion cfCliVersion,
+      boolean versioningChanged, boolean nonVersioning, String cfAppNamePrefix,
+      CfAppSetupTimeDetails existingInActiveApplicationDetails, Integer activeAppRevision) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCfCLI, enforceSslValidation, useAppAutoscalar, limitPcfThreads,
         ignorePcfConnectionContextCache, cfCliVersion);
@@ -51,5 +58,10 @@ public class CfCommandRollbackRequest extends CfCommandRequest {
     this.appsToBeDownSized = appsToBeDownSized;
     this.newApplicationDetails = newApplicationDetails;
     this.isStandardBlueGreenWorkflow = isStandardBlueGreenWorkflow;
+    this.versioningChanged = versioningChanged;
+    this.nonVersioning = nonVersioning;
+    this.cfAppNamePrefix = cfAppNamePrefix;
+    this.existingInActiveApplicationDetails = existingInActiveApplicationDetails;
+    this.activeAppRevision = activeAppRevision;
   }
 }

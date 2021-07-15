@@ -48,6 +48,10 @@ public class SetupSweepingOutputPcf implements SweepingOutput {
   private PcfManifestsPackage pcfManifestsPackage;
   private boolean isSuccess;
   private List<String> tags;
+  private String cfAppNamePrefix;
+  private boolean versioningChanged;
+  private boolean nonVersioning;
+  private Integer activeAppRevision;
 
   public InfoVariables fetchPcfVariableInfo() {
     InfoVariablesBuilder infoVariablesBuilder = InfoVariables.builder();
