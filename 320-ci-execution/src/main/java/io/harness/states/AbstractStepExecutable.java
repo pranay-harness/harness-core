@@ -114,6 +114,9 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
 
     CIStepInfo ciStepInfo = (CIStepInfo) stepParameters.getSpec();
 
+    log.info("Received step {} for execution with type {}", stepIdentifier,
+        ((CIStepInfo) stepParameters.getSpec()).getStepType().getType());
+
     resolveGitAppFunctor(ambiance, ciStepInfo);
 
     long timeoutInMillis = ciStepInfo.getDefaultTimeout();
@@ -184,10 +187,16 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
 
   private StepResponse buildAndReturnStepResponse(StepStatusTaskResponseData stepStatusTaskResponseData,
       Ambiance ambiance, StepElementParameters stepParameters, String stepIdentifier) {
+    long startTime = AmbianceUtils.getCurrentLevelStartTs(ambiance);
+    long currentTime = System.currentTimeMillis();
+
     StepStatus stepStatus = stepStatusTaskResponseData.getStepStatus();
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
 
-    log.info("Received response {} for step {}", stepStatus.getStepExecutionStatus(), stepIdentifier);
+    log.info("Received step {} response {} with type {} in {} milliseconds ", stepIdentifier,
+        stepStatus.getStepExecutionStatus(), ((CIStepInfo) stepParameters.getSpec()).getStepType().getType(),
+        currentTime - startTime);
+
     if (stepStatus.getStepExecutionStatus() == StepExecutionStatus.SUCCESS) {
       if (stepStatus.getOutput() != null) {
         StepResponse.StepOutcome stepOutcome =
