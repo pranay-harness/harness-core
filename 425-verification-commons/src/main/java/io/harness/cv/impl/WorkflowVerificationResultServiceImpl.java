@@ -10,13 +10,15 @@ import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import java.util.Collections;
 
 public class WorkflowVerificationResultServiceImpl implements WorkflowVerificationResultService {
   @Inject private HPersistence hPersistence;
   @Override
   public void addWorkflowVerificationResult(WorkflowVerificationResult workflowVerificationResult) {
     Preconditions.checkNotNull(workflowVerificationResult);
-    hPersistence.save(workflowVerificationResult);
+    // TODO: handle duplicate stateExecutionId case. Right now we have a unique index on stateExecutionId.
+    hPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(workflowVerificationResult));
   }
 
   @Override
