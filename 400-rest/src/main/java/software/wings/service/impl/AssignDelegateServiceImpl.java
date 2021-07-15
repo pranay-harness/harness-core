@@ -785,7 +785,10 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     }
 
     try {
-      List<String> activeDelegates = retrieveActiveDelegates(delegateTask.getAccountId(), null);
+      // We are skipping invocation of the delegateSelectionLogsService.save intentionally, becuase we do not need to
+      // track selection logs here, we just want retrieveActiveDelegates method to respect cg/ng isolation, if necessary
+      BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(delegateTask);
+      List<String> activeDelegates = retrieveActiveDelegates(delegateTask.getAccountId(), batch);
 
       List<String> whitelistedDelegates = connectedWhitelistedDelegates(delegateTask);
       if (activeDelegates.isEmpty()) {
