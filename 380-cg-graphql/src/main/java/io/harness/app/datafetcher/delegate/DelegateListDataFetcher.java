@@ -1,7 +1,9 @@
 package io.harness.app.datafetcher.delegate;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.schema.query.delegate.QLDelegateFilter;
 import io.harness.app.schema.type.delegate.QLDelegate;
 import io.harness.app.schema.type.delegate.QLDelegate.QLDelegateBuilder;
@@ -23,6 +25,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
+@OwnedBy(DEL)
 public class DelegateListDataFetcher
     extends AbstractConnectionV2DataFetcher<QLDelegateFilter, QLNoOpSortCriteria, QLDelegateList> {
   @Override

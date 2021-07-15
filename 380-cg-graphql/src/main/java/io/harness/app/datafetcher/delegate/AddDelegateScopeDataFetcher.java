@@ -1,7 +1,10 @@
 package io.harness.app.datafetcher.delegate;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.schema.mutation.delegate.input.QLAddDelegateScopeInput;
 import io.harness.app.schema.mutation.delegate.payload.QLAddDelegateScopePayload;
 import io.harness.app.schema.type.delegate.QLDelegateScope;
@@ -16,6 +19,7 @@ import software.wings.service.intfc.DelegateScopeService;
 
 import com.google.inject.Inject;
 
+@OwnedBy(DEL)
 public class AddDelegateScopeDataFetcher
     extends BaseMutatorDataFetcher<QLAddDelegateScopeInput, QLAddDelegateScopePayload> {
   @Inject DelegateScopeService delegateScopeService;
