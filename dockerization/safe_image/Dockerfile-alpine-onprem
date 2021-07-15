@@ -9,8 +9,10 @@ RUN set -x \
 RUN set -x \
     && addgroup -g 1001 -S harness \
     && adduser -S -u 1001 -G harness harness \
-    && mkdir /opt/harness \
+    && mkdir -p /opt/harness/plugins \
     && chown -R harness:harness /opt/harness \
-    && chmod 700 -R /opt/harness
+    && chmod -R 700 /opt/harness
 
 WORKDIR /opt/harness
+
+USER harness
