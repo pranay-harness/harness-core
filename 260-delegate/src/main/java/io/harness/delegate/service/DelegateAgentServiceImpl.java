@@ -779,29 +779,29 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
-  private void handleError(Exception e) {
+  private void handleError(final Exception e) {
     log.info("Event:{}, message:[{}]", Event.ERROR.name(), e.getMessage());
     if (reconnectingSocket.compareAndSet(false, true)) {
       try {
         if (e instanceof SSLException || e instanceof TransportNotSupported) {
-          log.info("Reopening connection to manager");
+          log.warn("Reopening connection to manager because of exception", e);
           try {
             socket.close();
-          } catch (Exception ex) {
-            // Ignore
+          } catch (final Exception ex) {
+            log.error("Failed closing the socket!", ex);
           }
           trySocketReconnect();
         } else if (e instanceof ConnectException) {
-          log.warn("Failed to connect.");
+          log.warn("Failed to connect.", e);
           restartNeeded.set(true);
         } else if (e instanceof ConcurrentModificationException) {
-          log.error("Concurrent modification exception. Ignoring.");
+          log.error("Concurrent modification exception. Ignoring.", e);
         } else {
-          log.error("Exception: " + e.getMessage(), e);
+          log.error("Exception: ", e);
           try {
             finalizeSocket();
-          } catch (Exception ex) {
-            // Ignore
+          } catch (final Exception ex) {
+            log.error("Failed closing the socket!", ex);
           }
           restartNeeded.set(true);
         }
