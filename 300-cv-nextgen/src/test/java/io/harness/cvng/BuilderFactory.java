@@ -12,6 +12,9 @@ import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.cdng.beans.CVNGStepInfo;
 import io.harness.cvng.cdng.beans.CVNGStepInfo.CVNGStepInfoBuilder;
 import io.harness.cvng.cdng.beans.TestVerificationJobSpec;
+import io.harness.cvng.cdng.entities.CVNGStepTask;
+import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskBuilder;
+import io.harness.cvng.cdng.entities.CVNGStepTask.Status;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
@@ -71,6 +74,14 @@ public class BuilderFactory {
       }
       return builder;
     }
+  }
+
+  public CVNGStepTaskBuilder cvngStepTaskBuilder() {
+    return CVNGStepTask.builder()
+        .accountId(context.getAccountId())
+        .activityId(generateUuid())
+        .status(Status.IN_PROGRESS)
+        .callbackId(generateUuid());
   }
 
   public VerificationJobInstanceBuilder verificationJobInstanceBuilder() {

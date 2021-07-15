@@ -1,12 +1,12 @@
 package io.harness.cvng.metrics.services.impl;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.mockito.Matchers.eq;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
 import io.harness.metrics.service.api.MetricService;
@@ -25,9 +25,11 @@ public class CVNGMetricsPublisherTest extends CvNextGenTestBase {
   @Inject private CVNGMetricsPublisher cvngMetricsPublisher;
   @Inject private CVNGStepTaskService cvngStepTaskService;
   @Mock private MetricService metricService;
+  BuilderFactory builderFactory;
   @Before
   public void setup() throws IllegalAccessException {
     MockitoAnnotations.initMocks(this);
+    builderFactory = BuilderFactory.getDefault();
     FieldUtils.writeField(cvngMetricsPublisher, "metricService", metricService, true);
   }
 
@@ -35,11 +37,7 @@ public class CVNGMetricsPublisherTest extends CvNextGenTestBase {
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testRecordMetrics() {
-    CVNGStepTask cvngStepTask = CVNGStepTask.builder()
-                                    .activityId(generateUuid())
-                                    .status(CVNGStepTask.Status.IN_PROGRESS)
-                                    .accountId(generateUuid())
-                                    .build();
+    CVNGStepTask cvngStepTask = builderFactory.cvngStepTaskBuilder().build();
     cvngStepTaskService.create(cvngStepTask);
     cvngMetricsPublisher.sendTaskStatusMetrics();
     Mockito.verify(metricService).recordMetric(eq("cvng_step_task_non_final_status_count"), eq(1.0));

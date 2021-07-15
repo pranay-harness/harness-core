@@ -5,9 +5,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
+import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.cdng.beans.CVNGStepParameter;
 import io.harness.cvng.cdng.beans.CVNGStepType;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
+import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskBuilder;
 import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
@@ -42,11 +44,13 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.annotation.TypeAlias;
 
 @Slf4j
@@ -70,18 +74,40 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
     validate(stepParameters);
     String serviceIdentifier = stepParameters.getServiceIdentifier();
     String envIdentifier = stepParameters.getEnvIdentifier();
-    Instant startTime = clock.instant();
     String monitoredServiceIdentifier = stepParameters.getMonitoredServiceRef().getValue();
-    MonitoredServiceDTO monitoredServiceDTO = monitoredServiceService.getMonitoredServiceDTO(
-        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
-    Preconditions.checkNotNull(monitoredServiceDTO, "No monitoredService is defined for service %s and env %s",
-        serviceIdentifier, envIdentifier);
-    Preconditions.checkState(monitoredServiceIdentifier != monitoredServiceDTO.getIdentifier(),
-        "Invalid monitored service identifier for service %s and env %s", serviceIdentifier, envIdentifier);
+    CVNGStepTaskBuilder cvngStepTaskBuilder = CVNGStepTask.builder();
+    if (monitoredServiceIdentifier.isEmpty()) { // UI will set  this to empty in the runtime screen if not defined.
+      cvngStepTaskBuilder.skip(true);
+      cvngStepTaskBuilder.callbackId(UUID.randomUUID().toString());
+    } else {
+      MonitoredServiceDTO monitoredServiceDTO = monitoredServiceService.getMonitoredServiceDTO(
+          accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
+      if (monitoredServiceDTO == null) {
+        cvngStepTaskBuilder.skip(true);
+        cvngStepTaskBuilder.callbackId(UUID.randomUUID().toString());
+      } else {
+        Preconditions.checkState(monitoredServiceIdentifier.equals(monitoredServiceDTO.getIdentifier()),
+            "Invalid monitored service identifier for service %s and env %s", serviceIdentifier, envIdentifier);
+        DeploymentActivity deploymentActivity =
+            getDeploymentActivity(stepParameters, accountId, projectIdentifier, orgIdentifier, monitoredServiceDTO);
+        String activityUuid = activityService.register(deploymentActivity);
+        cvngStepTaskBuilder.activityId(activityUuid).callbackId(activityUuid);
+      }
+    }
+    CVNGStepTask cvngStepTask =
+        cvngStepTaskBuilder.accountId(accountId).status(CVNGStepTask.Status.IN_PROGRESS).build();
+    cvngStepTaskService.create(cvngStepTask);
+    return AsyncExecutableResponse.newBuilder().addCallbackIds(cvngStepTask.getCallbackId()).build();
+  }
+
+  @NotNull
+  private DeploymentActivity getDeploymentActivity(CVNGStepParameter stepParameters, String accountId,
+      String projectIdentifier, String orgIdentifier, MonitoredServiceDTO monitoredServiceDTO) {
+    Instant startTime = clock.instant();
     VerificationJob verificationJob =
         stepParameters.getVerificationJobBuilder()
-            .serviceIdentifier(RuntimeParameter.builder().value(serviceIdentifier).build())
-            .envIdentifier(RuntimeParameter.builder().value(envIdentifier).build())
+            .serviceIdentifier(RuntimeParameter.builder().value(stepParameters.getServiceIdentifier()).build())
+            .envIdentifier(RuntimeParameter.builder().value(stepParameters.getEnvIdentifier()).build())
             .projectIdentifier(projectIdentifier)
             .orgIdentifier(orgIdentifier)
             .accountId(accountId)
@@ -102,17 +128,11 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
     deploymentActivity.setOrgIdentifier(orgIdentifier);
     deploymentActivity.setAccountId(accountId);
     deploymentActivity.setProjectIdentifier(projectIdentifier);
-    deploymentActivity.setServiceIdentifier(serviceIdentifier);
-    deploymentActivity.setEnvironmentIdentifier(envIdentifier);
+    deploymentActivity.setServiceIdentifier(stepParameters.getServiceIdentifier());
+    deploymentActivity.setEnvironmentIdentifier(stepParameters.getEnvIdentifier());
     deploymentActivity.setActivityName(getActivityName(stepParameters));
-    String activityUuid = activityService.register(deploymentActivity);
-    CVNGStepTask cvngStepTask = CVNGStepTask.builder()
-                                    .accountId(accountId)
-                                    .status(CVNGStepTask.Status.IN_PROGRESS)
-                                    .activityId(activityUuid)
-                                    .build();
-    cvngStepTaskService.create(cvngStepTask);
-    return AsyncExecutableResponse.newBuilder().addCallbackIds(activityUuid).build();
+    deploymentActivity.setType(ActivityType.DEPLOYMENT);
+    return deploymentActivity;
   }
 
   private void validate(CVNGStepParameter stepParameters) {
@@ -128,6 +148,7 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
   @Value
   @Builder
   public static class CVNGResponseData implements ResponseData, ProgressData {
+    boolean skip;
     String activityId;
     ActivityStatusDTO activityStatusDTO;
   }
@@ -150,53 +171,69 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
     // FAILED - for verification failed
     // SUCCEEDED - for verification success
 
-    Status status;
-    switch (cvngResponseData.getActivityStatusDTO().getStatus()) {
-      case VERIFICATION_PASSED:
-        status = Status.SUCCEEDED;
-        break;
-      case VERIFICATION_FAILED:
-        status = Status.FAILED;
-        break;
-      case ERROR:
-      case IGNORED:
-        status = Status.ERRORED;
-        break;
-      default:
-        throw new IllegalStateException("Invalid status value: " + cvngResponseData.getActivityStatusDTO().getStatus());
-    }
-
-    StepResponseBuilder stepResponseBuilder = StepResponse.builder().status(status).stepOutcome(
-        StepResponse.StepOutcome.builder()
-            .name("output")
-            .outcome(VerifyStepOutcome.builder()
-                         .progressPercentage(cvngResponseData.getActivityStatusDTO().getProgressPercentage())
-                         .estimatedRemainingTime(TimeUnit.MILLISECONDS.toMinutes(
-                                                     cvngResponseData.getActivityStatusDTO().getRemainingTimeMs())
-                             + " minutes")
-                         .activityId(cvngResponseData.getActivityId())
-                         .build())
-            .build());
-    if (status == Status.FAILED) {
-      stepResponseBuilder.failureInfo(FailureInfo.newBuilder()
-                                          .addFailureData(FailureData.newBuilder()
-                                                              .setCode(ErrorCode.DEFAULT_ERROR_CODE.name())
-                                                              .setLevel(Level.ERROR.name())
-                                                              .addFailureTypes(FailureType.VERIFICATION_FAILURE)
-                                                              .setMessage("Verification failed")
-                                                              .build())
-                                          .build());
-    }
-    if (status == Status.ERRORED) {
-      stepResponseBuilder.failureInfo(
-          FailureInfo.newBuilder()
-              .addFailureData(FailureData.newBuilder()
-                                  .setCode(ErrorCode.UNKNOWN_ERROR.name())
-                                  .setLevel(Level.ERROR.name())
-                                  .addFailureTypes(FailureType.UNKNOWN_FAILURE)
-                                  .setMessage("Verification could not complete due to an unknown error")
-                                  .build())
+    StepResponseBuilder stepResponseBuilder = StepResponse.builder();
+    if (cvngResponseData.isSkip()) {
+      stepResponseBuilder.status(Status.SKIPPED)
+          .failureInfo(
+              FailureInfo.newBuilder()
+                  .addFailureData(
+                      FailureData.newBuilder()
+                          .setCode(ErrorCode.UNKNOWN_ERROR.name())
+                          .setLevel(Level.INFO.name())
+                          .addFailureTypes(FailureType.SKIPPING_FAILURE)
+                          .setMessage(String.format("No monitoredServiceRef is defined for service %s and env %s",
+                              stepParameters.getServiceIdentifier(), stepParameters.getEnvIdentifier()))
+                          .build())
+                  .build());
+    } else {
+      Status status;
+      switch (cvngResponseData.getActivityStatusDTO().getStatus()) {
+        case VERIFICATION_PASSED:
+          status = Status.SUCCEEDED;
+          break;
+        case VERIFICATION_FAILED:
+          status = Status.FAILED;
+          break;
+        case ERROR:
+        case IGNORED:
+          status = Status.ERRORED;
+          break;
+        default:
+          throw new IllegalStateException(
+              "Invalid status value: " + cvngResponseData.getActivityStatusDTO().getStatus());
+      }
+      stepResponseBuilder.status(status).stepOutcome(
+          StepResponse.StepOutcome.builder()
+              .name("output")
+              .outcome(VerifyStepOutcome.builder()
+                           .progressPercentage(cvngResponseData.getActivityStatusDTO().getProgressPercentage())
+                           .estimatedRemainingTime(TimeUnit.MILLISECONDS.toMinutes(
+                                                       cvngResponseData.getActivityStatusDTO().getRemainingTimeMs())
+                               + " minutes")
+                           .activityId(cvngResponseData.getActivityId())
+                           .build())
               .build());
+      if (status == Status.FAILED) {
+        stepResponseBuilder.failureInfo(FailureInfo.newBuilder()
+                                            .addFailureData(FailureData.newBuilder()
+                                                                .setCode(ErrorCode.DEFAULT_ERROR_CODE.name())
+                                                                .setLevel(Level.ERROR.name())
+                                                                .addFailureTypes(FailureType.VERIFICATION_FAILURE)
+                                                                .setMessage("Verification failed")
+                                                                .build())
+                                            .build());
+      }
+      if (status == Status.ERRORED) {
+        stepResponseBuilder.failureInfo(
+            FailureInfo.newBuilder()
+                .addFailureData(FailureData.newBuilder()
+                                    .setCode(ErrorCode.UNKNOWN_ERROR.name())
+                                    .setLevel(Level.ERROR.name())
+                                    .addFailureTypes(FailureType.UNKNOWN_FAILURE)
+                                    .setMessage("Verification could not complete due to an unknown error")
+                                    .build())
+                .build());
+      }
     }
     return stepResponseBuilder.build();
   }
