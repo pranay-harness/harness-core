@@ -63,6 +63,11 @@ public abstract class PmsBaseEventHandler<T extends Message> {
       handleEventWithContext(event);
       eventMonitoringService.sendMetric(LISTENER_END_METRIC, monitoringInfo, metadataMap);
       log.info("[PMS_MESSAGE_LISTENER] Processing Finished for {} event", event.getClass().getSimpleName());
+    } catch (Exception ex) {
+      try (AutoLogContext autoLogContext = autoLogContext(event)) {
+        log.error("Exception occurred while handling {}", event.getClass().getSimpleName(), ex);
+      }
+      throw ex;
     }
   }
 

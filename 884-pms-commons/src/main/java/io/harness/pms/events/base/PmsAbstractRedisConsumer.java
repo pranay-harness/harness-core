@@ -9,6 +9,8 @@ import static java.time.Duration.ofSeconds;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
+import io.harness.logging.AutoLogContext;
+import io.harness.queue.QueueController;
 
 import java.time.Duration;
 import java.util.List;
@@ -23,13 +25,16 @@ public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListe
   private static final String CACHE_KEY = "%s_%s";
   private final Consumer redisConsumer;
   private final T messageListener;
+  private final QueueController queueController;
   private AtomicBoolean shouldStop = new AtomicBoolean(false);
   private Cache<String, Integer> eventsCache;
 
-  public PmsAbstractRedisConsumer(Consumer redisConsumer, T messageListener, Cache<String, Integer> eventsCache) {
+  public PmsAbstractRedisConsumer(
+      Consumer redisConsumer, T messageListener, Cache<String, Integer> eventsCache, QueueController queueController) {
     this.redisConsumer = redisConsumer;
     this.messageListener = messageListener;
     this.eventsCache = eventsCache;
+    this.queueController = queueController;
   }
 
   @Override
@@ -43,6 +48,12 @@ public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListe
       do {
         while (getMaintenanceFlag()) {
           sleep(ofSeconds(1));
+        }
+        if (queueController.isNotPrimary()) {
+          log.info(this.getClass().getSimpleName()
+              + " is not running on primary deployment, will try again after some time...");
+          TimeUnit.SECONDS.sleep(30);
+          continue;
         }
         readEventsFrameworkMessages();
       } while (!Thread.currentThread().isInterrupted() && !shouldStop.get());
@@ -75,7 +86,8 @@ public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListe
   }
 
   private boolean handleMessage(Message message) {
-    try {
+    try (AutoLogContext autoLogContext = new AutoLogContext(
+             message.getMessage().getMetadataMap(), AutoLogContext.OverrideBehavior.OVERRIDE_NESTS)) {
       return processMessage(message);
     } catch (Exception ex) {
       // This is not evicted from events framework so that it can be processed
@@ -88,6 +100,7 @@ public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListe
   private boolean processMessage(Message message) {
     AtomicBoolean success = new AtomicBoolean(true);
     if (messageListener.isProcessable(message) && !isAlreadyProcessed(message)) {
+      log.debug("Read message with message id {} from redis", message.getId());
       insertMessageInCache(message);
       if (!messageListener.handleMessage(message)) {
         success.set(false);

@@ -13,6 +13,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.protobuf.ByteString;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import lombok.NonNull;
@@ -47,14 +48,16 @@ public abstract class PmsAbstractMessageListener<T extends com.google.protobuf.M
     long startTs = System.currentTimeMillis();
     if (isProcessable(message)) {
       executorService.submit(() -> {
-        try (AutoLogContext ignore = new AutoLogContext(message.getMessage().getMetadataMap(), OVERRIDE_NESTS)) {
+        Map<String, String> messageIdMap = new HashMap<>();
+        messageIdMap.put("messageId", message.getId());
+        try (AutoLogContext ignore = new AutoLogContext(message.getMessage().getMetadataMap(), OVERRIDE_NESTS);
+             AutoLogContext ignore1 = new AutoLogContext(messageIdMap, OVERRIDE_NESTS)) {
           T entity = extractEntity(message);
           Long issueTimestamp = ProtoUtils.timestampToUnixMillis(message.getTimestamp());
           processMessage(entity, message.getMessage().getMetadataMap(), issueTimestamp);
-
         } catch (Exception ex) {
-          log.info("[PMS_MESSAGE_LISTENER] Exception occurred while processing {} event with messageId: {}",
-              entityClass.getSimpleName(), message.getId());
+          log.error("[PMS_MESSAGE_LISTENER] Exception occurred while processing {} event with messageId: {}",
+              entityClass.getSimpleName(), message.getId(), ex);
         }
       });
     }
