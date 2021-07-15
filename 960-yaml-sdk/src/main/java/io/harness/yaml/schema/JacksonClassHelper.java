@@ -47,6 +47,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Slf4j
 @Singleton
@@ -80,6 +81,7 @@ public class JacksonClassHelper {
       }
       Set<FieldSubtypeData> fieldSubtypeDataList = new HashSet<>();
       Set<PossibleFieldTypes> possibleFieldTypesSet = new HashSet<>();
+      Set<String> nonEmptyFields = new HashSet<>();
 
       // Instantiating so that we don't get into infinite loop.
       swaggerDefinitionsMetaInfoMap.put(swaggerClassName, null);
@@ -102,6 +104,8 @@ public class JacksonClassHelper {
         processFieldTypeSet(possibleFieldTypesSet, declaredField);
         // subtype mappings
         processSubtypeMappings(swaggerDefinitionsMetaInfoMap, fieldSubtypeDataList, declaredField);
+        // Non empty fields
+        processNonEmptyFields(nonEmptyFields, declaredField);
       }
       // One of mappings
       final Set<OneOfMapping> oneOfMappingForClasses = getOneOfMappingsForClass(clazz);
@@ -110,8 +114,15 @@ public class JacksonClassHelper {
                                                                  .oneOfMappings(oneOfMappingForClasses)
                                                                  .subtypeClassMap(fieldSubtypeDataList)
                                                                  .fieldPossibleTypes(possibleFieldTypesSet)
+                                                                 .notEmptyStringFields(nonEmptyFields)
                                                                  .build();
       swaggerDefinitionsMetaInfoMap.put(swaggerClassName, definitionsMetaInfo);
+    }
+  }
+
+  private void processNonEmptyFields(Set<String> nonEmptyFields, Field declaredField) {
+    if (declaredField.getAnnotation(NotEmpty.class) != null) {
+      nonEmptyFields.add(YamlSchemaUtils.getFieldName(declaredField));
     }
   }
 
