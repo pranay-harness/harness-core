@@ -1,10 +1,10 @@
-package io.harness.yaml.extended.ci.container.quantity;
+package io.harness.beans.quantity;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.beans.quantity.unit.MemoryQuantityUnit;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.yaml.extended.ci.container.quantity.unit.MemoryQuantityUnit;
-import io.harness.yaml.validator.ResourceValidatorConstants;
+import io.harness.yaml.extended.ci.validator.ResourceValidatorConstants;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;

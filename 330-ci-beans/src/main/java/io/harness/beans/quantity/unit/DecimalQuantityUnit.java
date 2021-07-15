@@ -1,4 +1,4 @@
-package io.harness.yaml.extended.ci.container.quantity.unit;
+package io.harness.beans.quantity.unit;
 
 import lombok.Getter;
 

@@ -1,4 +1,4 @@
-package io.harness.yaml.validator;
+package io.harness.yaml.extended.ci.validator;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
 
