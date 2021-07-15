@@ -122,7 +122,6 @@ shared_dependencies = [
     "@maven//:com_sun_mail_javax_mail",
     "@maven//:com_thoughtworks_proxytoys_proxytoys",
     "@maven//:com_typesafe_config",
-    "@maven//:com_zaxxer_HikariCP_java7",
     "@maven//:commons_beanutils_commons_beanutils",
     "@maven//:commons_cli_commons_cli",
     "@maven//:commons_codec_commons_codec",
