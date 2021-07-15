@@ -1,7 +1,6 @@
 extend type Query {
   # Get details about all delegates for account
-  delegateList(filters: [DelegateFilter], limit: Int, offset: Int): DelegateList
-  @dataFetcher(name: delegateList)
+  delegateList(filters: [DelegateFilter], limit: Int, offset: Int): DelegateList @dataFetcher(name: delegateList)
 }
 
 type DelegateList {
