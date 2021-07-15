@@ -6,6 +6,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.pms.events.base.PmsAbstractRedisConsumer;
+import io.harness.queue.QueueController;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -18,7 +19,7 @@ public class SdkResponseEventRedisConsumer extends PmsAbstractRedisConsumer<SdkR
   @Inject
   public SdkResponseEventRedisConsumer(@Named(SDK_RESPONSE_EVENT_CONSUMER) Consumer redisConsumer,
       SdkResponseEventMessageListener sdkResponseMessageListener,
-      @Named("pmsEventsCache") Cache<String, Integer> eventsCache) {
-    super(redisConsumer, sdkResponseMessageListener, eventsCache);
+      @Named("pmsEventsCache") Cache<String, Integer> eventsCache, QueueController queueController) {
+    super(redisConsumer, sdkResponseMessageListener, eventsCache, queueController);
   }
 }
