@@ -1,8 +1,10 @@
 package software.wings.graphql.datafetcher.delegate;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.JENNY;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.datafetcher.delegate.AttachScopeToDelegateDataFetcher;
 import io.harness.app.schema.mutation.delegate.input.QLAttachScopeToDelegateInput;
 import io.harness.app.schema.mutation.delegate.input.QLAttachScopeToDelegateInput.QLAttachScopeToDelegateInputBuilder;
@@ -34,6 +36,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(DEL)
 public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTestBase {
   @Inject private HPersistence persistence;
   @Inject AttachScopeToDelegateDataFetcher attachScopeToDelegateDataFetcher;

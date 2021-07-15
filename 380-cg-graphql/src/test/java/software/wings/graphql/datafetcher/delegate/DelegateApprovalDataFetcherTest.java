@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.delegate;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.JENNY;
 
@@ -8,6 +9,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.datafetcher.delegate.DelegateApprovalDataFetcher;
 import io.harness.app.schema.mutation.delegate.input.QLDelegateApproveRejectInput;
 import io.harness.app.schema.mutation.delegate.payload.QLDelegateApproveRejectPayload;
@@ -35,6 +37,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(DEL)
 public class DelegateApprovalDataFetcherTest extends AbstractDataFetcherTestBase {
   private static final String ACCOUNT_ID = "ACCOUNT-ID";
 
