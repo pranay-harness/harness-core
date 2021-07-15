@@ -2,6 +2,7 @@ package software.wings.delegatetasks.cloudformation.cloudformationtaskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY;
@@ -44,6 +45,7 @@ import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Output;
 import com.amazonaws.services.cloudformation.model.Parameter;
 import com.amazonaws.services.cloudformation.model.Stack;
+import com.amazonaws.services.cloudformation.model.StackStatus;
 import com.amazonaws.services.cloudformation.model.Tag;
 import com.amazonaws.services.cloudformation.model.UpdateStackRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,6 +53,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -58,6 +61,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 
 @Singleton
@@ -66,6 +70,7 @@ import lombok.NoArgsConstructor;
 @OwnedBy(CDP)
 public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskHandler {
   @Inject private GitUtilsDelegate gitUtilsDelegate;
+  private int remainingTimeoutMs;
 
   @Override
   protected CloudFormationCommandExecutionResponse executeInternal(CloudFormationCommandRequest request,
@@ -75,6 +80,8 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
 
     CloudFormationCreateStackRequest upsertRequest = (CloudFormationCreateStackRequest) request;
 
+    remainingTimeoutMs = request.getTimeoutInMs() > 0 ? request.getTimeoutInMs() : DEFAULT_TIMEOUT_MS;
+
     executionLogCallback.saveExecutionLog("# Checking if stack already exists...");
     Optional<Stack> stackOptional = getIfStackExists(
         upsertRequest.getCustomStackName(), upsertRequest.getStackNameSuffix(), awsConfig, request.getRegion());
@@ -83,8 +90,26 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       executionLogCallback.saveExecutionLog("# Stack does not exist, creating new stack");
       return createStack(upsertRequest, executionLogCallback);
     } else {
-      executionLogCallback.saveExecutionLog("# Stack already exist, updating stack");
-      return updateStack(upsertRequest, stackOptional.get(), executionLogCallback);
+      Stack stack = stackOptional.get();
+      if (StackStatus.ROLLBACK_COMPLETE.name().equals(stack.getStackStatus())) {
+        executionLogCallback.saveExecutionLog(
+            format("# Stack already exists and is in %s state.", stack.getStackStatus()));
+        executionLogCallback.saveExecutionLog(format("# Deleting stack %s", stack.getStackName()));
+        CloudFormationCommandExecutionResponse deleteStackCommandExecutionResponse =
+            deleteStack(stack.getStackId(), stack.getStackName(), request, executionLogCallback);
+        if (SUCCESS.equals(deleteStackCommandExecutionResponse.getCommandExecutionStatus())) {
+          executionLogCallback.saveExecutionLog(
+              format("# Stack %s deleted successfully now creating a new stack", stack.getStackName()));
+          return createStack(upsertRequest, executionLogCallback);
+        }
+        executionLogCallback.saveExecutionLog(format(
+            "# Stack %s deletion failed, stack creation/updation will not proceed.\n Go to Aws Console and delete the stack",
+            stack.getStackName()));
+        return deleteStackCommandExecutionResponse;
+      } else {
+        executionLogCallback.saveExecutionLog("# Stack already exist, updating stack");
+        return updateStack(upsertRequest, stack, executionLogCallback);
+      }
     }
   }
 
@@ -146,6 +171,23 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           format("# Exception: %s while Updating stack: %s", ExceptionUtils.getMessage(ex), stack.getStackName());
       executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
       builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+    }
+    CloudFormationCommandExecutionResponse cloudFormationCommandExecutionResponse = builder.build();
+    if (!SUCCESS.equals(cloudFormationCommandExecutionResponse.getCommandExecutionStatus())
+        && cloudFormationCommandExecutionResponse.getCommandResponse() != null) {
+      String responseStackStatus =
+          ((CloudFormationCreateStackResponse) cloudFormationCommandExecutionResponse.getCommandResponse())
+              .getStackStatus();
+      if (responseStackStatus != null) {
+        boolean hasMatchingStatusToBeTreatedAsSuccess =
+            updateRequest.getStackStatusesToMarkAsSuccess().stream().anyMatch(
+                status -> status.name().equals(responseStackStatus));
+        if (hasMatchingStatusToBeTreatedAsSuccess) {
+          builder.commandExecutionStatus(SUCCESS);
+          cloudFormationCommandExecutionResponse.getCommandResponse().setCommandExecutionStatus(SUCCESS);
+          builder.commandResponse(cloudFormationCommandExecutionResponse.getCommandResponse());
+        }
+      }
     }
     return builder.build();
   }
@@ -236,9 +278,10 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         awsHelperService.createStack(createRequest.getRegion(), createStackRequest, createRequest.getAwsConfig());
     executionLogCallback.saveExecutionLog(format(
         "# Create Stack request submitted for stack: %s. Now polling for status.", createStackRequest.getStackName()));
-    int timeOutMs = createRequest.getTimeoutInMs() > 0 ? createRequest.getTimeoutInMs() : DEFAULT_TIMEOUT_MS;
+    int timeOutMs = remainingTimeoutMs;
     long endTime = System.currentTimeMillis() + timeOutMs;
     String errorMsg;
+    Stack stack = null;
     while (System.currentTimeMillis() < endTime) {
       DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest().withStackName(result.getStackId());
       List<Stack> stacks =
@@ -249,22 +292,29 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
         return;
       }
-      Stack stack = stacks.get(0);
+
+      stack = stacks.get(0);
+      stackEventsTs = printStackEvents(createRequest, stackEventsTs, stack, executionLogCallback);
+
       switch (stack.getStackStatus()) {
         case "CREATE_COMPLETE": {
           executionLogCallback.saveExecutionLog("# Stack creation Successful");
           populateInfraMappingPropertiesFromStack(builder, stack,
               ExistingStackInfo.builder().stackExisted(false).build(), executionLogCallback, createRequest);
+          executionLogCallback.saveExecutionLog("# Waiting 30 seconds for resources to come up");
+          printStackResources(createRequest, stack, executionLogCallback);
           return;
         }
         case "CREATE_FAILED": {
           errorMsg = format("# Error: %s while creating stack: %s", stack.getStackStatusReason(), stack.getStackName());
           executionLogCallback.saveExecutionLog(errorMsg, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
           builder.errorMessage(errorMsg).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+          builder.commandResponse(
+              CloudFormationCreateStackResponse.builder().stackStatus(stack.getStackStatus()).build());
+          printStackResources(createRequest, stack, executionLogCallback);
           return;
         }
         case "CREATE_IN_PROGRESS": {
-          stackEventsTs = printStackEvents(createRequest, stackEventsTs, stack, executionLogCallback);
           break;
         }
         case "ROLLBACK_IN_PROGRESS": {
@@ -278,12 +328,18 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
               stack.getStackStatusReason());
           executionLogCallback.saveExecutionLog(errorMsg, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
           builder.errorMessage(errorMsg).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+          builder.commandResponse(
+              CloudFormationCreateStackResponse.builder().stackStatus(stack.getStackStatus()).build());
+          printStackResources(createRequest, stack, executionLogCallback);
           return;
         }
         case "ROLLBACK_COMPLETE": {
           errorMsg = format("# Creation of stack: %s failed, Rollback complete", stack.getStackName());
           executionLogCallback.saveExecutionLog(errorMsg);
           builder.errorMessage(errorMsg).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+          builder.commandResponse(
+              CloudFormationCreateStackResponse.builder().stackStatus(stack.getStackStatus()).build());
+          printStackResources(createRequest, stack, executionLogCallback);
           return;
         }
         default: {
@@ -291,6 +347,9 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
               stack.getStackStatus(), stack.getStackStatusReason());
           executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
           builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+          builder.commandResponse(
+              CloudFormationCreateStackResponse.builder().stackStatus(stack.getStackStatus()).build());
+          printStackResources(createRequest, stack, executionLogCallback);
           return;
         }
       }
@@ -299,6 +358,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     String errorMessage = format("# Timing out while Creating stack: %s", createStackRequest.getStackName());
     executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
     builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+    printStackResources(createRequest, stack, executionLogCallback);
   }
 
   private ExistingStackInfo getExistingStackInfo(AwsConfig awsConfig, String region, Stack originalStack) {
@@ -321,8 +381,9 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     awsHelperService.updateStack(request.getRegion(), updateStackRequest, request.getAwsConfig());
     executionLogCallback.saveExecutionLog(
         format("# Update Stack Request submitted for stack: %s. Now polling for status", originalStack.getStackName()));
-    int timeOutMs = request.getTimeoutInMs() > 0 ? request.getTimeoutInMs() : DEFAULT_TIMEOUT_MS;
+    int timeOutMs = remainingTimeoutMs;
     long endTime = System.currentTimeMillis() + timeOutMs;
+    Stack stack = null;
     while (System.currentTimeMillis() < endTime) {
       DescribeStacksRequest describeStacksRequest =
           new DescribeStacksRequest().withStackName(originalStack.getStackId());
@@ -334,12 +395,19 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
         return;
       }
-      Stack stack = stacks.get(0);
+      stack = stacks.get(0);
+      stackEventsTs = printStackEvents(request, stackEventsTs, stack, executionLogCallback);
+
       switch (stack.getStackStatus()) {
         case "CREATE_COMPLETE":
         case "UPDATE_COMPLETE": {
           executionLogCallback.saveExecutionLog("# Update Successful for stack");
           populateInfraMappingPropertiesFromStack(builder, stack, existingStackInfo, executionLogCallback, request);
+          executionLogCallback.saveExecutionLog("# Waiting 30 seconds for resources to come up");
+          CloudFormationCreateStackResponse cloudFormationCreateStackResponse =
+              getCloudFormationCreateStackResponse(builder, stack, existingStackInfo, request);
+          builder.commandResponse(cloudFormationCreateStackResponse);
+          printStackResources(request, stack, executionLogCallback);
           return;
         }
         case "UPDATE_COMPLETE_CLEANUP_IN_PROGRESS": {
@@ -351,10 +419,13 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
               stack.getStackStatusReason(), stack.getStackName());
           executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
           builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+          CloudFormationCreateStackResponse cloudFormationCreateStackResponse =
+              getCloudFormationCreateStackResponse(builder, stack, existingStackInfo, request);
+          builder.commandResponse(cloudFormationCreateStackResponse);
+          printStackResources(request, stack, executionLogCallback);
           return;
         }
         case "UPDATE_IN_PROGRESS": {
-          stackEventsTs = printStackEvents(request, stackEventsTs, stack, executionLogCallback);
           break;
         }
         case "UPDATE_ROLLBACK_IN_PROGRESS": {
@@ -371,6 +442,10 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           String errorMsg = format("# Rollback of stack update: %s completed", stack.getStackName());
           executionLogCallback.saveExecutionLog(errorMsg);
           builder.errorMessage(errorMsg).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+          CloudFormationCreateStackResponse cloudFormationCreateStackResponse =
+              getCloudFormationCreateStackResponse(builder, stack, existingStackInfo, request);
+          builder.commandResponse(cloudFormationCreateStackResponse);
+          printStackResources(request, stack, executionLogCallback);
           return;
         }
         default: {
@@ -378,6 +453,10 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
               format("# Unexpected status: %s while creating stack: %s ", stack.getStackStatus(), stack.getStackName());
           executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
           builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+          CloudFormationCreateStackResponse cloudFormationCreateStackResponse =
+              getCloudFormationCreateStackResponse(builder, stack, existingStackInfo, request);
+          builder.commandResponse(cloudFormationCreateStackResponse);
+          printStackResources(request, stack, executionLogCallback);
           return;
         }
       }
@@ -385,25 +464,49 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     }
     String errorMessage = format("# Timing out while Updating stack: %s", originalStack.getStackName());
     executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR, CommandExecutionStatus.FAILURE);
+    CloudFormationCreateStackResponse cloudFormationCreateStackResponse =
+        getCloudFormationCreateStackResponse(builder, stack, existingStackInfo, request);
+    builder.commandResponse(cloudFormationCreateStackResponse);
     builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
+    printStackResources(request, stack, executionLogCallback);
   }
 
   private void populateInfraMappingPropertiesFromStack(CloudFormationCommandExecutionResponseBuilder builder,
       Stack stack, ExistingStackInfo existingStackInfo, ExecutionLogCallback executionLogCallback,
       CloudFormationCreateStackRequest cloudFormationCreateStackRequest) {
+    CloudFormationCreateStackResponse cloudFormationCreateStackResponse =
+        createCloudFormationCreateStackResponse(stack, existingStackInfo, cloudFormationCreateStackRequest);
+    builder.commandExecutionStatus(SUCCESS).commandResponse(cloudFormationCreateStackResponse);
+    sleep(ofSeconds(30));
+  }
+
+  private CloudFormationCreateStackResponse getCloudFormationCreateStackResponse(
+      CloudFormationCommandExecutionResponseBuilder builder, Stack stack, ExistingStackInfo existingStackInfo,
+      CloudFormationCreateStackRequest request) {
+    CloudFormationCreateStackResponse cloudFormationCreateStackResponse =
+        (CloudFormationCreateStackResponse) builder.build().getCommandResponse();
+    if (cloudFormationCreateStackResponse == null) {
+      cloudFormationCreateStackResponse = createCloudFormationCreateStackResponse(stack, existingStackInfo, request);
+    } else {
+      cloudFormationCreateStackResponse.setStackStatus(stack.getStackStatus());
+    }
+    return cloudFormationCreateStackResponse;
+  }
+
+  private CloudFormationCreateStackResponse createCloudFormationCreateStackResponse(Stack stack,
+      ExistingStackInfo existingStackInfo, CloudFormationCreateStackRequest cloudFormationCreateStackRequest) {
     CloudFormationCreateStackResponseBuilder createBuilder = CloudFormationCreateStackResponse.builder();
     createBuilder.existingStackInfo(existingStackInfo);
     createBuilder.stackId(stack.getStackId());
+    createBuilder.stackStatus(stack.getStackStatus());
     List<Output> outputs = stack.getOutputs();
     if (isNotEmpty(outputs)) {
       createBuilder.cloudFormationOutputMap(
           outputs.stream().collect(toMap(Output::getOutputKey, Output::getOutputValue)));
     }
-    createBuilder.commandExecutionStatus(CommandExecutionStatus.SUCCESS);
+    createBuilder.commandExecutionStatus(SUCCESS);
     createBuilder.rollbackInfo(getRollbackInfo(cloudFormationCreateStackRequest));
-    builder.commandExecutionStatus(CommandExecutionStatus.SUCCESS).commandResponse(createBuilder.build());
-    executionLogCallback.saveExecutionLog("# Waiting 30 seconds for resources to come up");
-    sleep(ofSeconds(30));
+    return createBuilder.build();
   }
 
   private CloudFormationRollbackInfo getRollbackInfo(
@@ -432,6 +535,18 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
             encVariable.getKey(), encVariable.getValue().getEncryptedData().getUuid(), Type.ENCRYPTED_TEXT.name()));
       }
     }
+
+    if (isNotEmpty(cloudFormationCreateStackRequest.getStackStatusesToMarkAsSuccess())) {
+      builder.skipBasedOnStackStatus(true);
+      builder.stackStatusesToMarkAsSuccess(cloudFormationCreateStackRequest.getStackStatusesToMarkAsSuccess()
+                                               .stream()
+                                               .map(status -> status.name())
+                                               .collect(Collectors.toList()));
+    } else {
+      builder.skipBasedOnStackStatus(false);
+      builder.stackStatusesToMarkAsSuccess(new ArrayList<>());
+    }
+
     builder.variables(variables);
     return builder.build();
   }
