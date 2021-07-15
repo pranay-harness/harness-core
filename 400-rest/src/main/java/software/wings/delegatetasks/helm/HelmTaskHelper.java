@@ -29,7 +29,6 @@ import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
-import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.helm.HelmCliCommandType;
@@ -288,7 +287,7 @@ public class HelmTaskHelper {
 
   public void addRepo(String repoName, String repoDisplayName, String chartRepoUrl, String username, char[] password,
       String chartDirectory, HelmVersion helmVersion, long timeoutInMillis) {
-    helmTaskHelperBase.addRepo(
+    helmTaskHelperBase.ensureAddAndUpdate(
         repoName, repoDisplayName, chartRepoUrl, username, password, chartDirectory, helmVersion, timeoutInMillis);
   }
 
@@ -296,9 +295,10 @@ public class HelmTaskHelper {
       long timeoutInMillis, HelmCommandFlag helmCommandFlag) {
     HttpHelmRepoConfig httpHelmRepoConfig = (HttpHelmRepoConfig) helmChartConfigParams.getHelmRepoConfig();
 
-    helmTaskHelperBase.addRepo(helmChartConfigParams.getRepoName(), helmChartConfigParams.getRepoDisplayName(),
-        httpHelmRepoConfig.getChartRepoUrl(), httpHelmRepoConfig.getUsername(), httpHelmRepoConfig.getPassword(),
-        chartDirectory, helmChartConfigParams.getHelmVersion(), timeoutInMillis);
+    helmTaskHelperBase.ensureAddAndUpdate(helmChartConfigParams.getRepoName(),
+        helmChartConfigParams.getRepoDisplayName(), httpHelmRepoConfig.getChartRepoUrl(),
+        httpHelmRepoConfig.getUsername(), httpHelmRepoConfig.getPassword(), chartDirectory,
+        helmChartConfigParams.getHelmVersion(), timeoutInMillis);
     helmTaskHelperBase.fetchChartFromRepo(helmChartConfigParams.getRepoName(),
         helmChartConfigParams.getRepoDisplayName(), helmChartConfigParams.getChartName(),
         helmChartConfigParams.getChartVersion(), chartDirectory, helmChartConfigParams.getHelmVersion(),
@@ -324,33 +324,8 @@ public class HelmTaskHelper {
     }
   }
 
-  private String getRepoUpdateCommand(String repoName, String workingDirectory, HelmVersion helmVersion) {
-    String repoUpdateCommand =
-        HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.REPO_UPDATE, helmVersion)
-            .replace(HELM_PATH_PLACEHOLDER, helmTaskHelperBase.getHelmPath(helmVersion))
-            .replace("KUBECONFIG=${KUBECONFIG_PATH}", "")
-            .replace(REPO_NAME, repoName);
-
-    return helmTaskHelperBase.applyHelmHomePath(repoUpdateCommand, workingDirectory);
-  }
-
   public void removeRepo(String repoName, String workingDirectory, HelmVersion helmVersion, long timeoutInMillis) {
     helmTaskHelperBase.removeRepo(repoName, workingDirectory, helmVersion, timeoutInMillis);
-  }
-
-  public void updateRepo(String repoName, String workingDirectory, HelmVersion helmVersion, long timeoutInMillis) {
-    try {
-      String repoUpdateCommand = getRepoUpdateCommand(repoName, workingDirectory, helmVersion);
-      ProcessResult processResult = helmTaskHelperBase.executeCommand(repoUpdateCommand, null,
-          format("update helm repo %s", repoName), timeoutInMillis, HelmCliCommandType.REPO_UPDATE);
-
-      log.info("Repo update command executed on delegate: {}", repoUpdateCommand);
-      if (processResult.getExitValue() != 0) {
-        log.warn("Failed to update helm repo {}. {}", repoName, processResult.getOutput().getUTF8());
-      }
-    } catch (Exception ex) {
-      log.warn(ExceptionUtils.getMessage(ex));
-    }
   }
 
   /*
@@ -427,7 +402,7 @@ public class HelmTaskHelper {
         httpHelmRepoConfig.getChartRepoUrl(), httpHelmRepoConfig.getUsername(), httpHelmRepoConfig.getPassword(),
         destinationDirectory, helmChartConfigParams.getHelmVersion(), timeoutInMillis);
 
-    updateRepo(
+    helmTaskHelperBase.updateRepo(
         helmChartConfigParams.getRepoName(), workingDirectory, helmChartConfigParams.getHelmVersion(), timeoutInMillis);
 
     String commandOutput = executeCommandWithLogOutput(

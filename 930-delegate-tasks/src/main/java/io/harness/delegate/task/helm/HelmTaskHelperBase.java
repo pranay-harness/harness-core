@@ -110,8 +110,8 @@ public class HelmTaskHelperBase {
     }
   }
 
-  public void addRepo(String repoName, String repoDisplayName, String chartRepoUrl, String username, char[] password,
-      String chartDirectory, HelmVersion helmVersion, long timeoutInMillis) {
+  public void ensureAddAndUpdate(String repoName, String repoDisplayName, String chartRepoUrl, String username,
+      char[] password, String chartDirectory, HelmVersion helmVersion, long timeoutInMillis) {
     String repoAddCommand =
         getHttpRepoAddCommand(repoName, chartRepoUrl, username, password, chartDirectory, helmVersion);
 
@@ -127,6 +127,7 @@ public class HelmTaskHelperBase {
               + processResult.getOutput().getUTF8(),
           USER, HelmCliCommandType.REPO_ADD);
     }
+    updateRepo(repoName, chartDirectory, helmVersion, timeoutInMillis);
   }
 
   private String getHttpRepoAddCommand(String repoName, String chartRepoUrl, String username, char[] password,
@@ -317,7 +318,7 @@ public class HelmTaskHelperBase {
 
     String username = getHttpHelmUsername(httpHelmConnector);
     char[] password = getHttpHelmPassword(httpHelmConnector);
-    addRepo(storeDelegateConfig.getRepoName(), storeDelegateConfig.getRepoDisplayName(),
+    ensureAddAndUpdate(storeDelegateConfig.getRepoName(), storeDelegateConfig.getRepoDisplayName(),
         httpHelmConnector.getHelmRepoUrl(), username, password, destinationDirectory, manifest.getHelmVersion(),
         timeoutInMillis);
     fetchChartFromRepo(storeDelegateConfig.getRepoName(), storeDelegateConfig.getRepoDisplayName(),
@@ -599,5 +600,30 @@ public class HelmTaskHelperBase {
     }
 
     return HelmChartInfo.builder().version(chartVersion).name(chartName).build();
+  }
+
+  public void updateRepo(String repoName, String workingDirectory, HelmVersion helmVersion, long timeoutInMillis) {
+    try {
+      String repoUpdateCommand = getRepoUpdateCommand(repoName, workingDirectory, helmVersion);
+      ProcessResult processResult = executeCommand(repoUpdateCommand, null, format("update helm repo %s", repoName),
+          timeoutInMillis, HelmCliCommandType.REPO_UPDATE);
+
+      log.info("Repo update command executed on delegate: {}", repoUpdateCommand);
+      if (processResult.getExitValue() != 0) {
+        log.warn("Failed to update helm repo {}. {}", repoName, processResult.getOutput().getUTF8());
+      }
+    } catch (Exception ex) {
+      log.warn(ExceptionUtils.getMessage(ex));
+    }
+  }
+
+  private String getRepoUpdateCommand(String repoName, String workingDirectory, HelmVersion helmVersion) {
+    String repoUpdateCommand =
+        HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.REPO_UPDATE, helmVersion)
+            .replace(HELM_PATH_PLACEHOLDER, getHelmPath(helmVersion))
+            .replace("KUBECONFIG=${KUBECONFIG_PATH}", "")
+            .replace(REPO_NAME, repoName);
+
+    return applyHelmHomePath(repoUpdateCommand, workingDirectory);
   }
 }

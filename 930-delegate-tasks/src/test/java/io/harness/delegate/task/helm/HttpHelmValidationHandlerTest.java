@@ -153,7 +153,7 @@ public class HttpHelmValidationHandlerTest extends CategoryTest {
     doReturn(HttpHelmUsernamePasswordDTO.builder().build()).when(decryptionService).decrypt(any(), anyList());
     doNothing()
         .when(helmTaskHelperBase)
-        .addRepo(anyString(), anyString(), anyString(), anyString(), any(), anyString(), any(), anyLong());
+        .ensureAddAndUpdate(anyString(), anyString(), anyString(), anyString(), any(), anyString(), any(), anyLong());
 
     doNothing().when(helmTaskHelperBase).removeRepo(anyString(), anyString(), any(), anyLong());
     doNothing().when(helmTaskHelperBase).cleanup(anyString());
@@ -172,7 +172,7 @@ public class HttpHelmValidationHandlerTest extends CategoryTest {
     doReturn(HttpHelmUsernamePasswordDTO.builder().build()).when(decryptionService).decrypt(any(), anyList());
     doThrow(new HelmClientException(errorMessage, USER, HelmCliCommandType.REPO_ADD))
         .when(helmTaskHelperBase)
-        .addRepo(anyString(), anyString(), anyString(), anyString(), any(), anyString(), any(), anyLong());
+        .ensureAddAndUpdate(anyString(), anyString(), anyString(), anyString(), any(), anyString(), any(), anyLong());
 
     doReturn(generalError).when(ngErrorHelper).getErrorSummary(generalError);
     doReturn(ErrorDetail.builder().message(generalError).build()).when(ngErrorHelper).createErrorDetail(generalError);
@@ -188,11 +188,11 @@ public class HttpHelmValidationHandlerTest extends CategoryTest {
     verify(helmTaskHelperBase, times(1)).initHelm(eq(workingDir), eq(HelmVersion.V3), anyLong());
     if (authType == HttpHelmAuthType.USER_PASSWORD) {
       verify(helmTaskHelperBase, times(1))
-          .addRepo(anyString(), eq("testhttphelmrepo"), eq("localhost"), eq("test"), eq("password".toCharArray()),
-              eq(workingDir), eq(HelmVersion.V3), anyLong());
+          .ensureAddAndUpdate(anyString(), eq("testhttphelmrepo"), eq("localhost"), eq("test"),
+              eq("password".toCharArray()), eq(workingDir), eq(HelmVersion.V3), anyLong());
     } else {
       verify(helmTaskHelperBase, times(1))
-          .addRepo(anyString(), eq("testhttphelmrepo"), eq("localhost"), eq(null), eq(null), eq(workingDir),
+          .ensureAddAndUpdate(anyString(), eq("testhttphelmrepo"), eq("localhost"), eq(null), eq(null), eq(workingDir),
               eq(HelmVersion.V3), anyLong());
     }
     verify(helmTaskHelperBase, times(1)).removeRepo(anyString(), eq(workingDir), eq(HelmVersion.V3), anyLong());
@@ -209,11 +209,11 @@ public class HttpHelmValidationHandlerTest extends CategoryTest {
     verify(helmTaskHelperBase, times(1)).initHelm(eq(workingDir), eq(HelmVersion.V3), anyLong());
     if (authType == HttpHelmAuthType.USER_PASSWORD) {
       verify(helmTaskHelperBase, times(1))
-          .addRepo(anyString(), eq("testhttphelmrepo"), eq("localhost"), eq("test"), eq("password".toCharArray()),
-              eq(workingDir), eq(HelmVersion.V3), anyLong());
+          .ensureAddAndUpdate(anyString(), eq("testhttphelmrepo"), eq("localhost"), eq("test"),
+              eq("password".toCharArray()), eq(workingDir), eq(HelmVersion.V3), anyLong());
     } else {
       verify(helmTaskHelperBase, times(1))
-          .addRepo(anyString(), eq("testhttphelmrepo"), eq("localhost"), eq(null), eq(null), eq(workingDir),
+          .ensureAddAndUpdate(anyString(), eq("testhttphelmrepo"), eq("localhost"), eq(null), eq(null), eq(workingDir),
               eq(HelmVersion.V3), anyLong());
     }
     verify(helmTaskHelperBase, times(0)).removeRepo(anyString(), eq(workingDir), eq(HelmVersion.V3), anyLong());

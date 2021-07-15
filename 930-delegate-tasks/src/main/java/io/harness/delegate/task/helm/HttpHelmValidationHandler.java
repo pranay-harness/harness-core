@@ -54,7 +54,7 @@ public class HttpHelmValidationHandler implements ConnectorValidationHandler {
       helmTaskHelperBase.initHelm(workingDirectory, defaultHelmVersion, DEFAULT_TIMEOUT_IN_MILLIS);
       String repoName = convertBase64UuidToCanonicalForm(generateUuid());
 
-      helmTaskHelperBase.addRepo(repoName, helmValidationParams.getConnectorName(),
+      helmTaskHelperBase.ensureAddAndUpdate(repoName, helmValidationParams.getConnectorName(),
           helmValidationParams.getHttpHelmConnectorDTO().getHelmRepoUrl(),
           helmTaskHelperBase.getHttpHelmUsername(helmValidationParams.getHttpHelmConnectorDTO()),
           helmTaskHelperBase.getHttpHelmPassword(helmValidationParams.getHttpHelmConnectorDTO()), workingDirectory,

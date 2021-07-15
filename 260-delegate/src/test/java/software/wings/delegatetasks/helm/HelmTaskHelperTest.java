@@ -130,13 +130,13 @@ public class HelmTaskHelperTest extends WingsBaseTest {
   public void testAddRepoForwardHelmTaskHelperBase() {
     doNothing()
         .when(helmTaskHelperBase)
-        .addRepo("vault", "vault", "https://helm-server", "admin", "secret-text".toCharArray(), "/home", V3,
+        .ensureAddAndUpdate("vault", "vault", "https://helm-server", "admin", "secret-text".toCharArray(), "/home", V3,
             LONG_TIMEOUT_INTERVAL);
     helmTaskHelper.addRepo("vault", "vault", "https://helm-server", "admin", "secret-text".toCharArray(), "/home", V3,
         LONG_TIMEOUT_INTERVAL);
 
     verify(helmTaskHelperBase)
-        .addRepo("vault", "vault", "https://helm-server", "admin", "secret-text".toCharArray(), "/home", V3,
+        .ensureAddAndUpdate("vault", "vault", "https://helm-server", "admin", "secret-text".toCharArray(), "/home", V3,
             LONG_TIMEOUT_INTERVAL);
   }
 
@@ -510,19 +510,19 @@ public class HelmTaskHelperTest extends WingsBaseTest {
         .when(helmTaskHelperBase)
         .executeCommand(anyString(), anyString(), anyString(), anyLong(), eq(HelmCliCommandType.REPO_ADD));
 
-    helmTaskHelperBase.addRepo(
+    helmTaskHelperBase.ensureAddAndUpdate(
         "repo", "repo", "http://null-password-url", "username", null, "chart", V3, LONG_TIMEOUT_INTERVAL);
     verify(helmTaskHelperBase)
         .executeCommand(eq("v3/helm repo add repo http://null-password-url --username username "), anyString(),
             anyString(), anyLong(), eq(HelmCliCommandType.REPO_ADD));
 
-    helmTaskHelperBase.addRepo(
+    helmTaskHelperBase.ensureAddAndUpdate(
         "repo", "repo", "http://repo-url", "username", emptyPassword, "chart", V3, LONG_TIMEOUT_INTERVAL);
     verify(helmTaskHelperBase)
         .executeCommand(eq("v3/helm repo add repo http://repo-url --username username "), anyString(), anyString(),
             anyLong(), eq(HelmCliCommandType.REPO_ADD));
 
-    helmTaskHelperBase.addRepo(
+    helmTaskHelperBase.ensureAddAndUpdate(
         "repo", "repo", "http://repo-url", " ", passwordWithWhitespaces, "chart", V3, LONG_TIMEOUT_INTERVAL);
     verify(helmTaskHelperBase)
         .executeCommand(eq("v3/helm repo add repo http://repo-url  "), anyString(), anyString(), anyLong(),
@@ -542,20 +542,20 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     helmTaskHelper.addRepo(
         "repo", "repo", "http://null-password-url", "username", null, "chart", V3, LONG_TIMEOUT_INTERVAL);
     verify(helmTaskHelperBase)
-        .addRepo(eq("repo"), eq("repo"), eq("http://null-password-url"), eq("username"), any(), eq("chart"), any(),
-            anyLong());
+        .ensureAddAndUpdate(eq("repo"), eq("repo"), eq("http://null-password-url"), eq("username"), any(), eq("chart"),
+            any(), anyLong());
 
     helmTaskHelper.addRepo(
         "repo", "repo", "http://repo-url", "username", emptyPassword, "chart", V3, LONG_TIMEOUT_INTERVAL);
     verify(helmTaskHelperBase)
-        .addRepo(eq("repo"), eq("repo"), eq("http://repo-url"), eq("username"), eq(emptyPassword), eq("chart"), any(),
-            anyLong());
+        .ensureAddAndUpdate(eq("repo"), eq("repo"), eq("http://repo-url"), eq("username"), eq(emptyPassword),
+            eq("chart"), any(), anyLong());
 
     helmTaskHelper.addRepo(
         "repo", "repo", "http://repo-url", " ", passwordWithWhitespaces, "chart", V3, LONG_TIMEOUT_INTERVAL);
     verify(helmTaskHelperBase)
-        .addRepo(eq("repo"), eq("repo"), eq("http://repo-url"), eq(" "), eq(passwordWithWhitespaces), eq("chart"),
-            any(), anyLong());
+        .ensureAddAndUpdate(eq("repo"), eq("repo"), eq("http://repo-url"), eq(" "), eq(passwordWithWhitespaces),
+            eq("chart"), any(), anyLong());
   }
 
   @Test
