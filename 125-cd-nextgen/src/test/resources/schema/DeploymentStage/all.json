@@ -1768,13 +1768,16 @@
           ],
           "properties": {
             "connectorRef": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "namespace": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "releaseName": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           }
         }
@@ -2008,19 +2011,23 @@
           ],
           "properties": {
             "cluster": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "connectorRef": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "metadata": {
               "type": "string"
             },
             "namespace": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             },
             "releaseName": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1
             }
           }
         }

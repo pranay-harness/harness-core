@@ -21,6 +21,7 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.Wither;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.annotation.TypeAlias;
 
 @Value
@@ -30,14 +31,27 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("k8sGcpInfrastructure")
 @OwnedBy(HarnessTeam.CDP)
 public class K8sGcpInfrastructure implements Infrastructure, Visitable, WithConnectorRef {
-  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> connectorRef;
-  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> namespace;
   @NotNull
+  @NotEmpty
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  ParameterField<String> connectorRef;
+  @NotNull
+  @NotEmpty
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  ParameterField<String> namespace;
+  @NotNull
+  @NotEmpty
   @SkipAutoEvaluation
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
   @Wither
   ParameterField<String> releaseName;
-  @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> cluster;
+  @NotNull
+  @NotEmpty
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  ParameterField<String> cluster;
 
   @Override
   public InfraMapping getInfraMapping() {
