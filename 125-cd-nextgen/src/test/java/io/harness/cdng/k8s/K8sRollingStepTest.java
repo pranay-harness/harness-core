@@ -79,7 +79,7 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
         ArgumentCaptor.forClass(K8sRollingReleaseOutput.class);
     verify(executionSweepingOutputService, times(1))
         .consume(eq(ambiance), eq(K8sRollingReleaseOutput.OUTPUT_NAME), releaseOutputCaptor.capture(),
-            eq(StepOutcomeGroup.STAGE.name()));
+            eq(StepOutcomeGroup.STEP.name()));
     assertThat(releaseOutputCaptor.getValue().getName()).isEqualTo(releaseName);
   }
 
@@ -110,7 +110,7 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
         ArgumentCaptor.forClass(K8sRollingReleaseOutput.class);
     verify(executionSweepingOutputService, times(1))
         .consume(eq(ambiance), eq(K8sRollingReleaseOutput.OUTPUT_NAME), releaseOutputCaptor.capture(),
-            eq(StepOutcomeGroup.STAGE.name()));
+            eq(StepOutcomeGroup.STEP.name()));
     assertThat(releaseOutputCaptor.getValue().getName()).isEqualTo(releaseName);
   }
 
@@ -162,7 +162,7 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
     ArgumentCaptor<K8sRollingOutcome> argumentCaptor = ArgumentCaptor.forClass(K8sRollingOutcome.class);
     verify(executionSweepingOutputService, times(1))
         .consume(eq(ambiance), eq(OutcomeExpressionConstants.K8S_ROLL_OUT), argumentCaptor.capture(),
-            eq(StepOutcomeGroup.STAGE.name()));
+            eq(StepOutcomeGroup.STEP.name()));
     assertThat(argumentCaptor.getValue().getReleaseName()).isEqualTo("releaseName");
   }
 

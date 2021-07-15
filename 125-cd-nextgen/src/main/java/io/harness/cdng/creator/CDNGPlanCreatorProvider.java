@@ -7,6 +7,7 @@ import io.harness.cdng.creator.filters.DeploymentStageFilterJsonCreator;
 import io.harness.cdng.creator.plan.stage.DeploymentStagePMSPlanCreator;
 import io.harness.cdng.creator.plan.steps.CDPMSStepFilterJsonCreator;
 import io.harness.cdng.creator.plan.steps.CDPMSStepPlanCreator;
+import io.harness.cdng.creator.plan.steps.K8sRollingRollbackPMSStepPlanCreator;
 import io.harness.cdng.creator.variables.DeploymentStageVariableCreator;
 import io.harness.cdng.creator.variables.K8sStepVariableCreator;
 import io.harness.cdng.creator.variables.ShellScriptStepVariableCreator;
@@ -40,6 +41,7 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     List<PartialPlanCreator<?>> planCreators = new LinkedList<>();
     planCreators.add(new DeploymentStagePMSPlanCreator());
     planCreators.add(new CDPMSStepPlanCreator());
+    planCreators.add(new K8sRollingRollbackPMSStepPlanCreator());
     injectorUtils.injectMembers(planCreators);
     return planCreators;
   }

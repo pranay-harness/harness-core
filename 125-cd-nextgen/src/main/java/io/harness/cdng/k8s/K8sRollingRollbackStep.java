@@ -59,10 +59,14 @@ public class K8sRollingRollbackStep extends TaskExecutableWithRollbackAndRbac<K8
   @Override
   public TaskRequest obtainTaskAfterRbac(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
-    OptionalSweepingOutput k8sRollingReleaseOptionalOutput = executionSweepingOutputService.resolveOptional(
-        ambiance, RefObjectUtils.getSweepingOutputRefObject(K8sRollingReleaseOutput.OUTPUT_NAME));
-    OptionalSweepingOutput k8sRollingOptionalOutput = executionSweepingOutputService.resolveOptional(
-        ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_ROLL_OUT));
+    K8sRollingRollbackStepParameters rollingRollbackStepParameters =
+        (K8sRollingRollbackStepParameters) stepElementParameters.getSpec();
+    OptionalSweepingOutput k8sRollingReleaseOptionalOutput = executionSweepingOutputService.resolveOptional(ambiance,
+        RefObjectUtils.getSweepingOutputRefObject(
+            rollingRollbackStepParameters.getRollingStepFqn() + "." + K8sRollingReleaseOutput.OUTPUT_NAME));
+    OptionalSweepingOutput k8sRollingOptionalOutput = executionSweepingOutputService.resolveOptional(ambiance,
+        RefObjectUtils.getSweepingOutputRefObject(
+            rollingRollbackStepParameters.getRollingStepFqn() + "." + OutcomeExpressionConstants.K8S_ROLL_OUT));
 
     if (!k8sRollingReleaseOptionalOutput.isFound()) {
       return TaskRequest.newBuilder()
