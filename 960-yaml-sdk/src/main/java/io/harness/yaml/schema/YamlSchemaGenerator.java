@@ -245,6 +245,10 @@ public class YamlSchemaGenerator {
       if (isNotEmpty(swaggerDefinitionsMetaInfo.getFieldEnumData())) {
         addEnumProperty(value, swaggerDefinitionsMetaInfo.getFieldEnumData());
       }
+      // non Empty fields
+      if (!isEmpty(swaggerDefinitionsMetaInfo.getNotEmptyStringFields())) {
+        addNotEmptyFields(value, swaggerDefinitionsMetaInfo.getNotEmptyStringFields());
+      }
 
       if (isNotEmpty(allOfNodeContents)) {
         if (value.has(SchemaConstants.ALL_OF_NODE)) {
@@ -257,6 +261,15 @@ public class YamlSchemaGenerator {
     }
 
     removeUnwantedNodes(value, "originalRef");
+  }
+
+  private void addNotEmptyFields(ObjectNode value, Set<String> nonEmptyFields) {
+    ObjectNode properties = getPropertiesNodeFromDefinitionNode(value);
+    // iterate over the created set
+    for (String fieldName : nonEmptyFields) {
+      ObjectNode objectNode = (ObjectNode) properties.get(fieldName);
+      objectNode.put(MIN_LENGTH_NODE, 1);
+    }
   }
 
   private void addEnumProperty(ObjectNode value, Set<FieldEnumData> fieldEnumData) {
