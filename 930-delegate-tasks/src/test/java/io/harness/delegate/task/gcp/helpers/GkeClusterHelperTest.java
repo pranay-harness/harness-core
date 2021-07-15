@@ -19,6 +19,7 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.GcpServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesConfig;
@@ -317,9 +318,9 @@ public class GkeClusterHelperTest extends CategoryTest {
   public void shouldNotListClustersIfError() throws Exception {
     when(clustersList.execute()).thenThrow(new IOException());
 
-    List<String> result = gkeClusterHelper.listClusters(serviceAccountKey, false);
+    assertThatThrownBy(() -> gkeClusterHelper.listClusters(serviceAccountKey, false))
+        .isInstanceOf(GcpServerException.class);
 
     verify(clusters).list(anyString());
-    assertThat(result).isNull();
   }
 }
