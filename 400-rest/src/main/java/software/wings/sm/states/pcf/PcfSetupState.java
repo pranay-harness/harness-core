@@ -1,6 +1,7 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.CF_APP_NON_VERSIONING_INACTIVE_ROLLBACK;
 import static io.harness.beans.FeatureName.CF_CUSTOM_EXTRACTION;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
@@ -175,6 +176,7 @@ public class PcfSetupState extends State {
   @Getter @Setter private boolean useArtifactProcessingScript;
   @Getter @Setter private String artifactProcessingScript;
   @Getter @Setter private List<String> tags;
+  @Getter @Setter private boolean isNonVersioning;
 
   public PcfSetupState(String name) {
     super(name, StateType.PCF_SETUP.name());
@@ -292,6 +294,8 @@ public class PcfSetupState extends State {
     artifactStreamAttributes.getMetadata().put(
         ArtifactMetadataKeys.artifactPath, artifactPathForSource(artifact, artifactStreamAttributes));
 
+    boolean nonVersioningInactiveRollbackEnabled =
+        featureFlagService.isEnabled(CF_APP_NON_VERSIONING_INACTIVE_ROLLBACK, pcfConfig.getAccountId());
     CfCommandSetupRequest cfCommandSetupRequest =
         CfCommandSetupRequest.builder()
             .activityId(activityId)
@@ -324,6 +328,8 @@ public class PcfSetupState extends State {
             .ignorePcfConnectionContextCache(
                 featureFlagService.isEnabled(IGNORE_PCF_CONNECTION_CONTEXT_CACHE, pcfConfig.getAccountId()))
             .cfCliVersion(pcfStateHelper.getCfCliVersionOrDefault(app.getAppId(), serviceElement.getUuid()))
+            .isNonVersioning(nonVersioningInactiveRollbackEnabled && isNonVersioning)
+            .nonVersioningInactiveRollbackEnabled(nonVersioningInactiveRollbackEnabled)
             .build();
 
     if (featureFlagService.isEnabled(CF_CUSTOM_EXTRACTION, pcfConfig.getAccountId()) && useArtifactProcessingScript
@@ -363,6 +369,7 @@ public class PcfSetupState extends State {
             .useArtifactProcessingScript(useArtifactProcessingScript)
             .artifactProcessingScript(artifactProcessingScript)
             .tags(tags)
+            .cfAppNamePrefix(pcfAppNameSuffix)
             .build();
 
     String waitId = generateUuid();
@@ -638,6 +645,10 @@ public class PcfSetupState extends State {
             .enforceSslValidation(stateExecutionData.isEnforceSslValidation())
             .pcfManifestsPackage(stateExecutionData.getPcfManifestsPackage())
             .tags(stateExecutionData.getTags())
+            .cfAppNamePrefix(stateExecutionData.getCfAppNamePrefix())
+            .nonVersioning(!isPcfSetupCommandResponseNull && cfSetupCommandResponse.isNonVersioning())
+            .versioningChanged(!isPcfSetupCommandResponseNull && cfSetupCommandResponse.isVersioningChanged())
+            .activeAppRevision(isPcfSetupCommandResponseNull ? null : cfSetupCommandResponse.getActiveAppRevision())
             .isUseCfCli(true);
 
     if (!isPcfSetupCommandResponseNull) {
@@ -798,6 +809,7 @@ public class PcfSetupState extends State {
                                 .useArtifactProcessingScript(useArtifactProcessingScript)
                                 .artifactProcessingScript(artifactProcessingScript)
                                 .tags(tags)
+                                .isNonVersioning(isNonVersioning)
                                 .build())
         .delegateTaskId(delegateTaskId)
         .build();

@@ -9,6 +9,7 @@ import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.CfAppAutoscalarRequestData;
 import io.harness.pcf.model.CfConfig;
 import io.harness.pcf.model.CfCreateApplicationRequestData;
+import io.harness.pcf.model.CfRenameRequest;
 import io.harness.pcf.model.CfRequestConfig;
 import io.harness.pcf.model.CfRunPluginScriptRequestData;
 
@@ -45,6 +46,12 @@ public class CfDeploymentManagerUnsupported implements CfDeploymentManager {
 
   @Override
   public void deleteApplication(CfRequestConfig cfRequestConfig) throws PivotalClientApiException {
+    throw new PivotalClientApiException("PCF operations not supported by this API.");
+  }
+
+  @Override
+  public void renameApplication(CfRenameRequest cfRenameRequest, LogCallback logCallback)
+      throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
 
@@ -126,6 +133,11 @@ public class CfDeploymentManagerUnsupported implements CfDeploymentManager {
   @Override
   public boolean isActiveApplication(CfRequestConfig cfRequestConfig, LogCallback executionLogCallback)
       throws PivotalClientApiException {
+    throw new PivotalClientApiException("PCF operations not supported by this API.");
+  }
+
+  @Override
+  public boolean isInActiveApplication(CfRequestConfig cfRequestConfig) throws PivotalClientApiException {
     throw new PivotalClientApiException("PCF operations not supported by this API.");
   }
 
