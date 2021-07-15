@@ -7,6 +7,7 @@ shared_dependencies = [
     "@maven//:io_netty_netty_all",
 ] + [
     "//360-cg-manager:module",
+    "//380-cg-graphql:module",
     "//390-db-migration:module",
     "//400-rest:module",
     "//420-delegate-agent:module",
