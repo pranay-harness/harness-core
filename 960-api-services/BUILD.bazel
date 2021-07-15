@@ -25,6 +25,7 @@ java_library(
         "@maven//:com_amazonaws_aws_java_sdk_ecs",
         "@maven//:com_amazonaws_aws_java_sdk_iam",
         "@maven//:com_amazonaws_aws_java_sdk_lambda",
+        "@maven//:com_amazonaws_aws_java_sdk_organizations",
         "@maven//:com_amazonaws_aws_java_sdk_s3",
         "@maven//:com_amazonaws_aws_java_sdk_servicediscovery",
         "@maven//:com_amazonaws_aws_java_sdk_sns",

@@ -16,8 +16,6 @@ shared_dependencies = [
     "@maven//:com_google_cloud_google_cloud_bigquery",
     "@maven//:io_leangen_graphql_spqr",
     "@maven//:software_amazon_awssdk_auth",
-    "@maven//:com_amazonaws_aws_java_sdk_organizations",
-    "@maven//:com_amazonaws_aws_java_sdk_s3",
     "@maven//:com_amazonaws_aws_java_sdk_sts",
 ]
 

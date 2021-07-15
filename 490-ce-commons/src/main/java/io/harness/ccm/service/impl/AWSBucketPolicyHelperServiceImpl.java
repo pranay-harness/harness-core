@@ -1,7 +1,6 @@
 package io.harness.ccm.service.impl;
 
-import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
-
+import io.harness.aws.AwsClientImpl;
 import io.harness.aws.CloseableAmazonWebServiceClient;
 import io.harness.ccm.commons.beans.billing.CEBucketPolicyJson;
 import io.harness.ccm.commons.beans.billing.CEBucketPolicyStatement;
@@ -10,12 +9,10 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.BucketPolicy;
 import com.google.gson.Gson;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,16 +21,17 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AWSBucketPolicyHelperServiceImpl implements AWSBucketPolicyHelperService {
-  private static final String ceAWSRegion = AWS_DEFAULT_REGION;
+  @Inject AwsClientImpl awsClient;
   private static final String rolePrefix = "arn:aws:iam";
   private static final String aws = "AWS";
 
   @Override
   public boolean updateBucketPolicy(
       String crossAccountRoleArn, String awsS3Bucket, String awsAccessKey, String awsSecretKey) {
-    AWSCredentialsProvider credentialsProvider = constructBasicAwsCredentials(awsAccessKey, awsSecretKey);
+    AWSCredentialsProvider credentialsProvider =
+        awsClient.constructStaticBasicAwsCredentials(awsAccessKey, awsSecretKey);
     try (CloseableAmazonWebServiceClient<AmazonS3Client> closeableAmazonS3Client =
-             new CloseableAmazonWebServiceClient(getAmazonS3Client(credentialsProvider))) {
+             new CloseableAmazonWebServiceClient(awsClient.getAmazonS3Client(credentialsProvider))) {
       BucketPolicy bucketPolicy = closeableAmazonS3Client.getClient().getBucketPolicy(awsS3Bucket);
       String policyText = bucketPolicy.getPolicyText();
       CEBucketPolicyJson policyJson = new Gson().fromJson(policyText, CEBucketPolicyJson.class);
@@ -58,16 +56,5 @@ public class AWSBucketPolicyHelperServiceImpl implements AWSBucketPolicyHelperSe
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return true;
-  }
-
-  protected AmazonS3Client getAmazonS3Client(AWSCredentialsProvider credentialsProvider) {
-    AmazonS3ClientBuilder builder =
-        AmazonS3ClientBuilder.standard().withRegion(ceAWSRegion).withForceGlobalBucketAccessEnabled(Boolean.TRUE);
-    builder.withCredentials(credentialsProvider);
-    return (AmazonS3Client) builder.build();
-  }
-
-  public AWSCredentialsProvider constructBasicAwsCredentials(String awsAccessKey, String awsSecretKey) {
-    return new AWSStaticCredentialsProvider(new BasicAWSCredentials(awsAccessKey, awsSecretKey));
   }
 }

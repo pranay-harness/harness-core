@@ -10,6 +10,8 @@ import static software.wings.settings.SettingVariableTypes.CE_AWS;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.S3SyncRecord;
 import io.harness.batch.processing.service.impl.AwsS3SyncServiceImpl;
+import io.harness.ccm.commons.dao.AWSConnectorToBucketMappingDao;
+import io.harness.ccm.commons.entities.AWSConnectorToBucketMapping;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResourceClient;
@@ -47,6 +49,7 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
   @Autowired private AwsS3SyncServiceImpl awsS3SyncService;
   @Autowired private ConnectorResourceClient connectorResourceClient;
   @Autowired private FeatureFlagService featureFlagService;
+  @Autowired private AWSConnectorToBucketMappingDao awsConnectorToBucketMappingDao;
   private JobParameters parameters;
   private static final String MASTER = "MASTER";
 
@@ -107,7 +110,7 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
         currentGenConnectorResponses.add(connectorResponse);
       }
     });
-    syncAwsContainers(currentGenConnectorResponses, accountId);
+    syncAwsContainers(currentGenConnectorResponses, accountId, false);
   }
 
   public void syncNextGenContainers(String accountId) {
@@ -130,18 +133,27 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
       page++;
     } while (response != null && isNotEmpty(response.getContent()));
     log.info("Processing batch size of {} in S3SyncEventWriter (From NG)", nextGenConnectorResponses.size());
-    syncAwsContainers(nextGenConnectorResponses, accountId);
+    syncAwsContainers(nextGenConnectorResponses, accountId, true);
   }
 
-  public void syncAwsContainers(List<ConnectorResponseDTO> connectorResponses, String accountId) {
+  public void syncAwsContainers(List<ConnectorResponseDTO> connectorResponses, String accountId, boolean isNextGen) {
     connectorResponses.forEach(connector -> {
-      CEAwsConnectorDTO ceAwsConnectorDTO = (CEAwsConnectorDTO) connector.getConnector().getConnectorConfig();
+      ConnectorInfoDTO connectorInfo = connector.getConnector();
+      CEAwsConnectorDTO ceAwsConnectorDTO = (CEAwsConnectorDTO) connectorInfo.getConnectorConfig();
       if (ceAwsConnectorDTO != null && ceAwsConnectorDTO.getCrossAccountAccess() != null) {
+        String destinationBucket = null;
+        if (isNextGen) {
+          AWSConnectorToBucketMapping awsConnectorToBucketMapping =
+              awsConnectorToBucketMappingDao.getByAwsConnectorId(accountId, connectorInfo.getIdentifier());
+          if (awsConnectorToBucketMapping != null) {
+            destinationBucket = awsConnectorToBucketMapping.getDestinationBucket();
+          }
+        }
         AwsCurAttributesDTO curAttributes = ceAwsConnectorDTO.getCurAttributes();
         CrossAccountAccessDTO crossAccountAccess = ceAwsConnectorDTO.getCrossAccountAccess();
         S3SyncRecord s3SyncRecord = S3SyncRecord.builder()
                                         .accountId(accountId)
-                                        .settingId(connector.getConnector().getIdentifier())
+                                        .settingId(connectorInfo.getIdentifier())
                                         .billingAccountId(ceAwsConnectorDTO.getAwsAccountId())
                                         .curReportName(curAttributes.getReportName())
                                         .billingBucketPath(String.join("/", "s3://" + curAttributes.getS3BucketName(),
@@ -149,6 +161,7 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
                                         .billingBucketRegion(curAttributes.getRegion())
                                         .externalId(crossAccountAccess.getExternalId())
                                         .roleArn(crossAccountAccess.getCrossAccountRoleArn())
+                                        .destinationBucket(destinationBucket)
                                         .build();
         awsS3SyncService.syncBuckets(s3SyncRecord);
       }
