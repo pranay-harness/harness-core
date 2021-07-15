@@ -124,11 +124,10 @@ public class DelegateController {
   }
 
   public static List<TaskGroup> populateTaskGroup(List<QLTaskGroup> qlTaskGroup) {
-    List<TaskGroup> taskGroupList = qlTaskGroup.stream()
-                                        .filter(Objects::nonNull)
-                                        .map(taskGroup -> taskGroupMapping().get(taskGroup.name()))
-                                        .collect(Collectors.toList());
-    return taskGroupList;
+    return qlTaskGroup.stream()
+        .filter(Objects::nonNull)
+        .map(taskGroup -> taskGroupMapping().get(taskGroup.name()))
+        .collect(Collectors.toList());
   }
 
   public static List<EnvironmentType> populateEnvironmentTypeList(List<QLEnvironmentType> qlEnvironmentTypeList) {
