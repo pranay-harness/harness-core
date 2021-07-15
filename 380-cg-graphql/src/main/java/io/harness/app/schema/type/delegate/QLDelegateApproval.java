@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DEL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateApproval;
+import io.harness.exception.InvalidRequestException;
 
 import software.wings.graphql.schema.type.QLEnum;
 
@@ -24,6 +25,6 @@ public enum QLDelegateApproval implements QLEnum {
     if (qlDelegateApproval == REJECT) {
       return DelegateApproval.REJECT;
     }
-    return null;
+    throw new InvalidRequestException("Invalid delegate approval value ");
   }
 }
