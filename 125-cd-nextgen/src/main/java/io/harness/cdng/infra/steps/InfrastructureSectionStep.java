@@ -32,12 +32,12 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.rbac.PrincipalTypeProtoToPrincipalTypeMapper;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
-import io.harness.pms.sdk.core.steps.executables.ChildExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.tags.TagUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rbac.CDNGRbacPermissions;
+import io.harness.steps.executable.ChildExecutableWithRbac;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -48,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CDC)
-public class InfrastructureSectionStep implements ChildExecutable<InfraSectionStepParameters> {
+public class InfrastructureSectionStep implements ChildExecutableWithRbac<InfraSectionStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder()
                                                .setType(ExecutionNodeType.INFRASTRUCTURE_SECTION.getName())
                                                .setStepCategory(StepCategory.STEP)
@@ -59,24 +59,7 @@ public class InfrastructureSectionStep implements ChildExecutable<InfraSectionSt
   @Inject @Named("PRIVILEGED") private AccessControlClient accessControlClient;
 
   @Override
-  public Class<InfraSectionStepParameters> getStepParametersClass() {
-    return InfraSectionStepParameters.class;
-  }
-
-  @Override
-  public ChildExecutableResponse obtainChild(
-      Ambiance ambiance, InfraSectionStepParameters stepParameters, StepInputPackage inputPackage) {
-    log.info("Starting execution for InfraSection Step [{}]", stepParameters);
-    validateEnvironment(stepParameters, ambiance);
-    EnvironmentOutcome environmentOutcome = processEnvironment(ambiance, stepParameters.getUseFromStage(),
-        stepParameters.getEnvironment(), stepParameters.getEnvironmentRef());
-    executionSweepingOutputResolver.consume(
-        ambiance, OutcomeExpressionConstants.ENVIRONMENT, environmentOutcome, StepOutcomeGroup.STAGE.name());
-
-    return ChildExecutableResponse.newBuilder().setChildNodeId(stepParameters.getChildNodeID()).build();
-  }
-
-  private void validateEnvironment(InfraSectionStepParameters stepParameters, Ambiance ambiance) {
+  public void validateResources(Ambiance ambiance, InfraSectionStepParameters stepParameters) {
     String accountIdentifier = AmbianceUtils.getAccountId(ambiance);
     String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
     String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
@@ -87,12 +70,35 @@ public class InfrastructureSectionStep implements ChildExecutable<InfraSectionSt
     }
     PrincipalType principalType = PrincipalTypeProtoToPrincipalTypeMapper.convertToAccessControlPrincipalType(
         executionPrincipalInfo.getPrincipalType());
+
     if (stepParameters.getEnvironmentRef() == null
         || EmptyPredicate.isEmpty(stepParameters.getEnvironmentRef().getValue())) {
       accessControlClient.checkForAccessOrThrow(Principal.of(principalType, principal),
           ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier), Resource.of("ENVIRONMENT", null),
           CDNGRbacPermissions.ENVIRONMENT_CREATE_PERMISSION, "Validation for Infrastructure Step failed");
+    } else {
+      accessControlClient.checkForAccessOrThrow(Principal.of(principalType, principal),
+          ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+          Resource.of("ENVIRONMENT", stepParameters.getEnvironmentRef().getValue()),
+          CDNGRbacPermissions.ENVIRONMENT_RUNTIME_PERMISSION, "Validation for Infrastructure Step failed");
     }
+  }
+
+  @Override
+  public Class<InfraSectionStepParameters> getStepParametersClass() {
+    return InfraSectionStepParameters.class;
+  }
+
+  @Override
+  public ChildExecutableResponse obtainChildAfterRbac(
+      Ambiance ambiance, InfraSectionStepParameters stepParameters, StepInputPackage inputPackage) {
+    log.info("Starting execution for InfraSection Step [{}]", stepParameters);
+    EnvironmentOutcome environmentOutcome = processEnvironment(ambiance, stepParameters.getUseFromStage(),
+        stepParameters.getEnvironment(), stepParameters.getEnvironmentRef());
+    executionSweepingOutputResolver.consume(
+        ambiance, OutcomeExpressionConstants.ENVIRONMENT, environmentOutcome, StepOutcomeGroup.STAGE.name());
+
+    return ChildExecutableResponse.newBuilder().setChildNodeId(stepParameters.getChildNodeID()).build();
   }
 
   @Override
