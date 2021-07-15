@@ -274,14 +274,14 @@ public class SamlBasedAuthHandler implements AuthHandler {
 
   @Nullable
   private User tryAutoAcceptingInvite(SamlSettings samlSettings, String nameId) {
-    if (featureFlagService.isEnabled(SAML_LOGIN_WITHOUT_INVITE_ACCEPT, samlSettings.getAccountId())) {
-      log.info(SAML_LOGIN_WITHOUT_INVITE_ACCEPT + "FF is enabled for account, Creating user with auto approved invite");
-      UserInvite userInvite = anUserInvite().withAccountId(samlSettings.getAccountId()).withEmail(nameId).build();
-      userService.inviteUser(userInvite, false, true);
-      User user = authenticationUtils.getUserByEmail(nameId);
-      return user;
-    }
-    return null;
+    //  if (featureFlagService.isEnabled(SAML_LOGIN_WITHOUT_INVITE_ACCEPT, samlSettings.getAccountId())) {
+    log.info(SAML_LOGIN_WITHOUT_INVITE_ACCEPT + "FF is enabled for account, Creating user with auto approved invite");
+    UserInvite userInvite = anUserInvite().withAccountId(samlSettings.getAccountId()).withEmail(nameId).build();
+    userService.inviteUser(userInvite, false, true);
+    User user = authenticationUtils.getUserByEmail(nameId);
+    return user;
+    //   }
+    //  return null;
   }
 
   // TODO : revisit this method when we are doing SAML authorization
