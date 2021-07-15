@@ -24,6 +24,7 @@ import io.harness.service.DelegateGrpcClientWrapper;
 
 import com.google.inject.Inject;
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
@@ -109,7 +110,7 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
     return new RetryPolicy<>()
         .handle(Exception.class)
-        .withDelay(RETRY_SLEEP_DURATION)
+        .withBackoff(15, 60, ChronoUnit.SECONDS)
         .withMaxAttempts(MAX_ATTEMPTS)
         .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
         .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
