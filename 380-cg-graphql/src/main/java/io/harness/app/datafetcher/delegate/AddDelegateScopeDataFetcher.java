@@ -5,7 +5,9 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import io.harness.app.schema.mutation.delegate.input.QLAddDelegateScopeInput;
 import io.harness.app.schema.mutation.delegate.payload.QLAddDelegateScopePayload;
 import io.harness.app.schema.type.delegate.QLDelegateScope;
+import io.harness.app.schema.type.delegate.QLDelegateScope.QLDelegateScopeBuilder;
 import io.harness.delegate.beans.DelegateScope;
+import io.harness.delegate.beans.DelegateScope.DelegateScopeBuilder;
 
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
@@ -27,13 +29,13 @@ public class AddDelegateScopeDataFetcher
   @Override
   @AuthRule(permissionType = MANAGE_DELEGATES)
   public QLAddDelegateScopePayload mutateAndFetch(QLAddDelegateScopeInput parameter, MutationContext mutationContext) {
-    DelegateScope.DelegateScopeBuilder delegateScopeBuilder = DelegateScope.builder();
+    DelegateScopeBuilder delegateScopeBuilder = DelegateScope.builder();
     DelegateController.populateDelegateScope(mutationContext.getAccountId(), parameter, delegateScopeBuilder);
     DelegateScope scope = delegateScopeService.add(delegateScopeBuilder.build());
     if (scope == null) {
       return QLAddDelegateScopePayload.builder().message("Error while adding delegate scope").build();
     }
-    QLDelegateScope.QLDelegateScopeBuilder qlDelegateScopeBuilder = QLDelegateScope.builder();
+    QLDelegateScopeBuilder qlDelegateScopeBuilder = QLDelegateScope.builder();
     DelegateController.populateQLDelegateScope(scope, qlDelegateScopeBuilder);
     return QLAddDelegateScopePayload.builder()
         .message("Delegate Scope added")

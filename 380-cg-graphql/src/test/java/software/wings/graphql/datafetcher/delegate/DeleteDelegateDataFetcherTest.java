@@ -13,6 +13,7 @@ import io.harness.app.schema.mutation.delegate.input.QLDeleteDelegateInput;
 import io.harness.app.schema.mutation.delegate.payload.QLDeleteDelegatePayload;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateBuilder;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
@@ -25,10 +26,10 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.DelegateService;
 
 import com.google.inject.Inject;
+import io.jsonwebtoken.lang.Assert;
 import java.sql.SQLException;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -57,8 +58,8 @@ public class DeleteDelegateDataFetcherTest extends AbstractDataFetcherTestBase {
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testSetStatusDeleteDelegate() {
     String accountId = generateUuid();
     String delegateId = generateUuid();
@@ -74,12 +75,12 @@ public class DeleteDelegateDataFetcherTest extends AbstractDataFetcherTestBase {
     QLDeleteDelegatePayload deleteDelegatePayload = deleteDelegateDataFetcher.mutateAndFetch(
         deleteDelegateInput, MutationContext.builder().accountId(accountId).build());
 
-    Assert.assertTrue(deleteDelegatePayload.getMessage().equals("Delegate deleted"));
+    Assert.isTrue(deleteDelegatePayload.getMessage().equals("Delegate deleted"));
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testNonExistingDeleteDelegate() {
     String accountId = generateUuid();
     String delegateId = generateUuid();
@@ -93,8 +94,8 @@ public class DeleteDelegateDataFetcherTest extends AbstractDataFetcherTestBase {
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testNonExistingSetStatusDeleteDelegate() {
     String accountId = generateUuid();
     String delegateId = generateUuid();
@@ -107,7 +108,7 @@ public class DeleteDelegateDataFetcherTest extends AbstractDataFetcherTestBase {
         .hasMessage("Unable to fetch delegate with delegate id " + delegateId);
   }
 
-  private Delegate.DelegateBuilder createDelegateBuilder() {
+  private DelegateBuilder createDelegateBuilder() {
     return Delegate.builder()
         .accountId(ACCOUNT_ID)
         .ip("127.0.0.1")
