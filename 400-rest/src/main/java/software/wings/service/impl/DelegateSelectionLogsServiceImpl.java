@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.beans.FeatureName.DISABLE_DELEGATE_SELECTION_LOG;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.delegate.beans.NgSetupFields.NG;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -157,6 +159,10 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
     if (task == null || task.getUuid() == null || !task.isSelectionLogsTrackingEnabled()) {
       return null;
     }
+
+    boolean isTaskNg =
+        !isEmpty(task.getSetupAbstractions()) && Boolean.parseBoolean(task.getSetupAbstractions().get(NG));
+
     return BatchDelegateSelectionLog.builder()
         .taskId(task.getUuid())
         .taskMetadata(DelegateSelectionLogTaskMetadata.builder()
@@ -164,6 +170,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
                           .accountId(task.getAccountId())
                           .setupAbstractions(task.getSetupAbstractions())
                           .build())
+        .isTaskNg(isTaskNg)
         .build();
   }
 

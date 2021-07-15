@@ -256,13 +256,18 @@ public class DelegateSelectionLogsServiceImplTest extends WingsBaseTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldCreateBatch() {
-    DelegateTask task = DelegateTask.builder().uuid(generateUuid()).selectionLogsTrackingEnabled(true).build();
+    DelegateTask task = DelegateTask.builder()
+                            .uuid(generateUuid())
+                            .setupAbstraction("ng", "true")
+                            .selectionLogsTrackingEnabled(true)
+                            .build();
     BatchDelegateSelectionLog batchDelegateSelectionLog = delegateSelectionLogsService.createBatch(task);
 
     assertThat(batchDelegateSelectionLog).isNotNull();
     assertThat(batchDelegateSelectionLog.getDelegateSelectionLogs()).isNotNull();
     assertThat(batchDelegateSelectionLog.getDelegateSelectionLogs()).isEmpty();
     assertThat(batchDelegateSelectionLog.getTaskId()).isEqualTo(task.getUuid());
+    assertThat(batchDelegateSelectionLog.isTaskNg()).isTrue();
   }
 
   @Test
