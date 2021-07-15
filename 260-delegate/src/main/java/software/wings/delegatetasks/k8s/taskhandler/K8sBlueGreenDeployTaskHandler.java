@@ -15,7 +15,7 @@ import static io.harness.k8s.manifest.ManifestHelper.getManagedWorkload;
 import static io.harness.k8s.manifest.ManifestHelper.getPrimaryService;
 import static io.harness.k8s.manifest.ManifestHelper.getServices;
 import static io.harness.k8s.manifest.ManifestHelper.getStageService;
-import static io.harness.k8s.manifest.ManifestHelper.getWorkloadsForBG;
+import static io.harness.k8s.manifest.ManifestHelper.getWorkloadsForCanaryAndBG;
 import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
 import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
@@ -262,16 +262,16 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
       executionLogCallback.saveExecutionLog("Manifests processed. Found following resources: \n"
           + k8sTaskHelperBase.getResourcesInTableFormat(resources));
 
-      List<KubernetesResource> workloads = getWorkloadsForBG(resources);
+      List<KubernetesResource> workloads = getWorkloadsForCanaryAndBG(resources);
 
       if (workloads.size() != 1) {
         if (workloads.isEmpty()) {
           executionLogCallback.saveExecutionLog(
-              "\nNo workload found in the Manifests. Can't do  Blue/Green Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Blue/Green workflow type.",
+              "\nNo workload found in the Manifests. Can't do  Blue/Green Deployment. Only Deployment, DeploymentConfig (OpenShift) and StatefulSet workloads are supported in Blue/Green workflow type.",
               ERROR, FAILURE);
         } else {
           executionLogCallback.saveExecutionLog(
-              "\nThere are multiple workloads in the Service Manifests you are deploying. Blue/Green Workflows support a single Deployment or DeploymentConfig (OpenShift) workload only. To deploy additional workloads in Manifests, annotate them with "
+              "\nThere are multiple workloads in the Service Manifests you are deploying. Blue/Green Workflows support a single Deployment, DeploymentConfig (OpenShift) or StatefulSet workload only. To deploy additional workloads in Manifests, annotate them with "
                   + HarnessAnnotations.directApply + ": true",
               ERROR, FAILURE);
         }

@@ -1,9 +1,13 @@
 package software.wings.delegatetasks.k8s;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 @OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public interface K8sTestConstants {
   String DEPLOYMENT_DIRECT_APPLY_YAML = "apiVersion: apps/v1\n"
       + "kind: Deployment\n"
