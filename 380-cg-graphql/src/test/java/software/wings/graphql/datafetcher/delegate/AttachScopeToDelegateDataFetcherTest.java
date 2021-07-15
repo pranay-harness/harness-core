@@ -5,11 +5,14 @@ import static io.harness.rule.OwnerRule.JENNY;
 
 import io.harness.app.datafetcher.delegate.AttachScopeToDelegateDataFetcher;
 import io.harness.app.schema.mutation.delegate.input.QLAttachScopeToDelegateInput;
+import io.harness.app.schema.mutation.delegate.input.QLAttachScopeToDelegateInput.QLAttachScopeToDelegateInputBuilder;
 import io.harness.app.schema.mutation.delegate.payload.QLAttachScopeToDelegatePayload;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateBuilder;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateScope;
+import io.harness.delegate.beans.DelegateScope.DelegateScopeBuilder;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -49,8 +52,8 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testAttachScopeToDelegateWithIncludeScope() {
     String accountId = generateUuid();
     String delegateId = generateUuid();
@@ -64,8 +67,7 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
 
     String[] delegateScopeNames = {"delegateScope22"};
     QLIdFilter includedScopeIds = QLIdFilter.builder().operator(QLIdOperator.IN).values(delegateScopeNames).build();
-    QLAttachScopeToDelegateInput.QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder =
-        QLAttachScopeToDelegateInput.builder();
+    QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder = QLAttachScopeToDelegateInput.builder();
     attachScopeToDelegateInputBuilder.accountId(accountId)
         .delegateId(delegateId)
         .includeScopes(includedScopeIds)
@@ -80,8 +82,8 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testAttachScopeToDelegateWithExcludeScope() {
     String accountId = generateUuid();
     String delegateId = generateUuid();
@@ -95,8 +97,7 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
 
     String[] delegateScopeNames = {"delegateScope22"};
     QLIdFilter excludeScopeIds = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(delegateScopeNames).build();
-    QLAttachScopeToDelegateInput.QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder =
-        QLAttachScopeToDelegateInput.builder();
+    QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder = QLAttachScopeToDelegateInput.builder();
     attachScopeToDelegateInputBuilder.accountId(accountId)
         .delegateId(delegateId)
         .excludeScopes(excludeScopeIds)
@@ -111,8 +112,8 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testAttachScopeToDelegateWithIncludeAndExcludeScope() {
     String accountId = generateUuid();
     String delegateId = generateUuid();
@@ -132,8 +133,7 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
     String[] excludeScopeIds = {"delegateScope11"};
     QLIdFilter includedScopeIds = QLIdFilter.builder().values(includeScopeIds).build();
     QLIdFilter excludedScopeIds = QLIdFilter.builder().values(excludeScopeIds).build();
-    QLAttachScopeToDelegateInput.QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder =
-        QLAttachScopeToDelegateInput.builder();
+    QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder = QLAttachScopeToDelegateInput.builder();
     attachScopeToDelegateInputBuilder.accountId(accountId)
         .delegateId(delegateId)
         .includeScopes(includedScopeIds)
@@ -149,8 +149,8 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testAttachScopeToNonExistingDelegate() {
     String accountId = generateUuid();
     String delegateId = generateUuid();
@@ -162,8 +162,7 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
     String[] delegateScopeIds = {"delegateScope22"};
     QLIdFilter includedScopeIds = QLIdFilter.builder().values(delegateScopeIds).build();
 
-    QLAttachScopeToDelegateInput.QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder =
-        QLAttachScopeToDelegateInput.builder();
+    QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder = QLAttachScopeToDelegateInput.builder();
     attachScopeToDelegateInputBuilder.accountId(accountId)
         .delegateId(delegateId)
         .includeScopes(includedScopeIds)
@@ -178,8 +177,8 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testAttachScopeToDelegateWithMultipleIncludeScopes() {
     String accountId = generateUuid();
     String delegateId = generateUuid();
@@ -198,8 +197,7 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
     String[] includeScopeIds = {"delegateScope22,delegateScope11"};
 
     QLIdFilter includedScopeIds = QLIdFilter.builder().operator(QLIdOperator.IN).values(includeScopeIds).build();
-    QLAttachScopeToDelegateInput.QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder =
-        QLAttachScopeToDelegateInput.builder();
+    QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder = QLAttachScopeToDelegateInput.builder();
     attachScopeToDelegateInputBuilder.accountId(accountId)
         .delegateId(delegateId)
         .includeScopes(includedScopeIds)
@@ -214,8 +212,8 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testAttachScopeToDelegateWithNoScopes() {
     String accountId = generateUuid();
     String delegateId = generateUuid();
@@ -223,8 +221,7 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
     Delegate existingDelegate = createDelegateBuilder(accountId, delegateId).build();
     persistence.save(existingDelegate);
 
-    QLAttachScopeToDelegateInput.QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder =
-        QLAttachScopeToDelegateInput.builder();
+    QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder = QLAttachScopeToDelegateInput.builder();
     attachScopeToDelegateInputBuilder.accountId(accountId).delegateId(delegateId).build();
 
     QLAttachScopeToDelegatePayload qlAttachScopeToDelegatePayload = attachScopeToDelegateDataFetcher.mutateAndFetch(
@@ -235,8 +232,8 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testAttachDuplicatesScopeToDelegate() {
     String accountId = generateUuid();
     String delegateId = generateUuid();
@@ -259,8 +256,7 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
     String[] includeScopeIds = {"delegateScope22"};
 
     QLIdFilter includedScopeIds = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(includeScopeIds).build();
-    QLAttachScopeToDelegateInput.QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder =
-        QLAttachScopeToDelegateInput.builder();
+    QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder = QLAttachScopeToDelegateInput.builder();
     attachScopeToDelegateInputBuilder.accountId(accountId)
         .delegateId(delegateId)
         .includeScopes(includedScopeIds)
@@ -274,7 +270,7 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
         qlAttachScopeToDelegatePayload.getMessage().equals("Scopes updated for delegate delegate id " + delegateId));
   }
 
-  private Delegate.DelegateBuilder createDelegateBuilder(String accountId, String delegateId) {
+  private DelegateBuilder createDelegateBuilder(String accountId, String delegateId) {
     return Delegate.builder()
         .accountId(accountId)
         .ip("127.0.0.1")
@@ -287,7 +283,7 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
         .lastHeartBeat(System.currentTimeMillis());
   }
 
-  private DelegateScope.DelegateScopeBuilder createDelegateScopeBuilder(String accountId, String delegateScopeName) {
+  private DelegateScopeBuilder createDelegateScopeBuilder(String accountId, String delegateScopeName) {
     List<String> applicationList = Arrays.asList("app1", "app2");
     List<TaskGroup> taskGroups = Arrays.asList(TaskGroup.JIRA, TaskGroup.AWS);
     return DelegateScope.builder()

@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.schema.mutation.delegate.input.QLDelegateApproveRejectInput;
 import io.harness.app.schema.mutation.delegate.payload.QLDelegateApproveRejectPayload;
 import io.harness.app.schema.type.delegate.QLDelegate;
+import io.harness.app.schema.type.delegate.QLDelegate.QLDelegateBuilder;
 import io.harness.app.schema.type.delegate.QLDelegateApproval;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateApproval;
@@ -48,7 +49,7 @@ public class DelegateApprovalDataFetcher
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
       Delegate delegate = delegateService.updateApprovalStatus(accountId, delegateId, delegateApproval);
       Assert.notNull(delegate, "Unable to perform the operation");
-      QLDelegate.QLDelegateBuilder qlDelegateBuilder = QLDelegate.builder();
+      QLDelegateBuilder qlDelegateBuilder = QLDelegate.builder();
       DelegateController.populateQLDelegate(delegate, qlDelegateBuilder);
       return new QLDelegateApproveRejectPayload(mutationContext.getAccountId(), qlDelegateBuilder.build());
     }

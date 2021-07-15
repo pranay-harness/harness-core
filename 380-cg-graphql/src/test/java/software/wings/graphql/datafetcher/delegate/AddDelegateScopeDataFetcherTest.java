@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.app.datafetcher.delegate.AddDelegateScopeDataFetcher;
 import io.harness.app.schema.mutation.delegate.input.QLAddDelegateScopeInput;
+import io.harness.app.schema.mutation.delegate.input.QLAddDelegateScopeInput.QLAddDelegateScopeInputBuilder;
 import io.harness.app.schema.mutation.delegate.payload.QLAddDelegateScopePayload;
 import io.harness.app.schema.type.delegate.QLDelegateStatus;
 import io.harness.app.schema.type.delegate.QLTaskGroup;
@@ -45,11 +46,11 @@ public class AddDelegateScopeDataFetcherTest extends AbstractDataFetcherTestBase
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testAddDelegateScope() {
     String accountId = generateUuid();
-    QLAddDelegateScopeInput.QLAddDelegateScopeInputBuilder qlAddDelegateScopeInputBuilder =
+    QLAddDelegateScopeInputBuilder qlAddDelegateScopeInputBuilder =
         QLAddDelegateScopeInput.builder()
             .accountId(accountId)
             .name("DELEGATE_SCOPE")
@@ -63,8 +64,8 @@ public class AddDelegateScopeDataFetcherTest extends AbstractDataFetcherTestBase
     Assert.notNull(addDelegateScopePayload.getDelegateScope());
   }
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testAddDelegateScope2() {
     String accountId = generateUuid();
     String[] applications = {"app1", "app2"};
@@ -75,7 +76,7 @@ public class AddDelegateScopeDataFetcherTest extends AbstractDataFetcherTestBase
     QLIdFilter environmentFilter = QLIdFilter.builder().values(environments).build();
     QLIdFilter servicesFilter = QLIdFilter.builder().values(services).build();
 
-    QLAddDelegateScopeInput.QLAddDelegateScopeInputBuilder qlAddDelegateScopeInputBuilder =
+    QLAddDelegateScopeInputBuilder qlAddDelegateScopeInputBuilder =
         QLAddDelegateScopeInput.builder()
             .accountId(accountId)
             .name("DELEGATE_SCOPE")
@@ -90,11 +91,11 @@ public class AddDelegateScopeDataFetcherTest extends AbstractDataFetcherTestBase
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testAddInvalidDelegateScope() {
     String accountId = generateUuid();
-    QLAddDelegateScopeInput.QLAddDelegateScopeInputBuilder qlAddDelegateScopeInputBuilder =
+    QLAddDelegateScopeInputBuilder qlAddDelegateScopeInputBuilder =
         QLAddDelegateScopeInput.builder().accountId(accountId).name("DELEGATE_SCOPE");
     assertThatThrownBy(()
                            -> delegateScopeDataFetcher.mutateAndFetch(qlAddDelegateScopeInputBuilder.build(),
@@ -104,8 +105,8 @@ public class AddDelegateScopeDataFetcherTest extends AbstractDataFetcherTestBase
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testTaskGroupEnumCheck() {
     Set<TaskGroup> taskGroupSet = EnumSet.allOf(TaskGroup.class);
     Set<QLTaskGroup> qlTaskGroupSet = EnumSet.allOf(QLTaskGroup.class);
@@ -117,8 +118,8 @@ public class AddDelegateScopeDataFetcherTest extends AbstractDataFetcherTestBase
     }
   }
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testDelegateStatusEnumCheck() {
     Set<DelegateInstanceStatus> delegateInstanceStatuses = EnumSet.allOf(DelegateInstanceStatus.class);
     Set<QLDelegateStatus> qlDelegateStatuses = EnumSet.allOf(QLDelegateStatus.class);

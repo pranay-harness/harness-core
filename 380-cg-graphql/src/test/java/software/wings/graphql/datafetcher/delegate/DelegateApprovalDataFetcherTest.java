@@ -14,6 +14,7 @@ import io.harness.app.schema.mutation.delegate.payload.QLDelegateApproveRejectPa
 import io.harness.app.schema.type.delegate.QLDelegateApproval;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateBuilder;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
@@ -52,16 +53,14 @@ public class DelegateApprovalDataFetcherTest extends AbstractDataFetcherTestBase
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testApproveFromDelegateApprovalDataFetcher() {
     String accountId = generateUuid();
     String delegateId = generateUuid();
 
-    Delegate existingDelegate = createDelegateBuilder().build();
-    existingDelegate.setUuid(delegateId);
-    existingDelegate.setAccountId(accountId);
-    existingDelegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
+    Delegate existingDelegate =
+        createDelegateBuilder(accountId, delegateId, DelegateInstanceStatus.WAITING_FOR_APPROVAL).build();
     persistence.save(existingDelegate);
 
     QLDelegateApproveRejectInput input = QLDelegateApproveRejectInput.builder()
@@ -76,16 +75,14 @@ public class DelegateApprovalDataFetcherTest extends AbstractDataFetcherTestBase
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testRejectFromDelegateApprovalDataFetcher() {
     String accountId = generateUuid();
     String delegateId = generateUuid();
 
-    Delegate existingDelegate = createDelegateBuilder().build();
-    existingDelegate.setUuid(delegateId);
-    existingDelegate.setAccountId(accountId);
-    existingDelegate.setStatus(DelegateInstanceStatus.WAITING_FOR_APPROVAL);
+    Delegate existingDelegate =
+        createDelegateBuilder(accountId, delegateId, DelegateInstanceStatus.WAITING_FOR_APPROVAL).build();
     persistence.save(existingDelegate);
 
     QLDelegateApproveRejectInput input = QLDelegateApproveRejectInput.builder()
@@ -101,17 +98,15 @@ public class DelegateApprovalDataFetcherTest extends AbstractDataFetcherTestBase
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testApprovalActionOnAlreadyApprovedRejectedDelegate() {
     String accountId = generateUuid();
     String delegateId = generateUuid();
 
-    Delegate existingDelegate = createDelegateBuilder().build();
-    existingDelegate.setUuid(delegateId);
-    existingDelegate.setAccountId(accountId);
-    existingDelegate.setStatus(DelegateInstanceStatus.ENABLED);
+    Delegate existingDelegate = createDelegateBuilder(accountId, delegateId, DelegateInstanceStatus.ENABLED).build();
     persistence.save(existingDelegate);
+
     QLDelegateApproveRejectInput input = QLDelegateApproveRejectInput.builder()
                                              .accountId(existingDelegate.getAccountId())
                                              .delegateId(existingDelegate.getUuid())
@@ -125,8 +120,8 @@ public class DelegateApprovalDataFetcherTest extends AbstractDataFetcherTestBase
   }
 
   @Test
-  @Category(UnitTests.class)
   @Owner(developers = JENNY)
+  @Category(UnitTests.class)
   public void testApprovalActionOnNonExistingDelegate() {
     String accountId = generateUuid();
     String delegateId = "TEST_DELEGATE_ID";
@@ -143,15 +138,17 @@ public class DelegateApprovalDataFetcherTest extends AbstractDataFetcherTestBase
         .hasMessage("Unable to fetch delegate with delegate ID TEST_DELEGATE_ID");
   }
 
-  private Delegate.DelegateBuilder createDelegateBuilder() {
+  private DelegateBuilder createDelegateBuilder(
+      String accountId, String delegateId, DelegateInstanceStatus delegateInstanceStatus) {
     return Delegate.builder()
-        .accountId(ACCOUNT_ID)
+        .accountId(accountId)
         .ip("127.0.0.1")
+        .uuid(delegateId)
         .hostName("localhost")
         .delegateName("testDelegateName")
         .delegateType(DELEGATE_TYPE)
         .version(VERSION)
-        .status(DelegateInstanceStatus.ENABLED)
+        .status(delegateInstanceStatus)
         .lastHeartBeat(System.currentTimeMillis());
   }
 }

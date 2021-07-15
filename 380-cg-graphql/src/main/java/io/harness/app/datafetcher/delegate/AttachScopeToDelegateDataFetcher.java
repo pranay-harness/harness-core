@@ -57,7 +57,7 @@ public class AttachScopeToDelegateDataFetcher
     String delegateId = parameter.getDelegateId();
     String accountId = parameter.getAccountId();
     List<String> includeScopes = new ArrayList<>();
-    if ((parameter.getIncludeScopes() != null)) {
+    if (parameter.getIncludeScopes() != null) {
       includeScopes = Arrays.asList(parameter.getIncludeScopes().getValues());
     }
     List<String> excludeScopes = new ArrayList<>();

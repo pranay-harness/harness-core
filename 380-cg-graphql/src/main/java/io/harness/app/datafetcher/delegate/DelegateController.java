@@ -1,15 +1,19 @@
 package io.harness.app.datafetcher.delegate;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.schema.mutation.delegate.input.QLAddDelegateScopeInput;
 import io.harness.app.schema.type.delegate.QLDelegate;
+import io.harness.app.schema.type.delegate.QLDelegate.QLDelegateBuilder;
 import io.harness.app.schema.type.delegate.QLDelegateScope;
+import io.harness.app.schema.type.delegate.QLDelegateScope.QLDelegateScopeBuilder;
 import io.harness.app.schema.type.delegate.QLTaskGroup;
 import io.harness.beans.EnvironmentType;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateScope;
+import io.harness.delegate.beans.DelegateScope.DelegateScopeBuilder;
 import io.harness.delegate.beans.TaskGroup;
 
 import software.wings.graphql.schema.type.QLEnvironmentType;
@@ -32,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DelegateController {
   private static final Map<String, TaskGroup> taskGroupMapping = taskGroupMapping();
 
-  public static void populateQLDelegate(Delegate delegate, QLDelegate.QLDelegateBuilder qlDelegateBuilder) {
+  public static void populateQLDelegate(Delegate delegate, QLDelegateBuilder qlDelegateBuilder) {
     qlDelegateBuilder.accountId(delegate.getAccountId())
         .delegateName(delegate.getDelegateName())
         .delegateType(delegate.getDelegateType())
@@ -50,7 +54,7 @@ public class DelegateController {
   public static List<QLDelegate> populateQLDelegateList(List<Delegate> delegateList) {
     List<QLDelegate> qlDelegateList = new ArrayList<>();
     for (Delegate delegate : delegateList) {
-      QLDelegate.QLDelegateBuilder qlDelegateBuilder = QLDelegate.builder();
+      QLDelegateBuilder qlDelegateBuilder = QLDelegate.builder();
       populateQLDelegate(delegate, qlDelegateBuilder);
       qlDelegateList.add(qlDelegateBuilder.build());
     }
@@ -64,10 +68,10 @@ public class DelegateController {
     return taskGroupTaskMap;
   }
 
-  public static void populateDelegateScope(String accountId, QLAddDelegateScopeInput delegateScopeInput,
-      DelegateScope.DelegateScopeBuilder delegateScopeBuilder) {
+  public static void populateDelegateScope(
+      String accountId, QLAddDelegateScopeInput delegateScopeInput, DelegateScopeBuilder delegateScopeBuilder) {
     List<TaskGroup> taskGroupList = new ArrayList<>();
-    if (delegateScopeInput.getTaskGroups() != null && !delegateScopeInput.getTaskGroups().isEmpty()) {
+    if (!isEmpty(delegateScopeInput.getTaskGroups())) {
       taskGroupList = delegateScopeInput.getTaskGroups()
                           .stream()
                           .filter(Objects::nonNull)
@@ -103,7 +107,7 @@ public class DelegateController {
   }
 
   public static void populateQLDelegateScope(
-      DelegateScope delegateScope, QLDelegateScope.QLDelegateScopeBuilder qlDelegateScopeBuilder) {
+      DelegateScope delegateScope, QLDelegateScopeBuilder qlDelegateScopeBuilder) {
     qlDelegateScopeBuilder.name(delegateScope.getName())
         .applications(delegateScope.getServices())
         .services(delegateScope.getApplications())
@@ -114,7 +118,7 @@ public class DelegateController {
   }
 
   public static QLDelegateScope populateQLDelegateScope(DelegateScope delegateScope) {
-    QLDelegateScope.QLDelegateScopeBuilder qlDelegateScopeBuilder = QLDelegateScope.builder();
+    QLDelegateScopeBuilder qlDelegateScopeBuilder = QLDelegateScope.builder();
     populateQLDelegateScope(delegateScope, qlDelegateScopeBuilder);
     return qlDelegateScopeBuilder.build();
   }
@@ -129,7 +133,7 @@ public class DelegateController {
 
   public static List<EnvironmentType> populateEnvironmentTypeList(List<QLEnvironmentType> qlEnvironmentTypeList) {
     List<EnvironmentType> environmentTypeList = new ArrayList<>();
-    if (qlEnvironmentTypeList == null || qlEnvironmentTypeList.isEmpty()) {
+    if (isEmpty(qlEnvironmentTypeList)) {
       return environmentTypeList;
     }
     environmentTypeList = qlEnvironmentTypeList.stream()
