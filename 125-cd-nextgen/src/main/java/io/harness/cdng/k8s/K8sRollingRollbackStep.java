@@ -61,6 +61,14 @@ public class K8sRollingRollbackStep extends TaskExecutableWithRollbackAndRbac<K8
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     K8sRollingRollbackStepParameters rollingRollbackStepParameters =
         (K8sRollingRollbackStepParameters) stepElementParameters.getSpec();
+    if (rollingRollbackStepParameters.getRollingStepFqn() == null) {
+      return TaskRequest.newBuilder()
+          .setSkipTaskRequest(SkipTaskRequest.newBuilder()
+                                  .setMessage("K8s Rollout Deploy step was not executed. Skipping rollback.")
+                                  .build())
+          .build();
+    }
+
     OptionalSweepingOutput k8sRollingReleaseOptionalOutput = executionSweepingOutputService.resolveOptional(ambiance,
         RefObjectUtils.getSweepingOutputRefObject(
             rollingRollbackStepParameters.getRollingStepFqn() + "." + K8sRollingReleaseOutput.OUTPUT_NAME));

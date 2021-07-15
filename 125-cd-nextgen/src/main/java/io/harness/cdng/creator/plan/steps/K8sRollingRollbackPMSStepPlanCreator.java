@@ -7,8 +7,6 @@ import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEPS;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP_GROUP;
 
-import static java.lang.String.format;
-
 import io.harness.advisers.manualIntervention.ManualInterventionAdviserRollbackParameters;
 import io.harness.advisers.manualIntervention.ManualInterventionAdviserWithRollback;
 import io.harness.advisers.retry.RetryAdviserRollbackParameters;
@@ -17,7 +15,6 @@ import io.harness.advisers.rollback.RollbackStrategy;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.k8s.K8sRollingRollbackStepParameters;
-import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.steps.GenericStepPMSPlanCreator;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.plancreator.steps.common.StepElementParameters;
@@ -59,10 +56,6 @@ public class K8sRollingRollbackPMSStepPlanCreator extends GenericStepPMSPlanCrea
       if (rollingFqn != null) {
         return rollingFqn;
       }
-    }
-
-    if (rollingFqn == null) {
-      throw new InvalidRequestException(format("Failed to determine [%s] step path.", K8S_ROLLING_DEPLOY));
     }
 
     return rollingFqn;
