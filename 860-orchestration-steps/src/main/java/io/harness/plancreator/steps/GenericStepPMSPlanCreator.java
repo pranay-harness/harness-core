@@ -103,8 +103,6 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
   @Override
   public PlanCreationResponse createPlanForField(PlanCreationContext ctx, StepElementConfig stepElement) {
-    StepParameters stepParameters = stepElement.getStepSpecType().getStepParameters();
-
     boolean isStepInsideRollback = false;
     if (YamlUtils.findParentNode(ctx.getCurrentField().getNode(), ROLLBACK_STEPS) != null) {
       isStepInsideRollback = true;
@@ -112,14 +110,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
     List<AdviserObtainment> adviserObtainmentFromMetaData = getAdviserObtainmentFromMetaData(ctx.getCurrentField());
 
-    if (stepElement.getStepSpecType() instanceof WithStepElementParameters) {
-      stepElement.setTimeout(TimeoutUtils.getTimeout(stepElement.getTimeout()));
-      stepParameters =
-          ((WithStepElementParameters) stepElement.getStepSpecType())
-              .getStepParametersInfo(stepElement,
-                  getRollbackParameters(ctx.getCurrentField(), Collections.emptySet(), RollbackStrategy.UNKNOWN));
-    }
-
+    StepParameters stepParameters = getStepParameters(ctx, stepElement);
     PlanNode stepPlanNode =
         PlanNode.builder()
             .uuid(ctx.getCurrentField().getNode().getUuid())
@@ -158,6 +149,17 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       }
     }
     return containsOnlyAllErrors;
+  }
+
+  protected StepParameters getStepParameters(PlanCreationContext ctx, StepElementConfig stepElement) {
+    if (stepElement.getStepSpecType() instanceof WithStepElementParameters) {
+      stepElement.setTimeout(TimeoutUtils.getTimeout(stepElement.getTimeout()));
+      return ((WithStepElementParameters) stepElement.getStepSpecType())
+          .getStepParametersInfo(stepElement,
+              getRollbackParameters(ctx.getCurrentField(), Collections.emptySet(), RollbackStrategy.UNKNOWN));
+    }
+
+    return stepElement.getStepSpecType().getStepParameters();
   }
 
   protected String getName(StepElementConfig stepElement) {
@@ -379,7 +381,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     return null;
   }
 
-  private OnFailRollbackParameters getRollbackParameters(
+  protected OnFailRollbackParameters getRollbackParameters(
       YamlField currentField, Set<FailureType> failureTypes, RollbackStrategy rollbackStrategy) {
     OnFailRollbackParametersBuilder rollbackParametersBuilder = OnFailRollbackParameters.builder();
     rollbackParametersBuilder.applicableFailureTypes(failureTypes);

@@ -58,13 +58,16 @@ public class K8sRollingRollbackStepTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testSkippingOfRollbackStep() {
-    K8sRollingRollbackStepParameters stepParameters = K8sRollingRollbackStepParameters.infoBuilder().build();
+    String rollingFqn = "pipeline.stages.deploy.spec.execution.steps.rolloutDeployment";
+    K8sRollingRollbackStepParameters stepParameters =
+        K8sRollingRollbackStepParameters.infoBuilder().rollingStepFqn(rollingFqn).build();
     final StepElementParameters stepElementParameters = StepElementParameters.builder().spec(stepParameters).build();
 
     OptionalSweepingOutput optionalSweepingOutput = OptionalSweepingOutput.builder().found(false).build();
     doReturn(optionalSweepingOutput)
         .when(executionSweepingOutputService)
-        .resolveOptional(ambiance, RefObjectUtils.getSweepingOutputRefObject(K8sRollingReleaseOutput.OUTPUT_NAME));
+        .resolveOptional(ambiance,
+            RefObjectUtils.getSweepingOutputRefObject(rollingFqn + "." + K8sRollingReleaseOutput.OUTPUT_NAME));
 
     TaskRequest taskRequest = k8sRollingRollbackStep.obtainTask(ambiance, stepElementParameters, stepInputPackage);
     assertThat(taskRequest).isNotNull();
@@ -104,7 +107,9 @@ public class K8sRollingRollbackStepTest extends CategoryTest {
 
   private void testRollback(OptionalSweepingOutput releaseOutput, OptionalSweepingOutput deploymentOutput,
       String expectedReleaseName, Integer expectedReleaseNumber) {
-    final K8sRollingRollbackStepParameters stepParameters = K8sRollingRollbackStepParameters.infoBuilder().build();
+    String rollingFqn = "pipeline.stages.deploy.spec.execution.steps.rolloutDeployment";
+    final K8sRollingRollbackStepParameters stepParameters =
+        K8sRollingRollbackStepParameters.infoBuilder().rollingStepFqn(rollingFqn).build();
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("10m")).build();
     final TaskRequest taskRequest = TaskRequest.newBuilder().build();
@@ -112,10 +117,12 @@ public class K8sRollingRollbackStepTest extends CategoryTest {
 
     doReturn(releaseOutput)
         .when(executionSweepingOutputService)
-        .resolveOptional(ambiance, RefObjectUtils.getSweepingOutputRefObject(K8sRollingReleaseOutput.OUTPUT_NAME));
+        .resolveOptional(ambiance,
+            RefObjectUtils.getSweepingOutputRefObject(rollingFqn + "." + K8sRollingReleaseOutput.OUTPUT_NAME));
     doReturn(deploymentOutput)
         .when(executionSweepingOutputService)
-        .resolveOptional(ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_ROLL_OUT));
+        .resolveOptional(ambiance,
+            RefObjectUtils.getSweepingOutputRefObject(rollingFqn + "." + OutcomeExpressionConstants.K8S_ROLL_OUT));
 
     doReturn(taskChainResponse)
         .when(k8sStepHelper)
