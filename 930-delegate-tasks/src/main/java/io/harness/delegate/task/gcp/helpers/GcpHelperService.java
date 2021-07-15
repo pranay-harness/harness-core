@@ -60,6 +60,7 @@ public class GcpHelperService {
   private static final String GOOGLE_META_BASE_URL = "http://metadata.google.internal/computeMetadata";
 
   @Inject private GcpHttpTransportHelperService gcpHttpTransportHelperService;
+  @Inject private GcpCredentialsHelperService gcpCredentialsHelperService;
 
   /**
    * Gets a GCP container service.
@@ -171,13 +172,13 @@ public class GcpHelperService {
     return checkIfUseProxyAndGetGoogleCredentials(serviceAccountKeyFileContent);
   }
 
-  public static GoogleCredential checkIfUseProxyAndGetGoogleCredentials(char[] serviceAccountKeyFileContent)
+  private GoogleCredential checkIfUseProxyAndGetGoogleCredentials(char[] serviceAccountKeyFileContent)
       throws IOException {
     String tokenUri =
         (String) (JsonUtils.asObject(new String(serviceAccountKeyFileContent), HashMap.class)).get("token_uri");
     return Http.getProxyHostName() != null && !Http.shouldUseNonProxy(tokenUri)
-        ? GcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(serviceAccountKeyFileContent)
-        : GcpCredentialsHelperService.getGoogleCredentialWithDefaultHttpTransport(serviceAccountKeyFileContent);
+        ? gcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(serviceAccountKeyFileContent)
+        : gcpCredentialsHelperService.getGoogleCredentialWithDefaultHttpTransport(serviceAccountKeyFileContent);
   }
 
   private void validateServiceAccountKey(char[] serviceAccountKeyFileContent) {

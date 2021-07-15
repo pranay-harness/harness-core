@@ -3,7 +3,6 @@ package io.harness.cvng.utils;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
-import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.gcp.helpers.GcpCredentialsHelperService;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -37,7 +36,7 @@ public class StackdriverUtils {
     try {
       if (gcpConnectorDTO.getCredential().getGcpCredentialType() == GcpCredentialType.MANUAL_CREDENTIALS) {
         GcpManualDetailsDTO gcpManualDetailsDTO = (GcpManualDetailsDTO) gcpConnectorDTO.getCredential().getConfig();
-        return GcpHelperService.checkIfUseProxyAndGetGoogleCredentials(
+        return GcpCredentialsHelperService.getGoogleCredentialFromFile(
             gcpManualDetailsDTO.getSecretKeyRef().getDecryptedValue());
       } else {
         return GcpCredentialsHelperService.getApplicationDefaultCredentials();
