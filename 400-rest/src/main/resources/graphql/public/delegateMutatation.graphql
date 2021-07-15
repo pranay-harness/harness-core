@@ -1,16 +1,14 @@
 extend type Mutation {
   # Approve or reject delegate
   delegateApproveReject(input: DelegateApproveRejectInput!): DelegateApproveRejectPayload
-  @dataFetcher(name: delegateApproval)
+    @dataFetcher(name: delegateApproval)
   # Deletes delegate.
-  deleteDelegate(input: DeleteDelegateInput!): DeleteDelegatePayload
-  @dataFetcher(name: deleteDelegate)
+  deleteDelegate(input: DeleteDelegateInput!): DeleteDelegatePayload @dataFetcher(name: deleteDelegate)
   # Add delegate scope
-  addDelegegateScope(input: AddDelegateScopeInput!): AddDelegateScopePayload
-  @dataFetcher(name: addDelegateScope)
+  addDelegegateScope(input: AddDelegateScopeInput!): AddDelegateScopePayload @dataFetcher(name: addDelegateScope)
   # attach scope to delegate
   attachScopeToDelegate(input: AttachScopeToDelegateInput!): AttachScopeToDelegatePayload
-  @dataFetcher(name: attachScopeToDelegate)
+    @dataFetcher(name: attachScopeToDelegate)
 }
 
 input DelegateApproveRejectInput {
