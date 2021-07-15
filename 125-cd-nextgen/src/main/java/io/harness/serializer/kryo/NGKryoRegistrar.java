@@ -70,7 +70,6 @@ import io.harness.cdng.manifest.yaml.kinds.OpenshiftParamManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
-import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.cdng.pipeline.beans.RollbackNode;
@@ -142,7 +141,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sStepPassThroughData.class, 8056);
 
     // Starting using 8100 series
-    kryo.register(DeploymentStage.class, 8100);
     kryo.register(PipelineInfrastructure.class, 8101);
     kryo.register(InfrastructureDef.class, 8102);
     kryo.register(ServiceDefinition.class, 8103);

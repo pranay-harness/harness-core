@@ -4,15 +4,12 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.ngpipeline.artifact.bean.DockerArtifactOutcome;
 import io.harness.ngpipeline.artifact.bean.GcrArtifactOutcome;
-import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummary;
 
 import java.util.Set;
 
 public class NGPipelineMorphiaRegistrar implements MorphiaRegistrar {
   @Override
-  public void registerClasses(Set<Class> set) {
-    set.add(PipelineExecutionSummary.class);
-  }
+  public void registerClasses(Set<Class> set) {}
 
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {

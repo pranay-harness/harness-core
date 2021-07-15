@@ -1,7 +1,6 @@
 package io.harness.beans.steps;
 
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.yaml.core.nonyaml.NonYamlInfo;
 
 import javax.validation.constraints.NotNull;
 import lombok.Builder;

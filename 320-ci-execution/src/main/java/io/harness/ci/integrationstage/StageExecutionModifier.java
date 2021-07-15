@@ -15,9 +15,9 @@ public interface StageExecutionModifier {
    * Modifies saved integration stage execution plan by appending pre and post execution steps or any custom steps.
    * Additional steps may include cleanup or setup step and other operations that are needed for complete execution.
    * @param execution Execution object that holds current steps
-   * @param stageType StageType object that holds info
+   * @param stageConfig StageElementConfig object that holds info
    * @return modified execution
    */
-  ExecutionElementConfig modifyExecutionPlan(ExecutionElementConfig execution, StageElementConfig stageType,
+  ExecutionElementConfig modifyExecutionPlan(ExecutionElementConfig execution, StageElementConfig stageConfig,
       PlanCreationContext context, String podName, CodeBase ciCodeBase, Infrastructure infrastructure);
 }

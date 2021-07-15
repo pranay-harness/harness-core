@@ -25,8 +25,6 @@ import io.harness.grpc.client.ManagerGrpcClientModule;
 import io.harness.logserviceclient.CILogServiceClientModule;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.mongo.MongoPersistence;
-import io.harness.ngpipeline.pipeline.service.NGPipelineService;
-import io.harness.ngpipeline.pipeline.service.NGPipelineServiceImpl;
 import io.harness.packages.HarnessPackages;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.client.ClientMode;
@@ -127,7 +125,6 @@ public class CIManagerServiceModule extends AbstractModule {
     install(PrimaryVersionManagerModule.getInstance());
     bind(CIManagerConfiguration.class).toInstance(ciManagerConfiguration);
     bind(HPersistence.class).to(MongoPersistence.class).in(Singleton.class);
-    bind(NGPipelineService.class).to(NGPipelineServiceImpl.class);
     bind(BuildNumberService.class).to(BuildNumberServiceImpl.class);
     bind(CIYamlSchemaService.class).to(CIYamlSchemaServiceImpl.class).in(Singleton.class);
     bind(CIOverviewDashboardService.class).to(CIOverviewDashboardServiceImpl.class);

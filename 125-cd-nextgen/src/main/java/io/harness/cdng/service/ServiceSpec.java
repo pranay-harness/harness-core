@@ -8,7 +8,6 @@ import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSetWrapper;
 import io.harness.cdng.variables.beans.NGVariableOverrideSetWrapper;
-import io.harness.yaml.core.intfc.WithType;
 import io.harness.yaml.core.variables.NGVariable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -16,12 +15,12 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.List;
 
 @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
-public interface ServiceSpec extends WithType {
+public interface ServiceSpec {
   ArtifactListConfig getArtifacts();
   List<ManifestConfigWrapper> getManifests();
   List<ManifestOverrideSetWrapper> getManifestOverrideSets();
   List<ArtifactOverrideSetWrapper> getArtifactOverrideSets();
   List<NGVariableOverrideSetWrapper> getVariableOverrideSets();
   List<NGVariable> getVariables();
-  @Override @JsonIgnore String getType();
+  @JsonIgnore String getType();
 }

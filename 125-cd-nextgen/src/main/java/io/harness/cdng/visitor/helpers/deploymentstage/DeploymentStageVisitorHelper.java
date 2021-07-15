@@ -1,6 +1,6 @@
 package io.harness.cdng.visitor.helpers.deploymentstage;
 
-import io.harness.cdng.pipeline.DeploymentStage;
+import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.walktree.visitor.validation.ConfigValidator;
 import io.harness.walktree.visitor.validation.ValidationVisitor;
 
@@ -12,7 +12,6 @@ public class DeploymentStageVisitorHelper implements ConfigValidator {
 
   @Override
   public Object createDummyVisitableElement(Object originalElement) {
-    DeploymentStage deploymentStage = (DeploymentStage) originalElement;
-    return DeploymentStage.builder().identifier(deploymentStage.getIdentifier()).build();
+    return DeploymentStageConfig.builder().build();
   }
 }

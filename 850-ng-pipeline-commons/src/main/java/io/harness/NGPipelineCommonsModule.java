@@ -1,7 +1,5 @@
 package io.harness;
 
-import io.harness.ngpipeline.pipeline.service.NGPipelineService;
-import io.harness.ngpipeline.pipeline.service.NGPipelineServiceImpl;
 import io.harness.threading.ThreadPool;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -23,7 +21,6 @@ public class NGPipelineCommonsModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(NGPipelineService.class).to(NGPipelineServiceImpl.class);
     bind(ExecutorService.class)
         .annotatedWith(Names.named("NgPipelineCommonsExecutor"))
         .toInstance(ThreadPool.create(1, 1, 5, TimeUnit.SECONDS,
