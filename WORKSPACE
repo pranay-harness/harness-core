@@ -4457,7 +4457,7 @@ plain_artifacts = [
     "com.tdunning:t-digest:3.2",
     "com.thoughtworks.proxytoys:proxytoys:1.0",
     "com.typesafe:config:1.3.4",
-    "com.zaxxer:HikariCP-java7:2.4.13",
+    "com.zaxxer:HikariCP:4.0.3",
     "commons-beanutils:commons-beanutils:1.9.4",
     "commons-cli:commons-cli:1.2",
     "commons-codec:commons-codec:1.10",
