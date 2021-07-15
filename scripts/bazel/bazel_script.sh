@@ -355,7 +355,6 @@ build_bazel_module 815-cg-triggers
 build_bazel_module 830-notification-service
 build_bazel_module 830-resource-group
 build_bazel_module 835-notification-senders
-build_bazel_module 840-template-service
 build_bazel_module 850-ng-pipeline-commons
 build_bazel_module 860-orchestration-steps
 build_bazel_module 860-orchestration-visualization
