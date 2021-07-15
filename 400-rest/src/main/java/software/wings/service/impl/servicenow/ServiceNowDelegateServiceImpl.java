@@ -64,7 +64,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
     ServiceNowConfig config = taskParameters.getServiceNowConfig();
     final Call<JsonNode> request;
     request = getRestClient(taskParameters)
-            .validateConnection(Credentials.basic(config.getUsername(), new String(config.getPassword())));
+                  .validateConnection(Credentials.basic(config.getUsername(), new String(config.getPassword())));
     Response<JsonNode> response = null;
     try {
       response = request.execute();
