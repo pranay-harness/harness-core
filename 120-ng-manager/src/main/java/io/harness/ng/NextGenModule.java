@@ -412,7 +412,7 @@ public class NextGenModule extends AbstractModule {
     install(AccessControlMigrationModule.getInstance());
     install(UserClientModule.getInstance(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
-    install(new InviteModule(appConfig.getBaseUrls(), appConfig.isNGAuthUIEnabled()));
+    install(new InviteModule(appConfig.isNGAuthUIEnabled()));
     install(new SignupModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId(),
         appConfig.getSignupNotificationConfiguration(), appConfig.getBaseUrls().getNextGenUiUrl(),

@@ -94,8 +94,7 @@ public class InviteServiceImplTest extends CategoryTest {
     MongoConfig mongoConfig = MongoConfig.builder().uri("mongodb://localhost:27017/ng-harness").build();
     inviteService = new InviteServiceImpl(USER_VERIFICATION_SECRET, mongoConfig, jwtGeneratorUtils, ngUserService,
         transactionTemplate, inviteRepository, notificationClient, accountClient, outboxService, organizationService,
-        projectService, accessControlClient, userClient, "https://qa.harness.io/", "https://qa.harness.io/ng/#/",
-        "https://qa.harness.io/auth/#/", false);
+        projectService, accessControlClient, userClient, false);
 
     when(accountClient.getAccountDTO(any()).execute())
         .thenReturn(Response.success(new RestResponse(AccountDTO.builder()
