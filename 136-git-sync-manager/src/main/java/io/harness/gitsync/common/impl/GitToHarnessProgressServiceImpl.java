@@ -42,6 +42,9 @@ public class GitToHarnessProgressServiceImpl implements GitToHarnessProgressServ
 
   @Override
   public GitToHarnessProgressDTO update(String uuid, Update update) {
+    // Ideally the JPA should have updated the lastUpdatedAt, but due to some limitations
+    // they don't update this field. https://github.com/spring-projects/spring-data-mongodb/issues/1797
+    update.set(GitToHarnessProgressKeys.lastUpdatedAt, System.currentTimeMillis());
     Criteria criteria = Criteria.where(GitToHarnessProgressKeys.uuid).is(uuid);
     return GitToHarnessProgressMapper.writeDTO(gitToHarnessProgressRepository.findAndModify(criteria, update));
   }
