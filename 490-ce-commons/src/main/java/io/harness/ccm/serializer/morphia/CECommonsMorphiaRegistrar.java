@@ -3,6 +3,7 @@ package io.harness.ccm.serializer.morphia;
 import io.harness.ccm.budget.ApplicationBudgetScope;
 import io.harness.ccm.budget.ClusterBudgetScope;
 import io.harness.ccm.budget.PerspectiveBudgetScope;
+import io.harness.ccm.commons.entities.AWSConnectorToBucketMapping;
 import io.harness.ccm.commons.entities.ClusterRecord;
 import io.harness.ccm.commons.entities.batch.BatchJobInterval;
 import io.harness.ccm.commons.entities.batch.BatchJobScheduledData;
@@ -48,6 +49,7 @@ public class CECommonsMorphiaRegistrar implements MorphiaRegistrar {
     set.add(CECloudAccount.class);
     set.add(CECluster.class);
     set.add(CloudBillingTransferRun.class);
+    set.add(AWSConnectorToBucketMapping.class);
 
     // events
     set.add(CeExceptionRecord.class);
