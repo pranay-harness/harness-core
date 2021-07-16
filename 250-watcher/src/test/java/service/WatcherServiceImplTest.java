@@ -32,6 +32,7 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -264,7 +265,7 @@ public class WatcherServiceImplTest extends CategoryTest {
     RestResponse<DelegateConfiguration> restResponse =
         RestResponse.Builder.aRestResponse().withResource(delegateConfiguration).build();
     HTimeLimiterMocker.mockCallInterruptible(timeLimiter, ofSeconds(15)).thenReturn(restResponse);
-    IOException ioException = new IOException("test");
+    ExecutionException ioException = new ExecutionException(new IOException("test"));
     HTimeLimiterMocker.mockCallInterruptible(timeLimiter, ofMinutes(1)).thenThrow(ioException);
 
     boolean downloadSuccesful = watcherService.downloadRunScriptsBeforeRestartingDelegateAndWatcher();
