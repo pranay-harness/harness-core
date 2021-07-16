@@ -1,11 +1,10 @@
 package io.harness.pms.migration;
 
-import static io.harness.pms.sdk.PmsSdkInstance.PmsSdkInstanceKeys.*;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.migration.NGMigration;
 import io.harness.pms.sdk.PmsSdkInstance;
+import io.harness.pms.sdk.PmsSdkInstance.PmsSdkInstanceKeys;
 
 import com.google.inject.Inject;
 import lombok.AccessLevel;
@@ -21,7 +20,7 @@ public class PmsInternalRemoverCoreMigration implements NGMigration {
 
   @Override
   public void migrate() {
-    Criteria criteria = Criteria.where(name).is("pmsInternal");
+    Criteria criteria = Criteria.where(PmsSdkInstanceKeys.name).is("pmsInternal");
     Query query = new Query(criteria);
     mongoTemplate.remove(query, PmsSdkInstance.class);
   }
