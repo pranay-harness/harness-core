@@ -4,16 +4,12 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.openapi.ApiClient;
 import io.harness.cf.openapi.api.DefaultApi;
-import io.harness.cf.openapi.model.Clause;
 import io.harness.cf.openapi.model.FeatureState;
 import io.harness.cf.openapi.model.PatchInstruction;
-import io.harness.cf.openapi.model.Serve;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
 @OwnedBy(HarnessTeam.CF)
 public class CFApi extends DefaultApi {
@@ -96,89 +92,5 @@ public class CFApi extends DefaultApi {
         .kind("removeSegmentToVariationTargetMap")
         .parameters(new RemoveSegmentToVariationMapParams(variation, segments))
         .build();
-  }
-}
-
-class FeatureFlagStateParams {
-  String state;
-  FeatureFlagStateParams(String state) {
-    this.state = state;
-  }
-}
-
-class UpdateDefaultServeParams {
-  String variation;
-
-  UpdateDefaultServeParams(String variation) {
-    this.variation = variation;
-  }
-}
-
-class AddTargetToVariationMapParams {
-  String variation;
-  List<String> targets;
-
-  AddTargetToVariationMapParams(String variation, List<String> targets) {
-    this.variation = variation;
-    this.targets = targets;
-  }
-}
-
-class RemoveTargetToVariationMapParams {
-  String variation;
-  List<String> targets;
-
-  RemoveTargetToVariationMapParams(String variation, List<String> targets) {
-    this.variation = variation;
-    this.targets = targets;
-  }
-}
-
-class AddSegmentToVariationMapParams {
-  String variation;
-  List<String> segments;
-
-  AddSegmentToVariationMapParams(String variation, List<String> segments) {
-    this.variation = variation;
-    this.segments = segments;
-  }
-}
-
-class RemoveSegmentToVariationMapParams {
-  String variation;
-  List<String> segments;
-
-  RemoveSegmentToVariationMapParams(String variation, List<String> segments) {
-    this.variation = variation;
-    this.segments = segments;
-  }
-}
-
-class RemoveRuleParam {
-  String ruleID;
-
-  RemoveRuleParam(String ruleID) {
-    this.ruleID = ruleID;
-  }
-}
-
-class AddRuleParam {
-  List<io.harness.cf.openapi.model.Clause> clauses = new ArrayList<>();
-  int priority;
-  io.harness.cf.openapi.model.Serve serve;
-  String uuid;
-
-  public static AddRuleParam getParamsForAccountID(String accountID, int priority) {
-    AddRuleParam param = new AddRuleParam();
-    param.priority = priority;
-    param.serve = new Serve();
-    param.serve.variation("true");
-    param.uuid = UUID.randomUUID().toString();
-    io.harness.cf.openapi.model.Clause clause = new Clause();
-    clause.attribute("identifier");
-    clause.op("equal");
-    clause.values(Arrays.asList(accountID));
-    param.clauses = Arrays.asList(clause);
-    return param;
   }
 }

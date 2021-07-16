@@ -95,7 +95,6 @@ BAZEL_MODULES="\
   //879-pms-sdk:module \
   //882-pms-sdk-core:module \
   //884-pms-commons:module \
-  //890-pms-contracts/src/main/proto:all \
   //890-pms-contracts:module \
   //890-sm-core:module \
   //900-git-sync-sdk:module \
@@ -169,7 +168,6 @@ BAZEL_MODULES="\
   //960-persistence:module \
   //960-persistence:supporter-test \
   //960-yaml-sdk:module \
-  //970-api-services-beans/src/main/proto/io/harness/logging:all \
   //970-api-services-beans:module \
   //970-grpc:module \
   //970-ng-commons:module \

@@ -12,7 +12,7 @@ shared_dependencies = [
     "//959-file-service-commons:module",
     "//960-api-services:module",
     "//970-api-services-beans:module",
-    "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
+    "//970-api-services-beans/src/main/proto:970_api_services_beans_java_proto",
     "//970-ng-commons:module",
     "//980-commons:module",
     "//product/ci/engine/proto:ciengine_java_proto",
