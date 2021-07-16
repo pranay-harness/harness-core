@@ -6,13 +6,12 @@ java_library(
     name = "module",
     srcs = glob(["src/main/java/**/*.java"]),
     resource_jars = [
-        "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
+        "//970-api-services-beans/src/main/proto:970_api_services_beans_java_proto",
     ],
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
-        "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_service_beans_proto",
-        "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
+        "//970-api-services-beans/src/main/proto:970_api_services_beans_java_proto",
         "//980-commons:module",
         "@jira_client//jar",
         "@maven//:com_amazonaws_aws_java_sdk_ec2",

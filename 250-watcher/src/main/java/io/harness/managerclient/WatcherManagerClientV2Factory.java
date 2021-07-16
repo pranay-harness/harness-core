@@ -1,7 +1,5 @@
 package io.harness.managerclient;
 
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
 import io.harness.network.NoopHostnameVerifier;
@@ -23,28 +21,14 @@ import okhttp3.Request.Builder;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
-@OwnedBy(HarnessTeam.DEL)
-class ManagerClientV2X509TrustManager implements X509TrustManager {
-  @Override
-  public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-    return new java.security.cert.X509Certificate[] {};
-  }
-
-  @Override
-  public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-
-  @Override
-  public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {}
-}
-
-public class ManagerClientV2Factory implements Provider<ManagerClientV2> {
+public class WatcherManagerClientV2Factory implements Provider<ManagerClientV2> {
   private static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
-      ImmutableList.of(new ManagerClientV2X509TrustManager());
+      ImmutableList.of(new WatcherManagerClientV2X509TrustManager());
 
   private String baseUrl;
   private TokenGenerator tokenGenerator;
 
-  ManagerClientV2Factory(String baseUrl, TokenGenerator tokenGenerator) {
+  WatcherManagerClientV2Factory(String baseUrl, TokenGenerator tokenGenerator) {
     this.baseUrl = baseUrl;
     this.tokenGenerator = tokenGenerator;
   }

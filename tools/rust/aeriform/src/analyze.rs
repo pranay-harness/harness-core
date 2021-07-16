@@ -30,6 +30,7 @@ enum Explanation {
     Empty,
     TeamIsMissing,
     DeprecatedModule,
+    BreakDependencyOnModule,
 }
 
 pub const EXPLANATION_TEAM_IS_MISSING: &str =
@@ -51,6 +52,12 @@ pub const EXPLANATION_TOO_MANY_ISSUE_POINTS_PER_CLASS: &str =
     "Please resolve the necessary issues so your issue points drop under the expected limit.
 Note resolving some of the issues with higher issue points weight might be harder,
 but you will need to resolve less of those.";
+
+pub const EXPLANATION_DEPENDENCY_TO_CLASS_IN_BREAK_DEPENDENCY_ON_MODULE: &str = "
+When class from a module that needs to break dependency from another module,
+depends on class from such module, this dependency needs to be broken.
+This can be done with breaking the dependency of the two classes or moving the
+classes accordingly, so they do not belong to module that should not depend to each other.";
 
 /// A sub-command to analyze the project module targets and dependencies
 #[derive(Clap)]
@@ -209,6 +216,13 @@ pub fn analyze(opts: Analyze) {
             tuple.1,
             &tuple.0.target_module_team(&modules),
         ));
+        results.extend(check_for_module_that_need_to_break_dependency_on(
+            tuple.0,
+            tuple.1,
+            &modules,
+            &classes,
+            &class_modules,
+        ));
         results.extend(check_for_promotion(
             tuple.0,
             tuple.1,
@@ -317,6 +331,11 @@ pub fn analyze(opts: Analyze) {
     if explanations.contains(Explanation::DeprecatedModule) {
         println!();
         println!("{}", EXPLANATION_CLASS_IN_DEPRECATED_MODULE);
+    }
+
+    if explanations.contains(Explanation::BreakDependencyOnModule) {
+        println!();
+        println!("{}", EXPLANATION_DEPENDENCY_TO_CLASS_IN_BREAK_DEPENDENCY_ON_MODULE);
     }
 
     if opts.issue_points_per_class_limit.is_some() && opts.issue_points_per_class_limit.unwrap() < ipc {
@@ -533,6 +552,70 @@ fn check_already_in_target(class: &JavaClass, module: &JavaModule, target_module
 
         results
     }
+}
+
+fn check_for_module_that_need_to_break_dependency_on(
+    class: &JavaClass,
+    module: &JavaModule,
+    modules: &HashMap<String, JavaModule>,
+    classes: &HashMap<String, &JavaClass>,
+    class_modules: &HashMap<&JavaClass, &JavaModule>,
+) -> Vec<Report> {
+    let mut results: Vec<Report> = Vec::new();
+
+    let target_module_name = class.target_module.as_ref();
+    if target_module_name.is_some() {
+        return results;
+    }
+
+    class.dependencies.iter().for_each(|src| {
+        let &dependent_class = classes.get(src).expect(&format!(
+            "Class {} depends on source {} that not have any module",
+            class.name, src
+        ));
+
+        if dependent_class.deprecated {
+            return ();
+        }
+
+        let &dependent_real_module = class_modules.get(dependent_class).expect(&format!(
+            "The class {} is not find in the modules",
+            dependent_class.name
+        ));
+
+        let dependent_target_module = if dependent_class.target_module.is_some() {
+            let dependent_target_module = modules.get(dependent_class.target_module.as_ref().unwrap());
+            if dependent_target_module.is_none() {
+                results.push(target_module_needed(dependent_class));
+                return ();
+            }
+
+            dependent_target_module.unwrap()
+        } else {
+            dependent_real_module
+        };
+
+        if module.break_dependencies_on.contains(&dependent_target_module.name) {
+            results.push(Report {
+                kind: Kind::Error,
+                explanation: Explanation::BreakDependencyOnModule,
+                message: format!(
+                    "{} depends on {} that is in module {} but {} should break dependency on it",
+                    class.name, dependent_class.name, dependent_target_module.name, module.name
+                ),
+                action: Default::default(),
+                for_class: class.name.clone(),
+                for_team: class.team(module, &None),
+                indirect_classes: [dependent_class.name.clone()].iter().cloned().collect(),
+                for_modules: [module.name.clone(), dependent_target_module.name.clone()]
+                    .iter()
+                    .cloned()
+                    .collect(),
+            });
+        }
+    });
+
+    results
 }
 
 fn check_for_promotion(

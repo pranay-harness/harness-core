@@ -1,3 +1,6 @@
+def breakDependencyOn(target):
+    return target
+
 def aeriform(target):
     name = target.replace("/", "").replace(":", "!")
     native.genquery(
