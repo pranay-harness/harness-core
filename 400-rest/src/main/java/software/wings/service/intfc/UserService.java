@@ -46,6 +46,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotBlank;
@@ -196,6 +197,8 @@ public interface UserService extends OwnedByAccount {
    * @return the user
    */
   User get(@NotEmpty String userId);
+
+  List<User> getUsers(Set<String> userIds);
 
   /**
    * Gets the user and loads the user groups for the given account.
