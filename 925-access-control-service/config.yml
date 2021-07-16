@@ -116,6 +116,7 @@ accountClient:
     baseUrl: ${ACCOUNT_CLIENT_BASE_URL:-https://localhost:9090/api/}
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
+    enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
   accountServiceSecret: ${ACCOUNT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 
 accessControlClient:
@@ -200,6 +201,7 @@ featureFlagClientConfiguration:
     baseUrl: ${FEATURE_FLAG_CLIENT_BASE_URL:-https://localhost:9090/api/}
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
+    enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
   featureFlagServiceSecret: ${FEATURE_FLAG_CLIENT_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
   
 serviceAccountClient:

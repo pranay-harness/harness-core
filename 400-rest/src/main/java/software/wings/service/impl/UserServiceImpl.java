@@ -2625,6 +2625,12 @@ public class UserServiceImpl implements UserService {
     return query.asList();
   }
 
+  @Override
+  public List<User> getUsers(Set<String> userIds) {
+    Query<User> query = wingsPersistence.createQuery(User.class).field("uuid").in(userIds);
+    return query.asList();
+  }
+
   private void loadSupportAccounts(User user) {
     if (user == null) {
       return;
