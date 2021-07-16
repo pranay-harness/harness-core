@@ -64,7 +64,7 @@ shared_dependencies = [
     "//970-grpc:module",
     "//970-ng-commons:module",
     "//980-commons:module",
-    "@jira_client//jar",
+    "@maven//:net_rcarz_jira_client",
     "@maven//:aopalliance_aopalliance",
     "@maven//:cglib_cglib_nodep",
     "@maven//:ch_qos_logback_contrib_logback_jackson",
