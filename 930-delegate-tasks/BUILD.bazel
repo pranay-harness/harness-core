@@ -16,7 +16,7 @@ shared_dependencies = [
     "//970-ng-commons:module",
     "//980-commons:module",
     "//product/ci/engine/proto:ciengine_java_proto",
-    "@jira_client//jar",
+    "@maven//:net_rcarz_jira_client",
     "@maven//:com_amazonaws_aws_java_sdk_autoscaling",
     "@maven//:com_amazonaws_aws_java_sdk_cloudformation",
     "@maven//:com_amazonaws_aws_java_sdk_codedeploy",
