@@ -80,8 +80,8 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
         attachScopeToDelegateInputBuilder.build(), MutationContext.builder().build());
     Assert.notNull(qlAttachScopeToDelegatePayload);
     Assert.notNull(qlAttachScopeToDelegatePayload.getMessage());
-    Assert.isTrue(
-        qlAttachScopeToDelegatePayload.getMessage().equals("Scopes updated for delegate delegate id " + delegateId));
+    Assert.isTrue(qlAttachScopeToDelegatePayload.getMessage().equals(
+        "Included scopes for delegate:  [delegateScope22] Excluded scopes for delegate: []"));
   }
 
   @Test
@@ -110,8 +110,8 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
         attachScopeToDelegateInputBuilder.build(), MutationContext.builder().build());
     Assert.notNull(qlAttachScopeToDelegatePayload);
     Assert.notNull(qlAttachScopeToDelegatePayload.getMessage());
-    Assert.isTrue(
-        qlAttachScopeToDelegatePayload.getMessage().equals("Scopes updated for delegate delegate id " + delegateId));
+    Assert.isTrue(qlAttachScopeToDelegatePayload.getMessage().equals(
+        "Included scopes for delegate:  [] Excluded scopes for delegate: [delegateScope22]"));
   }
 
   @Test
@@ -128,7 +128,7 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
     DelegateScope delegateScopeForInclude = createDelegateScopeBuilder(accountId, delegateScopeName1).build();
     persistence.save(delegateScopeForInclude);
 
-    String delegateScopeName2 = "delegateScopeId11";
+    String delegateScopeName2 = "delegateScope11";
     DelegateScope delegateScopeForExclude = createDelegateScopeBuilder(accountId, delegateScopeName2).build();
     persistence.save(delegateScopeForExclude);
 
@@ -147,8 +147,8 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
         attachScopeToDelegateInputBuilder.build(), MutationContext.builder().build());
     Assert.notNull(qlAttachScopeToDelegatePayload);
     Assert.notNull(qlAttachScopeToDelegatePayload.getMessage());
-    Assert.isTrue(
-        qlAttachScopeToDelegatePayload.getMessage().equals("Scopes updated for delegate delegate id " + delegateId));
+    Assert.isTrue(qlAttachScopeToDelegatePayload.getMessage().equals(
+        "Included scopes for delegate:  [delegateScope22] Excluded scopes for delegate: [delegateScope11]"));
   }
 
   @Test
@@ -197,7 +197,7 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
     DelegateScope delegateScope2 = createDelegateScopeBuilder(accountId, delegateScopeName2).build();
     persistence.save(delegateScope2);
 
-    String[] includeScopeIds = {"delegateScope22,delegateScope11"};
+    String[] includeScopeIds = {"delegateScope22", "delegateScope11"};
 
     QLIdFilter includedScopeIds = QLIdFilter.builder().operator(QLIdOperator.IN).values(includeScopeIds).build();
     QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder = QLAttachScopeToDelegateInput.builder();
@@ -210,8 +210,8 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
         attachScopeToDelegateInputBuilder.build(), MutationContext.builder().build());
     Assert.notNull(qlAttachScopeToDelegatePayload);
     Assert.notNull(qlAttachScopeToDelegatePayload.getMessage());
-    Assert.isTrue(
-        qlAttachScopeToDelegatePayload.getMessage().equals("Scopes updated for delegate delegate id " + delegateId));
+    Assert.isTrue(qlAttachScopeToDelegatePayload.getMessage().equals(
+        "Included scopes for delegate:  [delegateScope22, delegateScope11] Excluded scopes for delegate: []"));
   }
 
   @Test
@@ -256,8 +256,9 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
                                       .build();
     persistence.save(delegateScope);
     existingDelegate.setIncludeScopes(Arrays.asList(delegateScope));
-    String[] includeScopeIds = {"delegateScope22"};
+    persistence.save(existingDelegate);
 
+    String[] includeScopeIds = {"delegateScope22"};
     QLIdFilter includedScopeIds = QLIdFilter.builder().operator(QLIdOperator.EQUALS).values(includeScopeIds).build();
     QLAttachScopeToDelegateInputBuilder attachScopeToDelegateInputBuilder = QLAttachScopeToDelegateInput.builder();
     attachScopeToDelegateInputBuilder.accountId(accountId)
@@ -269,8 +270,8 @@ public class AttachScopeToDelegateDataFetcherTest extends AbstractDataFetcherTes
         attachScopeToDelegateInputBuilder.build(), MutationContext.builder().build());
     Assert.notNull(qlAttachScopeToDelegatePayload);
     Assert.notNull(qlAttachScopeToDelegatePayload.getMessage());
-    Assert.isTrue(
-        qlAttachScopeToDelegatePayload.getMessage().equals("Scopes updated for delegate delegate id " + delegateId));
+    Assert.isTrue(qlAttachScopeToDelegatePayload.getMessage().equals(
+        "Included scopes for delegate:  [DELEGATE_SCOPE_TEST] Excluded scopes for delegate: []"));
   }
 
   private DelegateBuilder createDelegateBuilder(String accountId, String delegateId) {
