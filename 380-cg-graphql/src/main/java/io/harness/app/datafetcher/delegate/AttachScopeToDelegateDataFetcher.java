@@ -1,6 +1,7 @@
 package io.harness.app.datafetcher.delegate;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
@@ -110,9 +111,18 @@ public class AttachScopeToDelegateDataFetcher
         }
       }
       delegateService.updateScopes(delegate);
-      return QLAttachScopeToDelegatePayload.builder()
-          .message("Scopes updated for delegate delegate id " + delegateId)
-          .build();
+
+      List<String> updatedIncludeScopes = new ArrayList<>();
+      if (!isEmpty(delegate.getIncludeScopes())) {
+        delegate.getIncludeScopes().forEach(delegateScope -> updatedIncludeScopes.add(delegateScope.getName()));
+      }
+      List<String> updatedExcludeScopes = new ArrayList<>();
+      if (!isEmpty(delegate.getExcludeScopes())) {
+        delegate.getExcludeScopes().forEach(delegateScope -> updatedExcludeScopes.add(delegateScope.getName()));
+      }
+      String responseString = "Included scopes for delegate:  " + updatedIncludeScopes
+          + " Excluded scopes for delegate: " + updatedExcludeScopes;
+      return QLAttachScopeToDelegatePayload.builder().message(responseString).build();
     }
   }
 
