@@ -2106,7 +2106,7 @@ public class DelegateServiceImpl implements DelegateService {
       try {
         delete(accountId, delegate.getUuid(), forceDelete);
       } catch (InvalidRequestException exception) {
-        log.error("Unbale to delete delegate " + delegate.getUuid());
+        log.error("Unable to delete delegate ", exception);
       }
     }
     DelegateGroup delegateGroup = persistence.createQuery(DelegateGroup.class)
