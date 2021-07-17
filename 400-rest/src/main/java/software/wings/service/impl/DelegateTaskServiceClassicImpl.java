@@ -155,7 +155,7 @@ import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.infra.InfraDownloadService;
 import software.wings.service.intfc.AlertService;
-import software.wings.service.intfc.AssignDelegateService;
+import io.harness.service.AssignDelegateService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateTaskServiceClassic;

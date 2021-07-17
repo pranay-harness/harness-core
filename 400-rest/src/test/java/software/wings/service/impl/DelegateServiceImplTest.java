@@ -99,7 +99,7 @@ import software.wings.expression.ManagerPreviewExpressionEvaluator;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.AssignDelegateService;
+import io.harness.service.AssignDelegateService;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.EmailNotificationService;

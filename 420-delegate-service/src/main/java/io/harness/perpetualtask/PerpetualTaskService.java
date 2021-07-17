@@ -1,12 +1,9 @@
 package io.harness.perpetualtask;
 
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 
 import java.util.List;
 
-@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public interface PerpetualTaskService {
   String createTask(String perpetualTaskType, String accountId, PerpetualTaskClientContext clientContext,
       PerpetualTaskSchedule schedule, boolean allowDuplicate, String taskDescription);

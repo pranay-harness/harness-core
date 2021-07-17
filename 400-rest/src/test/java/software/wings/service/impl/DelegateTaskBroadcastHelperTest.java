@@ -21,7 +21,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.DelegateTaskBroadcast;
+import io.harness.delegate.beans.DelegateTaskBroadcast;
 
 import com.google.inject.Inject;
 import java.util.Collections;

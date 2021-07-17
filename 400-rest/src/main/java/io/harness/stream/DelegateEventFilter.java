@@ -8,8 +8,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.serializer.JsonUtils;
 
-import software.wings.beans.DelegateTaskBroadcast;
-import software.wings.beans.PerpetualTaskBroadcastEvent;
+import io.harness.delegate.beans.DelegateTaskBroadcast;
+import io.harness.delegate.beans.PerpetualTaskBroadcastEvent;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DelegateTaskServiceClassic;
 

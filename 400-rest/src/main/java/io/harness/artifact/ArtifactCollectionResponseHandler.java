@@ -12,7 +12,7 @@ import io.harness.beans.FeatureName;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import io.harness.perpetualtask.PerpetualTaskLogContext;
+import io.harness.alert.perpetualTask.PerpetualTaskLogContext;
 import io.harness.perpetualtask.PerpetualTaskService;
 
 import software.wings.beans.alert.AlertType;

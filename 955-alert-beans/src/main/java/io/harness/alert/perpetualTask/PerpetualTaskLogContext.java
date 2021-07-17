@@ -1,4 +1,4 @@
-package io.harness.perpetualtask;
+package io.harness.alert.perpetualTask;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;

@@ -537,7 +537,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.ArtifactoryBuildService;
-import software.wings.service.intfc.AssignDelegateService;
+import io.harness.service.AssignDelegateService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AwsHelperResourceService;
 import software.wings.service.intfc.AwsMarketPlaceApiHandler;

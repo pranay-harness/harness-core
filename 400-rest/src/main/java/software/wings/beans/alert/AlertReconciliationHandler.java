@@ -18,7 +18,7 @@ import software.wings.beans.alert.Alert.AlertKeys;
 import software.wings.beans.alert.NoEligibleDelegatesAlertReconciliation.NoEligibleDelegatesAlertReconciliationKeys;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
-import software.wings.service.intfc.AssignDelegateService;
+import io.harness.service.AssignDelegateService;
 
 import com.google.inject.Inject;
 import java.time.Duration;

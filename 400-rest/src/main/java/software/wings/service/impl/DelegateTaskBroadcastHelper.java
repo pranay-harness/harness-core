@@ -12,8 +12,8 @@ import io.harness.beans.DelegateTask;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 
-import software.wings.beans.DelegateTaskBroadcast;
-import software.wings.service.intfc.AssignDelegateService;
+import io.harness.delegate.beans.DelegateTaskBroadcast;
+import io.harness.service.AssignDelegateService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

@@ -170,7 +170,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DatadogYaml;
-import software.wings.beans.DelegateTaskBroadcast;
+import io.harness.delegate.beans.DelegateTaskBroadcast;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.EcrConfig;

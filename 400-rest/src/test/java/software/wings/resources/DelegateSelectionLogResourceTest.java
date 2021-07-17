@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogResponse;
+import io.harness.delegate.resources.DelegateSelectionLogResource;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 

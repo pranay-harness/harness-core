@@ -47,7 +47,7 @@ import io.harness.managerclient.GetDelegatePropertiesResponse;
 import io.harness.managerclient.HttpsCertRequirement;
 import io.harness.managerclient.HttpsCertRequirementQuery;
 import io.harness.manifest.ManifestCollectionResponseHandler;
-import io.harness.perpetualtask.PerpetualTaskLogContext;
+import io.harness.alert.perpetualTask.PerpetualTaskLogContext;
 import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
 import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
