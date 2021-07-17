@@ -233,9 +233,11 @@ public class KubernetesContainerTask extends ContainerTask {
         for (StorageConfiguration storageConfiguration : containerDefinition.getStorageConfigurations()) {
           if (isNotBlank(storageConfiguration.getHostSourcePath())) {
             String volumeName = KubernetesConvention.getVolumeName(strip(storageConfiguration.getHostSourcePath()));
-            // what should be volume type here
-            volumeMap.put(
-                volumeName, new VolumeBuilder().withName(volumeName).withHostPath(new HostPathVolumeSource()).build());
+            volumeMap.put(volumeName,
+                new VolumeBuilder()
+                    .withName(volumeName)
+                    .withHostPath(new HostPathVolumeSource(strip(storageConfiguration.getHostSourcePath()), null))
+                    .build());
           }
         }
       }
