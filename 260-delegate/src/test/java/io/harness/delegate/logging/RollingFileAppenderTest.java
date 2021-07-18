@@ -9,5 +9,7 @@ public class RollingFileAppenderTest extends CategoryTest {
 
     public void setUp() throws Exception {
 
+    }
+
 
 }
