@@ -83,6 +83,7 @@ import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
+import ch.qos.logback.classic.LoggerContext;
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
@@ -129,6 +130,7 @@ import io.harness.filesystem.FileIo;
 import io.harness.grpc.DelegateServiceGrpcAgentClient;
 import io.harness.grpc.util.RestartableServiceManager;
 import io.harness.logging.AutoLogContext;
+import io.harness.logging.RemoteTriggeringPolicy;
 import io.harness.logstreaming.LogStreamingClient;
 import io.harness.logstreaming.LogStreamingHelper;
 import io.harness.logstreaming.LogStreamingSanitizer;
@@ -152,6 +154,7 @@ import io.harness.threading.Schedulable;
 import io.harness.utils.ProcessControl;
 import io.harness.version.VersionInfoManager;
 
+import org.slf4j.ILoggerFactory;
 import software.wings.beans.DelegateTaskFactory;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
@@ -407,6 +410,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       }
       log.info("Delegate will start running on JRE {}", System.getProperty(JAVA_VERSION));
       startTime = clock.millis();
+
       DelegateStackdriverLogAppender.setTimeLimiter(timeLimiter);
       DelegateStackdriverLogAppender.setManagerClient(delegateAgentManagerClient);
 
@@ -1288,6 +1292,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             log.info("[Old] Run scripts downloaded. Upgrading delegate. Stop acquiring async tasks");
             upgradeVersion = delegateScripts.getVersion();
             upgradeNeeded.set(true);
+            RemoteTriggeringPolicy.resetRollingPolicy();
           } else {
             log.info("Delegate up to date");
           }

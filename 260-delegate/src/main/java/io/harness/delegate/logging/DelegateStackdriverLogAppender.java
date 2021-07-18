@@ -89,4 +89,6 @@ public class DelegateStackdriverLogAppender extends RemoteStackdriverLogAppender
   public static void setDelegateId(String delegateId) {
     DelegateStackdriverLogAppender.delegateId = delegateId;
   }
+
+
 }
