@@ -74,7 +74,6 @@ public class CommonStepInfo {
           .setName("Barrier")
           .setType("Barrier")
           .setStepMetaData(StepMetaData.newBuilder().setFolderPath("FlowControl/Barrier").build())
-          .setFeatureFlag(FeatureName.NG_BARRIERS.name())
           .build();
 
   public List<StepInfo> getCommonSteps(String category) {
