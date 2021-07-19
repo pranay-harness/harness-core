@@ -30,6 +30,7 @@ type Application {
 
   environments(limit: Int!, offset: Int): EnvironmentConnection
     @dataFetcher(name: environmentConnection, contextFieldArgsMap: "{ \"Application\": \"id\"}")
+
 }
 
 type ApplicationConnection {

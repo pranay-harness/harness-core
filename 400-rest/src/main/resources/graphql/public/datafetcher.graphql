@@ -76,6 +76,7 @@ enum DataFetcherEnum {
   pipelineStats
   service
   serviceConnection
+  test
   serviceStats
   sunburstChartStats
   tagsInUseConnection

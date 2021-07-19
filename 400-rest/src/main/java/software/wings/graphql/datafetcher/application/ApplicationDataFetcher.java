@@ -36,6 +36,7 @@ public class ApplicationDataFetcher extends AbstractObjectDataFetcher<QLApplicat
   @Override
   @AuthRule(permissionType = LOGGED_IN)
   public QLApplication fetch(QLApplicationQueryParameters qlQuery, String accountId) {
+    System.out.println("Adadcsacds");
     Application application = null;
     if (qlQuery.getApplicationId() != null) {
       application = persistence.get(Application.class, qlQuery.getApplicationId());

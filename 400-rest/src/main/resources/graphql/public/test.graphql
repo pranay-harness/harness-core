@@ -1,0 +1,23 @@
+extend type Query {
+
+    testByName(name: String!): Test @dataFetcher(name: application)
+}
+
+type Test {
+    name: String
+    services(limit: Int!, offset: Int): ServiceConnection
+    @dataFetcher(name: serviceConnection, contextFieldArgsMap: "{ \"Application\": \"id\"}")
+
+    workflows(limit: Int!, offset: Int): WorkflowConnection
+    @dataFetcher(name: workflowConnection, contextFieldArgsMap: "{ \"Application\": \"id\"}")
+
+    pipelines(limit: Int!, offset: Int): PipelineConnection
+    @dataFetcher(name: pipelineConnection, contextFieldArgsMap: "{ \"Application\": \"id\"}")
+
+    environments(limit: Int!, offset: Int): EnvironmentConnection
+    @dataFetcher(name: environmentConnection, contextFieldArgsMap: "{ \"Application\": \"id\"}")
+
+    abcd(limit: Int!) : ServiceConnection
+    @dataFetcher(name: serviceConnection, contextFieldArgsMap: "{ \"Application\": \"id\"}")
+
+}
