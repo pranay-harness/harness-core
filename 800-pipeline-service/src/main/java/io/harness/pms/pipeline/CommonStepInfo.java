@@ -3,7 +3,6 @@ package io.harness.pms.pipeline;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
 import io.harness.pms.helpers.PmsFeatureFlagHelper;
@@ -43,7 +42,6 @@ public class CommonStepInfo {
                                                               .addCategory("Approval")
                                                               .setFolderPath("Approval")
                                                               .build())
-                                         .setFeatureFlag(FeatureName.NG_HARNESS_APPROVAL.name())
                                          .build();
   StepInfo jiraApprovalStepInfo = StepInfo.newBuilder()
                                       .setName("Jira Approval")
@@ -53,21 +51,18 @@ public class CommonStepInfo {
                                                            .addCategory("Approval")
                                                            .setFolderPath("Approval")
                                                            .build())
-                                      .setFeatureFlag(FeatureName.NG_HARNESS_APPROVAL.name())
                                       .build();
   StepInfo jiraCreateStepInfo =
       StepInfo.newBuilder()
           .setName("Jira Create")
           .setType(StepSpecTypeConstants.JIRA_CREATE)
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").setFolderPath("Jira").build())
-          .setFeatureFlag(FeatureName.NG_HARNESS_APPROVAL.name())
           .build();
   StepInfo jiraUpdateStepInfo =
       StepInfo.newBuilder()
           .setName("Jira Update")
           .setType(StepSpecTypeConstants.JIRA_UPDATE)
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").setFolderPath("Jira").build())
-          .setFeatureFlag(FeatureName.NG_HARNESS_APPROVAL.name())
           .build();
   StepInfo barrierStepInfo =
       StepInfo.newBuilder()
