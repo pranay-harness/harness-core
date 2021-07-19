@@ -3,9 +3,7 @@ package io.harness.ccm.commons.dao.recommendation;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.commons.utils.TimeUtils.offsetDateTimeNow;
 import static io.harness.ccm.commons.utils.TimeUtils.toEpocMilli;
-import static io.harness.ccm.commons.utils.TimeUtils.toInstant;
 import static io.harness.ccm.commons.utils.TimeUtils.toOffsetDateTime;
-import static io.harness.ccm.commons.utils.TimescaleUtils.isAliveAtInstant;
 import static io.harness.persistence.HQuery.excludeValidate;
 import static io.harness.timescaledb.Tables.CE_RECOMMENDATIONS;
 import static io.harness.timescaledb.Tables.KUBERNETES_UTILIZATION_DATA;
@@ -407,18 +405,24 @@ public class K8sRecommendationDAO {
         .execute();
   }
 
+  /**
+   * maximum overlapping problem with given start and end time, but in pure PSQL
+   * https://stackoverflow.com/questions/66416245/postgresql-count-max-number-of-concurrent-user-sessions-per-hour
+   */
   private int getNodeCount(@NonNull JobConstants jobConstants, @NonNull NodePoolId nodePoolId) {
-    // intellij is flagging it as nullptr possibility, since the result of count will always be a number, so it is safe
-    // to assume that the unwrapping of the response will null cause nullptr
-    return TimescaleUtils.retryRun(()
-                                       -> dslContext.selectCount()
-                                              .from(NODE_INFO)
-                                              .where(NODE_INFO.ACCOUNTID.eq(jobConstants.getAccountId()),
-                                                  NODE_INFO.CLUSTERID.eq(nodePoolId.getClusterid()),
-                                                  NODE_INFO.NODEPOOLNAME.eq(nodePoolId.getNodepoolname()),
-                                                  isAliveAtInstant(NODE_INFO.STARTTIME, NODE_INFO.STOPTIME,
-                                                      toInstant(jobConstants.getJobEndTime())))
-                                              .fetchOne(0, int.class));
+    final Condition condition = TimescaleUtils.isAlive(DSL.field(NODE_INFO.STARTTIME.getName(), OffsetDateTime.class),
+        DSL.field(NODE_INFO.STOPTIME.getName(), OffsetDateTime.class), jobConstants.getJobStartTime(),
+        jobConstants.getJobEndTime());
+
+    final String query =
+        "SELECT max(q.num_overlaps) from( SELECT v.ts, sum(sum(v.inc)) OVER (order by v.ts) AS num_overlaps FROM "
+        + NODE_INFO.getName() + " n CROSS JOIN lateral (values (" + NODE_INFO.STARTTIME.getName() + ", 1), ("
+        + NODE_INFO.STOPTIME.getName() + ", -1)) v(ts, inc) WHERE " + NODE_INFO.ACCOUNTID.getName() + " = '"
+        + jobConstants.getAccountId() + "' AND " + NODE_INFO.CLUSTERID.getName() + " = '" + nodePoolId.getClusterid()
+        + "' AND " + NODE_INFO.NODEPOOLNAME.getName() + " = '" + nodePoolId.getNodepoolname() + "' AND "
+        + condition.toString() + " GROUP BY v.ts ) q;";
+
+    return TimescaleUtils.retryRun(() -> dslContext.fetchOne(query).into(int.class));
   }
 
   public Optional<K8sNodeRecommendation> fetchNodeRecommendationById(
