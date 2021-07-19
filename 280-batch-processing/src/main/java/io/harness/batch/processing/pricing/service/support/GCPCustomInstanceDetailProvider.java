@@ -71,12 +71,12 @@ public class GCPCustomInstanceDetailProvider {
       return populateAndGetN2CustomPricing(vmComputePricingInfo, region);
     }
 
-    if (instanceType.startsWith("n1-")) {
-      return populateAndGetN1CustomPricing(vmComputePricingInfo, region);
-    }
-
     if (instanceType.startsWith("e2-")) {
       return populateAndGetE2CustomPricing(vmComputePricingInfo, region);
+    }
+
+    if (instanceType.startsWith("n1-") || instanceType.startsWith(GCP_CUSTOM_INSTANCE_PREFIX)) {
+      return populateAndGetN1CustomPricing(vmComputePricingInfo, region);
     }
 
     return null;
