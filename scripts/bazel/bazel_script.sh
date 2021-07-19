@@ -86,6 +86,7 @@ BAZEL_MODULES="\
   //850-ng-pipeline-commons:module \
   //860-orchestration-steps:module \
   //860-orchestration-visualization:module \
+  //865-cg-events:module \
   //870-cg-orchestration:module \
   //870-orchestration:module \
   //870-yaml-beans:module \
@@ -354,6 +355,7 @@ build_bazel_module 830-notification-service
 build_bazel_module 830-resource-group
 build_bazel_module 835-notification-senders
 build_bazel_module 850-ng-pipeline-commons
+build_bazel_module 865-cg-events
 build_bazel_module 860-orchestration-steps
 build_bazel_module 860-orchestration-visualization
 build_bazel_module 870-cg-orchestration
