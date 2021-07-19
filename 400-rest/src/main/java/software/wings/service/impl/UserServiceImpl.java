@@ -1080,7 +1080,7 @@ public class UserServiceImpl implements UserService {
     AccountSettingsResponse accountSettingsResponse = accountService.getAuthSettingsByAccountId(accountId);
     AuthenticationMechanism authenticationMechanism = accountSettingsResponse.getAuthenticationMechanism();
     boolean inviteAcceptanceRequired = !isSAMLConfigured && authenticationMechanism != AuthenticationMechanism.SAML;
-    boolean markEmailVerified = (isSAMLConfigured && authenticationMechanism == AuthenticationMechanism.SAML);
+    boolean markEmailVerified = isSAMLConfigured && authenticationMechanism == AuthenticationMechanism.SAML;
     for (String email : userInvite.getEmails()) {
       UserInvite userInviteClone = kryoSerializer.clone(userInvite);
       userInviteClone.setEmail(email.trim());
