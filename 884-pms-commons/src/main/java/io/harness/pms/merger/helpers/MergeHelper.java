@@ -1,10 +1,12 @@
 package io.harness.pms.merger.helpers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.yaml.validation.InputSetValidatorType.ALLOWED_VALUES;
 import static io.harness.pms.yaml.validation.InputSetValidatorType.REGEX;
 
 import static java.util.stream.Collectors.toMap;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGExpressionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -28,6 +30,7 @@ import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PIPELINE)
 @UtilityClass
 @Slf4j
 public class MergeHelper {
@@ -67,11 +70,21 @@ public class MergeHelper {
 
     templateConfig.getFqnToValueMap().keySet().forEach(key -> {
       if (inputSetFQNs.contains(key)) {
-        String error = validateStaticValues(
-            templateConfig.getFqnToValueMap().get(key), inputSetConfig.getFqnToValueMap().get(key));
-        if (EmptyPredicate.isNotEmpty(error)) {
-          errorMap.put(key, error);
+        Object templateValue = templateConfig.getFqnToValueMap().get(key);
+        Object value = inputSetConfig.getFqnToValueMap().get(key);
+        if (key.isType() || key.isIdentifierOrVariableName()) {
+          if (!value.toString().equals(templateValue.toString())) {
+            errorMap.put(key,
+                "The value for " + key.getExpressionFqn() + " is " + templateValue.toString()
+                    + "in the pipeline yaml, but the input set has it as " + value.toString());
+          }
+        } else {
+          String error = validateStaticValues(templateValue, value);
+          if (EmptyPredicate.isNotEmpty(error)) {
+            errorMap.put(key, error);
+          }
         }
+
         inputSetFQNs.remove(key);
       } else {
         Map<FQN, Object> subMap =
