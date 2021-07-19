@@ -11,6 +11,7 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Sources;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO.MonitoredServiceListItemDTOBuilder;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
+import io.harness.cvng.core.beans.monitoredService.RiskData;
 import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.entities.MonitoredService.MonitoredServiceKeys;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
@@ -324,13 +325,18 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     }
     List<HistoricalTrend> historicalTrendList = heatMapService.getHistoricalTrend(
         accountId, orgIdentifier, projectIdentifier, serviceEnvironmentIdentifiers, 24);
+    List<RiskData> currentRiskScoreList =
+        heatMapService.getLatestRiskScore(accountId, orgIdentifier, projectIdentifier, serviceEnvironmentIdentifiers);
 
     List<MonitoredServiceListItemDTO> monitoredServiceListDTOS = new ArrayList<>();
     int index = 0;
     for (MonitoredServiceListItemDTOBuilder monitoredServiceListDTOBuilder :
         monitoredServiceListDTOBuilderPageResponse.getContent()) {
-      HistoricalTrend historicalTrend = historicalTrendList.get(index++);
-      monitoredServiceListDTOS.add(monitoredServiceListDTOBuilder.historicalTrend(historicalTrend).build());
+      HistoricalTrend historicalTrend = historicalTrendList.get(index);
+      RiskData riskData = currentRiskScoreList.get(index);
+      index++;
+      monitoredServiceListDTOS.add(
+          monitoredServiceListDTOBuilder.historicalTrend(historicalTrend).currentHealthScore(riskData).build());
     }
     return PageResponse.<MonitoredServiceListItemDTO>builder()
         .pageSize(pageSize)

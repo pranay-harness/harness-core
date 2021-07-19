@@ -30,8 +30,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class NewRelicHealthSourceSpec extends HealthSourceSpec {
-  @NotNull String applicationName;
-  @NotNull String applicationId;
+  @NotEmpty String applicationName;
+  @NotEmpty String applicationId;
   @NotNull String feature;
   @NotNull @NotEmpty @Valid Set<MetricPackDTO> metricPacks;
 

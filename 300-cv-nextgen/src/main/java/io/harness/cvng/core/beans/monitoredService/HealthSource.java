@@ -18,14 +18,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class HealthSource {
-  @NotNull String name;
-  @NotNull String identifier;
+  @NotEmpty String name;
+  @NotEmpty String identifier;
   @JsonProperty(DATA_SOURCE_TYPE) MonitoredServiceDataSourceType type;
 
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = DATA_SOURCE_TYPE, include = JsonTypeInfo.As.EXTERNAL_PROPERTY,

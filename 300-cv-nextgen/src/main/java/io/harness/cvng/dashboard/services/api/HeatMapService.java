@@ -2,6 +2,7 @@ package io.harness.cvng.dashboard.services.api;
 
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
+import io.harness.cvng.core.beans.monitoredService.RiskData;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
 import io.harness.cvng.dashboard.beans.EnvServiceRiskDTO;
@@ -34,5 +35,8 @@ public interface HeatMapService {
       Instant endTime, String serviceIdentifier, CVMonitoringCategory category);
 
   List<HistoricalTrend> getHistoricalTrend(String accountId, String orgIdentifier, String projectIdentifier,
-      List<Pair<String, String>> serviceIdentifiers, int hours);
+      List<Pair<String, String>> serviceEnvIdentifiers, int hours);
+
+  List<RiskData> getLatestRiskScore(String accountId, String orgIdentifier, String projectIdentifier,
+      List<Pair<String, String>> serviceEnvIdentifiers);
 }
